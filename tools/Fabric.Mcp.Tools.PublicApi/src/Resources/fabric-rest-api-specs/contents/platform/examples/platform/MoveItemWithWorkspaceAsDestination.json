@@ -1,0 +1,30 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "itemId": "cccccccc-2222-3333-4444-dddddddddddd",
+        "moveItemRequest": {
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "cccccccc-2222-3333-4444-dddddddddddd",
+                        "type": "Lakehouse",
+                        "displayName": "MyLakehouse",
+                        "description": "A lakehouse used by the sales team.",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "dddddddd-3333-4444-5555-eeeeeeeeeeee",
+                        "type": "SQLEndpoint",
+                        "displayName": "MyLakehouse",
+                        "description": null,
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    }
+                ]
+            }
+        }
+    }
+}

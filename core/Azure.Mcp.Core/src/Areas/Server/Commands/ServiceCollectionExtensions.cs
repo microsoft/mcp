@@ -64,14 +64,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton(sp =>
-        {
-            return new RegistryToolLoader(
-                sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                sp.GetRequiredService<ILogger<RegistryToolLoader>>()
-            );
-        });
+        services.AddSingleton<RegistryToolLoader>();
 
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
@@ -82,6 +75,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
+        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
@@ -104,6 +98,20 @@ public static class AzureMcpServiceCollectionExtensions
         else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
+            {
+                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
+                {
+                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                    sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>(),
+                };
+
+                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
+                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
+            });
         }
 
         // Configure tool loading based on mode
@@ -153,6 +161,37 @@ public static class AzureMcpServiceCollectionExtensions
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IToolLoader>(sp =>
+            {
+                var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+                var consolidatedStrategy = sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>();
+
+                // Create a new CommandFactory with consolidated command groups
+                var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
+
+                var toolLoaders = new List<IToolLoader>
+                {
+                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    new ServerToolLoader(
+                        sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()
+                    ),
+                    // NamespaceToolLoader enables direct in-process execution for consolidated tools
+                    new NamespaceToolLoader(
+                        consolidatedCommandFactory,
+                        sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
+                        sp,
+                        loggerFactory.CreateLogger<NamespaceToolLoader>(),
+                        false
+                    ),
+                };
+
+                return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
+            });
+        }
         else if (serviceStartOptions.Mode == ModeTypes.All)
         {
             services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
@@ -197,7 +236,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.EnableInsecureTransports)
+        if (serviceStartOptions.Transport == TransportTypes.Http)
         {
             mcpServerBuilder.WithHttpTransport();
         }

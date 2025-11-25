@@ -14,7 +14,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_list_filesystems_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_fs_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -45,7 +45,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_calculate_required_subnet_size()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_ask",
+            "managedlustre_fs_subnetsize_ask",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -62,7 +62,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_fs_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -76,7 +76,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info_zonal_support()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_fs_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -95,7 +95,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info_no_zonal_support()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_fs_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -115,21 +115,21 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_create_azure_managed_lustre_no_blob_no_cmk()
     {
         var fsName = $"amlfs-{Guid.NewGuid().ToString("N")[..8]}";
-        var subnetId = Environment.GetEnvironmentVariable("AMLFS_SUBNET_ID");
-        var location = Environment.GetEnvironmentVariable("LOCATION");
+        var subnetId = Settings.DeploymentOutputs["AMLFS_SUBNET_ID"];
+        var location = Settings.DeploymentOutputs["LOCATION"];
 
         // Calculate CMK required variables
 
-        var keyUri = Environment.GetEnvironmentVariable("KEY_URI_WITH_VERSION");
-        var keyVaultResourceId = Environment.GetEnvironmentVariable("KEY_VAULT_RESOURCE_ID");
-        var userAssignedIdentityId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_RESOURCE_ID");
+        var keyUri = Settings.DeploymentOutputs["KEY_URI_WITH_VERSION"];
+        var keyVaultResourceId = Settings.DeploymentOutputs["KEY_VAULT_RESOURCE_ID"];
+        var userAssignedIdentityId = Settings.DeploymentOutputs["USER_ASSIGNED_IDENTITY_RESOURCE_ID"];
 
         // Calculate HSM required variables
-        var hsmDataContainerId = Environment.GetEnvironmentVariable("HSM_CONTAINER_ID");
-        var hsmLogContainerId = Environment.GetEnvironmentVariable("HSM_LOGS_CONTAINER_ID");
+        var hsmDataContainerId = Settings.DeploymentOutputs["HSM_CONTAINER_ID"];
+        var hsmLogContainerId = Settings.DeploymentOutputs["HSM_LOGS_CONTAINER_ID"];
 
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_create",
+            "managedlustre_fs_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -173,7 +173,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     {
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_update",
+            "managedlustre_fs_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -188,7 +188,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
 
         // Verify via list
         var listResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_fs_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -226,14 +226,14 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_check_subnet_size_and_succeed()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_validate",
+            "managedlustre_fs_subnetsize_validate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "sku", "AMLFS-Durable-Premium-40" },
                 { "size", 480 },
-                { "location", Environment.GetEnvironmentVariable("LOCATION") },
-                { "subnet-id", Environment.GetEnvironmentVariable("AMLFS_SUBNET_ID") }
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["AMLFS_SUBNET_ID"] }
             });
 
         var valid = result.AssertProperty("valid");
@@ -245,14 +245,14 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_check_subnet_size_and_fail()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_validate",
+            "managedlustre_fs_subnetsize_validate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "sku", "AMLFS-Durable-Premium-40" },
                 { "size", 1008 },
-                { "location", Environment.GetEnvironmentVariable("LOCATION") },
-                { "subnet-id", Environment.GetEnvironmentVariable("AMLFS_SUBNET_SMALL_ID") }
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["AMLFS_SUBNET_SMALL_ID"] }
             });
 
         var valid = result.AssertProperty("valid");
@@ -265,7 +265,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     {
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_update",
+            "managedlustre_fs_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -293,7 +293,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
 
         // Verify via list
         var listResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_fs_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }

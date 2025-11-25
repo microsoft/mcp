@@ -34,16 +34,6 @@ The definition of a notebook item is made out of a single part, and is construct
 
 * **Payload** See: [Example of payload content decoded from Base64](#example-of-ipynb-format-payload-content-decoded-from-base64).
 
-## Platform part
-
-The platform part is a file that contains the notebook metadata information.
-
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided. (Platform not mandatory).
-
-* [Get Item](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-
-* [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, but only if you set a new URL parameter `updateMetadata=true`.
-
 ### Example of ipynb format payload content decoded from Base64
 
 ```json

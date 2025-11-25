@@ -15,6 +15,8 @@ public class StorageSetup : IAreaSetup
 {
     public string Name => "storage";
 
+    public string Title => "Manage Azure Storage Account";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IStorageService, StorageService>();
@@ -40,7 +42,8 @@ public class StorageSetup : IAreaSetup
             To invoke a command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available
             sub-commands for different Azure Storage service operations including blobs. Note that this tool requires
             appropriate Storage account permissions and will only access storage resources accessible to the authenticated user.
-            """);
+            """,
+            Title);
 
         // Create Storage subgroups
         var storageAccount = new CommandGroup("account", "Storage accounts operations - Commands for listing and managing Storage accounts in your Azure subscription.");

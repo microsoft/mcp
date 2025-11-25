@@ -19,6 +19,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     private const string CommandTitle = "List Application Insights Recommendations";
     private readonly ILogger<RecommendationListCommand> _logger = logger;
 
+    public override string Id => "8d259f21-43b3-4962-bec8-de616b8b5f0d";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -45,7 +47,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -60,7 +62,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?
                 ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :

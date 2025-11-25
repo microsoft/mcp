@@ -42,13 +42,14 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedDeployments);
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -62,13 +63,14 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -83,13 +85,14 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -105,13 +108,14 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse([]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

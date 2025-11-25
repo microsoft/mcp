@@ -20,6 +20,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
 
+    public override string Id => "d3bf37ed-5f2e-448d-a16e-73140ef908c2";
+
     public override string Name => "definitions";
 
     public override string Description =>
@@ -56,7 +58,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -78,7 +80,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
                 options.MetricNamespace,
                 options.SearchString,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (allResults?.Count > 0)
             {

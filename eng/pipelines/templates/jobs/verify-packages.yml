@@ -1,0 +1,58 @@
+parameters:
+- name: OSName
+  type: string
+- name: Matrix
+  type: object
+- name: MaxParallel
+  type: number
+- name: DependsOn
+  type: object
+- name: TestTimeoutInMinutes
+  type: number
+- name: PackageDocker
+  type: boolean
+
+jobs:
+- job: Verify_Packages_${{ parameters.OSName }}
+  displayName: "Verify Packages"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
+  strategy:
+    maxParallel: ${{ parameters.MaxParallel }}
+    matrix: $[ ${{ parameters.Matrix }} ]
+  pool:
+    name: $(Pool)
+    ${{ if eq(parameters.OSName, 'macOS') }}:
+      vmImage: $(OSVmImage)
+    ${{ else }}:
+      image: $(OSVmImage)
+    os: ${{ parameters.OSName }}
+
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download artifacts
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: NodeTool@0
+    displayName: "Use Node.js 20.x"
+    inputs:
+      versionSpec: 20.x
+
+  - task: Powershell@2
+    displayName: "Verify packages/images and run smoke tests"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PackageSmokeTests.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsDirectory $(Pipeline.Workspace)
+        -TargetOs ${{ parameters.OSName }}
+        -TargetArch $(Architecture)
+        -TestDocker:$${{ parameters.PackageDocker }}

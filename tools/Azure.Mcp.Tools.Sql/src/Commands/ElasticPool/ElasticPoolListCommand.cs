@@ -15,6 +15,8 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 {
     private const string CommandTitle = "List SQL Elastic Pools";
 
+    public override string Id => "f980fda7-4bd6-4c24-b139-a091f088584f";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -39,7 +41,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -56,7 +58,8 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListResult);
         }

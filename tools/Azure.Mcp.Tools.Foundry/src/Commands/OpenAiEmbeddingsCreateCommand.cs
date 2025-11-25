@@ -16,13 +16,16 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
 {
     private const string CommandTitle = "Create OpenAI Embeddings";
 
+    public override string Id => "8b10845b-bb51-4cc4-b5dd-aacc874d4a0a";
+
     public override string Name => "embeddings-create";
 
     public override string Description =>
         $"""
-        Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into 
-        high-dimensional vector representations for similarity search and machine learning applications. 
-        Returns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.
+        Create embeddings using Azure OpenAI in Microsoft Foundry. Generate vector embeddings from text using Azure OpenAI 
+        deployments in your Microsoft Foundry resource for semantic search, similarity comparisons, clustering, or machine 
+        learning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to 
+        numerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.
         """;
 
     public override string Title => CommandTitle;
@@ -62,7 +65,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -85,7 +88,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
                 options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiEmbeddingsCreateCommandResult>(
                 new OpenAiEmbeddingsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!, options.InputText!),

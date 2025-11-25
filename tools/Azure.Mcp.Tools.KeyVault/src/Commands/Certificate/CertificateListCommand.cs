@@ -16,6 +16,8 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
     private const string _commandTitle = "List Key Vault Certificates";
     private readonly ILogger<CertificateListCommand> _logger = logger;
 
+    public override string Id => "6403bdef-adfd-46ae-a1fa-fcc57c391068";
+
     public override string Name => "list";
 
     public override string Title => _commandTitle;
@@ -46,7 +48,7 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +66,8 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
                 options.VaultName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(certificates ?? []), KeyVaultJsonContext.Default.CertificateListCommandResult);
         }

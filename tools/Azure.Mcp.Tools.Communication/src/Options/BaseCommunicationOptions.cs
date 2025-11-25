@@ -6,7 +6,10 @@ using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Options;
 
-public class BaseCommunicationOptions : GlobalOptions
+/// <summary>
+/// Base options class for Communication Services commands.
+/// </summary>
+public class BaseCommunicationOptions : SubscriptionOptions
 {
     [JsonPropertyName(CommunicationOptionDefinitions.EndpointName)]
     public string? Endpoint { get; set; }

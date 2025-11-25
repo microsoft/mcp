@@ -13,6 +13,8 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
     private const string CommandTitle = "Get Platform API Specification";
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "2338df97-d6d9-4f1d-9e92-e118efe9c643";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -35,7 +37,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -47,7 +49,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis("platform");
+            var apis = await fabricService.GetWorkloadPublicApis("platform", cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

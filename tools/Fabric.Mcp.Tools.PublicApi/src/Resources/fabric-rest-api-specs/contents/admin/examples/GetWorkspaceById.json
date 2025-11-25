@@ -9,7 +9,8 @@
                 "name": "test report",
                 "type": "Workspace",
                 "state": "Active",
-                "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84"
+                "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84",
+                "domainId": "8badadb6-9945-4e07-8134-00e0defec00b"
             }
         }
     }

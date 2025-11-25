@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Http;
 using Xunit;
 
@@ -12,7 +13,7 @@ public class HttpClientServiceTests
     public void Constructor_WithNullOptions_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new HttpClientService(null!));
+        Assert.Throws<ArgumentNullException>(() => new HttpClientService(null!, null!));
     }
 
     [Fact]
@@ -22,10 +23,9 @@ public class HttpClientServiceTests
         var options = new HttpClientOptions
         {
             DefaultTimeout = TimeSpan.FromSeconds(30),
-            DefaultUserAgent = "TestAgent"
         };
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
-        using var service = new HttpClientService(optionsWrapper);
+        using var service = new HttpClientService(optionsWrapper, null!);
 
         // Act
         var client = service.DefaultClient;
@@ -33,7 +33,6 @@ public class HttpClientServiceTests
         // Assert
         Assert.NotNull(client);
         Assert.Equal(TimeSpan.FromSeconds(30), client.Timeout);
-        Assert.Contains("TestAgent", client.DefaultRequestHeaders.UserAgent.ToString());
     }
 
     [Fact]
@@ -42,7 +41,7 @@ public class HttpClientServiceTests
         // Arrange
         var options = new HttpClientOptions();
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
-        using var service = new HttpClientService(optionsWrapper);
+        using var service = new HttpClientService(optionsWrapper, null!);
         var baseAddress = new Uri("https://example.com");
 
         // Act
@@ -59,7 +58,7 @@ public class HttpClientServiceTests
         // Arrange
         var options = new HttpClientOptions();
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
-        using var service = new HttpClientService(optionsWrapper);
+        using var service = new HttpClientService(optionsWrapper, null!);
         var baseAddress = new Uri("https://example.com");
 
         // Act
@@ -84,7 +83,7 @@ public class HttpClientServiceTests
             NoProxy = "localhost,127.0.0.1"
         };
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
-        using var service = new HttpClientService(optionsWrapper);
+        using var service = new HttpClientService(optionsWrapper, null!);
 
         // Act
         using var client = service.CreateClient();
@@ -101,7 +100,7 @@ public class HttpClientServiceTests
         // Arrange
         var options = new HttpClientOptions();
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
-        var service = new HttpClientService(optionsWrapper);
+        var service = new HttpClientService(optionsWrapper, null!);
         var client = service.DefaultClient; // Force creation
 
         // Act
@@ -110,4 +109,48 @@ public class HttpClientServiceTests
         // Assert
         Assert.Throws<ObjectDisposedException>(() => service.CreateClient());
     }
+
+    [Fact]
+    public void UserAgent_IsSetCorrectly()
+    {
+        // Arrange
+        var options = new HttpClientOptions();
+        var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "http"
+        };
+        var serviceStartOptionsWrapper = Microsoft.Extensions.Options.Options.Create(serviceStartOptions);
+        var service = new HttpClientService(optionsWrapper, serviceStartOptionsWrapper);
+        var client = service.DefaultClient;
+
+        // Act
+        var userAgent = client.DefaultRequestHeaders.UserAgent;
+
+        // Assert
+        Assert.Contains("azmcp-http/", userAgent.ToString());
+    }
+
+    [Fact]
+    public void UserAgent_UserAgentFromHttpClientOptionsIsIgnored()
+    {
+        // Arrange
+        var options = new HttpClientOptions();
+        options.DefaultUserAgent = "CustomAgent/1.0";
+        var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "http"
+        };
+        var serviceStartOptionsWrapper = Microsoft.Extensions.Options.Options.Create(serviceStartOptions);
+        var service = new HttpClientService(optionsWrapper, serviceStartOptionsWrapper);
+        var client = service.DefaultClient;
+
+        // Act
+        var userAgent = client.DefaultRequestHeaders.UserAgent;
+
+        // Assert
+        Assert.Contains("azmcp-http/", userAgent.ToString());
+    }
+
 }

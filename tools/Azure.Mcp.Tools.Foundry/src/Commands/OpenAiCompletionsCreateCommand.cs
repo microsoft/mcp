@@ -16,13 +16,17 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 {
     private const string CommandTitle = "Create OpenAI Completion";
 
+    public override string Id => "c42f95c1-7744-48da-852d-c50444c3c35c";
+
     public override string Name => "create-completion";
 
     public override string Description =>
         $"""
-        Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI 
-        completion models and returns generated text with configurable parameters like temperature and max tokens. 
-        Returns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.
+        Create text completions using Azure OpenAI in Microsoft Foundry. Send a prompt or question to Azure OpenAI models 
+        deployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create 
+        completions, get AI-generated content, generate answers to questions, or produce text completions from Azure 
+        OpenAI based on any input prompt. Supports customization with temperature and max tokens. 
+        Requires resource-name, deployment-name, and prompt-text.
         """;
 
     public override string Title => CommandTitle;
@@ -60,7 +64,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -82,7 +86,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.Temperature,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
                 new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo),

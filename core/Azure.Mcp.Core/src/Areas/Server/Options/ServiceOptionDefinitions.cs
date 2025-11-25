@@ -11,8 +11,9 @@ public static class ServiceOptionDefinitions
     public const string ToolName = "tool";
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
-    public const string EnableInsecureTransportsName = "enable-insecure-transports";
+    public const string DangerouslyDisableHttpIncomingAuthName = "dangerously-disable-http-incoming-auth";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
+    public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -46,7 +47,7 @@ public static class ServiceOptionDefinitions
         $"--{ToolName}"
     )
     {
-        Description = "Expose only specific tools by name (e.g., 'azmcp_acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp_acr_registry_list\" --tool \"azmcp_group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
+        Description = "Expose only specific tools by name (e.g., 'acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"acr_registry_list\" --tool \"group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,
@@ -67,12 +68,11 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> EnableInsecureTransports = new(
-        $"--{EnableInsecureTransportsName}")
+    public static readonly Option<bool> DangerouslyDisableHttpIncomingAuth = new(
+        $"--{DangerouslyDisableHttpIncomingAuthName}")
     {
         Required = false,
-        Hidden = true,
-        Description = "Enable insecure transport",
+        Description = "Dangerously disables HTTP incoming authentication, exposing the server to unauthenticated access over HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
         DefaultValueFactory = _ => false
     };
 
@@ -82,5 +82,13 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<OutgoingAuthStrategy> OutgoingAuthStrategy = new(
+        $"--{OutgoingAuthStrategyName}")
+    {
+        Required = false,
+        Description = "Outgoing authentication strategy for Azure service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
+        DefaultValueFactory = _ => Options.OutgoingAuthStrategy.NotSet
     };
 }

@@ -18,6 +18,8 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
     private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
 
+    public override string Id => "814acadf-ee84-47f9-ad68-2d65ec7dbb07";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -30,7 +32,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
@@ -95,7 +97,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     }
 
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         try
@@ -131,7 +133,8 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
                 options.SourceVaultId,
                 options.UserAssignedIdentityId,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemCreateResult);
         }

@@ -136,6 +136,37 @@
                   "readOnly": false
               }
           }
-      }
+      },
+      "BindSemanticModelConnectionRequest": {
+          "description": "The payload of a bindConnection request to bind a data source reference of a semantic model to a data connection.",
+          "required": ["connectionBinding"],
+          "properties": {
+              "connectionBinding": {
+                  "description": "The details of the connection binding.",
+                  "$ref": "#/definitions/ConnectionBinding",
+                  "readOnly": false
+              }
+          }
+      },
+      "ConnectionBinding": {
+          "description": "The details of the connection binding.",
+          "required": ["connectionDetails"],
+              "type": "object",
+              "properties": {
+              "id": {
+                  "description": "The object ID of the connection.",
+                  "type": "string",
+				  "format": "uuid"
+			  },
+              "connectivityType": {
+		          "description": "The connectivity type of the connection.",
+                  "$ref": "../platform/definitions/connections.json#/definitions/ConnectivityType"
+              },
+              "connectionDetails": {
+                  "description": "The connection details of the connection.",
+                  "$ref": "../platform/definitions/connections.json#/definitions/ListConnectionDetails"
+              }
+          }
+	  }
   }
 }

@@ -18,6 +18,8 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
     private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
     private readonly ILogger<IndexGetCommand> _logger = logger;
 
+    public override string Id => "471292d0-4f6d-49d8-bf29-cbcb7b27dedb";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -53,7 +55,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +71,8 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
             var indexes = await searchService.GetIndexDetails(
                 options.Service!,
                 options.Index,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
         }

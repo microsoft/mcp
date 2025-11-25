@@ -20,6 +20,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
 
+    public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -63,7 +65,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -88,7 +90,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.AccessTier,
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);

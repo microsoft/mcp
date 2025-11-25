@@ -183,14 +183,6 @@ Describe Eventstream metadata.
 
 ```
 
-## Platform part
-
-The platform payload is optional. The platform part is a file that contains the Eventstream metadata information.
-
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
-* [Get Item](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
-
 ## Definition example
 
 Here's an example of a Base64-encoded eventstream definition, where the content from [Example of payload content decoded from Base64](#eventstreamjson-example) is encoded in Base64 and placed in the `payload` field with the path set to `eventstream.json` :

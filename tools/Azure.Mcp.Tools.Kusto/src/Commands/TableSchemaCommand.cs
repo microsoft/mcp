@@ -13,6 +13,8 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
     private const string CommandTitle = "Get Kusto Table Schema";
     private readonly ILogger<TableSchemaCommand> _logger = logger;
 
+    public override string Id => "9a972c48-6797-49bb-9784-8063ad1f7e96";
+
     public override string Name => "schema";
 
     public override string Description =>
@@ -30,7 +32,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -52,7 +54,8 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
                     options.Table!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -63,7 +66,8 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
                     options.Table!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);

@@ -29,7 +29,7 @@ public class KustoCommandTests(ITestOutputHelper output)
             var credentials = new DefaultAzureCredential();
             await Client.PingAsync();
             var clusterInfo = await CallToolAsync(
-                "azmcp_kusto_cluster_get",
+                "kusto_cluster_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionId },
@@ -39,13 +39,13 @@ public class KustoCommandTests(ITestOutputHelper output)
 
             // Create HttpClientService for KustoClient
             var httpClientOptions = new HttpClientOptions();
-            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions));
+            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions), null!);
 
             var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientService);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
-                CancellationToken.None).ConfigureAwait(false);
+                TestContext.Current.CancellationToken).ConfigureAwait(false);
         }
         catch
         {
@@ -59,7 +59,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_list_databases_in_cluster()
     {
         var result = await CallToolAsync(
-            "azmcp_kusto_database_list",
+            "kusto_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -77,7 +77,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_list_kusto_tables()
     {
         var result = await CallToolAsync(
-            "azmcp_kusto_table_list",
+            "kusto_table_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -94,7 +94,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_list_tables_with_direct_uri()
     {
         var clusterInfo = await CallToolAsync(
-            "azmcp_kusto_cluster_get",
+            "kusto_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -105,7 +105,7 @@ public class KustoCommandTests(ITestOutputHelper output)
         Assert.NotNull(clusterUri);
 
         var result = await CallToolAsync(
-            "azmcp_kusto_table_list",
+            "kusto_table_list",
             new()
             {
                 { "cluster-uri", clusterUri },
@@ -121,7 +121,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_get_table_schema()
     {
         var result = await CallToolAsync(
-            "azmcp_kusto_table_schema",
+            "kusto_table_schema",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -140,7 +140,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_get_table_schema_with_direct_uri()
     {
         var clusterInfo = await CallToolAsync(
-            "azmcp_kusto_cluster_get",
+            "kusto_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -151,7 +151,7 @@ public class KustoCommandTests(ITestOutputHelper output)
         Assert.NotNull(clusterUri);
 
         var result = await CallToolAsync(
-            "azmcp_kusto_table_schema",
+            "kusto_table_schema",
             new()
             {
                 { "cluster-uri", clusterUri },
@@ -171,7 +171,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_query_kusto()
     {
         var result = await CallToolAsync(
-            "azmcp_kusto_query",
+            "kusto_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -189,7 +189,7 @@ public class KustoCommandTests(ITestOutputHelper output)
     public async Task Should_query_kusto_with_direct_uri()
     {
         var clusterInfo = await CallToolAsync(
-            "azmcp_kusto_cluster_get",
+            "kusto_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -200,7 +200,7 @@ public class KustoCommandTests(ITestOutputHelper output)
         Assert.NotNull(clusterUri);
 
         var result = await CallToolAsync(
-            "azmcp_kusto_query",
+            "kusto_query",
             new()
             {
                 { "cluster-uri", clusterUri },

@@ -13,6 +13,8 @@ public class TablesSetup : IAreaSetup
 {
     public string Name => "tables";
 
+    public string Title => "Azure Tables Services";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ITablesService, TablesService>();

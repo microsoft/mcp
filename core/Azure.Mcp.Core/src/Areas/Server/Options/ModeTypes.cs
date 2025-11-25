@@ -23,4 +23,9 @@ internal static class ModeTypes
     /// All tools mode - exposes all Azure MCP tools individually (one tool per command).
     /// </summary>
     public const string All = "all";
+
+    /// <summary>
+    /// Consolidated tools mode - exposes consolidated tools that group related Azure operations together.
+    /// </summary>
+    public const string ConsolidatedProxy = "consolidated";
 }

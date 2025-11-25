@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -16,10 +15,12 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
 {
     private const string CommandTitle = "Deploy Model to Azure AI Services";
 
+    public override string Id => "67ef0a4a-3d5b-4d9e-8f07-f2fdc0f60fba";
+
     public override string Name => "deploy";
 
     public override string Description =>
-    "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.";
+    "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Microsoft Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.";
 
     public override string Title => CommandTitle;
 
@@ -66,7 +67,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -92,7 +93,8 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
                 options.SkuCapacity,
                 options.ScaleType,
                 options.ScaleCapacity,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deploymentResource), FoundryJsonContext.Default.ModelDeploymentCommandResult);
         }

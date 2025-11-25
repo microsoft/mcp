@@ -17,7 +17,7 @@
                         }
                     },
                     {
-                        "connectivityType": "OnPremisesDataGateway",
+                        "connectivityType": "OnPremisesGateway",
                         "displayName": "ContosoConnection2",
                         "id": "0b9af1bd-e974-4893-8947-d89d5a560385",
                         "gatewayId": "58376c10-5f61-4024-887e-748df4beae45",

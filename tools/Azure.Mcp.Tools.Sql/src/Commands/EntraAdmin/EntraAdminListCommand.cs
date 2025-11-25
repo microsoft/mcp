@@ -15,6 +15,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 {
     private const string CommandTitle = "List SQL Server Entra ID Administrators";
 
+    public override string Id => "240aac03-0eb0-4cd3-91f8-475577289186";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -36,7 +38,7 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +55,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(administrators ?? []), SqlJsonContext.Default.EntraAdminListResult);
         }

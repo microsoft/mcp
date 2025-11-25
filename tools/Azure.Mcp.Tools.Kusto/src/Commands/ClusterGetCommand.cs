@@ -18,6 +18,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
 
+    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -49,7 +51,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = cluster is null ?
                 null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);

@@ -46,7 +46,7 @@ public class ServerConfigGetCommandTests
             GeoRedundantBackup = "Disabled"
         }, new JsonSerializerOptions { WriteIndented = true });
 
-        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server").Returns(expectedConfig);
+        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var command = new ServerConfigGetCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -57,7 +57,7 @@ public class ServerConfigGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -73,7 +73,7 @@ public class ServerConfigGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server")
+        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var command = new ServerConfigGetCommand(_logger);
@@ -85,7 +85,7 @@ public class ServerConfigGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

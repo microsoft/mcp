@@ -16,6 +16,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
 
+    public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
     public override string Name => "get";
     public override string Description =>
         $"""
@@ -47,7 +48,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +70,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
                 options.TestId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

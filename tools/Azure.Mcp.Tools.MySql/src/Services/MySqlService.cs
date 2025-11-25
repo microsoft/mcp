@@ -17,9 +17,6 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ILogger<MySqlService> _logger = logger;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
-    private readonly object _tokenLock = new object();
 
     // Maximum number of items to return to prevent DoS attacks and performance issues
     private const int MaxResultLimit = 10000;
@@ -67,29 +64,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         "ENCODE(", "DECODE(", "PASSWORD(", "OLD_PASSWORD("
     ];
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        lock (_tokenLock)
-        {
-            if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-            {
-                return _cachedEntraIdAccessToken;
-            }
-        }
-
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-
-        lock (_tokenLock)
-        {
-            _cachedEntraIdAccessToken = accessToken.Token;
-            _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
-        }
-
-        return _cachedEntraIdAccessToken;
+        TokenCredential tokenCredential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, cancellationToken);
+        return accessToken.Token;
     }
 
     private static string NormalizeServerName(string server)
@@ -101,9 +82,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return server;
     }
 
-    private async Task<string> BuildConnectionStringAsync(string server, string user, string database)
+    private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         var host = NormalizeServerName(server);
         return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
     }
@@ -191,19 +172,19 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
         try
         {
-            var connectionString = await BuildConnectionStringAsync(server, user, "mysql");
+            var connectionString = await BuildConnectionStringAsync(server, user, "mysql", cancellationToken);
 
-            await using var resource = await MySqlResource.CreateAsync(connectionString);
+            await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
             var query = "SHOW DATABASES;";
             await using var command = new MySqlCommand(query, resource.Connection);
-            await using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var dbs = new List<string>();
             var dbCount = 0;
-            while (await reader.ReadAsync() && dbCount < MaxResultLimit)
+            while (await reader.ReadAsync(cancellationToken) && dbCount < MaxResultLimit)
             {
                 var dbName = reader.GetString(0);
                 // Filter out system databases
@@ -230,17 +211,17 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query)
+    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken)
     {
         try
         {
             ValidateQuerySafety(query);
 
-            var connectionString = await BuildConnectionStringAsync(server, user, database);
+            var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
-            await using var resource = await MySqlResource.CreateAsync(connectionString);
+            await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
             await using var command = new MySqlCommand(query, resource.Connection);
-            await using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
             var rows = new List<string>();
 
@@ -251,7 +232,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
             var rowCount = 0;
 
-            while (await reader.ReadAsync() && rowCount < MaxResultLimit)
+            while (await reader.ReadAsync(cancellationToken) && rowCount < MaxResultLimit)
             {
                 var row = new List<string>();
                 for (int i = 0; i < reader.FieldCount; i++)
@@ -278,19 +259,19 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table)
+    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken)
     {
         try
         {
-            var connectionString = await BuildConnectionStringAsync(server, user, database);
+            var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
-            await using var resource = await MySqlResource.CreateAsync(connectionString);
+            await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
             var query = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @table;";
             await using var command = new MySqlCommand(query, resource.Connection);
             command.Parameters.AddWithValue("@table", table);
-            await using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var schema = new List<string>();
-            while (await reader.ReadAsync())
+            while (await reader.ReadAsync(cancellationToken))
             {
                 schema.Add($"{reader.GetString(0)}: {reader.GetString(1)}");
             }
@@ -305,17 +286,17 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, string user)
+    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, string user, CancellationToken cancellationToken)
     {
         try
         {
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken);
             if (rg == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             }
             var serverList = new List<string>();
-            await foreach (MySqlFlexibleServerResource server in rg.GetMySqlFlexibleServers().GetAllAsync())
+            await foreach (MySqlFlexibleServerResource server in rg.GetMySqlFlexibleServers().GetAllAsync(cancellationToken: cancellationToken))
             {
                 serverList.Add(server.Data.Name);
             }
@@ -330,19 +311,19 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<List<string>> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database)
+    public async Task<List<string>> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
     {
         try
         {
-            var connectionString = await BuildConnectionStringAsync(server, user, database);
+            var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
-            await using var resource = await MySqlResource.CreateAsync(connectionString);
+            await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
             var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();";
             await using var command = new MySqlCommand(query, resource.Connection);
-            await using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var tables = new List<string>();
             var tableCount = 0;
-            while (await reader.ReadAsync() && tableCount < MaxResultLimit)
+            while (await reader.ReadAsync(cancellationToken) && tableCount < MaxResultLimit)
             {
                 tables.Add(reader.GetString(0));
                 tableCount++;
@@ -364,16 +345,16 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string user, string server)
+    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
         try
         {
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken);
             if (rg == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             }
-            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server);
+            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
             var mysqlServerData = mysqlServer.Value.Data;
             var config = new ServerConfigGetResult
             {
@@ -396,18 +377,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param)
+    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param, CancellationToken cancellationToken)
     {
         try
         {
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken);
             if (rg == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             }
-            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server);
+            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
 
-            var configResponse = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param);
+            var configResponse = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param, cancellationToken);
             if (configResponse?.Value?.Data == null)
             {
                 throw new Exception($"Parameter '{param}' not found.");
@@ -423,18 +404,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
-    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param, string value)
+    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param, string value, CancellationToken cancellationToken)
     {
         try
         {
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken);
             if (rg == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             }
-            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server);
+            var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
 
-            var configuration = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param);
+            var configuration = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param, cancellationToken);
             if (configuration?.Value?.Data == null)
             {
                 throw new Exception($"Parameter '{param}' not found.");
@@ -443,7 +424,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             var configData = configuration.Value.Data;
             configData.Value = value;
 
-            var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData);
+            var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
             return updateOperation.Value.Data.Value;
         }
         catch (Exception ex)
@@ -459,10 +440,10 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         public MySqlConnection Connection { get; }
 
-        public static async Task<MySqlResource> CreateAsync(string connectionString)
+        public static async Task<MySqlResource> CreateAsync(string connectionString, CancellationToken cancellationToken)
         {
             var connection = new MySqlConnection(connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
             return new MySqlResource(connection);
         }
 

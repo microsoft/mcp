@@ -10,14 +10,16 @@ public interface ICosmosService : IDisposable
     Task<List<string>> GetCosmosAccounts(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListDatabases(
         string accountName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListContainers(
         string accountName,
@@ -25,7 +27,8 @@ public interface ICosmosService : IDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryItems(
         string accountName,
@@ -35,5 +38,6 @@ public interface ICosmosService : IDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

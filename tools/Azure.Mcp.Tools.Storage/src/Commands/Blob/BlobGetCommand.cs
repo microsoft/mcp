@@ -18,12 +18,13 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
     private const string CommandTitle = "Get Storage Blob Details";
     private readonly ILogger<BlobGetCommand> _logger = logger;
 
+    public override string Id => "d6bdc190-e68f-49af-82e7-9cf6ec9b8183";
+
     public override string Name => "get";
 
     public override string Description =>
         $"""
-        Gets the details of Azure Storage blobs, including metadata properties, approximate size, last modification time, and more.
-        If a specific blob name is not provided, the command will return details for all blobs within the specified container.
+        List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or get details for a specific blob. Shows blob properties including metadata, size, last modification time, and content properties. If no blob specified, lists all blobs present in the container. Required: account, container <container>, subscription <subscription>. Optional: blob <blob>, tenant <tenant>. Returns: blob name, size, lastModified, contentType, contentMD5, metadata, and blob properties. Do not use this tool to list containers in the storage account.
         """;
 
     public override string Title => CommandTitle;
@@ -51,7 +52,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +70,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
                 options.Blob,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy
+                options.RetryPolicy,
+                cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);

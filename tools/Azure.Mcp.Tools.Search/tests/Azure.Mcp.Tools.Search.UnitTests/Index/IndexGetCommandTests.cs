@@ -42,7 +42,8 @@ public class IndexGetCommandTests
         _searchService.GetIndexDetails(
             Arg.Is("service123"),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
         var command = new IndexGetCommand(_logger);
@@ -50,7 +51,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -68,7 +69,8 @@ public class IndexGetCommandTests
         _searchService.GetIndexDetails(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new IndexGetCommand(_logger);
@@ -76,7 +78,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -97,7 +99,8 @@ public class IndexGetCommandTests
         _searchService.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexGetCommand(_logger);
@@ -105,7 +108,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -121,7 +124,11 @@ public class IndexGetCommandTests
         var expectedDefinition = CreateMockIndexDefinition();
 
         // When using ThrowsAsync or Returns with NSubstitute, we need to match the exact parameter signature
-        _searchService.GetIndexDetails(Arg.Is(serviceName), Arg.Is(indexName), Arg.Any<RetryPolicyOptions?>())
+        _searchService.GetIndexDetails(
+            Arg.Is(serviceName),
+            Arg.Is(indexName),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
 
         var command = new IndexGetCommand(_logger);
@@ -130,7 +137,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -154,7 +161,11 @@ public class IndexGetCommandTests
         var serviceName = "service123";
         var indexName = "index1";
 
-        _searchService.GetIndexDetails(Arg.Is(serviceName), Arg.Is(indexName), Arg.Any<RetryPolicyOptions?>())
+        _searchService.GetIndexDetails(
+            Arg.Is(serviceName),
+            Arg.Is(indexName),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new IndexGetCommand(_logger);
@@ -163,7 +174,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -185,7 +196,8 @@ public class IndexGetCommandTests
         _searchService.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexGetCommand(_logger);
@@ -194,7 +206,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -212,7 +224,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

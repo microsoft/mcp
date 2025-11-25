@@ -20,12 +20,13 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 {
     private const string CommandTitle = "Send SMS Message";
     private readonly ILogger<SmsSendCommand> _logger = logger;
+    public override string Id => "a0dc94f3-25ac-4971-a552-0d90fd57e902";
 
     public override string Name => "send";
 
     public override string Description =>
         """
-        Sends SMS messages to one or more recipients using Azure Communication Services.
+        Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.
         Returns message IDs and delivery status for each sent message.
         """;
 
@@ -36,7 +37,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         Destructive = false,
         ReadOnly = true,
         OpenWorld = true,
-        Idempotent = true,
+        Idempotent = false,
         Secret = false,
         LocalRequired = false
     };
@@ -62,7 +63,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -85,7 +86,8 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
                 options.EnableDeliveryReport,
                 options.Tag,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = results?.Count > 0 ?

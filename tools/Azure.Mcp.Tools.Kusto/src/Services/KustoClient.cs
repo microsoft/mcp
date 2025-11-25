@@ -7,7 +7,7 @@ using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
-public class KustoClient(
+public sealed class KustoClient(
     string clusterUri,
     TokenCredential tokenCredential,
     string userAgent,
@@ -16,7 +16,10 @@ public class KustoClient(
     private readonly string _clusterUri = clusterUri;
     private readonly TokenCredential _tokenCredential = tokenCredential;
     private readonly string _userAgent = userAgent;
-    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(clusterUri));
+    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(clusterUri), client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(240);
+    });
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
     private static readonly string s_default_scope = "https://kusto.kusto.windows.net/.default";
@@ -34,7 +37,7 @@ public class KustoClient(
         return await SendRequestAsync(_httpClient, httpRequest, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken = default)
+    private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken)
     {
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
         var scopes = new string[]
@@ -67,12 +70,12 @@ public class KustoClient(
         return httpRequest;
     }
 
-    private async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken = default)
+    private async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
     {
         var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
         if (!httpResponse.IsSuccessStatusCode)
         {
-            string errorContent = await httpResponse.Content.ReadAsStringAsync();
+            string errorContent = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
             throw new HttpRequestException($"Request failed with status code {httpResponse.StatusCode}: {errorContent}");
         }
         return KustoResult.FromHttpResponseMessage(httpResponse);

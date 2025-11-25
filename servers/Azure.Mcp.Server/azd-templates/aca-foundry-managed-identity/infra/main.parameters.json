@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "entraAppDisplayName": {
+      "value": "Azure MCP Storage Server API"
+    },
+    "acaName": {
+      "value": "azure-mcp-storage-server"
+    },
+    "storageResourceId": {
+      "value": "${STORAGE_RESOURCE_ID}"
+    },
+    "aifProjectResourceId": {
+      "value": "${AIF_PROJECT_RESOURCE_ID}"
+    },
+    "appInsightsConnectionString": {
+      "value": "DISABLED"
+    }
+  }
+}

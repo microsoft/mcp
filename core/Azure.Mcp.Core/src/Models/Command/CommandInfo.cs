@@ -9,6 +9,9 @@ namespace Azure.Mcp.Core.Models.Command;
 
 public class CommandInfo
 {
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 

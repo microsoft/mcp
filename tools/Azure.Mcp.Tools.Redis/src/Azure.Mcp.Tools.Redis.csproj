@@ -9,11 +9,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.Redis" />
     <PackageReference Include="Azure.ResourceManager.RedisEnterprise" />
+    <PackageReference Include="Azure.ResourceManager.Resources" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />

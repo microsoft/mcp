@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "domainId": "20acb9a8-d54a-4ecd-ae60-27fc226668b6"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "20acb9a8-d54a-4ecd-ae60-27fc226668b6",
+                "displayName": "Finance",
+                "description": "This domain is used for identifying financial data and reports.",
+                "parentDomainId": "541488c9-eb1f-4ee1-8997-10bb2fe6d58c"
+            }
+        }
+    }
+}

@@ -17,6 +17,8 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
 {
     private const string CommandTitle = "Rename SQL Database";
 
+    public override string Id => "3bddfa1a-ab9d-44f0-830a-e56a159e5469";
+
     public override string Name => "rename";
 
     public override string Description =>
@@ -47,11 +49,11 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
     protected override DatabaseRenameOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.NewDatabaseName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.NewDatabaseName);
+        options.NewDatabaseName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.NewDatabaseNameOption.Name);
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +72,8 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
                 options.NewDatabaseName!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseRenameResult);
         }

@@ -1,0 +1,22 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "diagnostics": {
+          "status": "Enabled",
+          "destination": {
+            "type": "Lakehouse",
+            "lakehouse": {
+              "referenceType": "ById",
+              "itemId": "33d48b2c-5b7c-42e2-8467-87fecb105fdd",
+              "workspaceId": "85173301-af01-49c9-b667-03edc44517da"
+            }
+          }
+        }
+      }
+    }
+  }
+}

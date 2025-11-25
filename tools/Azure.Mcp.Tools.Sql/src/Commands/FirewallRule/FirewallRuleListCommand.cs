@@ -15,6 +15,8 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 {
     private const string CommandTitle = "List SQL Server Firewall Rules";
 
+    public override string Id => "1f55cab9-0bbb-499a-a9ac-1492f11c043a";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -36,7 +38,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +55,8 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);
         }

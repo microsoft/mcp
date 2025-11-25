@@ -18,6 +18,9 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
 {
     private const string CommandTitle = "Get Service Bus Topic Details";
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
+
+    public override string Id => "c2487c40-58d0-40f7-98f1-105744865a11";
+
     public override string Name => "details";
 
     public override string Description =>
@@ -54,7 +57,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +73,8 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
                 options.Namespace!,
                 options.TopicName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }

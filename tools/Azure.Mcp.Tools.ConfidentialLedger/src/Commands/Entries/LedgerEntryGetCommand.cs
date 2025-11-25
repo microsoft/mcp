@@ -16,6 +16,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
     private const string CommandTitle = "Retrieve Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryGetCommand> _logger = logger;
+    public override string Id => "f1281e49-6392-455d-8caf-eb58428e8f5e";
 
     public override string Name => "get";
 
@@ -49,7 +50,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -63,7 +64,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
             var result = await _service.GetLedgerEntryAsync(
                 options.LedgerName!,
                 options.TransactionId!,
-                options.CollectionId).ConfigureAwait(false);
+                options.CollectionId,
+                cancellationToken).ConfigureAwait(false);
 
             context.Response.Results = ResponseResult.Create(
                 result,

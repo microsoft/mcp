@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -130,11 +133,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        if (learn && string.IsNullOrEmpty(tool))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
         }
-        else if (learn && !string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        else if (learn && !string.IsNullOrEmpty(tool))
         {
             return await ToolLearnModeAsync(request, intent ?? "", tool!, cancellationToken);
         }
@@ -159,14 +162,19 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         };
     }
 
-    private async Task<string> GetRootToolsJsonAsync()
+    /// <summary>
+    /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
+    /// </summary>
+    /// <returns>A JSON serialized string with each area's name and a description of operations available in
+    /// that namespace.</returns>
+    private async Task<string> GetRootToolsJsonAsync(CancellationToken cancellationToken)
     {
         if (_cachedRootToolsJson != null)
         {
             return _cachedRootToolsJson;
         }
 
-        var serverList = await _discoveryStrategy.DiscoverServersAsync();
+        var serverList = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
         var tools = new List<Tool>(serverList.Count());
         foreach (var server in serverList)
         {
@@ -184,7 +192,13 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         return toolsJson;
     }
 
-    private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool)
+    /// <summary>
+    /// Gets the set of <see cref="Core.Commands.IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// </summary>
+    /// <param name="request">Calling request</param>
+    /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
+    /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
+    private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         if (_cachedToolListsJson.TryGetValue(tool, out var cachedJson))
         {
@@ -192,8 +206,8 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         }
 
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions);
-        var listTools = await client.ListToolsAsync();
+        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
+        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
         var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
         _cachedToolListsJson[tool] = toolsJson;
 
@@ -202,7 +216,8 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
-        var toolsJson = await GetRootToolsJsonAsync();
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        var toolsJson = await GetRootToolsJsonAsync(cancellationToken);
         var learnResponse = new CallToolResult
         {
             Content =
@@ -232,7 +247,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
-        var toolsJson = await GetToolListJsonAsync(request, tool);
+        var activity = Activity.Current?
+            .SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolArea, tool);
+
+        var toolsJson = await GetToolListJsonAsync(request, tool, cancellationToken);
         if (string.IsNullOrEmpty(toolsJson))
         {
             return await RootLearnModeAsync(request, intent, cancellationToken);
@@ -273,7 +292,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         try
         {
             var clientOptions = CreateClientOptions(request.Server);
-            client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions);
+            client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
             if (client == null)
             {
                 _logger.LogError("Failed to get provider client for tool: {Tool}", tool);
@@ -284,6 +303,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         {
             _logger.LogError(ex, "Exception thrown while getting provider client for tool: {Tool}", tool);
             return await RootLearnModeAsync(request, intent, cancellationToken);
+        }
+
+        var activity = Activity.Current;
+        if (activity != null)
+        {
+            activity.SetTag(TagName.IsServerCommandInvoked, true)
+                    .SetTag(TagName.ToolArea, tool)
+                    .SetTag(TagName.ToolName, command);
         }
 
         try
@@ -435,15 +462,15 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             Dictionary<string, object?> parameters = [];
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var paramsProp) && paramsProp.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = paramsProp.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value);
+                    parameters = paramsProp.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value.Clone());
                 }
             }
             if (commandName != null && commandName != "Unknown")

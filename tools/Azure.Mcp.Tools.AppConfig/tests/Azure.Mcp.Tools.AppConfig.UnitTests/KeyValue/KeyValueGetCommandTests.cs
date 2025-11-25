@@ -58,13 +58,14 @@ public class KeyValueGetCommandTests
           Arg.Any<string?>(),
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -95,13 +96,14 @@ public class KeyValueGetCommandTests
           "key1",
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--key-filter", "key1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -133,13 +135,14 @@ public class KeyValueGetCommandTests
           Arg.Any<string?>(),
           "prod",
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--label-filter", "prod"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -175,7 +178,8 @@ public class KeyValueGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
         var args = _commandDefinition.Parse([
@@ -186,7 +190,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -221,7 +225,8 @@ public class KeyValueGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
         var args = _commandDefinition.Parse([
@@ -231,7 +236,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -258,7 +263,8 @@ public class KeyValueGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Setting not found"));
 
         var args = _commandDefinition.Parse([
@@ -268,7 +274,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -284,7 +290,7 @@ public class KeyValueGetCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -302,7 +308,7 @@ public class KeyValueGetCommandTests
             "--key-filter", "keyfilter"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -1,21 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
+using System.Threading;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
+using Azure.Search.Documents.Agents;
+using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
-public sealed class SearchService(ISubscriptionService subscriptionService, ICacheService cacheService) : BaseAzureService, ISearchService
+public sealed class SearchService(
+    ISubscriptionService subscriptionService,
+    ICacheService cacheService,
+    ITenantService tenantService)
+    : BaseAzureService(tenantService), ISearchService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -27,7 +36,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
     public async Task<List<string>> ListServices(
         string subscription,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -35,17 +45,17 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
             ? $"{SearchServicesCacheKey}_{subscription}"
             : $"{SearchServicesCacheKey}_{subscription}_{tenantId}";
 
-        var cachedServices = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationServices);
+        var cachedServices = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationServices, cancellationToken);
         if (cachedServices != null)
         {
             return cachedServices;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var services = new List<string>();
         try
         {
-            await foreach (var service in subscriptionResource.GetSearchServicesAsync())
+            await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
             {
                 if (service?.Data?.Name != null)
                 {
@@ -53,7 +63,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
                 }
             }
 
-            await _cacheService.SetAsync(CacheGroup, cacheKey, services, s_cacheDurationServices);
+            await _cacheService.SetAsync(CacheGroup, cacheKey, services, s_cacheDurationServices, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -66,7 +76,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
     public async Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
@@ -76,8 +87,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         {
             try
             {
-                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
-                await foreach (var index in searchClient.GetIndexesAsync())
+                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+                await foreach (var index in searchClient.GetIndexesAsync(cancellationToken: cancellationToken))
                 {
                     indexes.Add(MapToIndexInfo(index));
                 }
@@ -92,8 +103,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         {
             try
             {
-                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
-                var index = await searchClient.GetIndexAsync(indexName);
+                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+                var index = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
 
                 indexes.Add(MapToIndexInfo(index.Value));
             }
@@ -110,7 +121,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         string serviceName,
         string indexName,
         string searchText,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(serviceName), serviceName),
@@ -119,8 +131,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
 
         try
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
-            var indexDefinition = await searchClient.GetIndexAsync(indexName);
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+            var indexDefinition = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
             var client = searchClient.GetSearchClient(indexName);
 
             var options = new SearchOptions
@@ -133,7 +145,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
             var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
             ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
 
-            var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options);
+            var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
             return await ProcessSearchResults(searchResponse);
         }
@@ -141,6 +153,137 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         {
             throw new Exception($"Error querying Search index: {ex.Message}", ex);
         }
+    }
+
+    public async Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
+        string serviceName,
+        string? knowledgeSourceName = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        try
+        {
+            var sources = new List<KnowledgeSourceInfo>();
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+
+            if (string.IsNullOrEmpty(knowledgeSourceName))
+            {
+                await foreach (var source in searchClient.GetKnowledgeSourcesAsync(cancellationToken: cancellationToken))
+                {
+                    sources.Add(new KnowledgeSourceInfo(source.Name, source.GetType().Name, source.Description));
+                }
+            }
+            else
+            {
+                var result = await searchClient.GetKnowledgeSourceAsync(knowledgeSourceName, cancellationToken: cancellationToken);
+                if (result?.Value != null)
+                {
+                    sources.Add(new KnowledgeSourceInfo(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
+                }
+            }
+
+            return sources;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge sources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
+        string serviceName,
+        string? knowledgeBaseName = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        try
+        {
+            var bases = new List<KnowledgeBaseInfo>();
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+
+            if (string.IsNullOrEmpty(knowledgeBaseName))
+            {
+                await foreach (var knowledgeBase in searchClient.GetKnowledgeAgentsAsync(cancellationToken: cancellationToken))
+                {
+                    bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
+                }
+            }
+            else
+            {
+                var result = await searchClient.GetKnowledgeAgentAsync(knowledgeBaseName, cancellationToken: cancellationToken);
+                if (result?.Value != null)
+                {
+                    if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        bases.Add(new KnowledgeBaseInfo(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
+                    }
+                }
+            }
+
+            return bases;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge bases: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> RetrieveFromKnowledgeBase(
+        string serviceName,
+        string baseName,
+        string? query,
+        IEnumerable<(string role, string message)>? messages,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
+
+        try
+        {
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+
+            var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+            ConfigureRetryPolicy(clientOptions, retryPolicy);
+
+            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
+
+            var request = new KnowledgeAgentRetrievalRequest(
+                messages != null ?
+                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
+                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
+
+            var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
+
+            var response = results.GetRawResponse().Content ?? throw new InvalidOperationException("Response had no content");
+            return await ProcessRetrieveResponse(response.ToStream());
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
+        }
+    }
+
+    internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
+    {
+        using var jsonDoc = await JsonDocument.ParseAsync(responseStream);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            foreach (var prop in jsonDoc.RootElement.EnumerateObject())
+            {
+                if (prop.Name is "response" or "references")
+                {
+                    prop.WriteTo(writer);
+                }
+            }
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     private static List<string> FindVectorFields(SearchIndex indexDefinition)
@@ -179,20 +322,20 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         return vectorizableFields;
     }
 
-    private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy)
+    private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
         var key = $"{SearchServicesCacheKey}_{serviceName}";
-        var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients);
+        var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
         {
-            var credential = await GetCredential();
+            var credential = await GetCredential(cancellationToken);
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var endpoint = new Uri($"https://{serviceName}.search.windows.net");
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
-            await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients);
+            await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients, cancellationToken);
         }
         return searchClient;
     }

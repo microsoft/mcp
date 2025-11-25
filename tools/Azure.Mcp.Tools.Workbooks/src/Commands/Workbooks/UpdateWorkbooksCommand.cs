@@ -15,14 +15,13 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
+    public override string Id => "9efdc32c-22bc-4b85-8b5c-2fbefc0e927e";
 
     public override string Name => "update";
 
     public override string Description =>
         """
-        Updates properties of a workbook, including its display name and serialized content.
-        At least one property must be provided for the update operation.
-        Returns the updated workbook object upon successful completion.
+        Updates properties of an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.
         """;
 
     public override string Title => CommandTitle;
@@ -54,7 +53,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -71,7 +70,8 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.DisplayName,
                 options.SerializedContent,
                 options.RetryPolicy,
-                options.Tenant) ?? throw new InvalidOperationException("Failed to update workbook");
+                options.Tenant,
+                cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 
             context.Response.Results = ResponseResult.Create(new(updatedWorkbook), WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
         }

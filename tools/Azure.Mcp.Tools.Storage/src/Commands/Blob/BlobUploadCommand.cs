@@ -15,6 +15,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
 
+    public override string Id => "aafb82ac-e35a-4800-b362-c642a3ac1e17";
+
     public override string Name => "upload";
 
     public override string Description =>
@@ -48,7 +50,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +70,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
                 options.LocalFilePath!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
 

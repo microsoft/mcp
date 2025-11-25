@@ -18,12 +18,14 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     private const string CommandTitle = "Get Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
 
+    public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
+
     public override string Name => "get";
 
     public override string Description =>
         $"""
         Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.
-        If health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.
+        If health model is provided, don't use this command, instead use monitor_healthmodels_entity_get tool.
         """;
 
     public override string Title => CommandTitle;
@@ -51,7 +53,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +69,8 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
             var status = await resourceHealthService.GetAvailabilityStatusAsync(
                 options.ResourceId!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(status), ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }

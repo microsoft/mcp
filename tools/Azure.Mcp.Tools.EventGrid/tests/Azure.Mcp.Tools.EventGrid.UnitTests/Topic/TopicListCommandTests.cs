@@ -51,13 +51,13 @@ public class TopicListCommandTests
             new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
         };
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedTopics));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -78,13 +78,13 @@ public class TopicListCommandTests
         // Arrange
         var subscriptionId = "sub123";
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -104,13 +104,13 @@ public class TopicListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "sub123";
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -134,14 +134,14 @@ public class TopicListCommandTests
                 new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
                 new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
             };
-            _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedTopics);
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)

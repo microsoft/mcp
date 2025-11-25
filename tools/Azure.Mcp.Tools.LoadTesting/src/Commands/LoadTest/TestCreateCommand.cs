@@ -16,6 +16,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 {
     private const string _commandTitle = "Test Create";
     private readonly ILogger<TestCreateCommand> _logger = logger;
+
+    public override string Id => "2153384b-02ea-47b3-a069-7f5f9a709d66";
     public override string Name => "create";
     public override string Description =>
         $"""
@@ -61,7 +63,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -88,7 +90,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
                 options.RampUpTime,
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

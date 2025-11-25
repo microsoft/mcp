@@ -18,6 +18,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
 
+    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -67,7 +69,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -95,7 +97,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
                 options.IncludeServiceInstructionTemplates,
                 options.PricingAudience,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = result != null ?

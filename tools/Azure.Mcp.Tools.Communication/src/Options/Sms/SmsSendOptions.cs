@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Communication.Options.Sms;
 
 public class SmsSendOptions : BaseCommunicationOptions
 {
-    [JsonPropertyName(CommunicationOptionDefinitions.FromName)]
+    [JsonPropertyName(CommunicationOptionDefinitions.FromSmsName)]
     public string? From { get; set; }
 
     [JsonPropertyName(CommunicationOptionDefinitions.ToName)]

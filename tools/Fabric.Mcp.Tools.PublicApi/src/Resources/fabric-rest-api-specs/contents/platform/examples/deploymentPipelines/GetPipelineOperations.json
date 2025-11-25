@@ -1,0 +1,35 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824"
+    },
+    "responses": {
+        "200": {
+            "value": [
+                {
+                    "id": "1065e6a3-a020-4c0c-ada7-92b5fe99eec5",
+                    "type": "Deploy",
+                    "status": "Succeeded",
+                    "lastUpdatedTime": "2020-12-13T09:26:43.153",
+                    "executionStartTime": "2020-12-13T09:25:43.153Z",
+                    "executionEndTime": "2020-12-13T09:26:43.153Z",
+                    "sourceStageOrder": 0,
+                    "targetStageOrder": 1,
+                    "note": {
+                        "content": "Sample note",
+                        "isTruncated": false
+                    },
+                    "preDeploymentDiffInformation": {
+                        "newItemsCount": 0,
+                        "differentItemsCount": 0,
+                        "noDifferenceItemsCount": 1
+                    },
+                    "performedBy": {
+                        "id": "a35d842b-90d5-59a2-c56a-5f8fcff0bf9d",
+                        "displayName": "john@contoso.com",
+                        "type": "User"
+                    }
+                }
+            ]
+        }
+    }
+}

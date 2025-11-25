@@ -1,0 +1,50 @@
+name: "Auto-assign milestone for Bug Bash template issues"
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+env:
+  TARGET_MILESTONE: "2025-10"
+
+jobs:
+  set-milestone:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.issue.state == 'open' &&
+      contains(join(github.event.issue.labels.*.name, ','), 'Bug-Bash') &&
+      contains(join(github.event.issue.labels.*.name, ','), 'Azure.Mcp.Server') &&
+      contains(github.event.issue.body, '<!-- TEMPLATE: bug-bash-v1 -->')
+    steps:
+      - name: Apply milestone if missing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = context.issue.number;
+
+            if (context.payload.issue.milestone) {
+              core.info('Issue already has a milestone. Skipping.');
+              return;
+            }
+
+            const targetTitle = process.env.TARGET_MILESTONE;
+            const milestones = await github.paginate(
+              github.rest.issues.listMilestones,
+              { owner, repo, state: "open", per_page: 100 }
+            );
+            const ms = milestones.find(m => m.title === targetTitle);
+            if (!ms) {
+              core.warning(`Milestone "${targetTitle}" not found. Create it first.`);
+              return;
+            }
+
+            await github.rest.issues.update({
+              owner, repo, issue_number, milestone: ms.number
+            });
+            core.info(`Milestone "${targetTitle}" applied to #${issue_number}.`);

@@ -6,6 +6,7 @@ using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
@@ -17,7 +18,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     public async Task Should_list_foundry_models()
     {
         var result = await CallToolAsync(
-            "azmcp_foundry_models_list",
+            "foundry_models_list",
             new()
             {
                 { "search-for-free-playground", "true" }
@@ -34,7 +35,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "azmcp_foundry_models_deployments_list",
+            "foundry_models_deployments_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -51,7 +52,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     {
         var deploymentName = $"test-deploy-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         var result = await CallToolAsync(
-            "azmcp_foundry_models_deploy",
+            "foundry_models_deploy",
             new()
             {
                 { "deployment", deploymentName },
@@ -73,7 +74,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "azmcp_foundry_knowledge_index_list",
+            "foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -97,7 +98,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // First get list of indexes to find one to test with
         var listResult = await CallToolAsync(
-            "azmcp_foundry_knowledge_index_list",
+            "foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", endpoint },
@@ -111,7 +112,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
             var indexName = firstIndex.GetProperty("name").GetString();
 
             var result = await CallToolAsync(
-                "azmcp_foundry_knowledge_index_schema",
+                "foundry_knowledge_index_schema",
                 new()
                 {
                     { "endpoint", endpoint },
@@ -137,7 +138,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_create-completion",
+            "foundry_openai_create-completion",
             new()
             {
                 { "subscription", subscriptionId },
@@ -184,7 +185,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_embeddings-create",
+            "foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -276,7 +277,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var dimensions = 512; // Test with reduced dimensions if supported
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_embeddings-create",
+            "foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -327,7 +328,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_models-list",
+            "foundry_openai_models-list",
             new()
             {
                 { "subscription", subscriptionId },
@@ -426,6 +427,37 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
     [Fact]
     [Trait("Category", "Live")]
+    public async Task Should_create_agent()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var agentName = $"test-agent-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        // Model deployment name hardcoded in the test-resources.bicep
+        var modelDeploymentName = "gpt-4o";
+        var systemInstruction = "Help user with your knowledge";
+        var result = await CallToolAsync(
+            "foundry_agents_create",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "model-deployment", modelDeploymentName },
+                { "agent-name", agentName },
+                { "system-instruction", systemInstruction }
+            });
+
+        var agentIdResult = result.AssertProperty("agentId");
+        var agentNameResult = result.AssertProperty("agentName");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        var modelDeploymentNameResult = result.AssertProperty("modelDeploymentName");
+        Assert.Equal(JsonValueKind.String, agentIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, agentNameResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, modelDeploymentNameResult.ValueKind);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
     public async Task Should_connect_agent()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -437,7 +469,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_connect",
+            "foundry_agents_connect",
             new()
             {
                 { "agent-id", agentId },
@@ -467,7 +499,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_list",
+            "foundry_agents_list",
             new()
             {
                 { "endpoint", endpoint }
@@ -495,7 +527,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_query-and-evaluate",
+            "foundry_agents_query-and-evaluate",
             new()
             {
                 { "agent-id", agentId },
@@ -544,7 +576,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var azureOpenAIEndpoint = $"https://{accounts}.cognitiveservices.azure.com";
         var azureOpenAIDeployment = "gpt-4o";
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_evaluate",
+            "foundry_agents_evaluate",
             new()
             {
                 { "evaluator", evaluatorName },
@@ -588,7 +620,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_chat-completions-create",
+            "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -675,7 +707,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_chat-completions-create",
+            "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -754,11 +786,325 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.Equal(deploymentName, commandDeploymentName.GetString());
     }
 
+    [Fact]
+    public async Task Should_list_all_foundry_resources_in_subscription()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should have at least one resource (the test resource)
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        // Verify first resource structure
+        var firstResource = resources.EnumerateArray().First();
+
+        // Verify required properties exist
+        var resourceName = firstResource.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
+        Assert.NotEmpty(resourceName.GetString()!);
+
+        var resourceGroup = firstResource.AssertProperty("resourceGroup");
+        Assert.Equal(JsonValueKind.String, resourceGroup.ValueKind);
+        Assert.NotEmpty(resourceGroup.GetString()!);
+
+        var subscriptionName = firstResource.AssertProperty("subscriptionName");
+        Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
+        Assert.NotEmpty(subscriptionName.GetString()!);
+
+        var location = firstResource.AssertProperty("location");
+        Assert.Equal(JsonValueKind.String, location.ValueKind);
+        Assert.NotEmpty(location.GetString()!);
+
+        var endpoint = firstResource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+
+        var kind = firstResource.AssertProperty("kind");
+        Assert.Equal(JsonValueKind.String, kind.ValueKind);
+        Assert.NotEmpty(kind.GetString()!);
+
+        var skuName = firstResource.AssertProperty("skuName");
+        Assert.Equal(JsonValueKind.String, skuName.ValueKind);
+        Assert.NotEmpty(skuName.GetString()!);
+
+        // Verify deployments array exists (may be empty)
+        var deployments = firstResource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_foundry_resources_in_resource_group()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should have at least one resource in this resource group
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        // Verify all resources are in the specified resource group
+        foreach (var resource in resources.EnumerateArray())
+        {
+            var rg = resource.GetProperty("resourceGroup");
+            Assert.Equal(resourceGroup, rg.GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_specific_foundry_resource()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.ResourceGroupName;
+        var resourceName = Settings.ResourceBaseName;
+
+        var result = await CallToolAsync(
+            "foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should return exactly one resource
+        Assert.Single(resources.EnumerateArray());
+
+        var resource = resources.EnumerateArray().First();
+
+        // Verify resource details match the request
+        var returnedResourceName = resource.AssertProperty("resourceName");
+        Assert.Equal(resourceName, returnedResourceName.GetString());
+
+        var returnedResourceGroup = resource.AssertProperty("resourceGroup");
+        Assert.Equal(resourceGroup, returnedResourceGroup.GetString());
+
+        // Verify all required properties
+        var subscriptionName = resource.AssertProperty("subscriptionName");
+        Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
+        Assert.NotEmpty(subscriptionName.GetString()!);
+
+        var location = resource.AssertProperty("location");
+        Assert.Equal(JsonValueKind.String, location.ValueKind);
+        Assert.NotEmpty(location.GetString()!);
+
+        var endpoint = resource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+        Assert.StartsWith("https://", endpoint.GetString());
+
+        var kind = resource.AssertProperty("kind");
+        Assert.Equal(JsonValueKind.String, kind.ValueKind);
+        Assert.Contains(kind.GetString(), new[] { "OpenAI", "AIServices", "CognitiveServices" });
+
+        var skuName = resource.AssertProperty("skuName");
+        Assert.Equal(JsonValueKind.String, skuName.ValueKind);
+        Assert.NotEmpty(skuName.GetString()!);
+
+        // Verify deployments array structure
+        var deployments = resource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+
+        // If deployments exist, verify their structure
+        var deploymentsArray = deployments.EnumerateArray().ToArray();
+        if (deploymentsArray.Length > 0)
+        {
+            var firstDeployment = deploymentsArray[0];
+
+            var deploymentName = firstDeployment.AssertProperty("deploymentName");
+            Assert.Equal(JsonValueKind.String, deploymentName.ValueKind);
+            Assert.NotEmpty(deploymentName.GetString()!);
+
+            var modelName = firstDeployment.AssertProperty("modelName");
+            Assert.Equal(JsonValueKind.String, modelName.ValueKind);
+            Assert.NotEmpty(modelName.GetString()!);
+
+            // Optional properties - verify structure if present
+            if (firstDeployment.TryGetProperty("modelVersion", out var modelVersion))
+            {
+                Assert.Equal(JsonValueKind.String, modelVersion.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("modelFormat", out var modelFormat))
+            {
+                Assert.Equal(JsonValueKind.String, modelFormat.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("skuName", out var deploymentSkuName))
+            {
+                Assert.Equal(JsonValueKind.String, deploymentSkuName.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("skuCapacity", out var skuCapacity))
+            {
+                Assert.Equal(JsonValueKind.Number, skuCapacity.ValueKind);
+                Assert.True(skuCapacity.GetInt32() > 0);
+            }
+
+            if (firstDeployment.TryGetProperty("provisioningState", out var provisioningState))
+            {
+                Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_foundry_resource_using_static_resources()
+    {
+        // Use the static OpenAI account that's defined in test-resources.bicep
+        var staticOpenAIAccount = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "azmcp-test");
+        var staticResourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", staticResourceGroup },
+                { "resource-name", staticOpenAIAccount },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should return the static resource
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        var resource = resources.EnumerateArray().First();
+
+        // Verify resource matches static configuration
+        var resourceName = resource.AssertProperty("resourceName");
+        Assert.Equal(staticOpenAIAccount, resourceName.GetString());
+
+        var resourceGroup = resource.AssertProperty("resourceGroup");
+        Assert.Equal(staticResourceGroup, resourceGroup.GetString());
+
+        // Verify endpoint is valid
+        var endpoint = resource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+        Assert.StartsWith("https://", endpoint.GetString());
+
+        // Verify deployments exist for static resource
+        var deployments = resource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+
+        // Static resource should have at least the gpt-4o-mini deployment
+        var deploymentsArray = deployments.EnumerateArray().ToArray();
+        if (deploymentsArray.Length > 0)
+        {
+            // Check if gpt-4o-mini deployment exists
+            var hasExpectedDeployment = deploymentsArray.Any(d =>
+            {
+                if (d.TryGetProperty("deploymentName", out var name) ||
+                    d.TryGetProperty("modelName", out name))
+                {
+                    var nameStr = name.GetString();
+                    return nameStr != null && nameStr.Contains("gpt-4o-mini", StringComparison.OrdinalIgnoreCase);
+                }
+                return false;
+            });
+
+            Output.WriteLine($"Found {deploymentsArray.Length} deployment(s) on static resource");
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_create_thread()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var userMessage = "Message from user";
+        var result = await CallToolAsync(
+            "foundry_threads_create",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "user-message", userMessage }
+            });
+        var threadIdResult = result.AssertProperty("threadId");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_list_threads()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var result = await CallToolAsync(
+            "foundry_threads_list",
+            new()
+            {
+                { "endpoint", endpoint }
+            });
+        var threads = result.AssertProperty("threads");
+        Assert.Equal(JsonValueKind.Array, threads.ValueKind);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_get_messages()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var threadId = await CreateThread("Hello from user", endpoint);
+        var result = await CallToolAsync(
+            "foundry_threads_get-messages",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "thread-id", threadId }
+            });
+        var threadIdResult = result.AssertProperty("threadId");
+        var messagesResult = result.AssertProperty("messages");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.Array, messagesResult.ValueKind);
+    }
+
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
     {
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
         var client = new PersistentAgentsClient(
             projectEndpoint,
-            new CustomChainedCredential());
+            await tokenProvider.GetTokenCredentialAsync(default, default));
 
         var bingConnectionId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.CognitiveServices/accounts/{Settings.ResourceBaseName}/projects/{Settings.ResourceBaseName}-ai-projects/connections/{Settings.ResourceBaseName}-bing-connection";
 
@@ -772,5 +1118,18 @@ public class FoundryCommandTests(ITestOutputHelper output)
             instructions: "You politely help with general knowledge questions. Use the bing search tool to help ground your responses.",
             tools: [new BingGroundingToolDefinition(bingGroundingToolParameters)]);
         return agent.Id;
+    }
+
+    private async Task<string> CreateThread(string userMessage, string projectEndpoint)
+    {
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
+        var client = new PersistentAgentsClient(
+            projectEndpoint,
+            await tokenProvider.GetTokenCredentialAsync(default, default));
+
+        PersistentAgentThread thread = await client.Threads.CreateThreadAsync([
+            new(MessageRole.User, userMessage)]);
+        return thread.Id;
     }
 }

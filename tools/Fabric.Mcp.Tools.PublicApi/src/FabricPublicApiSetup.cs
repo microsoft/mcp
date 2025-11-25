@@ -14,6 +14,8 @@ public class FabricPublicApiSetup : IAreaSetup
 {
     public string Name => "publicapis";
 
+    public string Title => "Microsoft Fabric Public APIs";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
@@ -46,7 +48,7 @@ public class FabricPublicApiSetup : IAreaSetup
             This tool provides read-only access to Microsoft Fabric's public API documentation 
             repository on GitHub. It does NOT interact with live Fabric resources or require 
             authentication - it only retrieves API specifications and examples.
-            """);
+            """, Title);
 
         // Create public apis subgroups
         var platform = new CommandGroup("platform", "Platform API Operations - Commands for accessing Microsoft Fabric platform-level APIs, including authentication, user management, and tenant configuration.");

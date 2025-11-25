@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -73,7 +76,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act
-        var result = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -105,8 +108,8 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act - Call twice
-        var result1 = await loader.ListToolsHandler(request, CancellationToken.None);
-        var result2 = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result1 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should return same cached instance
         Assert.Same(result1.Tools, result2.Tools);
@@ -129,7 +132,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act
-        var result = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result.Tools);
@@ -150,7 +153,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -176,8 +179,8 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act - Call twice
-        var result1 = await loader.CallToolHandler(request, CancellationToken.None);
-        var result2 = await loader.CallToolHandler(request, CancellationToken.None);
+        var result1 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Both should succeed and return same cached content
         Assert.False(result1.IsError);
@@ -201,7 +204,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -223,7 +226,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -243,7 +246,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await loader.CallToolHandler(request, CancellationToken.None));
+            await loader.CallToolHandler(request, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -255,7 +258,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>());
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -285,7 +288,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequestWithJsonElements(toolName, arguments);
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -310,7 +313,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequest(toolName, arguments);
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -332,7 +335,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -349,7 +352,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         // Get two different namespaces
         var listRequest = CreateListToolsRequest();
-        var tools = await loader.ListToolsHandler(listRequest, CancellationToken.None);
+        var tools = await loader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         if (tools.Tools.Count < 2)
         {
@@ -367,7 +370,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        await loader.CallToolHandler(request1, CancellationToken.None);
+        await loader.CallToolHandler(request1, TestContext.Current.CancellationToken);
 
         // Now access second namespace
         var request2 = CreateCallToolRequest(namespace2, new Dictionary<string, object?>
@@ -376,7 +379,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        var result2 = await loader.CallToolHandler(request2, CancellationToken.None);
+        var result2 = await loader.CallToolHandler(request2, TestContext.Current.CancellationToken);
 
         // Assert - Both should succeed, proving lazy loading works
         Assert.NotNull(result2);
@@ -399,7 +402,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
                 ["intent"] = "concurrent test"
             });
 
-            return await loader.CallToolHandler(request, CancellationToken.None);
+            return await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
         });
 
         var results = await Task.WhenAll(tasks);
@@ -434,13 +437,112 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        await loader.CallToolHandler(request, CancellationToken.None);
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Act
         await loader.DisposeAsync();
 
         // Assert - No exception should be thrown
         // Cache clearing is internal, but disposal should complete successfully
+    }
+
+    // Elicitation Handler Tests (ported from BaseToolLoaderTests)
+
+    [Fact]
+    public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationHandler()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.NotNull(options.Handlers);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+    }
+
+    [Fact]
+    public void CreateClientOptions_WithNoElicitationCapability_ReturnsOptionsWithoutElicitationHandler()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities());
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.NotNull(options.Handlers);
+        Assert.Null(options.Handlers.ElicitationHandler);
+    }
+
+    [Fact]
+    public async Task CreateClientOptions_ElicitationHandler_DelegatesToServerSendRequestAsync()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        var elicitationRequest = new ElicitRequestParams
+        {
+            Message = "Please enter your password:"
+        };
+
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+
+        await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
+
+        // Assert - verify SendRequestAsync was called with elicitation method
+        await mockServer.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(req => req.Method == "elicitation/create"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateClientOptions_ElicitationHandler_ValidatesRequestAndThrowsOnNull()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+
+        // Assert - verify handler validates null request
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
     // Helper methods
@@ -498,6 +600,23 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         };
     }
 
+    private static ModelContextProtocol.Client.McpClientOptions CallCreateClientOptions(
+        NamespaceToolLoader loader,
+        ModelContextProtocol.Server.McpServer server)
+    {
+        // Use reflection to call the protected CreateClientOptions method
+        var method = typeof(BaseToolLoader).GetMethod(
+            "CreateClientOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (method == null)
+        {
+            throw new InvalidOperationException("CreateClientOptions method not found on BaseToolLoader");
+        }
+
+        var result = method.Invoke(loader, [server]);
+        return (ModelContextProtocol.Client.McpClientOptions)result!;
+    }
     public void Dispose()
     {
         _serviceProvider?.Dispose();

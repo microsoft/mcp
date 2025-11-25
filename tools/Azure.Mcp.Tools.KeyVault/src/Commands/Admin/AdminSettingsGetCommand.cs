@@ -16,11 +16,12 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
 
+    public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
     public override string Name => "get";
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,        // Command queries Azure resources (vault settings)
+        OpenWorld = false,       // Command queries Azure resources (vault settings)
         Destructive = false,     // Command only reads settings, no modifications
         Idempotent = true,       // Same call produces same result
         ReadOnly = true,         // Only reads data, no state changes
@@ -44,7 +45,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -56,7 +57,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         try
         {
             var service = context.GetService<IKeyVaultService>();
-            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy);
+            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);

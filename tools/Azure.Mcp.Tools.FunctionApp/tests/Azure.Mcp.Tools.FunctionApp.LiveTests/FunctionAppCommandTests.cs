@@ -15,7 +15,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_list_function_apps_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -55,7 +55,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", "" }
@@ -68,7 +68,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_handle_invalid_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", "invalid-subscription" }
@@ -84,7 +84,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync("azmcp_functionapp_get", []);
+        var result = await CallToolAsync("functionapp_get", []);
 
         Assert.False(result.HasValue);
     }
@@ -94,7 +94,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     {
         // List to obtain a real function app and its resource group
         var listResult = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -108,7 +108,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
         var resourceGroup = first.GetProperty("resourceGroupName").GetString()!;
 
         var getResult = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -136,7 +136,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_handle_nonexistent_function_app_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -156,7 +156,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     {
         // Missing resource-group
         var missingRg = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -166,7 +166,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
 
         // Missing subscription
         var missingSub = await CallToolAsync(
-            "azmcp_functionapp_get",
+            "functionapp_get",
             new()
             {
                 { "resource-group", "rg-test" },

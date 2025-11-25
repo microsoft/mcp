@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
@@ -26,21 +27,28 @@ public sealed class NamespaceToolLoader(
     CommandFactory commandFactory,
     IOptions<ServiceStartOptions> options,
     IServiceProvider serviceProvider,
-    ILogger<NamespaceToolLoader> logger) : BaseToolLoader(logger)
+    ILogger<NamespaceToolLoader> logger,
+    bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly bool _applyFilter = applyFilter;
 
-    private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new Lazy<IReadOnlyList<string>>(() =>
+    private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
-        return commandFactory.RootGroup.SubGroup
-            .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-            .Where(group => options.Value.Namespace == null ||
-                           options.Value.Namespace.Length == 0 ||
-                           options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-            .Select(group => group.Name)
-            .ToList();
+        IEnumerable<CommandGroup> allSubGroups = commandFactory.RootGroup.SubGroup;
+
+        if (applyFilter)
+        {
+            allSubGroups = allSubGroups
+                .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+                .Where(group => options.Value.Namespace == null ||
+                               options.Value.Namespace.Length == 0 ||
+                               options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
+        }
+
+        return allSubGroups.Select(group => group.Name).ToList();
     });
 
     private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
@@ -118,6 +126,14 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                Annotations = new ToolAnnotations()
+                {
+                    Title = group.Title ?? namespaceName,
+                    DestructiveHint = group.ToolMetadata?.Destructive,
+                    IdempotentHint = group.ToolMetadata?.Idempotent,
+                    OpenWorldHint = group.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = group.ToolMetadata?.ReadOnly,
+                },
             };
 
             allToolsResponse.Tools.Add(tool);
@@ -142,7 +158,7 @@ public sealed class NamespaceToolLoader(
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.AddTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {
@@ -167,12 +183,42 @@ public sealed class NamespaceToolLoader(
 
         try
         {
-            if (learn && string.IsNullOrEmpty(command))
+            var activity = Activity.Current;
+
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // We no longer spawn new processes to handle child tool invocations.
+                // So, we have to update ToolName to represent the namespace's child tool name
+                // rather than what is exposed to the user. The following inputs would
+                // be routed here.  In both examples, the end-user's MCP client sees that we expose
+                // a tool called "storage" and would invoke our "storage" tool.
+                //
+                // A) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": [ "--name", "foo", "--subscription-id", "bar" ]
+                //    }
+                //
+                // This is the case where the LLM knows what tool should be executed, so it passes
+                // in all the parameters required to execute the underlying Storage tool.
+                //
+                // B) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": []
+                //       "learn": true
+                //    }
+                //
+                // This command attempts to learn what the command "blob_list" entails by
+                // invoking it with no parameters and "learn" == "true".  The command will
+                // generally fail, providing the LLM with extra information it needs to pass
+                // in for the command to succeed the next time.
+                activity?.SetTag(TagName.ToolName, command);
+
                 var toolParams = GetParametersFromArgs(args);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -237,6 +283,7 @@ public sealed class NamespaceToolLoader(
             };
         }
 
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -285,7 +332,25 @@ public sealed class NamespaceToolLoader(
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
             }
 
-            var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+            // Check if this tool requires elicitation for sensitive data
+            var metadata = cmd.Metadata;
+            if (metadata.Secret)
+            {
+                var elicitationResult = await HandleSecretElicitationAsync(
+                    request,
+                    $"{namespaceName} {command}",
+                    _options.Value.InsecureDisableElicitation,
+                    _logger,
+                    cancellationToken);
+
+                if (elicitationResult != null)
+                {
+                    return elicitationResult;
+                }
+            }
+
+            var currentActivity = Activity.Current;
+            var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
@@ -300,7 +365,12 @@ public sealed class NamespaceToolLoader(
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
+            // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
+            // The logic above performs sampling to try and get a correct command name.  "blob_get" in
+            // this case, which will be executed.
+            currentActivity?.SetTag(TagName.ToolName, command).SetTag(TagName.ToolId, cmd.Id);
+
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
@@ -365,6 +435,7 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult
@@ -609,15 +680,15 @@ public sealed class NamespaceToolLoader(
 
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value) ?? new Dictionary<string, JsonElement>();
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value.Clone()) ?? new Dictionary<string, JsonElement>();
                 }
             }
 

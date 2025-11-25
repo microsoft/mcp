@@ -17,6 +17,8 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Database";
 
+    public override string Id => "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -54,18 +56,18 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
     protected override DatabaseCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuName);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTier);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacity);
-        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.Collation);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytes);
-        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolName);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundant);
-        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScale);
+        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuNameOption.Name);
+        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTierOption.Name);
+        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacityOption.Name);
+        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.CollationOption.Name);
+        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytesOption.Name);
+        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolNameOption.Name);
+        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundantOption.Name);
+        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScaleOption.Name);
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -91,7 +93,8 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
                 options.ElasticPoolName,
                 options.ZoneRedundant,
                 options.ReadScale,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateResult);
         }

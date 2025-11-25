@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IAppLensService
+public class AppLensService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
@@ -32,11 +32,12 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         string subscription,
         string? resourceGroup = null,
         string? resourceType = null,
-        string? tenantId = null)
+        string? tenantId = null,
+        CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
         // Step 1: Get the resource ID
-        var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType);
+        var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType, cancellationToken);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -46,7 +47,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         var foundResource = (FoundResourceResult)findResult;
 
         // Step 2: Get AppLens session
-        var session = await GetAppLensSessionAsync(foundResource.ResourceId, tenantId);
+        var session = await GetAppLensSessionAsync(foundResource.ResourceId, tenantId, cancellationToken);
 
         if (session is FailedAppLensSessionResult failed)
         {
@@ -56,7 +57,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         var successfulSession = (SuccessfulAppLensSessionResult)session;
 
         // Step 3: Ask AppLens the diagnostic question
-        var insights = await CollectInsightsAsync(successfulSession.Session, question);
+        var insights = await CollectInsightsAsync(successfulSession.Session, question, cancellationToken);
 
         return new DiagnosticResult(
             insights.Insights,
@@ -69,7 +70,8 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         string resource,
         string? subscription,
         string? resourceGroup,
-        string? resourceType)
+        string? resourceType,
+        CancellationToken cancellationToken)
     {
         // Construct a resource ID from the provided information
 
@@ -83,25 +85,25 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
     }
 
-    private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null)
+    private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             // Get Azure credential using BaseAzureService
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
 
             // Get ARM token
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext(["https://management.azure.com/user_impersonation"]),
-                CancellationToken.None);
+                cancellationToken);
 
             // Call the AppLens token endpoint
-            var request = new HttpRequestMessage(HttpMethod.Get,
+            using var request = new HttpRequestMessage(HttpMethod.Get,
                 $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01");
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            var response = await _httpClientService.DefaultClient.SendAsync(request);
+            using var response = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -112,7 +114,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
                 return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
             }
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
             AppLensSession? appLensSession;
             appLensSession = ParseGetTokenResponse(content);
 
@@ -167,7 +169,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         connection.On<string>("MessageReceived", async (response) =>
         {
             ChatMessageResponseBody responseBody = ChatMessageResponseBody.FromJson(response);
-            await channel.Writer.WriteAsync(responseBody);
+            await channel.Writer.WriteAsync(responseBody, cancellationToken);
         });
 
         connection.On<string>("MessageCancelled", async (response) =>
@@ -191,7 +193,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
                 ResponseType = MessageResponseType.SystemMessage
             };
 
-            await channel.Writer.WriteAsync(responseBody);
+            await channel.Writer.WriteAsync(responseBody, cancellationToken);
         });
 
         bool completed = false;
@@ -260,12 +262,12 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
     /// <param name="session">The AppLens session.</param>
     /// <param name="question">The diagnostic question.</param>
     /// <returns>A task containing diagnostic insights and solutions.</returns>
-    private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question)
+    private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question, CancellationToken cancellationToken)
     {
         var insights = new List<string>();
         var solutions = new List<string>();
 
-        await foreach (var message in AskAppLensAsync(session, question))
+        await foreach (var message in AskAppLensAsync(session, question, cancellationToken))
         {
             if (message.ResponseType == MessageResponseType.SystemMessage && !string.IsNullOrEmpty(message.Message?.Message))
             {
@@ -283,7 +285,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
     private static AppLensSession ParseGetTokenResponse(string rawResponse)
     {
-        JsonDocument jsonResponse = JsonDocument.Parse(rawResponse);
+        using var jsonDoc = JsonDocument.Parse(rawResponse);
 
         AppLensSession? session = null;
 
@@ -292,11 +294,11 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         const int TokenColumnIndex = 1;
         const int ExpiresInColumnIndex = 2;
 
-        if (!jsonResponse.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
+        if (!jsonDoc.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
         {
-            if (jsonResponse.RootElement.ValueKind == JsonValueKind.Object)
+            if (jsonDoc.RootElement.ValueKind == JsonValueKind.Object)
             {
-                IEnumerable<string> propertyNames = jsonResponse.RootElement.EnumerateObject().Select(property => property.Name);
+                IEnumerable<string> propertyNames = jsonDoc.RootElement.EnumerateObject().Select(property => property.Name);
                 string joinedPropertyNames = string.Join(", ", propertyNames);
                 throw new Exception($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
             }

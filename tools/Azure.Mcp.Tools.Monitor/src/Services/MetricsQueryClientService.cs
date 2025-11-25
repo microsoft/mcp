@@ -10,9 +10,9 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 
 public class MetricsQueryClientService(ITenantService tenantService) : BaseAzureService(tenantService), IMetricsQueryClientService
 {
-    public async Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenant);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new MetricsQueryClientOptions());
 
         if (retryPolicy != null)

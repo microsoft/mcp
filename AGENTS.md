@@ -27,6 +27,9 @@
 - Prefer file-scoped changes over project-wide modifications when possible
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context
+- Write transport-agnostic commands that work in both stdio and HTTP modes
+- Keep commands stateless and thread-safe for multi-user remote scenarios
+- Test commands with different RBAC permissions for OBO scenarios
 
 ## Don't
 - Use `subscriptionId` parameter name
@@ -41,6 +44,11 @@
 - Skip error handling or comprehensive tests
 - Use dashes in command group names (use concatenated lowercase)
 - Make project-wide changes when file-scoped changes suffice
+- Check transport type in commands (stdio vs HTTP)
+- Store per-request state in command instance fields
+- Access HttpContext directly from commands
+- Make transport-specific decisions in command logic
+- Assume single-user scenarios when implementing services
 
 ## Commands
 
@@ -243,7 +251,7 @@ dotnet build
 ./eng/scripts/Build-Local.ps1 -BuildNative
 
 # Build with debugging symbols
-./eng/scripts/Build-Local.ps1 -DebugBuild
+./eng/scripts/Build-Local.ps1
 
 # Docker image build
 ./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"
@@ -418,7 +426,7 @@ catch (Exception ex)
 ### Base Service Classes
 Choose the appropriate base class based on operations:
 
-**For Resource Graph queries (recommended):**
+**For Azure Resource Read Operations (recommended):**
 ```csharp
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
@@ -430,22 +438,32 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             resourceGroup,
             subscription,
             retryPolicy,
-            ConvertToStorageAccountModel);
+            ConvertToStorageAccountModel,
+            cancellationToken: cancellationToken);
     }
 }
 ```
 
-**For direct ARM operations:**
+**For Azure Resource Write Operations:**
 ```csharp
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureService(tenantService), IStorageService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-    public async Task<StorageAccount> GetAccountAsync(string subscription, string resourceGroup, string accountName, RetryPolicyOptions? retryPolicy)
+    public async Task<StorageAccountResult> CreateStorageAccount(
+        string account,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? sku = null,
+        string? accessTier = null,
+        bool? enableHierarchicalNamespace = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
-        // Use subscriptionResource for direct ARM operations
+        // Use subscriptionResource for write operations
     }
 }
 ```
@@ -455,7 +473,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 // All response models must be registered for AOT compatibility
 [JsonSerializable(typeof(StorageAccountGetCommand.StorageAccountListCommandResult))]
 [JsonSerializable(typeof(StorageAccount))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
@@ -582,6 +600,63 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 - Use `ICacheService` for expensive Azure operations
 - Implement `BaseAzureResourceService` for efficient Resource Graph queries
 - Follow retry policy patterns with `RetryPolicyOptions`
+
+## Remote MCP Server Architecture
+
+Azure MCP Server supports **stdio** (local) and **HTTP** (remote) transports with different authentication models.
+
+### Key Differences: Stdio vs Remote HTTP
+
+| Aspect | Stdio Mode | Remote HTTP Mode |
+|--------|-----------|------------------|
+| **Concurrency** | Single user | Multiple concurrent users |
+| **State Management** | Can use instance fields | Must be stateless |
+| **Deployment** | Local binaries | Cloud hosting (App Service, AKS) |
+| **Configuration** | Simple (no auth) | Requires Entra ID app registration |
+
+### Authentication Strategies
+
+**On-Behalf-Of (OBO) Flow:**
+- Per-user authorization with audit trails
+- User's RBAC permissions enforced
+- Requires API permissions and admin consent
+- Command: `--run-as-remote-http-service --outgoing-auth-strategy UseOnBehalfOf`
+
+**Hosting Environment Identity:**
+- Service-level permissions using Managed Identity
+- Simpler configuration, no token exchange overhead
+- All users share server's permissions
+- Command: `--run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+
+### Command Implementation for Remote Mode
+
+**Critical Requirements:**
+- Write transport-agnostic commands (work in both stdio and HTTP modes)
+- Use `IAzureTokenCredentialProvider` for all Azure authentication
+- Keep commands stateless and thread-safe (no instance field state)
+- Test with different RBAC permissions for OBO scenarios
+- Provide context-aware error messages for remote scenarios
+
+**Key Patterns:**
+```csharp
+// ✅ Correct: Authentication provider handles both modes
+var credential = await GetCredentialAsync(null, CancellationToken.None);
+var armClient = new ArmClient(credential);
+
+// ❌ Wrong: Don't check transport type or access HttpContext
+if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") != null) { }
+var httpContext = _httpContextAccessor.HttpContext;
+```
+
+### Security Best Practices
+
+1. Always use HTTPS in production
+2. Implement least privilege RBAC
+3. Use OBO for multi-tenant scenarios (preserves user identity)
+4. Secure configuration secrets with Azure Key Vault
+5. Enable Application Insights for monitoring
+6. Validate token claims (audience, issuer, scopes)
+7. Use Managed Identity when possible
 
 ## External MCP Server Integration
 

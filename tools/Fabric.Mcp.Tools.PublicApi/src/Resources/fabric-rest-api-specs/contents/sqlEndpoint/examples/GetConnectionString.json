@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "sqlEndpointId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "guestTenantId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+        "privateLinkType": "Workspace"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m-jh0bi.zcf.datawarehouse.fabric.microsoft.com"
+            }
+        }
+    }
+}

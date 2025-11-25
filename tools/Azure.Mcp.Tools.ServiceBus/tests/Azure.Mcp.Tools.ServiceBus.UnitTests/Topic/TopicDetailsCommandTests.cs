@@ -67,13 +67,14 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).Returns(expectedDetails);
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -98,13 +99,14 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(serviceBusException);
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -121,13 +123,14 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -157,14 +160,15 @@ public class TopicDetailsCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
                 .Returns(expectedDetails);
         }
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)

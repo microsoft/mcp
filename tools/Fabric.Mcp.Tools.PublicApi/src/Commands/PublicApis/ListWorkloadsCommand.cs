@@ -14,6 +14,8 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
 
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -35,7 +37,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -45,7 +47,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloads = await fabricService.ListWorkloadsAsync();
+            var workloads = await fabricService.ListWorkloadsAsync(cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }

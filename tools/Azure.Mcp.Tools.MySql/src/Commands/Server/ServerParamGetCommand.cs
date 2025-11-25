@@ -14,6 +14,8 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
 {
     private const string CommandTitle = "Get MySQL Server Parameter";
 
+    public override string Id => "bae423b4-aee8-4f23-a104-e816727d183f";
+
     public override string Name => "get";
 
     public override string Description => "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.";
@@ -43,7 +45,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -55,7 +57,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            string paramValue = await mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!);
+            string paramValue = await mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(paramValue) ?
                 ResponseResult.Create(new(options.Param!, paramValue), MySqlJsonContext.Default.ServerParamGetCommandResult) :
                 null;

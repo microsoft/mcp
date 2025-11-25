@@ -12,12 +12,12 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
 {
     private readonly IHttpClientService _httpClientService = httpClientService;
 
-    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location)
+    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
         try
         {
             var requestUrl = $"{managementEndpoint}/subscriptions/{SubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{location}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
-            using var rawResponse = await GetQuotaByUrlAsync(requestUrl);
+            using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {

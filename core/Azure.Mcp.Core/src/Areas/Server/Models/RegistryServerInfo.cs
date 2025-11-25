@@ -31,6 +31,12 @@ public sealed class RegistryServerInfo
     public string? Description { get; init; }
 
     /// <summary>
+    /// Gets the user-friendly title for the server.
+    /// </summary>
+    [JsonPropertyName("title")]
+    public string? Title { get; init; }
+
+    /// <summary>
     /// Gets the transport type, e.g., "stdio".
     /// </summary>
     [JsonPropertyName("type")]
@@ -53,4 +59,10 @@ public sealed class RegistryServerInfo
     /// </summary>
     [JsonPropertyName("env")]
     public Dictionary<string, string>? Env { get; init; }
+
+    /// <summary>
+    /// Gets installation instructions for the server.
+    /// </summary>
+    [JsonPropertyName("installInstructions")]
+    public string? InstallInstructions { get; init; }
 }

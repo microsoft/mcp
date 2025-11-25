@@ -17,13 +17,17 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 {
     private const string CommandTitle = "Create OpenAI Chat Completions";
 
+    public override string Id => "aa674825-1463-464d-9b2c-f8315f778d0d";
+
     public override string Name => "chat-completions-create";
 
     public override string Description =>
         $"""
-        Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational 
-        inputs with message history and system instructions to generate contextual responses. Returns chat 
-        response as JSON. Requires resource-name, deployment-name, and message-array.
+        Create chat completions using Azure OpenAI in Microsoft Foundry. Send messages to Azure OpenAI chat models deployed 
+        in your Microsoft Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations 
+        with message history, system instructions, and response customization. Use this when you need to create chat 
+        completions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI. 
+        Requires resource-name, deployment-name, and message-array.
         """;
 
     public override string Title => CommandTitle;
@@ -75,7 +79,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -92,7 +96,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
             var messages = new List<object>();
             if (!string.IsNullOrEmpty(options.MessageArray))
             {
-                var jsonDocument = JsonDocument.Parse(options.MessageArray);
+                using var jsonDocument = JsonDocument.Parse(options.MessageArray);
                 foreach (var element in jsonDocument.RootElement.EnumerateArray())
                 {
                     // Convert JsonElement to JsonObject for proper type matching in service
@@ -121,7 +125,8 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
                 options.User,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiChatCompletionsCreateCommandResult>(
                 new OpenAiChatCompletionsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!),

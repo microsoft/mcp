@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,11 +20,13 @@ public class MonitorSetup : IAreaSetup
 {
     public string Name => "monitor";
 
+    public string Title => "Azure Monitor";
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClient<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
+        services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
@@ -42,12 +45,17 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<MetricsDefinitionsCommand>();
 
         services.AddSingleton<ActivityLogListCommand>();
+
+        services.AddSingleton<WebTestsGetCommand>();
+        services.AddSingleton<WebTestsListCommand>();
+        services.AddSingleton<WebTestsCreateCommand>();
+        services.AddSingleton<WebTestsUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
-        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.");
+        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.", Title);
 
         // Create Monitor subgroups
         var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");
@@ -106,6 +114,19 @@ public class MonitorSetup : IAreaSetup
 
         var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
         activityLog.AddCommand(activityLogList.Name, activityLogList);
+
+        // Register Monitor.WebTest sub-group commands
+        var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
+        monitor.AddSubGroup(webTests);
+
+        var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();
+        webTests.AddCommand(webTestGet.Name, webTestGet);
+        var webTestList = serviceProvider.GetRequiredService<WebTestsListCommand>();
+        webTests.AddCommand(webTestList.Name, webTestList);
+        var webTestCreate = serviceProvider.GetRequiredService<WebTestsCreateCommand>();
+        webTests.AddCommand(webTestCreate.Name, webTestCreate);
+        var webTestUpdate = serviceProvider.GetRequiredService<WebTestsUpdateCommand>();
+        webTests.AddCommand(webTestUpdate.Name, webTestUpdate);
 
         return monitor;
     }

@@ -17,6 +17,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Server";
 
+    public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -60,7 +62,7 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -82,7 +84,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
                 options.AdministratorPassword!,
                 options.Version,
                 options.PublicNetworkAccess,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);
         }

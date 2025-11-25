@@ -16,6 +16,8 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
     private const string CommandTitle = "List Resource Groups";
     private readonly ILogger<GroupListCommand> _logger = logger;
 
+    public override string Id => "a0049f31-9a32-4b5e-91ec-e7b074fc7246";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -37,7 +39,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -52,7 +54,8 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
             var groups = await resourceGroupService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = groups?.Count > 0 ?
                 ResponseResult.Create(new Result(groups), GroupJsonContext.Default.Result) :

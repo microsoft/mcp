@@ -13,6 +13,9 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private const string CommandTitle = "Set PostgreSQL Server Parameter";
+
+    public override string Id => "2134621b-518f-48ac-a66a-82c40fcb58bb";
+
     public override string Name => "set";
 
     public override string Description =>
@@ -45,7 +48,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -57,7 +60,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
         try
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            var result = await pgService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!);
+            var result = await pgService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(result, options.Param!, options.Value!), PostgresJsonContext.Default.ServerParamSetCommandResult) :
                 null;

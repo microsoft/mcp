@@ -53,7 +53,7 @@ public class KnowledgeIndexListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(
                 [
                     new() { Name = "test-index", Type = "aisearch", Version = "1.0", Description = "Test index" }
@@ -63,7 +63,7 @@ public class KnowledgeIndexListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -82,13 +82,13 @@ public class KnowledgeIndexListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<KnowledgeIndexInformation>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -106,13 +106,13 @@ public class KnowledgeIndexListCommandTests
             new() { Name = "test-index2", Type = "aisearch", Version = "1.1", Description = "Second test index" }
         };
 
-        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

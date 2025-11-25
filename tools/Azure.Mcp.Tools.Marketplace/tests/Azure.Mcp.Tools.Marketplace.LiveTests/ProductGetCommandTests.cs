@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
@@ -24,8 +26,9 @@ public class ProductGetCommandTests : CommandTestsBase
     public ProductGetCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
+        var cacheService = new SingleUserCliCacheService(memoryCache);
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+        var tenantService = new TenantService(tokenProvider, cacheService);
         _marketplaceService = new MarketplaceService(tenantService);
     }
 
@@ -34,7 +37,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -54,7 +57,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_language_option()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -75,7 +78,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_market_option()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -96,7 +99,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

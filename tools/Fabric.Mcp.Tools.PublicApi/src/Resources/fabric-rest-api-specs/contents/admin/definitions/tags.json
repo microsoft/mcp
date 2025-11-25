@@ -26,6 +26,9 @@
             ],
             "description": "This is a request wrapper for a creating a list of tags.",
             "properties": {
+                "scope": {
+                    "$ref": "../../common/definitions.json#/definitions/TagScope"
+                },
                 "createTagsRequest": {
                     "type": "array",
                     "description": "An array of createTagRequest",
@@ -70,7 +73,8 @@
             "description": "Represents a tag.",
             "required": [
                 "id",
-                "displayName"
+                "displayName",
+                "scope"
             ],
             "properties": {
                 "id": {
@@ -81,6 +85,9 @@
                 "displayName": {
                     "type": "string",
                     "description": "The name of the tag."
+                },
+                "scope": {
+                    "$ref": "../../common/definitions.json#/definitions/TagScope"
                 }
             }
         },

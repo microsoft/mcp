@@ -37,10 +37,15 @@ public class RecommendationListCommandTests
             JsonNode.Parse("{ \"id\": \"rec1\", \"type\": \"cpu\" }")!,
             JsonNode.Parse("{ \"id\": \"rec2\", \"type\": \"memory\" }")!
         };
-        _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _serviceMock.GetProfilerInsightsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(insights!));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(_context.Response.Results);
         var json = JsonSerializer.Serialize(_context.Response.Results);
         var node = JsonNode.Parse(json);
@@ -52,10 +57,15 @@ public class RecommendationListCommandTests
     [Fact]
     public async Task ExecuteAsync_WhenServiceReturnsNoInsights_NoResults()
     {
-        _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _serviceMock.GetProfilerInsightsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Null(_context.Response.Results);
     }
 }

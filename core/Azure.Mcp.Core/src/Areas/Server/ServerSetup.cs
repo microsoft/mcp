@@ -14,6 +14,8 @@ public sealed class ServerSetup : IAreaSetup
 {
     public string Name => "server";
 
+    public string Title => "MCP Server Management";
+
     /// <summary>
     /// Configures services required for the Server area.
     /// </summary>
@@ -21,6 +23,7 @@ public sealed class ServerSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ServiceStartCommand>();
+        services.AddSingleton<ServiceInfoCommand>();
     }
 
     /// <summary>
@@ -31,11 +34,14 @@ public sealed class ServerSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create MCP Server command group
-        var mcpServer = new CommandGroup(Name, "MCP Server operations - Commands for managing and interacting with the MCP Server.");
+        var mcpServer = new CommandGroup(Name, "MCP Server operations - Commands for managing and interacting with the MCP Server.", Title);
 
         // Register MCP Server commands
         var startCommand = serviceProvider.GetRequiredService<ServiceStartCommand>();
         mcpServer.AddCommand(startCommand.Name, startCommand);
+
+        var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
+        mcpServer.AddCommand(infoCommand.Name, infoCommand);
 
         return mcpServer;
     }

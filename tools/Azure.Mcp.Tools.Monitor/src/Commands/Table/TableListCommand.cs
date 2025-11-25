@@ -13,6 +13,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
 
+    public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -46,7 +48,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +66,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
                 options.Workspace!,
                 options.TableType,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
         }

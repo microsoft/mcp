@@ -50,12 +50,14 @@ public class CertificateCreateCommandTests
 
         // TODO (vcolin7): Find a way to mock CertificateOperation
         // We'll test that the service is called correctly, but let it fail since mocking the return is complex
-        _keyVaultService.CreateCertificate(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateCertificate(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownCertificateName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -65,15 +67,18 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Verify the service was called with correct parameters
-        await _keyVaultService.Received(1).CreateCertificate(
-            _knownVaultName,
-            _knownCertificateName,
-            _knownSubscriptionId,
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+        await _keyVaultService
+            .Received(1)
+            .CreateCertificate(
+                _knownVaultName,
+                _knownCertificateName,
+                _knownSubscriptionId,
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
         // Should handle the exception
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -90,7 +95,7 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -104,12 +109,14 @@ public class CertificateCreateCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.CreateCertificate(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateCertificate(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownCertificateName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -119,7 +126,7 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

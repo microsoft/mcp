@@ -47,7 +47,7 @@ public class RegistryRepositoryListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(new Dictionary<string, List<string>>
                 {
                     ["myacr"] = ["repo1", "repo2"]
@@ -57,7 +57,7 @@ public class RegistryRepositoryListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -75,13 +75,13 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Dictionary<string, List<string>>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -93,13 +93,13 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

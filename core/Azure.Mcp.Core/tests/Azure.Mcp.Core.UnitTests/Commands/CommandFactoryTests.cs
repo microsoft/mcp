@@ -4,9 +4,11 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -22,14 +24,24 @@ public class CommandFactoryTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
+    private readonly AzureMcpServerConfiguration _serverConfiguration;
+    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions;
 
     public CommandFactoryTests()
     {
         var services = new ServiceCollection();
         services.AddLogging();
+
+        _serverConfiguration = new AzureMcpServerConfiguration
+        {
+            Name = "Test Server",
+            Version = "Test Version"
+        };
+
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
+        _configurationOptions = Microsoft.Extensions.Options.Options.Create(_serverConfiguration);
     }
 
     [Fact]
@@ -123,7 +135,7 @@ public class CommandFactoryTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger));
+            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger));
     }
 
     [Fact]
@@ -138,7 +150,7 @@ public class CommandFactoryTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger));
+            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger));
     }
 
     [Theory]
@@ -153,47 +165,15 @@ public class CommandFactoryTests
         var area3 = CreateIAreaSetup("name3");
 
         var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
-
-        // All commands in command factory are prefixed with the root command group, "azmcp".
-        var commandNameToTry = "azmcp" + CommandFactory.Separator + commandName;
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
 
         // Act
-        var actual = factory.GetServiceArea(commandNameToTry);
-
         // Try in the case that the root prefix is not used.  This is in the case that the tool
         // is created using the IAreaSetup name as root.
         var actual2 = factory.GetServiceArea(commandName);
 
         // Assert
-        Assert.Equal(expected, actual);
         Assert.Equal(expected, actual2);
-    }
-
-    [Fact]
-    public void GetCommandName_WithOutRootGroup()
-    {
-        // Arrange
-        var commandName = "kusto_cluster_list";
-        var area1 = CreateIAreaSetup("name1");
-        var area2 = CreateIAreaSetup("name2");
-        var area3 = CreateIAreaSetup("name3");
-
-        var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
-
-        // All commands in command factory are prefixed with the root command group.
-        var commandNameToTry = CommandFactory.RootCommandGroupName + CommandFactory.Separator + commandName;
-
-        // Act
-        var actual = factory.RemoveRootGroupFromCommandName(commandNameToTry);
-
-        // Try in the case that the root prefix is not used.
-        var actual2 = factory.RemoveRootGroupFromCommandName(commandName);
-
-        // Assert
-        Assert.Equal(commandName, actual);
-        Assert.Equal(commandName, actual2);
     }
 
     [Fact]
@@ -205,7 +185,7 @@ public class CommandFactoryTests
         var area3 = CreateIAreaSetup("name3");
 
         var serviceAreas = new List<IAreaSetup> { area1, area2, area3 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
 
         // All commands created in command factory are prefixed with the root command group, "azmcp".
         var commandNameToTry = "azmcp" + CommandFactory.Separator + "name0_subgroup2_directCommand4";
@@ -225,7 +205,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, prefix);
+        var commandDictionary = CommandFactory.CreateCommandDictionaryInner(commandGroup, prefix);
 
         // Assert
         Assert.NotNull(commandDictionary);
@@ -247,7 +227,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, string.Empty);
+        var commandDictionary = CommandFactory.CreateCommandDictionaryInner(commandGroup, string.Empty);
 
         // Assert
         Assert.NotNull(commandDictionary);

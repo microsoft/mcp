@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -50,7 +51,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains(EventHubsOptionDefinitions.NamespaceName.Name) && args.Contains(OptionDefinitions.Common.ResourceGroup.Name))
+            if (args.Contains($"{EventHubsOptionDefinitions.NamespaceOption.Name}") && args.Contains($"{OptionDefinitions.Common.ResourceGroup.Name}"))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(
@@ -58,7 +59,7 @@ public class NamespaceGetCommandTests
                     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
                     "rg-eventhubs-prod",
                     "East US",
-                    new EventHubsNamespaceSku("Standard", "Standard", 1),
+                    new Models.EventHubsSku("Standard", "Standard", null),
                     "Active",
                     "Succeeded",
                     DateTimeOffset.UtcNow.AddDays(-30),
@@ -71,7 +72,13 @@ public class NamespaceGetCommandTests
                     true,
                     new Dictionary<string, string> { { "env", "prod" } });
 
-                _eventHubsService.GetNamespaceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+                _eventHubsService.GetNamespaceAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                     .Returns(namespaceDetails);
             }
             else
@@ -81,26 +88,33 @@ public class NamespaceGetCommandTests
                 {
                     new("eh-namespace-prod-001",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
-                        "rg-eventhubs-prod"),
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                     new("eh-namespace-prod-002",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-002",
-                        "rg-eventhubs-prod"),
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                     new("eh-shared-services",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-shared-services",
-                        "rg-eventhubs-prod")
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                 };
 
                 _eventHubsService.GetNamespacesAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>())
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                     .Returns(namespaces);
             }
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -125,11 +139,12 @@ public class NamespaceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource Group 'rg-eventhubs-test' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -145,11 +160,12 @@ public class NamespaceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);

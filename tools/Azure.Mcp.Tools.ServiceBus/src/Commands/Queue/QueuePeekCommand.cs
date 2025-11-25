@@ -17,6 +17,9 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
 {
     private const string CommandTitle = "Peek Messages from Service Bus Queue";
     private readonly ILogger<QueuePeekCommand> _logger = logger;
+
+    public override string Id => "90c32c6c-0732-4079-b657-d5129293c67a";
+
     public override string Name => "peek";
 
     public override string Description =>
@@ -61,7 +64,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -78,7 +81,8 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
                 options.Name!,
                 options.MaxMessages ?? 1,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);
         }

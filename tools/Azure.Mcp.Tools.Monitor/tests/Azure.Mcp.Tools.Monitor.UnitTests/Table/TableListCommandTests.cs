@@ -67,12 +67,13 @@ public sealed class TableListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(testTables);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -104,7 +105,8 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
         var args = _commandDefinition.Parse([
@@ -114,7 +116,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -127,7 +129,8 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
@@ -151,7 +154,8 @@ public sealed class TableListCommandTests
             _knownWorkspace,
             _knownTableType,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
         var args = _commandDefinition.Parse([
@@ -162,7 +166,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -172,7 +176,8 @@ public sealed class TableListCommandTests
             _knownWorkspace,
             _knownTableType,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -185,7 +190,8 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -195,7 +201,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -218,7 +224,8 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<string>>(new Exception("Test error")));
 
         var args = _commandDefinition.Parse([
@@ -228,7 +235,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

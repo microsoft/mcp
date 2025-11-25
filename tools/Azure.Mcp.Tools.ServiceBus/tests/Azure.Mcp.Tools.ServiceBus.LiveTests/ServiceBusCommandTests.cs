@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.LiveTests
@@ -30,7 +32,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
             await SendTestMessages(QueueName, numberOfMessages);
 
             var result = await CallToolAsync(
-                "azmcp_servicebus_queue_peek",
+                "servicebus_queue_peek",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -52,7 +54,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
             await SendTestMessages(TopicName, numberOfMessages);
 
             var result = await CallToolAsync(
-                "azmcp_servicebus_topic_subscription_peek",
+                "servicebus_topic_subscription_peek",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -71,7 +73,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Queue_details()
         {
             var result = await CallToolAsync(
-                "azmcp_servicebus_queue_details",
+                "servicebus_queue_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -87,7 +89,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Topic_details()
         {
             var result = await CallToolAsync(
-                "azmcp_servicebus_topic_details",
+                "servicebus_topic_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -103,7 +105,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Subscription_details()
         {
             var result = await CallToolAsync(
-                "azmcp_servicebus_topic_subscription_details",
+                "servicebus_topic_subscription_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -118,7 +120,8 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 
         private async Task SendTestMessages(string queueOrTopicName, int numberOfMessages)
         {
-            var credentials = new CustomChainedCredential(Settings.TenantId);
+            var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+            TokenCredential credentials = await tokenProvider.GetTokenCredentialAsync(Settings.TenantId, default);
             await using (var client = new ServiceBusClient($"{Settings.ResourceBaseName}.servicebus.windows.net", credentials))
             await using (var sender = client.CreateSender(queueOrTopicName))
             {

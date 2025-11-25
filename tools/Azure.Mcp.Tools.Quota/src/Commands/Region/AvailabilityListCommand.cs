@@ -16,6 +16,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
 
+    public override string Id => "0b8902f5-3fd4-49d9-b73e-4cea88afdd62";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -53,7 +55,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -82,7 +84,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 options.Subscription!,
                 options.CognitiveServiceModelName,
                 options.CognitiveServiceModelVersion,
-                options.CognitiveServiceDeploymentSkuName);
+                options.CognitiveServiceDeploymentSkuName,
+                cancellationToken);
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 

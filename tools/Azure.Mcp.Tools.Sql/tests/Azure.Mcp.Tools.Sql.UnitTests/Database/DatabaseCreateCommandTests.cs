@@ -91,7 +91,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -122,21 +122,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: true
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is("S0"),
-            Arg.Is("Standard"),
-            Arg.Is(10),
-            Arg.Is("SQL_Latin1_General_CP1_CI_AS"),
-            Arg.Is(2147483648L),
-            Arg.Any<string?>(),
-            Arg.Is(true),
-            Arg.Is("Disabled"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("S0"),
+                Arg.Is("Standard"),
+                Arg.Is(10),
+                Arg.Is("SQL_Latin1_General_CP1_CI_AS"),
+                Arg.Is(2147483648L),
+                Arg.Any<string?>(),
+                Arg.Is(true),
+                Arg.Is("Disabled"),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -154,7 +155,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -167,7 +168,8 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -187,7 +189,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -200,7 +202,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database already exists");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -220,7 +223,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -232,7 +235,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -252,7 +256,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -264,7 +268,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -284,7 +289,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -296,7 +301,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -316,7 +322,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -352,28 +358,29 @@ public class DatabaseCreateCommandTests
                 ZoneRedundant: false
             );
 
-            _sqlService.CreateDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<int?>(),
-                Arg.Any<string?>(),
-                Arg.Any<long?>(),
-                Arg.Any<string?>(),
-                Arg.Any<bool?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+            _sqlService
+                .CreateDatabaseAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<int?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<long?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<bool?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
         }
 
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -389,4 +396,307 @@ public class DatabaseCreateCommandTests
             }
         }
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNullSku_CreatesDatabase()
+    {
+        // Arrange - When no SKU is specified, null values are passed to the service
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("S0", "Standard", 10, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 268435456000,
+            ServiceLevelObjective: "S0",
+            Edition: "Standard",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is((string?)null),
+                Arg.Is((string?)null),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify that null SKU values were passed
+        await _sqlService.Received(1).CreateDatabaseAsync(
+            "server1",
+            "testdb",
+            "rg",
+            "sub",
+            null,
+            null,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithBasicSku_CreatesBasicDatabase()
+    {
+        // Arrange - Create database with explicit Basic SKU
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("Basic", "Basic", 5, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 2147483648,
+            ServiceLevelObjective: "Basic",
+            Edition: "Basic",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("Basic"),
+                Arg.Is("Basic"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "Basic",
+            "--sku-tier", "Basic"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify Basic SKU values were passed
+        await _sqlService.Received(1).CreateDatabaseAsync(
+            "server1",
+            "testdb",
+            "rg",
+            "sub",
+            "Basic",
+            "Basic",
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStandardSku_CreatesStandardDatabase()
+    {
+        // Arrange - Create database with explicit Standard SKU
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("S1", "Standard", 20, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 268435456000,
+            ServiceLevelObjective: "S1",
+            Edition: "Standard",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("S1"),
+                Arg.Is("Standard"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "S1",
+            "--sku-tier", "Standard"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify Standard SKU values were passed
+        await _sqlService.Received(1).CreateDatabaseAsync(
+            "server1",
+            "testdb",
+            "rg",
+            "sub",
+            "S1",
+            "Standard",
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithPremiumSku_CreatesPremiumDatabase()
+    {
+        // Arrange - Create database with explicit Premium SKU
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("P1", "Premium", 125, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 536870912000,
+            ServiceLevelObjective: "P1",
+            Edition: "Premium",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("P1"),
+                Arg.Is("Premium"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "P1",
+            "--sku-tier", "Premium"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify Premium SKU values were passed
+        await _sqlService.Received(1).CreateDatabaseAsync(
+            "server1",
+            "testdb",
+            "rg",
+            "sub",
+            "P1",
+            "Premium",
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
 }
+

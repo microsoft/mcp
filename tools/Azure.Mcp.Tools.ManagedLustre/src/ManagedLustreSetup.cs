@@ -13,6 +13,8 @@ public class ManagedLustreSetup : IAreaSetup
 {
     public string Name => "managedlustre";
 
+    public string Title => "Azure Managed Lustre";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IManagedLustreService, ManagedLustreService>();
@@ -28,9 +30,9 @@ public class ManagedLustreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var managedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.");
+            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.", Title);
 
-        var fileSystem = new CommandGroup("filesystem", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
+        var fileSystem = new CommandGroup("fs", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         managedLustre.AddSubGroup(fileSystem);
 
         var list = serviceProvider.GetRequiredService<FileSystemListCommand>();

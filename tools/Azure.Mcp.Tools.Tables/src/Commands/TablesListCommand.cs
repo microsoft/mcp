@@ -29,7 +29,9 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -40,21 +42,19 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
 
         try
         {
-            var account = options.StorageAccount ?? options.CosmosDbAccount;
             var tablesService = context.GetService<ITablesService>();
             var tables = await tablesService.ListTables(
-                account!,
-                !string.IsNullOrWhiteSpace(options.CosmosDbAccount),
+                options.StorageAccount!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tables ?? []), TablesJsonContext.Default.TablesListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing tables. StorageAccount: {StorageAccount}, CosmosDbAccount: {CosmosDbAccount}.",
-                options.StorageAccount, options.CosmosDbAccount);
+            _logger.LogError(ex, "Error listing tables. StorageAccount: {StorageAccount}.", options.StorageAccount);
             HandleException(context, ex);
         }
 

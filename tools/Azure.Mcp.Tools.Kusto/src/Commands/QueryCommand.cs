@@ -14,6 +14,8 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
 
+    public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -44,7 +46,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -66,7 +68,8 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
                     options.Query!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -77,7 +80,8 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
                     options.Query!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);

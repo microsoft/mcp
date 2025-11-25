@@ -36,7 +36,7 @@ public class TableSchemaGetCommandTests
     public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful()
     {
         var expectedSchema = new List<string> { "id INT PRIMARY KEY", "name VARCHAR(100) NOT NULL", "email VARCHAR(255)" };
-        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users").Returns(expectedSchema);
+        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
         var command = new TableSchemaGetCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -49,7 +49,7 @@ public class TableSchemaGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -64,7 +64,7 @@ public class TableSchemaGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenTableNotFound()
     {
-        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent").ThrowsAsync(new ArgumentException("Table not found"));
+        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
 
         var command = new TableSchemaGetCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -77,7 +77,7 @@ public class TableSchemaGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

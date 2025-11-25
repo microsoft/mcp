@@ -65,12 +65,12 @@ public class McpRuntimeTests
         };
     }
 
-    private static string GetAndAssertTagKeyValue(Activity activity, string tagName)
+    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
-        var matching = activity.Tags.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
 
+        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
         Assert.NotNull(matching.Value);
-        Assert.NotEmpty(matching.Value);
 
         return matching.Value;
     }
@@ -104,8 +104,7 @@ public class McpRuntimeTests
         var options = CreateOptions();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(null!, options, mockTelemetry, logger));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(null!, options, mockTelemetry, logger));
         Assert.Equal("toolLoader", exception.ParamName);
     }
 
@@ -119,8 +118,7 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, null!, mockTelemetry, logger));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, null!, mockTelemetry, logger));
         Assert.Equal("options", exception.ParamName);
     }
 
@@ -134,8 +132,7 @@ public class McpRuntimeTests
         var options = CreateOptions();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, options, null!, logger));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, options, null!, logger));
         Assert.Equal("telemetry", exception.ParamName);
     }
 
@@ -148,8 +145,7 @@ public class McpRuntimeTests
         var options = CreateOptions();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, options, mockTelemetry, null!));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, options, mockTelemetry, null!));
         Assert.Equal("logger", exception.ParamName);
     }
 
@@ -187,31 +183,31 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var expectedResult = new ListToolsResult
         {
-            Tools = new List<Tool>
-            {
+            Tools =
+            [
                 new Tool { Name = "test-tool", Description = "A test tool" }
-            }
+            ]
         };
 
         var request = CreateListToolsRequest();
         mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<ListToolsResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
-        var result = await runtime.ListToolsHandler(request, CancellationToken.None);
+        var result = await runtime.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
     }
 
@@ -226,17 +222,17 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock>
-            {
+            Content =
+            [
                 new TextContentBlock { Text = "Tool executed successfully" }
-            }
+            ]
         };
 
         var toolName = "test-tool";
@@ -246,17 +242,20 @@ public class McpRuntimeTests
             { OptionDefinitions.Common.SubscriptionName, JsonDocument.Parse("\"test-subscription\"").RootElement },
         });
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).CallToolHandler(request, Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+
+        var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
+        Assert.Equal(toolName, actualToolName);
 
         // The runtime may or may not surface telemetry tags on the Activity depending on the
         // telemetry implementation. Assert the request and response contents instead.
@@ -278,12 +277,12 @@ public class McpRuntimeTests
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
-        var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
+        var expectedResult = new ListToolsResult { Tools = [] };
         var request = CreateListToolsRequest();
         var cancellationToken = new CancellationToken();
 
         mockToolLoader.ListToolsHandler(request, cancellationToken)
-            .Returns(new ValueTask<ListToolsResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
         var result = await runtime.ListToolsHandler(request, cancellationToken);
@@ -303,12 +302,12 @@ public class McpRuntimeTests
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
-        var expectedResult = new CallToolResult { Content = new List<ContentBlock>() };
+        var expectedResult = new CallToolResult { Content = [] };
         var request = CreateCallToolRequest();
         var cancellationToken = new CancellationToken();
 
         mockToolLoader.CallToolHandler(request, cancellationToken)
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
         var result = await runtime.CallToolHandler(request, cancellationToken);
@@ -329,7 +328,7 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
@@ -342,11 +341,11 @@ public class McpRuntimeTests
 
         // Act & Assert
         var actualException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            runtime.ListToolsHandler(request, CancellationToken.None).AsTask());
+            runtime.ListToolsHandler(request, TestContext.Current.CancellationToken).AsTask());
 
         Assert.Equal(expectedException.Message, actualException.Message);
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
@@ -363,13 +362,14 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
-        var request = CreateCallToolRequest();
-        var expectedException = new InvalidOperationException("Tool loader failed");
+        var toolName = "test-tool";
+        var request = CreateCallToolRequest(toolName);
+        var expectedException = new Exception("Tool loader failed");
 
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
             .Returns<ValueTask<CallToolResult>>(x => throw expectedException);
@@ -377,19 +377,19 @@ public class McpRuntimeTests
         // Act & Assert
         Assert.NotNull(request.Params);
 
-        var actualException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            runtime.CallToolHandler(request, CancellationToken.None).AsTask());
+        var actualException = await Assert.ThrowsAsync<Exception>(() =>
+            runtime.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask());
         Assert.Equal(expectedException.Message, actualException.Message);
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
-        Assert.Equal(request.Params.Name, actualToolName);
+        Assert.Equal(toolName, actualToolName);
 
         GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
 
-        Assert.DoesNotContain(activity.Tags,
+        Assert.DoesNotContain(activity.TagObjects,
             x => string.Equals(x.Key, TagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -433,27 +433,27 @@ public class McpRuntimeTests
         var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        IMcpRuntime runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         // Setup mock responses
-        var listToolsResult = new ListToolsResult { Tools = new List<Tool>() };
-        var callToolResult = new CallToolResult { Content = new List<ContentBlock>() };
+        var listToolsResult = new ListToolsResult { Tools = [] };
+        var callToolResult = new CallToolResult { Content = [] };
 
         mockToolLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<ListToolsResult>(listToolsResult));
+            .Returns(listToolsResult);
         mockToolLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallToolResult>(callToolResult));
+            .Returns(callToolResult);
 
         // Act & Assert - Interface methods should be available
-        var listResult = await runtime.ListToolsHandler(CreateListToolsRequest(), CancellationToken.None);
-        var callResult = await runtime.CallToolHandler(CreateCallToolRequest(), CancellationToken.None);
+        var listResult = await runtime.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+        var callResult = await runtime.CallToolHandler(CreateCallToolRequest(), TestContext.Current.CancellationToken);
 
         Assert.Equal(listToolsResult, listResult);
         Assert.Equal(callToolResult, callResult);
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithNullRequest_DelegatesToToolLoader()
+    public async Task ListToolsHandler_WithNullParameters_DelegatesToToolLoader()
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
@@ -461,21 +461,22 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList });
 
-        var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
-        mockToolLoader.ListToolsHandler(null!, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<ListToolsResult>(expectedResult));
+        var expectedResult = new ListToolsResult { Tools = [] };
+        mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
 
         // Act
-        var result = await runtime.ListToolsHandler(null!, CancellationToken.None);
+        var result = await runtime.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
-        await mockToolLoader.Received(1).ListToolsHandler(null!, Arg.Any<CancellationToken>());
+        await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task CallToolHandler_WithNullRequest_ReturnsError()
+    public async Task CallToolHandler_WithNullParameters_ReturnsError()
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
@@ -486,12 +487,13 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall });
 
         // Act
-        var result = await runtime.CallToolHandler(null!, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -506,7 +508,7 @@ public class McpRuntimeTests
         // Verify that the tool loader was NOT called since the null request is handled at the runtime level
         await mockToolLoader.DidNotReceive().CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
     }
@@ -538,12 +540,12 @@ public class McpRuntimeTests
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
-        var expectedResult = new CallToolResult { Content = new List<ContentBlock>() };
+        var expectedResult = new CallToolResult { Content = [] };
         var request = CreateCallToolRequest();
         var specificToken = new CancellationTokenSource().Token;
 
         mockToolLoader.CallToolHandler(request, specificToken)
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
         var result = await runtime.CallToolHandler(request, specificToken);
@@ -563,12 +565,12 @@ public class McpRuntimeTests
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
-        var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
+        var expectedResult = new ListToolsResult { Tools = [] };
         var request = CreateListToolsRequest();
         var specificToken = new CancellationTokenSource().Token;
 
         mockToolLoader.ListToolsHandler(request, specificToken)
-            .Returns(new ValueTask<ListToolsResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
         var result = await runtime.ListToolsHandler(request, specificToken);
@@ -609,10 +611,10 @@ public class McpRuntimeTests
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock>
-            {
+            Content =
+            [
                 new TextContentBlock { Text = "Tool executed successfully without prior listing" }
-            }
+            ]
         };
 
         var request = CreateCallToolRequest("existing-tool", new Dictionary<string, JsonElement>
@@ -620,10 +622,10 @@ public class McpRuntimeTests
             { "action", JsonDocument.Parse("\"execute\"").RootElement }
         });
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act - Call tool directly without listing tools first
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -660,10 +662,10 @@ public class McpRuntimeTests
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock>
-            {
+            Content =
+            [
                 new TextContentBlock { Text = "Tool executed successfully without prior listing" }
-            }
+            ]
         };
 
         var request = CreateCallToolRequest(toolName, new Dictionary<string, JsonElement>
@@ -672,10 +674,10 @@ public class McpRuntimeTests
             { OptionDefinitions.Common.SubscriptionName, JsonDocument.Parse($"\"{testSubscriptionId}\"").RootElement }
         });
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act - Call tool directly without listing tools first
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -780,7 +782,7 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
-            .Returns(ValueTask.FromResult<Activity?>(activity));
+            .Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
@@ -788,10 +790,10 @@ public class McpRuntimeTests
         var errorText = "Some error details";
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock>
-            {
+            Content =
+            [
                 new TextContentBlock { Text = errorText }
-            },
+            ],
             IsError = true
         };
 
@@ -802,12 +804,12 @@ public class McpRuntimeTests
             { OptionDefinitions.Common.SubscriptionName, JsonDocument.Parse("\"test-subscription\"").RootElement },
         });
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallToolResult>(expectedResult));
+            .Returns(expectedResult);
 
         // Act
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         // Error details are present in the CallToolResult content; assert that instead of relying

@@ -14,6 +14,8 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 {
     private const string CommandTitle = "Delete SQL Database";
 
+    public override string Id => "c4ef0375-0df9-445c-b8ae-2542e9612425";
+
     public override string Name => "delete";
 
     public override string Description =>
@@ -33,7 +35,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -51,7 +53,8 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
                 options.Database!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteResult);
         }

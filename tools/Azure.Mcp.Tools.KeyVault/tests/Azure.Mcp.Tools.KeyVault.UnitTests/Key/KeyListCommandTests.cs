@@ -50,12 +50,14 @@ public class KeyListCommandTests
         // Arrange
         var expectedKeys = new List<string> { "key1", "key2" };
 
-        _keyVaultService.ListKeys(
-            Arg.Is(_knownVaultName),
-            Arg.Any<bool>(),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Any<bool>(),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 
         var args = _commandDefinition.Parse([
@@ -64,7 +66,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -81,12 +83,14 @@ public class KeyListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoKeys()
     {
         // Arrange
-        _keyVaultService.ListKeys(
-            Arg.Is(_knownVaultName),
-            Arg.Any<bool>(),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Any<bool>(),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -95,7 +99,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -114,12 +118,14 @@ public class KeyListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.ListKeys(
-            Arg.Is(_knownVaultName),
-            Arg.Any<bool>(),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Any<bool>(),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -128,7 +134,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

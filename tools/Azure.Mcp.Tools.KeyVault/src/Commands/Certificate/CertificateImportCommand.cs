@@ -16,6 +16,8 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
 
+    public override string Id => "4ae12e3e-dee0-4d8d-ad34-ffeaf70c642b";
+
     public override string Name => "import";
 
     public override string Title => CommandTitle;
@@ -52,7 +54,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -72,7 +74,8 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.Password,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

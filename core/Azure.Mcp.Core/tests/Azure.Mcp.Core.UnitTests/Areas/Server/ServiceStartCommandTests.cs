@@ -2,12 +2,18 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
+
+using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -144,7 +150,6 @@ public class ServiceStartCommandTests
     [Theory]
     [InlineData("sse")]
     [InlineData("websocket")]
-    [InlineData("http")]
     [InlineData("invalid")]
     public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport)
     {
@@ -154,12 +159,12 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid transport '{invalidTransport}'", response.Message);
-        Assert.Contains("Valid transports are: stdio.", response.Message);
+        Assert.Contains("Valid transports are: stdio, http.", response.Message);
     }
 
     [Theory]
@@ -174,12 +179,12 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid mode '{invalidMode}'", response.Message);
-        Assert.Contains("Valid modes are: single, namespace, all.", response.Message);
+        Assert.Contains("Valid modes are: single, namespace, all, consolidated.", response.Message);
     }
 
     [Theory]
@@ -195,7 +200,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert - Should not fail validation, though may fail later due to server startup
         if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
@@ -214,12 +219,12 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
-        Assert.False(options.EnableInsecureTransports);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.InsecureDisableElicitation);
     }
 
@@ -237,7 +242,7 @@ public class ServiceStartCommandTests
         Assert.NotNull(options.Tool);
         Assert.Single(options.Tool);
         Assert.Equal(expectedTool, options.Tool[0]);
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal("all", options.Mode);
     }
 
@@ -268,12 +273,12 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport); // Default transport
+        Assert.Equal(TransportTypes.StdIo, options.Transport); // Default transport
         Assert.Null(options.Namespace);
         Assert.Equal("namespace", options.Mode); // Default mode
         Assert.False(options.ReadOnly); // Default readonly
         Assert.False(options.Debug);
-        Assert.False(options.EnableInsecureTransports);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
     }
 
@@ -346,7 +351,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -382,17 +387,17 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public void GetErrorMessage_WithInsecureTransportException_ReturnsCustomMessage()
+    public void GetErrorMessage_WithDangerouslyDisableHttpIncomingAuthException_ReturnsCustomMessage()
     {
         // Arrange
-        var exception = new InvalidOperationException("Using --enable-insecure-transport requires...");
+        var exception = new InvalidOperationException("Using --dangerously-disable-http-incoming-auth requires...");
 
         // Act
         var message = GetErrorMessage(exception);
 
         // Assert
-        Assert.Contains("Insecure transport configuration error", message);
-        Assert.Contains("proper authentication configured", message);
+        Assert.Contains("Configuration error to disable incoming HTTP authentication", message);
+        Assert.Contains("proper authentication is configured", message);
     }
 
     [Fact]
@@ -459,7 +464,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown for valid transport
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -483,7 +488,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown when transport is omitted
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -494,6 +499,107 @@ public class ServiceStartCommandTests
             // Other exceptions are expected since the server can't actually start in a unit test
             // We only care that ArgumentException about transport is not thrown
         }
+    }
+
+
+    [Fact]
+    public void InitializedHandler_SetsStartupInformation()
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = TransportTypes.StdIo,
+            Mode = "test-mode",
+            Tool = ["test-tool1", "test-tool2"],
+            ReadOnly = false,
+            Debug = true,
+            Namespace = ["storage", "keyvault"],
+            InsecureDisableElicitation = false,
+            DangerouslyDisableHttpIncomingAuth = true,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        var mode = GetAndAssertTagKeyValue(activity, TagName.ServerMode);
+        Assert.Equal(serviceStartOptions.Mode, mode);
+
+        var tool = GetAndAssertTagKeyValue(activity, TagName.Tool);
+        Assert.Equal(string.Join(",", serviceStartOptions.Tool), tool);
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        var namespaces = GetAndAssertTagKeyValue(activity, TagName.Namespace);
+        Assert.Equal(string.Join(",", serviceStartOptions.Namespace), namespaces);
+    }
+
+    [Fact]
+    public void InitializedHandler_SetsCorrectInformationWhenNull()
+    {
+        // Arrange
+        // Tool, Mode, and Namespace are null
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
+            Mode = null,
+            ReadOnly = true,
+            Debug = false,
+            InsecureDisableElicitation = true,
+            DangerouslyDisableHttpIncomingAuth = false,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        Assert.DoesNotContain(TagName.ServerMode, activity.TagObjects.Select(x => x.Key));
+
+        Assert.DoesNotContain(TagName.Tool, activity.TagObjects.Select(x => x.Key));
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
     }
 
     private static ParseResult CreateParseResult(string? serviceValue)
@@ -666,5 +772,15 @@ public class ServiceStartCommandTests
         var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (HttpStatusCode)method!.Invoke(_command, [exception])!;
+    }
+
+    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
+    {
+        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+
+        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
+        Assert.NotNull(matching.Value);
+
+        return matching.Value;
     }
 }

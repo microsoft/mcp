@@ -9,8 +9,8 @@ public interface ITablesService
 {
     Task<List<string>> ListTables(
         string account,
-        bool isCosmosDb,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

@@ -12,6 +12,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseP
 {
     private const string CommandTitle = "List PostgreSQL Servers";
 
+    public override string Id => "4d9f78e1-38f2-4229-a8c7-b631c192a0ff";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -29,7 +31,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseP
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -41,7 +43,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseP
         try
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> servers = await pgService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!);
+            List<string> servers = await pgService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(servers ?? []), PostgresJsonContext.Default.ServerListCommandResult);
         }
         catch (Exception ex)

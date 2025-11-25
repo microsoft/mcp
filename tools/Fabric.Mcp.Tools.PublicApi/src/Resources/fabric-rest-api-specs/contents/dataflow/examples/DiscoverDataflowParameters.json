@@ -1,0 +1,77 @@
+{
+  "parameters": {
+    "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+    "dataflowId": "dddddddd-9999-0000-1111-eeeeeeeeeeee"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "name": "manufacturer",
+            "isRequired": true,
+            "description": "Manufacturer of the item",
+            "type": "String",
+            "defaultValue": "test-value"
+          },
+          {
+            "name": "isImported",
+            "isRequired": false,
+            "description": "Is the item imported",
+            "type": "Boolean",
+            "defaultValue": true
+          },
+          {
+            "name": "quantity",
+            "isRequired": false,
+            "description": "Quantity of item",
+            "type": "Integer",
+            "defaultValue": 123456789
+          },
+          {
+            "name": "weightThreshold",
+            "isRequired": true,
+            "description": "Weight threshold for item",
+            "type": "Number",
+            "defaultValue": 3.14
+          },
+          {
+            "name": "datetimeOfOrder",
+            "isRequired": true,
+            "description": "Datetime of order",
+            "type": "DateTime",
+            "defaultValue": "2025-09-15T21:45:00.000Z"
+          },
+          {
+            "name": "datetimeZoneOfOrder",
+            "isRequired": true,
+            "description": "DatetimeZone of order",
+            "type": "DateTimeZone",
+            "defaultValue": "2025-09-15T21:45:00+02:00"
+          },
+          {
+            "name": "dateOfImport",
+            "isRequired": true,
+            "description": "Date of import",
+            "type": "Date",
+            "defaultValue": "2025-09-15"
+          },
+          {
+            "name": "timeOfImport",
+            "isRequired": true,
+            "description": "Time of import",
+            "type": "Time",
+            "defaultValue": "21:45:00"
+          },
+          {
+            "name": "durationOfImport",
+            "isRequired": true,
+            "description": "Duration of import",
+            "type": "Duration",
+            "defaultValue": "P5DT21H35M30S"
+          }
+        ]
+      }
+    }
+  }
+}

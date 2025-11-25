@@ -18,6 +18,8 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
     private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
 
+    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -84,7 +86,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -107,7 +109,8 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.QueryStartTime,
                 options.QueryEndTime,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
         }

@@ -14,6 +14,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
+    public override string Id => "716a33e5-755c-4168-87ed-8a4651476c6e";
 
     public override string Name => "list";
 
@@ -72,7 +73,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -95,7 +96,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             {
                 // Iterate all subscriptions and aggregate
                 var subscriptionService = context.GetService<ISubscriptionService>();
-                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy);
+                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {
@@ -107,7 +108,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                             options.TopicName, // bare name
                             options.Location,
                             options.Tenant,
-                            options.RetryPolicy);
+                            options.RetryPolicy,
+                            cancellationToken);
                         if (found?.Count > 0)
                         {
                             aggregate.AddRange(found);
@@ -129,7 +131,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.TopicName,
                     options.Location,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }

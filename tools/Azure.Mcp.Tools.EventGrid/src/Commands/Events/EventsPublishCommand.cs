@@ -14,6 +14,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
 {
     private const string CommandTitle = "Publish Events to Event Grid Topic";
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
+    public override string Id => "d5f216a4-c45e-4c29-a414-d3feaa5929e2";
 
     public override string Name => "publish";
 
@@ -69,7 +70,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -88,7 +89,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.EventData!,
                 options.EventSchema,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(result),

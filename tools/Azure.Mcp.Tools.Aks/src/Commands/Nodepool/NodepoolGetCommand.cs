@@ -13,17 +13,15 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
 public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : BaseAksCommand<NodepoolGetOptions>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool";
+    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
+
+    public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
 
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get or list Azure Kubernetes Service (AKS) node pools (agent pools) in a cluster. If a specific node pool name
-        is provided, that node pool will be retrieved. Otherwise, all node pools will be listed in the specified cluster.
-        Returns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.
-        """;
+        "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.";
 
     public override string Title => CommandTitle;
 
@@ -54,7 +52,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -72,7 +70,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
                 options.ClusterName!,
                 options.NodepoolName,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);
         }

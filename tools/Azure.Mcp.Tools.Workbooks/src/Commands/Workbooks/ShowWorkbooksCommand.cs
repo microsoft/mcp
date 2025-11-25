@@ -15,14 +15,14 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 {
     private const string CommandTitle = "Get Workbook";
     private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
+    public override string Id => "a7a882cd-1729-49ed-b349-2a79f8c7de56";
 
     public override string Name => "show";
 
     public override string Description =>
         """
-        Gets information about a specific workbook by its Azure resource ID.
-        Returns workbook details including JSON serialized content, display name, description, category,
-        location, kind, tags, version, modification time, and other metadata.
+        Gets information about a specific Azure Workbook using its resource ID. Returns workbook details including serialized JSON content, display name, description, category, location, kind, tags, version, modification time, and other metadata.
+        Requires the Azure resource ID of the workbook to retrieve.
         """;
 
     public override string Title => CommandTitle;
@@ -50,7 +50,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -62,7 +62,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
         try
         {
             var workbooksService = context.GetService<IWorkbooksService>();
-            var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant) ?? throw new InvalidOperationException("Failed to retrieve workbook");
+            var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant, cancellationToken) ?? throw new InvalidOperationException("Failed to retrieve workbook");
 
             context.Response.Results = ResponseResult.Create(new(workbook), WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }

@@ -31,7 +31,6 @@ public class LogAnalyticsHelper(
     private readonly string _subscription = subscription;
     private readonly string _logType = logType;
     private readonly string? _tenantId = tenantId;
-    private readonly TokenCredential _credential = new CustomChainedCredential(tenantId);
     private readonly IMonitorService _monitorService = monitorService ?? throw new ArgumentNullException(nameof(monitorService));
     private readonly ILogger _logger = logger ?? NullLogger.Instance;
     private readonly SemaphoreSlim _clientInitLock = new(1, 1);
@@ -85,8 +84,9 @@ public class LogAnalyticsHelper(
                     MaxDelay = TimeSpan.FromSeconds(10)
                 }
             };
-
-            _logsIngestionClient = new LogsIngestionClient(endpoint, _credential, options);
+            var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+            TokenCredential credential = await tokenProvider.GetTokenCredentialAsync(_tenantId, default);
+            _logsIngestionClient = new LogsIngestionClient(endpoint, credential, options);
             return _logsIngestionClient;
         }
         catch (Exception ex)

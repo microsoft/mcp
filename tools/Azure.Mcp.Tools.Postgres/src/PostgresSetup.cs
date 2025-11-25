@@ -3,9 +3,11 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
+using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,8 +17,12 @@ public class PostgresSetup : IAreaSetup
 {
     public string Name => "postgres";
 
+    public string Title => "Azure Database for PostgreSQL";
+
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IEntraTokenProvider, EntraTokenProvider>();
+        services.AddSingleton<IDbProvider, DbProvider>();
         services.AddSingleton<IPostgresService, PostgresService>();
 
         services.AddSingleton<DatabaseListCommand>();
@@ -34,7 +40,7 @@ public class PostgresSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.");
+        var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);

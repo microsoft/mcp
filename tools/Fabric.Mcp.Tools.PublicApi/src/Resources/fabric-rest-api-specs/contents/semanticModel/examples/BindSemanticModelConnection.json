@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "semanticModelId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "bindSemanticModelConnectionRequest": {
+            "connectionBinding": {
+                "id": "0b9af1bd-e974-4893-8947-d89d5a560385",
+                "connectivityType": "OnPremisesDataGateway",
+                "connectionDetails": {
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;sales"
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

@@ -19,13 +19,13 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
 
+    public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
+
     public override string Name => "get";
 
     public override string Description =>
         """
-        Gets detailed information about Azure Storage accounts, including account name, location, SKU, access settings,
-        and configuration details. If a specific account name is not provided, the command will return details for all
-        accounts in a subscription.
+        Retrieves detailed information about Azure Storage accounts, including account name, location, SKU, kind, hierarchical namespace status, HTTPS-only settings, and blob public access configuration. If a specific account name is not provided, the command will return details for all accounts in a subscription.
         """;
 
     public override string Title => CommandTitle;
@@ -53,7 +53,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -72,7 +72,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = ResponseResult.Create(new(accounts ?? []), StorageJsonContext.Default.AccountGetCommandResult);

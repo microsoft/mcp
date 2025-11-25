@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+        "anomalyDetectorId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "definition": {
+                    "format": "AnomalyDetectorV1",
+                    "parts": [
+                        {
+                            "path": "Configurations.json",
+                            "payload": "eyANCiAgIiRpZCI6ICJodHRwczovL2RldmVsb3Blci5taWNyb3NvZnQuY29tL2pzb24tc2NoZW1hcy9mYWJyaWMvaXRlbS9hbm9tYWx5RGV0ZWN0b3IvZGVmaW5pdGlvbi8xLjAuMC9zY2hlbWEuanNvbiIsDQogICIkc2NoZW1hIjogImh0dHBzOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LTA3L3NjaGVtYSMiLA0KICAidW5pdmFyaWF0ZUNvbmZpZ3VyYXRpb25zIjogWw0KICBdDQp9",
+                            "payloadType": "InlineBase64"
+                        },
+                        {
+                            "path": ".platform",
+                            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                            "payloadType": "InlineBase64"
+                        }
+                    ]
+                }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

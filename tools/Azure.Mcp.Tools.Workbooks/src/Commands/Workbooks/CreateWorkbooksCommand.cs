@@ -17,6 +17,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
+    public override string Id => "a49c650d-8568-4b63-8bad-35eb6d9ab0a7";
 
     public override string Name => "create";
 
@@ -58,7 +59,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -82,7 +83,8 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                  */
                 options.SourceId ?? "azure monitor",
                 options.RetryPolicy,
-                options.Tenant) ?? throw new InvalidOperationException("Failed to create workbook");
+                options.Tenant,
+                cancellationToken) ?? throw new InvalidOperationException("Failed to create workbook");
 
             context.Response.Results = ResponseResult.Create(new(createdWorkbook), WorkbooksJsonContext.Default.CreateWorkbooksCommandResult);
         }

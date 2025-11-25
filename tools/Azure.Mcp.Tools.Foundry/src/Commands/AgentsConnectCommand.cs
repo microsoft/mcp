@@ -12,12 +12,13 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 {
     private const string CommandTitle = "Connect to AI Agent and Run a Query";
+    public override string Id => "2f0184c9-a19e-41a5-87cc-f96b08fafccb";
 
     public override string Name => "connect";
 
     public override string Description =>
         """
-        Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
+        Query a Microsoft Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
         """;
 
     public override ToolMetadata Metadata => new()
@@ -49,7 +50,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -66,7 +67,8 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
                 options.Query!,
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsConnectCommandResult(response),

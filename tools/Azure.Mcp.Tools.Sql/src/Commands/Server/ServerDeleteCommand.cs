@@ -16,6 +16,8 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 {
     private const string CommandTitle = "Delete SQL Server";
 
+    public override string Id => "381bd0ef-5bb4-45ed-ae51-d129dcc044b2";
+
     public override string Name => "delete";
 
     public override string Description =>
@@ -50,7 +52,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -78,7 +80,8 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (deleted)
             {

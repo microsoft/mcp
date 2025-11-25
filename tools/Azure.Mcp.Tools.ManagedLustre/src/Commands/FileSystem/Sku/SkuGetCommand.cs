@@ -17,6 +17,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
 {
     private const string CommandTitle = "Get AMLFS SKU information";
 
+    public override string Id => "43f679ba-1b6e-4851-9315-f8ad16b789e5";
     public override string Name => "get";
 
     public override string Description =>
@@ -49,7 +50,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -58,7 +59,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
 
             var options = BindOptions(parseResult);
             var service = context.GetService<IManagedLustreService>();
-            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
+            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
         }

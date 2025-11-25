@@ -13,6 +13,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 {
     private const string CommandTitle = "List PostgreSQL Tables";
 
+    public override string Id => "625af363-9894-4b24-a6d9-62032e62a940";
     public override string Name => "list";
     public override string Description => "Lists all tables in the PostgreSQL database.";
     public override string Title => CommandTitle;
@@ -27,7 +28,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -39,7 +40,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         try
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> tables = await pgService.ListTablesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!);
+            List<string> tables = await pgService.ListTablesAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.AuthType!,
+                options.User!,
+                options.Password,
+                options.Server!,
+                options.Database!,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(tables ?? []), PostgresJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)

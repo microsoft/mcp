@@ -13,6 +13,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 {
     private const string CommandTitle = "List MySQL Tables";
 
+    public override string Id => "f12a9e5a-d8ae-4208-8c4c-fe6fe3b3c42e";
+
     public override string Name => "list";
 
     public override string Description => "Enumerates all tables within a specified database on an Azure Database for MySQL Flexible Server instance. This command provides a complete inventory of table objects, facilitating database exploration, schema analysis, and data architecture understanding for development tasks.";
@@ -29,7 +31,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -41,7 +43,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            List<string> tables = await mysqlService.GetTablesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!);
+            List<string> tables = await mysqlService.GetTablesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(tables ?? []), MySqlJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)

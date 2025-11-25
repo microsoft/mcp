@@ -16,6 +16,8 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
     private const string _commandTitle = "List Key Vault Secrets";
     private readonly ILogger<SecretListCommand> _logger = logger;
 
+    public override string Id => "5ecf1460-a896-4930-964a-570e7b1c33ab";
+
     public override string Name => "list";
 
     public override string Title => _commandTitle;
@@ -46,7 +48,7 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -62,7 +64,8 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
                 options.VaultName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(secrets ?? []), KeyVaultJsonContext.Default.SecretListCommandResult);
         }

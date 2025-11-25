@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -24,9 +25,19 @@ public sealed class McpServerMetadata(string id = "", string name = "", string d
     public string Name { get; set; } = name;
 
     /// <summary>
+    /// Gets or sets the user-friendly title of the server for display purposes.
+    /// </summary>
+    public string? Title { get; set; }
+
+    /// <summary>
     /// Gets or sets a description of the server's purpose or capabilities.
     /// </summary>
     public string Description { get; set; } = description;
+
+    /// <summary>
+    /// Gets or sets the tool metadata for this server, containing tool-specific information.
+    /// </summary>
+    public ToolMetadata? ToolMetadata { get; set; }
 }
 
 /// <summary>
@@ -44,6 +55,9 @@ public interface IMcpServerProvider
     /// Creates an MCP client that can communicate with this server.
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client ready for use.</returns>
-    Task<McpClient> CreateClientAsync(McpClientOptions clientOptions);
+    /// <exception cref="ArgumentException">Thrown when the server configuration doesn't specify a valid transport type (missing URL or stdio configuration).</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the server configuration is valid but client creation fails (e.g., missing command for stdio transport, dependency issues, or external process failures).</exception>
+    Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken);
 }

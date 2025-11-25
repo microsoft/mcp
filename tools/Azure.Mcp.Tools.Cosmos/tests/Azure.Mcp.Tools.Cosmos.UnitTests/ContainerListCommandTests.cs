@@ -49,7 +49,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
         var args = _commandDefinition.Parse([
@@ -59,7 +60,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -81,7 +82,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -91,7 +93,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -114,7 +116,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -124,7 +127,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -139,7 +142,7 @@ public class ContainerListCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange & Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -12,13 +11,15 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSchemaOptions>
 {
-    private const string CommandTitle = "Get Knowledge Index Schema in Azure AI Foundry";
+    private const string CommandTitle = "Get Knowledge Index Schema in Microsoft Foundry";
+
+    public override string Id => "7a7453e2-c021-4554-bf71-f95eb3e8c874";
 
     public override string Name => "schema";
 
     public override string Description =>
         """
-        Retrieves the detailed schema configuration of a specific knowledge index from Azure AI Foundry.
+        Retrieves the detailed schema configuration of a specific knowledge index from Microsoft Foundry.
 
         This function provides comprehensive information about the structure and configuration of a knowledge index, including field definitions, data types, searchable attributes, and other schema properties. The schema information is essential for understanding how the index is structured and how data is indexed and searchable.
 
@@ -57,7 +58,7 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -73,7 +74,8 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
                 options.Endpoint!,
                 options.IndexName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             if (indexSchema == null)
             {

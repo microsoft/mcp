@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode.
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -107,6 +107,35 @@ azmcp server start \
     [--transport <transport>] \
     [--read-only]
 ```
+
+#### Consolidated Mode
+
+Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
+
+Each consolidated tool groups operations that are commonly used together:
+- **Resource management**: Groups operations by resource type and action (get, create, edit, delete)
+- **Workflow-based**: Organizes tools around common tasks (deployment, monitoring, security)
+- **Metadata-aligned**: Only groups commands with exactly the same toolMetadata values (destructive, idempotent, readOnly, etc.)
+
+**Benefits:**
+- **Better for AI agents**: Reduces decision complexity by presenting meaningful tool groupings
+- **Optimized tool count**: Well under VS Code's 128-tool limit
+- **Task-oriented**: Tools are named after user intents (e.g., `get_azure_databases_details`, `deploy_azure_resources_and_applications`)
+- **Maintains functionality**: All individual commands are still accessible through the consolidated tools
+
+```bash
+# Start MCP Server with consolidated mode
+azmcp server start \
+    --mode consolidated \
+    [--transport <transport>] \
+    [--namespace <namespace>] \
+    [--read-only]
+```
+
+**Configuration file location**: The consolidated tool definitions are maintained in `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`. Each definition includes:
+- Tool name and description optimized for AI agent selection
+- List of mapped individual commands
+- Matching toolMetadata (destructive, idempotent, readOnly, secret, etc.)
 
 #### Namespace Mode (Default)
 
@@ -146,12 +175,12 @@ The `azmcp server start` command supports the following options:
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
-| `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
-| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
+| `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**
@@ -168,115 +197,27 @@ The `azmcp server start` command supports the following options:
 > azmcp server start --insecure-disable-elicitation
 > ```
 
-### Azure AI Foundry Operations
+#### Server Info
 
 ```bash
-# Connect to an agent in an AI Foundry project and query it
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents connect --agent-id <agent-id> \
-                             --query <query> \
-                             --endpoint <endpoint>
+# Get information about the MCP server, which includes the server's name and version.
+azmcp server info
+```
 
-# Evaluate a response from an agent by passing query and response inline
+
+### Azure AI Best Practices
+
+```bash
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Microsoft Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents evaluate --agent-id <agent-id> \
-                              --query <query> \
-                              --response <response> \
-                              --evaluator <evaluator> \
-                              --azure-openai-endpoint <azure-openai-endpoint> \
-                              --azure-openai-deployment <azure-openai-deployment> \
-                              [--tool-definitions <tool-definitions>]
+azmcp azureaibestpractices get
 
-# Query and evaluate an agent in one command
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --endpoint <endpoint> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--evaluators <evaluators>]
-
-# List knowledge indexes in an AI Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index list --endpoint <endpoint>
-
-# Get knowledge index schema information
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index schema --endpoint <endpoint> \
-                                     --index <index>
-
-# Deploy an AI Foundry model
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deploy --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --deployment <deployment> \
-                            --model-name <model> \
-                            --model-format <model-format> \
-                            --azure-ai-services <azure-ai-services> \
-                            [--model-version <model-version>] \
-                            [--model-source <model-source>] \
-                            [--sku <sku>] \
-                            [--sku-capacity <sku-capacity>] \
-                            [--scale-type <scale-type>] \
-                            [--scale-capacity <scale-capacity>]
-
-# List AI Foundry model deployments
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deployments list --endpoint <endpoint>
-
-# List AI Foundry models
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
-                          [--publisher <publisher>] \
-                          [--license <license>] \
-                          [--model-name <model>]
-
-# Create interactive chat completions using Azure OpenAI chat models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai chat-completions-create --subscription <subscription> \
-                                             --resource-group <resource-group> \
-                                             --resource-name <resource-name> \
-                                             --deployment <deployment-name> \
-                                             --message-array <message-array> \
-                                             [--max-tokens <max-tokens>] \
-                                             [--temperature <temperature>] \
-                                             [--top-p <top-p>] \
-                                             [--frequency-penalty <frequency-penalty>] \
-                                             [--presence-penalty <presence-penalty>] \
-                                             [--stop <stop-sequences>] \
-                                             [--stream <stream>] \
-                                             [--seed <seed>] \
-                                             [--user <user>] \
-                                             [--auth-method <auth-method>]
-
-# Generate text completions using deployed Azure OpenAI models in AI Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai create-completion --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --prompt-text <prompt-text> \
-                                       [--max-tokens <max-tokens>] \
-                                       [--temperature <temperature>]
-
-# Generate vector embeddings for text using Azure OpenAI embedding models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai embeddings-create --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --input-text <input-text> \
-                                       [--user <user>] \
-                                       [--encoding-format <encoding-format>] \
-                                       [--dimensions <dimensions>] \
-                                       [--auth-method <auth-method>]
-
-# List all available OpenAI models and deployments in an Azure resource
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai models-list --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --resource-name <resource-name> \
-                                 [--auth-method <auth-method>]
+# Includes guidance on:
+#   - Microsoft Agent Framework usage and patterns
+#   - Microsoft Foundry model selection
+#   - Best practices for ai app / agent development in Azure
 ```
 
 ### Azure AI Search Operations
@@ -294,8 +235,26 @@ azmcp search index query --subscription <subscription> \
                          --index <index> \
                          --query <query>
 
+# Get AI Search knowledge bases (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search knowledge base get --service <service>
+                                [--knowledge-base <knowledge-base>]
+
+# Run retrieval against an AI Search knowledge base
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search knowledge base retrieve --service <service> \
+                                     --knowledge-base <knowledge-base> \
+                                     [--query <query>] \
+                                     [--messages <messages>]
+
+# Get AI Search knowledge sources (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
 # List AI Search accounts in a subscription
-azmcp search list --subscription <subscription>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search service list --subscription <subscription>
 ```
 
 ### Azure AI Services Speech Operations
@@ -338,6 +297,71 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 
 Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
 
+```bash
+# Synthesize speech from text and save to an audio file using Azure AI Services Speech
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint <endpoint> \
+                            --text <text-to-synthesize> \
+                            --outputAudio <output-file-path> \
+                            [--language <language>] \
+                            [--voice <voice-name>] \
+                            [--format <audio-format>] \
+                            [--endpointId <custom-voice-endpoint-id>]
+```
+
+#### Text-to-Speech Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--text` | Yes | The text to convert to speech |
+| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
+| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
+| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
+| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
+| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
+
+#### Supported Audio Formats
+
+The `--format` parameter accepts the following values:
+
+- **WAV formats**: `Riff24Khz16BitMonoPcm` (default), `Riff16Khz16BitMonoPcm`, `Raw16Khz16BitMonoPcm`
+- **MP3 formats**: `Audio16Khz32KBitRateMonoMp3`, `Audio24Khz96KBitRateMonoMp3`, `Audio48Khz192KBitRateMonoMp3`
+- **OGG/Opus formats**: `Ogg16Khz16BitMonoOpus`, `Ogg24Khz16BitMonoOpus`
+
+**Examples:**
+
+```bash
+# Basic text-to-speech synthesis
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hello, welcome to Azure AI Services Speech" \
+    --outputAudio welcome.wav
+
+# Synthesize with specific language and voice
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hola, bienvenido a los servicios de voz de Azure" \
+    --outputAudio spanish-greeting.wav \
+    --language es-ES \
+    --voice es-ES-ElviraNeural
+
+# Generate MP3 output with high quality
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This is a high quality audio output" \
+    --outputAudio output.mp3 \
+    --format Audio48Khz192KBitRateMonoMp3
+
+# Use custom voice model
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This uses my custom trained voice" \
+    --outputAudio custom-voice.wav \
+    --voice my-custom-voice-model
+    --endpointId my-custom-voice-endpoint-id
+```
+
 ### Azure App Configuration Operations
 
 ```bash
@@ -375,7 +399,9 @@ azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \
                        --key <key> \
                        --value <value> \
-                       [--label <label>]
+                       [--label <label>] \
+                       [--content-type <content-type>] \
+                       [--tags <tags>]
 ```
 
 ### Azure App Lens Operations
@@ -403,6 +429,8 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+```
+
 ### Azure App Service Operations
 
 ```bash
@@ -474,41 +502,118 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
-### Azure Communication Services Operations
+### Azure CLI Operations
+
+#### Generate
 
 ```bash
-# Send SMS message using Azure Communication Services
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "<connection-string>" \
-    --from "<sender-phone-number>" \
-    --to "<recipient-phone-number>" \
-    --message "<message-text>" \
-    [--enable-delivery-report] \
-    [--tag "<custom-tag>"]
+# Generate an Azure CLI command based on user intent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp extension cli generate --cli-type <cli-type>
+                             --intent <intent>
+```
+
+#### Install
+
+```bash
+# Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp extension cli install --cli-type <cli-type>
+```
+
+### Azure Communication Services Operations
+
+#### Email
+
+```bash
+# Send email using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint <endpoint> \
+                               --from <sender-email> \
+                               --to <recipient-email> \
+                               --subject <email-subject> \
+                               --message <email-content> \
+                               [--is-html] \
+                               [--sender-name <sender-display-name>] \
+                               [--cc <cc-recipient-email>] \
+                               [--bcc <bcc-recipient-email>] \
+                               [--reply-to <reply-to-email>]
 
 # Examples:
-# Send SMS to single recipient
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124" \
-    --message "Hello from Azure Communication Services!"
+# Send plain text email
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --to "recipient@example.com" \
+                               --subject "Important message" \
+                               --message "Hello from Azure Communication Services!"
 
-# Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124,+14255550125" \
-    --message "Broadcast message" \
-    --enable-delivery-report \
-    --tag "marketing-campaign"
+# Send HTML-formatted email with CC and sender name
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --sender-name "Support Team" \
+                               --to "recipient@example.com" \
+                               --cc "manager@example.com" \
+                               --subject "Monthly Report" \
+                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+                               --is-html
+
+# Send to multiple recipients with BCC and reply-to
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "notifications@verified-domain.com" \
+                               --to "recipient1@example.com,recipient2@example.com" \
+                               --bcc "archive@example.com" \
+                               --reply-to "support@example.com" \
+                               --subject "System Notification" \
+                               --message "This is an automated notification."
 ```
 
 **Options:**
--   `--connection-string`: Azure Communication Services connection string (required)
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
+#### SMS
+
+```bash
+# SMS message using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint <endpoint> \
+                             --from <sender-phone-number> \
+                             --to <recipient-phone-number> \
+                             --message <message-text> \
+                             [--enable-delivery-report] \
+                             [--tag <custom-tag>]
+
+# Examples:
+# Send SMS to single recipient
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
+                             --from "+1234567890" \
+                             --to "+1234567891" \
+                             --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
+                             --from "+1234567890" \
+                             --to "+1234567891,+1234567892" \
+                             --message "Broadcast message" \
+                             --enable-delivery-report \
+                             --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
 -   `--from`: SMS-enabled phone number in E.164 format (required)
 -   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
 -   `--message`: SMS message content (required)
@@ -526,6 +631,7 @@ azmcp confidentialledger entries append --ledger <ledger-name> \
                                         [--collection-id <collection-id>]
 
 # Retrieve a Confidential Ledger entry with verification proof
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp confidentialledger entries get --ledger <ledger-name> \
                                      --transaction-id <transaction-id> \
                                      [--collection-id <collection-id>]
@@ -630,7 +736,7 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
-                  --query "<kql-query>"
+                  --query <kql-query>
 
 ```
 
@@ -851,11 +957,85 @@ azmcp eventgrid events publish --subscription <subscription> \
 ### Azure Event Hubs
 
 ```bash
-# Get detailed properties of an Event Hubs namespace
+# Delete a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub consumergroup delete --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --namespace <namespace> \
+                                              --eventhub <eventhub-name> \
+                                              --consumer-group <consumer-group-name>
+
+# Get Consumer Groups (list all in event hub or get specific consumer group)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub consumergroup get --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --namespace <namespace> \
+                                           --eventhub <eventhub-name> \
+                                           [--consumer-group <consumer-group-name>]
+
+# Create or update a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub consumergroup update --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --namespace <namespace> \
+                                              --eventhub <eventhub-name> \
+                                              --consumer-group <consumer-group-name> \
+                                              [--user-metadata <user-metadata>]
+```
+
+```bash
+# Delete an Event Hub
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub delete --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name>
+
+# Get Event Hubs (list all in namespace or get specific event hub)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --namespace <namespace> \
+                             [--eventhub <eventhub-name>]
+
+# Create or update an Event Hub
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name> \
+                                [--partition-count <count>] \
+                                [--message-retention-in-hours <hours>] \
+                                [--status <status>]
+```
+
+```bash
+# Delete an Event Hubs Namespace
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs namespace delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --namespace <namespace>
+
+# Get Event Hubs Namespaces (list all in subscription/resource group or get specific namespace)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace get --subscription <subscription> \
-                              --namespace <namespace> \
-                              --resource-group <resource-group>
+                              [--resource-group <resource-group>] \
+                              [--namespace <namespace>]
+
+# Create or update an Event Hubs Namespace
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs namespace update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --namespace <namespace> \
+                                 [--location <location>] \
+                                 [--sku-name <sku-name>] \
+                                 [--sku-tier <sku-tier>] \
+                                 [--sku-capacity <sku-capacity>] \
+                                 [--is-auto-inflate-enabled <true/false>] \
+                                 [--maximum-throughput-units <units>] \
+                                 [--kafka-enabled <true/false>] \
+                                 [--zone-redundant <true/false>] \
+                                 [--tags <json-tags>]
 ```
 
 ### Azure Function App Operations
@@ -874,7 +1054,7 @@ azmcp functionapp get --subscription <subscription> \
 
 ```bash
 # Gets Key Vault Managed HSM account settings
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
@@ -1093,7 +1273,8 @@ azmcp marketplace product get --subscription <subscription> \
 
 ```bash
 # Get best practices for secure, production-grade Azure usage
-azmcp bestpractices get --resource <resource> --action <action>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp get bestpractices get --resource <resource> --action <action>
 
 # Resource options:
 #   general        - General Azure best practices
@@ -1109,12 +1290,41 @@ azmcp bestpractices get --resource <resource> --action <action>
 
 ### Azure MCP Tools
 
+The `azmcp tools list` command provides flexible ways to explore and discover available tools in the Azure MCP server. It supports multiple modes and filtering options that can be combined for precise control over the output format and content.
+
+**Available Options:**
+- `--namespace-mode`: List only top-level service namespaces instead of individual tools
+- `--name-only`: Return only tool/namespace names without descriptions, options, or metadata
+- `--namespace <namespace>`: Filter results to specific namespace(s). Can be used multiple times to include multiple namespaces
+
+**Option Combinations:**
+- Use `--name-only` alone to get a simple list of all tool names
+- Use `--namespace-mode` alone to see available service namespaces with full details
+- Combine `--namespace-mode` and `--name-only` to get just the namespace names
+- Use `--namespace` with any other option to filter results to specific services
+- All options can be combined for maximum flexibility
+
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
 
 # List only the available top-level service namespaces
-azmcp tools list --namespaces
+azmcp tools list --namespace-mode
+
+# List only tool names without descriptions or metadata
+azmcp tools list --name-only
+
+# Filter tools by specific namespace(s)
+azmcp tools list --namespace storage
+azmcp tools list --namespace storage --namespace keyvault
+
+# Combine options: get namespace names only for specific namespaces
+azmcp tools list --namespace-mode --name-only
+azmcp tools list --namespace-mode --name-only --namespace storage
+
+# Combine options: get tool names only for specific namespace(s)
+azmcp tools list --name-only --namespace storage
+azmcp tools list --name-only --namespace storage --namespace keyvault
 ```
 
 ### Azure Monitor Operations
@@ -1123,6 +1333,7 @@ azmcp tools list --namespaces
 
 ```bash
 # List the activity logs of an Azure Resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor activitylog list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --resource-type <resource-type> \
@@ -1150,7 +1361,7 @@ azmcp monitor workspace list --subscription <subscription>
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
                                  --table <table> \
-                                 --query "<kql-query>" \
+                                 --query <kql-query> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
@@ -1158,7 +1369,7 @@ azmcp monitor resource log query --subscription <subscription> \
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table <table> \
-                                  --query "<kql-query>" \
+                                  --query <kql-query> \
                                   [--hours <hours>] \
                                   [--limit <limit>]
 
@@ -1176,10 +1387,10 @@ azmcp monitor workspace log query --subscription <subscription> \
 ```bash
 # Get the health of an entity
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity gethealth --subscription <subscription> \
-                                            --resource-group <resource-group> \
-                                            --health-model <health-model-name> \
-                                            --entity <entity-id>
+azmcp monitor healthmodels entity get --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --health-model <health-model-name> \
+                                      --entity <entity-id>
 ```
 
 #### Metrics
@@ -1237,65 +1448,129 @@ azmcp monitor metrics query --subscription <subscription> \
                             --aggregation "Average"
 ```
 
+#### Web Tests (Availability Tests)
+
+```bash
+# Create a new web test in Azure Monitor
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests create --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              --appinsights-component <component-name> \
+                              --location <location> \
+                              --webtest-locations <locations> \
+                              --request-url <url> \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+
+# Get details for a specific web test
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests get --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --webtest-resource <webtest-resource-name>
+
+# List all web tests in a subscription or optionally, within a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
+
+# Update an existing web test in Azure Monitor
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests update --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              [--appinsights-component <component-name>] \
+                              [--location <location>] \
+                              [--webtest-locations <locations>] \
+                              [--request-url <url>] \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+```
+
 ### Azure Managed Lustre
 
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem list --subscription <subscription> \
-                                         --resource-group <resource-group> 
+azmcp managedlustre fs list --subscription <subscription> \
+                            --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem create --subscription <subscription> \
-                                           --sku <sku> \
-                                           --size <filesystem-size-in-tib> \
-                                           --subnet-id <subnet-id> \
-                                           --zone <zone> \
-                                           --maintenance-day <maintenance-day> \
-                                           --maintenance-time <maintenance-time> \
-                                           [--hsm-container <hsm-container>] \
-                                           [--hsm-log-container <hsm-log-container>] \
-                                           [--import-prefix <import-prefix>] \
-                                           [--root-squash-mode <root-squash-mode>] \
-                                           [--no-squash-nid-list <no-squash-nid-list>] \
-                                           [--squash-uid <squash-uid>] \
-                                           [--squash-gid <squash-gid>] \
-                                           [--custom-encryption] \
-                                           [--key-url <key-url>] \
-                                           [--source-vault <source-vault>] \
-                                           [--user-assigned-identity-id <user-assigned-identity-id>]
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs create --subscription <subscription> \
+                              --sku <sku> \
+                              --size <filesystem-size-in-tib> \
+                              --subnet-id <subnet-id> \
+                              --zone <zone> \
+                              --maintenance-day <maintenance-day> \
+                              --maintenance-time <maintenance-time> \
+                              [--hsm-container <hsm-container>] \
+                              [--hsm-log-container <hsm-log-container>] \
+                              [--import-prefix <import-prefix>] \
+                              [--root-squash-mode <root-squash-mode>] \
+                              [--no-squash-nid-list <no-squash-nid-list>] \
+                              [--squash-uid <squash-uid>] \
+                              [--squash-gid <squash-gid>] \
+                              [--custom-encryption] \
+                              [--key-url <key-url>] \
+                              [--source-vault <source-vault>] \
+                              [--user-assigned-identity-id <user-assigned-identity-id>]
 
 # Update an existing Azure Managed Lustre filesystem
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem update --subscription <subscription> \
-                                           --resource-group <resource-group> \
-                                           --name <filesystem-name> \
-                                           [--maintenance-day <maintenance-day>] \
-                                           [--maintenance-time <HH:mm>] \
-                                           [--root-squash-mode <mode>] \
-                                           [--no-squash-nid-list <nid1,nid2,...>] \
-                                           [--squash-uid <uid>] \
-                                           [--squash-gid <gid>]
+azmcp managedlustre fs update --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --name <filesystem-name> \
+                              [--maintenance-day <maintenance-day>] \
+                              [--maintenance-time <HH:mm>] \
+                              [--root-squash-mode <mode>] \
+                              [--no-squash-nid-list <nid1,nid2,...>] \
+                              [--squash-uid <uid>] \
+                              [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem subnetsize ask --subscription <subscription> \
-                                                   --sku <azure-managed-lustre-sku> \
-                                                   --size <filesystem-size-in-tib>
+azmcp managedlustre fs subnetsize ask --subscription <subscription> \
+                                      --sku <azure-managed-lustre-sku> \
+                                      --size <filesystem-size-in-tib>
 
 # Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem subnetsize validate --subscription <subscription> \
-                                                        --subnet-id <subnet-resource-id> \
-                                                        --sku <azure-managed-lustre-sku> \
-                                                        --size <filesystem-size-in-tib> \
-                                                        --location <filesystem-location>
+azmcp managedlustre fs subnetsize validate --subscription <subscription> \
+                                           --subnet-id <subnet-resource-id> \
+                                           --sku <azure-managed-lustre-sku> \
+                                           --size <filesystem-size-in-tib> \
+                                           --location <filesystem-location>
 
 # Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem sku get --subscription <subscription> \
-                                            --location <location>
+azmcp managedlustre fs sku get --subscription <subscription> \
+                               --location <location>
 ```
 
 ### Azure Native ISV Operations
@@ -1351,26 +1626,20 @@ azmcp role assignment list --subscription <subscription> \
 ### Azure Redis Operations
 
 ```bash
+# Creates a new Azure Managed Redis resource
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp redis create --subscription <subscription> \
+                   --resource-group <resource-group> \
+                   --name <name> \
+                   --sku <sku> \
+                   --location <location> \
+                   [--modules <modules>]
+```
 
-# Lists Databases in an Azure Redis Cluster
+```bash
+# Lists all Redis resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cluster database list --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --cluster <cluster>
-
-# Lists Redis Clusters in the Azure Managed Redis or Azure Redis Enterprise services
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cluster list --subscription <subscription>
-
-# Lists Redis Caches in the Azure Cache for Redis service
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cache list --subscription <subscription>
-
-# Lists Access Policy Assignments in an Azure Redis Cache
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cache list accesspolicy --subscription <subscription> \
-                                    --resource-group <resource-group> \
-                                    --cache <cache-name>
+azmcp redis list --subscription <subscription>
 ```
 
 ### Azure Resource Group Operations
@@ -1395,7 +1664,7 @@ azmcp resourcehealth availability-status list --subscription <subscription> \
 
 # List service health events in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth service-health-events list --subscription <subscription> \
+azmcp resourcehealth health-events list --subscription <subscription> \
                                                 [--event-type <event-type>] \
                                                 [--status <status>] \
                                                 [--query-start-time <start-time>] \
@@ -1558,7 +1827,7 @@ azmcp sql server delete --subscription <subscription> \
                         --server <server-name>
 
 # List SQL servers in a resource group
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server list --subscription <subscription> \
                       --resource-group <resource-group>
 
@@ -1625,11 +1894,10 @@ azmcp storage blob upload --subscription <subscription> \
 ### Azure Tables Operations
 
 ```bash
-# List tables in a Storage or Cosmos DB account
+# List tables in a Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp tables list --subscription <subscription> \
-                  [--storage-account <storage-account>] \
-                  [--cosmosdb-account <cosmosdb-account>]
+                  [--storage-account <storage-account>]
 ```
 
 ### Azure Subscription Management
@@ -1658,13 +1926,13 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 
 # List session hosts in a host pool
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                [--resource-group <resource-group>]
 
 # List user sessions on a session host
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost usersession-list --subscription <subscription> \
+azmcp virtualdesktop hostpool host user-list --subscription <subscription> \
                                                            [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                            --sessionhost <sessionhost-name> \
                                                            [--resource-group <resource-group>]
@@ -1695,18 +1963,18 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 ```bash
 # Standard usage - enumerates all host pools in subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool <hostpool-name>
 
 # Optimized usage - direct resource group access
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool <hostpool-name> \
                                                 --resource-group <resource-group>
 
 # Alternative with resource ID (no resource group needed)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
 ```
 
@@ -1774,6 +2042,152 @@ azmcp cloudarchitect design --question "What type of application are you buildin
                             --confidence-score 0.1
 ```
 
+### Microsoft Foundry Operations
+
+```bash
+# Create an agent in a Microsoft Foundry project
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents create --endpoint <endpoint> \
+                            --model-deployment <model-deployment> \
+                            --agent-name <agent-name> \
+                            --systemInstruction <system-instruction>
+
+# Connect to an agent in a Microsoft Foundry project and query it
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
+
+# Get SDK samples for interacting with a Microsoft Foundry agent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
+
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
+# Query and evaluate an agent in one command
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
+# List knowledge indexes in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry knowledge index list --endpoint <endpoint>
+
+# Get knowledge index schema information
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index <index>
+
+# Deploy a Microsoft Foundry model
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deploy --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --deployment <deployment> \
+                            --model-name <model> \
+                            --model-format <model-format> \
+                            --azure-ai-services <azure-ai-services> \
+                            [--model-version <model-version>] \
+                            [--model-source <model-source>] \
+                            [--sku <sku>] \
+                            [--sku-capacity <sku-capacity>] \
+                            [--scale-type <scale-type>] \
+                            [--scale-capacity <scale-capacity>]
+
+# List Microsoft Foundry model deployments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deployments list --endpoint <endpoint>
+
+# List Microsoft Foundry models
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
+                          [--publisher <publisher>] \
+                          [--license <license>] \
+                          [--model-name <model>]
+
+# Create interactive chat completions using Azure OpenAI chat models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai chat-completions-create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --resource-name <resource-name> \
+                                             --deployment <deployment-name> \
+                                             --message-array <message-array> \
+                                             [--max-tokens <max-tokens>] \
+                                             [--temperature <temperature>] \
+                                             [--top-p <top-p>] \
+                                             [--frequency-penalty <frequency-penalty>] \
+                                             [--presence-penalty <presence-penalty>] \
+                                             [--stop <stop-sequences>] \
+                                             [--stream <stream>] \
+                                             [--seed <seed>] \
+                                             [--user <user>] \
+                                             [--auth-method <auth-method>]
+
+# Generate text completions using deployed Azure OpenAI models in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
+
+# Generate vector embeddings for text using Azure OpenAI embedding models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai embeddings-create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --input-text <input-text> \
+                                       [--user <user>] \
+                                       [--encoding-format <encoding-format>] \
+                                       [--dimensions <dimensions>] \
+                                       [--auth-method <auth-method>]
+
+# List all available OpenAI models and deployments in an Azure resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai models-list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --resource-name <resource-name> \
+                                 [--auth-method <auth-method>]
+
+# Get Microsoft Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
+
+# Create a Microsoft Foundry agent thread
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads create --endpoint <endpoint>
+                             --user-message <user-message>
+
+# Get messages of a Microsoft Foundry agent thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads get-messages --endpoint <endpoint>
+                                   --thread-id <thread-id>
+
+# List Microsoft Foundry agent threads in a Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads list --endpoint <endpoint>
+```
+
 ## Response Format
 
 All responses follow a consistent JSON format:
@@ -1790,7 +2204,7 @@ All responses follow a consistent JSON format:
 
 ### Tool and Namespace Result Objects
 
-When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
 | Field | Description |
 |-------|-------------|

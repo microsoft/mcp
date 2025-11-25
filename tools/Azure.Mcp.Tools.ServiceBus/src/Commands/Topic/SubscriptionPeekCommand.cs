@@ -17,6 +17,9 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
+
+    public override string Id => "61d32f07-fad6-4e43-9f1e-f0937ce773b3";
+
     public override string Name => "peek";
 
     public override string Description =>
@@ -64,7 +67,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -83,7 +86,8 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
                 options.SubscriptionName!,
                 options.MaxMessages ?? 1,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.SubscriptionPeekCommandResult);
         }

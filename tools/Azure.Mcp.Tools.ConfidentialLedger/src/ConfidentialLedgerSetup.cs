@@ -13,6 +13,8 @@ public class ConfidentialLedgerSetup : IAreaSetup
 {
     public string Name => "confidentialledger";
 
+    public string Title => "Azure Confidential Ledger";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IConfidentialLedgerService, ConfidentialLedgerService>();
@@ -23,7 +25,7 @@ public class ConfidentialLedgerSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var root = new CommandGroup(Name,
-            "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.");
+            "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.", Title);
 
         var entries = new CommandGroup("entries", "Ledger entries operations - Commands for appending and retrieving ledger entries.");
         root.AddSubGroup(entries);

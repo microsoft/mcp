@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -15,6 +15,8 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     private const string CommandTitle = "Get API Examples";
 
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
 
     public override string Name => "get";
 
@@ -51,7 +53,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -63,7 +65,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!);
+            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }

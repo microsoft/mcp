@@ -61,6 +61,344 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/sqlEndpoints/{sqlEndpointId}/refreshMetadata": {
+      "post": {
+        "summary": "Refreshes all tables within a SQL analytics endpoint.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *contributor* or higher workspace role. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_RefreshSqlEndpointMetadata",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlEndpointId",
+            "description": "The SQL analytics endpoint ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "sqlEndpointRefreshMetadataRequest",
+            "description": "Refresh SQL analytics endpoint request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SqlEndpointRefreshMetadataRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/TableSyncStatuses"
+            }
+          },
+          "202": {
+            "description": "Request accepted, SQL analytics table refresh in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Refresh all tables for a specified SQL analytics endpoint in a workspace": {
+            "$ref": "./examples/RefreshAllTablesInSqlEndpoint.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlEndpoints/{sqlEndpointId}/connectionString": {
+      "get": {
+        "summary": "Returns the SQL connection string of the specified warehouse.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the warehouse. The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\n SqlEndpoint.Read.All or SqlEndpoint.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetConnectionString",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlEndpointId",
+            "description": "The SQL endpoint ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "guestTenantId",
+            "description": "The guest tenant ID if the end user's tenant is different from the SQL endpoint's tenant.",
+            "type": "string",
+            "format": "uuid",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "privateLinkType",
+            "description": "Indicates the type of private link this connection string uses. Additional `privateLinkType` types may be added over time.",
+            "type": "string",
+            "enum": [
+              "None",
+              "Workspace"
+            ],
+            "x-ms-enum": {
+                "name": "PrivateLinkType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "No private link (default)."
+                    },
+                    {
+                        "value": "Workspace",
+                        "description": "Workspace private Link."
+                    }
+                ]
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ConnectionStringResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidGuestTenantId - The provided ID does not exist.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get connection string example": {
+            "$ref": "./examples/GetConnectionString.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlEndpoints/{itemId}/settings/sqlAudit": {
+      "patch": {
+        "summary": "Update settings associated with the SQL endpoint.",
+        "description": "## Permissions\n\n The caller must have *audit* item permission. \n\n## Required Delegated Scopes\n\nItem.Audit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SQLAuditSettings"
+        ],
+        "operationId": "UpdateSQLAuditSettings",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateAuditSettingsRequest",
+            "description": "Update SQL audit settings request payload.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/SqlAuditSettingsUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/SqlAuditSettings"
+
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update SQL Audit Settings": {
+            "$ref": "./examples/UpdateSqlAuditSettings.json"
+          }
+        }
+      },
+      "get": {
+        "summary": "Returns the settings associated with the SQL endpoint.",
+        "description": "## Permissions\n\n The caller must have *reader* or higher item permission. \n\n## Required Delegated Scopes\n\nSqlEndpoint.Read.All or SqlEndpoint.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SQLAuditSettings"
+        ],
+        "operationId": "GetSQLAuditSettings",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/SqlAuditSettings"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get SQL Audit Settings": {
+            "$ref": "./examples/GetSqlAuditSettings.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlEndpoints/{itemId}/settings/sqlAudit/setAuditActionsAndGroups": {
+      "post": {
+        "summary": "Update the audit actions and groups for this SQL endpoint.",
+        "description": "## Permissions\n\n The caller must have *audit* item permission. \n\n## Required Delegated Scopes\n\nItem.Audit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SQLAuditSettings"
+        ],
+        "operationId": "SetAuditActionsAndGroups",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "setAuditActionsAndGroupsRequest",
+            "description": "Set audit actions and groups request payload.",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": [
+                "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+                "FAILED_DATABASE_AUTHENTICATION_GROUP",
+                "BATCH_COMPLETED_GROUP"
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Set SQL Audit Groups": {
+            "$ref": "./examples/SetAuditActionsAndGroups.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

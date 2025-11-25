@@ -2,29 +2,39 @@
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
+<!-- remove-section: start nuget;vsix;npm remove_note_ga -->
+> [!NOTE]
+> Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
+<!-- remove-section: end remove_note_ga -->
+
+<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
-[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053)
+[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 
 <!-- remove-section: end remove_install_links -->
-
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
+        - [Visual Studio 2026](#visual-studio-2026)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
+        - [Eclipse IDE](#eclipse-ide)
         - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end remove_installatiion_sub_sections -->
+        - [Docker](#docker)
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+        - [Microsoft Foundry](#microsoft-foundry)
+        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -33,7 +43,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Documentation](#documentation)
     - [Feedback and Support](#feedback-and-support)
     - [Security](#security)
+    - [Permissions and Risk](#permissions-and-risk)
     - [Data Collection](#data-collection)
+    - [Compliance Responsibility](#compliance-responsibility)
+    - [Third Party Components](#third-party-components)
+    - [Export Control](#export-control)
+    - [No Warranty / Limitation of Liability](#no-warranty--limitation-of-liability)
     - [Contributing](#contributing)
     - [Code of Conduct](#code-of-conduct)
 
@@ -42,30 +57,78 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 **Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
 # Installation
-
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
-<!-- insert-section: vsix {{    | | Enable Auto-Start | | Manual Start (if autostart is off) |}} -->
-<!-- insert-section: vsix {{    | -- | -- | -- | -- |}} -->
-<!-- insert-section: vsix {{    | 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |}} -->
-<!-- insert-section: vsix {{    | 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |}} -->
-<!-- insert-section: vsix {{    | 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |}} -->
-<!-- insert-section: vsix {{    | 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Confirm its runing by observing the log messages in the output tab. ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)|}}-->
+<!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{   #### **Enable Autostart**}} -->
+<!-- insert-section: vsix {{   1. Open **Settings** in VS Code.}} -->
+<!-- insert-section: vsix {{   2. Search for `chat.mcp.autostart`.}} -->
+<!-- insert-section: vsix {{   3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.}} -->
+<!-- insert-section: vsix {{   4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.}} -->
+<!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ToolTip.png)}}-->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{   #### **Manual Start (if autostart is off)**}} -->
+<!-- insert-section: vsix {{   1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).}} -->
+<!-- insert-section: vsix {{   2. Run `MCP: List Servers`.}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ListServers.png)}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{   3. Select `Azure MCP Server ext`, then click **Start Server**.}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/SelectServer.png)}} -->
+<!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/StartServer.png)}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{   4. **Check That It's Running**}} -->
+<!-- insert-section: vsix {{      - Go to the **Output** tab in VS Code.}} -->
+<!-- insert-section: vsix {{      - Look for log messages confirming the server started successfully.}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/Output.png)}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
+<!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       ```json}} -->
+<!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
+<!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // Filter which namespaces to expose}} -->
+<!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       ```}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.}} -->
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
+
+> [!IMPORTANT]  
+> Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
 ## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
 ### VS Code (Recommended)
+Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
 
-1. Install either the stable or Insiders release of VS Code:
-   * [💫 Stable release](https://code.visualstudio.com/download)
-   * [🔮 Insiders release](https://code.visualstudio.com/insiders)
-1. Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension
+![Install Azure MCP Server Extension](images/install_azure_mcp_server_extension.gif)
+
+1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
+1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
+1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
+
+### Visual Studio 2026
+1. Download [Visual Studio 2026](https://visualstudio.microsoft.com/) or [Visual Studio 2026 Insiders](https://visualstudio.microsoft.com/insiders/) and install using the **Visual Studio Installer**.
+    - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
+1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
+1. Click **install while downloading** to complete the installation.
+   
+For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
 
@@ -81,6 +144,12 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
+### Eclipse IDE
+
+1. Install [Eclipse IDE](https://www.eclipse.org/downloads/packages/).
+1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
+1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
+
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
 
@@ -93,8 +162,8 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
-To verify your .NET version, run the following command in your terminal: `dotnet --info`
--  Configure your `mcp.json` file with the following:
+To verify the .NET version, run the following command in the terminal: `dotnet --info`
+-  Configure the `mcp.json` file with the following:
 
     ```json
     {
@@ -120,8 +189,8 @@ To verify your .NET version, run the following command in your terminal: `dotnet
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--  Configure your `mcp.json` file with the following:
+- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+-  Configure the `mcp.json` file with the following:
 
     ```json
     {
@@ -139,6 +208,7 @@ To verify your .NET version, run the following command in your terminal: `dotnet
     }
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
+<!-- remove-section: start nuget remove_custom_client_config_table -->
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 **Client-Specific Configuration**
@@ -148,13 +218,14 @@ To verify your .NET version, run the following command in your terminal: `dotnet
 | **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
 | **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
+| **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
 | **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
+<!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
-
 
 ## Package Manager
 Package manager installation offers several advantages over IDE-specific setup, including centralized dependency management, CI/CD integration, support for headless/server environments, version control, and project portability.
@@ -166,16 +237,61 @@ Install Azure MCP Server via a package manager:
 Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 
 ```bash
-dotnet tool install --global Azure.Mcp
+dotnet tool install Azure.Mcp
+```
+or 
+```bash
+dotnet tool install Azure.Mcp --version <version>
 ```
 
 ### NPM
 
 Install the Node.js package: [@azure/mcp](https://www.npmjs.com/package/@azure/mcp).
 
+**Local installation (recommended):**
+
 ```bash
-npm install -g @azure/mcp
+npm install @azure/mcp@latest
 ```
+
+**Install a specific version:**
+
+```bash
+npm install @azure/mcp@<version>
+```
+
+**Run a command without installing (using npx):**
+
+```bash
+npx -y @azure/mcp@latest [command]
+```
+For example,
+
+Start a server
+```bash
+npx -y @azure/mcp@latest server start
+```
+
+List tools
+```bash
+npx -y @azure/mcp@latest tools list
+```
+
+<details>
+<summary>Additional instructions</summary>
+
+**When to use local vs global installation:**
+
+-   **Local (recommended):** Install in the project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration.
+-   **Global:** Install system-wide to run `azmcp` commands directly from any terminal.
+
+**Troubleshooting:**
+To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (or respective binaries) installation, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md).
+
+**Architecture:**
+To understand how platform-specific binaries are installed with @azure/mcp, review the [wrapper binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md).
+
+</details>
 
 ### Docker
 
@@ -194,9 +310,9 @@ AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
 AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-#### Configure your MCP client to use Docker
+#### Configure MCP client to use Docker
 
-2. Add or update existing `mcp.json`.  Replace `/full/path/to/your/.env` with the actual `.env` file path.
+2. Add or update existing `mcp.json`.  Replace `/full/path/to/.env` with the actual `.env` file path.
 
 ```json
    {
@@ -208,7 +324,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
                "-i",
                "--rm",
                "--env-file",
-               "/full/path/to/your/.env",
+               "/full/path/to/.env",
                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
          }
@@ -216,10 +332,23 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
    }
 ```
 </details>
-<!-- remove-section: end remove_package_manager_section -->
-<!-- remove-section: end remove_entire_installation_sub_section -->
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+<!-- remove-section: end remove_package_manager_section -->
+
+## Remote MCP Server (preview)
+
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+### Microsoft Foundry
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/) for Microsoft Foundry.
+2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+
+### Microsoft Copilot Studio
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/) for Microsoft Copilot Studio.
+<!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
 
@@ -238,13 +367,21 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ✨ The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
 
-### 🧮 Azure AI Foundry
+### 🧮 Microsoft Foundry
 
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
+* List Microsoft Foundry models
+* Deploy Microsoft Foundry models
+* List Microsoft Foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
+* Create Microsoft Foundry agents
+* List Microsoft Foundry agents
+* Connect and query Microsoft Foundry agents
+* Evaluate Microsoft Foundry agents
+* Get SDK samples for interacting with Microsoft Foundry agent
+* Create Microsoft Foundry agent threads
+* List Microsoft Foundry agent threads
+* Get messages of a Microsoft Foundry thread
   
 ### 🔎 Azure AI Search
 
@@ -257,6 +394,9 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Recognize speech from my audio file with language detection"
 * "Transcribe speech from audio with profanity filtering"
 * "Transcribe audio with phrase hints for better accuracy"
+* "Convert text to speech and save to output.wav"
+* "Synthesize speech from 'Hello, welcome to Azure' with Spanish voice"
+* "Generate MP3 audio from text with high quality format"
 
 ### ⚙️ Azure App Configuration
 
@@ -274,12 +414,25 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
+### 🖥️ Azure CLI Generate
+
+* Generate Azure CLI commands based on user intent
+
+### 🖥️ Azure CLI Install
+
+* Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools CLI for your platform.
+
 ### 📞 Azure Communication Services
 
 * "Send an SMS message to +1234567890"
 * "Send SMS with delivery reporting enabled"
 * "Send a broadcast SMS to multiple recipients"
 * "Send SMS with custom tracking tag"
+* "Send an email from 'sender@example.com' to 'recipient@example.com' with subject 'Hello' and message 'Welcome!'"
+* "Send an HTML email to multiple recipients with CC and BCC using Azure Communication Services"
+* "Send an email with reply-to address 'reply@example.com' and subject 'Support Request'"
+* "Send an email from my communication service endpoint with custom sender name and multiple recipients"
+* "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
 ### 📦 Azure Container Apps
 
@@ -383,12 +536,14 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
-- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
+- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
-- 🎤 **Azure AI Services Speech** - Speech-to-text recognition
+- 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
+- 🤖 **Azure AI Best Practices** - AI app development guidance for Microsoft Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
+- 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
 - 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
@@ -444,6 +599,12 @@ Your credentials are always handled securely through the official [Azure Identit
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to. This includes not only the Azure MCP Server, but any MCP client/agent that you choose to implement down to the model provider.
 
+You should follow Microsoft security guidance for MCP servers, including enabling Entra ID authentication, secure token management, and network isolation. Refer to [Microsoft Security Documentation](https://learn.microsoft.com/azure/api-management/secure-mcp-servers) for details.
+
+## Permissions and Risk
+
+MCP clients can invoke operations based on the user’s Azure RBAC permissions. Autonomous or misconfigured clients may perform destructive actions. You should review and apply least-privilege RBAC roles and implement safeguards before deployment. Certain safeguards, such as flags to prevent destructive operations, are not standardized in the MCP specification and may not be supported by all clients.
+
 ## Data Collection
 
 <!-- remove-section: start vsix remove_data_collection_section_content -->
@@ -454,10 +615,44 @@ The software may collect information about you and your use of the software and 
 <!-- remove-section: start vsix remove_telemetry_config_section -->
 ### Telemetry Configuration
 
-Telemetry collection is on by default.
+Telemetry collection is on by default. The server supports two telemetry streams:
 
-To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
+1. **User-provided telemetry**: If you configure your own Application Insights connection string via the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable, telemetry will be sent to your Application Insights resource.
+
+2. **Microsoft telemetry**: By default, telemetry is also sent to Microsoft to help improve the product. This can be disabled separately from user-provided telemetry. See [Disabling All Telemetry](#disabling-all-telemetry) section below for more details.
+
+#### Disabling All Telemetry
+
+To disable all telemetry collection (both user-provided and Microsoft), set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY=false
+```
+
+#### Disabling Microsoft Telemetry Only
+
+To disable only Microsoft telemetry collection while keeping your own Application Insights telemetry active, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT=false
+```
 <!-- remove-section: end remove_telemetry_config_section -->
+
+## Compliance Responsibility
+
+This MCP server may interact with clients and services outside Microsoft compliance boundaries. You are responsible for ensuring that any integration complies with applicable organizational, regulatory, and contractual requirements.
+
+## Third Party Components
+
+This MCP server may use or depend on third party components. You are responsible for reviewing and complying with the licenses and security posture of any third-party components.
+
+## Export Control
+
+Use of this software must comply with all applicable export laws and regulations, including U.S. Export Administration Regulations and local jurisdiction requirements.
+
+## No Warranty / Limitation of Liability
+
+This software is provided “as is” without warranties or conditions of any kind, either express or implied. Microsoft shall not be liable for any damages arising from use, misuse, or misconfiguration of this software.
 
 ## Contributing
 

@@ -15,6 +15,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
 {
     private const string CommandTitle = "List Container Registry Repositories";
     private readonly ILogger<RegistryRepositoryListCommand> _logger = logger;
+    public override string Id => "adc6eb20-ad98-4624-954d-61581f6fbca9";
 
     public override string Name => "list";
 
@@ -49,7 +50,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -66,7 +67,8 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
                 options.ResourceGroup,
                 options.Registry,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(map ?? []), AcrJsonContext.Default.RegistryRepositoryListCommandResult);
         }

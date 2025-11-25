@@ -19,6 +19,8 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
 
     private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
 
+    public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
+
     public override string Name => "update";
 
     public override string Description =>
@@ -70,7 +72,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
         options.SquashGid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashGidOption.Name);
         return options;
     }
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -92,7 +94,8 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
                 options.SquashUid,
                 options.SquashGid,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new FileSystemUpdateResult(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         }

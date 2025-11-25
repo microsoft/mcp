@@ -14,6 +14,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 {
     private const string CommandTitle = "Get PostgreSQL Table Schema";
 
+    public override string Id => "643a3497-44e1-4727-b3d6-c2e5dba6cab2";
     public override string Name => "get";
     public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
     public override string Title => CommandTitle;
@@ -41,7 +42,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -55,7 +56,16 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 
 
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> schema = await pgService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!);
+            List<string> schema = await pgService.GetTableSchemaAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.AuthType!,
+                options.User!,
+                options.Password,
+                options.Server!,
+                options.Database!,
+                options.Table!,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)

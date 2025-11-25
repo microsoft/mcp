@@ -24,7 +24,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     }
 
     public Command GetCommand() => _command;
-
+    public abstract string Id { get; }
     public abstract string Name { get; }
     public abstract string Description { get; }
     public abstract string Title { get; }
@@ -42,7 +42,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     /// <returns>An options object containing the bound options.</returns>
     protected abstract TOptions BindOptions(ParseResult parseResult);
 
-    public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);
+    public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken);
 
     protected virtual void HandleException(CommandContext context, Exception ex)
     {

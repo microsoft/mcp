@@ -19,9 +19,21 @@ internal static class TelemetryConstants
         public const string MacAddressHash = "MacAddressHash";
         public const string ResourceHash = "AzResourceHash";
         public const string SubscriptionGuid = "AzSubscriptionGuid";
+        public const string ToolId = "ToolId";
         public const string ToolName = "ToolName";
         public const string ToolArea = "ToolArea";
         public const string ServerMode = "ServerMode";
+        public const string IsServerCommandInvoked = "IsServerCommandInvoked";
+        public const string Transport = "Transport";
+        public const string IsReadOnly = "IsReadOnly";
+        public const string Namespace = "Namespace";
+        public const string ToolCount = "ToolCount";
+        public const string InsecureDisableElicitation = "InsecureDisableElicitation";
+        public const string IsDebug = "IsDebug";
+        public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
+        public const string Tool = "Tool";
+        public const string VSCodeConversationId = "VSCodeConversationId";
+        public const string VSCodeRequestId = "VSCodeRequestId";
     }
 
     internal class ActivityName
@@ -29,5 +41,6 @@ internal static class TelemetryConstants
         public const string CommandExecuted = "CommandExecuted";
         public const string ListToolsHandler = "ListToolsHandler";
         public const string ToolExecuted = "ToolExecuted";
+        public const string ServerStarted = "ServerStarted";
     }
 }

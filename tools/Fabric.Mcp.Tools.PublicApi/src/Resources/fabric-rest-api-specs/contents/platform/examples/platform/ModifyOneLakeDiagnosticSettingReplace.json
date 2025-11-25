@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+    "modifyOneLakeDiagnosticSettingRequest": {
+      "status": "Enabled",
+      "destination": {
+        "type": "Lakehouse",
+        "lakehouse": {
+          "referenceType": "ById",
+          "itemId": "83b128a3-f58f-4eee-ab0b-e7e25a748f54",
+          "workspaceId": "6eb233d7-b1c6-4248-9255-5a0d223f3456"
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {}
+  }
+}
