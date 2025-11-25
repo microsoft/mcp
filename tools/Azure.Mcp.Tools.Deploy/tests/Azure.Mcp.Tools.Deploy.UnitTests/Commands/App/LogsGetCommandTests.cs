@@ -191,5 +191,5 @@ public class LogsGetCommandTests
         Assert.NotNull(result);
         Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
     }
-    
+
 }

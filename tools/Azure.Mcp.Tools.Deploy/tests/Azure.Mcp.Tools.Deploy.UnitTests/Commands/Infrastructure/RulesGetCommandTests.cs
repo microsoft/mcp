@@ -66,7 +66,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result.Message);
         Assert.Contains("If creating AzCli script, the script should stop if any command fails", result.Message, StringComparison.OrdinalIgnoreCase);
     }
-    
+
     [Fact]
     public async Task Should_get_infrastructure_rules_without_resource_types()
     {
