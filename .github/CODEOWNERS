@@ -235,10 +235,10 @@
 
 
 # PRLabel: %tools-Workbooks
-/tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Workbooks/      @gardnerjr @matteing @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Workbooks
-# ServiceOwners:                       @matteing
+# ServiceOwners:                       @gardnerjr @matteing
 
 # PRLabel: %tools-SignalR
 /tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @microsoft/azure-mcp
@@ -264,8 +264,3 @@
 /core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
 /servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
-
-# PRLabel: %tools-Workbooks
-/tools/Azure.Mcp.Tools.Workbooks/    @gardnerjr @matteing
-# ServiceLabel: %tools-Workbooks
-# ServiceOwners:                       @gardnerjr @matteing
