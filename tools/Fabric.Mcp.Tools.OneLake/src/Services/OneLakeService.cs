@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -26,25 +30,23 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         }
 
         var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        
-        // OneLake API returns XML in Azure Storage format
+
         using var reader = new StreamReader(response);
         var xmlContent = await reader.ReadToEndAsync(cancellationToken);
-        
+
         try
         {
             var doc = XDocument.Parse(xmlContent);
             var containers = doc.Root?.Element("Containers")?.Elements("Container") ?? [];
-            
+
             var workspaces = containers.Select(container =>
             {
                 var workspace = new Workspace
                 {
-                    Id = container.Element("Name")?.Value ?? "",
-                    DisplayName = container.Element("Name")?.Value ?? ""
+                    Id = container.Element("Name")?.Value ?? string.Empty,
+                    DisplayName = container.Element("Name")?.Value ?? string.Empty
                 };
 
-                // Parse Properties
                 var propertiesElement = container.Element("Properties");
                 if (propertiesElement != null)
                 {
@@ -56,7 +58,6 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     }
                 }
 
-                // Parse Metadata
                 var metadataElement = container.Element("Metadata");
                 if (metadataElement != null)
                 {
@@ -70,12 +71,12 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
                 return workspace;
             }).ToList();
-            
+
             return workspaces;
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to parse OneLake workspace list response: {ex.Message}", ex);
+            throw new InvalidOperationException("Failed to parse OneLake workspace list response.", ex);
         }
     }
 
@@ -88,8 +89,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         }
 
         var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        
-        // Return raw XML response
+
         using var reader = new StreamReader(response);
         return await reader.ReadToEndAsync(cancellationToken);
     }
@@ -537,22 +537,22 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        // First, get the workspace name from the workspace ID using Fabric API
-        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
-        var workspaceName = workspace.DisplayName ?? workspaceId;
+        var xmlContent = await ExecuteWithWorkspaceFallbackAsync(
+            workspaceId,
+            async identifier =>
+            {
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{identifier}?delimiter=/&restype=container&comp=list";
+                if (!string.IsNullOrEmpty(continuationToken))
+                {
+                    url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+                }
 
-        // Use workspace name in OneLake Data Plane API to get items with proper names
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceName}?delimiter=/&restype=container&comp=list";
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
-        }
+                var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
 
-        var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        
-        // OneLake API returns XML in Azure Storage format for item listing
-        using var reader = new StreamReader(response);
-        var xmlContent = await reader.ReadToEndAsync(cancellationToken);
+                using var reader = new StreamReader(response);
+                return await reader.ReadToEndAsync(cancellationToken);
+            },
+            cancellationToken);
         
         try
         {
@@ -741,42 +741,70 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        // First, get the workspace name from the workspace ID using Fabric API
-        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
-        var workspaceName = workspace.DisplayName ?? workspaceId;
+        return await ExecuteWithWorkspaceFallbackAsync(
+            workspaceId,
+            async identifier =>
+            {
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{identifier}?delimiter=/&restype=container&comp=list";
+                if (!string.IsNullOrEmpty(continuationToken))
+                {
+                    url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+                }
 
-        // Use workspace name in OneLake Data Plane API to get items with proper names
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceName}?delimiter=/&restype=container&comp=list";
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
-        }
+                var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
 
-        var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        
-        // Return raw XML response
-        using var reader = new StreamReader(response);
-        return await reader.ReadToEndAsync(cancellationToken);
+                using var reader = new StreamReader(response);
+                return await reader.ReadToEndAsync(cancellationToken);
+            },
+            cancellationToken);
     }
 
     public async Task<string> ListOneLakeItemsDfsJsonAsync(string workspaceId, bool recursive = true, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        // First, get the workspace name from the workspace ID using Fabric API
-        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
-        var workspaceName = workspace.DisplayName ?? workspaceId;
+        return await ExecuteWithWorkspaceFallbackAsync(
+            workspaceId,
+            async identifier =>
+            {
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{identifier}?resource=filesystem&recursive={recursive.ToString().ToLower()}";
+                if (!string.IsNullOrEmpty(continuationToken))
+                {
+                    url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+                }
 
-        // Use workspace name in OneLake DFS API to get items
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceName}?resource=filesystem&recursive={recursive.ToString().ToLower()}";
-        if (!string.IsNullOrEmpty(continuationToken))
+                var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+
+                using var reader = new StreamReader(response);
+                return await reader.ReadToEndAsync(cancellationToken);
+            },
+            cancellationToken);
+    }
+
+    private async Task<T> ExecuteWithWorkspaceFallbackAsync<T>(
+        string workspaceId,
+        Func<string, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(workspaceId, out _))
         {
-            url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+            return await operation(workspaceId);
         }
 
-        var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        
-        // Return raw JSON response (DFS API returns JSON, not XML)
-        using var reader = new StreamReader(response);
-        return await reader.ReadToEndAsync(cancellationToken);
+        try
+        {
+            return await operation(workspaceId);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+        {
+            var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
+            var workspaceName = workspace.DisplayName;
+
+            if (string.IsNullOrWhiteSpace(workspaceName) || string.Equals(workspaceName, workspaceId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw;
+            }
+
+            return await operation(workspaceName);
+        }
     }
 
     private static List<OneLakeItem> ParseBlobPrefixElements(IEnumerable<XElement> blobPrefixes, string workspaceId)
@@ -961,7 +989,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<Stream> ReadFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
@@ -969,7 +997,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         // Use DFS endpoint for file operations (similar to directory creation)
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
         
         // Create or overwrite file using DFS API
         using var createRequest = new HttpRequestMessage(HttpMethod.Put, url + "?resource=file");
@@ -999,16 +1027,224 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         await SendDataPlaneRequestAsync(flushRequest, cancellationToken: cancellationToken);
     }
 
+    public async Task<BlobPutResult> PutBlobAsync(string workspaceId, string itemId, string blobPath, Stream content, long contentLength, string? contentType = null, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+
+        if (content.CanSeek)
+        {
+            content.Seek(0, SeekOrigin.Begin);
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, url)
+        {
+            Content = new StreamContent(content)
+        };
+
+        request.Headers.Add("x-ms-blob-type", "BlockBlob");
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+        request.Content.Headers.ContentLength = contentLength;
+
+        if (!overwrite)
+        {
+            request.Headers.TryAddWithoutValidation("If-None-Match", "*");
+        }
+
+        using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
+
+        var eTag = response.Headers.ETag?.Tag;
+        var lastModified = response.Content?.Headers?.LastModified;
+        if (lastModified is null && response.Headers.TryGetValues("Last-Modified", out var lastModifiedValues))
+        {
+            if (DateTimeOffset.TryParse(lastModifiedValues.FirstOrDefault(), out var parsed))
+            {
+                lastModified = parsed;
+            }
+        }
+        string? requestId = GetHeaderValue(response.Headers, "x-ms-request-id");
+        string? version = GetHeaderValue(response.Headers, "x-ms-version");
+        string? versionId = GetHeaderValue(response.Headers, "x-ms-version-id");
+        string? contentCrc64 = GetHeaderValue(response.Headers, "x-ms-content-crc64");
+        string? encryptionScope = GetHeaderValue(response.Headers, "x-ms-encryption-scope");
+        string? encryptionKeySha256 = GetHeaderValue(response.Headers, "x-ms-encryption-key-sha256");
+        string? clientRequestId = GetHeaderValue(response.Headers, "x-ms-client-request-id");
+        string? rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
+
+        bool? requestServerEncrypted = null;
+        var requestServerEncryptedValue = GetHeaderValue(response.Headers, "x-ms-request-server-encrypted");
+        if (!string.IsNullOrWhiteSpace(requestServerEncryptedValue) && bool.TryParse(requestServerEncryptedValue, out var encrypted))
+        {
+            requestServerEncrypted = encrypted;
+        }
+
+        string? contentMd5 = null;
+        if (response.Content is { } httpContent)
+        {
+            if (httpContent.Headers.ContentMD5 is { Length: > 0 } contentMd5Bytes)
+            {
+                contentMd5 = Convert.ToBase64String(contentMd5Bytes);
+            }
+            else if (httpContent.Headers.TryGetValues("Content-MD5", out var contentMd5Values))
+            {
+                contentMd5 = contentMd5Values.FirstOrDefault();
+            }
+        }
+
+        return new BlobPutResult(
+            workspaceId,
+            itemId,
+            blobPath,
+            contentLength,
+            string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType!,
+            eTag,
+            lastModified,
+            requestId,
+            version,
+            requestServerEncrypted,
+            contentMd5,
+            contentCrc64,
+            encryptionScope,
+            encryptionKeySha256,
+            versionId,
+            clientRequestId,
+            rootActivityId);
+    }
+
+    public async Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
+
+        var contentHeaders = response.Content?.Headers;
+        var contentTypeHeader = contentHeaders?.ContentType;
+        var contentType = contentTypeHeader?.ToString();
+        var charset = contentTypeHeader?.CharSet;
+        var contentEncoding = contentHeaders?.ContentEncoding?.FirstOrDefault();
+        var contentLanguage = contentHeaders?.ContentLanguage?.FirstOrDefault();
+        var contentDisposition = contentHeaders?.ContentDisposition?.ToString();
+        var contentLength = contentHeaders?.ContentLength;
+
+        string? contentMd5 = null;
+        if (contentHeaders?.ContentMD5 is { Length: > 0 } md5Bytes)
+        {
+            contentMd5 = Convert.ToBase64String(md5Bytes);
+        }
+        else if (contentHeaders?.TryGetValues("Content-MD5", out var contentMd5Values) == true)
+        {
+            contentMd5 = contentMd5Values.FirstOrDefault();
+        }
+
+        var contentCrc64 = GetHeaderValue(response.Headers, "x-ms-content-crc64");
+
+        byte[]? contentBytes = null;
+        if (response.Content != null)
+        {
+            contentBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
+
+        string? contentBase64 = null;
+        string? contentText = null;
+        if (contentBytes is { } bytes)
+        {
+            contentBase64 = Convert.ToBase64String(bytes);
+
+            var hasBinaryEncoding = !string.IsNullOrWhiteSpace(contentEncoding) && !string.Equals(contentEncoding, "identity", StringComparison.OrdinalIgnoreCase);
+            if (!hasBinaryEncoding && IsTextContent(contentType))
+            {
+                var encoding = GetTextEncoding(charset);
+                contentText = encoding.GetString(bytes);
+            }
+        }
+
+        var eTag = response.Headers.ETag?.Tag;
+        var lastModified = contentHeaders?.LastModified;
+        if (lastModified is null && response.Headers.TryGetValues("Last-Modified", out var lastModifiedValues))
+        {
+            if (DateTimeOffset.TryParse(lastModifiedValues.FirstOrDefault(), out var parsed))
+            {
+                lastModified = parsed;
+            }
+        }
+
+        bool? requestServerEncrypted = null;
+        var requestServerEncryptedValue = GetHeaderValue(response.Headers, "x-ms-request-server-encrypted");
+        if (!string.IsNullOrWhiteSpace(requestServerEncryptedValue) && bool.TryParse(requestServerEncryptedValue, out var encrypted))
+        {
+            requestServerEncrypted = encrypted;
+        }
+
+        var encryptionScope = GetHeaderValue(response.Headers, "x-ms-encryption-scope");
+        var encryptionKeySha256 = GetHeaderValue(response.Headers, "x-ms-encryption-key-sha256");
+        var version = GetHeaderValue(response.Headers, "x-ms-version");
+        var versionId = GetHeaderValue(response.Headers, "x-ms-version-id");
+        var requestId = GetHeaderValue(response.Headers, "x-ms-request-id");
+        var clientRequestId = GetHeaderValue(response.Headers, "x-ms-client-request-id");
+        var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
+
+        return new BlobGetResult(
+            workspaceId,
+            itemId,
+            blobPath,
+            contentLength,
+            string.IsNullOrWhiteSpace(contentType) ? contentTypeHeader?.MediaType : contentType,
+            charset,
+            contentEncoding,
+            contentLanguage,
+            contentDisposition,
+            contentMd5,
+            contentCrc64,
+            contentBase64,
+            contentText,
+            eTag,
+            lastModified,
+            requestServerEncrypted,
+            encryptionScope,
+            encryptionKeySha256,
+            version,
+            versionId,
+            requestId,
+            clientRequestId,
+            rootActivityId);
+    }
+
+    public async Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
+
+        var version = GetHeaderValue(response.Headers, "x-ms-version");
+        var versionId = GetHeaderValue(response.Headers, "x-ms-version-id");
+        var requestId = GetHeaderValue(response.Headers, "x-ms-request-id");
+        var clientRequestId = GetHeaderValue(response.Headers, "x-ms-client-request-id");
+        var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
+
+        return new BlobDeleteResult(
+            workspaceId,
+            itemId,
+            blobPath,
+            version,
+            versionId,
+            requestId,
+            clientRequestId,
+            rootActivityId);
+    }
+
     public async Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
     public async Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default)
     {
         // Use blob endpoint for directory deletion, similar to file deletion
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{directoryPath.TrimStart('/')}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}";
         
         if (recursive)
         {
@@ -1026,7 +1262,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
         // However, we can create an empty directory using a PUT request with the appropriate headers
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/Files/{directoryPath.TrimStart('/')}?resource=directory";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}?resource=directory";
         
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
         request.Headers.Add("x-ms-resource", "directory");
@@ -1093,6 +1329,53 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         response.EnsureSuccessStatusCode();
         
         return response;
+    }
+
+    private static string? GetHeaderValue(HttpHeaders? headers, string name)
+    {
+        if (headers is null)
+        {
+            return null;
+        }
+
+        return headers.TryGetValues(name, out var values) ? values.FirstOrDefault() : null;
+    }
+
+    private static bool IsTextContent(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return false;
+        }
+
+        if (contentType.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return contentType.Contains("json", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("xml", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("yaml", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("csv", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("html", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("javascript", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Encoding GetTextEncoding(string? charset)
+    {
+        if (string.IsNullOrWhiteSpace(charset))
+        {
+            return Encoding.UTF8;
+        }
+
+        try
+        {
+            return Encoding.GetEncoding(charset);
+        }
+        catch (Exception)
+        {
+            return Encoding.UTF8;
+        }
     }
 
     private static long? GetContentLength(HttpResponseHeaders headers)
