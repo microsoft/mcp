@@ -1,6 +1,9 @@
 parameters:
 - name: ServerName
   type: string
+- name: NuGetFeedIndexUrl
+  type: string
+  default: 'https://api.nuget.org/v3/index.json'
 - name: DependsOn
   type: object
 
@@ -30,6 +33,7 @@ jobs:
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -NuGetFeedIndexUrl '${{ parameters.NuGetFeedIndexUrl }}'
 
   - task: AzureCLI@2
     inputs:
