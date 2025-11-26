@@ -56,7 +56,6 @@ jobs:
         -NpmRegistry '${{ parameters.NpmRegistry }}'
 
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
-  condition: succeeded('PublishToDev')
   parameters:
     ServerName: ${{ parameters.ServerName }}
     NuGetFeedIndexUrl: ${{ parameters.NuGetFeedIndexUrl }}
