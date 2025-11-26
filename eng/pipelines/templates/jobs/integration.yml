@@ -1,7 +1,12 @@
 parameters:
+- name: ServerName
+  type: string
 - name: NugetDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
+- name: NuGetFeedIndexUrl
+  type: string
+  default: 'https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-net/nuget/v3/index.json'
 - name: NpmRegistry
   type: string
   default: 'https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/'
@@ -49,3 +54,11 @@ jobs:
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -NpmRegistry '${{ parameters.NpmRegistry }}'
+
+- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
+  condition: succeeded('PublishToDev')
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    NuGetFeedIndexUrl: ${{ parameters.NuGetFeedIndexUrl }}
+    DependsOn:
+    - PublishToDev
