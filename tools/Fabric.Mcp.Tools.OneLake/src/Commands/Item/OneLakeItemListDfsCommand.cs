@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -25,6 +25,7 @@ public sealed class OneLakeItemListDfsCommand(
     private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "7e7566ab-0984-4f1e-a8be-45a0184a59e5";
     public override string Name => "onelake-item-list-dfs";
     public override string Title => "List OneLake Items (DFS)";
     public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API";
@@ -61,8 +62,13 @@ public sealed class OneLakeItemListDfsCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -75,7 +81,7 @@ public sealed class OneLakeItemListDfsCommand(
                 options.WorkspaceId,
                 recursive: options.Recursive,
                 continuationToken: options.ContinuationToken,
-                CancellationToken.None);
+                cancellationToken);
 
             var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);

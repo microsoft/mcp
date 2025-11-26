@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -26,6 +26,7 @@ public sealed class DirectoryCreateCommand(
     private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe";
     public override string Name => "create";
     public override string Title => "Create OneLake Directory";
     public override string Description => "Create a directory in OneLake storage. Can create nested directory structures.";
@@ -69,8 +70,13 @@ public sealed class DirectoryCreateCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
@@ -89,7 +95,7 @@ public sealed class DirectoryCreateCommand(
                 options.WorkspaceId,
                 options.ItemId,
                 options.DirectoryPath,
-                CancellationToken.None);
+                cancellationToken);
 
             var result = new DirectoryCreateCommandResult
             {

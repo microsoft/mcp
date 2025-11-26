@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -22,6 +22,7 @@ public sealed class FileWriteCommand(
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "ca454f68-3c44-47e3-bd88-6596a1d2c368";
     public override string Name => "write";
     public override string Title => "Write OneLake File";
     public override string Description => "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.";
@@ -72,8 +73,13 @@ public sealed class FileWriteCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         
         try
@@ -121,7 +127,7 @@ public sealed class FileWriteCommand(
                     options.FilePath,
                     contentStream,
                     options.Overwrite,
-                    CancellationToken.None);
+                    cancellationToken);
             }
 
             var result = new FileWriteCommandResult(

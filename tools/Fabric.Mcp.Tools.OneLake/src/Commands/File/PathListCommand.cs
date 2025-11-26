@@ -3,11 +3,13 @@
 
 using System;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Text.Json;
+using System.Threading;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -21,7 +23,9 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
     private const string CommandTitle = "List OneLake Path Structure";
     private readonly ILogger<PathListCommand> _logger = logger;
 
-        public override string Name => "list";
+    public override string Id => "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3";
+
+    public override string Name => "list";
 
     public override string Description =>
         """
@@ -80,7 +84,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -111,7 +115,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     options.ItemId,
                     options.Path,
                     options.Recursive,
-                    cancellationToken: default);
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new PathListResult { RawResponse = rawResponse }, 
@@ -128,7 +132,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     options.WorkspaceId,
                     options.ItemId,
                     options.Recursive,
-                    cancellationToken: default);
+                    cancellationToken: cancellationToken);
             }
             else
             {
@@ -137,7 +141,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     options.ItemId,
                     options.Path,
                     options.Recursive,
-                    cancellationToken: default);
+                    cancellationToken: cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(

@@ -11,6 +11,7 @@ using NSubstitute.ExceptionExtensions;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Net;
+using System.Threading;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -132,7 +133,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -174,7 +175,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -216,7 +217,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -247,7 +248,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);

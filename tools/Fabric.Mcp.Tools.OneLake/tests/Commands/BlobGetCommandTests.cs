@@ -73,7 +73,7 @@ public class BlobGetCommandTests
         var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath}");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await service.Received(1).GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<CancellationToken>());
@@ -97,7 +97,7 @@ public class BlobGetCommandTests
         var parseResult = command.GetCommand().Parse("--item-id lakehouse --file-path Files/sample.txt");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
@@ -112,7 +112,7 @@ public class BlobGetCommandTests
         var parseResult = command.GetCommand().Parse("--workspace-id workspace --file-path Files/sample.txt");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());

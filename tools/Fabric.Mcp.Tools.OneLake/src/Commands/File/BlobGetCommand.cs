@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -25,6 +25,7 @@ public sealed class BlobGetCommand(
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
     public override string Name => "download";
     public override string Title => "Get OneLake Blob";
     public override string Description => "Retrieve a blob from OneLake using the blob endpoint, returning metadata, base64 content, and text when applicable.";
@@ -69,8 +70,13 @@ public sealed class BlobGetCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -88,7 +94,7 @@ public sealed class BlobGetCommand(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
-                CancellationToken.None);
+                cancellationToken);
 
             var commandResult = new BlobGetCommandResult(
                 result,

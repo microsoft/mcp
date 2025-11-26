@@ -12,6 +12,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -131,7 +132,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -160,7 +161,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -181,7 +182,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

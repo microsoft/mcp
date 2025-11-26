@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -22,6 +22,7 @@ public sealed class BlobListCommand(
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a";
     public override string Name => "list";
     public override string Title => "List OneLake Blobs";
     public override string Description => "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.";
@@ -69,8 +70,13 @@ public sealed class BlobListCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -92,7 +98,7 @@ public sealed class BlobListCommand(
                     options.ItemId,
                     options.Path,
                     options.Recursive,
-                    CancellationToken.None);
+                    cancellationToken);
 
                 var rawResult = new BlobListCommandResult { RawResponse = rawResponse };
                 context.Response.Results = ResponseResult.Create(rawResult, MinimalJsonContext.Default.BlobListCommandResult);
@@ -108,7 +114,7 @@ public sealed class BlobListCommand(
                     options.WorkspaceId,
                     options.ItemId,
                     options.Recursive,
-                    CancellationToken.None)).ToList();
+                    cancellationToken)).ToList();
             }
             else
             {
@@ -117,7 +123,7 @@ public sealed class BlobListCommand(
                     options.ItemId,
                     options.Path,
                     options.Recursive,
-                    CancellationToken.None)).ToList();
+                    cancellationToken)).ToList();
             }
 
             var result = new BlobListCommandResult(files, options.Path ?? "");

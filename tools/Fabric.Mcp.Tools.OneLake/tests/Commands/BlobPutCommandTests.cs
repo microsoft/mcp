@@ -91,7 +91,7 @@ public class BlobPutCommandTests
         var parseResult = command.GetCommand().Parse($"{identifierArgs} --file-path {blobPath} --content \"{content}\"");
         var context = new CommandContext(serviceProvider);
 
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.Created, response.Status);
         await oneLakeService.Received(1).PutBlobAsync(
@@ -148,7 +148,7 @@ public class BlobPutCommandTests
             var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath} --local-file-path {tempFile} --content-type application/json --overwrite");
             var context = new CommandContext(serviceProvider);
 
-            var response = await command.ExecuteAsync(context, parseResult);
+            var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
             Assert.Equal(HttpStatusCode.Created, response.Status);
             var expectedLength = new FileInfo(tempFile).Length;
@@ -182,7 +182,7 @@ public class BlobPutCommandTests
         var parseResult = command.GetCommand().Parse("--workspace-id test-workspace --item-id test-item --file-path Files/empty.txt");
         var context = new CommandContext(serviceProvider);
 
-        var response = await command.ExecuteAsync(context, parseResult);
+    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.NotEqual(HttpStatusCode.Created, response.Status);
         await oneLakeService.DidNotReceive().PutBlobAsync(

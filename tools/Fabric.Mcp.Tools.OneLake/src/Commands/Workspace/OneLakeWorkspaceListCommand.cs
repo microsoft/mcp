@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -21,6 +21,7 @@ public sealed class OneLakeWorkspaceListCommand(
     private readonly ILogger<OneLakeWorkspaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "5f005a27-9838-4c09-9785-55ce49963c97";
     public override string Name => "list";
     public override string Title => "List OneLake Workspaces";
     public override string Description => "List all OneLake workspaces using the OneLake data plane API.";
@@ -50,8 +51,13 @@ public sealed class OneLakeWorkspaceListCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -59,7 +65,7 @@ public sealed class OneLakeWorkspaceListCommand(
             {
                 var xmlResponse = await _oneLakeService.ListOneLakeWorkspacesXmlAsync(
                     options.ContinuationToken,
-                    CancellationToken.None);
+                    cancellationToken);
 
                 _logger.LogInformation("Retrieved OneLake workspaces XML response with length: {Length}", xmlResponse.Length);
 
@@ -70,7 +76,7 @@ public sealed class OneLakeWorkspaceListCommand(
             {
                 var workspaces = await _oneLakeService.ListOneLakeWorkspacesAsync(
                     options.ContinuationToken,
-                    CancellationToken.None);
+                    cancellationToken);
 
                 var workspaceList = workspaces.ToList();
                 _logger.LogInformation("Retrieved {Count} OneLake workspaces", workspaceList.Count);

@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -25,6 +25,7 @@ public sealed class OneLakeItemListCommand(
     private readonly ILogger<OneLakeItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d";
     public override string Name => "list";
     public override string Title => "List OneLake Items";
     public override string Description => "List OneLake items in a workspace using the OneLake data plane API";
@@ -59,8 +60,13 @@ public sealed class OneLakeItemListCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -72,7 +78,7 @@ public sealed class OneLakeItemListCommand(
             var xmlResponse = await _oneLakeService.ListOneLakeItemsXmlAsync(
                 options.WorkspaceId,
                 continuationToken: options.ContinuationToken,
-                CancellationToken.None);
+                cancellationToken);
 
             var result = new OneLakeItemListCommandResult { XmlResponse = xmlResponse };
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListCommandResult);

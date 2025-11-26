@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -23,6 +23,7 @@ public sealed class FileReadCommand(
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "b70e5f70-d616-4a54-9879-6aa0a80345d9";
     public override string Name => "read";
     public override string Title => "Read OneLake File";
     public override string Description => "Read the contents of a file from OneLake storage.";
@@ -66,8 +67,13 @@ public sealed class FileReadCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -85,10 +91,10 @@ public sealed class FileReadCommand(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
-                CancellationToken.None);
+                cancellationToken);
 
             using var reader = new StreamReader(stream);
-            var content = await reader.ReadToEndAsync(CancellationToken.None);
+            var content = await reader.ReadToEndAsync(cancellationToken);
 
             var result = new FileReadCommandResult(options.FilePath, content);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileReadCommandResult);

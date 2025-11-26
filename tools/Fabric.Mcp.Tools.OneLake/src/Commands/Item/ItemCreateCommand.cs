@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -21,6 +21,7 @@ public sealed class ItemCreateCommand(
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
     public override string Name => "create";
     public override string Title => "Create Fabric Item";
     public override string Description => "Create a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.";
@@ -59,8 +60,13 @@ public sealed class ItemCreateCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -76,7 +82,7 @@ public sealed class ItemCreateCommand(
                 Description = options.ItemDescription
             };
 
-            var item = await _oneLakeService.CreateItemAsync(options.WorkspaceId, request, CancellationToken.None);
+            var item = await _oneLakeService.CreateItemAsync(options.WorkspaceId, request, cancellationToken);
 
             _logger.LogInformation("Successfully created {ItemType} '{ItemName}' in workspace {WorkspaceId}",
                 options.ItemType, options.ItemName, options.WorkspaceId);

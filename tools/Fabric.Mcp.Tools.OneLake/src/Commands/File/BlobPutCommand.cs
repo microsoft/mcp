@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -25,6 +25,7 @@ public sealed class BlobPutCommand(
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
     public override string Name => "upload";
     public override string Title => "Upload OneLake Blob";
     public override string Description => "Upload content to OneLake via the blob endpoint. Supports inline content or local file uploads with optional overwrite control.";
@@ -77,8 +78,13 @@ public sealed class BlobPutCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
@@ -103,7 +109,7 @@ public sealed class BlobPutCommand(
                 contentLength,
                 options.ContentType,
                 options.Overwrite,
-                CancellationToken.None);
+                cancellationToken);
 
             var commandResult = new BlobPutCommandResult(
                 result.WorkspaceId,

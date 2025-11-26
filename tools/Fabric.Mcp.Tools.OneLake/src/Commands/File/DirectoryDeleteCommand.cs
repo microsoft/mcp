@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -22,6 +22,7 @@ public sealed class DirectoryDeleteCommand(
     private readonly ILogger<DirectoryDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "86991cd6-75fa-4870-9d99-f986ba9f5f73";
     public override string Name => "delete";
     public override string Title => "Delete OneLake Directory";
     public override string Description => "Delete a directory from OneLake storage. Use --recursive to delete non-empty directories.";
@@ -67,8 +68,13 @@ public sealed class DirectoryDeleteCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -87,7 +93,7 @@ public sealed class DirectoryDeleteCommand(
                 options.ItemId,
                 options.DirectoryPath,
                 options.Recursive,
-                CancellationToken.None);
+                cancellationToken);
 
             var message = options.Recursive 
                 ? "Directory and all contents deleted successfully" 

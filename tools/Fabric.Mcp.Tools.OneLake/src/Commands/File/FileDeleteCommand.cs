@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -23,6 +23,7 @@ public sealed class FileDeleteCommand(
     private readonly ILogger<FileDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "0aa3f887-0085-4141-8e34-f0cf1ed44f71";
     public override string Name => "delete";
     public override string Title => "Delete OneLake File";
     public override string Description => "Delete a file from OneLake storage.";
@@ -66,8 +67,13 @@ public sealed class FileDeleteCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -85,7 +91,7 @@ public sealed class FileDeleteCommand(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
-                CancellationToken.None);
+                cancellationToken);
 
             var result = new FileDeleteCommandResult(options.FilePath, "File deleted successfully");
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileDeleteCommandResult);

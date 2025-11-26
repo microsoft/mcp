@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -25,6 +25,7 @@ public sealed class BlobDeleteCommand(
     private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
+    public override string Id => "48561b8d-6f19-45ae-86fa-9feeb8f75e8e";
     public override string Name => "delete";
     public override string Title => "Delete OneLake Blob";
     public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
@@ -69,8 +70,13 @@ public sealed class BlobDeleteCommand(
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         try
         {
@@ -88,7 +94,7 @@ public sealed class BlobDeleteCommand(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
-                CancellationToken.None);
+                cancellationToken);
 
             var commandResult = new BlobDeleteCommandResult(
                 result,
