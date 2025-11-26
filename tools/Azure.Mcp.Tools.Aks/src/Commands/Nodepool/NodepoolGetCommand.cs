@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 

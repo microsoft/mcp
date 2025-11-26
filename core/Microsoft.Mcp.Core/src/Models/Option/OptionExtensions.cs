@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Models.Option;
+using System.CommandLine;
+
+namespace Microsoft.Mcp.Core.Models.Option;
 
 /// <summary>
 /// Extension methods for working with option definitions and command registration.
