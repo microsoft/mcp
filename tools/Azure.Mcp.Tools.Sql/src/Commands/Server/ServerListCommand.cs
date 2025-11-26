@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
@@ -19,6 +20,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
     : BaseSqlCommand<ServerListOptions>(logger)
 {
     private const string CommandTitle = "List SQL Servers";
+
+    public override string Id => "72ca757c-b60e-42af-b7dd-396548194b19";
 
     public override string Name => "list";
 
@@ -61,7 +64,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -77,7 +80,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
             var servers = await sqlService.ListServersAsync(
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new ServerListResult(servers ?? []),

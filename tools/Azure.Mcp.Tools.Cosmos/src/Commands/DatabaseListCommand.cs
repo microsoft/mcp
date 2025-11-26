@@ -12,6 +12,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 {
     private const string CommandTitle = "List Cosmos DB Databases";
     private readonly ILogger<DatabaseListCommand> _logger = logger;
+    public override string Id => "d4d76b47-467b-4bc8-a5b9-9ee356aaf8af";
 
     public override string Name => "list";
 
@@ -33,7 +34,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -50,7 +51,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(databases ?? []), CosmosJsonContext.Default.DatabaseListCommandResult);
         }

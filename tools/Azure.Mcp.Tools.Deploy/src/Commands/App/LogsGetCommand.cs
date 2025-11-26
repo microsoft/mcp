@@ -15,6 +15,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 {
     private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
+    public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
 
     public override string Name => "get";
     public override string Title => CommandTitle;
@@ -50,7 +51,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +69,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
                 options.WorkspaceFolder!,
                 options.AzdEnvName!,
                 options.Subscription!,
-                options.Limit);
+                options.Limit, cancellationToken);
 
             context.Response.Message = result;
         }

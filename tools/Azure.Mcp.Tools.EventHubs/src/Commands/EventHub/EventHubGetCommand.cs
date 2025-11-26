@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
@@ -20,6 +21,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     private const string CommandTitle = "Get Event Hubs from Namespace";
     private readonly IEventHubsService _service = service;
     private readonly ILogger<EventHubGetCommand> _logger = logger;
+
+    public override string Id => "ab774777-76ac-4e24-ba19-da67254441a9";
 
     public override string Name => "get";
 
@@ -62,7 +65,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -83,7 +86,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
                 context.Response.Results = ResponseResult.Create(new(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
@@ -95,7 +99,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }

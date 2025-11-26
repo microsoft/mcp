@@ -3,12 +3,12 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
@@ -16,6 +16,8 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
 {
     private const string CommandTitle = "Gets App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
+
+    public override string Id => "abc28800-ae4a-4369-9ec0-2653a578e82a";
 
     public override string Name => "get";
 
@@ -67,7 +69,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -87,7 +89,8 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
                 options.KeyFilter,
                 options.LabelFilter,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueGetCommandResult);
         }

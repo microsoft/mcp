@@ -14,6 +14,8 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
 {
     private const string CommandTitle = "Set MySQL Server Parameter";
 
+    public override string Id => "8d086e44-8c8a-4649-a282-38f775704595";
+
     public override string Name => "set";
 
     public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
@@ -45,7 +47,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -57,7 +59,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            string result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!);
+            string result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;

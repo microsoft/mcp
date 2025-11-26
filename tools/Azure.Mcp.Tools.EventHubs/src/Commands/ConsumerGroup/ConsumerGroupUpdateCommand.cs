@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
@@ -17,6 +18,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     private const string CommandTitle = "Create or Update Event Hubs Consumer Group";
 
     private readonly ILogger<ConsumerGroupUpdateCommand> _logger = logger;
+    public override string Id => "859871ba-b8dc-439c-a607-11b0d89f5112";
 
     public override string Name => "update";
 
@@ -64,7 +66,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -85,7 +87,8 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
                 options.Subscription!,
                 options.UserMetadata,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(consumerGroup), EventHubsJsonContext.Default.ConsumerGroupUpdateCommandResult);
         }

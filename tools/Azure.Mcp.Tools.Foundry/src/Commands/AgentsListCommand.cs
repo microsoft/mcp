@@ -3,7 +3,6 @@
 
 using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
 
@@ -13,11 +12,14 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 {
     private const string CommandTitle = "List Evaluation Agents";
 
+    public override string Id => "8238b073-a302-49e6-8a27-8aab04c848fe";
+
     public override string Name => "list";
 
     public override string Description =>
         """
-        List all Azure AI Agents available in the configured project.
+        List all Azure AI Agents in a Microsoft Foundry project. Shows agents that can be used for AI workflows, 
+        evaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
         """;
 
     public override string Title => CommandTitle;
@@ -45,7 +47,7 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -60,7 +62,8 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
             var agents = await service.ListAgents(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = agents?.Count > 0 ?
                 ResponseResult.Create(

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -15,6 +15,8 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger) : Globa
     private const string CommandTitle = "Get CLI installation instructions";
     private readonly ILogger<CliInstallCommand> _logger = logger;
     private readonly string[] _allowedCliTypeValues = ["az", "azd", "func"];
+
+    public override string Id => "464626d0-b9be-4a3b-9f29-858637ab8c10";
 
     public override string Name => "install";
 
@@ -57,7 +59,7 @@ This tool can provide installation instructions for the specified CLI tool among
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -80,10 +82,10 @@ This tool can provide installation instructions for the specified CLI tool among
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType);
+            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
-            var responseBody = await responseMessage.Content.ReadAsStringAsync();
+            var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
             CliInstallResult result = new(responseBody, cliType);
             context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliInstallResult);
 

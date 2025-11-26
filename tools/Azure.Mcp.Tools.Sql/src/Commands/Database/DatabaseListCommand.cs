@@ -15,6 +15,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
 {
     private const string CommandTitle = "List SQL Databases";
 
+    public override string Id => "4c1f18c3-5edf-4b0a-943c-55c8a522019c";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -39,7 +41,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -56,7 +58,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(databases ?? []), SqlJsonContext.Default.DatabaseListResult);
         }

@@ -141,21 +141,68 @@ For more production-like builds, you can enable the switches: `-SelfContained -S
 So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed in `build_info.json` for the local platform as framework-dependent, non-trimmed, non-single-file applications, outputting them to the default path `.work/build`.
 
 ### [eng/scripts/Compress-ForSigning.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Compress-ForSigning.ps1)
-
 `Compress-ForSigning.ps1` collects the build output from `Build-Code.ps1`, organizes it into a standardized folder structure, and compresses Mac binaries into ZIP archives suitable for signing. This script uses the metadata in `build_info.json` to determine the correct paths and naming conventions for the ZIP files.
 
 `Compress-ForSigning.ps1` doesn't have any use in local development other than to test that its output is correct for later signing in a CI pipeline.
 
-# Packaging scripts
+# Published artifact types
 
-Packaging scripts create distributable packages from the output of `Build-Code.ps1`, using the metadata collected in `build_info.json`.  Each packaging script targets a specific package format, such as npm, Docker, or VSIX. `build_info.json` lists an `artifactPath` for each server / platform combination.  This is the path that the packing scripts use to locate the files to package.
+### npm/npx
+- packed with [`Pack-Npm.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Npm.ps1)
+- released via [`release-npm.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/npm/release-npm.yml)
+- required project file properties:
+  - `NpmPackageName`: the package name shown on npmjs.com (for example, `@azure-tools/azure-mcp`).
+  - `NpmDescription`: (optional, defaults to `Description` if not set) the package description shown on npmjs.com
+  - `NpmPackageKeywords`: (comma separated) an array of keywords to help users find the package on npmjs.com
 
-Packing scripts currently include:
-- [eng/scripts/Pack-Npm.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Npm.ps1) for creating [npm packages for use with `npx`](https://docs.npmjs.com/cli/v9/commands/npx?v=true)
-- [eng/scripts/Pack-Nuget.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Nuget.ps1) for creating [NuGet packages for use with `dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec)
-- [eng/scripts/Pack-Vsix.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Vsix.ps1) for creating [VS Code VSIX packages](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#packaging-extensions)
-- [eng/scripts/Pack-Zip.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Zip.ps1) for creating ZIP archives
-- [eng/scripts/Prepare-Docker.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Prepare-Docker.ps1) for staging the contents of Docker images
+Servers are packed into two npm package types:
+1. A platform-specific package for each OS/architecture combination (for example, `@azure-tools/azure-mcp-linux-x64`), containing the native binaries for that platform.
+2. A wrapper package (for example, `@azure-tools/azure-mcp`) that depends on the platform-specific packages and provides a unified CLI experience via `npx` (for example, `npx @azure-tools/azure-mcp@latest server start`).
 
 
+### NuGet/dnx
+- packed with [`Pack-Nuget.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Nuget.ps1)
+- released via [`release-nuget.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/nuget/release-nuget.yml)
+- required project file properties:
+  - `DnxPackageId`: the package name shown on nuget.org (for example, `Azure.Mcp`).
+  - `DnxDescription`: (optional, defaults to `Description` if not set) the package description shown on nuget.org
+  - `DnxToolCommandName`: (optional, defaults to `CliName`) the command users run after installing the package as a global tool (for example, `azmcp`).
+  - `DnxPackageTags`: (comma separated) an array of keywords to help users find the package on nuget.org
 
+
+### Docker
+- packed with [`Prepare-Docker.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Prepare-Docker.ps1)
+- released via [`release-docker.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/docker/release-docker.yml)
+- required project file properties:
+  - `DockerImageName`: the name of the Docker image (for example, `azure-sdk/azure-mcp`).
+
+
+### VSIX
+- packed with [`Pack-Vsix.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Vsix.ps1)
+- released via [`release-vsix.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/vsix/release-vsix.yml)
+- requires customized package manifest and assets under `servers/<ServerName>/vscode`
+
+
+### Zip
+- packed with [`Pack-Zip.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Zip.ps1)
+- added to GitHub releases via [`release.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/release.yml)
+- no special project file properties required
+
+Zip files for each server in a release are added to the GitHub release assets.
+
+# Server release process
+
+We only ship the repo's server projects, with each server stored under `servers/<ServerName>`. The release pipelines are driven by the server-specific `build.yml` files (for example, `servers/Azure.Mcp.Server/build.yml`). Those files opt a server into the artifact types we publish and pass the settings that flow through `/eng/pipelines/templates/common.yml`.
+
+## Queuing a release run
+- Manually queue the server pipeline (e.g. [`mcp - Azure.Mcp.Server`](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7866&_a=summary)) with `PublishTarget` set to `none`, `internal`, or `public`.
+  - `none` builds and validates only. Outputs are saved as unsigned pipeline artifacts. Servers will be given a prerelease version based on the version in the servers' project file, with a suffix like `-alpha.<buildId>`.
+  - `internal` runs signing, packaging and the internal integration stage. Servers will also be given a prerelease version for internal release based on the project file version. Outputs are saved as pipeline artifacts and pushed to internal registries.
+  - `public` runs signing, packaging, and the release jobs in [eng/pipelines/templates/jobs/release.yml](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/release.yml). This creates the GitHub release tag and pushes artifacts to their public registries. Public releases use the version in the server project file as-is, not dynamic prerelease versions.
+- **Expect post-release automation**: After a successful public release, `jobs/release.yml` runs `Update-Version.ps1` to increment the server version and open a PR. This PR must be merged before the next release can start.
+
+## Server release configuration
+The parameters in a server's `build.yml` decide what we produce. Set `PackageDocker: true` to include Docker images, `PackageVSIX: true` to include VS Code extensions. Every pipeline always creates the npm/npx and NuGet/dnx artifacts.
+
+## Project file properties
+Packaging and release scripts depend on metadata found in a build's build_info.json file, which is generated by `eng/scripts/New-BuildInfo.ps1` using properties from each server's project file. See [eng/scripts/Get-ProjectProperties.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Get-ProjectProperties.ps1) for a list of all supported project file properties.

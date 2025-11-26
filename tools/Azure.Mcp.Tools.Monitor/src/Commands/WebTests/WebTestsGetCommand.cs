@@ -9,12 +9,15 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
 public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
 {
     private const string CommandTitle = "Get details of a specific web test";
+
+    public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
 
     public override string Name => "get";
 
@@ -53,7 +56,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +72,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
                 options.ResourceGroup!,
                 options.ResourceName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (webTest != null)
             {

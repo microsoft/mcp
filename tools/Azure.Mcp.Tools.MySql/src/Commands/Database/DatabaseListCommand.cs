@@ -13,6 +13,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 {
     private const string CommandTitle = "List MySQL Databases";
 
+    public override string Id => "5941c89c-1406-4657-8828-eec3531e64ec";
+
     public override string Name => "list";
 
     public override string Description => "Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.";
@@ -29,7 +31,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -41,7 +43,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
+            List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(databases ?? []), MySqlJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)

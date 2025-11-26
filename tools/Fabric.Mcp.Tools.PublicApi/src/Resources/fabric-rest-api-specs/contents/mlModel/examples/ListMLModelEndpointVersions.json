@@ -73,7 +73,11 @@
             },
             {
               "versionName": "2",
-              "status": "Deactivated"
+              "status": "Failed",
+              "failureDetails": {
+                "errorCode": "InvalidInput",
+                "message": "Tensor-based models are not supported yet."
+              }
             }
           ]
         }

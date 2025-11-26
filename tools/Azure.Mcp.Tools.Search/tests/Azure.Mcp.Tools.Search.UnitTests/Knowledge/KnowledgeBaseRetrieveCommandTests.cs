@@ -40,14 +40,15 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Is("base1"),
             Arg.Is("life"),
             Arg.Is<List<(string role, string message)>?>(m => m == null),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(json);
 
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -62,14 +63,15 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Is("base1"),
             Arg.Is<string?>(q => q == null),
             Arg.Is<List<(string role, string message)>?>(m => m != null && m.Count == 1 && m[0].role == "user"),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(json);
 
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -82,7 +84,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --query or at least one --messages", response.Message);
     }
@@ -94,7 +96,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Specifying both --query and --messages is not allowed.", response.Message);
     }
@@ -105,7 +107,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid message format", response.Message);
     }
@@ -118,13 +120,14 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<List<(string role, string message)>?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test failure"));
 
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test failure", response.Message);
     }

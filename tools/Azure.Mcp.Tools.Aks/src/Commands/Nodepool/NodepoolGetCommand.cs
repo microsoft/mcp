@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
@@ -15,6 +16,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
+
+    public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
 
     public override string Name => "get";
 
@@ -50,7 +53,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +71,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
                 options.ClusterName!,
                 options.NodepoolName,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);
         }

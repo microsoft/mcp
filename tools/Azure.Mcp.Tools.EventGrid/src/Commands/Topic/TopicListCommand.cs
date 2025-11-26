@@ -12,6 +12,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 {
     private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
+    public override string Id => "42390294-2856-4980-a057-095c91355650";
 
     public override string Name => "list";
 
@@ -45,7 +46,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -61,7 +62,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }

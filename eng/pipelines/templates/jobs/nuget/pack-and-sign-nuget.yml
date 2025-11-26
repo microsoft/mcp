@@ -42,7 +42,7 @@ jobs:
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
 
-  - task: EsrpCodeSigning@5
+  - task: EsrpCodeSigning@6
     displayName: 'CodeSign Nuget Packages'
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'

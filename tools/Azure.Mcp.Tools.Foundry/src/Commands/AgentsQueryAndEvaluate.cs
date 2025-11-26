@@ -21,6 +21,8 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         Returns both the agent response and evaluation results
         """;
 
+    public override string Id => "0d8b60ac-4567-4420-bf9f-8d4ed27cc780";
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -56,7 +58,7 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -75,7 +77,8 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
                 options.Tenant,
-                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList());
+                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList(),
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsQueryAndEvaluateCommandResult(result),

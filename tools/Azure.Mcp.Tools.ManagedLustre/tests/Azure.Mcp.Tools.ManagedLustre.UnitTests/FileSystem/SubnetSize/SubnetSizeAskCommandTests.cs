@@ -58,7 +58,8 @@ public class FileSystemSubnetSizeCommandTests
             Arg.Is("AMLFS-Durable-Premium-40"),
             Arg.Is(480),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(21);
 
         var args = _commandDefinition.Parse([
@@ -68,7 +69,7 @@ public class FileSystemSubnetSizeCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -86,11 +87,17 @@ public class FileSystemSubnetSizeCommandTests
     public async Task ExecuteAsync_ValidSkus_DoNotThrow(string sku)
     {
         // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
+        _amlfsService.GetRequiredAmlFSSubnetsSize(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>()).Returns(10);
         var args = _commandDefinition.Parse(["--sku", sku, "--size", "48", "--subscription", _knownSubscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -105,11 +112,18 @@ public class FileSystemSubnetSizeCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
+        _amlfsService.GetRequiredAmlFSSubnetsSize(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(10);
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -127,7 +141,7 @@ public class FileSystemSubnetSizeCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
@@ -138,13 +152,19 @@ public class FileSystemSubnetSizeCommandTests
     public async Task ExecuteAsync_ServiceThrows_IsHandled()
     {
         // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _amlfsService.GetRequiredAmlFSSubnetsSize(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
         var args = _commandDefinition.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.InternalServerError);

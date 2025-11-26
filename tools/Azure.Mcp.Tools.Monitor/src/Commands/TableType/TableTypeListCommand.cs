@@ -13,6 +13,8 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
     private const string CommandTitle = "List Log Analytics Table Types";
     private readonly ILogger<TableTypeListCommand> _logger = logger;
 
+    public override string Id => "17928c13-3907-428c-8232-74f7aec1d76d";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -30,7 +32,7 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -47,7 +49,8 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
                 options.ResourceGroup!,
                 options.Workspace!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);
         }

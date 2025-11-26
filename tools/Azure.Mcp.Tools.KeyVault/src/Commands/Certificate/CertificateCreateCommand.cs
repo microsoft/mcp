@@ -16,6 +16,8 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
     private const string CommandTitle = "Create Key Vault Certificate";
     private readonly ILogger<CertificateCreateCommand> _logger = logger;
 
+    public override string Id => "a11e024a-62e6-4237-8d7d-4b9b8439f50e";
+
     public override string Name => "create";
 
     public override string Title => CommandTitle;
@@ -48,7 +50,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,10 +67,11 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
                 options.CertificateName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Wait for the certificate operation to complete
-            var completedOperation = await operation.WaitForCompletionAsync();
+            var completedOperation = await operation.WaitForCompletionAsync(cancellationToken);
             var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(

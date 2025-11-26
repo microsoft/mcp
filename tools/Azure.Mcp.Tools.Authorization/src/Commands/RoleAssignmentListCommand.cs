@@ -17,6 +17,8 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
     private const string _commandTitle = "List Role Assignments";
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
 
+    public override string Id => "1dfbef45-4014-4575-a9ba-2242bc792e54";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -50,7 +52,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         return args;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -66,7 +68,8 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.Subscription!,
                 options.Scope!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(assignments ?? []), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
         }

@@ -6,6 +6,7 @@
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
+    <McpRepositoryName>com.microsoft/template-server-name</McpRepositoryName>
     <!-- <PackageIcon></PackageIcon> Defaults to the microsoft logo if not specified. -->
 
     <!-- npm settings -->
@@ -19,11 +20,6 @@
     <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>template,mcp</DnxPackageTags>
-
-    <!-- vsix settings -->
-    <VsixPackagePrefix>vscode-template-mcp</VsixPackagePrefix>
-    <VsixDescription>Template project for validating the microsoft/mcp engineering system</VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -4,12 +4,12 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
@@ -17,6 +17,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
 {
     private const string CommandTitle = "Get Storage Blob Details";
     private readonly ILogger<BlobGetCommand> _logger = logger;
+
+    public override string Id => "d6bdc190-e68f-49af-82e7-9cf6ec9b8183";
 
     public override string Name => "get";
 
@@ -50,7 +52,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +70,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
                 options.Blob,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy
+                options.RetryPolicy,
+                cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);

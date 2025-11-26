@@ -16,6 +16,8 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
     private const string CommandTitle = "Get Key Vault Key";
     private readonly ILogger<KeyGetCommand> _logger = logger;
 
+    public override string Id => "c19a45a0-b963-427d-a087-35560a7f4e5b";
+
     public override string Name => "get";
 
     public override string Title => CommandTitle;
@@ -48,7 +50,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                 options.KeyName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

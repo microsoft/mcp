@@ -16,7 +16,8 @@ public interface ICommunicationService
         bool enableDeliveryReport = false,
         string? tag = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends an email using Azure Communication Services.
@@ -45,5 +46,6 @@ public interface ICommunicationService
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

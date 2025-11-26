@@ -15,6 +15,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     private const string CommandTitle = "List Azure Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
 
+    public override string Id => "72bbe80e-ca42-4a43-8f02-45495bca1179";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -31,7 +33,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -43,7 +45,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         try
         {
             var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy);
+            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                     new SubscriptionListCommandResult(subscriptions),

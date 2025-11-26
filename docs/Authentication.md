@@ -2,9 +2,38 @@
 
 This document provides comprehensive guidance for Azure MCP Server authentication and related security considerations in enterprise environments. While the core focus is authentication, it also covers network and security configurations that commonly affect authentication in enterprise scenarios.
 
+## Overview
+
+Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity library for .NET](https://learn.microsoft.com/dotnet/azure/sdk/authentication/).
+
+> [!TIP]
+> In VS Code, after installing the Azure MCP Server extension, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac), then run "Azure: Sign In" to authenticate quickly.
+
+The server supports two authentication modes: **broker mode** (which uses your OS's native authentication system like Windows Web Account Manager for enhanced security) and **credential chain mode** (which tries multiple authentication methods in sequence). Here is an overview of how authentication works:
+
+```mermaid
+flowchart TD
+    C{"Broker mode?"} -- yes --> D["OS broker"]
+    C -- no --> E["EnvironmentCredential"]
+    E -- failed --> n8["VisualStudioCredential"]
+    E -- succeeded --> n17["Authenticated to Azure"]
+    n8 -- failed --> n12["AzureCliCredential"]
+    n8 -- succeeded --> n17
+    n12 -- failed --> n13["AzurePowerShellCredential"]
+    n12 -- succeeded --> n17
+    n13 -- failed --> n14["AzureDeveloperCliCredential"]
+    n13 -- succeeded --> n17
+    n14 -- failed --> n15["InteractiveBrowserCredential"]
+    n14 -- succeeded --> n17
+    n15 -- failed --> n16["Authentication failed"]
+    n15 -- succeeded --> n17
+    n17@{ shape: event }
+    n16@{ shape: event }
+```
+
 ## Authentication Fundamentals
 
-Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity library for .NET](https://learn.microsoft.com/dotnet/azure/sdk/authentication/). If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
+If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
 
 - Set to `true`, a broker-enabled instance of `InteractiveBrowserCredential` is used to authenticate. On Windows, the broker is Web Account Manager. If a broker isn't supported on your operating system, the credential degrades gracefully to a browser-based login experience. For more information on this approach, see [Interactive brokered authentication](https://learn.microsoft.com/dotnet/azure/sdk/authentication/additional-methods#interactive-brokered-authentication).
 - Not set, a custom [chain of credentials](https://learn.microsoft.com/dotnet/azure/sdk/authentication/credential-chains?tabs=dac#how-a-chained-credential-works) is used to authenticate. The chain is designed to support many environments, along with the most common authentication flows and developer tools. When one credential fails to acquire a token, the chain attempts the next credential. In Azure MCP Server, the chain is configured as follows by default:
@@ -20,19 +49,28 @@ Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity lib
     | 7 | [AzureDeveloperCliCredential](https://learn.microsoft.com/dotnet/api/azure.identity.azuredeveloperclicredential?view=azure-dotnet) | Uses your Azure Developer CLI login | Yes |
     | 8 | [InteractiveBrowserCredential](https://learn.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential?view=azure-dotnet) | Uses a broker and falls back to browser-based login if needed. The account picker dialog allows you to ensure you're selecting the correct account. | Yes |
 
+    **Note:** `InteractiveBrowserCredential` is included as a fallback only in default and "dev" credential chains. When using `AZURE_TOKEN_CREDENTIALS=prod` or specifying a specific credential, the interactive browser credential is not added, ensuring production scenarios fail fast if authentication is unavailable.
+
     If you're logged in through any of these mechanisms, the Azure MCP Server will automatically use those credentials. Ensure that you have the correct authorization permissions in Azure. For example, read access to your Storage account via Role-Based Access Control (RBAC). To learn more about Azure's RBAC authorization system, see [What is Azure RBAC?](https://learn.microsoft.com/azure/role-based-access-control/overview).
 
 ## Recommended Authentication Configuration by Environment
 
 ### Production Environments
 
-For Kubernetes workloads or Azure-hosted apps, set the following environment variable:
+For Kubernetes workloads or Azure-hosted apps (Web Apps, Function Apps, Container Apps, AKS), set the following environment variable:
 
 ```bash
 export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order.
+This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order. The `InteractiveBrowserCredential` is NOT included, ensuring authentication fails fast if none of the production credentials are available.
+
+**For User-Assigned Managed Identity**, also set:
+```bash
+export AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
+If `AZURE_CLIENT_ID` is not set, System-Assigned Managed Identity will be used.
 
 ### Development Environments
 
@@ -43,6 +81,8 @@ az login
 # Verify access
 az account show
 ```
+
+The default credential chain includes `InteractiveBrowserCredential` as a fallback for development convenience.
 
 ### CI/CD Pipelines
 

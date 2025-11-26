@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -16,13 +17,16 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 {
     private const string CommandTitle = "List OpenAI Models";
 
+    public override string Id => "7453dac1-9767-4613-a8f2-80c996af6da2";
+
     public override string Name => "models-list";
 
     public override string Description =>
         $"""
-        List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about 
-        deployed models including model names, versions, capabilities, and deployment status. 
-        Returns model information as JSON array. Requires resource-name.
+        List all available Azure OpenAI models and deployments in a Microsoft Foundry resource. This tool retrieves information 
+        about Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities, 
+        and deployment status. Use this when you need to see what OpenAI models are available, check model deployments, 
+        or list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.
         """;
 
     public override string Title => CommandTitle;
@@ -52,7 +56,7 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -70,7 +74,8 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
                 options.ResourceGroup!,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiModelsListCommandResult>(
                 new OpenAiModelsListCommandResult(result, options.ResourceName!),

@@ -58,3 +58,4 @@ When asked to deploy resources:
 - Default to using `azd` and azd-related tools unless the user specifies otherwise.
 - If using `azd up` or `azd provision` command **always** validate the deployment first with `azd provision --preview`.
 - If using an `az deployment` command **always** validate the deployment first with the `what-if` subcommand. E.g., `az deployment group what-if --name <deployment-name> --resource-group <resource-group-name> --template-file <template-file>`.
+- When asked to deploy the app to a specific Azure resource, avoid using `azd init`

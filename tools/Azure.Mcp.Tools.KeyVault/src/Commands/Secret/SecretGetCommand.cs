@@ -16,6 +16,8 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     private const string _commandTitle = "Get Key Vault Secret";
     private readonly ILogger<SecretGetCommand> _logger = logger;
 
+    public override string Id => "933bcb29-87e6-4f78-94ad-8ad0c8c60002";
+
     public override string Name => "get";
 
     public override string Title => _commandTitle;
@@ -48,7 +50,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                 options.SecretName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

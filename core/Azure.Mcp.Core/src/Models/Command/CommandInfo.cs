@@ -3,12 +3,15 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Models.Command;
 
 public class CommandInfo
 {
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 

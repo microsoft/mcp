@@ -16,6 +16,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
 
+    public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -60,7 +62,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -77,7 +79,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
                 options.ClusterName,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterGetCommandResult);
         }

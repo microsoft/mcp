@@ -5,11 +5,11 @@ using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
@@ -18,6 +18,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
 {
     private const string CommandTitle = "List Activity Logs";
     internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
+
+    public override string Id => "ffc0ed72-0622-4a27-bfd8-6df9b83adce8";
 
     public override string Name => "list";
 
@@ -64,7 +66,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Required validation step
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -89,7 +91,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 options.EventLevel,
                 options.Top ?? 10,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Return empty array if no results
             var activityLogs = results ?? [];

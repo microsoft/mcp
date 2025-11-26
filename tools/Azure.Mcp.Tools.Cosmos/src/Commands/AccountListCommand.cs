@@ -13,6 +13,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 {
     private const string CommandTitle = "List Cosmos DB Accounts";
     private readonly ILogger<AccountListCommand> _logger = logger;
+    public override string Id => "9b69bac8-d465-410e-8b79-fabc38f0426b";
 
     public override string Name => "list";
 
@@ -34,7 +35,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -49,7 +50,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
             var accounts = await cosmosService.GetCosmosAccounts(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(accounts ?? []), CosmosJsonContext.Default.AccountListCommandResult);
         }

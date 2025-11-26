@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
@@ -18,6 +19,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 {
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
+
+    public override string Id => "5249839c-a3c6-4f9e-b62b-afde801d95a6";
 
     public override string Name => "get";
 
@@ -63,7 +66,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             return context.Response;
@@ -78,7 +81,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
                 options.FunctionAppName!,
                 options.ResourceGroup!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }

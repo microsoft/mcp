@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
@@ -16,6 +17,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
 {
     private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
+
+    public override string Id => "bbd026b6-df96-4c52-8b72-13734984a600";
 
     public override string Name => "list";
 
@@ -54,7 +57,7 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +72,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
             List<string> results = await service.ListMonitoredResources(
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.DatadogResource!);
+                options.DatadogResource!,
+                cancellationToken);
             context.Response.Results = results?.Count > 0
                 ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
                 : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);

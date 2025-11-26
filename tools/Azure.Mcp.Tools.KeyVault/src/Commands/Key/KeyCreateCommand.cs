@@ -16,6 +16,8 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
     private const string CommandTitle = "Create Key Vault Key";
     private readonly ILogger<KeyCreateCommand> _logger = logger;
 
+    public override string Id => "ef27bda9-8a1f-4288-b68b-12308ab8e607";
+
     public override string Name => "create";
 
     public override string Title => CommandTitle;
@@ -50,7 +52,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +70,8 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
                 options.KeyType!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

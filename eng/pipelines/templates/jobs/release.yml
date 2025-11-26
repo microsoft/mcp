@@ -3,7 +3,9 @@ parameters:
   type: string
 - name: IncludeNative
   type: boolean
-- name: IncludeDockerRelease
+- name: PackageDocker
+  type: boolean
+- name: PackageVSIX
   type: boolean
 - name: IsTestPipeline
   type: boolean
@@ -56,12 +58,13 @@ jobs:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: TagRepository
 
-- template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    DependsOn: TagRepository
+- ${{ if parameters.PackageVSIX }}:
+  - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      DependsOn: TagRepository
 
-- ${{ if parameters.IncludeDockerRelease }}:
+- ${{ if parameters.PackageDocker }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
       ContainerRegistry: 'azuresdkimages'

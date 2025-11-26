@@ -16,6 +16,8 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     private const string CommandTitle = "List Key Vault Keys";
     private readonly ILogger<KeyListCommand> _logger = logger;
 
+    public override string Id => "efa3d435-44af-47c1-a2ce-76ac56d575e5";
+
     public override string Name => "list";
 
     public override string Title => CommandTitle;
@@ -48,7 +50,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
                 options.IncludeManagedKeys,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(keys ?? []), KeyVaultJsonContext.Default.KeyListCommandResult);
         }

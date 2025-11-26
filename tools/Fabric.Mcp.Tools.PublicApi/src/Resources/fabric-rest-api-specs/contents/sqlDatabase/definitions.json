@@ -8,7 +8,7 @@
     "definitions": {
         "SQLDatabase": {
             "description": "A SQL database object.",
-            "type": "object",
+            "type": "object", 
             "required": ["type"],
             "allOf": [
                 {
@@ -57,6 +57,21 @@
                 "serverFqdn": {
                     "description": "The server fully qualified domain name (FQDN).",
                     "type": "string"
+                },
+                "earliestRestorePoint": {
+                    "description": "The earliest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "latestRestorePoint": {
+                    "description": "The latest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "backupRetentionDays": {
+                    "description": "The backup retention period in days.",
+                    "type": "integer",
+                    "format": "int32"
                 }
             }
         },
@@ -79,6 +94,16 @@
                     "type": "string",
                     "format": "uuid",
                     "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The SQL database creation payload.",
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The SQL database definition.",
+                    "$ref": "#/definitions/SQLDatabaseDefinition",
+                    "readOnly": false
                 }
             }
         },
@@ -91,7 +116,151 @@
                     "readOnly": false
                 }
             }
-        }
+        },
+        "UpdateSQLDatabaseDefinitionRequest": {
+            "description": "Update SQL database public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SQLDatabaseDefinition"
+                }
+            }
+        },
+        "SQLDatabaseDefinitionResponse": {
+            "description": "The SQL database public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SQLDatabaseDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "SQLDatabaseCreationPayload": {
+            "description": "SQL database item payload.",
+            "type": "object",
+            "required": [
+                "creationMode"
+            ],
+            "discriminator": "creationMode",
+            "properties": {
+                "creationMode": {
+                    "description": "The creation mode of the SQL database creation.",
+                    "$ref": "#/definitions/CreationMode"
+                },
+                "backupRetentionDays": {
+                    "description": "Set the backup retention period in days. The minimum is 1 days. The maximum is 35 days.",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 35
+                },
+                "restorePointInTime": {
+                    "description": "Set the time to restore the source database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "sourceDatabaseReference": {
+                    "description": "Set the reference for the source database to be restored from.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            }
+        },
+        "CreationMode": {
+          "description": "The creation mode of the creation payload. Additional CreationMode types may be added over time.",
+          "type": "string",
+          "enum": [ "New", "Restore" ],
+          "x-ms-enum": {
+            "name": "CreationMode",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "New",
+                "description": "The default creation mode. 'backupRetentionDays' object is accepted in this creation mode."
+              },
+              {
+                "value": "Restore",
+                "description": "The creation mode of restoring from a source database. 'sourceDatabaseReference' object and 'restorePointInTime' object are required for this creation mode. 'backupRetentionDays' object is not accepted."
+              }
+            ]
+          }
+        },
+        "NewSQLDatabaseCreationPayload": {
+            "description": "Create a SQL database item creation payload with supported settings",
+            "type": "object",
+            "properties": {
+                "backupRetentionDays": {
+                    "description": "Set the backup retention period in days. The minimum is 1 days. The maximum is 35 days.",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 35
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "New"
+        },
+        "RestoreSQLDatabaseCreationPayload": {
+            "description": "Create a SQL database item creation payload with restoring from a source database",
+            "type": "object",
+            "properties": {
+                "restorePointInTime": {
+                    "description": "Set the time to restore the source database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "sourceDatabaseReference": {
+                    "description": "Set the reference for the source database to be restored from.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "Restore"
+        },
+        "SQLDatabaseDefinition" : {
+            "description": "The SQL database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/sql-database-definition) for more details on how to craft a SQL database public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SQLDatabasePublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "SQLDatabasePublicDefinitionPart": {
+            "description": "SQL database definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The SQL database public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The SQL database public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        }  
     }
   }
   

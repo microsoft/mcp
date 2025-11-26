@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
@@ -17,6 +18,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
+    public override string Id => "c4c90435-fbc0-4598-ba82-3b9213d58b26";
 
     public override string Name => "list";
 
@@ -58,7 +60,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -76,7 +78,8 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
                 options.ResourceGroup!,
                 filters,
                 options.RetryPolicy,
-                options.Tenant);
+                options.Tenant,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workbooks ?? []), WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }

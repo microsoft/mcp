@@ -17,6 +17,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 {
     private const string CommandTitle = "Generate Architecture Diagram";
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
+    public override string Id => "34d7ec6a-e229-4775-8af3-85f81ae3e6d3";
 
     public override string Name => "generate";
 
@@ -51,7 +52,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         return options;
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

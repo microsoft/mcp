@@ -16,6 +16,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
+    public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
     public override string Name => "get";
     public override string Description =>
         $"""
@@ -48,7 +49,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +69,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                 options.TestRunId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunGetCommandResult) :

@@ -35,7 +35,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(null, retryPolicy);
+        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -145,6 +145,10 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     Tier = skuTier,
                     Capacity = skuCapacity
                 };
+
+                _logger.LogInformation(
+                    "SKU Configuration - Name: {SkuName}, Tier: {SkuTier}, Capacity: {SkuCapacity}, Family: {SkuFamily}, Size: {SkuSize}",
+                    databaseData.Sku.Name, databaseData.Sku.Tier, databaseData.Sku.Capacity, databaseData.Sku.Family, databaseData.Sku.Size);
             }
 
             // Configure collation if provided
@@ -250,17 +254,21 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName);
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
             var databaseData = databaseResource.Value.Data;
 
             if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
             {
+                // When SKU name is being changed, reset tier, capacity, family, and size to avoid conflicts
+                // Only preserve values that are explicitly provided or if SKU name isn't changing
+                bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
+
                 var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
                 {
-                    Tier = skuTier ?? databaseData.Sku?.Tier,
-                    Capacity = skuCapacity ?? databaseData.Sku?.Capacity,
-                    Family = databaseData.Sku?.Family,
-                    Size = databaseData.Sku?.Size
+                    Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
+                    Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
+                    Family = isSkuNameChanging ? null : databaseData.Sku?.Family,
+                    Size = isSkuNameChanging ? null : databaseData.Sku?.Size
                 };
 
                 databaseData.Sku = sku;
@@ -347,7 +355,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
         try
         {
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
 
             var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
                 subscription,
@@ -654,7 +662,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string subscription,
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -667,7 +675,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName);
+            var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
 
             await firewallRuleResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
@@ -720,7 +728,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string? version,
         string? publicNetworkAccess,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -734,9 +742,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             // Use ARM client directly for create operations
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var serverData = new SqlServerData(location)
             {
@@ -862,7 +870,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
 
             Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
@@ -966,7 +974,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName);
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
             await databaseResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 

@@ -14,6 +14,8 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     private const string CommandTitle = "List Kusto Clusters";
     private readonly ILogger<ClusterListCommand> _logger = logger;
 
+    public override string Id => "2cff1548-40c9-48ea-8548-6bfa91f2ea85";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -31,7 +33,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -46,7 +48,8 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
             var clusterNames = await kusto.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(clusterNames ?? []), KustoJsonContext.Default.ClusterListCommandResult);
         }

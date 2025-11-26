@@ -4,11 +4,11 @@
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
@@ -16,6 +16,8 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 {
     private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
     private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
+
+    public override string Id => "dcd2952d-02af-4ffc-a7a2-3c6d04251f66";
 
     public override string Name => "retrieve";
 
@@ -75,7 +77,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -102,7 +104,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var result = await searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy);
+            var result = await searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)

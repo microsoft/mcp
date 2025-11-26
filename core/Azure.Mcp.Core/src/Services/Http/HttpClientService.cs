@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Net;
+using System.Reflection;
+using System.Runtime.Versioning;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Services.Http;
@@ -14,11 +18,20 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     private readonly HttpClientOptions _options;
     private readonly Lazy<HttpClient> _defaultClient;
     private bool _disposed;
+    private string UserAgent { get; }
 
-    public HttpClientService(IOptions<HttpClientOptions> options)
+    public HttpClientService(IOptions<HttpClientOptions> options, IOptions<ServiceStartOptions> serviceStartOptions)
     {
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _defaultClient = new Lazy<HttpClient>(() => CreateClientInternal());
+
+        var assembly = typeof(HttpClientService).Assembly;
+        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+
+        var transport = serviceStartOptions?.Value.Transport ?? TransportTypes.StdIo;
+        UserAgent = $"azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})";
     }
 
     /// <inheritdoc />
@@ -53,15 +66,30 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     private HttpClient CreateClientInternal()
     {
         var handler = CreateHttpClientHandler();
+
+#if DEBUG
+        // If a TEST_PROXY_URL is configured, insert RecordingRedirectHandler as the last delegating handler
+        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+        Console.WriteLine("Using test proxy URL: " + testProxyUrl);
+        HttpMessageHandler pipeline = handler;
+        if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
+        {
+            Console.WriteLine("Inserting RecordingRedirectHandler for test proxy.");
+            // RecordingRedirectHandler should be the last delegating handler before the transport
+            pipeline = new RecordingRedirectHandler(proxyUri)
+            {
+                InnerHandler = pipeline
+            };
+        }
+        var client = new HttpClient(pipeline);
+#else
         var client = new HttpClient(handler);
+#endif
 
         // Apply default configuration
         client.Timeout = _options.DefaultTimeout;
 
-        if (!string.IsNullOrEmpty(_options.DefaultUserAgent))
-        {
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(_options.DefaultUserAgent);
-        }
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
 
         return client;
     }

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
 using Azure.Mcp.Tools.AppLens.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 
@@ -20,6 +21,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 {
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
+
+    public override string Id => "92fb5b7d-f1d7-4834-a61a-e170ad8594ac";
 
     public override string Name => "diagnose";
 
@@ -58,7 +61,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -80,7 +83,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.Tenant);
+                options.Tenant,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }

@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
@@ -18,6 +19,8 @@ public sealed class WebTestsCreateCommand(ILogger<WebTestsCreateCommand> logger)
     private const string CommandTitle = "Create a web test in Azure Monitor";
 
     private readonly ILogger<WebTestsCreateCommand> _logger = logger;
+
+    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
 
     public override string Name => "create";
 
@@ -120,7 +123,7 @@ public sealed class WebTestsCreateCommand(ILogger<WebTestsCreateCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -158,7 +161,8 @@ public sealed class WebTestsCreateCommand(ILogger<WebTestsCreateCommand> logger)
                 sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
                 timeoutInSeconds: options.TimeoutInSeconds,
                 tenant: options.Tenant,
-                retryPolicy: options.RetryPolicy);
+                retryPolicy: options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(webTest),

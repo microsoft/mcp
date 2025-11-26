@@ -44,7 +44,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, commandFactory) = CreateToolLoader();
         var request = CreateRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Verify basic structure
         Assert.NotNull(result);
@@ -84,7 +84,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, _) = CreateToolLoader(readOnlyOptions);
         var request = CreateRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Verify basic structure
         Assert.NotNull(result);
@@ -118,7 +118,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -137,7 +137,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -164,7 +164,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -186,7 +186,7 @@ public class CommandFactoryToolLoaderTests
 
         try
         {
-            var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+            var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
             // Verify basic structure
             Assert.NotNull(result);
@@ -225,7 +225,7 @@ public class CommandFactoryToolLoaderTests
 
         try
         {
-            var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+            var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
             // Verify basic structure
             Assert.NotNull(result);
@@ -264,7 +264,7 @@ public class CommandFactoryToolLoaderTests
                 // Verify that tools from non-specified services are not included
                 var allToolsOptions = new ToolLoaderOptions(); // No filter = all tools
                 var (allToolsLoader, _) = CreateToolLoader(allToolsOptions);
-                var allToolsResult = await allToolsLoader.ListToolsHandler(request, CancellationToken.None);
+                var allToolsResult = await allToolsLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
                 var excludedTools = allToolsResult.Tools.Where(t =>
                     !existingServices.Any(service =>
@@ -310,7 +310,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Content);
@@ -328,7 +328,7 @@ public class CommandFactoryToolLoaderTests
             Params = null
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
@@ -355,7 +355,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
@@ -376,7 +376,7 @@ public class CommandFactoryToolLoaderTests
         };
         var (toolLoader, _) = CreateToolLoader(filteredOptions);
         var request = CreateRequest();
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.Tools);
@@ -449,7 +449,7 @@ public class CommandFactoryToolLoaderTests
         };
 
         // Act - Call CallToolHandler BEFORE ListToolsHandler
-        var callResult = await toolLoader.CallToolHandler(callToolRequest, CancellationToken.None);
+        var callResult = await toolLoader.CallToolHandler(callToolRequest, TestContext.Current.CancellationToken);
 
         // Assert based on what we know might happen
         Assert.NotNull(callResult);
@@ -468,7 +468,7 @@ public class CommandFactoryToolLoaderTests
 
         // Now call ListToolsHandler to verify it still works after CallToolHandler
         var listToolsRequest = CreateRequest();
-        var listResult = await toolLoader.ListToolsHandler(listToolsRequest, CancellationToken.None);
+        var listResult = await toolLoader.ListToolsHandler(listToolsRequest, TestContext.Current.CancellationToken);
 
         // Assert that ListToolsHandler still works
         Assert.NotNull(listResult);
@@ -492,7 +492,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Find the appconfig_kv_set tool and print all tool names
         var appConfigSetTool = result.Tools.FirstOrDefault(t => t.Name == "appconfig_kv_set");
@@ -548,7 +548,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -577,7 +577,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -598,7 +598,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Should reject execution as client doesn't support elicitation (security requirement)
         Assert.NotNull(result);
@@ -617,7 +617,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Non-Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false }); // Not secret
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -639,7 +639,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Should execute without issues for non-secret tools
         Assert.NotNull(result);
@@ -659,7 +659,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -680,7 +680,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Should execute successfully despite being a secret tool and client not supporting elicitation
         Assert.NotNull(result);
@@ -704,7 +704,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -725,7 +725,7 @@ public class CommandFactoryToolLoaderTests
             }
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Should still reject execution when insecure option is disabled
         Assert.NotNull(result);
@@ -781,7 +781,7 @@ public class CommandFactoryToolLoaderTests
         };
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should not reject due to tool filtering
         Assert.NotNull(result);
@@ -824,7 +824,7 @@ public class CommandFactoryToolLoaderTests
         };
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -863,7 +863,7 @@ public class CommandFactoryToolLoaderTests
         };
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should not reject due to tool filtering (case insensitive match)
         Assert.NotNull(result);
@@ -916,7 +916,7 @@ public class CommandFactoryToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await filteredToolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await filteredToolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

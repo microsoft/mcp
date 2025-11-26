@@ -14,6 +14,8 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
 
+    public override string Id => "41daed5c-bf44-4cdf-9f3c-1df775465e53";
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -44,7 +46,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +69,8 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
                     query,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -78,7 +81,8 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
                     query,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);

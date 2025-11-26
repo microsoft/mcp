@@ -16,6 +16,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 {
     private const string CommandTitle = "Delete SQL Server Firewall Rule";
 
+    public override string Id => "f13fc5d2-7547-480b-a704-36120e2e9b92";
+
     public override string Name => "delete";
 
     public override string Description =>
@@ -51,7 +53,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +71,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.FirewallRuleName!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
         }

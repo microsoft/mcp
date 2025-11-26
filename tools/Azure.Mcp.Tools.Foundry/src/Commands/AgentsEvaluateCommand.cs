@@ -13,6 +13,8 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 {
     private const string CommandTitle = "Evaluate Agent";
 
+    public override string Id => "a614ec89-1fce-474f-9cb2-87537b287cbf";
+
     public override string Name => "evaluate";
 
     public override string Description =>
@@ -55,7 +57,7 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -73,7 +75,8 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
                 options.Response!,
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
-                options.ToolDefinitions);
+                options.ToolDefinitions,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsEvaluateCommandResult(result),

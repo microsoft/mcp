@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
@@ -17,6 +18,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
     private const string CommandTitle = "Get Event Hubs Consumer Groups";
 
     private readonly ILogger<ConsumerGroupGetCommand> _logger = logger;
+    public override string Id => "604fda48-2438-419d-a819-5f9d2f3b21f8";
 
     public override string Name => "get";
 
@@ -63,7 +65,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -86,7 +88,8 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 var singleResult = consumerGroup != null ? new List<Models.ConsumerGroup> { consumerGroup } : new List<Models.ConsumerGroup>();
                 context.Response.Results = ResponseResult.Create(new(singleResult), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
@@ -100,7 +103,8 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
             }

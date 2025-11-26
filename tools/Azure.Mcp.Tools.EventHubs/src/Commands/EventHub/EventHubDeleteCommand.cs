@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
@@ -19,6 +20,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
     private const string CommandTitle = "Delete Event Hub";
     private readonly IEventHubsService _service = service;
     private readonly ILogger<EventHubDeleteCommand> _logger = logger;
+    public override string Id => "108ffeab-8d37-4c29-98c9-aa99eb8f61c7";
 
     public override string Name => "delete";
 
@@ -62,7 +64,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -79,7 +81,8 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(deleted, options.EventHub!),

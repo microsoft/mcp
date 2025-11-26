@@ -412,7 +412,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     $description = $server.dnxDescription ? $server.dnxDescription : $server.description
     $iconFileName = Split-Path $server.packageIcon -Leaf
 
-    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native -and -not $_.specialPurpose }
     if ($filteredPlatforms.Count -eq 0) {
         LogInfo "No platforms to build for server $($server.name) with native=$native"
         return
@@ -535,11 +535,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -PlatformReferences $platformRefs `
         -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
 
+    $insertPayload = @{
+        ToolTitle = '.NET Tool'
+        MCPRepositoryMetadata = "<!-- mcp-name: $($server.mcpRepositoryName) -->"
+    }
+
     & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
         -Command "extract" `
         -InputReadMePath "$RepoRoot/$($server.readmePath)" `
         -PackageType "nuget" `
-        -InsertPayload @{ ToolTitle = '.NET Tool' } `
+        -InsertPayload $insertPayload `
         -OutputDirectory $tempFolder
 
     LogInfo "Creating Nuget Package from $wrapperToolNuspec"

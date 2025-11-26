@@ -68,6 +68,156 @@
           }
         ]
       }
+    },
+    "WorkspaceOutboundConnections": {
+      "type": "object",
+      "description": "Represents the complete set of outbound access protection cloud connection rules configured for a workspace as part of its networking communication policy. \nThis object defines the connection rules that govern which external endpoints and workspaces are permitted or denied for outbound communication",
+      "properties": {
+        "defaultAction": {
+          "description": "Defines the default behavior for all cloud connection types that are not explicitly listed in the rules array. \n If set to \"Allow\", all unspecified connection types are permitted by default. \nIf set to \"Deny\", all unspecified connection types are blocked by default unless explicitly allowed. \nThis setting acts as a global fallback policy and is critical for enforcing a secure default posture in environments where only known and trusted connections should be permitted.",
+          "$ref": "#/definitions/ConnectionAccessActionType"
+        },
+        "rules": {
+          "type": "array",
+          "description": "A list of rules that define outbound access behavior for specific cloud connection types. Each rule may include endpoint-based or workspace-based restrictions depending on supported connection types.",
+          "items": {
+            "$ref": "#/definitions/OutboundConnectionRule"
+          }
+        }
+      }
+    },
+    "OutboundConnectionRule": {
+      "type": "object",
+      "description": "Defines an outbound access rule for a specific cloud connection.",
+      "required": [
+        "connectionType"
+      ],
+      "properties": {
+        "connectionType": {
+          "type": "string",
+          "description": "Specifies the cloud connection type to which the rule applies. The behavior and applicability of other rule properties (such as allowedEndpoints or allowedWorkspaces) may vary depending on the capabilities of connection type."
+        },
+        "defaultAction": {
+          "description": "Defines the default outbound access behavior for the connectionType. This field determines whether connections of this type are permitted or blocked by default, unless further refined by allowedEndpoints or allowedWorkspaces. \n If set to \"Allow\": All connections of this type are permitted unless explicitly denied by a more specific rule. This field provides fine-grained control over each connection type and complements the global fallback behavior defined by defaultAction.",
+          "$ref": "#/definitions/ConnectionAccessActionType"
+        },
+        "allowedEndpoints": {
+          "type": "array",
+          "description": "Defines a list of explicitly permitted external endpoints for the connectionType. Each entry in the array represents a hostname pattern that is allowed for outbound communication from the workspace. This field is applicable only to connection types that support endpoint-based filtering (e.g., SQL, MySQL, Web, etc.). If defaultAction is set to \"Deny\" for the connection type, only the endpoints listed here will be allowed; all others will be blocked.",
+          "items": {
+            "$ref": "#/definitions/ConnectionRuleEndpointMetadata"
+          }
+        },
+        "allowedWorkspaces": {
+          "type": "array",
+          "description": "Specifies a list of workspace IDs that are explicitly permitted for outbound communication for the given fabric connectionType. This field is applicable only to fabric connection types that support workspace-based filtering, limited to Lakehouse, Warehouse, FabricSql, and PowerPlatformDataflows. When defaultAction is set to \"Deny\" for a connection type, only the workspaces listed in allowedWorkspaces will be allowed for outbound access; all others will be blocked.",
+          "items": {
+            "$ref": "#/definitions/ConnectionRuleWorkspaceMetadata"
+          }
+        }
+      }
+    },
+    "ConnectionRuleEndpointMetadata": {
+      "type": "object",
+      "description": "Represents a single endpoint-level exception rule that allows outbound communication to a specific external domain or host. This object is used within the allowedEndpoints array of a connection rule to explicitly authorize outbound access to trusted endpoints for a given connectionType. This is applicable only to connection types that support endpoint-based filtering (e.g., SQL, MySQL, Web, etc.).",
+      "properties": {
+        "hostNamePattern": {
+          "type": "string",
+          "description": "A wildcard-supported pattern that defines the allowed external endpoint. Examples include *.microsoft.com, api.contoso.com, or data.partner.org."
+        }
+      },
+      "required": [
+        "hostNamePattern"
+      ]
+    },
+    "ConnectionRuleWorkspaceMetadata": {
+      "type": "object",
+      "description": "Represents a workspace-level exception rule that allows outbound communication to a specific workspace for a given connectionType. This object is used within the allowedWorkspaces array of a connection rule to explicitly authorize cross-workspace access. This is applicable only to connection types that support workspace-based filtering, such as Lakehouse, Warehouse, FabricSql, and PowerPlatformDataflows.",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier (GUID) of the target workspace that is allowed to be connected from current workspace."
+        }
+      },
+      "required": [
+        "workspaceId"
+      ]
+    },
+    "ConnectionAccessActionType": {
+      "type": "string",
+      "description": "Defines the access control behavior for outbound connections. This enum is used for the field defaultAction to specify whether outbound communication should be allowed or denied by default. \nThis type enables both global and connection-specific control over outbound access, helping enforce secure and predictable network communication policies. Additional connection access action types may be added over time.",
+      "enum": [
+        "Allow",
+        "Deny"
+      ],
+      "x-ms-enum": {
+        "name": "ConnectionAccessActionType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Allow",
+            "description": "Permits outbound connections. When used as a default action, all cloud connections are allowed."
+          },
+          {
+            "value": "Deny",
+            "description": "Blocks outbound connections. When used as a default action, all cloud connections are denied unless explicitly allowed."
+          }
+        ]
+      }
+    },
+    "WorkspaceOutboundGateways": {
+      "type": "object",
+      "description": "Represents the complete set of gateway outbound access protection rules configured for a workspace as part of its networking communication policy. \nThis object defines the gateway rules that govern outbound communication",
+      "properties": {
+        "defaultAction": {
+          "description": "Defines the default behavior for all gateways that are not explicitly listed in the allowed list array. \n If set to \"Allow\", all unspecified gateways are permitted by default. \nIf set to \"Deny\", all unspecified gateways are blocked.",
+          "$ref": "#/definitions/GatewayAccessActionType"
+        },
+        "allowedGateways": {
+          "type": "array",
+          "description": "A list of rules that define outbound access behavior for gateways.",
+          "items": {
+            "$ref": "#/definitions/GatewayAccessRuleMetadata"
+          }
+        }
+      }
+    },
+    "GatewayAccessRuleMetadata": {
+      "type": "object",
+      "description": "Represents a gateway that is allowed for outbound communication. This object is used within the allowedGateways to explicitly authorize outbound access.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Gateway Id to be allowed."
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "GatewayAccessActionType": {
+      "type": "string",
+      "description": "Defines the access control behavior for outbound gateways. This enum is used for the field defaultAction to specify whether outbound communication should be allowed or denied by default. \nThis type enables both global and gateway-specific control over outbound access, helping enforce secure and predictable network communication policies. Additional gateway access action types may be added over time.",
+      "enum": [
+        "Allow",
+        "Deny"
+      ],
+      "x-ms-enum": {
+        "name": "GatewayAccessActionType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Allow",
+            "description": "Permits outbound gateways. When used as a default action, all gateways are allowed."
+          },
+          {
+            "value": "Deny",
+            "description": "Blocks outbound gateways. When used as a default action, all gateways are denied unless explicitly allowed."
+          }
+        ]
+      }
     }
   }
 }

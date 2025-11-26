@@ -15,6 +15,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
     private const string CommandTitle = "Query Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
     private readonly ILogger<IndexQueryCommand> _logger = logger;
 
+    public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
+
     public override string Name => "query";
 
     public override string Description =>
@@ -51,7 +53,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +70,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
                 options.Service!,
                 options.Index!,
                 options.Query!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
         }

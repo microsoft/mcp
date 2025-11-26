@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -18,6 +19,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
     private const string CommandTitle = "Delete Event Hubs Namespace";
 
     private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
+
+    public override string Id => "187ffc25-1e32-4e39-a7d4-94859852ac50";
 
     public override string Name => "delete";
 
@@ -61,7 +64,7 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -79,7 +82,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(success, $"Namespace '{options.Namespace}' deleted successfully"),

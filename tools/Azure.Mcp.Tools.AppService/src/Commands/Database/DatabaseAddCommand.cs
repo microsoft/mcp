@@ -17,12 +17,15 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
 
+    public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
+
     public override string Name => "add";
 
     public override string Description =>
         """
-        Add a database connection to an App Service. This command configures database connection
-        settings for the specified App Service, allowing it to connect to a database server.
+        Add a database connection for an App Service using connection string for an existing database. This command configures database connection
+        settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
+        database type, database server name, connection string, resource group name and subscription.
         """;
 
     public override string Title => CommandTitle;
@@ -50,7 +53,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Validate first, then bind
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -74,7 +77,8 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
                 options.ConnectionString ?? string.Empty, // connectionString - will be generated if not provided
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new Result(connectionInfo),

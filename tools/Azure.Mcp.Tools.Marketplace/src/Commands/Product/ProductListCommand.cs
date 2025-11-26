@@ -18,6 +18,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
 
+    public override string Id => "0485e8f9-61bf-4baf-b914-7fa5530a6f78";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -65,7 +67,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
 
@@ -92,7 +94,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
                 options.NextCursor,
                 options.Expand,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);

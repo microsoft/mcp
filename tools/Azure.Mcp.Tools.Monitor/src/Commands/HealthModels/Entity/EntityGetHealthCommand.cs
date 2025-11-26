@@ -13,7 +13,11 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
     private const string CommandName = "get";
+
+    public override string Id => "80b23546-a6ac-4f0c-ad70-f51d6dff5543";
+
     public override string Name => CommandName;
+
     public override string Description =>
     $"""
     Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.
@@ -39,7 +43,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -58,7 +62,8 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 options.Subscription!,
                 options.AuthMethod,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.JsonNode);
         }

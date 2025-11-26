@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.9.6</Version>
+    <Version>2.0.0-beta.8</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+    <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
 
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
@@ -19,11 +20,6 @@
     <DnxPackageId>Azure.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>azure,mcp</DnxPackageTags>
-
-    <!-- vsix settings -->
-    <VsixPackagePrefix>vscode-azure-mcp</VsixPackagePrefix>
-    <VsixDescription>Provides Model Context Protocol (MCP) integration and tooling for Azure in Visual Studio Code.</VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>

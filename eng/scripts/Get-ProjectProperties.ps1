@@ -53,11 +53,9 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
-    'VsixPackagePrefix',
-    'VsixDescription',
-    'VsixPublisher',
+    'IsAotCompatible',
 
-    'IsAotCompatible'
+    'McpRepositoryName'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

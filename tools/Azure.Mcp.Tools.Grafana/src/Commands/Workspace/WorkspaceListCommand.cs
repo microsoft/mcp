@@ -18,6 +18,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
     private const string CommandTitle = "List Grafana Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
 
+    public override string Id => "7a47b562-f219-47de-80f6-12e19367b61d";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -38,7 +40,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +55,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
             var workspaces = await grafanaService.ListWorkspacesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workspaces ?? []), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }

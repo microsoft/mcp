@@ -16,6 +16,8 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
     private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
 
+    public override string Id => "fb1322cd-05b0-4264-9e96-6a9b3d9291a0";
+
     public override string Name => "create";
 
     public override string Title => CommandTitle;
@@ -50,7 +52,7 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -68,7 +70,8 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
                 options.SecretValue!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

@@ -303,9 +303,9 @@
 - [Test 288: use_azure_openai_models](#test-288)
 - [Test 289: use_azure_openai_models](#test-289)
 - [Test 290: use_azure_openai_models](#test-290)
-- [Test 291: connect_azure_ai_foundry_agents](#test-291)
-- [Test 292: query_and_evaluate_azure_ai_foundry_agents](#test-292)
-- [Test 293: evaluate_azure_ai_foundry_agents](#test-293)
+- [Test 291: connect_foundry_agents](#test-291)
+- [Test 292: query_and_evaluate_foundry_agents](#test-292)
+- [Test 293: evaluate_foundry_agents](#test-293)
 - [Test 294: get_azure_storage_details](#test-294)
 - [Test 295: get_azure_storage_details](#test-295)
 - [Test 296: get_azure_storage_details](#test-296)
@@ -2360,9 +2360,9 @@
 |------|-------|------|--------|
 | 1 | 0.472052 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.434889 | `update_azure_monitor_webtests` | ❌ |
-| 3 | 0.411997 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.411997 | `evaluate_foundry_agents` | ❌ |
 | 4 | 0.398711 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.396961 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.396961 | `query_and_evaluate_foundry_agents` | ❌ |
 
 ---
 
@@ -4630,7 +4630,7 @@
 ## Test 246
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>  
+**Prompt:** Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>  
 
 ### Results
 
@@ -4698,16 +4698,16 @@
 ## Test 250
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** List all agents in my AI Foundry project  
+**Prompt:** List all agents in my Microsoft Foundry project  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.521635 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.510202 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.521635 | `query_and_evaluate_foundry_agents` | ❌ |
+| 2 | 0.510202 | `evaluate_foundry_agents` | ❌ |
 | 3 | 0.502701 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 4 | 0.498263 | `connect_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.498263 | `connect_foundry_agents` | ❌ |
 | 5 | 0.406924 | `deploy_azure_ai_models` | ❌ |
 
 ---
@@ -4715,7 +4715,7 @@
 ## Test 251
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** List all AI Foundry model deployments  
+**Prompt:** List all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -4723,16 +4723,16 @@
 |------|-------|------|--------|
 | 1 | 0.579535 | `deploy_azure_ai_models` | ❌ |
 | 2 | 0.562287 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.448518 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.440588 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.412573 | `connect_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.448518 | `query_and_evaluate_foundry_agents` | ❌ |
+| 4 | 0.440588 | `evaluate_foundry_agents` | ❌ |
+| 5 | 0.412573 | `connect_foundry_agents` | ❌ |
 
 ---
 
 ## Test 252
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** List all AI Foundry models  
+**Prompt:** List all Microsoft Foundry models  
 
 ### Results
 
@@ -4740,16 +4740,16 @@
 |------|-------|------|--------|
 | 1 | 0.504996 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.482882 | `deploy_azure_ai_models` | ❌ |
-| 3 | 0.404007 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.404007 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.398816 | `use_azure_openai_models` | ❌ |
-| 5 | 0.397094 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.397094 | `evaluate_foundry_agents` | ❌ |
 
 ---
 
 ## Test 253
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** List all AI Foundry resources in my subscription  
+**Prompt:** List all Microsoft Foundry resources in my subscription  
 
 ### Results
 
@@ -4759,7 +4759,7 @@
 | 2 | 0.418960 | `deploy_azure_ai_models` | ❌ |
 | 3 | 0.406256 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.405825 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.403886 | `connect_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.403886 | `connect_foundry_agents` | ❌ |
 
 ---
 
@@ -4851,7 +4851,7 @@
 ## Test 259
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** List all knowledge indexes in my AI Foundry project  
+**Prompt:** List all knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
@@ -4859,8 +4859,8 @@
 |------|-------|------|--------|
 | 1 | 0.515763 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.410117 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.404503 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.396554 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.404503 | `evaluate_foundry_agents` | ❌ |
+| 4 | 0.396554 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.395810 | `deploy_azure_ai_models` | ❌ |
 
 ---
@@ -4911,7 +4911,7 @@
 | 1 | 0.507068 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.425742 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.309441 | `get_azure_resource_and_app_health_status` | ❌ |
-| 4 | 0.298698 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.298698 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.291702 | `use_azure_openai_models` | ❌ |
 
 ---
@@ -4919,7 +4919,7 @@
 ## Test 263
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me all AI Foundry model deployments  
+**Prompt:** Show me all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -4927,8 +4927,8 @@
 |------|-------|------|--------|
 | 1 | 0.599374 | `deploy_azure_ai_models` | ❌ |
 | 2 | 0.552427 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.462343 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.458855 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.462343 | `query_and_evaluate_foundry_agents` | ❌ |
+| 4 | 0.458855 | `evaluate_foundry_agents` | ❌ |
 | 5 | 0.435445 | `use_azure_openai_models` | ❌ |
 
 ---
@@ -4953,7 +4953,7 @@
 ## Test 265
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me the AI Foundry resources in resource group <resource_group_name>  
+**Prompt:** Show me the Microsoft Foundry resources in resource group <resource_group_name>  
 
 ### Results
 
@@ -4961,24 +4961,24 @@
 |------|-------|------|--------|
 | 1 | 0.588933 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.510164 | `deploy_azure_ai_models` | ❌ |
-| 3 | 0.472608 | `connect_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.467078 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.463365 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.472608 | `connect_foundry_agents` | ❌ |
+| 4 | 0.467078 | `evaluate_foundry_agents` | ❌ |
+| 5 | 0.463365 | `query_and_evaluate_foundry_agents` | ❌ |
 
 ---
 
 ## Test 266
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me the available agents in my AI Foundry project  
+**Prompt:** Show me the available agents in my Microsoft Foundry project  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546352 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.534447 | `connect_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.530860 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.546352 | `query_and_evaluate_foundry_agents` | ❌ |
+| 2 | 0.534447 | `connect_foundry_agents` | ❌ |
+| 3 | 0.530860 | `evaluate_foundry_agents` | ❌ |
 | 4 | 0.525204 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 5 | 0.429424 | `deploy_azure_ai_models` | ❌ |
 
@@ -4987,7 +4987,7 @@
 ## Test 267
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me the available AI Foundry models  
+**Prompt:** Show me the available Microsoft Foundry models  
 
 ### Results
 
@@ -4996,8 +4996,8 @@
 | 1 | 0.555128 | `deploy_azure_ai_models` | ❌ |
 | 2 | 0.522598 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.509261 | `use_azure_openai_models` | ❌ |
-| 4 | 0.460129 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.459774 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.460129 | `query_and_evaluate_foundry_agents` | ❌ |
+| 5 | 0.459774 | `evaluate_foundry_agents` | ❌ |
 
 ---
 
@@ -5064,7 +5064,7 @@
 | 1 | 0.496487 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.435586 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.309789 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.302527 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.302527 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.290298 | `get_azure_container_details` | ❌ |
 
 ---
@@ -5106,15 +5106,15 @@
 ## Test 274
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me the knowledge indexes in my AI Foundry project  
+**Prompt:** Show me the knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.502671 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.463948 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.445783 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.463948 | `evaluate_foundry_agents` | ❌ |
+| 3 | 0.445783 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.423188 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 5 | 0.406434 | `use_azure_openai_models` | ❌ |
 
@@ -5183,15 +5183,15 @@
 | 1 | 0.454384 | `deploy_azure_ai_models` | ❌ |
 | 2 | 0.442176 | `use_azure_openai_models` | ❌ |
 | 3 | 0.414312 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 4 | 0.364747 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.351290 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.364747 | `evaluate_foundry_agents` | ❌ |
+| 5 | 0.351290 | `query_and_evaluate_foundry_agents` | ❌ |
 
 ---
 
 ## Test 279
 
 **Expected Tool:** `get_azure_ai_resources_details`  
-**Prompt:** Show me the schema for knowledge index <index-name> in my AI Foundry project  
+**Prompt:** Show me the schema for knowledge index <index-name> in my Microsoft Foundry project  
 
 ### Results
 
@@ -5200,7 +5200,7 @@
 | 1 | 0.478034 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.412237 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 3 | 0.343793 | `deploy_azure_ai_models` | ❌ |
-| 4 | 0.324853 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.324853 | `evaluate_foundry_agents` | ❌ |
 | 5 | 0.324788 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
@@ -5218,7 +5218,7 @@
 | 2 | 0.464269 | `get_azure_ai_resources_details` | ❌ |
 | 3 | 0.312313 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.305105 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.304946 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.304946 | `query_and_evaluate_foundry_agents` | ❌ |
 
 ---
 
@@ -5233,7 +5233,7 @@
 |------|-------|------|--------|
 | 1 | 0.563955 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.477702 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.330689 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.330689 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.327179 | `get_azure_data_explorer_kusto_details` | ❌ |
 | 5 | 0.321587 | `get_azure_messaging_service_details` | ❌ |
 
@@ -5250,7 +5250,7 @@
 |------|-------|------|--------|
 | 1 | 0.516786 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.465756 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.354201 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.354201 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.324666 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.306570 | `get_azure_data_explorer_kusto_details` | ❌ |
 
@@ -5267,8 +5267,8 @@
 |------|-------|------|--------|
 | 1 | 0.668959 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.561928 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.450609 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.412094 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.450609 | `query_and_evaluate_foundry_agents` | ❌ |
+| 4 | 0.412094 | `evaluate_foundry_agents` | ❌ |
 | 5 | 0.390953 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
@@ -5284,8 +5284,8 @@
 |------|-------|------|--------|
 | 1 | 0.523520 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.399606 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.322840 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.267991 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.322840 | `query_and_evaluate_foundry_agents` | ❌ |
+| 4 | 0.267991 | `evaluate_foundry_agents` | ❌ |
 | 5 | 0.264021 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
@@ -5301,8 +5301,8 @@
 |------|-------|------|--------|
 | 1 | 0.691050 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.627604 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.461989 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.420964 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.461989 | `query_and_evaluate_foundry_agents` | ❌ |
+| 4 | 0.420964 | `evaluate_foundry_agents` | ❌ |
 | 5 | 0.415253 | `get_azure_messaging_service_details` | ❌ |
 
 ---
@@ -5318,7 +5318,7 @@
 |------|-------|------|--------|
 | 1 | 0.530526 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.439695 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.308887 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.308887 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.285910 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.282944 | `get_azure_data_explorer_kusto_details` | ❌ |
 
@@ -5336,8 +5336,8 @@
 | 1 | 0.389976 | `use_azure_openai_models` | ✅ **EXPECTED** |
 | 2 | 0.254256 | `send_azure_communication_messages` | ❌ |
 | 3 | 0.205840 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.184587 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.150676 | `connect_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.184587 | `query_and_evaluate_foundry_agents` | ❌ |
+| 5 | 0.150676 | `connect_foundry_agents` | ❌ |
 
 ---
 
@@ -5352,7 +5352,7 @@
 |------|-------|------|--------|
 | 1 | 0.517427 | `generate_azure_cli_commands` | ❌ |
 | 2 | 0.472325 | `use_azure_openai_models` | ✅ **EXPECTED** |
-| 3 | 0.388735 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.388735 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.377388 | `browse_azure_marketplace_products` | ❌ |
 | 5 | 0.367725 | `install_azure_cli_extensions` | ❌ |
 
@@ -5394,16 +5394,16 @@
 
 ## Test 291
 
-**Expected Tool:** `connect_azure_ai_foundry_agents`  
-**Prompt:** Query an agent in my AI foundry project  
+**Expected Tool:** `connect_foundry_agents`  
+**Prompt:** Query an agent in my Microsoft Foundry project  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.575247 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.514658 | `connect_azure_ai_foundry_agents` | ✅ **EXPECTED** |
-| 3 | 0.510270 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.575247 | `query_and_evaluate_foundry_agents` | ❌ |
+| 2 | 0.514658 | `connect_foundry_agents` | ✅ **EXPECTED** |
+| 3 | 0.510270 | `evaluate_foundry_agents` | ❌ |
 | 4 | 0.495795 | `get_azure_ai_resources_details` | ❌ |
 | 5 | 0.392199 | `deploy_azure_ai_models` | ❌ |
 
@@ -5411,16 +5411,16 @@
 
 ## Test 292
 
-**Expected Tool:** `query_and_evaluate_azure_ai_foundry_agents`  
-**Prompt:** Query and evaluate an agent in my AI Foundry project for task_adherence  
+**Expected Tool:** `query_and_evaluate_foundry_agents`  
+**Prompt:** Query and evaluate an agent in my Microsoft Foundry project for task_adherence  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.596620 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.590134 | `query_and_evaluate_azure_ai_foundry_agents` | ✅ **EXPECTED** |
-| 3 | 0.423699 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.596620 | `evaluate_foundry_agents` | ❌ |
+| 2 | 0.590134 | `query_and_evaluate_foundry_agents` | ✅ **EXPECTED** |
+| 3 | 0.423699 | `connect_foundry_agents` | ❌ |
 | 4 | 0.383588 | `get_azure_ai_resources_details` | ❌ |
 | 5 | 0.365679 | `deploy_azure_ai_models` | ❌ |
 
@@ -5428,15 +5428,15 @@
 
 ## Test 293
 
-**Expected Tool:** `evaluate_azure_ai_foundry_agents`  
+**Expected Tool:** `evaluate_foundry_agents`  
 **Prompt:** Evaluate the full query and response I got from my agent for task_adherence  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.425995 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.364688 | `evaluate_azure_ai_foundry_agents` | ✅ **EXPECTED** |
+| 1 | 0.425995 | `query_and_evaluate_foundry_agents` | ❌ |
+| 2 | 0.364688 | `evaluate_foundry_agents` | ✅ **EXPECTED** |
 | 3 | 0.262513 | `get_azure_resource_and_app_health_status` | ❌ |
 | 4 | 0.249584 | `get_azure_ai_resources_details` | ❌ |
 | 5 | 0.238878 | `get_azure_database_admin_configuration_details` | ❌ |
@@ -7614,7 +7614,7 @@
 | 1 | 0.500055 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.199503 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.196910 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.186666 | `connect_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.186666 | `connect_foundry_agents` | ❌ |
 | 5 | 0.167947 | `recognize_speech_from_audio` | ❌ |
 
 ---
@@ -7800,7 +7800,7 @@
 |------|-------|------|--------|
 | 1 | 0.502774 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.193935 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.171100 | `connect_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.171100 | `connect_foundry_agents` | ❌ |
 | 4 | 0.160597 | `use_azure_openai_models` | ❌ |
 | 5 | 0.141443 | `add_azure_app_service_database` | ❌ |
 
@@ -7887,7 +7887,7 @@
 | 2 | 0.242675 | `use_azure_openai_models` | ❌ |
 | 3 | 0.208005 | `generate_azure_cli_commands` | ❌ |
 | 4 | 0.194253 | `deploy_azure_ai_models` | ❌ |
-| 5 | 0.186024 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.186024 | `query_and_evaluate_foundry_agents` | ❌ |
 
 ---
 
@@ -7920,7 +7920,7 @@
 | 1 | 0.512680 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.209836 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.177107 | `use_azure_openai_models` | ❌ |
-| 4 | 0.156184 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.156184 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.133229 | `get_azure_ai_resources_details` | ❌ |
 
 ---
@@ -7954,7 +7954,7 @@
 | 1 | 0.397874 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.257631 | `use_azure_openai_models` | ❌ |
 | 3 | 0.253810 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.217932 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.217932 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.182776 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 
 ---
@@ -7970,7 +7970,7 @@
 |------|-------|------|--------|
 | 1 | 0.493098 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.245003 | `use_azure_openai_models` | ❌ |
-| 3 | 0.222850 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.222850 | `query_and_evaluate_foundry_agents` | ❌ |
 | 4 | 0.183681 | `deploy_azure_ai_models` | ❌ |
 | 5 | 0.172007 | `generate_azure_cli_commands` | ❌ |
 
@@ -7988,7 +7988,7 @@
 | 1 | 0.539450 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.453170 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.451471 | `use_azure_openai_models` | ❌ |
-| 4 | 0.361161 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.361161 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.348465 | `deploy_azure_ai_models` | ❌ |
 
 ---
@@ -8005,7 +8005,7 @@
 | 1 | 0.359302 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.194397 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.170664 | `use_azure_openai_models` | ❌ |
-| 4 | 0.146774 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.146774 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.134187 | `deploy_azure_ai_models` | ❌ |
 
 ---
@@ -8022,7 +8022,7 @@
 | 1 | 0.380445 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.188454 | `use_azure_openai_models` | ❌ |
 | 3 | 0.170544 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.161234 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.161234 | `query_and_evaluate_foundry_agents` | ❌ |
 | 5 | 0.124053 | `deploy_azure_ai_models` | ❌ |
 
 ---
@@ -8075,4 +8075,5 @@
 🟠 **Fair** - The tool selection system needs significant improvement.
 
 ⚠️ **Recommendation:** Tool descriptions need improvement to better match user intent (targets: ≥0.6 good, ≥0.7 high).
+
 

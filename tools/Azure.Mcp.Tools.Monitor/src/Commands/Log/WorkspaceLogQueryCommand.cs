@@ -13,6 +13,8 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
 
+    public override string Id => "3f513aea-b6fc-4ad0-8f7d-9fbaa1056ac6";
+
     public override string Name => "query";
 
     public override string Description =>
@@ -60,7 +62,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -81,7 +83,8 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
                 options.Hours,
                 options.Limit,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
         }

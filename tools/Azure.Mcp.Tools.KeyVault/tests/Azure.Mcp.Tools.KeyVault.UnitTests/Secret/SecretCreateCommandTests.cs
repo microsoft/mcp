@@ -53,13 +53,15 @@ public class SecretCreateCommandTests
     public async Task ExecuteAsync_CreatesSecret_WhenValidInput()
     {
         // Arrange
-        _keyVaultService.CreateSecret(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSecretName),
-            Arg.Is(_knownSecretValue),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateSecret(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSecretName),
+                Arg.Is(_knownSecretValue),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
 
         var args = _commandDefinition.Parse([
@@ -70,7 +72,7 @@ public class SecretCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -96,7 +98,7 @@ public class SecretCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -110,13 +112,15 @@ public class SecretCreateCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.CreateSecret(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSecretName),
-            Arg.Is(_knownSecretValue),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateSecret(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSecretName),
+                Arg.Is(_knownSecretValue),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -127,7 +131,7 @@ public class SecretCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

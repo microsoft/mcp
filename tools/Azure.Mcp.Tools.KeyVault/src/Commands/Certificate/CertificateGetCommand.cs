@@ -16,6 +16,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
 
+    public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
+
     public override string Name => "get";
 
     public override string Title => CommandTitle;
@@ -48,7 +50,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                 options.CertificateName!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(

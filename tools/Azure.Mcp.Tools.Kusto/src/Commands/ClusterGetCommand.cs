@@ -5,11 +5,11 @@ using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -17,6 +17,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
 {
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
+
+    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
 
     public override string Name => "get";
 
@@ -49,7 +51,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -65,7 +67,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = cluster is null ?
                 null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);

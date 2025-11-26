@@ -15,6 +15,8 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
 {
     private const string CommandTitle = "Show SQL Server";
 
+    public override string Id => "70c56d40-4611-4e22-b3f7-19e22b707f6b";
+
     public override string Name => "show";
 
     public override string Description =>
@@ -36,7 +38,7 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +55,8 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerShowResult);
         }

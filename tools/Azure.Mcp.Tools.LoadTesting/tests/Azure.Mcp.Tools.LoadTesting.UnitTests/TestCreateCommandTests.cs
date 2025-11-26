@@ -51,7 +51,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -71,7 +72,7 @@ public class TestCreateCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -95,7 +96,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is((string?)null),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -105,7 +107,7 @@ public class TestCreateCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
@@ -116,7 +118,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
         var command = new TestCreateCommand(_logger);
@@ -134,7 +137,7 @@ public class TestCreateCommandTests
             "--endpoint", "https://example.com/api/test"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

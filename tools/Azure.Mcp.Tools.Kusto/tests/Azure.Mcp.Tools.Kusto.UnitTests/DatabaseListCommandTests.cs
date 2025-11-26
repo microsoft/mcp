@@ -46,13 +46,13 @@ public sealed class DatabaseListCommandTests
         {
             _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedDatabases);
         }
         else
         {
             _kusto.ListDatabasesAsync(
-                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedDatabases);
         }
         var command = new DatabaseListCommand(_logger);
@@ -61,7 +61,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -81,13 +81,13 @@ public sealed class DatabaseListCommandTests
         {
             _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             _kusto.ListDatabasesAsync(
-                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         var command = new DatabaseListCommand(_logger);
@@ -96,7 +96,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -117,13 +117,13 @@ public sealed class DatabaseListCommandTests
         {
             _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         else
         {
             _kusto.ListDatabasesAsync(
-                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         var command = new DatabaseListCommand(_logger);
@@ -132,7 +132,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -148,7 +148,7 @@ public sealed class DatabaseListCommandTests
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -163,7 +163,7 @@ public sealed class DatabaseListCommandTests
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

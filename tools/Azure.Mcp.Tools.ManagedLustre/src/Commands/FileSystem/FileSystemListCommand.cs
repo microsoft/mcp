@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -14,6 +15,8 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
     : BaseManagedLustreCommand<FileSystemListOptions>(logger)
 {
     private const string CommandTitle = "List Azure Managed Lustre File Systems";
+
+    public override string Id => "723d9b34-9022-486e-83a7-f72d83bdafd2";
 
     public override string Name => "list";
 
@@ -48,7 +51,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +67,8 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), ManagedLustreJsonContext.Default.FileSystemListResult);
         }

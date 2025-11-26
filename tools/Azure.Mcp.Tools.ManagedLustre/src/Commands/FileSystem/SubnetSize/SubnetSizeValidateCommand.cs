@@ -17,6 +17,8 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
+    public override string Id => "b6317bba-e28c-445b-9133-9cfbfe677698";
+
     public override string Name => "validate";
 
     public override string Description =>
@@ -69,7 +71,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -85,7 +87,8 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                                 options.SubnetId!,
                                 options.Location!,
                                 options.Tenant,
-                                options.RetryPolicy);
+                                options.RetryPolicy,
+                                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }

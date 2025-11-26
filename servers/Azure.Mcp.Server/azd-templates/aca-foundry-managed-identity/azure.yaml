@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: azure-mcp-server
+metadata:
+  template: azure-mcp-server@0.0.1-beta
+
+infra:
+  provider: bicep
+  path: ./infra
+  outputs:
+    AZURE_RESOURCE_GROUP: AZURE_RESOURCE_GROUP
+    CONTAINER_APP_NAME: CONTAINER_APP_NAME
+
+hooks:
+  preprovision:
+    shell: sh
+    run: echo "Starting 'Azure MCP Storage Server' infrastructure provisioning..."
+    continueOnError: false
+  
+  postprovision:
+    shell: sh  
+    run: |
+      echo "Success: Infrastructure provisioned"
+    continueOnError: false
+
+  predeploy:
+    shell: sh
+    run: echo "Building and deploying 'Azure MCP Storage Server' application..."
+    continueOnError: false
+
+  postdeploy:
+    shell: sh
+    run: |
+      echo "Success: 'Azure MCP Storage Server' deployed"
+    continueOnError: false

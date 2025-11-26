@@ -18,6 +18,9 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
+
+    public override string Id => "a02c58ce-e89f-4303-ac4a-c9dfb118e761";
+
     public override string Name => "details";
 
     public override string Description =>
@@ -57,7 +60,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -73,7 +76,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
                 options.Namespace!,
                 options.Name!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
         }

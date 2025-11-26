@@ -12,6 +12,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseM
 {
     private const string CommandTitle = "List MySQL Servers";
 
+    public override string Id => "0d66df82-8ec7-4716-9bed-fe3dfb8e825c";
+
     public override string Name => "list";
 
     public override string Description => "Discovers and lists all Azure Database for MySQL Flexible Server instances within the specified resource group. This command provides an inventory of available MySQL server resources, including their names and current status, enabling efficient server management and resource planning.";
@@ -28,7 +30,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseM
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -40,7 +42,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseM
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            List<string> servers = await mysqlService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!);
+            List<string> servers = await mysqlService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(servers ?? []), MySqlJsonContext.Default.ServerListCommandResult);
         }
         catch (Exception ex)

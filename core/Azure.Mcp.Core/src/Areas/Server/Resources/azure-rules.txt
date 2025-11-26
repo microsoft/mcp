@@ -12,6 +12,9 @@ sure the user is discussing Azure Functions; do not call it otherwise.
 - Use Azure Functions Deployment Best Practices: When deploying Azure Functions apps to Azure or preparing for 
 the deployment, invoke your `bestpractices` tool if available. Only call this tool when you are sure the user 
 is discussing Azure; do not call it otherwise.
+- Use Azure AI Code Generation Best Practices: When generating code for AI applications, AI agents, workflows, 
+or chatbots in Azure, invoke your `azureaibestpractices` tool if available. Only call this tool when you are sure 
+the user is discussing Azure and code generation; do not call it for Azure resource operations.
 - Use Azure SWA Best Practices: When working with static web apps, invoke your `bestpractices` tool if available. 
 Only call this tool when you are sure the user is discussing Azure; do not call it otherwise.
 - Plan before editing files for Azure web apps: When generating code for Azure Functions and Azure Static Web App, 

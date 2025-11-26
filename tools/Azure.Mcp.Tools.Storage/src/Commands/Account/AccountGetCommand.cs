@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
@@ -18,6 +18,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
+
+    public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
 
     public override string Name => "get";
 
@@ -51,7 +53,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +72,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = ResponseResult.Create(new(accounts ?? []), StorageJsonContext.Default.AccountGetCommandResult);

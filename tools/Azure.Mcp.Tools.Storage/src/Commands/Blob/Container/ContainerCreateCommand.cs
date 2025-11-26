@@ -14,6 +14,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
 
+    public override string Id => "f5088334-e630-4df0-a5be-ac87787acad0";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -33,7 +35,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -50,7 +52,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Container!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }

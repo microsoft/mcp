@@ -52,7 +52,10 @@ public class ItemQueryCommandTests
             Arg.Is("container123"),
             Arg.Is(query),
             Arg.Is("sub123"),
-            Arg.Any<AuthMethod>(), null, Arg.Any<RetryPolicyOptions>())
+            Arg.Any<AuthMethod>(),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedItems));
 
         var args = _commandDefinition.Parse([
@@ -64,7 +67,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -94,7 +97,8 @@ public class ItemQueryCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedItems));
 
         var args = _commandDefinition.Parse([
@@ -106,7 +110,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -128,7 +132,8 @@ public class ItemQueryCommandTests
             Arg.Is<string>(s => s == "sub123"),
             Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -139,7 +144,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -165,7 +170,8 @@ public class ItemQueryCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -176,7 +182,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -192,7 +198,7 @@ public class ItemQueryCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange & Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -18,10 +18,6 @@ public class ApplicationInsightsSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClientServices(options =>
-        {
-            options.DefaultUserAgent = "AzureMCPClient/1.0";
-        });
 
         // Service for accessing Profiler dataplane.
         services.AddSingleton<IProfilerDataService, ProfilerDataService>();
@@ -33,7 +29,12 @@ public class ApplicationInsightsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var group = new CommandGroup(Name, "Application Insights operations - Commands for listing and managing Application Insights components.", Title);
+        var group = new CommandGroup(Name,
+        """
+        Application Insights operations - Commands for listing and managing Application Insights components. 
+        These commands do not support querying metrics or logs. Use Azure Monitor querying tools for that purpose.
+        """,
+         Title);
 
         var recommendation = new CommandGroup("recommendation", "Application Insights recommendation operations - list recommendation targets (components).");
         group.AddSubGroup(recommendation);

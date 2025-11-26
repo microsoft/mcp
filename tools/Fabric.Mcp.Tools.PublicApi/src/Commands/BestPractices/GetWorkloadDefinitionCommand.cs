@@ -17,6 +17,8 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
 
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "445c49f3-2a5d-478a-82ca-87fde1a7943e";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -49,7 +51,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
         return options;
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {

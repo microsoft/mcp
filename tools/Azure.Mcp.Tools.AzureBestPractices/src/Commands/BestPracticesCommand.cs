@@ -18,6 +18,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     private readonly ILogger<BestPracticesCommand> _logger = logger;
     private static readonly Dictionary<string, string> s_bestPracticesCache = new();
 
+    public override string Id => "ff12e8fb-f7ce-446a-884b-996dac118b83";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -88,7 +90,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         };
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {

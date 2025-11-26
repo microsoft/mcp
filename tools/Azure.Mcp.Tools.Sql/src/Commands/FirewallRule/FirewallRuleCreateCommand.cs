@@ -17,6 +17,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 {
     private const string CommandTitle = "Create SQL Server Firewall Rule";
 
+    public override string Id => "37c43190-c3f5-4cd2-beda-3ecc2e3ec049";
+
     public override string Name => "create";
 
     public override string Description =>
@@ -56,7 +58,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -76,7 +78,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
                 options.FirewallRuleName!,
                 options.StartIpAddress!,
                 options.EndIpAddress!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }

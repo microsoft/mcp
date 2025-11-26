@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
@@ -21,6 +22,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
     private readonly ILogger<AzqrCommand> _logger = logger;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzqrPath;
+    public override string Id => "e7ef18a3-2730-4300-bad3-dc766f47dd2a";
 
     public override string Name => "azqr";
 
@@ -57,7 +59,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -75,7 +77,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
             var subscriptionService = context.GetService<ISubscriptionService>();
             var dateTimeProvider = context.GetService<IDateTimeProvider>();
-            var subscription = await subscriptionService.GetSubscription(options.Subscription, options.Tenant);
+            var subscription = await subscriptionService.GetSubscription(options.Subscription, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";
@@ -102,7 +104,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             command += " --json";
 
             var processService = context.GetService<IExternalProcessService>();
-            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds);
+            var result = await processService.ExecuteAsync(azqrPath, command,
+                operationTimeoutSeconds: _processTimeoutSeconds,
+                cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {

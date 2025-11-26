@@ -16,6 +16,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 {
     private const string CommandTitle = "Get Iac(Infrastructure as Code) Rules";
     private readonly ILogger<RulesGetCommand> _logger = logger;
+    public override string Id => "942b5c00-01dd-4ca0-9596-4cf650ff7934";
 
     public override string Name => "get";
     public override string Title => CommandTitle;
@@ -51,7 +52,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
         return options;
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {

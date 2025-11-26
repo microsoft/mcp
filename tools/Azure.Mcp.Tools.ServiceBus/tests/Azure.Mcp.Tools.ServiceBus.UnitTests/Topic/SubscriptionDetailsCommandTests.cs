@@ -69,7 +69,8 @@ public class SubscriptionDetailsCommandTests
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).Returns(expectedDetails);
 
         var args = _commandDefinition.Parse([
@@ -80,7 +81,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -106,7 +107,8 @@ public class SubscriptionDetailsCommandTests
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(serviceBusException);
 
         var args = _commandDefinition.Parse([
@@ -117,7 +119,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -136,7 +138,8 @@ public class SubscriptionDetailsCommandTests
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -147,7 +150,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -179,14 +182,15 @@ public class SubscriptionDetailsCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expectedDetails);
         }
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)

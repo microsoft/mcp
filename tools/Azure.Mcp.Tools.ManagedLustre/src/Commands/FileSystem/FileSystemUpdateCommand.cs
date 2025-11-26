@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -18,6 +19,8 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
     private const string CommandTitle = "Update Azure Managed Lustre FileSystem";
 
     private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
+
+    public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
 
     public override string Name => "update";
 
@@ -70,7 +73,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
         options.SquashGid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashGidOption.Name);
         return options;
     }
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -92,7 +95,8 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
                 options.SquashUid,
                 options.SquashGid,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new FileSystemUpdateResult(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         }

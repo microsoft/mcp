@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 
@@ -19,6 +19,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 {
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
+
+    public override string Id => "d3bf37ed-5f2e-448d-a16e-73140ef908c2";
 
     public override string Name => "definitions";
 
@@ -56,7 +58,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -78,7 +80,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
                 options.MetricNamespace,
                 options.SearchString,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (allResults?.Count > 0)
             {

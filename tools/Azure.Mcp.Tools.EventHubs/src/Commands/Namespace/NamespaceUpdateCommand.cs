@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -18,6 +19,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
     private const string CommandTitle = "Create or Update Event Hubs Namespace";
 
     private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
+
+    public override string Id => "225eb25d-52c5-4c3a-9eb4-066cf2b9da84";
 
     public override string Name => "update";
 
@@ -117,7 +120,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -158,7 +161,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.ZoneRedundant,
                 tags,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new NamespaceUpdateCommandResult(updatedNamespace),

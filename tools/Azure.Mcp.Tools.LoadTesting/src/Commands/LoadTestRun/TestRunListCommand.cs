@@ -16,6 +16,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
 {
     private const string _commandTitle = "Test Run List";
     private readonly ILogger<TestRunListCommand> _logger = logger;
+    public override string Id => "425c843c-a435-4a01-a8ff-5dffab398591";
     public override string Name => "list";
     public override string Description =>
         $"""
@@ -47,7 +48,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +68,8 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
                 options.TestId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunListCommandResult);
         }

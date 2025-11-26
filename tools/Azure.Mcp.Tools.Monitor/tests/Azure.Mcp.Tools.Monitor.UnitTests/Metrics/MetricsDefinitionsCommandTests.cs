@@ -97,7 +97,8 @@ public class MetricsDefinitionsCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(
                 [
                     new()
@@ -117,7 +118,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -161,7 +162,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Storage/storageAccounts",
             null,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var context = new CommandContext(_serviceProvider);
@@ -169,7 +171,7 @@ public class MetricsDefinitionsCommandTests
             "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --tenant tenant1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -183,7 +185,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Storage/storageAccounts",
             null,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -198,7 +201,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             "cpu",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(
             [
                 new()
@@ -214,7 +218,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --search-string cpu");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -229,7 +233,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             "cpu",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -255,7 +260,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Storage/storageAccounts",
             "memory",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var context = new CommandContext(_serviceProvider);
@@ -263,7 +269,7 @@ public class MetricsDefinitionsCommandTests
             "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --search-string memory --tenant tenant1 --limit 20");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -277,7 +283,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Storage/storageAccounts",
             "memory",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -296,14 +303,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<MetricDefinition>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -324,14 +332,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<MetricDefinition>>(exception));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --resource-group rg1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -383,14 +392,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -410,14 +420,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -436,14 +447,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<List<MetricDefinition>>(null!));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -468,14 +480,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -484,7 +497,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 10 of 15", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service receives all data but command applies limit internally
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -501,14 +514,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 5");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -517,7 +531,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 5 of 20", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service is called correctly
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -534,14 +548,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 8");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -550,7 +565,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 8 of 25", response.Message);
         Assert.Contains("Use --search-string to filter results", response.Message);
         // Verify the service was called
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -567,14 +582,15 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 10");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -582,7 +598,7 @@ public class MetricsDefinitionsCommandTests
         // Verify that all results are returned without truncation
         Assert.Equal("All 3 metric definitions returned.", response.Message);
         // Verify the service was called
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -612,7 +628,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Compute/virtualMachines",
             "performance",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var context = new CommandContext(_serviceProvider);
@@ -620,7 +637,7 @@ public class MetricsDefinitionsCommandTests
             "--subscription test-subscription --resource-type Microsoft.Compute/virtualMachines --resource test-vm --metric-namespace Microsoft.Compute/virtualMachines --search-string performance --tenant test-tenant --limit 25");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -634,7 +651,8 @@ public class MetricsDefinitionsCommandTests
             "Microsoft.Compute/virtualMachines",
             "performance",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion

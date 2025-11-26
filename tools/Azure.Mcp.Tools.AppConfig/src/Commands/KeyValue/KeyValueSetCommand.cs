@@ -15,6 +15,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
 
+    public override string Id => "a89086eb-acf4-4168-9d32-de5cd7384030";
+
     public override string Name => "set";
 
     public override string Description =>
@@ -53,7 +55,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     }
 
     [McpServerTool(Destructive = true, ReadOnly = false, Title = CommandTitle)]
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -74,7 +76,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
                 options.RetryPolicy,
                 options.Label,
                 options.ContentType,
-                options.Tags);
+                options.Tags,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
                 AppConfigJsonContext.Default.KeyValueSetCommandResult

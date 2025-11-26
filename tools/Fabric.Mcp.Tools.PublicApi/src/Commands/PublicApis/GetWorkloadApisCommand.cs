@@ -16,6 +16,8 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
     private const string CommandTitle = "Get Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "97229a98-c1ae-4255-a6e2-07631c2a42c5";
+
     public override string Name => "get";
 
     public override string Description =>
@@ -51,7 +53,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +72,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType);
+            var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

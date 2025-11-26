@@ -15,6 +15,8 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
 {
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
+    public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
+
     public override string Name => "ask";
 
     public override string Description =>
@@ -65,7 +67,7 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             return context.Response;
@@ -79,8 +81,8 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
                 options.Subscription!,
                 options.Sku!, options.Size,
                 options.Tenant,
-                options.RetryPolicy
-                );
+                options.RetryPolicy,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }
         catch (Exception ex)
