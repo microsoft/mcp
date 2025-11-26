@@ -45,7 +45,7 @@ public class FileWriteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("file-write", systemCommand.Name);
+    Assert.Equal("write", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

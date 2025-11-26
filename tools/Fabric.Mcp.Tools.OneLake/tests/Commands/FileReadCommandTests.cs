@@ -28,7 +28,7 @@ public class FileReadCommandTests
         var command = new FileReadCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("file-read", command.Name);
+    Assert.Equal("read", command.Name);
         Assert.Equal("Read OneLake File", command.Title);
         Assert.Contains("Read the contents of a file from OneLake storage", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -49,7 +49,7 @@ public class FileReadCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("file-read", systemCommand.Name);
+    Assert.Equal("read", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

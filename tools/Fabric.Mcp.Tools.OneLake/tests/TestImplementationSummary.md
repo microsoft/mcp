@@ -79,7 +79,7 @@ tests/
 
 ### Test Coverage Created
 
-#### Command Tests (68 tests)
+#### Command Tests (84 tests)
 - **Constructor validation** - Ensures proper dependency injection
 - **Command properties** - Name, title, description validation
 - **Metadata verification** - ReadOnly, Destructive, Idempotent flags
@@ -99,14 +99,16 @@ tests/
 - **Architecture documentation** - Test demonstrating pattern differences
 
 ### Key Features Tested
-- ✅ **OneLake Workspace Listing** (`onelake-workspace-list`)
-- ✅ **Path Listing** (`path-list`) - File system browsing
-- ✅ **Blob Listing** (`list-blobs`) - Blob storage access
-- ✅ **OneLake Item Listing** (`onelake-item-list`) - Item enumeration
-- ✅ **OneLake Data Item Listing** (`onelake-item-data-list`) - DFS API item enumeration
-- ✅ **Item Creation** (`onelake-item-create`) - Create OneLake items
-- ✅ **File Operations** (`onelake-file-read`, `onelake-file-write`, `onelake-file-delete`) - File management
-- ✅ **Directory Operations** (`onelake-directory-create`, `onelake-directory-delete`) - Directory management
+- ✅ **OneLake Workspace Listing** (`onelake workspace list`)
+- ✅ **Path Listing** (`onelake file list`) - File system browsing
+- ✅ **Blob Listing** (`onelake blob list`) - Blob storage access
+- ✅ **Blob Retrieval** (`onelake blob download`) - OneLake blob endpoint download
+- ✅ **Blob Deletion** (`onelake blob delete`) - OneLake blob endpoint removal
+- ✅ **OneLake Item Listing** (`onelake item list`) - Item enumeration
+- ✅ **OneLake Data Item Listing** (`onelake item list-data`) - DFS API item enumeration
+- ✅ **Item Creation** (`onelake item create`) - Create OneLake items
+- ✅ **File Operations** (`onelake file read`, `onelake file write`, `onelake file delete`) - File management
+- ✅ **Directory Operations** (`onelake directory create`, `onelake directory delete`) - Directory management
 - ✅ **Testable Service Architecture** - Dependency injection patterns with comprehensive testing
 
 ## Technical Implementation
@@ -127,8 +129,8 @@ tests/
 ## Final Test Results ✅
 
 ```
-Test summary: total: 74, failed: 0, succeeded: 74, skipped: 0, duration: 2.3s
-Build succeeded in 6.5s
+Test summary: total: 90, failed: 0, succeeded: 90, skipped: 0, duration: 20.3s
+Build succeeded in 26.0s
 ```
 
 ## Architecture Insights Discovered
@@ -197,19 +199,20 @@ For this implementation, we chose to:
 
 | Command | Name | Coverage |
 |---------|------|----------|
-| Workspace List | `onelake-workspace-list` | Full ✅ |
-| Item List | `onelake-item-list` | Full ✅ |
-| Item Get | `onelake-item-get` | Full ✅ |
-| File Read | `onelake-file-read` | Full ✅ |
-| File Write | `onelake-file-write` | Full ✅ |
-| File Delete | `onelake-file-delete` | Full ✅ |
-| Directory Create | `onelake-directory-create` | Full ✅ |
-| Directory Delete | `onelake-directory-delete` | Full ✅ |
-| Directory Create | `onelake-directory-create` | Full ✅ |
-| Directory Delete | `onelake-directory-delete` | Full ✅ |
-| Blob List | `onelake-blob-list` | Full ✅ |
-| Path List | `onelake-path-list` | Full ✅ |
-| Item Data List | `onelake-item-data-list` | Full ✅ |
+| Workspace List | `onelake workspace list` | Full ✅ |
+| Item List | `onelake item list` | Full ✅ |
+| Item List (DFS API) | `onelake item list-data` | Full ✅ |
+| Item Create | `onelake item create` | Full ✅ |
+| File List (DFS) | `onelake file list` | Full ✅ |
+| File Read | `onelake file read` | Full ✅ |
+| File Write | `onelake file write` | Full ✅ |
+| File Delete | `onelake file delete` | Full ✅ |
+| Directory Create | `onelake directory create` | Full ✅ |
+| Directory Delete | `onelake directory delete` | Full ✅ |
+| Blob List | `onelake blob list` | Full ✅ |
+| Blob Upload | `onelake blob upload` | Full ✅ |
+| Blob Download | `onelake blob download` | Full ✅ |
+| Blob Delete | `onelake blob delete` | Full ✅ |
 
 ## Key Achievements 🚀
 

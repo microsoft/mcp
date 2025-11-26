@@ -24,18 +24,25 @@ public class FabricOneLakeSetup : IAreaSetup
 
         // Register workspace commands
         services.AddSingleton<OneLakeWorkspaceListCommand>();
-        
+
         // Register item commands
-    services.AddSingleton<OneLakeItemListCommand>();
-    services.AddSingleton<OneLakeItemDataListCommand>();
+        services.AddSingleton<OneLakeItemListCommand>();
+        services.AddSingleton<OneLakeItemDataListCommand>();
         services.AddSingleton<ItemCreateCommand>();
-        
+
         // Register file commands
         services.AddSingleton<FileReadCommand>();
         services.AddSingleton<FileWriteCommand>();
         services.AddSingleton<FileDeleteCommand>();
-        services.AddSingleton<BlobListCommand>();
         services.AddSingleton<PathListCommand>();
+
+        // Register blob commands
+        services.AddSingleton<BlobPutCommand>();
+        services.AddSingleton<BlobGetCommand>();
+        services.AddSingleton<BlobDeleteCommand>();
+        services.AddSingleton<BlobListCommand>();
+
+        // Register directory commands
         services.AddSingleton<DirectoryCreateCommand>();
         services.AddSingleton<DirectoryDeleteCommand>();
     }
@@ -54,41 +61,62 @@ public class FabricOneLakeSetup : IAreaSetup
             This tool provides operations for working with OneLake resources within your Fabric tenant.
             """);
 
-        // Register workspace commands
-        var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
-        fabricOneLake.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
-        
-        // Register item commands
-    var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
-    fabricOneLake.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
+        var workspaceGroup = new CommandGroup("workspace", "Workspace operations - Commands for listing and managing OneLake workspaces.");
+        fabricOneLake.AddSubGroup(workspaceGroup);
 
-    var oneLakeItemDataListCommand = serviceProvider.GetRequiredService<OneLakeItemDataListCommand>();
-    fabricOneLake.AddCommand(oneLakeItemDataListCommand.Name, oneLakeItemDataListCommand);
-        
+        var itemGroup = new CommandGroup("item", "Item operations - Commands for listing and creating OneLake items.");
+        fabricOneLake.AddSubGroup(itemGroup);
+
+        var fileGroup = new CommandGroup("file", "File operations - Commands for reading, writing, deleting, and browsing OneLake files using the DFS API.");
+        fabricOneLake.AddSubGroup(fileGroup);
+
+        var blobGroup = new CommandGroup("blob", "Blob operations - Commands for interacting with OneLake's blob-compatible endpoints.");
+        fabricOneLake.AddSubGroup(blobGroup);
+
+        var directoryGroup = new CommandGroup("directory", "Directory operations - Commands for creating and deleting OneLake directories.");
+        fabricOneLake.AddSubGroup(directoryGroup);
+
+        var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
+        workspaceGroup.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
+
+        var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
+        itemGroup.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
+
+        var oneLakeItemDataListCommand = serviceProvider.GetRequiredService<OneLakeItemDataListCommand>();
+        itemGroup.AddCommand(oneLakeItemDataListCommand.Name, oneLakeItemDataListCommand);
+
         var itemCreateCommand = serviceProvider.GetRequiredService<ItemCreateCommand>();
-        fabricOneLake.AddCommand(itemCreateCommand.Name, itemCreateCommand);
-        
-        // Register file commands
+        itemGroup.AddCommand(itemCreateCommand.Name, itemCreateCommand);
+
         var fileReadCommand = serviceProvider.GetRequiredService<FileReadCommand>();
-        fabricOneLake.AddCommand(fileReadCommand.Name, fileReadCommand);
-        
+        fileGroup.AddCommand(fileReadCommand.Name, fileReadCommand);
+
         var fileWriteCommand = serviceProvider.GetRequiredService<FileWriteCommand>();
-        fabricOneLake.AddCommand(fileWriteCommand.Name, fileWriteCommand);
+        fileGroup.AddCommand(fileWriteCommand.Name, fileWriteCommand);
 
         var fileDeleteCommand = serviceProvider.GetRequiredService<FileDeleteCommand>();
-        fabricOneLake.AddCommand(fileDeleteCommand.Name, fileDeleteCommand);
-
-        var blobListCommand = serviceProvider.GetRequiredService<BlobListCommand>();
-        fabricOneLake.AddCommand(blobListCommand.Name, blobListCommand);
+        fileGroup.AddCommand(fileDeleteCommand.Name, fileDeleteCommand);
 
         var pathListCommand = serviceProvider.GetRequiredService<PathListCommand>();
-        fabricOneLake.AddCommand(pathListCommand.Name, pathListCommand);
+        fileGroup.AddCommand(pathListCommand.Name, pathListCommand);
+
+        var blobPutCommand = serviceProvider.GetRequiredService<BlobPutCommand>();
+        blobGroup.AddCommand(blobPutCommand.Name, blobPutCommand);
+
+        var blobGetCommand = serviceProvider.GetRequiredService<BlobGetCommand>();
+        blobGroup.AddCommand(blobGetCommand.Name, blobGetCommand);
+
+        var blobDeleteCommand = serviceProvider.GetRequiredService<BlobDeleteCommand>();
+        blobGroup.AddCommand(blobDeleteCommand.Name, blobDeleteCommand);
+
+        var blobListCommand = serviceProvider.GetRequiredService<BlobListCommand>();
+        blobGroup.AddCommand(blobListCommand.Name, blobListCommand);
 
         var directoryCreateCommand = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
-        fabricOneLake.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);
+        directoryGroup.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);
 
         var directoryDeleteCommand = serviceProvider.GetRequiredService<DirectoryDeleteCommand>();
-        fabricOneLake.AddCommand(directoryDeleteCommand.Name, directoryDeleteCommand);
+        directoryGroup.AddCommand(directoryDeleteCommand.Name, directoryDeleteCommand);
 
         return fabricOneLake;
     }

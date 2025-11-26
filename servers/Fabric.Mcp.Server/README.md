@@ -113,17 +113,20 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 ## OneLake (`onelake`)
 | Command | Purpose |
 |---|---|
-| `onelake path-list` | Explore folders and files using the DFS hierarchical view. |
-| `onelake list-blobs` | Enumerate OneLake content in a flat blob-style listing. |
-| `onelake file-read` | Download file contents from OneLake storage. |
-| `onelake file-write` | Upload text or local files, with optional overwrite. |
-| `onelake file-delete` | Remove individual files. |
-| `onelake directory-create` | Create nested directories. |
-| `onelake directory-delete` | Delete directories (with optional recursion). |
-| `onelake onelake-workspace-list` | List available OneLake workspaces. |
-| `onelake onelake-item-list` | List Fabric items within a workspace (data plane). |
-| `onelake onelake-item-data-list` | List Fabric items via the DFS endpoint. |
-| `onelake item-create` | Provision new Fabric items (lakehouse, notebook, etc.). |
+| `onelake file list` | Explore folders and files using the DFS hierarchical view. |
+| `onelake blob list` | Enumerate OneLake content in a flat blob-style listing. |
+| `onelake blob download` | Download blob content (metadata + base64/text payload) via the blob endpoint. |
+| `onelake blob upload` | Upload blobs using inline content or local files with overwrite and content-type support. |
+| `onelake blob delete` | Remove blobs and retrieve Fabric request identifiers. |
+| `onelake file read` | Download file contents from OneLake storage. |
+| `onelake file write` | Upload text or local files, with optional overwrite. |
+| `onelake file delete` | Remove individual files. |
+| `onelake directory create` | Create nested directories. |
+| `onelake directory delete` | Delete directories (with optional recursion). |
+| `onelake workspace list` | List available OneLake workspaces. |
+| `onelake item list` | List Fabric items within a workspace (data plane). |
+| `onelake item list-data` | List Fabric items via the DFS endpoint. |
+| `onelake item create` | Provision new Fabric items (lakehouse, notebook, etc.). |
 
 All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item-create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 

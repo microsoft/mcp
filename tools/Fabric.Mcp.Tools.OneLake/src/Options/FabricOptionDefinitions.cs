@@ -154,6 +154,13 @@ public static class FabricOptionDefinitions
         Required = false
     };
 
+    public const string ContentTypeName = "content-type";
+    public static readonly Option<string> ContentType = new($"--{ContentTypeName}")
+    {
+        Description = "MIME content type to set on the uploaded file (e.g., 'application/json'). Defaults to 'application/octet-stream'.",
+        Required = false
+    };
+
     // Display options
     public const string DisplayNameName = "display-name";
     public static readonly Option<string> DisplayName = new($"--{DisplayNameName}")

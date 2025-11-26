@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
@@ -12,24 +13,26 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Net;
+using System.Threading;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
-public sealed class DirectoryDeleteCommand(
-    ILogger<DirectoryDeleteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<DirectoryDeleteOptions>()
+public sealed class BlobDeleteCommand(
+    ILogger<BlobDeleteCommand> logger,
+    IOneLakeService oneLakeService) : GlobalCommand<BlobDeleteOptions>()
 {
-    private readonly ILogger<DirectoryDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Name => "delete";
-    public override string Title => "Delete OneLake Directory";
-    public override string Description => "Delete a directory from OneLake storage. Use --recursive to delete non-empty directories.";
+    public override string Title => "Delete OneLake Blob";
+    public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,
-        Idempotent = true,
+        Idempotent = false,
         LocalRequired = false,
         OpenWorld = false,
         ReadOnly = false,
@@ -43,13 +46,13 @@ public sealed class DirectoryDeleteCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DirectoryPath);
-        command.Options.Add(FabricOptionDefinitions.Recursive);
+        command.Options.Add(FabricOptionDefinitions.FilePath);
     }
 
-    protected override DirectoryDeleteOptions BindOptions(ParseResult parseResult)
+    protected override BlobDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
         var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
@@ -62,8 +65,7 @@ public sealed class DirectoryDeleteCommand(
             ? itemId!
             : itemName ?? string.Empty;
 
-        options.DirectoryPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DirectoryPath.Name) ?? string.Empty;
-        options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
+        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
         return options;
     }
 
@@ -82,38 +84,41 @@ public sealed class DirectoryDeleteCommand(
                 throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
             }
 
-            await _oneLakeService.DeleteDirectoryAsync(
+            var result = await _oneLakeService.DeleteBlobAsync(
                 options.WorkspaceId,
                 options.ItemId,
-                options.DirectoryPath,
-                options.Recursive,
+                options.FilePath,
                 CancellationToken.None);
 
-            var message = options.Recursive 
-                ? "Directory and all contents deleted successfully" 
-                : "Directory deleted successfully";
-            var result = new DirectoryDeleteCommandResult(options.DirectoryPath, message);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryDeleteCommandResult);
+            var commandResult = new BlobDeleteCommandResult(
+                result,
+                "Blob deleted successfully.");
+
+            context.Response.Status = HttpStatusCode.OK;
+            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobDeleteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting directory {DirectoryPath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
-                options.DirectoryPath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error deleting blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
+                options.FilePath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 
-    public sealed record DirectoryDeleteCommandResult(
-        string DirectoryPath,
-        string Message);
+    public sealed record BlobDeleteCommandResult(BlobDeleteResult Result, string Message);
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
 }
 
-public sealed class DirectoryDeleteOptions : GlobalOptions
+public sealed class BlobDeleteOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
-    public string DirectoryPath { get; set; } = string.Empty;
-    public bool Recursive { get; set; } = false;
+    public string FilePath { get; set; } = string.Empty;
 }

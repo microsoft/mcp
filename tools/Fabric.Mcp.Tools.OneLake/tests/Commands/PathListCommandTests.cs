@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Fabric.Mcp.Tools.OneLake.Commands;
+using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
@@ -18,7 +18,7 @@ public class PathListCommandTests
         var command = new PathListCommand(logger);
 
         // Assert
-        Assert.Equal("path-list", command.Name);
+    Assert.Equal("list", command.Name);
         Assert.Equal("List OneLake Path Structure", command.Title);
         Assert.Contains("List files and directories", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -38,7 +38,7 @@ public class PathListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("path-list", systemCommand.Name);
+    Assert.Equal("list", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

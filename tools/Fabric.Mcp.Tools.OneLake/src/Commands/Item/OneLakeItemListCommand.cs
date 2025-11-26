@@ -25,7 +25,7 @@ public sealed class OneLakeItemListCommand(
     private readonly ILogger<OneLakeItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "onelake-item-list";
+    public override string Name => "list";
     public override string Title => "List OneLake Items";
     public override string Description => "List OneLake items in a workspace using the OneLake data plane API";
 

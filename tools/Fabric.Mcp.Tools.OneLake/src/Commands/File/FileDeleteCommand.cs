@@ -23,7 +23,7 @@ public sealed class FileDeleteCommand(
     private readonly ILogger<FileDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "file-delete";
+    public override string Name => "delete";
     public override string Title => "Delete OneLake File";
     public override string Description => "Delete a file from OneLake storage.";
 

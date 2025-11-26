@@ -21,7 +21,7 @@ public sealed class ItemCreateCommand(
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "item-create";
+    public override string Name => "create";
     public override string Title => "Create Fabric Item";
     public override string Description => "Create a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.";
 

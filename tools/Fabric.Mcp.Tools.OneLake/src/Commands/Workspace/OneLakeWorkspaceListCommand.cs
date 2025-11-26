@@ -21,7 +21,7 @@ public sealed class OneLakeWorkspaceListCommand(
     private readonly ILogger<OneLakeWorkspaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "onelake-workspace-list";
+    public override string Name => "list";
     public override string Title => "List OneLake Workspaces";
     public override string Description => "List all OneLake workspaces using the OneLake data plane API.";
 

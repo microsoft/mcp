@@ -13,7 +13,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Fabric.Mcp.Tools.OneLake.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 public sealed class PathListCommand(ILogger<PathListCommand> logger)
     : GlobalCommand<PathListOptions>()
@@ -21,7 +21,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
     private const string CommandTitle = "List OneLake Path Structure";
     private readonly ILogger<PathListCommand> _logger = logger;
 
-    public override string Name => "path-list";
+        public override string Name => "list";
 
     public override string Description =>
         """

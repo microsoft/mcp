@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.File;
-using Fabric.Mcp.Tools.OneLake.Commands;
-using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
+using System.Collections.Generic;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
+using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 using System.Text.Json.Serialization;
 
 namespace Fabric.Mcp.Tools.OneLake.Models;
@@ -33,15 +33,22 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(OneLakeEnvironmentEndpoints))]
 [JsonSerializable(typeof(OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult))]
 [JsonSerializable(typeof(OneLakeItemListCommand.OneLakeItemListCommandResult))]
+[JsonSerializable(typeof(OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult))]
 [JsonSerializable(typeof(OneLakeItemDataListCommand.OneLakeItemDataListCommandResult))]
 [JsonSerializable(typeof(ItemCreateCommand.ItemCreateCommandResult))]
 [JsonSerializable(typeof(FileReadCommand.FileReadCommandResult))]
 [JsonSerializable(typeof(FileWriteCommand.FileWriteCommandResult))]
 [JsonSerializable(typeof(FileDeleteCommand.FileDeleteCommandResult))]
+[JsonSerializable(typeof(BlobPutCommand.BlobPutCommandResult))]
+[JsonSerializable(typeof(BlobGetCommand.BlobGetCommandResult))]
+[JsonSerializable(typeof(BlobDeleteCommand.BlobDeleteCommandResult))]
 [JsonSerializable(typeof(BlobListCommand.BlobListCommandResult))]
-[JsonSerializable(typeof(Commands.PathListCommand.PathListResult))]
+[JsonSerializable(typeof(PathListCommand.PathListResult))]
 [JsonSerializable(typeof(DirectoryCreateCommand.DirectoryCreateCommandResult))]
 [JsonSerializable(typeof(DirectoryDeleteCommand.DirectoryDeleteCommandResult))]
+[JsonSerializable(typeof(BlobPutResult))]
+[JsonSerializable(typeof(BlobGetResult))]
+[JsonSerializable(typeof(BlobDeleteResult))]
 [JsonSerializable(typeof(IEnumerable<Workspace>))]
 [JsonSerializable(typeof(IEnumerable<OneLakeItem>))]
 [JsonSerializable(typeof(IEnumerable<Lakehouse>))]

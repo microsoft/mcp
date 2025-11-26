@@ -12,19 +12,22 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.IO;
+using System.Net;
+using System.Text;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
-public sealed class FileWriteCommand(
-    ILogger<FileWriteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileWriteOptions>()
+public sealed class BlobPutCommand(
+    ILogger<BlobPutCommand> logger,
+    IOneLakeService oneLakeService) : GlobalCommand<BlobPutOptions>()
 {
-    private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "write";
-    public override string Title => "Write OneLake File";
-    public override string Description => "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.";
+    public override string Name => "upload";
+    public override string Title => "Upload OneLake Blob";
+    public override string Description => "Upload content to OneLake via the blob endpoint. Supports inline content or local file uploads with optional overwrite control.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -47,12 +50,13 @@ public sealed class FileWriteCommand(
         command.Options.Add(FabricOptionDefinitions.Content);
         command.Options.Add(FabricOptionDefinitions.LocalFilePath);
         command.Options.Add(FabricOptionDefinitions.Overwrite);
+        command.Options.Add(FabricOptionDefinitions.ContentType);
     }
 
-    protected override FileWriteOptions BindOptions(ParseResult parseResult)
+    protected override BlobPutOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        
+
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
         var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
@@ -69,40 +73,16 @@ public sealed class FileWriteCommand(
         options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
         options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
         options.Overwrite = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Overwrite.Name);
+        options.ContentType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContentType.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
-        
+
         try
         {
-            Stream contentStream;
-            long contentLength;
-
-            // Determine content source
-            if (!string.IsNullOrEmpty(options.LocalFilePath))
-            {
-                if (!System.IO.File.Exists(options.LocalFilePath))
-                {
-                    throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
-                }
-                
-                contentStream = System.IO.File.OpenRead(options.LocalFilePath);
-                contentLength = new FileInfo(options.LocalFilePath).Length;
-            }
-            else if (!string.IsNullOrEmpty(options.Content))
-            {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(options.Content);
-                contentStream = new MemoryStream(bytes);
-                contentLength = bytes.Length;
-            }
-            else
-            {
-                throw new ArgumentException("Either --content or --local-file-path must be specified.");
-            }
-
             if (string.IsNullOrWhiteSpace(options.WorkspaceId))
             {
                 throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
@@ -113,41 +93,97 @@ public sealed class FileWriteCommand(
                 throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
             }
 
-            using (contentStream)
-            {
-                await _oneLakeService.WriteFileAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
-                    options.FilePath,
-                    contentStream,
-                    options.Overwrite,
-                    CancellationToken.None);
-            }
+            using var contentStream = ResolveContentStream(options, out var contentLength);
 
-            var result = new FileWriteCommandResult(
-                options.FilePath, 
-                contentLength, 
-                options.Overwrite ? "File written successfully (overwritten)" : "File written successfully");
-                
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileWriteCommandResult);
+            var result = await _oneLakeService.PutBlobAsync(
+                options.WorkspaceId,
+                options.ItemId,
+                options.FilePath,
+                contentStream,
+                contentLength,
+                options.ContentType,
+                options.Overwrite,
+                CancellationToken.None);
+
+            var commandResult = new BlobPutCommandResult(
+                result.WorkspaceId,
+                result.ItemId,
+                result.Path,
+                result.ContentLength,
+                result.ContentType,
+                result.ETag,
+                result.LastModified,
+                result.RequestId,
+                result.Version,
+                result.RequestServerEncrypted,
+                result.ContentMd5,
+                result.ContentCrc64,
+                result.EncryptionScope,
+                result.EncryptionKeySha256,
+                result.VersionId,
+                result.ClientRequestId,
+                result.RootActivityId,
+                options.Overwrite ? "Blob uploaded successfully (overwritten)." : "Blob uploaded successfully.");
+
+            context.Response.Status = HttpStatusCode.Created;
+            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobPutCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
+            _logger.LogError(ex, "Error uploading blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
                 options.FilePath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 
-    public sealed record FileWriteCommandResult(
-        string FilePath,
+    private static Stream ResolveContentStream(BlobPutOptions options, out long contentLength)
+    {
+        if (!string.IsNullOrEmpty(options.LocalFilePath))
+        {
+            if (!System.IO.File.Exists(options.LocalFilePath))
+            {
+                throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
+            }
+
+            var fileStream = System.IO.File.OpenRead(options.LocalFilePath);
+            contentLength = fileStream.Length;
+            return fileStream;
+        }
+
+        if (!string.IsNullOrEmpty(options.Content))
+        {
+            var bytes = Encoding.UTF8.GetBytes(options.Content);
+            contentLength = bytes.LongLength;
+            return new MemoryStream(bytes);
+        }
+
+        throw new ArgumentException("Either --content or --local-file-path must be specified when uploading a blob.");
+    }
+
+    public sealed record BlobPutCommandResult(
+        string WorkspaceId,
+        string ItemId,
+        string BlobPath,
         long ContentLength,
+        string ContentType,
+        string? ETag,
+        DateTimeOffset? LastModified,
+        string? RequestId,
+        string? Version,
+        bool? RequestServerEncrypted,
+        string? ContentMd5,
+        string? ContentCrc64,
+        string? EncryptionScope,
+        string? EncryptionKeySha256,
+        string? VersionId,
+        string? ClientRequestId,
+        string? RootActivityId,
         string Message);
 }
 
-public sealed class FileWriteOptions : GlobalOptions
+public sealed class BlobPutOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
@@ -155,4 +191,5 @@ public sealed class FileWriteOptions : GlobalOptions
     public string? Content { get; set; }
     public string? LocalFilePath { get; set; }
     public bool Overwrite { get; set; }
+    public string? ContentType { get; set; }
 }

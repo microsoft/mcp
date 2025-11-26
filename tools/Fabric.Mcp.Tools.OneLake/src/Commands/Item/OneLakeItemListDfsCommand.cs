@@ -9,26 +9,25 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Net;
 
-namespace Fabric.Mcp.Tools.OneLake.Commands.File;
+namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
 /// <summary>
-/// Command to create a directory in OneLake storage.
+/// Command to list OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 /// </summary>
-public sealed class DirectoryCreateCommand(
-    ILogger<DirectoryCreateCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<DirectoryCreateOptions>()
+public sealed class OneLakeItemListDfsCommand(
+    ILogger<OneLakeItemListDfsCommand> logger,
+    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions>()
 {
-    private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "create";
-    public override string Title => "Create OneLake Directory";
-    public override string Description => "Create a directory in OneLake storage. Can create nested directory structures.";
+    public override string Name => "onelake-item-list-dfs";
+    public override string Title => "List OneLake Items (DFS)";
+    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API";
 
     public override ToolMetadata Metadata => new()
     {
@@ -36,7 +35,7 @@ public sealed class DirectoryCreateCommand(
         Idempotent = true,
         LocalRequired = false,
         OpenWorld = false,
-        ReadOnly = false,
+        ReadOnly = true,
         Secret = false
     };
 
@@ -45,12 +44,11 @@ public sealed class DirectoryCreateCommand(
         base.RegisterOptions(command);
         command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DirectoryPath);
+        command.Options.Add(FabricOptionDefinitions.Recursive);
+        command.Options.Add(FabricOptionDefinitions.ContinuationToken);
     }
 
-    protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
+    protected override OneLakeItemListDfsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
@@ -58,21 +56,14 @@ public sealed class DirectoryCreateCommand(
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
             ? workspaceId!
             : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.DirectoryPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DirectoryPath.Name) ?? string.Empty;
+        options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
+        options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
-
         try
         {
             if (string.IsNullOrWhiteSpace(options.WorkspaceId))
@@ -80,35 +71,21 @@ public sealed class DirectoryCreateCommand(
                 throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
             }
 
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
-            await _oneLakeService.CreateDirectoryAsync(
+            var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
                 options.WorkspaceId,
-                options.ItemId,
-                options.DirectoryPath,
+                recursive: options.Recursive,
+                continuationToken: options.ContinuationToken,
                 CancellationToken.None);
 
-            var result = new DirectoryCreateCommandResult
-            {
-                WorkspaceId = options.WorkspaceId,
-                ItemId = options.ItemId,
-                DirectoryPath = options.DirectoryPath,
-                Success = true,
-                Message = $"Directory '{options.DirectoryPath}' created successfully"
-            };
-
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryCreateCommandResult);
+            var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
+            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating directory {DirectoryPath} in item {ItemId}. Options: {@Options}", 
-                options.DirectoryPath, options.ItemId, options);
+            _logger.LogError(ex, "Error listing OneLake items (DFS) in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
             HandleException(context, ex);
         }
-
+        
         return context.Response;
     }
 
@@ -130,19 +107,15 @@ public sealed class DirectoryCreateCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record DirectoryCreateCommandResult
+    public sealed record OneLakeItemListDfsCommandResult
     {
-        public string WorkspaceId { get; init; } = string.Empty;
-        public string ItemId { get; init; } = string.Empty;
-        public string DirectoryPath { get; init; } = string.Empty;
-        public bool Success { get; init; }
-        public string Message { get; init; } = string.Empty;
+        public string? JsonResponse { get; init; }
     }
 }
 
-public sealed class DirectoryCreateOptions : GlobalOptions
+public sealed class OneLakeItemListDfsOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
-    public string DirectoryPath { get; set; } = string.Empty;
+    public bool Recursive { get; set; }
+    public string? ContinuationToken { get; set; }
 }

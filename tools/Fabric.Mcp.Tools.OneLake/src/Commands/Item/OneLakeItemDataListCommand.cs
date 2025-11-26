@@ -25,7 +25,7 @@ public sealed class OneLakeItemDataListCommand(
     private readonly ILogger<OneLakeItemDataListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "onelake-item-data-list";
+    public override string Name => "list-data";
     public override string Title => "List OneLake Items (Data API)";
     public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
 
@@ -116,6 +116,6 @@ public sealed class OneLakeItemDataListCommand(
 public sealed class OneLakeItemDataListOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
-    public bool Recursive { get; set; } = true;
+    public bool Recursive { get; set; }
     public string? ContinuationToken { get; set; }
 }

@@ -23,7 +23,7 @@ public sealed class FileReadCommand(
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "file-read";
+    public override string Name => "read";
     public override string Title => "Read OneLake File";
     public override string Description => "Read the contents of a file from OneLake storage.";
 

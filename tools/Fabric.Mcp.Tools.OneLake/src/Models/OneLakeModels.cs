@@ -212,6 +212,63 @@ public class OneLakeFileInfo
     public string? ETag { get; set; }
 }
 
+public sealed record BlobPutResult(
+    [property: JsonPropertyName("workspaceId")] string WorkspaceId,
+    [property: JsonPropertyName("itemId")] string ItemId,
+    [property: JsonPropertyName("path")] string Path,
+    [property: JsonPropertyName("contentLength")] long ContentLength,
+    [property: JsonPropertyName("contentType")] string ContentType,
+    [property: JsonPropertyName("etag")] string? ETag,
+    [property: JsonPropertyName("lastModified")] DateTimeOffset? LastModified,
+    [property: JsonPropertyName("requestId")] string? RequestId,
+    [property: JsonPropertyName("version")] string? Version = null,
+    [property: JsonPropertyName("requestServerEncrypted")] bool? RequestServerEncrypted = null,
+    [property: JsonPropertyName("contentMd5")] string? ContentMd5 = null,
+    [property: JsonPropertyName("contentCrc64")] string? ContentCrc64 = null,
+    [property: JsonPropertyName("encryptionScope")] string? EncryptionScope = null,
+    [property: JsonPropertyName("encryptionKeySha256")] string? EncryptionKeySha256 = null,
+    [property: JsonPropertyName("versionId")] string? VersionId = null,
+    [property: JsonPropertyName("clientRequestId")] string? ClientRequestId = null,
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId = null
+);
+
+public sealed record BlobGetResult(
+    [property: JsonPropertyName("workspaceId")] string WorkspaceId,
+    [property: JsonPropertyName("itemId")] string ItemId,
+    [property: JsonPropertyName("path")] string Path,
+    [property: JsonPropertyName("contentLength")] long? ContentLength,
+    [property: JsonPropertyName("contentType")] string? ContentType,
+    [property: JsonPropertyName("charset")] string? Charset,
+    [property: JsonPropertyName("contentEncoding")] string? ContentEncoding,
+    [property: JsonPropertyName("contentLanguage")] string? ContentLanguage,
+    [property: JsonPropertyName("contentDisposition")] string? ContentDisposition,
+    [property: JsonPropertyName("contentMd5")] string? ContentMd5,
+    [property: JsonPropertyName("contentCrc64")] string? ContentCrc64,
+    [property: JsonPropertyName("contentBase64")] string? ContentBase64,
+    [property: JsonPropertyName("contentText")] string? ContentText,
+    [property: JsonPropertyName("etag")] string? ETag,
+    [property: JsonPropertyName("lastModified")] DateTimeOffset? LastModified,
+    [property: JsonPropertyName("requestServerEncrypted")] bool? RequestServerEncrypted,
+    [property: JsonPropertyName("encryptionScope")] string? EncryptionScope,
+    [property: JsonPropertyName("encryptionKeySha256")] string? EncryptionKeySha256,
+    [property: JsonPropertyName("version")] string? Version,
+    [property: JsonPropertyName("versionId")] string? VersionId,
+    [property: JsonPropertyName("requestId")] string? RequestId,
+    [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
+);
+
+public sealed record BlobDeleteResult(
+    [property: JsonPropertyName("workspaceId")] string WorkspaceId,
+    [property: JsonPropertyName("itemId")] string ItemId,
+    [property: JsonPropertyName("path")] string Path,
+    [property: JsonPropertyName("version")] string? Version,
+    [property: JsonPropertyName("versionId")] string? VersionId,
+    [property: JsonPropertyName("requestId")] string? RequestId,
+    [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
+);
+
 // Request/response models
 public class CreateItemRequest
 {

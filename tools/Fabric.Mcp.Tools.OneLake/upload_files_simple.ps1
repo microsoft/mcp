@@ -27,8 +27,8 @@ foreach ($file in $files) {
     Write-Host "Uploading $($file.Name)... " -NoNewline
     
     try {
-        # Use the OneLake file-write command
-        dotnet run -- onelake file-write --workspace-id $workspaceId --item-id $itemId --file-path $targetPath --local-file-path $file.FullName --overwrite
+    # Use the OneLake file write command
+    dotnet run -- onelake file write --workspace-id $workspaceId --item-id $itemId --file-path $targetPath --local-file-path $file.FullName --overwrite
         
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Success" -ForegroundColor Green

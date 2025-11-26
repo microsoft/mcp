@@ -12,11 +12,11 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Integrate with other Fabric workloads through OneLake
 
 **Features:**
-- 11 comprehensive OneLake commands with full MCP integration
+- 14 comprehensive OneLake commands with full MCP integration
 - Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
 - Support for multiple Microsoft Fabric environments (PROD, DAILY, DXT, MSIT)
 - Robust error handling and authentication
-- Production-ready with 100% test coverage (76 tests)
+- Production-ready with 100% test coverage (90 tests)
 - Clean, focused API design optimized for AI agent interactions
 
 ## Prerequisites
@@ -93,7 +93,7 @@ $env:ONELAKE_ENVIRONMENT = "DAILY"
 [Environment]::SetEnvironmentVariable("ONELAKE_ENVIRONMENT", "DAILY", "User")
 
 # Run commands with specific environment
-$env:ONELAKE_ENVIRONMENT = "DAILY"; dotnet run -- onelake onelake-workspace-list
+$env:ONELAKE_ENVIRONMENT = "DAILY"; dotnet run -- onelake workspace list
 ```
 
 #### Windows (Command Prompt)
@@ -105,7 +105,7 @@ set ONELAKE_ENVIRONMENT=DAILY
 setx ONELAKE_ENVIRONMENT DAILY
 
 # Run commands with specific environment
-set ONELAKE_ENVIRONMENT=DAILY && dotnet run -- onelake onelake-workspace-list
+set ONELAKE_ENVIRONMENT=DAILY && dotnet run -- onelake workspace list
 ```
 
 #### Linux/macOS (Bash)
@@ -117,7 +117,7 @@ export ONELAKE_ENVIRONMENT=DAILY
 echo 'export ONELAKE_ENVIRONMENT=DAILY' >> ~/.bashrc
 
 # Run commands with specific environment
-ONELAKE_ENVIRONMENT=DAILY dotnet run -- onelake onelake-workspace-list
+ONELAKE_ENVIRONMENT=DAILY dotnet run -- onelake workspace list
 ```
 
 ### Environment-Specific Usage Examples
@@ -125,8 +125,8 @@ ONELAKE_ENVIRONMENT=DAILY dotnet run -- onelake onelake-workspace-list
 #### Working with Production Environment (Default)
 ```bash
 # No environment variable needed - PROD is default
-dotnet run -- onelake onelake-workspace-list
-dotnet run -- onelake file-read --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "data.json"
+dotnet run -- onelake workspace list
+dotnet run -- onelake file read --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "data.json"
 ```
 
 #### Working with Daily Build Environment
@@ -135,23 +135,23 @@ dotnet run -- onelake file-read --workspace-id "your-workspace-id" --item-id "yo
 export ONELAKE_ENVIRONMENT=DAILY
 
 # Now all commands will use DAILY endpoints
-dotnet run -- onelake onelake-workspace-list
-dotnet run -- onelake file-write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Testing daily build"
+dotnet run -- onelake workspace list
+dotnet run -- onelake file write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Testing daily build"
 ```
 
 #### Testing with Multiple Environments
 ```bash
 # Test against production
 unset ONELAKE_ENVIRONMENT
-dotnet run -- onelake onelake-workspace-list
+dotnet run -- onelake workspace list
 
 # Test against daily build
 export ONELAKE_ENVIRONMENT=DAILY
-dotnet run -- onelake onelake-workspace-list
+dotnet run -- onelake workspace list
 
 # Test against DXT
 export ONELAKE_ENVIRONMENT=DXT
-dotnet run -- onelake onelake-workspace-list
+dotnet run -- onelake workspace list
 ```
 
 ### PowerShell Script Environment Configuration
@@ -207,10 +207,10 @@ You can verify which environment you're targeting by checking the endpoints in t
 
 ### Workspace and Item Identifiers
 
-All commands except `item-create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item-create` currently requires the GUID-based `--workspace-id` option.
+All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option.
 
 ```bash
-dotnet run -- onelake path-list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
+dotnet run -- onelake file list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
 ```
 
 ## Available Commands
@@ -224,7 +224,7 @@ dotnet run -- onelake path-list --workspace "Analytics Workspace" --item "SalesL
 Lists all OneLake workspaces using the OneLake data plane API.
 
 ```bash
-dotnet run -- onelake onelake-workspace-list
+dotnet run -- onelake workspace list
 ```
 
 **Example Output:**
@@ -251,7 +251,7 @@ dotnet run -- onelake onelake-workspace-list
 Lists OneLake items in a workspace using the OneLake data plane API.
 
 ```bash
-dotnet run -- onelake onelake-item-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
+dotnet run -- onelake item list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
 ```
 
 **Parameters:**
@@ -280,7 +280,7 @@ dotnet run -- onelake onelake-item-list --workspace-id "47242da5-ff3b-46fb-a94f-
 Lists OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 
 ```bash
-dotnet run -- onelake onelake-item-data-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --recursive
+dotnet run -- onelake item list-data --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --recursive
 ```
 
 **Parameters:**
@@ -292,10 +292,10 @@ dotnet run -- onelake onelake-item-data-list --workspace-id "47242da5-ff3b-46fb-
 Creates a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.
 
 ```bash
-dotnet run -- onelake item-create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --display-name "NewLakehouse" --type "Lakehouse"
+dotnet run -- onelake item create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --display-name "NewLakehouse" --type "Lakehouse"
 ```
 
-> **Note:** `item-create` currently requires the GUID-based `--workspace-id` switch; friendly workspace names are not supported for this command yet.
+> **Note:** `item create` currently requires the GUID-based `--workspace-id` switch; friendly workspace names are not supported for this command yet.
 
 **Parameters:**
 - `--workspace-id`: The ID of the Microsoft Fabric workspace
@@ -309,7 +309,7 @@ dotnet run -- onelake item-create --workspace-id "47242da5-ff3b-46fb-a94f-977909
 Reads the contents of a file from OneLake storage.
 
 ```bash
-dotnet run -- onelake file-read --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "raw_data/data.json"
+dotnet run -- onelake file read --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "raw_data/data.json"
 ```
 
 **Parameters:**
@@ -335,12 +335,12 @@ Writes content to a file in OneLake storage. Can write text content directly or 
 
 **Write text content directly:**
 ```bash
-dotnet run -- onelake file-write --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "test/hello.txt" --content "Hello, OneLake!"
+dotnet run -- onelake file write --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "test/hello.txt" --content "Hello, OneLake!"
 ```
 
 **Upload from local file:**
 ```bash
-dotnet run -- onelake file-write --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "data/upload.json" --local-file-path "C:\local\data.json" --overwrite
+dotnet run -- onelake file write --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "data/upload.json" --local-file-path "C:\local\data.json" --overwrite
 ```
 
 **Parameters:**
@@ -369,7 +369,7 @@ dotnet run -- onelake file-write --workspace-id "47242da5-ff3b-46fb-a94f-977909b
 Deletes a file from OneLake storage.
 
 ```bash
-dotnet run -- onelake file-delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "temp/unwanted.txt"
+dotnet run -- onelake file delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "temp/unwanted.txt"
 ```
 
 **Parameters:**
@@ -389,17 +389,131 @@ dotnet run -- onelake file-delete --workspace-id "47242da5-ff3b-46fb-a94f-977909
 }
 ```
 
+#### Upload Blob (Blob Endpoint)
+
+Uploads binary content to OneLake using the native blob endpoint. Supports inline content, local files, and content-type overrides while returning rich service metadata.
+
+```bash
+dotnet run -- onelake blob upload --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite --content-type application/octet-stream
+```
+
+**Parameters:**
+- `--workspace-id`: The ID or friendly name of the Microsoft Fabric workspace
+- `--item-id`: The ID or friendly name of the Fabric item (e.g., Lakehouse)
+- `--file-path`: Blob path under the `Files/` container
+- `--content`: (Optional) Inline content to upload
+- `--local-file-path`: (Optional) Local file to stream to OneLake
+- `--overwrite`: (Optional) Overwrite the blob if it already exists
+- `--content-type`: (Optional) Explicit MIME type for the blob
+
+**Example Output:**
+```json
+{
+  "status": 201,
+  "message": "Success",
+  "results": {
+    "workspaceId": "47242da5-ff3b-46fb-a94f-977909b773d5",
+    "itemId": "0e67ed13-2bb6-49be-9c87-a1105a4ea342",
+    "blobPath": "Files/data/archive.bin",
+    "contentLength": 1048576,
+    "contentType": "application/octet-stream",
+    "etag": "\"0x8DB63C58E54196C\"",
+    "lastModified": "2025-11-25T18:14:03.5123456+00:00",
+    "requestId": "72f62f01-6d92-4c66-8a7a-d5dd24ff1c9d",
+    "version": "2023-11-03",
+    "requestServerEncrypted": true,
+    "contentCrc64": "i8K5MTc=",
+    "encryptionScope": "onelake-default",
+    "clientRequestId": "c0a7efbb-fbd7-484e-95c1-e606f9387e0d",
+    "rootActivityId": "1c95a779-7d14-4596-9b54-81197cda059b",
+    "message": "Blob uploaded successfully."
+  }
+}
+```
+
+#### Get Blob (Blob Endpoint)
+
+Downloads a blob via the OneLake blob endpoint, returning metadata, a base64 representation, and decoded text content when applicable.
+
+```bash
+dotnet run -- onelake blob download --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --file-path "Files/data/archive.bin"
+```
+
+**Parameters:**
+- `--workspace`/`--workspace-id`: Workspace friendly name or ID
+- `--item`/`--item-id`: Item friendly name or ID
+- `--file-path`: Path to the blob under `Files/`
+
+**Example Output:**
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "results": {
+    "blob": {
+      "workspaceId": "47242da5-ff3b-46fb-a94f-977909b773d5",
+      "itemId": "0e67ed13-2bb6-49be-9c87-a1105a4ea342",
+      "path": "Files/data/archive.bin",
+      "contentLength": 1048576,
+      "contentType": "application/json",
+      "charset": "utf-8",
+      "contentBase64": "eyJtZXNzYWdlIjogIkhlbGxvIE9uZUxha2UhIn0=",
+      "contentText": "{\"message\": \"Hello OneLake!\"}",
+      "etag": "\"0x8DB63C58E54196C\"",
+      "lastModified": "2025-11-25T18:14:03.5123456+00:00",
+      "requestServerEncrypted": true,
+      "clientRequestId": "c0a7efbb-fbd7-484e-95c1-e606f9387e0d",
+      "rootActivityId": "1c95a779-7d14-4596-9b54-81197cda059b"
+    },
+    "message": "Blob retrieved successfully."
+  }
+}
+```
+
+#### Delete Blob (Blob Endpoint)
+
+Removes a blob using the OneLake blob endpoint and returns the request identifiers emitted by the platform.
+
+```bash
+dotnet run -- onelake blob delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
+```
+
+**Parameters:**
+- `--workspace-id` / `--workspace`: Workspace identifier or friendly name
+- `--item-id` / `--item`: Item identifier or friendly name
+- `--file-path`: Path to the blob to remove
+
+**Example Output:**
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "results": {
+    "result": {
+      "workspaceId": "47242da5-ff3b-46fb-a94f-977909b773d5",
+      "itemId": "0e67ed13-2bb6-49be-9c87-a1105a4ea342",
+      "path": "Files/data/archive.bin",
+      "version": "2023-11-03",
+      "requestId": "b2aa28ff-96ff-4afc-8d0f-6a2151ad5e3e",
+      "clientRequestId": "8a347b58-d80a-46f3-b4f2-0efd8e6a60a1",
+      "rootActivityId": "0c828f9e-348c-4d7a-9c61-34dfe0f4e279"
+    },
+    "message": "Blob deleted successfully."
+  }
+}
+```
+
 #### List Files as Blobs
 
 Lists files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format.
 
 ```bash
-dotnet run -- onelake list-blobs --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+dotnet run -- onelake blob list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 **With path and recursive options:**
 ```bash
-dotnet run -- onelake list-blobs --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "raw_data" --recursive
+dotnet run -- onelake blob list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "raw_data" --recursive
 ```
 
 **Parameters:**
@@ -441,22 +555,22 @@ dotnet run -- onelake list-blobs --workspace-id "47242da5-ff3b-46fb-a94f-977909b
 
 **Use Case:** Best for discovering all files in a flat structure, similar to Azure Blob Storage. Provides a comprehensive list of all files and directories with basic metadata.
 
-#### List Path Structure
+#### List File Structure (DFS API)
 
 Lists files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. Shows directory structure with paths, sizes, timestamps, and metadata.
 
 ```bash
-dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+dotnet run -- onelake file list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 **With recursive exploration:**
 ```bash
-dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --recursive
+dotnet run -- onelake file list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --recursive
 ```
 
 **With specific path:**
 ```bash
-dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "analytics/reports"
+dotnet run -- onelake file list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "analytics/reports"
 ```
 
 **Parameters:**
@@ -509,7 +623,7 @@ dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b7
 
 #### API Comparison: Blob vs Path Listing
 
-| Feature | `list-blobs` | `path-list` |
+| Feature | `blob list` | `file list` |
 |---------|-------------|-------------|
 | **API Endpoint** | OneLake Blob Storage | OneLake DFS (Data Lake File System) |
 | **Output Style** | Flat blob listing | Hierarchical filesystem view |
@@ -525,7 +639,7 @@ dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b7
 Creates a directory in OneLake storage. Can create nested directory structures.
 
 ```bash
-dotnet run -- onelake directory-create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "analytics/reports/2024"
+dotnet run -- onelake directory create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "analytics/reports/2024"
 ```
 
 **Parameters:**
@@ -554,12 +668,12 @@ Deletes a directory from OneLake storage. Use `--recursive` to delete non-empty 
 
 **Delete empty directory:**
 ```bash
-dotnet run -- onelake directory-delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "temp"
+dotnet run -- onelake directory delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "temp"
 ```
 
 **Delete directory and all contents (recursive):**
 ```bash
-dotnet run -- onelake directory-delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "old_data" --recursive
+dotnet run -- onelake directory delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "old_data" --recursive
 ```
 
 **Parameters:**
@@ -593,34 +707,43 @@ az login --tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" --scope "https://manage
 ### Workspace Operations
 ```cmd
 # List all OneLake workspaces
-fabmcp.exe onelake onelake-workspace-list
+fabmcp.exe onelake workspace list
 
 # List items in a specific workspace
-fabmcp.exe onelake onelake-item-list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5"
+fabmcp.exe onelake item list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5"
 ```
 
 ### Path & Directory Operations
 ```cmd
 # List files and directories with filesystem view
-fabmcp.exe onelake path-list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "Files" --recursive
+fabmcp.exe onelake file list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "Files" --recursive
 
 # Create a new directory
-fabmcp.exe onelake directory-create --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir"
+fabmcp.exe onelake directory create --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir"
 
 # Delete a directory (with recursive option for non-empty directories)
-fabmcp.exe onelake directory-delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir" --recursive
+fabmcp.exe onelake directory delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir" --recursive
 ```
 
 ### File Operations
 ```cmd
 # Write content to a file
-fabmcp.exe onelake file-write --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt" --content "Hello, OneLake!"
+fabmcp.exe onelake file write --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt" --content "Hello, OneLake!"
 
 # Read file contents
-fabmcp.exe onelake file-read --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
+fabmcp.exe onelake file read --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
 
 # Delete a file
-fabmcp.exe onelake file-delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
+fabmcp.exe onelake file delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
+
+# Upload a blob (Blob endpoint)
+fabmcp.exe onelake blob upload --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite
+
+# Download a blob with metadata (Blob endpoint)
+fabmcp.exe onelake blob download --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
+
+# Delete a blob (Blob endpoint)
+fabmcp.exe onelake blob delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
 ```
 
 **Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).
@@ -645,59 +768,59 @@ Use the provided PowerShell scripts for bulk operations:
 
 ```bash
 # 1. Create a structured directory for your data pipeline
-dotnet run -- onelake directory-create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/raw"
-dotnet run -- onelake directory-create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/processed"
+dotnet run -- onelake directory create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/raw"
+dotnet run -- onelake directory create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/processed"
 
 # 2. Upload raw data
-dotnet run -- onelake file-write --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "pipelines/etl/raw/source_data.csv" --local-file-path "C:\data\source.csv"
+dotnet run -- onelake file write --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "pipelines/etl/raw/source_data.csv" --local-file-path "C:\data\source.csv"
 
 # 3. Process and write results
-dotnet run -- onelake file-write --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "pipelines/etl/processed/clean_data.parquet" --local-file-path "C:\processed\clean.parquet"
+dotnet run -- onelake file write --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "pipelines/etl/processed/clean_data.parquet" --local-file-path "C:\processed\clean.parquet"
 
 # 4. Clean up temporary files
-dotnet run -- onelake directory-delete --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/temp" --recursive
+dotnet run -- onelake directory delete --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "pipelines/etl/temp" --recursive
 ```
 
 ### Analytics Workflow
 
 ```bash
 # 1. List available workspaces
-dotnet run -- onelake onelake-workspace-list
+dotnet run -- onelake workspace list
 
 # 2. List items in a workspace
-dotnet run -- onelake onelake-item-list --workspace-id "WORKSPACE_ID"
+dotnet run -- onelake item list --workspace-id "WORKSPACE_ID"
 
 # 3. Explore data structure using hierarchical view
-dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/reports"
+dotnet run -- onelake file list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/reports"
 
 # 4. Get comprehensive file inventory with blob listing
-dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data" --recursive
+dotnet run -- onelake blob list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data" --recursive
 
 # 5. Read analysis results
-dotnet run -- onelake file-read --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "reports/monthly_summary.json"
+dotnet run -- onelake file read --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "reports/monthly_summary.json"
 
 # 6. Archive old reports
-dotnet run -- onelake directory-create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "archive/2024"
+dotnet run -- onelake directory create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "archive/2024"
 # Move files to archive (requires multiple file operations)
-dotnet run -- onelake directory-delete --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "reports/old" --recursive
+dotnet run -- onelake directory delete --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "reports/old" --recursive
 ```
 
 ### Data Discovery and Exploration
 
 ```bash
 # 1. Quick overview of lakehouse structure using DFS API (shows directories and permissions)
-dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Tables"
+dotnet run -- onelake file list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Tables"
 
 # 2. Comprehensive file search using Blob API (finds all files including nested)
-dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Files" --recursive
+dotnet run -- onelake blob list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Files" --recursive
 
 # 3. Compare structure views - hierarchical vs flat
-dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
-dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
+dotnet run -- onelake file list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
+dotnet run -- onelake blob list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
 
 # 4. Find specific file types across the entire lakehouse
-dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.parquet"
-dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.delta"
+dotnet run -- onelake blob list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.parquet"
+dotnet run -- onelake blob list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.delta"
 ```
 
 ## Error Handling
@@ -707,7 +830,7 @@ The tool provides detailed error messages and proper HTTP status codes:
 - **401**: Authentication failed - run `az login`
 - **403**: Access denied - check workspace permissions
 - **404**: Resource not found - verify workspace/item IDs and file paths
-- **409**: Conflict - file already exists (use `--overwrite` for file-write)
+- **409**: Conflict - file already exists (use `--overwrite` for `file write`)
 
 ## Environment Variables
 
@@ -724,7 +847,7 @@ export FABRIC_ITEM_ID="0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 
 Then use them in commands:
 ```bash
-dotnet run -- onelake file-read --workspace-id "$FABRIC_WORKSPACE_ID" --item-id "$FABRIC_ITEM_ID" --file-path "data.json"
+dotnet run -- onelake file read --workspace-id "$FABRIC_WORKSPACE_ID" --item-id "$FABRIC_ITEM_ID" --file-path "data.json"
 ```
 
 ## Integration with MCP Clients
