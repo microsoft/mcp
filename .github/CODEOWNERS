@@ -264,3 +264,8 @@
 /core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
 /servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
+
+# PRLabel: %tools-Workbooks
+/tools/Azure.Mcp.Tools.Workbooks/    @gardnerjr @matteing
+# ServiceLabel: %tools-Workbooks
+# ServiceOwners:                       @gardnerjr @matteing
