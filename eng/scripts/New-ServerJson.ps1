@@ -68,10 +68,10 @@ if (!$OutputPath) {
     $serverOutputPath = "$RepoRoot/.work/build/$($server.artifactPath)/"
     $OutputPath = "$serverOutputPath/server.json"
 
-    LogDebug "Output path not provided. Using default path: $serverOutputPath"
-
-    New-Item -ItemType Directory -Force -Path $serverOutputPath | Out-Null
+    LogInfo "Output path not provided. Using default path: $serverOutputPath"
 }
 
 LogInfo "Writing updated server.json to $OutputPath"
+
+New-Item -ItemType File -Force -Path $OutputPath | Out-Null
 Set-Content -Path $OutputPath -Value $updatedJson -Encoding UTF8 -NoNewLine
