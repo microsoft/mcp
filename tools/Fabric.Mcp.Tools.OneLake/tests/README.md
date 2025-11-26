@@ -9,7 +9,7 @@ The test suite includes comprehensive coverage for OneLake MCP commands:
 - **OneLakeWorkspaceListCommandTests** - Workspace listing functionality
 - **PathListCommandTests** - File system path navigation  
 - **BlobListCommandTests** - Blob storage operations
-- **BlobGetCommandTests** - Blob retrieval operations and response parsing
+- **BlobGetCommandTests** - Blob retrieval operations
 - **BlobPutCommandTests** - Blob upload scenarios including overwrite and headers
 - **BlobDeleteCommandTests** - Blob deletion operations and auditing metadata
 - **OneLakeItemListCommandTests** - OneLake item enumeration
