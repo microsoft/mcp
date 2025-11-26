@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Models.Option;
+namespace Microsoft.Mcp.Core.Models.Option;
 
 public class OptionDefinition<T>(string name, string description, string? value = "", T? defaultValue = default, bool required = false, bool hidden = false)
     where T : notnull

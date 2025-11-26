@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 

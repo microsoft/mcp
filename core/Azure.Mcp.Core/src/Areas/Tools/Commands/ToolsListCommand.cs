@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 
