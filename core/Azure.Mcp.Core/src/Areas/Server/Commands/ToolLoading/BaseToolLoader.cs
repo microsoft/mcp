@@ -62,7 +62,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// </returns>
     protected static JsonElement GetParametersJsonElement(RequestContext<CallToolRequestParams> request)
     {
-        IReadOnlyDictionary<string, JsonElement>? args = request.Params?.Arguments;
+        IDictionary<string, JsonElement>? args = request.Params?.Arguments;
         if (args != null && args.TryGetValue("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
         {
             return parametersElem;

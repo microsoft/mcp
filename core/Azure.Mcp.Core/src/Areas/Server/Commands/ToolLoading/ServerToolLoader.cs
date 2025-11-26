@@ -439,7 +439,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             {
                 Progress = 0f,
                 Message = message,
-            }, cancellationToken);
+            }, cancellationToken: cancellationToken);
     }
     private async Task<(string? commandName, Dictionary<string, object?> parameters)> GetCommandAndParametersFromIntentAsync(
         RequestContext<CallToolRequestParams> request,
@@ -456,11 +456,12 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         var samplingRequest = new CreateMessageRequestParams
         {
+            MaxTokens = 1000,
             Messages = [
                 new SamplingMessage
                 {
                     Role = Role.Assistant,
-                    Content = new TextContentBlock{
+                    Content = [new TextContentBlock{
                         Text = $"""
                             This is a list of available commands for the {tool} server.
 
@@ -484,14 +485,14 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                             Available Commands:
                             {availableToolsJson}
                             """
-                    }
+                    }]
                 }
             ],
         };
         try
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
-            var samplingContent = samplingResponse.Content as TextContentBlock;
+            var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
             var toolCallJson = samplingContent?.Text?.Trim();
             string? commandName = null;
             Dictionary<string, object?> parameters = [];
