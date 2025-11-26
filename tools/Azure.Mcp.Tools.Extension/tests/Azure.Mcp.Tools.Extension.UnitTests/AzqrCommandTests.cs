@@ -73,8 +73,8 @@ public sealed class AzqrCommandTests
         _processService.ExecuteAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IDictionary<string, string>?>(),
             Arg.Any<int>(),
-            Arg.Any<IEnumerable<string>>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProcessResult(0, expectedOutput, string.Empty, $"scan --subscription-id {mockSubscriptionId}"));
 
@@ -90,8 +90,8 @@ public sealed class AzqrCommandTests
             await _processService.Received().ExecuteAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<IDictionary<string, string>?>(),
                 Arg.Any<int>(),
-                Arg.Any<IEnumerable<string>>(),
                 Arg.Any<CancellationToken>());
         }
         finally
