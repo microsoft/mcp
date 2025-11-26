@@ -35,6 +35,7 @@ param(
 $ErrorActionPreference = "Stop" 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+$TemporaryDirectory = "$RepoRoot/.work/temp_deploy_server_json"
 
 if (!(Test-Path $ServerJsonPath)) {
     LogError "Server JSON file $ServerJsonPath does not exist. Run eng/scripts/New-ServerJson.ps1 to create it."
