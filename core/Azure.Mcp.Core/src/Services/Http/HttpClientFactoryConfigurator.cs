@@ -32,9 +32,7 @@ public static class HttpClientFactoryConfigurator
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // builder is static to prevent to access instance members or external state beyond what's been injected
-        // within the service collection.
-        services.ConfigureHttpClientDefaults(static builder => ConfigureHttpClientBuilder(builder));
+        services.ConfigureHttpClientDefaults(ConfigureHttpClientBuilder);
 
         return services;
     }
