@@ -7,6 +7,8 @@
 .DESCRIPTION
     Deploys the server.json in the official MCP repository following guidance in:
     https://eng.ms/docs/coreai/devdiv/one-engineering-system-1es/1es-gadecast/ospoost/ai-guidance-for-microsoft-developers/mcp/publishing-to-the-official-mcp-registry
+
+    Supported publish targets are: 'public' and 'public_staging'.
 .PARAMETER ServerName
     Name of the MCP server under "./servers/" folder whose server.json will be deployed.
 .PARAMETER ServerJsonPath
@@ -35,7 +37,13 @@ param(
 $ErrorActionPreference = "Stop" 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+$StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
 $TemporaryDirectory = "$RepoRoot/.work/temp_deploy_server_json"
+
+$PublishTargetInternal = "internal"
+$PublishTargetStaging = "public_staging"
+$PublishTargetProduction = "public"
+$KnownPublishTargets = @($PublishTargetInternal, $PublishTargetStaging, $PublishTargetProduction)
 
 if (!(Test-Path $ServerJsonPath)) {
     LogError "Server JSON file $ServerJsonPath does not exist. Run eng/scripts/New-ServerJson.ps1 to create it."
@@ -53,6 +61,22 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 $publishTarget = $buildInfo.publishTarget
+$matchingServer = $buildInfo.servers | Where-Object { $_.name -eq $ServerName }
+
+if ($matchingServer.Count -eq 0) {
+    LogError "No server found with name '$ServerName' in build info."
+    exit 1
+} elseif ($matchingServer.Count -gt 1) {
+    LogError "Multiple servers found with name '$ServerName' in build info."
+    exit 1
+}
+
+$serverInfo = $matchingServer[0]
+
+if (-not $KnownPublishTargets.Contains($publishTarget)) {
+    LogInfo "Unknown publish target '$publishTarget'. Known targets are: $($KnownPublishTargets -join ', ')"
+    exit 0
+}
 
 Write-Host "Preparing to deploy '$ServerJsonPath' with type '$publishTarget'."
 
@@ -92,32 +116,19 @@ if ($BuildOnly) {
     exit 0
 }
 
-$StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
-$matchingServer = $buildInfo.servers | Where-Object { $_.name -eq $ServerName }
-
-if ($matchingServer.Count -eq 0) {
-    LogError "No server found with name '$ServerName' in build info."
-    exit 1
-}
-
-if ($matchingServer.Count -gt 1) {
-    LogError "Multiple servers found with name '$ServerName' in build info."
-    exit 1
-}
-
-$serverInfo = $matchingServer[0]
-
 try {
-    if ($publishTarget -eq 'internal') {
+    if ($publishTarget -eq $PublishTargetStaging) {
         Write-Host "$($serverInfo.name): Deploying server.json to staging instance: $StagingRegistry"
         & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com -registry https://staging.registry.modelcontextprotocol.io
         & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath -registry https://staging.registry.modelcontextprotocol.io
-    } elseif ($publishTarget -eq 'public') {
+    } elseif ($publishTarget -eq $PublishTargetProduction) {
         Write-Host "$($serverInfo.name): Deploying server.json to production instance."
         & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
         & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
+    } elseif ($publishTarget -eq $PublishTargetInternal) { 
+        LogInfo "$($serverInfo.name): Internal publish target specified. Skipping deployment to public MCP registry."
     } else {
-        LogError "$($serverInfo.name): Unknown publish target: $publishTarget"
+        LogError "$($serverInfo.name): Unsupported publish target: $publishTarget"
         exit 1
     }
 }
