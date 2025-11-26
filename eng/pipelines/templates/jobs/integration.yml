@@ -54,10 +54,3 @@ jobs:
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -NpmRegistry '${{ parameters.NpmRegistry }}'
-
-- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    NuGetFeedIndexUrl: ${{ parameters.NuGetFeedIndexUrl }}
-    DependsOn:
-    - PublishToDev
