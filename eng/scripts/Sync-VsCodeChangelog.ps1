@@ -107,11 +107,10 @@ LogInfo "Version: $Version"
 LogInfo ""
 
 # Parse sections from unreleased content
-$sections = @{
-    'Features Added' = @()
-    'Breaking Changes' = @()
-    'Bugs Fixed' = @()
-    'Other Changes' = @()
+# Initialize sections dynamically from $RecommendedSectionHeaders (from ChangeLog-Operations.ps1 via common.ps1)
+$sections = @{}
+foreach ($header in $RecommendedSectionHeaders) {
+    $sections[$header] = @()
 }
 
 $currentSection = $null
@@ -126,9 +125,8 @@ foreach ($line in $unreleasedContent -split "`n") {
         }
         
         $currentSection = $Matches[1].Trim()
-        # Only process known sections
-        $validSections = @('Features Added', 'Breaking Changes', 'Bugs Fixed', 'Other Changes')
-        if ($currentSection -notin $validSections) {
+        # Only process known sections (use $RecommendedSectionHeaders from ChangeLog-Operations.ps1)
+        if ($currentSection -notin $RecommendedSectionHeaders) {
             LogWarning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
             $currentSection = $null
         }
