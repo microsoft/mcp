@@ -1,0 +1,4 @@
+pr: 1234
+changes:
+  - section: "Features Added"
+    description: "Added a new changelog entry management system"
