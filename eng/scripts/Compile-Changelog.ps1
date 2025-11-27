@@ -68,6 +68,12 @@ param(
     [switch]$DeleteFiles
 )
 
+$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/../common/scripts/common.ps1"
+. "$PSScriptRoot/../common/scripts/Helpers/PSModule-Helpers.ps1"
+
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -221,10 +227,9 @@ function Build-SubsectionMapping {
     return $subsectionMapping
 }
 
-# Get repository root
-$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$changelogFile = Join-Path $repoRoot $ChangelogPath
-$changelogEntriesDir = Join-Path $repoRoot $ChangelogEntriesPath
+# Set up paths using $RepoRoot from common.ps1
+$changelogFile = Join-Path $RepoRoot $ChangelogPath
+$changelogEntriesDir = Join-Path $RepoRoot $ChangelogEntriesPath
 
 Write-Host "Changelog Compiler" -ForegroundColor Cyan
 Write-Host "==================" -ForegroundColor Cyan
@@ -242,8 +247,10 @@ if (-not (Test-Path $changelogFile)) {
     exit 1
 }
 
-# Get all YAML files (both .yml and .yaml extensions)
-$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Include "*.yml", "*.yaml" -File | Where-Object { $_.Name -ne "README.yml" -and $_.Name -ne "README.yaml" })
+# Get all YAML files, excluding the example template file
+$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Include "*.yml", "*.yaml" -File | Where-Object { 
+    $_.BaseName -ne 'username-example-brief-description'
+})
 
 if ($yamlFiles.Count -eq 0) {
     Write-Host "No changelog entries found in $changelogEntriesDir" -ForegroundColor Yellow
@@ -254,18 +261,28 @@ if ($yamlFiles.Count -eq 0) {
 Write-Host "Found $($yamlFiles.Count) changelog entry file(s)" -ForegroundColor Green
 Write-Host ""
 
-# Install PowerShell-Yaml module if not available
-$yamlModule = Get-Module -ListAvailable -Name "powershell-yaml"
-if (-not $yamlModule) {
-    Write-Host "Installing powershell-yaml module..." -ForegroundColor Yellow
-    Install-Module -Name powershell-yaml -Force -Scope CurrentUser -AllowClobber
+Install-ModuleIfNotInstalled "powershell-yaml" "0.4.7" | Import-Module
+
+# Load JSON schema and extract valid values
+$schemaPath = Join-Path $RepoRoot "eng/schemas/changelog-entry.schema.json"
+if (-not (Test-Path $schemaPath)) {
+    Write-Error "Schema file not found: $schemaPath"
+    exit 1
 }
-Import-Module powershell-yaml -ErrorAction Stop
+
+$schema = Get-Content -Path $schemaPath -Raw | ConvertFrom-Json
+$validSections = $schema.properties.changes.items.properties.section.enum
+$validSubsections = $schema.properties.changes.items.properties.subsection.enum
+$minDescriptionLength = $schema.properties.changes.items.properties.description.minLength
+
+Write-Host "Loaded validation rules from schema:" -ForegroundColor Gray
+Write-Host "  Valid sections: $($validSections -join ', ')" -ForegroundColor Gray
+Write-Host "  Valid subsections: $($validSubsections -join ', ')" -ForegroundColor Gray
+Write-Host "  Min description length: $minDescriptionLength" -ForegroundColor Gray
+Write-Host ""
 
 # Parse and validate YAML files
 $entries = @()
-$validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
-$validSubsections = @("Dependency Updates")
 
 foreach ($file in $yamlFiles) {
     Write-Host "Processing: $($file.Name)" -ForegroundColor Gray
@@ -316,8 +333,8 @@ foreach ($file in $yamlFiles) {
                 continue
             }
             
-            if ($change['description'].Length -lt 10) {
-                Write-Error "  Description too short in change #$($changeCount + 1) of $($file.Name) (minimum 10 characters)"
+            if ($change['description'].Length -lt $minDescriptionLength) {
+                Write-Error "  Description too short in change #$($changeCount + 1) of $($file.Name) (minimum $minDescriptionLength characters)"
                 continue
             }
             

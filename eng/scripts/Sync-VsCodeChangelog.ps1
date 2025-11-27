@@ -56,31 +56,32 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/../common/scripts/common.ps1"
+
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 # Infer VS Code changelog path from main CHANGELOG.md path
 $changelogDir = Split-Path $ChangelogPath -Parent
 $VsCodeChangelogPath = Join-Path $changelogDir "vscode/CHANGELOG.md"
 $MainChangelogPath = $ChangelogPath
-
-# Get repository root
-$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$mainChangelogFile = Join-Path $repoRoot $MainChangelogPath
-$vscodeChangelogFile = Join-Path $repoRoot $VsCodeChangelogPath
+$mainChangelogFile = Join-Path $RepoRoot $MainChangelogPath
+$vscodeChangelogFile = Join-Path $RepoRoot $VsCodeChangelogPath
 
 # Validate files exist
 if (-not (Test-Path $mainChangelogFile)) {
-    Write-Error "Main CHANGELOG not found: $mainChangelogFile"
+    LogError "Main CHANGELOG not found: $mainChangelogFile"
     exit 1
 }
 
 if (-not (Test-Path $vscodeChangelogFile)) {
-    Write-Error "VS Code CHANGELOG not found: $vscodeChangelogFile"
+    LogError "VS Code CHANGELOG not found: $vscodeChangelogFile"
     exit 1
 }
 
-Write-Host "`nVS Code Changelog Sync" -ForegroundColor Cyan
-Write-Host "======================" -ForegroundColor Cyan
-Write-Host ""
+LogInfo ""
+LogInfo "VS Code Changelog Sync"
+LogInfo "======================"
+LogInfo ""
 
 # Read the main CHANGELOG
 $mainContent = Get-Content -Path $mainChangelogFile -Raw
@@ -88,7 +89,7 @@ $mainContent = Get-Content -Path $mainChangelogFile -Raw
 # Extract the Unreleased section (supports both "2.0.0" and "2.0.0-beta.3" formats)
 $unreleasedMatch = $mainContent -match '(?ms)^## ([\d\.]+(?:-[\w\.]+)?) \(Unreleased\)\s*\n(.*?)(?=\n## |\z)'
 if (-not $unreleasedMatch) {
-    Write-Error "No Unreleased section found in main CHANGELOG"
+    LogError "No Unreleased section found in main CHANGELOG"
     exit 1
 }
 
@@ -100,10 +101,10 @@ if (-not $Version) {
     $Version = $unreleasedVersion
 }
 
-Write-Host "Source: $mainChangelogFile" -ForegroundColor Gray
-Write-Host "Target: $vscodeChangelogFile" -ForegroundColor Gray
-Write-Host "Version: $Version" -ForegroundColor Gray
-Write-Host ""
+LogInfo "Source: $mainChangelogFile"
+LogInfo "Target: $vscodeChangelogFile"
+LogInfo "Version: $Version"
+LogInfo ""
 
 # Parse sections from unreleased content
 $sections = @{
@@ -128,7 +129,7 @@ foreach ($line in $unreleasedContent -split "`n") {
         # Only process known sections
         $validSections = @('Features Added', 'Breaking Changes', 'Bugs Fixed', 'Other Changes')
         if ($currentSection -notin $validSections) {
-            Write-Warning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
+            LogWarning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
             $currentSection = $null
         }
         $currentEntries = @()
@@ -217,12 +218,12 @@ while ($vscodeEntry.Count -gt 0 -and $vscodeEntry[-1] -eq "") {
 $vscodeEntryText = $vscodeEntry -join "`n"
 
 if ($DryRun) {
-    Write-Host "Preview of new VS Code CHANGELOG entry:" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host $vscodeEntryText
-    Write-Host ""
-    Write-Host "DRY RUN - No files were modified" -ForegroundColor Yellow
+    LogInfo "Preview of new VS Code CHANGELOG entry:"
+    LogInfo "========================================"
+    LogInfo ""
+    LogInfo $vscodeEntryText
+    LogInfo ""
+    LogWarning "DRY RUN - No files were modified"
     exit 0
 }
 
@@ -232,7 +233,7 @@ $vscodeContent = Get-Content -Path $vscodeChangelogFile -Raw
 # Find insertion point (after "# Release History" header)
 $headerMatch = $vscodeContent -match '(?ms)^(# Release History\s*\n)'
 if (-not $headerMatch) {
-    Write-Error "Could not find '# Release History' header in VS Code CHANGELOG"
+    LogError "Could not find '# Release History' header in VS Code CHANGELOG"
     exit 1
 }
 
@@ -246,11 +247,11 @@ $newVscodeContent = $beforeHeader + "`n" + $vscodeEntryText + "`n`n" + $afterHea
 # Write updated VS Code changelog
 $newVscodeContent | Set-Content -Path $vscodeChangelogFile -NoNewline -Encoding UTF8
 
-Write-Host "✓ Synced Unreleased section to VS Code CHANGELOG" -ForegroundColor Green
-Write-Host "  Version: $Version" -ForegroundColor Gray
-Write-Host "  Location: $vscodeChangelogFile" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Summary:" -ForegroundColor Cyan
+LogSuccess "✓ Synced Unreleased section to VS Code CHANGELOG"
+LogInfo "  Version: $Version"
+LogInfo "  Location: $vscodeChangelogFile"
+LogInfo ""
+LogInfo "Summary:"
 
 $addedCount = @($sections['Features Added'] | Where-Object { $_.Trim() -ne '' }).Count
 $breakingCount = @($sections['Breaking Changes'] | Where-Object { $_.Trim() -ne '' }).Count
@@ -258,17 +259,17 @@ $otherCount = @($sections['Other Changes'] | Where-Object { $_.Trim() -ne '' }).
 $fixedCount = @($sections['Bugs Fixed'] | Where-Object { $_.Trim() -ne '' }).Count
 
 if ($addedCount -gt 0) {
-    Write-Host "  - Added: $addedCount entries" -ForegroundColor Gray
+    LogInfo "  - Added: $addedCount entries"
 }
 if ($breakingCount -gt 0 -or $otherCount -gt 0) {
     $totalChanged = $breakingCount + $otherCount
-    Write-Host "  - Changed: $totalChanged entries ($breakingCount breaking, $otherCount other)" -ForegroundColor Gray
+    LogInfo "  - Changed: $totalChanged entries ($breakingCount breaking, $otherCount other)"
 }
 if ($fixedCount -gt 0) {
-    Write-Host "  - Fixed: $fixedCount entries" -ForegroundColor Gray
+    LogInfo "  - Fixed: $fixedCount entries"
 }
-Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "1. Review the changes in the VS Code CHANGELOG" -ForegroundColor Gray
-Write-Host "2. Commit the updated VS Code CHANGELOG with your release" -ForegroundColor Gray
-Write-Host ""
+LogInfo ""
+LogInfo "Next steps:"
+LogInfo "1. Review the changes in the VS Code CHANGELOG"
+LogInfo "2. Commit the updated VS Code CHANGELOG with your release"
+LogInfo ""

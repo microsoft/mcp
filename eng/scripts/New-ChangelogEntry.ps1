@@ -95,15 +95,19 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/../common/scripts/common.ps1"
+
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 # Determine if we're in interactive mode (any required parameter is missing)
 $isInteractive = (-not $ChangelogPath) -or (-not $Description) -or (-not $Section) -or (-not $PSBoundParameters.ContainsKey('PR'))
 
 # Show header once if in interactive mode
 if ($isInteractive) {
-    Write-Host "`nChangelog Entry Creator" -ForegroundColor Cyan
-    Write-Host "======================" -ForegroundColor Cyan
-    Write-Host ""
+    LogInfo ""
+    LogInfo "Changelog Entry Creator"
+    LogInfo "======================="
+    LogInfo ""
 }
 
 # Helper function to convert text to title case (capitalize first letter of each word)
@@ -119,9 +123,17 @@ function ConvertTo-TitleCase {
     return $textInfo.ToTitleCase($Text.ToLowerInvariant())
 }
 
-# Valid sections for validation
-$validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
-$validSubsections = @("Dependency Updates")
+# Load JSON schema and extract valid values
+$schemaPath = Join-Path $RepoRoot "eng/schemas/changelog-entry.schema.json"
+if (-not (Test-Path $schemaPath)) {
+    LogError "Schema file not found: $schemaPath"
+    exit 1
+}
+
+$schema = Get-Content -Path $schemaPath -Raw | ConvertFrom-Json
+$validSections = $schema.properties.changes.items.properties.section.enum
+$validSubsections = $schema.properties.changes.items.properties.subsection.enum
+$minDescriptionLength = $schema.properties.changes.items.properties.description.minLength
 
 # Validate and normalize Section parameter if provided (case-insensitive)
 if ($Section) {
@@ -130,18 +142,11 @@ if ($Section) {
         # Use the properly cased version
         $Section = $matchedSection
     } else {
-        Write-Host ""
-        Write-Host "ERROR: Invalid section '$Section'" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Valid sections are:" -ForegroundColor Yellow
-        Write-Host "  - Features Added" -ForegroundColor Yellow
-        Write-Host "  - Breaking Changes" -ForegroundColor Yellow
-        Write-Host "  - Bugs Fixed" -ForegroundColor Yellow
-        Write-Host "  - Other Changes" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "Example usage:" -ForegroundColor Cyan
-        Write-Host '  .\eng\scripts\New-ChangelogEntry.ps1 -Section "Features Added" -Description "..." -PR 1234' -ForegroundColor Gray
-        Write-Host ""
+        LogError "Invalid section '$Section'. Valid sections are: $($validSections -join ', ')"
+        LogInfo ""
+        LogInfo "Example usage:"
+        LogInfo '  .\eng\scripts\New-ChangelogEntry.ps1 -Section "Features Added" -Description "..." -PR 1234'
+        LogInfo ""
         exit 1
     }
 }
@@ -153,16 +158,9 @@ if ($Subsection) {
     # Validate subsection against allowed values
     $matchedSubsection = $validSubsections | Where-Object { $_ -ieq $Subsection }
     if (-not $matchedSubsection) {
-        Write-Host ""
-        Write-Host "ERROR: Invalid subsection '$Subsection'" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Valid subsections are:" -ForegroundColor Yellow
-        foreach ($validSub in $validSubsections) {
-            Write-Host "  - $validSub" -ForegroundColor Yellow
-        }
-        Write-Host ""
-        Write-Host "If you need a new subsection, please add it to the schema first." -ForegroundColor Cyan
-        Write-Host ""
+        LogError "Invalid subsection '$Subsection'. Valid subsections are: $($validSubsections -join ', ')"
+        LogInfo "If you need a new subsection, please add it to the schema first."
+        LogInfo ""
         exit 1
     }
     # Use the properly cased version
@@ -186,9 +184,7 @@ if (-not $ChangelogPath) {
             $customPath.Trim()
         }
         default {
-            Write-Host ""
-            Write-Host "ERROR: Invalid choice '$serverChoice'. Please select 1-3." -ForegroundColor Red
-            Write-Host ""
+            LogError "Invalid choice '$serverChoice'. Please select 1-3."
             exit 1
         }
     }
@@ -202,10 +198,8 @@ if (-not $ChangelogPath) {
 $changelogDir = Split-Path $ChangelogPath -Parent
 $ChangelogEntriesPath = Join-Path $changelogDir "changelog-entries"
 
-# Get repository root
-$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$changelogEntriesDir = Join-Path $repoRoot $ChangelogEntriesPath
-$schemaPath = Join-Path $repoRoot "eng/schemas/changelog-entry.schema.json"
+# Set up paths (RepoRoot and schemaPath already defined above for schema loading)
+$changelogEntriesDir = Join-Path $RepoRoot $ChangelogEntriesPath
 
 # Create changelog-entries directory if it doesn't exist
 if (-not (Test-Path $changelogEntriesDir)) {
@@ -218,36 +212,30 @@ if (-not $Description) {
     Write-Host "Note: For multi-line descriptions (e.g., with lists), use the -Description parameter with a here-string." -ForegroundColor Gray
     Write-Host ""
     
-    $Description = Read-Host "Description (minimum 10 characters)"
+    $Description = Read-Host "Description (minimum $minDescriptionLength characters)"
     # Trim whitespace from user input
     $Description = $Description.Trim()
     
-    while ($Description.Length -lt 10) {
-        Write-Host "Description must be at least 10 characters long." -ForegroundColor Red
-        $Description = Read-Host "Description (minimum 10 characters)"
+    while ($Description.Length -lt $minDescriptionLength) {
+        Write-Host "Description must be at least $minDescriptionLength characters long." -ForegroundColor Red
+        $Description = Read-Host "Description (minimum $minDescriptionLength characters)"
         $Description = $Description.Trim()
     }
 }
 
 if (-not $Section) {
     Write-Host "`nSelect a section:" -ForegroundColor Cyan
-    Write-Host "1. Features Added"
-    Write-Host "2. Breaking Changes"
-    Write-Host "3. Bugs Fixed"
-    Write-Host "4. Other Changes"
+    for ($i = 0; $i -lt $validSections.Count; $i++) {
+        Write-Host "$($i + 1). $($validSections[$i])"
+    }
     
-    $choice = Read-Host "`nEnter choice (1-4)"
-    $Section = switch ($choice) {
-        "1" { "Features Added" }
-        "2" { "Breaking Changes" }
-        "3" { "Bugs Fixed" }
-        "4" { "Other Changes" }
-        default {
-            Write-Host ""
-            Write-Host "ERROR: Invalid choice '$choice'. Please select 1-4." -ForegroundColor Red
-            Write-Host ""
-            exit 1
-        }
+    $choice = Read-Host "`nEnter choice (1-$($validSections.Count))"
+    $choiceIndex = [int]$choice - 1
+    if ($choiceIndex -ge 0 -and $choiceIndex -lt $validSections.Count) {
+        $Section = $validSections[$choiceIndex]
+    } else {
+        LogError "Invalid choice '$choice'. Please select 1-$($validSections.Count)."
+        exit 1
     }
 }
 
@@ -261,16 +249,8 @@ if (-not $PSBoundParameters.ContainsKey('Subsection') -and $isInteractive) {
         # Validate subsection against allowed values
         $matchedSubsection = $validSubsections | Where-Object { $_ -ieq $Subsection }
         if (-not $matchedSubsection) {
-            Write-Host ""
-            Write-Host "ERROR: Invalid subsection '$Subsection'" -ForegroundColor Red
-            Write-Host ""
-            Write-Host "Valid subsections are:" -ForegroundColor Yellow
-            foreach ($validSub in $validSubsections) {
-                Write-Host "  - $validSub" -ForegroundColor Yellow
-            }
-            Write-Host ""
-            Write-Host "If you need a new subsection, please add it to the schema first." -ForegroundColor Cyan
-            Write-Host ""
+            LogError "Invalid subsection '$Subsection'. Valid subsections are: $($validSubsections -join ', ')"
+            LogInfo "If you need a new subsection, please add it to the schema first."
             exit 1
         }
         # Use the properly cased version
@@ -338,22 +318,24 @@ $yamlContent = $yamlContent.TrimEnd("`n")
 # Write YAML file
 $yamlContent | Set-Content -Path $filepath -Encoding UTF8 -NoNewline
 
-Write-Host "`n✓ Created changelog entry: $filename" -ForegroundColor Green
-Write-Host "  Location: $filepath" -ForegroundColor Gray
-Write-Host "  Section: $Section" -ForegroundColor Gray
+LogSuccess ""
+LogSuccess "✓ Created changelog entry: $filename"
+LogInfo "  Location: $filepath"
+LogInfo "  Section: $Section"
 if ($Subsection) {
-    Write-Host "  Subsection: $Subsection" -ForegroundColor Gray
+    LogInfo "  Subsection: $Subsection"
 }
-Write-Host "  Description: $Description" -ForegroundColor Gray
+LogInfo "  Description: $Description"
 if ($PR) {
-    Write-Host "  PR: #$PR" -ForegroundColor Gray
+    LogInfo "  PR: #$PR"
 } else {
-    Write-Host "  PR: Not set (remember to update before merging)" -ForegroundColor Yellow
+    LogWarning "  PR: Not set (remember to update before merging)"
 }
 
 # Validate against schema if available
 if (Test-Path $schemaPath) {
-    Write-Host "`nValidating against schema..." -ForegroundColor Cyan
+    LogInfo ""
+    LogInfo "Validating against schema..."
     
     # Try to use PowerShell-Yaml module if available
     $yamlModule = Get-Module -ListAvailable -Name "powershell-yaml"
@@ -365,43 +347,38 @@ if (Test-Path $schemaPath) {
             
             # Validate new format
             if (-not $yamlData.pr -and $yamlData.pr -ne 0) {
-                Write-Host ""
-                Write-Host "ERROR: PR field is required" -ForegroundColor Red
-                Write-Host ""
+                LogError "PR field is required"
                 exit 1
             }
             
             if (-not $yamlData.changes -or $yamlData.changes.Count -eq 0) {
-                Write-Host ""
-                Write-Host "ERROR: At least one change is required" -ForegroundColor Red
-                Write-Host ""
+                LogError "At least one change is required"
                 exit 1
             }
             
             foreach ($change in $yamlData.changes) {
-                if ($change.description.Length -lt 10) {
-                    Write-Host ""
-                    Write-Host "ERROR: Description must be at least 10 characters" -ForegroundColor Red
-                    Write-Host ""
+                if ($change.description.Length -lt $minDescriptionLength) {
+                    LogError "Description must be at least $minDescriptionLength characters"
                     exit 1
                 }
             }
             
-            Write-Host "✓ Validation passed" -ForegroundColor Green
+            LogSuccess "✓ Validation passed"
         }
         catch {
-            Write-Warning "Could not validate YAML: $_"
+            LogWarning "Could not validate YAML: $_"
         }
     }
     else {
-        Write-Host "  Note: Install 'powershell-yaml' module for automatic validation" -ForegroundColor Gray
-        Write-Host "  Run: Install-Module -Name powershell-yaml" -ForegroundColor Gray
+        LogInfo "  Note: Install 'powershell-yaml' module for automatic validation"
+        LogInfo "  Run: Install-Module -Name powershell-yaml"
     }
 }
 
-Write-Host "`nNext steps:" -ForegroundColor Cyan
-Write-Host "1. Commit this file with your changes" -ForegroundColor Gray
+LogInfo ""
+LogInfo "Next steps:"
+LogInfo "1. Commit this file with your changes"
 if (-not $PR) {
-    Write-Host "2. Update the 'pr' field in the YAML file once you have a PR number" -ForegroundColor Gray
+    LogInfo "2. Update the 'pr' field in the YAML file once you have a PR number"
 }
-Write-Host ""
+LogInfo ""
