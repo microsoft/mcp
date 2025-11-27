@@ -231,8 +231,8 @@ if (-not (Test-Path $changelogFile)) {
     exit 1
 }
 
-# Get all YAML files
-$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Filter "*.yml" -File | Where-Object { $_.Name -ne "README.yml" })
+# Get all YAML files (both .yml and .yaml extensions)
+$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Include "*.yml", "*.yaml" -File | Where-Object { $_.Name -ne "README.yml" -and $_.Name -ne "README.yaml" })
 
 if ($yamlFiles.Count -eq 0) {
     Write-Host "No changelog entries found in $changelogEntriesDir" -ForegroundColor Yellow
@@ -258,11 +258,6 @@ $validSubsections = @("Dependency Updates")
 
 foreach ($file in $yamlFiles) {
     Write-Host "Processing: $($file.Name)" -ForegroundColor Gray
-    
-    # Validate filename format (should be numeric timestamp)
-    if ($file.BaseName -notmatch '^\d+$') {
-        Write-Warning "  Filename '$($file.Name)' doesn't follow timestamp convention (numeric only)"
-    }
     
     try {
         $yamlContent = Get-Content -Path $file.FullName -Raw
