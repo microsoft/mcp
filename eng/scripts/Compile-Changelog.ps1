@@ -94,6 +94,25 @@ function ConvertTo-TitleCase {
     return $textInfo.ToTitleCase($Text.ToLowerInvariant())
 }
 
+# Helper function to normalize indentation in multi-line text
+# Converts tabs to spaces and standardizes indent levels to 2 spaces
+function Normalize-Indentation {
+    param([string]$Line)
+    
+    # Convert tabs to 2 spaces
+    $line = $Line -replace "`t", "  "
+    
+    # Count leading spaces and normalize to multiples of 2
+    if ($line -match '^(\s+)(.*)$') {
+        $leadingSpaces = $matches[1].Length
+        $content = $matches[2]
+        # Round to nearest multiple of 2 (minimum 2 if any indentation exists)
+        $normalizedSpaces = [Math]::Max(2, [Math]::Ceiling($leadingSpaces / 2) * 2)
+        return (" " * $normalizedSpaces) + $content
+    }
+    return $line
+}
+
 # Helper function to format a changelog entry with description and PR link
 function Format-ChangelogEntry {
     param(
@@ -103,6 +122,9 @@ function Format-ChangelogEntry {
     
     # Trim leading and trailing whitespace from the entire description
     $Description = $Description.Trim()
+    
+    # Normalize tabs to spaces throughout the description
+    $Description = $Description -replace "`t", "  "
     
     # Check if description contains multiple lines
     if ($Description.Contains("`n")) {
@@ -139,30 +161,28 @@ function Format-ChangelogEntry {
                 }
             }
             elseif ($i -eq $lines.Length - 1) {
-                # Last line
-                # Line is already trimmed at the end, preserve leading indentation
-                $trimmedLine = $line.TrimStart()
-                $leadingSpaces = $line.Length - $trimmedLine.Length
-                $indent = if ($leadingSpaces -gt 0) { $line.Substring(0, $leadingSpaces) } else { "" }
+                # Last line: normalize indentation and add PR link for non-list entries
+                $normalizedLine = Normalize-Indentation $line.TrimEnd()
                 
                 if ($isList) {
                     # For lists, PR link was added to first line, just add the last bullet
-                    $formattedLines += "  $indent$trimmedLine"
+                    $formattedLines += "  $normalizedLine"
                 }
                 else {
                     # For regular multi-line text, add PR link to last line
                     # Ensure valid sentence ending for non-bullet text
-                    $needsPeriod = -not ($trimmedLine -match '^-\s+')
-                    if ($needsPeriod -and $trimmedLine -notmatch '[.!?\)\]]$') {
-                        $trimmedLine += "."
+                    $content = $normalizedLine.TrimStart()
+                    $needsPeriod = -not ($content -match '^-\s+') -and ($content -notmatch '[.!?\)\]]$')
+                    if ($needsPeriod) {
+                        $normalizedLine += "."
                     }
-                    $formattedLines += "  $indent$trimmedLine$prLink"
+                    $formattedLines += "  $normalizedLine$prLink"
                 }
             }
             else {
-                # Middle lines: preserve indentation and add 2 spaces for nesting
-                # Line is already trimmed at the end
-                $formattedLines += "  $line"
+                # Middle lines: normalize indentation and add 2 spaces for nesting
+                $normalizedLine = Normalize-Indentation $line.TrimEnd()
+                $formattedLines += "  $normalizedLine"
             }
         }
         
