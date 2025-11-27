@@ -17,7 +17,8 @@
     Optional subsection for grouping related changes. Valid values: "Dependency Updates".
 
 .PARAMETER PR
-    Pull request number (integer).
+    Pull request number (integer). Optional - if not provided, it will be auto-detected from the git commit
+    message during compilation. Must be a positive integer if provided.
 
 .PARAMETER Filename
     Optional custom filename for the changelog entry (without path).
@@ -100,7 +101,8 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 # Determine if we're in interactive mode (any required parameter is missing)
-$isInteractive = (-not $ChangelogPath) -or (-not $Description) -or (-not $Section) -or (-not $PSBoundParameters.ContainsKey('PR'))
+# Note: PR is optional - it will be auto-detected from git commit during compilation
+$isInteractive = (-not $ChangelogPath) -or (-not $Description) -or (-not $Section)
 
 # Show header once if in interactive mode
 if ($isInteractive) {
@@ -259,7 +261,7 @@ if (-not $PSBoundParameters.ContainsKey('Subsection') -and $isInteractive) {
 }
 
 if (-not $PR -and $isInteractive) {
-    $prInput = Read-Host "`nPR number (press Enter to skip if not known yet)"
+    $prInput = Read-Host "`nPR number (press Enter to auto-detect from git during compilation)"
     if ($prInput) {
         $PR = [int]$prInput
     }
@@ -281,11 +283,12 @@ if ($Filename) {
 }
 $filepath = Join-Path $changelogEntriesDir $filename
 
-# Create YAML content in new format: pr at top level, changes as an array
+# Create YAML content in new format: pr at top level (optional), changes as an array
+# If PR is not provided, it will be auto-detected from git commit during compilation
 if ($PR) {
     $yamlContent = "pr: $PR`n"
 } else {
-    $yamlContent = "pr: 0  # TODO: Update with actual PR number`n"
+    $yamlContent = ""
 }
 
 $yamlContent += "changes:`n"
@@ -329,7 +332,7 @@ LogInfo "  Description: $Description"
 if ($PR) {
     LogInfo "  PR: #$PR"
 } else {
-    LogWarning "  PR: Not set (remember to update before merging)"
+    LogInfo "  PR: Will be auto-detected from git commit"
 }
 
 # Validate against schema if available
@@ -345,9 +348,9 @@ if (Test-Path $schemaPath) {
         try {
             $yamlData = Get-Content -Path $filepath -Raw | ConvertFrom-Yaml
             
-            # Validate new format
-            if (-not $yamlData.pr -and $yamlData.pr -ne 0) {
-                LogError "PR field is required"
+            # Validate PR if provided (must be positive integer)
+            if ($yamlData.ContainsKey('pr') -and $yamlData.pr -and $yamlData.pr -lt 1) {
+                LogError "PR must be a positive integer"
                 exit 1
             }
             
@@ -379,6 +382,6 @@ LogInfo ""
 LogInfo "Next steps:"
 LogInfo "1. Commit this file with your changes"
 if (-not $PR) {
-    LogInfo "2. Update the 'pr' field in the YAML file once you have a PR number"
+    LogInfo "2. The PR number will be auto-detected from the git commit when compiled"
 }
 LogInfo ""

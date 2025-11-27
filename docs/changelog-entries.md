@@ -17,11 +17,10 @@ For most contributors, here's all you need:
 ./eng/scripts/New-ChangelogEntry.ps1 `
   -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" `
   -Description "Your change description here" `
-  -Section "Features Added" `
-  -PR 1234
+  -Section "Features Added"
 ```
 
-That's it! The script creates the YAML file for you. Commit it with your code changes.
+That's it! The PR number will be **auto-detected** from the git commit when the changelog is compiled during release. Commit the YAML file with your code changes.
 
 > **Tip:** Not every PR needs a changelog entry. Skip it for internal refactoring, test-only changes, or minor cleanup.
 
@@ -83,8 +82,8 @@ Create a changelog entry for:
 **Structure**: One file per PR, supporting multiple changelog entries
 
 ```yaml
-pr: <number>          # Required: PR number (use 0 if not known yet)
-changes:              # Required: Array of changes (minimum 1)
+pr: <number>              # Optional: PR number (auto-detected from git commit during compilation if omitted)
+changes:                  # Required: Array of changes (minimum 1)
   - section: <string>     # Required
     description: <string> # Required
     subsection: <string>  # Optional
@@ -92,7 +91,6 @@ changes:              # Required: Array of changes (minimum 1)
 
 #### Required Fields
 
-- **pr**: Pull request number at the top level (integer, use 0 if not known yet)
 - **changes**: Array of `change` objects (must have at least one). Each `change` requires:
   - **section**: One of the following:
     - `Features Added` - New features, tools, or capabilities
@@ -103,6 +101,7 @@ changes:              # Required: Array of changes (minimum 1)
 
 #### Optional Fields
 
+- **pr**: Pull request number (positive integer). If not provided, it can be auto-detected from the git commit message during compilation. GitHub squash merges include the PR number in the format `... (#1234)` which the compiler extracts automatically.
 - **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
 
 ### Using the Generator Script
@@ -121,9 +120,10 @@ The easiest way to create a changelog entry is using the generator script locate
 ./eng/scripts/New-ChangelogEntry.ps1 `
   -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
   -Description "Added support for User-Assigned Managed Identity" `
-  -Section "Features Added" `
-  -PR 1234
+  -Section "Features Added"
 ```
+
+> **Note:** The `-PR` parameter is optional. If omitted, the PR number will be auto-detected from the git commit during compilation.
 
 ##### With a subsection
 
@@ -132,8 +132,7 @@ The easiest way to create a changelog entry is using the generator script locate
   -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
   -Description "Updated ModelContextProtocol.AspNetCore to version 0.4.0-preview.3" `
   -Section "Other Changes" `
-  -Subsection "Dependency Updates" `
-  -PR 1234
+  -Subsection "Dependency Updates"
 ```
 
 ##### With a multi-line entry
@@ -149,8 +148,7 @@ Added new Foundry tools:
 ./eng/scripts/New-ChangelogEntry.ps1 `
   -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
   -Description $description `
-  -Section "Features Added" `
-  -PR 1234
+  -Section "Features Added"
 ```
 
 ### Manual Creation
@@ -160,16 +158,16 @@ If you prefer to do things manually, create a new YAML file with your changes an
 #### Simple entry
 
 ```yaml
-pr: 1234
 changes:
   - section: "Features Added"
     description: "Added support for User-Assigned Managed Identity"
 ```
 
+> **Note:** You can also specify the PR number explicitly if you know it: `pr: 1234`
+
 #### Multi-line entry
 
 ```yaml
-pr: 1234
 changes:
   - section: "Features Added"
     description: |
@@ -182,7 +180,6 @@ changes:
 #### Using a subsection
 
 ```yaml
-pr: 1234
 changes:
   - section: "Other Changes"
     subsection: "Dependency Updates"
@@ -192,7 +189,6 @@ changes:
 #### Multiple-entries
 
 ```yaml
-pr: 1234
 changes:
   - section: "Features Added"
     description: "Added support for multiple changes per PR in changelog entries"
@@ -278,7 +274,7 @@ The scripts automatically validate YAML files against the schema at `eng/schemas
   - Available servers: `Azure.Mcp.Server`, `Fabric.Mcp.Server`, `Template.Mcp.Server`, etc.
   - Each server has its own `changelog-entries/` folder and `CHANGELOG.md`
   - Example paths: `servers/Azure.Mcp.Server/CHANGELOG.md`, `servers/Fabric.Mcp.Server/CHANGELOG.md`
-- **PR number unknown**: You can create the entry before opening a PR. Just use `pr: 0` and update it later.
+- **PR number auto-detection**: You don't need to know the PR number when creating an entry, it will be auto-detected from the git commit during compilation. You can still provide it explicitly if you want.
 - **Edit an existing entry**: Just edit the YAML file and commit the change.
 - **Multiple entries**: Create a single YAML file with multiple entries under the `changes` section.
 
@@ -306,7 +302,9 @@ Yes! Just create a single YAML file with multiple entries under the `changes` se
 
 ### Do I need to know the PR number when creating an entry?
 
-No. You can create the YAML file before opening a PR by setting `pr: 0`, then update the PR number later when you know it.
+No! The PR number is **auto-detected** from the git commit message during compilation. When your PR is merged via GitHub's squash merge, the commit message includes the PR number in the format `... (#1234)`. The compilation script extracts this automatically.
+
+If you prefer, you can still specify the PR number explicitly using `pr: 1234` in the YAML file.
 
 ### Does every PR need a changelog entry?
 

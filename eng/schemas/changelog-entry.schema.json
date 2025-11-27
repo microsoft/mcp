@@ -3,12 +3,12 @@
   "title": "Changelog Entry",
   "description": "Schema for individual changelog entry YAML files. One file per PR, supporting multiple changes.",
   "type": "object",
-  "required": ["pr", "changes"],
+  "required": ["changes"],
   "properties": {
     "pr": {
       "type": "integer",
-      "description": "Pull request number (use 0 if not known yet)",
-      "minimum": 0
+      "description": "Pull request number (optional - auto-detected from git commit during compilation if not provided)",
+      "minimum": 1
     },
     "changes": {
       "type": "array",

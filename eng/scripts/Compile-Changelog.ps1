@@ -94,6 +94,27 @@ function ConvertTo-TitleCase {
     return $textInfo.ToTitleCase($Text.ToLowerInvariant())
 }
 
+# Helper function to extract PR number from the git commit that introduced a file
+# GitHub squash merges include PR number in format "... (#1234)" in commit message
+function Get-PrFromGitCommit {
+    param([string]$FilePath)
+    
+    try {
+        # Get the first (oldest) commit that touched this file
+        # Using --follow to track renames, and --reverse to get oldest first
+        $commitMessage = git log --follow --reverse --format="%s" -- $FilePath 2>$null | Select-Object -First 1
+        
+        if ($commitMessage -and $commitMessage -match '\(#(\d+)\)\s*$') {
+            return [int]$matches[1]
+        }
+    }
+    catch {
+        # Git command failed, return 0
+    }
+    
+    return 0
+}
+
 # Helper function to normalize indentation in multi-line text
 # Converts tabs to spaces and standardizes indent levels to 2 spaces
 function Normalize-Indentation {
@@ -268,9 +289,10 @@ if (-not (Test-Path $changelogFile)) {
 }
 
 # Get all YAML files, excluding the example template file
-$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Include "*.yml", "*.yaml" -File | Where-Object { 
-    $_.BaseName -ne 'username-example-brief-description'
-})
+# Note: Using -Filter twice and combining results since -Include requires -Recurse
+$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Filter "*.yaml" -File)
+$yamlFiles += @(Get-ChildItem -Path $changelogEntriesDir -Filter "*.yml" -File)
+$yamlFiles = @($yamlFiles | Where-Object { $_.BaseName -ne 'username-example-brief-description' })
 
 if ($yamlFiles.Count -eq 0) {
     Write-Host "No changelog entries found in $changelogEntriesDir" -ForegroundColor Yellow
@@ -311,17 +333,21 @@ foreach ($file in $yamlFiles) {
         $yamlContent = Get-Content -Path $file.FullName -Raw
         $entry = $yamlContent | ConvertFrom-Yaml
         
-        # Validate required top-level fields
-        if (-not $entry.ContainsKey('pr')) {
-            Write-Error "  Missing required field 'pr' in $($file.Name)"
-            continue
+        # Handle PR field - it's optional, will be auto-detected from git if not provided
+        if (-not $entry.ContainsKey('pr') -or -not $entry['pr']) {
+            # Try to extract PR from git commit that introduced this file
+            $detectedPR = Get-PrFromGitCommit -FilePath $file.FullName
+            if ($detectedPR -gt 0) {
+                $entry['pr'] = $detectedPR
+                Write-Host "  Auto-detected PR #$detectedPR from git history" -ForegroundColor Green
+            }
+            else {
+                $entry['pr'] = 0
+                Write-Warning "  PR number not provided in $($file.Name) and could not be auto-detected from git"
+            }
         }
-        
-        if ($entry['pr'] -eq 0) {
-            Write-Warning "  PR number is 0 in $($file.Name) (update when known)"
-        }
-        elseif ($entry['pr'] -lt 0) {
-            Write-Error "  Invalid PR number in $($file.Name) (must be non-negative)"
+        elseif ($entry['pr'] -lt 1) {
+            Write-Error "  Invalid PR number in $($file.Name) (must be a positive integer)"
             continue
         }
         
