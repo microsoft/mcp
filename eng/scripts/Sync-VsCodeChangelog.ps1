@@ -85,8 +85,8 @@ Write-Host ""
 # Read the main CHANGELOG
 $mainContent = Get-Content -Path $mainChangelogFile -Raw
 
-# Extract the Unreleased section
-$unreleasedMatch = $mainContent -match '(?ms)^## ([\d\.]+-[\w\.]+) \(Unreleased\)\s*\n(.*?)(?=\n## |\z)'
+# Extract the Unreleased section (supports both "2.0.0" and "2.0.0-beta.3" formats)
+$unreleasedMatch = $mainContent -match '(?ms)^## ([\d\.]+(?:-[\w\.]+)?) \(Unreleased\)\s*\n(.*?)(?=\n## |\z)'
 if (-not $unreleasedMatch) {
     Write-Error "No Unreleased section found in main CHANGELOG"
     exit 1
@@ -125,11 +125,17 @@ foreach ($line in $unreleasedContent -split "`n") {
         }
         
         $currentSection = $Matches[1].Trim()
+        # Only process known sections
+        $validSections = @('Features Added', 'Breaking Changes', 'Bugs Fixed', 'Other Changes')
+        if ($currentSection -notin $validSections) {
+            Write-Warning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
+            $currentSection = $null
+        }
         $currentEntries = @()
         continue
     }
     
-    # Skip lines before any section
+    # Skip lines before any section or in unknown sections
     if (-not $currentSection) {
         continue
     }
@@ -203,8 +209,8 @@ Add-Section -SectionName "Changed" -Entries $changedEntries
 # Fixed section (from Bugs Fixed)
 Add-Section -SectionName "Fixed" -Entries $sections['Bugs Fixed']
 
-# Trim trailing empty line
-while ($vscodeEntry[-1] -eq "") {
+# Trim trailing empty lines (with safety check for empty array)
+while ($vscodeEntry.Count -gt 0 -and $vscodeEntry[-1] -eq "") {
     $vscodeEntry = $vscodeEntry[0..($vscodeEntry.Count - 2)]
 }
 

@@ -114,9 +114,9 @@ function ConvertTo-TitleCase {
         return $Text
     }
     
-    # Use TextInfo for proper title casing
-    $textInfo = (Get-Culture).TextInfo
-    return $textInfo.ToTitleCase($Text.ToLowerInvariant())  
+    # Use invariant culture TextInfo for proper title casing
+    $textInfo = [System.Globalization.CultureInfo]::InvariantCulture.TextInfo
+    return $textInfo.ToTitleCase($Text.ToLowerInvariant())
 }
 
 # Valid sections for validation
@@ -144,14 +144,6 @@ if ($Section) {
         Write-Host ""
         exit 1
     }
-}
-
-# Validate PR parameter if provided
-if ($PR -and $PR -lt 1) {
-    Write-Host ""
-    Write-Host "ERROR: PR number must be a positive integer (got: $PR)" -ForegroundColor Red
-    Write-Host ""
-    exit 1
 }
 
 # Normalize subsection to title case if provided
@@ -331,8 +323,8 @@ if ($Description.Contains("`n")) {
     }
 } else {
     # Single-line description - use quoted string
-    # Escape double quotes in the description
-    $escapedDescription = $Description -replace '"', '\"'
+    # Escape backslashes and double quotes in the description
+    $escapedDescription = $Description -replace '\\', '\\\\' -replace '"', '\"'
     $yamlContent += "    description: `"$escapedDescription`"`n"
 }
 

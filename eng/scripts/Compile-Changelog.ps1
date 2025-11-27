@@ -105,6 +105,10 @@ function Format-ChangelogEntry {
         $lines = $cleanedDescription -split "`n"
         $formattedLines = @()
         
+        # Check if this is a list (first line followed by bullet items)
+        $isList = $lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+'
+        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+        
         for ($i = 0; $i -lt $lines.Length; $i++) {
             $line = $lines[$i].TrimEnd()  # Trim trailing spaces from each line
             
@@ -112,36 +116,42 @@ function Format-ChangelogEntry {
                 # First line: main bullet point - also trim leading spaces
                 $line = $line.TrimStart()
                 # Ensure it ends with colon if followed by a list, otherwise period
-                if ($lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+') {
+                if ($isList) {
                     # Next line is a bullet, so first line should end with colon
                     if (-not $line.EndsWith(":")) {
                         $line += ":"
                     }
+                    # For lists, add PR link to first line
+                    $formattedLines += "- $line$prLink"
                 }
                 else {
-                    # Regular multi-line text, ensure period at end
-                    if (-not $line.EndsWith(".")) {
+                    # Regular multi-line text, ensure valid sentence ending
+                    if ($line -notmatch '[.!?\)\]]$') {
                         $line += "."
                     }
+                    $formattedLines += "- $line"
                 }
-                $formattedLines += "- $line"
             }
             elseif ($i -eq $lines.Length - 1) {
-                # Last line: add PR link here
+                # Last line
                 # Line is already trimmed at the end, preserve leading indentation
                 $trimmedLine = $line.TrimStart()
                 $leadingSpaces = $line.Length - $trimmedLine.Length
                 $indent = if ($leadingSpaces -gt 0) { $line.Substring(0, $leadingSpaces) } else { "" }
                 
-                # For bullet items, don't add period; for regular text, ensure period
-                $needsPeriod = -not ($trimmedLine -match '^-\s+')
-                if ($needsPeriod -and -not $trimmedLine.EndsWith(".")) {
-                    $trimmedLine += "."
+                if ($isList) {
+                    # For lists, PR link was added to first line, just add the last bullet
+                    $formattedLines += "  $indent$trimmedLine"
                 }
-                
-                # Add PR link if available
-                $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
-                $formattedLines += "  $indent$trimmedLine$prLink"
+                else {
+                    # For regular multi-line text, add PR link to last line
+                    # Ensure valid sentence ending for non-bullet text
+                    $needsPeriod = -not ($trimmedLine -match '^-\s+')
+                    if ($needsPeriod -and $trimmedLine -notmatch '[.!?\)\]]$') {
+                        $trimmedLine += "."
+                    }
+                    $formattedLines += "  $indent$trimmedLine$prLink"
+                }
             }
             else {
                 # Middle lines: preserve indentation and add 2 spaces for nesting
@@ -155,7 +165,8 @@ function Format-ChangelogEntry {
     else {
         # Single-line description: original logic
         $formattedDescription = $Description
-        if (-not $formattedDescription.EndsWith(".")) {
+        # Ensure valid sentence ending (avoid double punctuation)
+        if ($formattedDescription -notmatch '[.!?\)\]]$') {
             $formattedDescription += "."
         }
         
@@ -432,18 +443,23 @@ if ($Version) {
             }
             Write-Host "Current version: $currentVersion" -ForegroundColor Gray
             
-            # Parse semantic version (handles formats like "2.0.0-beta.3" or "1.5.2")
-            if ($currentVersion -match '^(\d+)\.(\d+)\.(\d+)(?:-(.+?)\.(\d+))?') {
+            # Parse semantic version (handles formats like "2.0.0-beta.3", "2.0.0-alpha", or "1.5.2")
+            if ($currentVersion -match '^(\d+)\.(\d+)\.(\d+)(?:-(.+?)(?:\.(\d+))?)?$') {
                 $major = [int]$matches[1]
                 $minor = [int]$matches[2]
                 $patch = [int]$matches[3]
                 $prerelease = $matches[4]
-                $prereleaseNum = if ($matches[5]) { [int]$matches[5] } else { 0 }
+                $prereleaseNum = if ($matches[5]) { [int]$matches[5] } else { $null }
                 
                 # Increment based on prerelease status
                 if ($prerelease) {
-                    # Increment prerelease number (e.g., beta.3 -> beta.4)
-                    $nextVersion = "$major.$minor.$patch-$prerelease.$($prereleaseNum + 1)"
+                    if ($null -ne $prereleaseNum) {
+                        # Has numeric suffix - increment it (e.g., beta.3 -> beta.4)
+                        $nextVersion = "$major.$minor.$patch-$prerelease.$($prereleaseNum + 1)"
+                    } else {
+                        # No numeric suffix - add .1 (e.g., alpha -> alpha.1)
+                        $nextVersion = "$major.$minor.$patch-$prerelease.1"
+                    }
                 } else {
                     # Increment patch version (e.g., 1.5.2 -> 1.5.3)
                     $nextVersion = "$major.$minor.$($patch + 1)"
