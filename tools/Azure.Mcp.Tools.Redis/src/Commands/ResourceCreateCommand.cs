@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Redis.Commands;
 

@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 

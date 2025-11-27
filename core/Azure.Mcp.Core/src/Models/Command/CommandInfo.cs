@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Models.Command;
 

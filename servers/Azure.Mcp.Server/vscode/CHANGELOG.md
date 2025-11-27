@@ -1,15 +1,22 @@
 # Release History
 
-## 2.0.7 (Unreleased) (pre-release)
+## 2.0.7 (2025-11-25) (pre-release)
+
+### Changed
+
+- Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
+- Updated the .NET 10 SDK version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/microsoft/mcp/pull/1243)]
 
 ### Fixed
-- Adds version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration.
 
-## 2.0.6 (2025-11-19) (pre-release)
+- Added version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration. [[#1050](https://github.com/microsoft/mcp/pull/1050)]
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225)]
+
+## 2.0.6 (2025-11-20) (pre-release)
 
 ### Added
 
-- Added a [hidden] command `server_info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
+- Added a [hidden] command `server_info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164)]
 - Added OpenTelemetry tracing support with Azure Monitor exporter for HTTP transport mode, allowing self-hosted instances to export traces to Application Insights when `APPLICATIONINSIGHTS_CONNECTION_STRING` is configured. [[#1227](https://github.com/microsoft/mcp/pull/1227)]
 
 ### Changed
@@ -174,7 +181,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 
 ### Added
 
-- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940)]
 
 ### Changed
 
@@ -755,7 +762,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
   - `azmcp-virtualdesktop-hostpool-list` - List all host pools in a subscription
   - `azmcp-virtualdesktop-sessionhost-list` - List all session hosts in a host pool
   - `azmcp-virtualdesktop-sessionhost-usersession-list` - List all user sessions on a specific session host
-- Added support for creating and publishing DevDeviceId in telemetry. [[#810](https://github.com/Azure/azure-mcp/pull/810/)]
+- Added support for creating and publishing DevDeviceId in telemetry. [[#810](https://github.com/Azure/azure-mcp/pull/810)]
 - Added caching for Cosmos DB databases and containers. [[#813](https://github.com/Azure/azure-mcp/pull/813)]
 
 ### Changed
