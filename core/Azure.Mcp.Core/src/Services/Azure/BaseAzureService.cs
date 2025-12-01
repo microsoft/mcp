@@ -4,6 +4,7 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
@@ -217,6 +218,7 @@ public abstract class BaseAzureService
         {
             TokenCredential credential = await GetCredential(tenantId, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
+            options.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
