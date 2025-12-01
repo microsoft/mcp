@@ -2,9 +2,9 @@
 #Requires -Version 7
 
 param(
-	[string] $ArtifactsPath,
+    [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-	[string] $OutputPath
+    [string] $OutputPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -365,6 +365,13 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
+    $serverJsonFile = "$ArtifactsPath/$($server.name)/server.json"
+
+    if (!(Test-Path $serverJsonFile)) {
+        LogError "Server JSON file $serverJsonFile does not exist to pack into NuGet."
+        return
+    }
+
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
 
     $platformOutputPath = "$serverOutputPath/platform"
@@ -451,9 +458,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
     Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force
-
-    # Export ServerJson
-    Copy-Item -Path "$RepoRoot/$($server.serverJsonPath)" -Destination "$tempFolder/.mcp/server.json" -Force
+    Copy-Item -Path $serverJsonFile -Destination "$tempFolder/.mcp/server.json" -Force
 
     # Export WrapperPackageNuspec
     ExportWrapperPackageNuspec `
