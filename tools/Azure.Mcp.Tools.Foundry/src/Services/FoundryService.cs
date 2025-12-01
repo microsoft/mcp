@@ -1674,6 +1674,10 @@ public class FoundryService(
         }
     }
 
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
     internal static Microsoft.Extensions.AI.ChatMessage CreateRequestMessage(string toolCallId, string name, Dictionary<string, object?> arguments, RunStep step)
     {
         return new(ChatRole.Assistant, [new FunctionCallContent(toolCallId, name, arguments)])
@@ -1684,6 +1688,10 @@ public class FoundryService(
         };
     }
 
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be serializable by default or registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
     internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, List<AgentFileSearchResult> result, RunStep step)
     {
         return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
@@ -1714,6 +1722,10 @@ public class FoundryService(
         };
     }
 
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be serializable by default or registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
     internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, IDictionary<string, string?> result, RunStep step)
     {
         return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
