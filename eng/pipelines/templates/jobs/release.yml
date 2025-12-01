@@ -76,7 +76,7 @@ jobs:
   parameters:
     ServerName: ${{ parameters.ServerName }}
     DependsOn:
-    - PublishNuget
+    - PublishNugetPackage
     - PublishNpm
 
 - job: UpdatePackageVersion
