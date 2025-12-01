@@ -20,6 +20,8 @@ public static class HttpClientFactoryConfigurator
     private static readonly string s_framework;
     private static readonly string s_platform;
 
+    private static string? s_userAgent = null;
+
     static HttpClientFactoryConfigurator()
     {
         var assembly = typeof(HttpClientService).Assembly;
@@ -144,6 +146,7 @@ public static class HttpClientFactoryConfigurator
 
     private static string BuildUserAgent(string transport)
     {
-        return $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
+        s_userAgent ??= $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
+        return s_userAgent;
     }
 }

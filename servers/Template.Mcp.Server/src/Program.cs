@@ -140,8 +140,6 @@ internal class Program
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<CommandFactory>();
 
-        services.AddHttpClient();
-
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.
         // The http-traport-specific implementations and configurations must be registered
