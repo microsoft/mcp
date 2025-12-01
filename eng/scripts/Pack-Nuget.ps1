@@ -1,6 +1,16 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
+<#
+.SYNOPSIS
+    Packs NuGet packages for MCP DNX servers and their platforms.
+.PARAMETER ArtifactsPath
+    The path where build artifacts are located.
+.PARAMETER BuildInfoPath
+    The path to the 'build_info' directory; used to locate build_info.json and each server's server.json.
+.PARAMETER OutputPath
+    The path where the generated NuGet packages will be placed.
+#>
 param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
@@ -25,7 +35,19 @@ if(!$ArtifactsPath) {
 }
 
 if(!$BuildInfoPath) {
-    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
+    $BuildInfoPath = "$RepoRoot/.work/"
+}
+
+if (!(Test-Path $BuildInfoPath -PathType Container)) {
+    LogError "Build info directory $BuildInfoPath does not exist."
+    $exitCode = 1
+}
+
+$BuildInfoJsonPath = Join-Path $BuildInfoPath "build_info.json"
+
+if (!(Test-Path $BuildInfoJsonPath)) {
+    LogError "Build info file $BuildInfoJsonPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
 }
 
 if (!$OutputPath) {
@@ -36,13 +58,6 @@ if(!(Test-Path $ArtifactsPath)) {
 	LogError "Artifacts path $ArtifactsPath does not exist."
 	$exitCode = 1
 }
-
-if (!(Test-Path $BuildInfoPath)) {
-    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
-    $exitCode = 1
-}
-
-$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
@@ -57,7 +72,7 @@ if($LASTEXITCODE -ne 0 -or !$sharedTargetFramework) {
     $exitCode = 1
 }
 
-$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+$buildInfo = Get-Content $BuildInfoJsonPath -Raw | ConvertFrom-Json -AsHashtable
 
 # Exit early if there were parameter errors
 if($exitCode -ne 0) {
@@ -365,11 +380,11 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $serverJsonFile = "$ArtifactsPath/$($server.name)/server.json"
+    $serverJsonFile = "$BuildInfoPath/$($server.name)/server.json"
 
     if (!(Test-Path $serverJsonFile)) {
         LogError "Server JSON file $serverJsonFile does not exist to pack into NuGet."
-        return
+        exit 1
     }
 
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
