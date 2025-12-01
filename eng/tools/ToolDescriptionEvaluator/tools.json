@@ -12859,7 +12859,7 @@
     },
     {
       "name": "list",
-      "description": "List all tables in a Storage or Cosmos DB account.",
+      "description": "List all tables in an Azure Storage account.",
       "command": "tables list",
       "option": [
         {
@@ -13468,5 +13468,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 223
+  "duration": 371
 }
