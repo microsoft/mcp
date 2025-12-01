@@ -7,6 +7,7 @@
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
     <McpRepositoryName>com.microsoft/template-server-name</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
     <!-- <PackageIcon></PackageIcon> Defaults to the microsoft logo if not specified. -->
 
     <!-- npm settings -->
