@@ -151,5 +151,3 @@ extends:
           - template: /eng/pipelines/templates/variables/globals.yml
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}
