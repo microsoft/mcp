@@ -1,4 +1,5 @@
 Azure Functions code generation best practices:
+    - Learn the coding best practices from Azure examples listed at https://github.com/Azure-Samples
     - Use the latest programming models (v4 for JavaScript, v2 for Python) 
     - If the project runtime is Python or Node.js, do not create a function.json file
     - Only if the project runtime is .NET, PowerShell or Java create a function.json file with the required bindings and triggers.
