@@ -29,6 +29,20 @@ if ($exitCode -ne 0) {
     exit $exitCode
 }
 
+function ReplacePropertyValue {
+    param (
+        [hashtable]$HashTable,
+        [string]$PropertyName,
+        [string]$NewValue
+    )
+
+    if ($HashTable.ContainsKey($PropertyName)) {
+        $HashTable["$PropertyName"] = $NewValue
+    } else {
+        LogError "Hashtable does not have a property named '$PropertyName'."
+    }
+}
+
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 $server = $buildInfo.servers | Where-Object { $_.name -ieq $ServerName }
 
@@ -44,22 +58,28 @@ if (!(Test-Path $serverJsonPath)) {
     exit 1
 }
 
-$jsonHashTable = Get-Content -Path $serverJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
+[hashtable]$jsonHashTable = Get-Content -Path $serverJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
 
-if (!$jsonHashTable.ContainsKey('version')) {
-    LogError "server.json file $serverJsonPath does not have a version key."
-    exit 1
-}
-
-$jsonHashTable.version = $server.version
+ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'name' -NewValue $server.mcpRepositoryName
+ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue $server.version
 
 foreach ($package in $jsonHashTable.packages) {
-    if (!$package.ContainsKey('version')) {
-        LogWarning "Package: $($package.registryType), identifier: $($package.identifier) does not have a version key."
-        continue
-    }
+    ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
 
-    $package.version = $server.version
+    switch ($package.registryType) {
+        'nuget' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.dnxPackageId
+        }
+        'npm' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.npmPackageName
+        }
+        'docker' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.dockerImageName
+        }
+        Default {
+            LogWarning "Unknown package registry type '$($package.registryType)' in server.json."
+        }
+    }
 }
 
 $updatedJson = $jsonHashTable | ConvertTo-Json -Depth 10
