@@ -68,9 +68,9 @@ jobs:
                 VSIX Version: $($server.vsixVersion)
                 VSIX baseName: $baseName
                 Is Prerelease: $($server.vsixIsPrerelease)
+                "@
 
-                Write-Host ''
-                Write-Host 'Installing vsce...'
+                Write-Host "`nInstalling vsce..."
                 npm install -g @vscode/vsce
 
                 Write-Host "Executing: vsce publish $($publishArgs -join ' ')"
