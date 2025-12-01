@@ -398,13 +398,13 @@ public static class OneLakeEndpoints
 {
     public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
     public const string StorageScope = "https://storage.azure.com/.default";
-    
+
     // Environment-aware Fabric API base URL
     public static string GetFabricApiBaseUrl() => GetEndpoints(CurrentEnvironment).FabricApiBaseUrl;
-    
+
     // Environment-aware Fabric authentication scope
     public static string GetFabricScope() => GetEndpoints(CurrentEnvironment).FabricScope;
-    
+
     public static readonly string[] FabricScopes =
     [
         "https://api.fabric.microsoft.com/.default"
@@ -448,25 +448,25 @@ public static class OneLakeEndpoints
     };
 
     // Get current environment from environment variable or default to PROD
-    private static string CurrentEnvironment => 
+    private static string CurrentEnvironment =>
         Environment.GetEnvironmentVariable("ONELAKE_ENVIRONMENT")?.ToUpperInvariant() ?? "PROD";
 
     // Public properties that return environment-specific URLs
-    public static string OneLakeDataPlaneBaseUrl => 
+    public static string OneLakeDataPlaneBaseUrl =>
         EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBaseUrl;
 
-    public static string OneLakeDataPlaneDfsBaseUrl => 
+    public static string OneLakeDataPlaneDfsBaseUrl =>
         EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneDfsBaseUrl;
 
-    public static string OneLakeDataPlaneBlobBaseUrl => 
+    public static string OneLakeDataPlaneBlobBaseUrl =>
         EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBlobBaseUrl;
 
     // Method to get endpoints for a specific environment
     public static OneLakeEnvironmentEndpoints GetEndpoints(string environment)
     {
         var env = environment.ToUpperInvariant();
-        return EnvironmentEndpoints.TryGetValue(env, out var endpoints) 
-            ? endpoints 
+        return EnvironmentEndpoints.TryGetValue(env, out var endpoints)
+            ? endpoints
             : EnvironmentEndpoints["PROD"];
     }
 

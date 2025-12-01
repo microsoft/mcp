@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Net;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
@@ -88,7 +88,7 @@ public sealed class OneLakeItemListCommand(
             _logger.LogError(ex, "Error listing OneLake items in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 
@@ -114,7 +114,7 @@ public sealed class OneLakeItemListCommand(
     {
         public List<OneLakeItem>? Items { get; init; }
         public string? XmlResponse { get; init; }
-        
+
         public OneLakeItemListCommandResult() { }
         public OneLakeItemListCommandResult(List<OneLakeItem> items) { Items = items; }
     }

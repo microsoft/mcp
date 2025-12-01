@@ -1,6 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -8,12 +14,6 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using System.CommandLine.Parsing;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
@@ -26,7 +26,7 @@ public class BlobDeleteCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobDeleteCommand(NullLogger<BlobDeleteCommand>.Instance, service);
 
-    Assert.Equal("delete", command.Name);
+        Assert.Equal("delete", command.Name);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
     }
@@ -56,7 +56,7 @@ public class BlobDeleteCommandTests
         var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath}");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await service.Received(1).DeleteBlobAsync(workspaceId, itemId, blobPath, Arg.Any<CancellationToken>());
@@ -79,7 +79,7 @@ public class BlobDeleteCommandTests
         var parseResult = command.GetCommand().Parse("--item-id lakehouse --file-path Files/sample.txt");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await service.DidNotReceive().DeleteBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
@@ -94,7 +94,7 @@ public class BlobDeleteCommandTests
         var parseResult = command.GetCommand().Parse("--workspace-id workspace --file-path Files/sample.txt");
         var context = new CommandContext(Substitute.For<IServiceProvider>());
 
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await service.DidNotReceive().DeleteBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());

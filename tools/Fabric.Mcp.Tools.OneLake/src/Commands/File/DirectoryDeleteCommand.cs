@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -95,19 +95,19 @@ public sealed class DirectoryDeleteCommand(
                 options.Recursive,
                 cancellationToken);
 
-            var message = options.Recursive 
-                ? "Directory and all contents deleted successfully" 
+            var message = options.Recursive
+                ? "Directory and all contents deleted successfully"
                 : "Directory deleted successfully";
             var result = new DirectoryDeleteCommandResult(options.DirectoryPath, message);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryDeleteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting directory {DirectoryPath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
+            _logger.LogError(ex, "Error deleting directory {DirectoryPath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
                 options.DirectoryPath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 

@@ -21,7 +21,7 @@ public class BlobListCommandTests
         var command = new BlobListCommand(logger, oneLakeService);
 
         // Assert
-    Assert.Equal("list", command.Name);
+        Assert.Equal("list", command.Name);
         Assert.Equal("List OneLake Blobs", command.Title);
         Assert.Contains("List files and directories in OneLake storage as blobs", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class BlobListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-    Assert.Equal("list", systemCommand.Name);
+        Assert.Equal("list", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

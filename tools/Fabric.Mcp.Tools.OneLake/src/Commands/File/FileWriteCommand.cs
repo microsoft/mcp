@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -53,7 +53,7 @@ public sealed class FileWriteCommand(
     protected override FileWriteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        
+
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
         var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
@@ -81,7 +81,7 @@ public sealed class FileWriteCommand(
         }
 
         var options = BindOptions(parseResult);
-        
+
         try
         {
             Stream contentStream;
@@ -94,7 +94,7 @@ public sealed class FileWriteCommand(
                 {
                     throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
                 }
-                
+
                 contentStream = System.IO.File.OpenRead(options.LocalFilePath);
                 contentLength = new FileInfo(options.LocalFilePath).Length;
             }
@@ -131,19 +131,19 @@ public sealed class FileWriteCommand(
             }
 
             var result = new FileWriteCommandResult(
-                options.FilePath, 
-                contentLength, 
+                options.FilePath,
+                contentLength,
                 options.Overwrite ? "File written successfully (overwritten)" : "File written successfully");
-                
+
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileWriteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
+            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
                 options.FilePath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 

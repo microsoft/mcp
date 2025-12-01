@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Net;
+using System.Threading;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -8,10 +12,6 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Net;
-using System.Threading;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -46,7 +46,7 @@ public class FileWriteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-    Assert.Equal("write", systemCommand.Name);
+        Assert.Equal("write", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
@@ -133,7 +133,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -175,7 +175,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -217,7 +217,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -248,7 +248,7 @@ public class FileWriteCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);

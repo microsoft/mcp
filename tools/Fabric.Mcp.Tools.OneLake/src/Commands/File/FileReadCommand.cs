@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Net;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -101,11 +101,11 @@ public sealed class FileReadCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reading file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
+            _logger.LogError(ex, "Error reading file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
                 options.FilePath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 

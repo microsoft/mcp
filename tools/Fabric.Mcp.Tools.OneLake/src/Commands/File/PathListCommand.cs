@@ -9,11 +9,11 @@ using System.Threading;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -106,7 +106,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             {
                 throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
             }
-            
+
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
@@ -118,13 +118,13 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PathListResult { RawResponse = rawResponse }, 
+                    new PathListResult { RawResponse = rawResponse },
                     MinimalJsonContext.Default.PathListResult);
                 return context.Response;
             }
-            
+
             List<FileSystemItem> fileSystemItems;
-            
+
             // Use intelligent discovery if no path is specified
             if (string.IsNullOrWhiteSpace(options.Path))
             {
@@ -145,12 +145,12 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             }
 
             context.Response.Results = ResponseResult.Create(
-                new PathListResult(fileSystemItems), 
+                new PathListResult(fileSystemItems),
                 MinimalJsonContext.Default.PathListResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing path structure. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Path: {Path}", 
+            _logger.LogError(ex, "Error listing path structure. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Path: {Path}",
                 options.WorkspaceId, options.ItemId, options.Path);
             HandleException(context, ex);
         }

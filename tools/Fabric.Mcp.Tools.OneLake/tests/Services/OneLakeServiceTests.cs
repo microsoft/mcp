@@ -48,12 +48,12 @@ public class OneLakeServiceTests
                 // Parameter validation - ensure continuation token is properly escaped
                 if (continuationToken.Length > 1000) // Example validation
                     throw new ArgumentException("Continuation token is too long.", nameof(continuationToken));
-                
+
                 url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
             }
 
             var response = await _apiClient.SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-            
+
             // In real implementation, would parse XML response and return workspaces
             // For this example, return mock data based on whether continuation token was provided
             var mockWorkspaces = new List<Workspace>
@@ -72,7 +72,7 @@ public class OneLakeServiceTests
     public async Task ListOneLakeWorkspacesAsync_WithoutContinuationToken_CallsCorrectUrlAndReturnsWorkspaces()
     {
         // Arrange
-    using var mockResponse = new MemoryStream();
+        using var mockResponse = new MemoryStream();
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,
@@ -107,8 +107,8 @@ public class OneLakeServiceTests
         // Arrange
         var continuationToken = "token123";
         var expectedUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/?comp=list&continuationToken={Uri.EscapeDataString(continuationToken)}";
-    using var mockResponse = new MemoryStream();
-        
+        using var mockResponse = new MemoryStream();
+
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,
@@ -139,7 +139,7 @@ public class OneLakeServiceTests
     public async Task ListOneLakeWorkspacesAsync_WithEmptyString_TreatsAsNull()
     {
         // Arrange
-    using var mockResponse = new MemoryStream();
+        using var mockResponse = new MemoryStream();
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,
@@ -173,15 +173,15 @@ public class OneLakeServiceTests
         var service = new TestableOneLakeService(mockApiClient);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             service.ListOneLakeWorkspacesAsync(longToken));
         Assert.Equal("Continuation token is too long. (Parameter 'continuationToken')", exception.Message);
 
         // Verify no API call was made due to validation failure
         await mockApiClient.DidNotReceive().SendOneLakeApiRequestAsync(
-            Arg.Any<HttpMethod>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
+            Arg.Any<HttpMethod>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -191,8 +191,8 @@ public class OneLakeServiceTests
         // Arrange
         var specialToken = "token with spaces & symbols!";
         var expectedUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/?comp=list&continuationToken={Uri.EscapeDataString(specialToken)}";
-    using var mockResponse = new MemoryStream();
-        
+        using var mockResponse = new MemoryStream();
+
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,

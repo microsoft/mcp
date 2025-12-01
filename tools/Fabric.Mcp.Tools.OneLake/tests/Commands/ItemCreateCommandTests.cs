@@ -21,7 +21,7 @@ public class ItemCreateCommandTests
         var command = new ItemCreateCommand(logger, oneLakeService);
 
         // Assert
-    Assert.Equal("create", command.Name);
+        Assert.Equal("create", command.Name);
         Assert.Equal("Create Fabric Item", command.Title);
         Assert.Contains("Create a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace", command.Description);
         Assert.False(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class ItemCreateCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-    Assert.Equal("create", systemCommand.Name);
+        Assert.Equal("create", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

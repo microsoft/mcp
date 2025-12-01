@@ -146,7 +146,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Head, url, cancellationToken: cancellationToken);
-        
+
         return new OneLakeFileInfo
         {
             Name = Path.GetFileName(filePath),
@@ -169,7 +169,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         // Use the OneLake blob endpoint to list files for specific path
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
-        
+
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
         var trimmedPath = path.TrimStart('/');
@@ -193,7 +193,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             // Assume it's a sub-path within Files for backward compatibility
             url += $"/Files/{trimmedPath}";
         }
-        
+
         url += $"?restype=container&comp=list";
         if (recursive)
         {
@@ -202,7 +202,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        
+
         // Parse XML response to extract file information
         var files = ParseBlobListResponse(content);
         return files.OrderBy(f => f.IsDirectory ? 0 : 1).ThenBy(f => f.Name);
@@ -236,7 +236,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
                 var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                
+
                 // Parse XML response to extract file information
                 var files = ParseBlobListResponse(content);
                 allFiles.AddRange(files);
@@ -263,27 +263,28 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             var doc = XDocument.Parse(xmlContent);
             var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
-            
+
             // Parse blob elements (files and directories)
             var blobs = doc.Descendants(ns + "Blob");
             foreach (var blob in blobs)
             {
                 var nameElement = blob.Element(ns + "Name");
                 var propertiesElement = blob.Element(ns + "Properties");
-                
-                if (nameElement?.Value == null || propertiesElement == null) continue;
-                
+
+                if (nameElement?.Value == null || propertiesElement == null)
+                    continue;
+
                 var fileName = nameElement.Value;
                 var lastModified = propertiesElement.Element(ns + "Last-Modified")?.Value;
                 var contentLength = propertiesElement.Element(ns + "Content-Length")?.Value;
                 var contentType = propertiesElement.Element(ns + "Content-Type")?.Value;
                 var resourceType = propertiesElement.Element(ns + "ResourceType")?.Value;
-                
+
                 var size = long.TryParse(contentLength, out var parsedSize) ? parsedSize : 0;
-                
+
                 // Use ResourceType to determine if this is a directory
                 var isDirectory = string.Equals(resourceType, "directory", StringComparison.OrdinalIgnoreCase);
-                
+
                 files.Add(new OneLakeFileInfo
                 {
                     Name = Path.GetFileName(fileName),
@@ -294,7 +295,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     IsDirectory = isDirectory
                 });
             }
-            
+
             // Parse blob prefixes (directories) - Note: OneLake typically doesn't return these
             var blobPrefixes = doc.Descendants(ns + "BlobPrefix");
             foreach (var prefix in blobPrefixes)
@@ -319,7 +320,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             throw new InvalidOperationException($"Failed to parse OneLake file listing response: {ex.Message}", ex);
         }
-        
+
         return files;
     }
 
@@ -338,7 +339,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
                 var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                
+
                 var items = ParsePathListResponse(content);
                 allItems.AddRange(items);
             }
@@ -360,20 +361,20 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     private List<FileSystemItem> ParsePathListResponse(string jsonContent)
     {
         var fileSystemItems = new List<FileSystemItem>();
-        
+
         try
         {
             // Parse JSON response from ADLS Gen2 API
             using var document = JsonDocument.Parse(jsonContent);
             var root = document.RootElement;
-            
+
             if (root.TryGetProperty("paths", out var pathsElement))
             {
                 foreach (var pathItem in pathsElement.EnumerateArray())
                 {
                     var name = pathItem.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : "";
                     var isDirectory = false;
-                    
+
                     if (pathItem.TryGetProperty("isDirectory", out var isDirElement))
                     {
                         // Handle both boolean and string representations
@@ -390,7 +391,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                             isDirectory = bool.TryParse(isDirElement.GetString(), out var boolValue) && boolValue;
                         }
                     }
-                    
+
                     var contentLength = 0L;
                     if (pathItem.TryGetProperty("contentLength", out var lengthElement))
                     {
@@ -403,14 +404,14 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                             long.TryParse(lengthElement.GetString(), out contentLength);
                         }
                     }
-                    var lastModified = pathItem.TryGetProperty("lastModified", out var modElement) 
+                    var lastModified = pathItem.TryGetProperty("lastModified", out var modElement)
                         ? DateTime.TryParse(modElement.GetString(), out var modDate) ? modDate : (DateTime?)null
                         : null;
                     var etag = pathItem.TryGetProperty("etag", out var etagElement) ? etagElement.GetString() : null;
                     var permissions = pathItem.TryGetProperty("permissions", out var permsElement) ? permsElement.GetString() : null;
                     var owner = pathItem.TryGetProperty("owner", out var ownerElement) ? ownerElement.GetString() : null;
                     var group = pathItem.TryGetProperty("group", out var groupElement) ? groupElement.GetString() : null;
-                    
+
                     if (!string.IsNullOrEmpty(name))
                     {
                         var item = new FileSystemItem
@@ -427,7 +428,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                             Group = group,
                             Children = null
                         };
-                        
+
                         fileSystemItems.Add(item);
                     }
                 }
@@ -437,7 +438,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             throw new InvalidOperationException($"Failed to parse OneLake path listing response: {ex.Message}", ex);
         }
-        
+
         return fileSystemItems;
     }
 
@@ -451,7 +452,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         // Use ADLS Gen2 filesystem API format instead of blob container format
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
-        
+
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
         var trimmedPath = path.TrimStart('/');
@@ -475,14 +476,14 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             // Assume it's a sub-path within Files for backward compatibility
             url += $"/Files/{trimmedPath}";
         }
-        
+
         url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
         var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        
+
         var fileSystemItems = ParsePathListResponse(content);
-        
+
         return fileSystemItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
@@ -490,7 +491,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var root = new List<FileSystemItem>();
         var pathPrefix = basePath.TrimEnd('/') + "/";
-        
+
         // Group items by their immediate parent directory
         var grouped = flatItems
             .Where(item => item.Path.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase) || item.Path == basePath.TrimEnd('/'))
@@ -500,7 +501,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                 var firstSlash = relativePath.IndexOf('/');
                 return firstSlash == -1 ? "" : relativePath.Substring(0, firstSlash);
             });
-        
+
         foreach (var group in grouped)
         {
             if (string.IsNullOrEmpty(group.Key))
@@ -513,7 +514,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                 // Create directory entry with children
                 var dirPath = $"{pathPrefix}{group.Key}";
                 var directoryItem = group.FirstOrDefault(item => item.Path == dirPath && item.Type == "directory");
-                
+
                 if (directoryItem == null)
                 {
                     directoryItem = new FileSystemItem
@@ -526,12 +527,12 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                         ContentType = "application/x-directory"
                     };
                 }
-                
+
                 directoryItem.Children = group.Where(item => item.Path != dirPath).ToList();
                 root.Add(directoryItem);
             }
         }
-        
+
         return root.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
@@ -553,22 +554,22 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                 return await reader.ReadToEndAsync(cancellationToken);
             },
             cancellationToken);
-        
+
         try
         {
             var doc = XDocument.Parse(xmlContent);
-            
+
             // For container listing with comp=list, Azure Storage returns different XML structure
             // Try various possible XML structures based on Azure Storage Blob Service API
             var items = new List<OneLakeItem>();
-            
+
             // Option 1: Try <EnumerationResults><Blobs><BlobPrefix> (OneLake uses BlobPrefix)
             var blobPrefixes = doc.Root?.Element("Blobs")?.Elements("BlobPrefix");
             if (blobPrefixes != null && blobPrefixes.Any())
             {
                 items.AddRange(ParseBlobPrefixElements(blobPrefixes, workspaceId));
             }
-            
+
             // Option 2: Try <EnumerationResults><Blobs><Blob> (fallback for regular blobs)
             if (!items.Any())
             {
@@ -578,7 +579,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     items.AddRange(ParseBlobElements(blobs, workspaceId));
                 }
             }
-            
+
             // Option 2: Try <EnumerationResults><Containers><Container> (like workspace listing)
             if (!items.Any())
             {
@@ -588,7 +589,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     items.AddRange(ParseContainerElements(containers, workspaceId));
                 }
             }
-            
+
             // Option 3: Try direct children of root element
             if (!items.Any())
             {
@@ -598,7 +599,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     items.AddRange(ParseGenericElements(directElements, workspaceId));
                 }
             }
-            
+
             return items;
         }
         catch (Exception ex)
@@ -642,7 +643,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         // Use the OneLake blob endpoint to list files for specific path
         var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
-        
+
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
         var trimmedPath = path.TrimStart('/');
@@ -666,7 +667,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             // Assume it's a sub-path within Files for backward compatibility
             singleUrl += $"/Files/{trimmedPath}";
         }
-        
+
         singleUrl += $"?restype=container&comp=list";
         if (recursive)
         {
@@ -708,7 +709,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         // Use ADLS Gen2 filesystem API format instead of blob container format
         var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
-        
+
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
         var trimmedPath = path.TrimStart('/');
@@ -732,7 +733,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             // Assume it's a sub-path within Files for backward compatibility
             singleUrl += $"/Files/{trimmedPath}";
         }
-        
+
         singleUrl += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
         var singleResponse = await SendDataPlaneRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
@@ -813,11 +814,11 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             var nameElement = blobPrefix.Element("Name");
             var name = nameElement?.Value ?? "";
-            
+
             // Remove trailing slash and extract type from name
             var cleanName = name.TrimEnd('/');
             var (itemName, itemType) = ExtractItemNameAndType(cleanName);
-            
+
             var item = new OneLakeItem
             {
                 Id = cleanName,
@@ -881,11 +882,11 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             var name = fullName.Substring(0, lastDot);
             var type = fullName.Substring(lastDot + 1);
-            
+
             // Map Fabric types to display names
             return (name, MapFabricTypeToDisplayName(type));
         }
-        
+
         return (fullName, "Item");
     }
 
@@ -998,7 +999,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         // Use DFS endpoint for file operations (similar to directory creation)
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
-        
+
         // Create or overwrite file using DFS API
         using var createRequest = new HttpRequestMessage(HttpMethod.Put, url + "?resource=file");
         createRequest.Headers.Add("x-ms-resource", "file");
@@ -1008,9 +1009,9 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             createRequest.Headers.Add("If-None-Match", "*");
         }
-        
+
         await SendDataPlaneRequestAsync(createRequest, cancellationToken: cancellationToken);
-        
+
         // Upload content
         url += "?action=append&position=0";
         using var uploadRequest = new HttpRequestMessage(new HttpMethod("PATCH"), url)
@@ -1018,9 +1019,9 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             Content = new StreamContent(content)
         };
         uploadRequest.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        
+
         await SendDataPlaneRequestAsync(uploadRequest, cancellationToken: cancellationToken);
-        
+
         // Flush/commit
         url = url.Replace("action=append&position=0", $"action=flush&position={content.Length}");
         using var flushRequest = new HttpRequestMessage(new HttpMethod("PATCH"), url);
@@ -1245,16 +1246,16 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         // Use blob endpoint for directory deletion, similar to file deletion
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}";
-        
+
         if (recursive)
         {
             url += "?recursive=true";
         }
-        
+
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
         // Add the required header to indicate we're deleting a directory
         request.Headers.Add("x-ms-delete-type", "directory");
-        
+
         await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
     }
 
@@ -1263,10 +1264,10 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
         // However, we can create an empty directory using a PUT request with the appropriate headers
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}?resource=directory";
-        
+
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
         request.Headers.Add("x-ms-resource", "directory");
-        
+
         await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
     }
 
@@ -1275,18 +1276,18 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
-        
+
         using var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        
+
         if (!string.IsNullOrEmpty(jsonContent))
         {
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
         }
-        
+
         var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        
+
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 
@@ -1294,19 +1295,19 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var tokenContext = new Azure.Core.TokenRequestContext(new[] { OneLakeEndpoints.StorageScope });
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
-        
+
         using var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
-        
+
         if (!string.IsNullOrEmpty(jsonContent))
         {
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
         }
-        
+
         var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        
+
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 
@@ -1320,14 +1321,14 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.StorageScope });
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
-            
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
         request.Headers.Add("x-ms-date", DateTime.UtcNow.ToString("R"));
-        
+
         var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        
+
         return response;
     }
 
@@ -1401,7 +1402,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         return contentType switch
         {
             "application/vnd.ms-fabric.lakehouse" => "Lakehouse",
-            "application/vnd.ms-fabric.notebook" => "Notebook", 
+            "application/vnd.ms-fabric.notebook" => "Notebook",
             "application/vnd.ms-fabric.report" => "Report",
             "application/vnd.ms-fabric.dataset" => "Dataset",
             "application/vnd.ms-fabric.dataflow" => "Dataflow",

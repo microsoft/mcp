@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -106,7 +106,7 @@ public sealed class BlobListCommand(
             }
 
             List<OneLakeFileInfo> files;
-            
+
             // Use intelligent discovery if no path is specified
             if (string.IsNullOrWhiteSpace(options.Path))
             {
@@ -131,11 +131,11 @@ public sealed class BlobListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}. Options: {@Options}", 
+            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}. Options: {@Options}",
                 options.WorkspaceId, options.ItemId, options.Path, options);
             HandleException(context, ex);
         }
-        
+
         return context.Response;
     }
 

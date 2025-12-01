@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Net;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Text;
-using System.Text.Json;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
@@ -27,7 +27,7 @@ public class BlobPutCommandTests
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new BlobPutCommand(NullLogger<BlobPutCommand>.Instance, oneLakeService);
 
-    Assert.Equal("upload", command.Name);
+        Assert.Equal("upload", command.Name);
         Assert.Contains("Upload content to OneLake", command.Description);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
@@ -42,7 +42,7 @@ public class BlobPutCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-    Assert.Equal("upload", systemCommand.Name);
+        Assert.Equal("upload", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 
@@ -91,7 +91,7 @@ public class BlobPutCommandTests
         var parseResult = command.GetCommand().Parse($"{identifierArgs} --file-path {blobPath} --content \"{content}\"");
         var context = new CommandContext(serviceProvider);
 
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.Created, response.Status);
         await oneLakeService.Received(1).PutBlobAsync(
@@ -115,7 +115,7 @@ public class BlobPutCommandTests
         Assert.Equal("key-sha256", root.GetProperty("encryptionKeySha256").GetString());
         Assert.Equal("version-id", root.GetProperty("versionId").GetString());
         Assert.Equal("client-request-id", root.GetProperty("clientRequestId").GetString());
-    Assert.Equal("root-activity-id", root.GetProperty("rootActivityId").GetString());
+        Assert.Equal("root-activity-id", root.GetProperty("rootActivityId").GetString());
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public class BlobPutCommandTests
         var parseResult = command.GetCommand().Parse("--workspace-id test-workspace --item-id test-item --file-path Files/empty.txt");
         var context = new CommandContext(serviceProvider);
 
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         Assert.NotEqual(HttpStatusCode.Created, response.Status);
         await oneLakeService.DidNotReceive().PutBlobAsync(

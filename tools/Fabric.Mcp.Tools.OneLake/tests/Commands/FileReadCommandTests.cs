@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Net;
+using System.Text;
+using System.Threading;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -8,11 +13,6 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Net;
-using System.Text;
-using System.Threading;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -29,7 +29,7 @@ public class FileReadCommandTests
         var command = new FileReadCommand(logger, oneLakeService);
 
         // Assert
-    Assert.Equal("read", command.Name);
+        Assert.Equal("read", command.Name);
         Assert.Equal("Read OneLake File", command.Title);
         Assert.Contains("Read the contents of a file from OneLake storage", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -50,7 +50,7 @@ public class FileReadCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-    Assert.Equal("read", systemCommand.Name);
+        Assert.Equal("read", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
@@ -122,7 +122,7 @@ public class FileReadCommandTests
         var filePath = "test/file.txt";
         var fileContent = "Hello, OneLake!";
 
-    using var contentStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
+        using var contentStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         oneLakeService.ReadFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>())
             .Returns(contentStream);
 
@@ -132,7 +132,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -161,7 +161,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -182,7 +182,7 @@ public class FileReadCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-    var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
