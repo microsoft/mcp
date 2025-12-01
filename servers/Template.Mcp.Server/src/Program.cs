@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
@@ -133,6 +134,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        services.ConfigureMcpServerOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();

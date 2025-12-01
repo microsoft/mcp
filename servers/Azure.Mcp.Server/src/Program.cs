@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -11,7 +12,9 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
@@ -27,6 +30,16 @@ internal class Program
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
+
+            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+            var configuration = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+            services.AddSingleton<IConfiguration>(configuration);
+
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -184,6 +197,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        services.ConfigureMcpServerOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
