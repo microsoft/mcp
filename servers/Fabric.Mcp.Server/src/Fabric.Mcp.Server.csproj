@@ -9,8 +9,8 @@
     <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric-icon.png</PackageIcon>
 
     <!-- Official MCP repository settings -->
-    <!-- <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName> -->
-    <!-- <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath> -->
+    <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
