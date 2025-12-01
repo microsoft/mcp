@@ -1,14 +1,14 @@
 {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-    "name": "com.microsoft/azure",
+    "name": "<<McpRepositoryName>>",
     "description": "All Azure MCP tools to create a seamless connection between AI agents and Azure services.",
-    "version": "<<PLACEHOLDER_VERSION>>",
+    "version": "<<Version>>",
     "title": "Azure MCP Server",
     "packages": [
         {
             "registryType": "nuget",
-            "identifier": "Azure.Mcp",
-            "version": "<<PLACEHOLDER_VERSION>>",
+            "identifier": "<<DnxPackageId>>",
+            "version": "<<Version>>",
             "transport": {
                 "type": "stdio"
             },
@@ -25,8 +25,8 @@
         },
         {
             "registryType": "npm",
-            "identifier": "@azure/mcp",
-            "version": "<<PLACEHOLDER_VERSION>>",
+            "identifier": "<<NpmPackageName>>",
+            "version": "<<Version>>",
             "transport": {
                 "type": "stdio"
             },
