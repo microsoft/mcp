@@ -8,7 +8,9 @@ using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -246,6 +248,39 @@ public static class AzureMcpServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
+    /// </summary>
+    /// <param name="services">Service Collection to add configuration logic to.</param>
+    public static void ConfigureMcpServerOptions(this IServiceCollection services)
+    {
+        services.AddOptions<AzureMcpServerConfiguration>()
+            .BindConfiguration(string.Empty)
+            .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            {
+                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
+                // over any other settings.
+                var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
+                var transport = serviceStartOptions.Value.Transport;
+                var isStdioTransport = string.IsNullOrEmpty(transport)
+                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
+
+                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
+                // the assembly that will run the tool calls.
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly == null)
+                {
+                    throw new InvalidOperationException("Should be a managed assembly as entry assembly.");
+                }
+
+                options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
+
+                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
+                // telemetry is disabled for HTTP transport
+                options.IsTelemetryEnabled = collectTelemetry && isStdioTransport;
+            });
     }
 
     /// <summary>
