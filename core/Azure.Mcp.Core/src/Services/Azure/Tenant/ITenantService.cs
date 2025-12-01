@@ -102,4 +102,30 @@ public interface ITenantService
     Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets a new instance of <see cref="HttpClient"/> configured for use with Azure tenant operations.
+    /// </summary>
+    /// <remarks>
+    /// <para>Each instance includes the following configuration:</para>
+    /// <list type="bullet">
+    /// <item><description>Proxy settings</description></item>
+    /// <item><description>Record/playback handler</description></item>
+    /// <item><description>Timeout configuration</description></item>
+    /// <item><description>User-Agent header</description></item>
+    /// </list>
+    /// <para>Do:</para>
+    /// <list type="bullet">
+    /// <item><description>Utilize the client for a single method or MCP tool invocation.</description></item>
+    /// <item><description>Add request-specific configuration that is scoped to the current operation.</description></item>
+    /// </list>
+    /// <para>Don't:</para>
+    /// <list type="bullet">
+    /// <item><description>Persist the client beyond the lifetime of the invoking tool.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// An <see cref="HttpClient"/> instance configured for use with Azure tenant operations.
+    /// </returns>
+    HttpClient GetClient();
 }
