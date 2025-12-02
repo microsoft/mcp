@@ -41,13 +41,13 @@ Or copy `.env.example` to `.env` and fill in your credentials.
 
     ```pwsh
     # For Azure MCP Server (default)
-    ./Run-ToolDescriptionEvaluator.ps1
+    ./scripts/Run-ToolDescriptionEvaluator.ps1
 
     # For Fabric MCP Server
-    ./Run-ToolDescriptionEvaluator.ps1 -Server "Fabric"
+    ./scripts/Run-ToolDescriptionEvaluator.ps1 -Server "Fabric"
 
     # For a specific server executable
-    ./Run-ToolDescriptionEvaluator.ps1 -ServerExe "./path/to/azmcp.exe"
+    ./scripts/Run-ToolDescriptionEvaluator.ps1 -ServerExe "./path/to/azmcp.exe"
     ```
 
 4. Check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`
