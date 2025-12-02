@@ -50,16 +50,19 @@ public class CommandFactory
         }
     }
 
-    internal const string RootCommandGroupName = "azmcp";
 
-    public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<CommandFactory> logger)
+    public CommandFactory(IServiceProvider serviceProvider,
+        IEnumerable<IAreaSetup> serviceAreas, 
+        ITelemetryService telemetryService, 
+        IOptions<AzureMcpServerConfiguration> configurationOptions, 
+        ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
         _telemetryService = telemetryService;
         _configurationOptions = configurationOptions;
-        _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
+        _rootGroup = new CommandGroup(_configurationOptions.Value.RootCommandGroupName, _configurationOptions.Value.DisplayName);
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions

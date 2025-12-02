@@ -27,8 +27,6 @@ using Options = Microsoft.Extensions.Options.Options;
 /// </summary>
 public static class AzureMcpServiceCollectionExtensions
 {
-    private const string DefaultServerName = "Azure MCP Server";
-
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
@@ -212,18 +210,15 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerOptions = services
             .AddOptions<McpServerOptions>()
-            .Configure<IMcpRuntime>((mcpServerOptions, mcpRuntime) =>
+            .Configure<IMcpRuntime, IOptions<AzureMcpServerConfiguration>>((mcpServerOptions, mcpRuntime, serverConfiguration) =>
             {
-                var mcpServerOptionsBuilder = services.AddOptions<McpServerOptions>();
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName();
-                var serverName = entryAssembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? DefaultServerName;
+                var configuration = serverConfiguration.Value;
 
                 mcpServerOptions.ProtocolVersion = "2024-11-05";
                 mcpServerOptions.ServerInfo = new Implementation
                 {
-                    Name = serverName,
-                    Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
+                    Name = configuration.DisplayName,
+                    Version = configuration.Version,
                 };
 
                 mcpServerOptions.Handlers = new()
@@ -264,6 +259,7 @@ public static class AzureMcpServiceCollectionExtensions
                 // over any other settings.
                 var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
                 var transport = serviceStartOptions.Value.Transport;
+                var isTelemetryEnabledEnvironment = collectTelemetry;
                 var isStdioTransport = string.IsNullOrEmpty(transport)
                     || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
@@ -279,7 +275,7 @@ public static class AzureMcpServiceCollectionExtensions
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = collectTelemetry && isStdioTransport;
+                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
             });
     }
 
