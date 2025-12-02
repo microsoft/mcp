@@ -261,7 +261,11 @@ Choose the appropriate base class for your service based on the operations neede
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+           var subscriptionResource = await _subscriptionService.GetSubscription(
+               subscription,
+               null,
+               retryPolicy,
+               cancellationToken);  // Pass cancellationToken to all async calls
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -294,7 +298,7 @@ var resources = await ExecuteResourceQueryAsync(
 - Be aware of nullable properties and use appropriate null checks
 
 **Compilation Error Resolution:**
-- When you see `cannot convert from 'System.Threading.CancellationToken' to 'string'`, check method parameter order
+- When you see `cannot convert from 'System.Threading.CancellationToken' to 'string'`, check method parameter order. `CancellationToken` is conventionally the last parameter of method signatures, typically named `cancellationToken`, and, if there are optional arguments, it may need to be passed using named parameter syntax like `cancellationToken: cancellationToken`.
 - For `'SqlDatabaseData' does not contain a definition for 'X'`, verify property names in the actual SDK types
 - Use existing service implementations as reference for correct property access patterns
 
@@ -561,7 +565,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Required validation step
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -580,10 +584,11 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
 
             // Call service operation(s) with required parameters
             var results = await service.{Operation}(
-                options.RequiredParam!,  // Required parameters end with !
-                options.OptionalParam,   // Optional parameters are nullable
-                options.Subscription!,   // From SubscriptionCommand
-                options.RetryPolicy);    // From GlobalCommand
+                options.RequiredParam!,      // Required parameters end with !
+                options.OptionalParam,       // Optional parameters are nullable
+                options.Subscription!,       // From SubscriptionCommand
+                options.RetryPolicy,         // From GlobalCommand
+                cancellationToken);
 
             // Set results if any were returned
             // For enumerable returns, coalesce null into an empty enumerable.
@@ -793,7 +798,7 @@ public interface IMyService
         string subscription,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -910,7 +915,7 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
         CancellationToken cancellationToken)
     {
         // Always use subscription service for resolution
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -976,7 +981,7 @@ public class {Resource}{Operation}CommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -1006,7 +1011,7 @@ public class {Resource}{Operation}CommandTests
         var parseResult = _commandDefinition.Parse({argsArray});
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -1034,7 +1039,7 @@ public class {Resource}{Operation}CommandTests
         var parseResult = _commandDefinition.Parse(["--required", "value"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1791,7 +1796,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 ```
 
 ### Command Option Patterns
@@ -1963,6 +1968,7 @@ catch (Exception ex)
    - **CRITICAL**: Use the old `UseResourceGroup()` or `RequireResourceGroup()` pattern - These methods no longer exist. Use extension methods like `.AsRequired()` or `.AsOptional()` instead
    - **CRITICAL**: Skip live test infrastructure for Azure service commands - Create `test-resources.bicep` template early in development
    - **CRITICAL**: Use `parseResult.GetValue()` without the generic type parameter - Use `parseResult.GetValueOrDefault<T>(optionName)` instead
+   - **CRITICAL**: Omit `CancellationToken` parameter from async methods - ALL async methods MUST include `CancellationToken cancellationToken` as the final parameter
    - Redefine base class properties in Options classes
    - Skip base.RegisterOptions() call
    - Skip base.Dispose() call
@@ -1977,6 +1983,9 @@ catch (Exception ex)
    - Use dashes in command group names
 
 2. Always:
+   - **CRITICAL**: Include `CancellationToken cancellationToken` as the final parameter in ALL async methods (service interfaces, implementations, and command calls)
+   - **CRITICAL**: Forward the `cancellationToken` parameter to async methods invoked within `IBaseCommand.ExecuteAsync` method implementations.
+   - **CRITICAL**: Use `Arg.Any<CancellationToken>()` in mock setups and `TestContext.Current.CancellationToken` when invoking product code in tests
    - Create a static `{Toolset}OptionDefinitions` class for the toolset
    - **For option handling**: Use extension methods like `.AsRequired()` or `.AsOptional()` to control option requirements per command. Register explicitly in `RegisterOptions` and bind explicitly in `BindOptions`
    - **For option binding**: Use `parseResult.GetValueOrDefault<T>(optionDefinition.Name)` pattern for all options
@@ -2045,10 +2054,10 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
-var armClient = await CreateArmClientAsync(null, retryPolicy);
+var armClient = await CreateArmClientAsync(null, retryPolicy, cancellationToken);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -2271,7 +2280,7 @@ Commands should be **transport-agnostic** - they work identically in stdio and H
 public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccountGetOptions>
 {
     private readonly IStorageService _storageService;
-    
+
     public StorageAccountGetCommand(
         IStorageService storageService,
         ILogger<StorageAccountGetCommand> logger)
@@ -2282,21 +2291,23 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
-        
+
         // Authentication provider handles both stdio and HTTP scenarios
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.RetryPolicy);
-        
+            options.RetryPolicy,
+            cancellationToken);
+
         // Standard response format works for all transports
         context.Response.Results = ResponseResult.Create(
             new(accounts ?? []),
             StorageJsonContext.Default.CommandResult);
-        
+
         return context.Response;
     }
 }
@@ -2312,7 +2323,7 @@ public override async Task<CommandResponse> ExecuteAsync(...)
     {
         // Different behavior for HTTP mode
     }
-    
+
     // ❌ Don't access HttpContext directly in commands
     var httpContext = _httpContextAccessor.HttpContext;
     if (httpContext != null)
@@ -2340,16 +2351,16 @@ public class StorageService : BaseAzureService, IStorageService
         string subscription,
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy);
-        
+        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy, cancellationToken);
+
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
-        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity  
+        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity
         // - Local identity in stdio mode (Azure CLI, VS Code, etc.)
-        
+
         // ... Azure SDK calls
     }
 }
@@ -2370,7 +2381,7 @@ Remote HTTP mode supports **multiple concurrent users**:
 public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseListOptions>
 {
     private readonly ISqlService _sqlService;  // ✅ Singleton service, thread-safe
-    
+
     public SqlDatabaseListCommand(
         ISqlService sqlService,
         ILogger<SqlDatabaseListCommand> logger)
@@ -2381,17 +2392,19 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         // ✅ Options created per-request, no shared state
         var options = BindOptions(parseResult);
-        
+
         // ✅ Service calls are async and don't store request state
         var databases = await _sqlService.ListDatabasesAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.Server);
-        
+            options.Server,
+            cancellationToken);
+
         return context.Response;
     }
 }
@@ -2404,17 +2417,18 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
     // ❌ Don't store per-request state in command fields
     private CommandContext? _currentContext;
     private BadCommandOptions? _currentOptions;
-    
+
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         // ❌ Race condition with multiple concurrent requests
         _currentContext = context;
         _currentOptions = BindOptions(parseResult);
-        
+
         // ❌ Another request might overwrite these before we use them
-        await Task.Delay(100);
+        await Task.Delay(100, cancellationToken);
         return _currentContext.Response;
     }
 }
@@ -2435,12 +2449,12 @@ public async Task<List<Resource>> GetResourcesAsync(
     // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
-    
+
     var credential = await GetCredential(tenant, cancellationToken);
-    
+
     // ✅ If tenant is null, service will use default tenant
     // ✅ If tenant is provided, service validates it's accessible
-    
+
     var armClient = new ArmClient(credential);
     // ... rest of implementation
 }
@@ -2456,15 +2470,15 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     RequestFailedException reqEx when reqEx.Status == 401 =>
         "Authentication failed. In remote mode, ensure your token has the required " +
         "Mcp.Tools.ReadWrite scope and sufficient RBAC permissions on Azure resources.",
-    
+
     RequestFailedException reqEx when reqEx.Status == 403 =>
         "Authorization failed. Your user account lacks the required RBAC permissions. " +
         "In remote mode with On Behalf Of flow, permissions come from the authenticated user's identity. Learn more at https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow",
-    
+
     InvalidOperationException invEx when invEx.Message.Contains("tenant") =>
         "Tenant mismatch. In remote OBO mode, the requested tenant must match your " +
         "authenticated user's tenant ID.",
-    
+
     _ => base.GetErrorMessage(ex)
 };
 ```
@@ -2491,16 +2505,16 @@ When writing tests, consider both transport modes:
 public class StorageCommandLiveTests : IAsyncLifetime
 {
     private readonly TestSettings _settings;
-    
+
     public async Task InitializeAsync()
     {
         _settings = TestSettings.Load();
-        
+
         // Test infrastructure supports both modes:
         // - Stdio mode: Uses Azure CLI/VS Code credentials
         // - HTTP mode: Can simulate OBO or hosting environment identity
     }
-    
+
     [Fact]
     public async Task ListStorageAccounts_ReturnsAccounts()
     {
@@ -2508,7 +2522,7 @@ public class StorageCommandLiveTests : IAsyncLifetime
         var result = await CallToolAsync(
             "azmcp_storage_account_list",
             new { subscription = _settings.SubscriptionId });
-        
+
         Assert.NotNull(result);
     }
 }
@@ -2561,7 +2575,12 @@ Before submitting:
 - [ ] Command class implements all required members
 - [ ] Command uses proper OptionDefinitions
 - [ ] Service interface and implementation complete
-- [ ] All async methods include CancellationToken parameter as final argument, and rules for using CancellationToken are followed in unit tests when setting up mocks or calling product code.
+- [ ] CancellationToken Requirements
+  - [ ] ALL async methods must use a `CancellationToken cancellationToken` as the final method parameter
+  - [ ] ALWAYS forward the `CancellationToken` parameter in implementations of `IBaseCommand.ExecuteAsync` to all async service interface calls
+  - [ ] Unit test mocks use `Arg.Any<CancellationToken>()` for CancellationToken parameters
+  - [ ] Unit test product code invocations use `TestContext.Current.CancellationToken`
+  - [ ] NEVER pass `CancellationToken.None` or `default` as a value to method parameters
 - [ ] Unit tests cover all paths
 - [ ] Integration tests added
 - [ ] Command registered in toolset setup RegisterCommands method
