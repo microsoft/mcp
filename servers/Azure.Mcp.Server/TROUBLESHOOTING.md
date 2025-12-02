@@ -21,6 +21,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
+      - [Support Logging](#support-logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
       - [Collecting logs with VS Code](#collecting-logs-with-vs-code)
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
@@ -912,6 +913,43 @@ az role assignment create \
 The Azure MCP Server is instrumented using the .NET [EventSource](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) to emit detailed information. Logging follows the pattern of marking operation start, completion, and exceptions. These logs are invaluable for diagnosing Azure MCP Server issues.
 
 Server logs can be obtained by capturing events for provider "Microsoft-Extensions-Logging".
+
+#### Support Logging
+
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-enable-support-logging` option. This option requires `--log-file-path` to be specified to ensure logs are written to a local file and not accidentally sent over the network.
+
+> [!WARNING]
+> Support logging may include sensitive information. Use with extreme caution and only when requested by support.
+
+**Example configuration in mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server (Support Mode)": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@latest",
+        "server",
+        "start",
+        "--dangerously-enable-support-logging",
+        "--log-file-path",
+        "/path/to/mcp-support.log"
+      ]
+    }
+  }
+}
+```
+
+**Command-line usage:**
+
+```bash
+azmcp server start --dangerously-enable-support-logging --log-file-path /path/to/mcp-support.log
+```
+
+The log file will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
 
 #### Collecting logs with dotnet-trace
 

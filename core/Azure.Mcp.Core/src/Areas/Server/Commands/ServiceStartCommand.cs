@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
@@ -81,6 +82,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
+        command.Options.Add(ServiceOptionDefinitions.LogFilePath);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -92,7 +95,24 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
             ValidateOutgoingAuthStrategy(commandResult);
+            ValidateSupportLogging(commandResult);
         });
+    }
+
+    /// <summary>
+    /// Validates that --log-file-path is specified when --dangerously-enable-support-logging is enabled.
+    /// This ensures logs are written to a local file and not accidentally sent over the network.
+    /// </summary>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateSupportLogging(CommandResult commandResult)
+    {
+        bool supportLoggingEnabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
+        string? logFilePath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFilePath.Name);
+
+        if (supportLoggingEnabled && string.IsNullOrEmpty(logFilePath))
+        {
+            commandResult.AddError("The --log-file-path option is required when --dangerously-enable-support-logging is enabled. This ensures logs are written to a local file and not accidentally sent over the network.");
+        }
     }
 
     /// <summary>
@@ -123,7 +143,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
-            OutgoingAuthStrategy = outgoingAuthStrategy
+            OutgoingAuthStrategy = outgoingAuthStrategy,
+            DangerouslyEnableSupportLogging = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyEnableSupportLogging.Name),
+            LogFilePath = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFilePath.Name)
         };
         return options;
     }
@@ -192,6 +214,43 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             {
                 activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
             }
+        }
+    }
+
+    /// <summary>
+    /// Configures support logging when DANGEROUSLY_ENABLE_SUPPORT_LOGGING is enabled.
+    /// This enables debug-level logging for troubleshooting and support purposes.
+    /// </summary>
+    /// <param name="logging">The logging builder to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
+    {
+        if (!options.DangerouslyEnableSupportLogging)
+        {
+            return;
+        }
+
+        // Set minimum log level to Debug when support logging is enabled
+        logging.SetMinimumLevel(LogLevel.Debug);
+
+        // Configure console logging to stderr for debug-level logs
+        logging.AddConsole(consoleOptions =>
+        {
+            consoleOptions.LogToStandardErrorThreshold = LogLevel.Debug;
+            consoleOptions.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+        });
+        logging.AddSimpleConsole(simple =>
+        {
+            simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+            simple.IncludeScopes = true;
+            simple.SingleLine = true;
+            simple.TimestampFormat = "[yyyy-MM-dd HH:mm:ss.fff] ";
+        });
+
+        // Add file logging if a log file path is specified
+        if (!string.IsNullOrWhiteSpace(options.LogFilePath))
+        {
+            logging.AddSupportFileLogging(options.LogFilePath);
         }
     }
 
@@ -367,6 +426,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
                     logging.SetMinimumLevel(LogLevel.Debug);
                 }
+
+                ConfigureSupportLogging(logging, serverOptions);
             })
             .ConfigureServices(services =>
             {
@@ -393,6 +454,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -570,6 +632,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 

@@ -280,6 +280,90 @@ public class ServiceStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
+        Assert.False(options.DangerouslyEnableSupportLogging);
+        Assert.Null(options.LogFilePath);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DangerouslyEnableSupportLoggingOption_ParsesCorrectly(bool expectedValue)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(expectedValue, null);
+
+        // Act
+        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
+
+        // Assert
+        Assert.Equal(expectedValue, actualValue);
+    }
+
+    [Fact]
+    public void LogFilePathOption_ParsesCorrectly()
+    {
+        // Arrange
+        var expectedPath = "/path/to/logfile.log";
+        var parseResult = CreateParseResultWithSupportLogging(true, expectedPath);
+
+        // Act
+        var actualPath = parseResult.GetValue(ServiceOptionDefinitions.LogFilePath);
+
+        // Assert
+        Assert.Equal(expectedPath, actualPath);
+    }
+
+    [Fact]
+    public void BindOptions_WithSupportLogging_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var logFilePath = "/tmp/mcp-support.log";
+        var parseResult = CreateParseResultWithSupportLogging(true, logFilePath);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.True(options.DangerouslyEnableSupportLogging);
+        Assert.Equal(logFilePath, options.LogFilePath);
+    }
+
+    [Fact]
+    public void BindOptions_WithSupportLoggingDisabled_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(false, null);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.False(options.DangerouslyEnableSupportLogging);
+        Assert.Null(options.LogFilePath);
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesSupportLogging()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasSupportLoggingOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.DangerouslyEnableSupportLogging.Name);
+        Assert.True(hasSupportLoggingOption, "DangerouslyEnableSupportLogging option should be registered");
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesLogFilePath()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasLogFilePathOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.LogFilePath.Name);
+        Assert.True(hasLogFilePathOption, "LogFilePath option should be registered");
     }
 
     [Fact]
@@ -340,6 +424,67 @@ public class ServiceStartCommandTests
         // Assert
         Assert.False(result.IsValid);
         Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithSupportLoggingEnabledWithoutLogFilePath_ReturnsInvalidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(true, null);
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("--log-file-path option is required when --dangerously-enable-support-logging is enabled", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithSupportLoggingEnabledWithLogFilePath_ReturnsValidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(true, "/tmp/mcp-support.log");
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Validate_WithSupportLoggingDisabled_ReturnsValidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(false, null);
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithSupportLoggingEnabledWithoutLogFilePath_ReturnsValidationError()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithSupportLogging(true, null);
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--log-file-path option is required when --dangerously-enable-support-logging is enabled", response.Message);
     }
 
     [Fact]
@@ -719,6 +864,27 @@ public class ServiceStartCommandTests
     private ParseResult CreateParseResultWithMinimalOptions()
     {
         return _command.GetCommand().Parse([]);
+    }
+
+    private ParseResult CreateParseResultWithSupportLogging(bool enableSupportLogging, string? logFilePath)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (enableSupportLogging)
+        {
+            args.Add("--dangerously-enable-support-logging");
+        }
+
+        if (!string.IsNullOrEmpty(logFilePath))
+        {
+            args.Add("--log-file-path");
+            args.Add(logFilePath);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
     }
 
     private ParseResult CreateParseResultWithToolsAndMode(string[] tools, string mode)
