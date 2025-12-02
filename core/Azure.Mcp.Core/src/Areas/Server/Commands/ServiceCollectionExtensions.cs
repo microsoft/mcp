@@ -279,7 +279,7 @@ public static class AzureMcpServiceCollectionExtensions
                 var entryAssembly = Assembly.GetEntryAssembly();
                 if (entryAssembly == null)
                 {
-                    throw new InvalidOperationException("Should be a managed assembly as entry assembly.");
+                    throw new InvalidOperationException("Entry assembly must be a managed assembly.");
                 }
 
                 options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
