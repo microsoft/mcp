@@ -30,5 +30,6 @@ public class AzureMcpServerConfiguration
 
     /// <summary>
     /// Indicates whether telemetry is enabled for the MCP server.  By default, it is set to true.
+    /// </summary>
     public bool IsTelemetryEnabled { get; set; } = true;
 }
