@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -26,7 +25,7 @@ using Options = Microsoft.Extensions.Options.Options;
 /// <summary>
 /// Extension methods for configuring Azure MCP server services.
 /// </summary>
-public static class AzureMcpServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
@@ -250,8 +249,6 @@ public static class AzureMcpServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    [RequiresUnreferencedCode()]
-    [RequiresDynamicCode()]
     public static void InitializeConfigurationAndOptions(this IServiceCollection services)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
@@ -259,6 +256,7 @@ public static class AzureMcpServiceCollectionExtensions
             .AddJsonFile("appsettings.json", optional: false)
             .AddJsonFile($"appsettings.{environment}.json", optional: true)
             .AddEnvironmentVariables()
+            .SetBasePath(AppContext.BaseDirectory)
             .Build();
         services.AddSingleton<IConfiguration>(configuration);
 
@@ -270,7 +268,6 @@ public static class AzureMcpServiceCollectionExtensions
                 // over any other settings.
                 var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
                 var transport = serviceStartOptions.Value.Transport;
-                var isTelemetryEnabledEnvironment = collectTelemetry;
                 var isStdioTransport = string.IsNullOrEmpty(transport)
                     || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
@@ -286,7 +283,7 @@ public static class AzureMcpServiceCollectionExtensions
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
+                options.IsTelemetryEnabled = collectTelemetry && isStdioTransport;
             });
     }
 
@@ -323,7 +320,7 @@ public static class AzureMcpServiceCollectionExtensions
     /// <returns>Combined content from all Azure best practices resource files.</returns>
     private static string LoadAzureRulesForBestPractices()
     {
-        var coreAssembly = typeof(AzureMcpServiceCollectionExtensions).Assembly;
+        var coreAssembly = typeof(ServiceCollectionExtensions).Assembly;
         var azureRulesContent = new StringBuilder();
 
         // List of known best practices resource files
