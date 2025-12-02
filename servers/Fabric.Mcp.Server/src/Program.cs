@@ -140,7 +140,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.ConfigureMcpServerOptions();
+        services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
