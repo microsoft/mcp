@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as Mocha from 'mocha';
-import * as glob from 'glob';
+import { glob } from 'glob';
 
 export function run(): Promise<void> {
     const opts: Mocha.MochaOptions = {
@@ -19,16 +19,12 @@ export function run(): Promise<void> {
 
     return new Promise((c, e) => {
         // Find both legacy and new-style unit tests
-        glob('suite/unit/**/**.test.js', { cwd: testsRoot }, (err, suiteFiles) => {
-            if (err) {
-                return e(err);
-            }
-            glob('*.unit.test.js', { cwd: testsRoot }, (err2, unitFiles) => {
-                if (err2) {
-                    return e(err2);
-                }
-                const files = [...suiteFiles, ...unitFiles];
-                files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+        Promise.all([
+            glob('suite/unit/**/**.test.js', { cwd: testsRoot }),
+            glob('*.unit.test.js', { cwd: testsRoot })
+        ]).then(([suiteFiles, unitFiles]: [string[], string[]]) => {
+            const files = [...suiteFiles, ...unitFiles];
+            files.forEach((f: string) => mocha.addFile(path.resolve(testsRoot, f)));
                 try {
                     mocha.run(failures => {
                         if (failures > 0) {
@@ -41,7 +37,6 @@ export function run(): Promise<void> {
                     console.error(err);
                     e(err);
                 }
-            });
-        });
+        }).catch(e);
     });
 }

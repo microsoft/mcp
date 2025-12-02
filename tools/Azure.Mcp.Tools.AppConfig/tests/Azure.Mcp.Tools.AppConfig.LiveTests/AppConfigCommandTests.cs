@@ -29,7 +29,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
     private readonly ILogger<AppConfigService> _logger;
-    private readonly ServiceProvider _httpClientProvider;
 
     public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
@@ -37,11 +36,11 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create();
-        var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
+       var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var httpClientService = new HttpClientService(httpClientOptions, serviceStartOptions);
-        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+
+        var httpClientFactory = TestHttpClientFactoryProvider.Create().GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientService);
@@ -55,16 +54,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
           Value = "\"contoso.com\""
         })
     };
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _httpClientProvider.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
 
     [Fact]
     public async Task Should_list_appconfig_accounts()

@@ -20,6 +20,8 @@ public static class HttpClientFactoryConfigurator
     private static readonly string s_framework;
     private static readonly string s_platform;
 
+    private static string? s_userAgent = null;
+
     static HttpClientFactoryConfigurator()
     {
         var assembly = typeof(HttpClientService).Assembly;
@@ -32,7 +34,7 @@ public static class HttpClientFactoryConfigurator
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.ConfigureHttpClientDefaults(static builder => ConfigureHttpClientBuilder(builder));
+        services.ConfigureHttpClientDefaults(ConfigureHttpClientBuilder);
 
         return services;
     }
@@ -41,16 +43,16 @@ public static class HttpClientFactoryConfigurator
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
-            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             client.Timeout = httpClientOptions.DefaultTimeout;
 
-            var transport = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value.Transport ?? TransportTypes.StdIo;
+            var transport = serviceProvider.GetRequiredService<IOptions<ServiceStartOptions>>().Value.Transport;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 
         builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
         {
-            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             return CreateHttpMessageHandler(httpClientOptions);
         });
     }
@@ -144,6 +146,8 @@ public static class HttpClientFactoryConfigurator
 
     private static string BuildUserAgent(string transport)
     {
-        return $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
+
+        s_userAgent ??= $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
+        return s_userAgent;
     }
 }

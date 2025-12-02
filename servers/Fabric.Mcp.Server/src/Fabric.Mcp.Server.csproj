@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.0-beta.2</Version>
+    <Version>0.0.0-beta.3</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
@@ -14,7 +14,7 @@
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
 
     <!-- docker settings -->
-    <DockerImageName></DockerImageName>
+    <DockerImageName>fabric/fabric-mcp</DockerImageName>
 
     <!-- dnx/nuget settings -->
     <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>

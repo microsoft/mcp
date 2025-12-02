@@ -203,7 +203,7 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddAzureTenantService();
+        services.AddAzureTenantService(addUserAgentClient: true);
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
