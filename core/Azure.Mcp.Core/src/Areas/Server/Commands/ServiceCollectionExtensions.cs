@@ -266,7 +266,6 @@ public static class AzureMcpServiceCollectionExtensions
             .BindConfiguration(string.Empty)
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
-                Console.WriteLine("Service Start Options");
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
                 // over any other settings.
                 var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
