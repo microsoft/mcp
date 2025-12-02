@@ -851,6 +851,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             return null;
         }
 
+        Console.WriteLine($"Adding HTTP spans for incoming and outgoing requests with Azure Monitor exporter to connection string {connectionString}.");
         return Sdk.CreateTracerProviderBuilder()
             // captures incoming HTTP requests
             .AddAspNetCoreInstrumentation()
