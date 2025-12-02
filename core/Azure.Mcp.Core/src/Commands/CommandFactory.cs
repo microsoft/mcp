@@ -143,7 +143,7 @@ public class CommandFactory
 
             // Create a temporary root node to register all the area's subgroups and commands to.
             // Use this to create the mapping of all commands to that area.
-            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+            var tempRoot = new CommandGroup(_rootGroup.Name, string.Empty);
             tempRoot.AddSubGroup(commandTree);
 
             var commandDictionary = CreateCommandDictionary(tempRoot);
