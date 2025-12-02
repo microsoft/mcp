@@ -249,12 +249,21 @@ public static class AzureMcpServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void ConfigureMcpServerOptions(this IServiceCollection services)
+    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
     {
+        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+        services.AddSingleton<IConfiguration>(configuration);
+
         services.AddOptions<AzureMcpServerConfiguration>()
             .BindConfiguration(string.Empty)
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
+                Console.WriteLine("Service Start Options");
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
                 // over any other settings.
                 var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);

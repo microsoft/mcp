@@ -31,15 +31,6 @@ internal class Program
 
             ServiceCollection services = new();
 
-            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
-            var configuration = new ConfigurationBuilder()
-                .AddCommandLine(args)
-                .AddJsonFile("appsettings.json", optional: false)
-                .AddJsonFile($"appsettings.{environment}.json", optional: true)
-                .AddEnvironmentVariables()
-                .Build();
-            services.AddSingleton<IConfiguration>(configuration);
-
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -197,7 +188,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.ConfigureMcpServerOptions();
+        services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
