@@ -292,8 +292,8 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 ./eng/scripts/Analyze-AOT-Compact.ps1
 
 # Tool description quality validation
-pushd 'eng/tools/ToolDescriptionEvaluator'
-dotnet run -- --validate --tool-description "Your command description" --prompt "user query"
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
+dotnet run -- --validate --tool-description "Your command description" --prompt "user query" --test-single-tool 'your-tool-name'
 popd
 ```
 
