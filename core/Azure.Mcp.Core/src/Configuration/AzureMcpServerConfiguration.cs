@@ -3,13 +3,32 @@
 
 namespace Azure.Mcp.Core.Configuration;
 
+/// <summary>
+/// Configuration settings for the MCP server.
+/// </summary>
 public class AzureMcpServerConfiguration
 {
-    public const string DefaultName = "Azure.Mcp.Server";
+    /// <summary>
+    /// The default prefix for the MCP server commands and help menus.
+    /// </summary>
+    public required string RootCommandGroupName { get; set; }
 
-    public string Name { get; set; } = DefaultName;
+    /// <summary>
+    /// The name of the MCP server. (i.e. Azure.Mcp.Server)
+    /// </summary>
+    public required string Name { get; set; }
 
-    public string Version { get; set; } = "1.0.0-beta";
+    /// <summary>
+    /// The display name of the MCP server.
+    /// </summary>
+    public required string DisplayName { get; set; }
 
+    /// <summary>
+    /// The version of the MCP server.
+    /// </summary>
+    public required string Version { get; set; }
+
+    /// <summary>
+    /// Indicates whether telemetry is enabled for the MCP server.  By default, it is set to true.
     public bool IsTelemetryEnabled { get; set; } = true;
 }
