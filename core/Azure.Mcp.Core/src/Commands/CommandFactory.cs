@@ -52,9 +52,9 @@ public class CommandFactory
 
 
     public CommandFactory(IServiceProvider serviceProvider,
-        IEnumerable<IAreaSetup> serviceAreas, 
-        ITelemetryService telemetryService, 
-        IOptions<AzureMcpServerConfiguration> configurationOptions, 
+        IEnumerable<IAreaSetup> serviceAreas,
+        ITelemetryService telemetryService,
+        IOptions<AzureMcpServerConfiguration> configurationOptions,
         ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
