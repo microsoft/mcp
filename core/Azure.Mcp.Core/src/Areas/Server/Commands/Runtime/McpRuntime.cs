@@ -11,7 +11,6 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 
@@ -92,7 +91,7 @@ public sealed class McpRuntime : IMcpRuntime
             var subscription = subscriptionArgument.Value.GetString();
             if (subscription != null)
             {
-                activity?.AddTag(TagName.SubscriptionGuid, subscription);
+                activity?.AddTag(AzureTagName.SubscriptionGuid, subscription);
             }
         }
 

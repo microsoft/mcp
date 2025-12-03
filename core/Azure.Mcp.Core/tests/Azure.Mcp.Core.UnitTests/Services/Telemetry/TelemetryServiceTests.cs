@@ -313,17 +313,17 @@ public class TelemetryServiceTests
         var dictionary = tags.ToDictionary();
         Assert.NotEmpty(tags);
 
-        AssertTag(dictionary, TelemetryConstants.TagName.DevDeviceId, TestDeviceId);
-        AssertTag(dictionary, TelemetryConstants.TagName.MacAddressHash, TestMacAddressHash);
+        AssertTag(dictionary, TagName.DevDeviceId, TestDeviceId);
+        AssertTag(dictionary, TagName.MacAddressHash, TestMacAddressHash);
 
         if (expectedServiceOptions != null)
         {
             Assert.NotNull(expectedServiceOptions.Mode);
-            AssertTag(dictionary, TelemetryConstants.TagName.ServerMode, expectedServiceOptions.Mode);
+            AssertTag(dictionary, TagName.ServerMode, expectedServiceOptions.Mode);
         }
         else
         {
-            Assert.False(dictionary.ContainsKey(TelemetryConstants.TagName.ServerMode));
+            Assert.False(dictionary.ContainsKey(TagName.ServerMode));
         }
     }
 
