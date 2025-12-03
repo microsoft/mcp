@@ -74,18 +74,11 @@ public class ServiceStartOptions
     public OutgoingAuthStrategy OutgoingAuthStrategy { get; set; } = OutgoingAuthStrategy.NotSet;
 
     /// <summary>
-    /// Gets or sets whether support logging is enabled.
-    /// When true, detailed debug-level logging is enabled for troubleshooting purposes.
+    /// Gets or sets the folder path for support logging.
+    /// When specified, detailed debug-level logging is enabled and logs are written to
+    /// automatically generated files in this folder with timestamp-based filenames.
     /// Warning: This may include sensitive information in logs.
     /// </summary>
-    [JsonPropertyName("dangerouslyEnableSupportLogging")]
-    public bool DangerouslyEnableSupportLogging { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets the file path where logs should be written.
-    /// When support logging is enabled, logs will be written to this file.
-    /// If null, logs will only be written to stderr.
-    /// </summary>
-    [JsonPropertyName("logFilePath")]
-    public string? LogFilePath { get; set; } = null;
+    [JsonPropertyName("supportLoggingFolder")]
+    public string? SupportLoggingFolder { get; set; } = null;
 }

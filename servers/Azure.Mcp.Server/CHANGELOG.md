@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added support logging capability with `--dangerously-enable-support-logging` and `--log-file-path` options for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to the specified file. The `--log-file-path` is required when support logging is enabled to ensure logs are written locally and not accidentally sent over the network.
+- Added support logging capability with `--dangerously-enable-support-logging-to-folder` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
 
 ### Breaking Changes
 

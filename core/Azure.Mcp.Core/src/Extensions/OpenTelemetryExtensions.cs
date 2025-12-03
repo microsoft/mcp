@@ -39,6 +39,15 @@ public static class OpenTelemetryExtensions
                     options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
                 }
 
+                // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+                // to telemetry endpoints. Support logging captures debug-level information that may contain
+                // sensitive data, so we disable all telemetry as a safety measure.
+                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.SupportLoggingFolder))
+                {
+                    options.IsTelemetryEnabled = false;
+                    return;
+                }
+
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
                 // over any other settings.
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");

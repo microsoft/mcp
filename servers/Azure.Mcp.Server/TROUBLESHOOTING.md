@@ -916,10 +916,13 @@ Server logs can be obtained by capturing events for provider "Microsoft-Extensio
 
 #### Support Logging
 
-For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-enable-support-logging` option. This option requires `--log-file-path` to be specified to ensure logs are written to a local file and not accidentally sent over the network.
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-enable-support-logging-to-folder` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
 
 > [!WARNING]
 > Support logging may include sensitive information. Use with extreme caution and only when requested by support.
+
+> [!NOTE]
+> When support logging is enabled, all telemetry is automatically disabled to prevent sensitive debug information from being sent to telemetry endpoints.
 
 **Example configuration in mcp.json:**
 
@@ -934,9 +937,8 @@ For troubleshooting scenarios, you can enable detailed debug-level logging using
         "@azure/mcp@latest",
         "server",
         "start",
-        "--dangerously-enable-support-logging",
-        "--log-file-path",
-        "/path/to/mcp-support.log"
+        "--dangerously-enable-support-logging-to-folder",
+        "/path/to/logs"
       ]
     }
   }
@@ -946,10 +948,10 @@ For troubleshooting scenarios, you can enable detailed debug-level logging using
 **Command-line usage:**
 
 ```bash
-azmcp server start --dangerously-enable-support-logging --log-file-path /path/to/mcp-support.log
+azmcp server start --dangerously-enable-support-logging-to-folder /path/to/logs
 ```
 
-The log file will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
+The log files will be created with timestamp-based names (e.g., `azmcp_20251202_143052.log`) and will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
 
 #### Collecting logs with dotnet-trace
 

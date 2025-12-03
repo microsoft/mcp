@@ -12,15 +12,16 @@ namespace Azure.Mcp.Core.Logging;
 public static class FileLoggingExtensions
 {
     /// <summary>
-    /// Configures file logging to write debug-level logs to a file for support and troubleshooting purposes.
+    /// Configures file logging to write debug-level logs to a folder for support and troubleshooting purposes.
+    /// Log files are automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log).
     /// </summary>
     /// <param name="builder">The logging builder to configure.</param>
-    /// <param name="logFilePath">The file path where logs should be written.</param>
+    /// <param name="logFolderPath">The folder path where log files should be written.</param>
     /// <returns>The logging builder for chaining.</returns>
-    public static ILoggingBuilder AddSupportFileLogging(this ILoggingBuilder builder, string logFilePath)
+    public static ILoggingBuilder AddSupportFileLogging(this ILoggingBuilder builder, string logFolderPath)
     {
         builder.Services.AddSingleton<ILoggerProvider>(sp =>
-            new FileLoggerProvider(logFilePath));
+            new FileLoggerProvider(logFolderPath));
 
         return builder;
     }

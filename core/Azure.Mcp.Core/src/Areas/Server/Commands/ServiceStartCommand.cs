@@ -82,8 +82,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
-        command.Options.Add(ServiceOptionDefinitions.LogFilePath);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -95,23 +94,27 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
             ValidateOutgoingAuthStrategy(commandResult);
-            ValidateSupportLogging(commandResult);
+            ValidateSupportLoggingFolder(commandResult);
         });
     }
 
     /// <summary>
-    /// Validates that --log-file-path is specified when --dangerously-enable-support-logging is enabled.
-    /// This ensures logs are written to a local file and not accidentally sent over the network.
+    /// Validates that the support logging folder path is valid when specified.
     /// </summary>
     /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateSupportLogging(CommandResult commandResult)
+    private static void ValidateSupportLoggingFolder(CommandResult commandResult)
     {
-        bool supportLoggingEnabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
-        string? logFilePath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFilePath.Name);
+        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name);
 
-        if (supportLoggingEnabled && string.IsNullOrEmpty(logFilePath))
+        if (string.IsNullOrEmpty(folderPath))
         {
-            commandResult.AddError("The --log-file-path option is required when --dangerously-enable-support-logging is enabled. This ensures logs are written to a local file and not accidentally sent over the network.");
+            return; // Option not specified, nothing to validate
+        }
+
+        // Validate the folder path is not empty or whitespace
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            commandResult.AddError("The --dangerously-enable-support-logging-to-folder option requires a valid folder path.");
         }
     }
 
@@ -144,8 +147,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
-            DangerouslyEnableSupportLogging = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyEnableSupportLogging.Name),
-            LogFilePath = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFilePath.Name)
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name)
         };
         return options;
     }
@@ -218,14 +220,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Configures support logging when DANGEROUSLY_ENABLE_SUPPORT_LOGGING is enabled.
+    /// Configures support logging when a support logging folder is specified.
     /// This enables debug-level logging for troubleshooting and support purposes.
     /// </summary>
     /// <param name="logging">The logging builder to configure.</param>
     /// <param name="options">The server configuration options.</param>
     private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
     {
-        if (!options.DangerouslyEnableSupportLogging)
+        if (string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
         {
             return;
         }
@@ -247,11 +249,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             simple.TimestampFormat = "[yyyy-MM-dd HH:mm:ss.fff] ";
         });
 
-        // Add file logging if a log file path is specified
-        if (!string.IsNullOrWhiteSpace(options.LogFilePath))
-        {
-            logging.AddSupportFileLogging(options.LogFilePath);
-        }
+        // Add file logging to the specified folder
+        logging.AddSupportFileLogging(options.SupportLoggingFolder);
     }
 
     /// <summary>
@@ -829,6 +828,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
     {
         if (options.Transport != TransportTypes.Http)
+        {
+            return null;
+        }
+
+        // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+        // to telemetry endpoints. Support logging captures debug-level information that may contain
+        // sensitive data, so we disable all telemetry as a safety measure.
+        if (!string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
         {
             return null;
         }

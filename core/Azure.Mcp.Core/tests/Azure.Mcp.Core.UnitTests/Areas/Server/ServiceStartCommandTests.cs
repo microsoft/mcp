@@ -280,90 +280,62 @@ public class ServiceStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
-        Assert.False(options.DangerouslyEnableSupportLogging);
-        Assert.Null(options.LogFilePath);
+        Assert.Null(options.SupportLoggingFolder);
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DangerouslyEnableSupportLoggingOption_ParsesCorrectly(bool expectedValue)
+    [InlineData("/tmp/logs")]
+    [InlineData("C:\\logs")]
+    [InlineData(null)]
+    public void DangerouslyEnableSupportLoggingToFolderOption_ParsesCorrectly(string? expectedFolder)
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(expectedValue, null);
+        var parseResult = CreateParseResultWithSupportLogging(expectedFolder);
 
         // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyEnableSupportLogging);
+        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder);
 
         // Assert
-        Assert.Equal(expectedValue, actualValue);
+        Assert.Equal(expectedFolder, actualValue);
     }
 
     [Fact]
-    public void LogFilePathOption_ParsesCorrectly()
+    public void BindOptions_WithSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
     {
         // Arrange
-        var expectedPath = "/path/to/logfile.log";
-        var parseResult = CreateParseResultWithSupportLogging(true, expectedPath);
-
-        // Act
-        var actualPath = parseResult.GetValue(ServiceOptionDefinitions.LogFilePath);
-
-        // Assert
-        Assert.Equal(expectedPath, actualPath);
-    }
-
-    [Fact]
-    public void BindOptions_WithSupportLogging_ReturnsCorrectlyConfiguredOptions()
-    {
-        // Arrange
-        var logFilePath = "/tmp/mcp-support.log";
-        var parseResult = CreateParseResultWithSupportLogging(true, logFilePath);
+        var logFolder = "/tmp/mcp-support-logs";
+        var parseResult = CreateParseResultWithSupportLogging(logFolder);
 
         // Act
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.True(options.DangerouslyEnableSupportLogging);
-        Assert.Equal(logFilePath, options.LogFilePath);
+        Assert.Equal(logFolder, options.SupportLoggingFolder);
     }
 
     [Fact]
-    public void BindOptions_WithSupportLoggingDisabled_ReturnsCorrectlyConfiguredOptions()
+    public void BindOptions_WithoutSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(false, null);
+        var parseResult = CreateParseResultWithSupportLogging(null);
 
         // Act
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.False(options.DangerouslyEnableSupportLogging);
-        Assert.Null(options.LogFilePath);
+        Assert.Null(options.SupportLoggingFolder);
     }
 
     [Fact]
-    public void AllOptionsRegistered_IncludesSupportLogging()
+    public void AllOptionsRegistered_IncludesSupportLoggingToFolder()
     {
         // Arrange & Act
         var command = _command.GetCommand();
 
         // Assert
-        var hasSupportLoggingOption = command.Options.Any(o =>
-            o.Name == ServiceOptionDefinitions.DangerouslyEnableSupportLogging.Name);
-        Assert.True(hasSupportLoggingOption, "DangerouslyEnableSupportLogging option should be registered");
-    }
-
-    [Fact]
-    public void AllOptionsRegistered_IncludesLogFilePath()
-    {
-        // Arrange & Act
-        var command = _command.GetCommand();
-
-        // Assert
-        var hasLogFilePathOption = command.Options.Any(o =>
-            o.Name == ServiceOptionDefinitions.LogFilePath.Name);
-        Assert.True(hasLogFilePathOption, "LogFilePath option should be registered");
+        var hasSupportLoggingFolderOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name);
+        Assert.True(hasSupportLoggingFolderOption, "DangerouslyEnableSupportLoggingToFolder option should be registered");
     }
 
     [Fact]
@@ -427,10 +399,10 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public void Validate_WithSupportLoggingEnabledWithoutLogFilePath_ReturnsInvalidResult()
+    public void Validate_WithSupportLoggingFolderWhitespace_ReturnsInvalidResult()
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(true, null);
+        var parseResult = CreateParseResultWithSupportLogging("   ");
         var commandResult = parseResult.CommandResult;
 
         // Act
@@ -438,14 +410,14 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("--log-file-path option is required when --dangerously-enable-support-logging is enabled", string.Join('\n', result.Errors));
+        Assert.Contains("The --dangerously-enable-support-logging-to-folder option requires a valid folder path", string.Join('\n', result.Errors));
     }
 
     [Fact]
-    public void Validate_WithSupportLoggingEnabledWithLogFilePath_ReturnsValidResult()
+    public void Validate_WithValidSupportLoggingFolder_ReturnsValidResult()
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(true, "/tmp/mcp-support.log");
+        var parseResult = CreateParseResultWithSupportLogging("/tmp/mcp-support-logs");
         var commandResult = parseResult.CommandResult;
 
         // Act
@@ -457,10 +429,10 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public void Validate_WithSupportLoggingDisabled_ReturnsValidResult()
+    public void Validate_WithoutSupportLoggingFolder_ReturnsValidResult()
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(false, null);
+        var parseResult = CreateParseResultWithSupportLogging(null);
         var commandResult = parseResult.CommandResult;
 
         // Act
@@ -472,10 +444,10 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSupportLoggingEnabledWithoutLogFilePath_ReturnsValidationError()
+    public async Task ExecuteAsync_WithSupportLoggingFolderWhitespace_ReturnsValidationError()
     {
         // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(true, null);
+        var parseResult = CreateParseResultWithSupportLogging("   ");
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         var context = new CommandContext(serviceProvider);
 
@@ -484,7 +456,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--log-file-path option is required when --dangerously-enable-support-logging is enabled", response.Message);
+        Assert.Contains("The --dangerously-enable-support-logging-to-folder option requires a valid folder path", response.Message);
     }
 
     [Fact]
@@ -866,22 +838,17 @@ public class ServiceStartCommandTests
         return _command.GetCommand().Parse([]);
     }
 
-    private ParseResult CreateParseResultWithSupportLogging(bool enableSupportLogging, string? logFilePath)
+    private ParseResult CreateParseResultWithSupportLogging(string? folderPath)
     {
         var args = new List<string>
         {
             "--transport", "stdio"
         };
 
-        if (enableSupportLogging)
+        if (folderPath is not null)
         {
-            args.Add("--dangerously-enable-support-logging");
-        }
-
-        if (!string.IsNullOrEmpty(logFilePath))
-        {
-            args.Add("--log-file-path");
-            args.Add(logFilePath);
+            args.Add("--dangerously-enable-support-logging-to-folder");
+            args.Add(folderPath);
         }
 
         return _command.GetCommand().Parse([.. args]);
