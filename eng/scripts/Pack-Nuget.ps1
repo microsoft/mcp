@@ -31,7 +31,7 @@ $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
 if(!$ArtifactsPath) {
-	$ArtifactsPath = "$RepoRoot/.work/build"
+    $ArtifactsPath = "$RepoRoot/.work/build"
 }
 
 if(!$BuildInfoPath) {
@@ -50,8 +50,8 @@ if (!$OutputPath) {
 }
 
 if(!(Test-Path $ArtifactsPath)) {
-	LogError "Artifacts path $ArtifactsPath does not exist."
-	$exitCode = 1
+    LogError "Artifacts path $ArtifactsPath does not exist."
+    $exitCode = 1
 }
 
 Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
@@ -524,7 +524,7 @@ try {
     LogSuccess "`nNuGet packaging completed successfully!"
 }
 finally {
-	Pop-Location
+    Pop-Location
 }
 
 exit $exitCode
