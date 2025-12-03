@@ -73,8 +73,12 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// Grab the names from the test-proxy source at https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/Common/SanitizerDictionary.cs#L65)
     /// Default Set:
     ///     - `AZSDK3430`: `$..id`
+    ///     The default replaces to all 0s, but we have some command-line tests that will throw on empty GUID for tenant,
+    ///     so we will remove this default sanitizer, and add a more specific one that only replaces with all 0s ending with 1.
+    ///     Still recognizably a GUID, but still a fake one.
+    ///     - `AZSDK3443`: `$..tenantId`
     /// </summary>
-    public virtual List<string> DisabledDefaultSanitizers { get; } = new() { "AZSDK3430" };
+    public virtual List<string> DisabledDefaultSanitizers { get; } = new() { "AZSDK3430", "AZSDK3443" };
 
     /// <summary>
     /// During recording, variables saved to this dictionary will be propagated to the test-proxy and saved in the recording file.
@@ -225,11 +229,16 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         if (EnableDefaultSanitizerAdditions)
         {
             // Sanitize out the resource basename by default!
-            // This implies that tests shouldn't use this baseresourcename as part of their validation logic, as sanitization will replace it with "Sanitized" and cause confusion.
+            // This implies that tests shouldn't use this baseresourcename as part of their validation logic, as sanitization will replace it with "Sanitized" and cause confusion during playback.
             GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
             {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
+            }));
+            BodyKeySanitizers.Add(new BodyKeySanitizer(new BodyKeySanitizerBody()
+            {
+                Key = "$..tenantId",
+                Value = "00000000-0000-0000-0000-000000000001",
             }));
         }
     }
