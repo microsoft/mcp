@@ -401,7 +401,9 @@ public class ToolsListCommandTests
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         });
 
         // Create a NEW service collection just for the empty command factory

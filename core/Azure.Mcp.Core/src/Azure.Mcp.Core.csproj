@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- Enable strongly typed binding for IConfiguration to support AOT and trimming. -->
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
