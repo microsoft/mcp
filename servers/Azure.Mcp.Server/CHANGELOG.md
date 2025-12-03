@@ -14,6 +14,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+
 ## 2.0.0-beta.7 (2025-11-25)
 
 ### Bugs Fixed
