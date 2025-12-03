@@ -50,16 +50,19 @@ public class CommandFactory
         }
     }
 
-    internal const string RootCommandGroupName = "azmcp";
 
-    public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<CommandFactory> logger)
+    public CommandFactory(IServiceProvider serviceProvider,
+        IEnumerable<IAreaSetup> serviceAreas,
+        ITelemetryService telemetryService,
+        IOptions<AzureMcpServerConfiguration> configurationOptions,
+        ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
         _telemetryService = telemetryService;
         _configurationOptions = configurationOptions;
-        _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
+        _rootGroup = new CommandGroup(_configurationOptions.Value.RootCommandGroupName, _configurationOptions.Value.DisplayName);
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
@@ -140,7 +143,7 @@ public class CommandFactory
 
             // Create a temporary root node to register all the area's subgroups and commands to.
             // Use this to create the mapping of all commands to that area.
-            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+            var tempRoot = new CommandGroup(_rootGroup.Name, string.Empty);
             tempRoot.AddSubGroup(commandTree);
 
             var commandDictionary = CreateCommandDictionary(tempRoot);

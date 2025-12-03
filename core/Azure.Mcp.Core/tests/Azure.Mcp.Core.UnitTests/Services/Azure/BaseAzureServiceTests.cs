@@ -28,6 +28,7 @@ public class BaseAzureServiceTests
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
+        _tenantService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
     }
 
     [Fact]

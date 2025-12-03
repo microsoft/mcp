@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Tables.Options;
-using Azure.Mcp.Tools.Tables.Services;
+using Azure.Mcp.Tools.Storage.Commands;
+using Azure.Mcp.Tools.Storage.Options;
+using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.Tables.Commands;
+namespace Azure.Mcp.Tools.Storage.Table.Commands;
 
-public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseTablesCommand<TablesListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseStorageCommand<BaseStorageOptions>()
 {
     private const string CommandTitle = "List Tables in Azure Storage";
-    private readonly ILogger<TablesListCommand> _logger = logger;
+    private readonly ILogger<TableListCommand> _logger = logger;
 
     public override string Name => "list";
 
@@ -42,24 +43,24 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
 
         try
         {
-            var tablesService = context.GetService<ITablesService>();
+            var tablesService = context.GetService<IStorageService>();
             var tables = await tablesService.ListTables(
-                options.StorageAccount!,
+                options.Account!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(tables ?? []), TablesJsonContext.Default.TablesListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing tables. StorageAccount: {StorageAccount}.", options.StorageAccount);
+            _logger.LogError(ex, "Error listing tables. StorageAccount: {StorageAccount}.", options.Account);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record TablesListCommandResult(List<string> Tables);
+    internal record TableListCommandResult(List<string> Tables);
 }

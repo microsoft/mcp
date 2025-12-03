@@ -2,23 +2,31 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.7 (Unreleased)
+## 2.0.0-beta.8 (Unreleased)
 
 ### Features Added
 
-- Added support for listing tables in Azure Storage via command `azmcp_tables_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
+- Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+- Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
-- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
+### Other Changes
+
+## 2.0.0-beta.7 (2025-11-25)
+
+### Bugs Fixed
+
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225)]
 
 ### Other Changes
 
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
+- Updated .NET tooling to stable version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/microsoft/mcp/pull/1243)]
 
-## 2.0.0-beta.6 (2025-11-19)
+## 2.0.0-beta.6 (2025-11-20)
 
 ### Features Added
 
@@ -56,6 +64,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1178](https://github.com/microsoft/mcp/pull/1178)]
+- Update server to support official MCP repository. [[#1104](https://github.com/microsoft/mcp/pull/1104)]
 
 ## 2.0.0-beta.4 (2025-11-13)
 
@@ -203,7 +212,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 
 ### Features Added
 
-- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940)]
 
 ### Bugs Fixed
 
@@ -917,7 +926,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
   - `azmcp-virtualdesktop-hostpool-list` - List all host pools in a subscription
   - `azmcp-virtualdesktop-sessionhost-list` - List all session hosts in a host pool
   - `azmcp-virtualdesktop-sessionhost-usersession-list` - List all user sessions on a specific session host
-- Added support for creating and publishing DevDeviceId in telemetry. [[#810](https://github.com/Azure/azure-mcp/pull/810/)]
+- Added support for creating and publishing DevDeviceId in telemetry. [[#810](https://github.com/Azure/azure-mcp/pull/810)]
 
 ### Breaking Changes
 
@@ -1107,7 +1116,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Bugs Fixed
 
-- Fixed issue where trace logs could be collected as telemetry. [[#540](https://github.com/Azure/azure-mcp/pull/540/)]
+- Fixed issue where trace logs could be collected as telemetry. [[#540](https://github.com/Azure/azure-mcp/pull/540)]
 - Fixed an issue that prevented the Azure MCP from finding the Azure CLI if it was installed on a path other than the default global one. [[#351](https://github.com/Azure/azure-mcp/issues/351)]
 
 ## 0.3.1 (2025-07-08)
@@ -1176,7 +1185,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 ### Other Changes
 
 - Repository structure changed to organize all of an Azure service's code into a single "area" folder. ([426](https://github.com/Azure/azure-mcp/pull/426))
-- Upgraded Azure.Messaging.ServiceBus to 7.20.1 and Azure.Core to 1.46.2. ([441](https://github.com/Azure/azure-mcp/pull/441/))
+- Upgraded Azure.Messaging.ServiceBus to 7.20.1 and Azure.Core to 1.46.2. ([441](https://github.com/Azure/azure-mcp/pull/441))
 - Updated to ModelContextProtocol 0.3.0-preview1, which brings support for the 06-18-2025 MCP specification. ([431](https://github.com/Azure/azure-mcp/pull/431))
 
 ## 0.2.3 (2025-06-19)

@@ -1891,13 +1891,13 @@ azmcp storage blob upload --subscription <subscription> \
                           --local-file-path <path-to-local-file>
 ```
 
-### Azure Tables Operations
+### Table Storage
 
 ```bash
 # List tables in an Azure Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp tables list --subscription <subscription> \
-                  [--storage-account <storage-account>]
+azmcp stoage table list --subscription <subscription> \
+                        --storage-account <storage-account>
 ```
 
 ### Azure Subscription Management

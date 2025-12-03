@@ -414,5 +414,41 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                     $"Expected validation error, but got: {ex.Message}");
             }
         }
+
+        [Fact]
+        public async Task Should_list_storage_tables_with_tenant_id()
+        {
+            var result = await CallToolAsync(
+                "azmcp_tables_list",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantId },
+                { "storage-account", Settings.ResourceBaseName },
+                });
+
+            var actual = result.AssertProperty("tables");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
+
+        [Fact]
+        public async Task Should_list_storage_tables_with_tenant_name()
+        {
+            Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
+
+            var result = await CallToolAsync(
+                "azmcp_tables_list",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantName },
+                { "storage-account", Settings.ResourceBaseName },
+                });
+
+            var actual = result.AssertProperty("tables");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
     }
 }

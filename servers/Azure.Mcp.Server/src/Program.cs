@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -27,6 +28,7 @@ internal class Program
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
+
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -113,7 +115,6 @@ internal class Program
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
-            new Azure.Mcp.Tools.Tables.TablesSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
@@ -185,6 +186,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
@@ -198,7 +200,7 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddAzureTenantService();
+        services.AddAzureTenantService(addUserAgentClient: true);
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)

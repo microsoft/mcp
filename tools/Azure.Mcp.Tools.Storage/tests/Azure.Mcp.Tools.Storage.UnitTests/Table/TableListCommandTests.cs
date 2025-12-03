@@ -6,33 +6,34 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Tables.Commands;
-using Azure.Mcp.Tools.Tables.Services;
+using Azure.Mcp.Tools.Storage.Commands;
+using Azure.Mcp.Tools.Storage.Services;
+using Azure.Mcp.Tools.Storage.Table.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Tables.UnitTests;
+namespace Azure.Mcp.Tools.Storage.UnitTests.Table;
 
-public class TablesListCommandTests
+public class TableListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ITablesService _tablesService;
-    private readonly ILogger<TablesListCommand> _logger;
-    private readonly TablesListCommand _command;
+    private readonly IStorageService _storageService;
+    private readonly ILogger<TableListCommand> _logger;
+    private readonly TableListCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownStorageAccount = "storage123";
     private readonly string _knownSubscription = "sub123";
 
-    public TablesListCommandTests()
+    public TableListCommandTests()
     {
-        _tablesService = Substitute.For<ITablesService>();
-        _logger = Substitute.For<ILogger<TablesListCommand>>();
+        _storageService = Substitute.For<IStorageService>();
+        _logger = Substitute.For<ILogger<TableListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_tablesService);
+        var collection = new ServiceCollection().AddSingleton(_storageService);
 
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
@@ -46,7 +47,7 @@ public class TablesListCommandTests
         // Arrange
         var expectedTables = new List<string> { "table1", "table2" };
 
-        _tablesService.ListTables(
+        _storageService.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -67,7 +68,7 @@ public class TablesListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, TablesJsonContext.Default.TablesListCommandResult);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
@@ -77,7 +78,7 @@ public class TablesListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoStorageTables()
     {
         // Arrange
-        _tablesService.ListTables(
+        _storageService.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -98,7 +99,7 @@ public class TablesListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, TablesJsonContext.Default.TablesListCommandResult);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tables);
@@ -126,7 +127,7 @@ public class TablesListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _tablesService.ListTables(
+        _storageService.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),

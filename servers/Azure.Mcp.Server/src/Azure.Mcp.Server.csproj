@@ -1,13 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0.0-beta.7</Version>
+    <Version>2.0.0-beta.8</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+
+    <!-- Official MCP repository settings -->
     <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
@@ -57,6 +60,18 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Azure.*\src\*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

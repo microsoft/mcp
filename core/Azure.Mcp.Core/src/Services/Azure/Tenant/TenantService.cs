@@ -13,16 +13,19 @@ public class TenantService : BaseAzureService, ITenantService
 {
     private readonly IAzureTokenCredentialProvider _credentialProvider;
     private readonly ICacheService _cacheService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
 
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IHttpClientFactory clientFactory)
     {
         _credentialProvider = credentialProvider;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _httpClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
         TenantService = this;
     }
 
@@ -101,5 +104,11 @@ public class TenantService : BaseAzureService, ITenantService
     public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)
     {
         return await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public HttpClient GetClient()
+    {
+        return _httpClientFactory.CreateClient();
     }
 }

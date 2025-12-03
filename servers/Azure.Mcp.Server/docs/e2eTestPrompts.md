@@ -630,6 +630,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
+| storage_table_list | List all tables in the storage account <storage-account> |
+| storage_table_list | Show me the tables in the storage account <storage-account> |
 
 ## Azure Subscription Management
 
@@ -639,13 +641,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | subscription_list | Show me my subscriptions |
 | subscription_list | What is my current subscription? |
 | subscription_list | What subscriptions do I have? |
-
-## Azure Tables
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_tables_list | List all tables in the storage account <storage-account> |
-| azmcp_tables_list | Show me the tables in the storage account <storage-account> |
 
 ## Azure Terraform Best Practices
 

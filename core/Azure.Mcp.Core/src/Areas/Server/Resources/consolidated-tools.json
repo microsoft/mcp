@@ -1439,7 +1439,7 @@
         "storage_blob_get",
         "managedlustre_fs_subnetsize_ask",
         "managedlustre_fs_subnetsize_validate",
-        "table_list"
+        "storage_table_list"
       ]
     },
     {
