@@ -41,6 +41,19 @@ jobs:
         -IncludeNative:$${{ parameters.IncludeNative }}
         -TestPipeline:$${{ parameters.IsTestPipeline }}
 
+  - ${{ if ne(parameters.PublishTarget, 'none') }}:
+      # We only create server.json if we're going to publish
+    - task: Powershell@2
+      displayName: "Create server json file"
+      name: CreateServerJson
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/New-ServerJson.ps1
+        arguments: >
+          -ServerName '${{ parameters.ServerName }}'
+          -BuildInfoPath '$(Build.ArtifactStagingDirectory)/build_info.json'
+          -OutputPath '$(Build.ArtifactStagingDirectory)/${{ parameters.ServerName }}/server.json'
+
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)

@@ -35,7 +35,9 @@ public class CommandFactoryTests
         _serverConfiguration = new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         _serviceProvider = services.BuildServiceProvider();
