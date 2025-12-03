@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Dps.Commands;
 using Azure.Mcp.Tools.Dps.Commands.Instance;
@@ -9,9 +12,6 @@ using Azure.Mcp.Tools.Dps.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.CommandLine;
-using System.Net;
-using System.Text.Json;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Dps.UnitTests.Instance;
@@ -341,7 +341,7 @@ public class InstanceListCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, DpsJsonContext.Default.InstanceListCommandResult);
 

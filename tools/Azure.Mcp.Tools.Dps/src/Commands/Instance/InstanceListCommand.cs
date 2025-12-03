@@ -7,11 +7,11 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Options;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Dps.Models;
 using Azure.Mcp.Tools.Dps.Options.Instance;
 using Azure.Mcp.Tools.Dps.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Dps.Commands.Instance;
 

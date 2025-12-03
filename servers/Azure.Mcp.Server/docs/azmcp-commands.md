@@ -929,6 +929,19 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure Device Provisioning Service (DPS) Operations
+
+```bash
+# List Device Provisioning Service instances in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp dps instance list --subscription <subscription>
+
+# List Device Provisioning Service instances in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp dps instance list --subscription <subscription> \
+                        --resource-group <resource-group>
+```
+
 ### Azure Event Grid Operations
 
 ```bash
