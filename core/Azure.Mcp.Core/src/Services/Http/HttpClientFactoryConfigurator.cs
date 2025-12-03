@@ -146,7 +146,6 @@ public static class HttpClientFactoryConfigurator
 
     private static string BuildUserAgent(string transport)
     {
-
         s_userAgent ??= $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
         return s_userAgent;
     }

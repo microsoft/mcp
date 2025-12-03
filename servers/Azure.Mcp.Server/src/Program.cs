@@ -200,10 +200,6 @@ internal class Program
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
 
-        services.AddHttpClient();
-        // customize the default client with Proxy, Record/Playback, and User-Agent defaults
-        services.ConfigureDefaultHttpClient();
-
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered

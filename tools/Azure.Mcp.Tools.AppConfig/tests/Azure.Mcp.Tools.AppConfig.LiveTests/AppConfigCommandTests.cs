@@ -36,10 +36,9 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-       var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
+        var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var httpClientService = new HttpClientService(httpClientOptions, serviceStartOptions);
-
         var httpClientFactory = TestHttpClientFactoryProvider.Create().GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
