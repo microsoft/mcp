@@ -22,7 +22,6 @@ public static class IaCRulesTemplateUtil
     public static string GetIaCRules(string deploymentTool, string iacType, string[] resourceTypes)
     {
         var parameters = CreateTemplateParameters(deploymentTool, iacType, resourceTypes);
-        var deploymentToolRules = GenerateDeploymentToolRules(parameters);
         if (deploymentTool.Equals(DeploymentTool.AzCli, StringComparison.OrdinalIgnoreCase))
         {
             return TemplateService.LoadTemplate("IaCRules/azcli-rules");
@@ -32,14 +31,11 @@ public static class IaCRulesTemplateUtil
         {
             iacType = "bicep";
         }
-        var iacTypeRules = GenerateIaCTypeRules(parameters);
-        var resourceSpecificRules = GenerateResourceSpecificRules(parameters);
-        var finalInstructions = GenerateFinalInstructions(parameters);
 
-        parameters.DeploymentToolRules = deploymentToolRules;
-        parameters.IacTypeRules = iacTypeRules;
-        parameters.ResourceSpecificRules = resourceSpecificRules;
-        parameters.FinalInstructions = finalInstructions;
+        parameters.DeploymentToolRules = GenerateDeploymentToolRules(parameters);
+        parameters.IacTypeRules = GenerateIaCTypeRules(parameters);
+        parameters.ResourceSpecificRules = GenerateResourceSpecificRules(parameters);
+        parameters.FinalInstructions =  GenerateFinalInstructions(parameters);
         parameters.RequiredTools = BuildRequiredTools(deploymentTool, resourceTypes);
         parameters.AdditionalNotes = BuildAdditionalNotes(deploymentTool, iacType);
 
@@ -112,18 +108,8 @@ public static class IaCRulesTemplateUtil
     {
         if (parameters.DeploymentTool.Equals(DeploymentTool.Azd, StringComparison.OrdinalIgnoreCase))
         {
-            var containerRegistryOutput = parameters.ResourceTypes.Contains(AzureServiceNames.AzureContainerApp)
-                ? "\n- Expected output in " + parameters.OutputFileName + ": AZURE_CONTAINER_REGISTRY_ENDPOINT representing the URI of the container registry endpoint."
-                : string.Empty;
 
-            var azdReplacements = new Dictionary<string, string>
-            {
-                { "IacType", parameters.IacType },
-                { "OutputFileName", parameters.OutputFileName },
-                { "ContainerRegistryOutput", containerRegistryOutput }
-            };
-
-            return TemplateService.ProcessTemplate("IaCRules/azd-rules", azdReplacements);
+            return "Agent must call tool #mcp_azure_mcp_azd with input command='iac_generation_rules' to get rules for AZD.";
         }
         else if (parameters.DeploymentTool.Equals(DeploymentTool.AzCli, StringComparison.OrdinalIgnoreCase))
         {
@@ -140,7 +126,7 @@ public static class IaCRulesTemplateUtil
     {
         return parameters.IacType switch
         {
-            IacType.Bicep => TemplateService.LoadTemplate("IaCRules/bicep-rules"),
+            IacType.Bicep => "",
             IacType.Terraform => TemplateService.LoadTemplate("IaCRules/terraform-rules"),
             _ => string.Empty
         };
