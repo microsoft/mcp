@@ -225,6 +225,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 
 - Increased Kusto `HttpClient` timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
 - Provide installation instructions when azd or other registry components are missing. [[#926](https://github.com/microsoft/mcp/pull/926)]
+- Update the `server.json` in the NuGet distribution to match the 2025-10-17 server.json schema version (latest from the MCP Registry).
 
 ### Other Changes
 
