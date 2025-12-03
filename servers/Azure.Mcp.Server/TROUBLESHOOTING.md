@@ -4,21 +4,66 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
 
 ## Table of Contents
 
+- [Troubleshooting](#troubleshooting)
+  - [Table of Contents](#table-of-contents)
   - [Common Issues](#common-issues)
-    - [Platform Package Installation Issues](#platform-package-installation-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
-  - [Development in VS Code](#development-in-vs-code)
-    - [Bring your own language model key](#bring-your-own-language-model-key)
-    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
-  - [VS Code Limitations](#tool-limitations)
+      - [Option 1: Filter by Service Namespace](#option-1-filter-by-service-namespace)
+      - [Option 2: Filter by Specific Tools](#option-2-filter-by-specific-tools)
+  - [Tool Limitations](#tool-limitations)
     - [128-Tool Limit Issue](#128-tool-limit-issue)
+      - [Problem](#problem)
+      - [Root Cause](#root-cause)
+      - [Workarounds](#workarounds)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
+      - [Requirements](#requirements)
+      - [Symptoms](#symptoms)
+      - [Solution](#solution)
+  - [Authentication](#authentication)
+    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
+      - [Root Cause](#root-cause-1)
+      - [Working with Resource Administrators](#working-with-resource-administrators)
+    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+      - [Possible Causes and Resolutions](#possible-causes-and-resolutions)
+    - [Controlling Authentication Methods with AZURE\_TOKEN\_CREDENTIALS](#controlling-authentication-methods-with-azure_token_credentials)
+      - [Exclude Credential Categories](#exclude-credential-categories)
+      - [Use Specific Credentials Only](#use-specific-credentials-only)
+      - [Using Managed Identity in Azure](#using-managed-identity-in-azure)
+    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
+      - [Why This Happens](#why-this-happens)
+      - [Resolution](#resolution)
+    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
+      - [Common Network Issues](#common-network-issues)
+      - [Working with Network Administrators](#working-with-network-administrators)
+      - [Troubleshooting Network Connectivity](#troubleshooting-network-connectivity)
+      - [Questions to Ask Your Network Administrator](#questions-to-ask-your-network-administrator)
+    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
+      - [Service Principal Authentication for Restricted Environments](#service-principal-authentication-for-restricted-environments)
+      - [Conditional Access Policy Compliance](#conditional-access-policy-compliance)
+      - [Resource Access in Locked-Down Environments](#resource-access-in-locked-down-environments)
+    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
+      - [Why This Happens](#why-this-happens-1)
+      - [Resolution Options](#resolution-options)
+      - [Next Steps](#next-steps)
+    - [Platform Package Installation Issues](#platform-package-installation-issues)
+      - [Error Examples:](#error-examples)
+      - [Resolution Steps:](#resolution-steps)
+      - [Common Causes of Auto-Installation Failure:](#common-causes-of-auto-installation-failure)
+      - [For Enterprise Users:](#for-enterprise-users)
+    - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
+      - [For Windows Users](#for-windows-users)
   - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+    - [HTTPS redirection issues](#https-redirection-issues)
+    - [Common Issues](#common-issues-1)
+      - [401 Unauthorized - Invalid Token](#401-unauthorized---invalid-token)
+      - [403 Forbidden - Insufficient Permissions](#403-forbidden---insufficient-permissions)
+      - [OBO Token Exchange Failures](#obo-token-exchange-failures)
+      - [Azure Service Access Denied](#azure-service-access-denied)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
@@ -26,14 +71,11 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
       - [Visualizing EventSource logs in PerfView](#visualizing-eventsource-logs-in-perfview)
     - [Observability with OpenTelemetry](#observability-with-opentelemetry)
-  - [Authentication](#authentication)
-    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
-    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
-    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
-    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
-    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
-    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
-    - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
+  - [Development Environment](#development-environment)
+    - [Development in VS Code](#development-in-vs-code)
+      - [Running Azure MCP Server Locally for Development](#running-azure-mcp-server-locally-for-development)
+      - [Bring your own language model key](#bring-your-own-language-model-key)
+    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
 
 ## Common Issues
 
@@ -53,7 +95,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
   "servers": {
     "Azure Storage": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -63,7 +105,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
     },
     "Azure KeyVault": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -83,7 +125,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
   "servers": {
     "Azure Storage Accounts Only": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -95,7 +137,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
     },
     "Essential Azure Tools": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -815,7 +857,7 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 ## Remote MCP Server (preview)
 
 Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
-- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/README.md) 
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/README.md)
 - [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
 
 ### HTTPS redirection issues
@@ -1050,8 +1092,8 @@ If you need to test the server in stdio mode (standard input/output), first buil
 
 ```bash
 dotnet build
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start      # macOS/Linux
 ```
 
 This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
@@ -1063,7 +1105,7 @@ This runs the MCP server in **stdio mode**, which communicates via standard inpu
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }

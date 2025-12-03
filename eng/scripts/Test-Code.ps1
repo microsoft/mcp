@@ -3,11 +3,12 @@
 
 [CmdletBinding()]
 param(
-    [string] $TestResultsPath,
+    [Parameter(Position=0)]
     [string[]] $Paths,
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
     [switch] $TestNativeBuild,
@@ -88,16 +89,18 @@ function CreateTestSolution {
     # Create solution and add projects
     Write-Host "Creating temporary solution file..."
 
-    Push-Location $workPath
+    $originalLocation = Get-Location
+    Set-Location $workPath
     try {
-        dotnet new sln -n "Tests" | Out-Null
+        dotnet new sln -n "Tests" --format slnx | Out-Null
         dotnet sln add $testProjects --in-root | Out-Host
+
+        $fullPath = Resolve-Path 'Tests.slnx'
+        return $fullPath
     }
     finally {
-        Pop-Location
+        Set-Location $originalLocation
     }
-
-    return "$workPath/Tests.sln"
 }
 
 function Create-CoverageReport {

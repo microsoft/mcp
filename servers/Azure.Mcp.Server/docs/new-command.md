@@ -1634,7 +1634,7 @@ using Microsoft.Extensions.Logging;
 
 #### 2. **Leverage ImplicitUsings**
 
-The project already has `<ImplicitUsings>enable</ImplicitUsings>` in `Directory.Build.props`, which automatically includes common using statements for .NET 9:
+The project already has `<ImplicitUsings>enable</ImplicitUsings>` in `Directory.Build.props`, which automatically includes common using statements for .NET 10:
 
 **Implicit Using Statements (automatically included):**
 - `using System;`
@@ -2107,16 +2107,13 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-      <TargetFramework>net9.0</TargetFramework>
-      <ImplicitUsings>enable</ImplicitUsings>
-      <Nullable>enable</Nullable>
       <IsPackable>false</IsPackable>
       <IsTestProject>true</IsTestProject>
       <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Azure.Mcp.Tools.{Toolset}\src\Azure.Mcp.Tools.{Toolset}.csproj" />
+      <ProjectReference Include="..\..\..\..\core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
       <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
     </ItemGroup>
   </Project>
@@ -2271,7 +2268,7 @@ Commands should be **transport-agnostic** - they work identically in stdio and H
 public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccountGetOptions>
 {
     private readonly IStorageService _storageService;
-    
+
     public StorageAccountGetCommand(
         IStorageService storageService,
         ILogger<StorageAccountGetCommand> logger)
@@ -2285,18 +2282,18 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
         ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
-        
+
         // Authentication provider handles both stdio and HTTP scenarios
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
             options.RetryPolicy);
-        
+
         // Standard response format works for all transports
         context.Response.Results = ResponseResult.Create(
             new(accounts ?? []),
             StorageJsonContext.Default.CommandResult);
-        
+
         return context.Response;
     }
 }
@@ -2312,7 +2309,7 @@ public override async Task<CommandResponse> ExecuteAsync(...)
     {
         // Different behavior for HTTP mode
     }
-    
+
     // ❌ Don't access HttpContext directly in commands
     var httpContext = _httpContextAccessor.HttpContext;
     if (httpContext != null)
@@ -2344,12 +2341,12 @@ public class StorageService : BaseAzureService, IStorageService
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
         var armClient = await CreateArmClientAsync(tenant: null, retryPolicy);
-        
+
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
-        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity  
+        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity
         // - Local identity in stdio mode (Azure CLI, VS Code, etc.)
-        
+
         // ... Azure SDK calls
     }
 }
@@ -2370,7 +2367,7 @@ Remote HTTP mode supports **multiple concurrent users**:
 public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseListOptions>
 {
     private readonly ISqlService _sqlService;  // ✅ Singleton service, thread-safe
-    
+
     public SqlDatabaseListCommand(
         ISqlService sqlService,
         ILogger<SqlDatabaseListCommand> logger)
@@ -2385,13 +2382,13 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
     {
         // ✅ Options created per-request, no shared state
         var options = BindOptions(parseResult);
-        
+
         // ✅ Service calls are async and don't store request state
         var databases = await _sqlService.ListDatabasesAsync(
             options.Subscription!,
             options.ResourceGroup,
             options.Server);
-        
+
         return context.Response;
     }
 }
@@ -2404,7 +2401,7 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
     // ❌ Don't store per-request state in command fields
     private CommandContext? _currentContext;
     private BadCommandOptions? _currentOptions;
-    
+
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         ParseResult parseResult)
@@ -2412,7 +2409,7 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
         // ❌ Race condition with multiple concurrent requests
         _currentContext = context;
         _currentOptions = BindOptions(parseResult);
-        
+
         // ❌ Another request might overwrite these before we use them
         await Task.Delay(100);
         return _currentContext.Response;
@@ -2435,12 +2432,12 @@ public async Task<List<Resource>> GetResourcesAsync(
     // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
-    
+
     var credential = await GetCredential(tenant, cancellationToken);
-    
+
     // ✅ If tenant is null, service will use default tenant
     // ✅ If tenant is provided, service validates it's accessible
-    
+
     var armClient = new ArmClient(credential);
     // ... rest of implementation
 }
@@ -2456,15 +2453,15 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     RequestFailedException reqEx when reqEx.Status == 401 =>
         "Authentication failed. In remote mode, ensure your token has the required " +
         "Mcp.Tools.ReadWrite scope and sufficient RBAC permissions on Azure resources.",
-    
+
     RequestFailedException reqEx when reqEx.Status == 403 =>
         "Authorization failed. Your user account lacks the required RBAC permissions. " +
         "In remote mode with On Behalf Of flow, permissions come from the authenticated user's identity. Learn more at https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow",
-    
+
     InvalidOperationException invEx when invEx.Message.Contains("tenant") =>
         "Tenant mismatch. In remote OBO mode, the requested tenant must match your " +
         "authenticated user's tenant ID.",
-    
+
     _ => base.GetErrorMessage(ex)
 };
 ```
@@ -2491,16 +2488,16 @@ When writing tests, consider both transport modes:
 public class StorageCommandLiveTests : IAsyncLifetime
 {
     private readonly TestSettings _settings;
-    
+
     public async Task InitializeAsync()
     {
         _settings = TestSettings.Load();
-        
+
         // Test infrastructure supports both modes:
         // - Stdio mode: Uses Azure CLI/VS Code credentials
         // - HTTP mode: Can simulate OBO or hosting environment identity
     }
-    
+
     [Fact]
     public async Task ListStorageAccounts_ReturnsAccounts()
     {
@@ -2508,7 +2505,7 @@ public class StorageCommandLiveTests : IAsyncLifetime
         var result = await CallToolAsync(
             "azmcp_storage_account_list",
             new { subscription = _settings.SubscriptionId });
-        
+
         Assert.NotNull(result);
     }
 }

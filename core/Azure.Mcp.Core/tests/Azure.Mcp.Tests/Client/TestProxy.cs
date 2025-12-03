@@ -262,11 +262,15 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     {
         try
         {
-            while (!ct.IsCancellationRequested && !reader.EndOfStream)
+            while (!ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
+
                 if (line == null)
+                {
                     break;
+                }
+
                 lock (sink)
                 {
                     sink.AppendLine(line);
@@ -279,6 +283,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private int? _waitForHttpPort(TimeSpan timeout)
     {
         var start = DateTime.UtcNow;
+
         while ((DateTime.UtcNow - start) < timeout)
         {
             string text;
@@ -286,6 +291,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             {
                 text = stdout.ToString();
             }
+
             foreach (var line in text.Split('\n'))
             {
                 if (_tryParsePort(line.Trim(), out var p))
@@ -293,8 +299,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
                     return p;
                 }
             }
+
             if (_process?.HasExited == true)
+            {
                 break;
+            }
+
             Thread.Sleep(50);
         }
         return null;

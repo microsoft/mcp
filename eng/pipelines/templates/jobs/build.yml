@@ -49,13 +49,6 @@ jobs:
     inputs:
       useGlobalJson: true
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
-
   - task: Powershell@2
     displayName: "Build code"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))

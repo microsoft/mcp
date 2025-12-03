@@ -6,36 +6,46 @@
     This script executes 'azmcp tools list', extracts metadata for each tool,
     and updates the azmcp-commands.md file by adding metadata information above
     each tool command. Maintains the existing format, schema, and order.
-    
+
 .PARAMETER AzmcpPath
-    Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe
-    
+    Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe
+
 .PARAMETER DocsPath
     Path to the azmcp-commands.md file. Default: ..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md
-    
+
 .EXAMPLE
     .\Update-AzCommandsMetadata.ps1
-    
+
 .EXAMPLE
     .\Update-AzCommandsMetadata.ps1 -AzmcpPath "C:\path\to\azmcp.exe" -DocsPath "C:\path\to\azmcp-commands.md"
 #>
 
 [CmdletBinding()]
 param(
-    [string]$AzmcpPath = "..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe",
-    [string]$DocsPath = "..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md"
+    [string]$AzmcpPath,
+    [string]$DocsPath
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/../common/scripts/common.ps1"
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+if(!$AzmcpPath) {
+    $AzmcpPath = "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe"
+}
+
+if(!$DocsPath) {
+    $DocsPath = "$RepoRoot/servers/Azure.Mcp.Server/docs/azmcp-commands.md"
+}
 
 function Get-MetadataLine {
     param(
         [string]$PropertyName,
         [bool]$Value
     )
-    
+
     $icon = if ($Value) { "✅" } else { "❌" }
-    
+
     # Convert to PascalCase
     $pascalCase = switch ($PropertyName) {
         "destructive" { "Destructive" }
@@ -46,7 +56,7 @@ function Get-MetadataLine {
         "localRequired" { "LocalRequired" }
         default { (Get-Culture).TextInfo.ToTitleCase($PropertyName) }
     }
-    
+
     return "$icon $pascalCase"
 }
 
@@ -54,39 +64,39 @@ function Get-ToolMetadataString {
     param(
         [PSCustomObject]$Metadata
     )
-    
+
     $lines = @()
-    
+
     # Order: destructive, idempotent, openWorld, readOnly, secret, localRequired
     if ($null -ne $Metadata.destructive) {
         $lines += Get-MetadataLine "destructive" $Metadata.destructive.value
     }
-    
+
     if ($null -ne $Metadata.idempotent) {
         $lines += Get-MetadataLine "idempotent" $Metadata.idempotent.value
     }
-    
+
     if ($null -ne $Metadata.openWorld) {
         $lines += Get-MetadataLine "openWorld" $Metadata.openWorld.value
     }
-    
+
     if ($null -ne $Metadata.readOnly) {
         $lines += Get-MetadataLine "readOnly" $Metadata.readOnly.value
     }
-    
+
     if ($null -ne $Metadata.secret) {
         $lines += Get-MetadataLine "secret" $Metadata.secret.value
     }
-    
+
     if ($null -ne $Metadata.localRequired) {
         $lines += Get-MetadataLine "localRequired" $Metadata.localRequired.value
     }
-    
+
     if ($lines.Count -gt 0) {
         # Add # prefix for markdown comment
         return "# " + ($lines -join " | ")
     }
-    
+
     return $null
 }
 
@@ -146,7 +156,7 @@ $removedCount = 0
 
 while ($i -lt $docLines.Count) {
     $line = $docLines[$i]
-    
+
     # Check if this is a metadata line (with or without # prefix) and remove it
     # We'll regenerate all metadata lines to ensure they're correct
     if ($line -match '^#?\s*(✅|❌)\s+(Destructive|Idempotent|Openworld|OpenWorld|Readonly|ReadOnly|Secret|Localrequired|LocalRequired)') {
@@ -155,16 +165,16 @@ while ($i -lt $docLines.Count) {
         $i++
         continue
     }
-    
+
     # Check if this line starts with "azmcp " (a command line)
     if ($line -match '^azmcp\s+(.+?)(\s+\\)?$') {
         # Extract the command (without the trailing backslash and parameters)
         $commandLine = $line.Trim()
-        
+
         # Try to find the base command in our metadata dictionary
         $matchedCommand = $null
         $matchedMetadata = $null
-        
+
         foreach ($cmd in $commandMetadata.Keys) {
             # Prepend "azmcp " to the command from metadata to match the format in the file
             $fullCommand = "azmcp $cmd"
@@ -175,11 +185,11 @@ while ($i -lt $docLines.Count) {
                 break
             }
         }
-        
+
         if ($matchedMetadata) {
             # Generate metadata string
             $metadataString = Get-ToolMetadataString $matchedMetadata
-            
+
             if ($metadataString) {
                 # Add metadata line above the command
                 $updatedLines += $metadataString
@@ -188,7 +198,7 @@ while ($i -lt $docLines.Count) {
             }
         }
     }
-    
+
     # Add the current line
     $updatedLines += $line
     $i++
