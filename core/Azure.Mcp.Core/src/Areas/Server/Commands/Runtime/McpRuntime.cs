@@ -7,7 +7,9 @@ using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
@@ -60,6 +62,7 @@ public sealed class McpRuntime : IMcpRuntime
     {
         using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo);
         CaptureToolCallMeta(activity, request.Params?.Meta);
+        activity?.SetTag(TagName.Transport, request.Server.Services?.GetService<HttpClientService>() != null ? TransportTypes.Http : TransportTypes.StdIo);
 
         if (request.Params == null)
         {
@@ -176,6 +179,7 @@ public sealed class McpRuntime : IMcpRuntime
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo);
+        activity?.SetTag(TagName.Transport, request.Server.Services?.GetService<HttpClientService>() != null ? TransportTypes.Http : TransportTypes.StdIo);
 
         try
         {
