@@ -14,7 +14,10 @@ fi
 
 # Run dotnet format directly with the solution file path (no --workspace)
 echo "Running dotnet format on $SOLUTION_FILE"
-dotnet format "$SOLUTION_FILE" --verify-no-changes
+
+# Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
+# Can be removed when https://github.com/dotnet/sdk/issues/45054 is resolved
+dotnet format "$SOLUTION_FILE" --verify-no-changes --exclude-diagnostics IL2026 IL3050
 
 # If dotnet format found issues, prevent the commit
 if [ $? -ne 0 ]; then
