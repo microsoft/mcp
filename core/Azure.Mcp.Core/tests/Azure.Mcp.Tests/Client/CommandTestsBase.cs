@@ -42,7 +42,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     public static LiveTestSettings PlaybackSettings => new()
     {
         SubscriptionId = "00000000-0000-0000-0000-000000000000",
-        TenantId = "00000000-0000-0000-0000-000000000000",
+        TenantId = "00000000-0000-0000-0000-000000000001",
         ResourceBaseName = "Sanitized",
         SubscriptionName = "Sanitized",
         TenantName = "Sanitized",
