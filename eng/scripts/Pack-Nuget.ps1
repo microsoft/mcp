@@ -43,7 +43,7 @@ if (!(Test-Path $BuildInfoPath)) {
     $exitCode = 1
 }
 
-$BuildInfoDirectory = Split-Path $BuildInfoPath -Parent
+$buildInfoDirectory = Split-Path $BuildInfoPath -Parent
 
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/packages_dnx"
@@ -375,7 +375,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $serverJsonFile = Join-Path $BuildInfoDirectory $server.name "server.json"
+    $serverJsonFile = Join-Path $buildInfoDirectory $server.name "server.json"
 
     if (!(Test-Path $serverJsonFile)) {
         LogError "Server JSON file $serverJsonFile does not exist to pack into NuGet."
