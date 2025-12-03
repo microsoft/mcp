@@ -21,6 +21,8 @@ namespace Azure.Mcp.Tests.Client;
 
 public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
 {
+    private const string EMPTYGUID = "00000000-0000-0000-0000-000000000000";
+
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
     protected string RecordingId { get; private set; } = string.Empty;
@@ -49,7 +51,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         {
             Regex = "https://login.microsoftonline.com/(.*?)\"",
             GroupForReplace = "1",
-            Value = "00000000-0000-0000-0000-000000000000"
+            Value = EMPTYGUID
         })
     };
 
@@ -230,6 +232,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
+            }));
+            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            {
+                Regex = Settings.SubscriptionId,
+                Value = EMPTYGUID,
             }));
         }
     }
