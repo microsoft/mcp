@@ -154,6 +154,13 @@ public static class FabricOptionDefinitions
         Required = false
     };
 
+    public const string DownloadFilePathName = "download-file-path";
+    public static readonly Option<string> DownloadFilePath = new($"--{DownloadFilePathName}")
+    {
+        Description = "Local path to save the downloaded content when running locally.",
+        Required = false
+    };
+
     public const string ContentTypeName = "content-type";
     public static readonly Option<string> ContentType = new($"--{ContentTypeName}")
     {

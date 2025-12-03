@@ -256,7 +256,14 @@ public sealed record BlobGetResult(
     [property: JsonPropertyName("requestId")] string? RequestId,
     [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
     [property: JsonPropertyName("rootActivityId")] string? RootActivityId
-);
+)
+{
+    [JsonPropertyName("contentFilePath")]
+    public string? ContentFilePath { get; init; }
+
+    [JsonPropertyName("inlineContentTruncated")]
+    public bool InlineContentTruncated { get; init; }
+}
 
 public sealed record BlobDeleteResult(
     [property: JsonPropertyName("workspaceId")] string WorkspaceId,

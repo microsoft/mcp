@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -1113,8 +1114,10 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             rootActivityId);
     }
 
-    public async Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
+    public async Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
+        downloadOptions ??= new BlobDownloadOptions();
+
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -1141,23 +1144,67 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         var contentCrc64 = GetHeaderValue(response.Headers, "x-ms-content-crc64");
 
-        byte[]? contentBytes = null;
-        if (response.Content != null)
+        var inlineRequested = downloadOptions.IncludeInlineContent;
+        var inlineLimit = downloadOptions.InlineContentLimit;
+        var destinationStream = downloadOptions.DestinationStream;
+        var contentFilePath = downloadOptions.LocalFilePath;
+
+        var shouldReadInline = inlineRequested;
+        var inlineContentTruncated = false;
+        if (inlineRequested && inlineLimit.HasValue && contentLength.HasValue && contentLength.Value > inlineLimit.Value)
         {
-            contentBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            shouldReadInline = false;
+            inlineContentTruncated = true;
         }
 
         string? contentBase64 = null;
         string? contentText = null;
-        if (contentBytes is { } bytes)
-        {
-            contentBase64 = Convert.ToBase64String(bytes);
 
-            var hasBinaryEncoding = !string.IsNullOrWhiteSpace(contentEncoding) && !string.Equals(contentEncoding, "identity", StringComparison.OrdinalIgnoreCase);
-            if (!hasBinaryEncoding && IsTextContent(contentType))
+        if (response.Content != null && (shouldReadInline || destinationStream is not null))
+        {
+            await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+            if (shouldReadInline && destinationStream is not null)
             {
-                var encoding = GetTextEncoding(charset);
-                contentText = encoding.GetString(bytes);
+                using var bufferedStream = new MemoryStream();
+                await responseStream.CopyToAsync(bufferedStream, cancellationToken);
+                bufferedStream.Seek(0, SeekOrigin.Begin);
+                await bufferedStream.CopyToAsync(destinationStream, cancellationToken);
+                if (string.IsNullOrWhiteSpace(contentFilePath) && destinationStream is FileStream fileDownloadStream)
+                {
+                    contentFilePath = fileDownloadStream.Name;
+                }
+                var bytes = bufferedStream.ToArray();
+                contentBase64 = Convert.ToBase64String(bytes);
+
+                var hasBinaryEncoding = !string.IsNullOrWhiteSpace(contentEncoding) && !string.Equals(contentEncoding, "identity", StringComparison.OrdinalIgnoreCase);
+                if (!hasBinaryEncoding && IsTextContent(contentType))
+                {
+                    var encoding = GetTextEncoding(charset);
+                    contentText = encoding.GetString(bytes);
+                }
+            }
+            else if (shouldReadInline)
+            {
+                using var bufferedStream = new MemoryStream();
+                await responseStream.CopyToAsync(bufferedStream, cancellationToken);
+                var bytes = bufferedStream.ToArray();
+                contentBase64 = Convert.ToBase64String(bytes);
+
+                var hasBinaryEncoding = !string.IsNullOrWhiteSpace(contentEncoding) && !string.Equals(contentEncoding, "identity", StringComparison.OrdinalIgnoreCase);
+                if (!hasBinaryEncoding && IsTextContent(contentType))
+                {
+                    var encoding = GetTextEncoding(charset);
+                    contentText = encoding.GetString(bytes);
+                }
+            }
+            else if (destinationStream is not null)
+            {
+                await responseStream.CopyToAsync(destinationStream, cancellationToken);
+                if (string.IsNullOrWhiteSpace(contentFilePath) && destinationStream is FileStream fileDownloadStream)
+                {
+                    contentFilePath = fileDownloadStream.Name;
+                }
             }
         }
 
@@ -1209,7 +1256,11 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             versionId,
             requestId,
             clientRequestId,
-            rootActivityId);
+            rootActivityId)
+        {
+            ContentFilePath = contentFilePath,
+            InlineContentTruncated = inlineContentTruncated
+        };
     }
 
     public async Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)

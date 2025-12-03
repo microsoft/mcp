@@ -4,8 +4,11 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
@@ -14,6 +17,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -24,6 +28,8 @@ public sealed class BlobGetCommand(
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
+
+    private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
     public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
     public override string Name => "download";
@@ -48,6 +54,7 @@ public sealed class BlobGetCommand(
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.FilePath);
+        command.Options.Add(FabricOptionDefinitions.DownloadFilePath.AsOptional());
     }
 
     protected override BlobGetOptions BindOptions(ParseResult parseResult)
@@ -67,6 +74,7 @@ public sealed class BlobGetCommand(
             : itemName ?? string.Empty;
 
         options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
+        options.DownloadFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DownloadFilePath.Name);
         return options;
     }
 
@@ -90,17 +98,72 @@ public sealed class BlobGetCommand(
                 throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
             }
 
+            var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
+            var transport = serviceStartOptions.Value.Transport ?? "stdio";
+            var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
+
+            string? downloadPath = null;
+            if (!string.IsNullOrWhiteSpace(options.DownloadFilePath))
+            {
+                if (!isLocalTransport)
+                {
+                    throw new ArgumentException("The --download-file-path option is only supported when the server runs with stdio transport.", nameof(options.DownloadFilePath));
+                }
+
+                var candidatePath = options.DownloadFilePath!;
+                downloadPath = Path.IsPathRooted(candidatePath)
+                    ? candidatePath
+                    : Path.GetFullPath(candidatePath);
+
+                var directory = Path.GetDirectoryName(downloadPath);
+                if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+
+            await using var fileStream = downloadPath is not null
+                ? new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None)
+                : null;
+
+            var downloadOptions = new BlobDownloadOptions
+            {
+                DestinationStream = fileStream,
+                LocalFilePath = downloadPath,
+                IncludeInlineContent = downloadPath is null,
+                InlineContentLimit = InlineContentLimitBytes
+            };
+
             var result = await _oneLakeService.GetBlobAsync(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
+                downloadOptions,
                 cancellationToken);
+
+            var messageBuilder = new StringBuilder();
+            if (downloadPath is not null)
+            {
+                var resolvedPath = result.ContentFilePath ?? downloadPath;
+                messageBuilder.Append($"Blob downloaded to local file '{resolvedPath}'.");
+            }
+            else if (result.InlineContentTruncated)
+            {
+                messageBuilder.Append($"Blob metadata retrieved. Content exceeds the inline limit of {InlineContentLimitBytes:N0} bytes; provide --download-file-path when running locally to save the content.");
+            }
+            else
+            {
+                messageBuilder.Append("Blob retrieved successfully.");
+            }
+
+            var finalMessage = messageBuilder.ToString();
 
             var commandResult = new BlobGetCommandResult(
                 result,
-                "Blob retrieved successfully.");
+                finalMessage);
 
             context.Response.Status = HttpStatusCode.OK;
+            context.Response.Message = finalMessage;
             context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobGetCommandResult);
         }
         catch (Exception ex)
@@ -127,4 +190,5 @@ public sealed class BlobGetOptions : GlobalOptions
     public string WorkspaceId { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
+    public string? DownloadFilePath { get; set; }
 }
