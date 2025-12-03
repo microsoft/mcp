@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Changelog Entry",
+  "description": "Schema for individual changelog entry YAML files. One file per PR, supporting multiple changes.",
+  "type": "object",
+  "required": ["changes"],
+  "properties": {
+    "pr": {
+      "type": "integer",
+      "description": "Pull request number (optional - auto-detected from git commit during compilation if not provided)",
+      "minimum": 1
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of changes in this PR (must have at least one)",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["section", "description"],
+        "properties": {
+          "section": {
+            "type": "string",
+            "description": "The changelog section this entry belongs to",
+            "enum": [
+              "Features Added",
+              "Breaking Changes",
+              "Bugs Fixed",
+              "Other Changes"
+            ]
+          },
+          "subsection": {
+            "type": "string",
+            "description": "Optional subsection for grouping related changes",
+            "enum": [
+              "Dependency Updates"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the change",
+            "minLength": 10
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
