@@ -10,11 +10,11 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 

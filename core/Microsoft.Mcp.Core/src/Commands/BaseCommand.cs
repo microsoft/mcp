@@ -1,12 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Telemetry;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -78,7 +82,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
         response.Status = GetStatusCode(ex);
         response.Message = GetErrorMessage(ex) + $". To mitigate this issue, please refer to the troubleshooting guidelines here at {TroubleshootingUrl}.";
-        response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
+        response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ExceptionResult);
     }
 
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
@@ -138,7 +142,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     }
 }
 
-internal record ExceptionResult(
+public record ExceptionResult(
     string Message,
     string? StackTrace,
     string Type);

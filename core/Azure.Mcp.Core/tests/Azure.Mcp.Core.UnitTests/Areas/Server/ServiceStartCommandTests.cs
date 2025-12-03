@@ -11,7 +11,6 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 

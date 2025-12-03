@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
@@ -47,7 +48,7 @@ public sealed class ResponseResult
     }
 }
 
-internal class ResultConverter : JsonConverter<ResponseResult>
+public class ResultConverter : JsonConverter<ResponseResult>
 {
     public override ResponseResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -61,7 +62,7 @@ internal class ResultConverter : JsonConverter<ResponseResult>
     }
 }
 
-internal class HttpStatusCodeConverter : JsonConverter<HttpStatusCode>
+public class HttpStatusCodeConverter : JsonConverter<HttpStatusCode>
 {
     public override HttpStatusCode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

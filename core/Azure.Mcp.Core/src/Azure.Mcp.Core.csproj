@@ -29,4 +29,8 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <PackageReference Include="System.Linq.AsyncEnumerable" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+  </ItemGroup>
 </Project>

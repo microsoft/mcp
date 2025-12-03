@@ -26,7 +26,6 @@ using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 

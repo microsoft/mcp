@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
