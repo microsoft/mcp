@@ -7,7 +7,7 @@
 .PARAMETER ArtifactsPath
     The path where build artifacts are located.
 .PARAMETER BuildInfoPath
-    The path to the 'build_info' directory; used to locate build_info.json and each server's server.json.
+    The path to the 'build_info.json' file. If not provided, defaults to '.work/build_info.json' in the repo root.
 .PARAMETER OutputPath
     The path where the generated NuGet packages will be placed.
 #>
@@ -31,32 +31,27 @@ $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
 if(!$ArtifactsPath) {
-	$ArtifactsPath = "$RepoRoot/.work/build"
+    $ArtifactsPath = "$RepoRoot/.work/build"
 }
 
 if(!$BuildInfoPath) {
-    $BuildInfoPath = "$RepoRoot/.work/"
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-if (!(Test-Path $BuildInfoPath -PathType Container)) {
-    LogError "Build info directory $BuildInfoPath does not exist."
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
     $exitCode = 1
 }
 
-$BuildInfoJsonPath = Join-Path $BuildInfoPath "build_info.json"
-
-if (!(Test-Path $BuildInfoJsonPath)) {
-    LogError "Build info file $BuildInfoJsonPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
-    $exitCode = 1
-}
+$buildInfoDirectory = Split-Path $BuildInfoPath -Parent
 
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/packages_dnx"
 }
 
 if(!(Test-Path $ArtifactsPath)) {
-	LogError "Artifacts path $ArtifactsPath does not exist."
-	$exitCode = 1
+    LogError "Artifacts path $ArtifactsPath does not exist."
+    $exitCode = 1
 }
 
 Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
@@ -72,7 +67,7 @@ if($LASTEXITCODE -ne 0 -or !$sharedTargetFramework) {
     $exitCode = 1
 }
 
-$buildInfo = Get-Content $BuildInfoJsonPath -Raw | ConvertFrom-Json -AsHashtable
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 # Exit early if there were parameter errors
 if($exitCode -ne 0) {
@@ -380,16 +375,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $serverJsonFile = "$BuildInfoPath/$($server.name)/server.json"
+    $serverJsonFile = Join-Path $buildInfoDirectory $server.name "server.json"
 
     if (!(Test-Path $serverJsonFile)) {
         LogError "Server JSON file $serverJsonFile does not exist to pack into NuGet."
         exit 1
     }
 
-    $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+    $serverOutputPath = Join-Path $OutputPath $server.artifactPath
 
-    $platformOutputPath = "$serverOutputPath/platform"
+    $platformOutputPath = Join-Path $serverOutputPath "platform"
     New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 
     # Process all platform packages before the wrapper package
@@ -515,8 +510,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
 Push-Location $RepoRoot
 try {
-	# Clear and recreate the output directory
-	Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    # Clear and recreate the output directory
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
     foreach($server in $buildInfo.servers) {
         BuildServerPackages -server $server -native $false
@@ -526,10 +521,10 @@ try {
         }
     }
 
-	LogSuccess "`nNuGet packaging completed successfully!"
+    LogSuccess "`nNuGet packaging completed successfully!"
 }
 finally {
-	Pop-Location
+    Pop-Location
 }
 
 exit $exitCode
