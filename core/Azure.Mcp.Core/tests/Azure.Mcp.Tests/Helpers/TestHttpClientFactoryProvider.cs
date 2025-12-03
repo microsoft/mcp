@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +23,10 @@ public static class TestHttpClientFactoryProvider
     {
         var services = new ServiceCollection();
         services.AddOptions();
+        services.Configure<HttpClientOptions>(_ => { });
+        services.Configure<ServiceStartOptions>(_ => { });
         services.AddHttpClient();
+        services.ConfigureDefaultHttpClient();
         return services.BuildServiceProvider();
     }
 }

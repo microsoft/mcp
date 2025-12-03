@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
@@ -29,6 +26,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
     private readonly ILogger<AppConfigService> _logger;
+    private readonly ServiceProvider _httpClientProvider;
 
     public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
@@ -36,13 +34,11 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
-        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
-        var httpClientService = new HttpClientService(httpClientOptions, serviceStartOptions);
-        var httpClientFactory = TestHttpClientFactoryProvider.Create().GetRequiredService<IHttpClientFactory>();
+        _httpClientProvider = TestHttpClientFactoryProvider.Create();
+        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientService);
+        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientFactory);
     }
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
@@ -53,6 +49,12 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
           Value = "\"contoso.com\""
         })
     };
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        _httpClientProvider.Dispose();
+    }
 
     [Fact]
     public async Task Should_list_appconfig_accounts()

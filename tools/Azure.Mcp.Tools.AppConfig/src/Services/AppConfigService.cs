@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
@@ -9,7 +10,6 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Microsoft.Extensions.Logging;
 
@@ -17,11 +17,11 @@ namespace Azure.Mcp.Tools.AppConfig.Services;
 
 using ETag = Core.Models.ETag;
 
-public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger, IHttpClientService httpClientService)
+public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger, IHttpClientFactory httpClientFactory)
     : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
 {
     private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<AppConfigurationAccount>> GetAppConfigAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -157,10 +157,12 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         var options = new ConfigurationClientOptions();
         AddDefaultPolicies(options);
 
-        var httpClient = _httpClientService.CreateClient(new Uri(endpoint));
+        var endpointUri = new Uri(endpoint);
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = endpointUri;
         options.Transport = new HttpClientTransport(httpClient);
 
-        return new ConfigurationClient(new Uri(endpoint), credential, options);
+        return new ConfigurationClient(endpointUri, credential, options);
     }
 
     private async Task<AppConfigurationAccount> FindAppConfigStore(string subscription, string accountName, string subscriptionIdentifier, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
