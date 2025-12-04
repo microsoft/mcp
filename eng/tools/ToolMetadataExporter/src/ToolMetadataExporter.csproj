@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\ToolDescriptionEvaluator\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\..\ToolDescriptionEvaluator\src\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
