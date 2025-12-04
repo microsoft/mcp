@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel.Primitives;
 using System.Net;
 using System.Reflection;
 using System.Runtime.Versioning;
