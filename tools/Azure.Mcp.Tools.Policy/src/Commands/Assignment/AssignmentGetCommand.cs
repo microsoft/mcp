@@ -93,5 +93,5 @@ public sealed class AssignmentGetCommand(ILogger<AssignmentGetCommand> logger)
         _ => base.GetStatusCode(ex)
     };
 
-    internal record AssignmentGetCommandResult(List<PolicyAssignment> Results);
+    public record AssignmentGetCommandResult(List<PolicyAssignment> Results);
 }

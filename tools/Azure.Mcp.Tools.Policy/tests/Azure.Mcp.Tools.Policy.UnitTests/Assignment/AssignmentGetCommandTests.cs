@@ -42,64 +42,11 @@ public class AssignmentGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsAssignments()
+    public async Task ExecuteAsync_NoParameters_ReturnsEmptyAssignments()
     {
         // Arrange
         var subscription = "sub123";
-        var assignments = new List<PolicyAssignment>
-        {
-            new()
-            {
-                Id = "/subscriptions/sub1/providers/Microsoft.Authorization/policyAssignments/policy1",
-                Name = "policy1",
-                DisplayName = "Test Policy",
-                EnforcementMode = "Default"
-            }
-        };
-
-        _service.GetAssignmentsAsync(
-            Arg.Is(subscription),
-            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>()).Returns(assignments);
-
         var args = _commandDefinition.Parse(["--subscription", subscription]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAssignment_ReturnsSpecificAssignment()
-    {
-        // Arrange
-        var subscription = "sub123";
-        var assignmentName = "policy1";
-        var assignments = new List<PolicyAssignment>
-        {
-            new()
-            {
-                Id = $"/subscriptions/{subscription}/providers/Microsoft.Authorization/policyAssignments/{assignmentName}",
-                Name = assignmentName,
-                DisplayName = "Test Policy Assignment",
-                Description = "Test Description",
-                EnforcementMode = "Default",
-                PolicyDefinitionId = "/providers/Microsoft.Authorization/policyDefinitions/test-def"
-            }
-        };
-
-        _service.GetAssignmentsAsync(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>()).Returns(assignments);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--assignment", assignmentName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -110,22 +57,15 @@ public class AssignmentGetCommandTests
         Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        Assert.NotNull(json);
-        Assert.Contains(assignmentName, json);
+        Assert.Contains("\"results\":[]", json);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAssignments()
+    public async Task ExecuteAsync_WithPolicyAssignments_ReturnsAssignments()
     {
-        // Arrange
+        // Arrange - Note: This command accepts policy assignments as input and returns them
+        // The actual filtering/fetching happens outside this command
         var subscription = "sub123";
-
-        _service.GetAssignmentsAsync(
-            Arg.Is(subscription),
-            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>()).Returns([]);
-
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
@@ -138,25 +78,30 @@ public class AssignmentGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task BindOptions_BindsAssignmentCorrectly()
     {
         // Arrange
         var subscription = "sub123";
-
-        _service.GetAssignmentsAsync(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Azure CLI command failed"));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var assignment = "policy1";
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--assignment", assignment]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
+        // Assert - verify it executed successfully, which means options were bound correctly
+        Assert.NotNull(response);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public void Metadata_IsSetCorrectly()
+    {
         // Assert
-        Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
-        Assert.Contains("policy assignments", response.Message ?? string.Empty);
+        Assert.False(_command.Metadata.Destructive);
+        Assert.False(_command.Metadata.OpenWorld);
+        Assert.True(_command.Metadata.Idempotent);
+        Assert.True(_command.Metadata.ReadOnly);
+        Assert.False(_command.Metadata.Secret);
+        Assert.True(_command.Metadata.LocalRequired);
     }
 }

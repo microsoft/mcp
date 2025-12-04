@@ -11,6 +11,7 @@ namespace Azure.Mcp.Tools.Policy.Commands;
 [JsonSerializable(typeof(PolicyAssignmentGetCommand.PolicyAssignmentGetCommandResult))]
 [JsonSerializable(typeof(PolicyAssignmentListCommand.PolicyAssignmentListCommandResult))]
 [JsonSerializable(typeof(PolicyDefinitionGetCommand.PolicyDefinitionGetCommandResult))]
+[JsonSerializable(typeof(AssignmentGetCommand.AssignmentGetCommandResult))]
 [JsonSerializable(typeof(PolicyAssignment))]
 [JsonSerializable(typeof(PolicyDefinition))]
 [JsonSerializable(typeof(List<PolicyAssignment>))]
