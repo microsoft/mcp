@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Dps.Models;
+
+namespace Azure.Mcp.Tools.Dps.Services;
+
+/// <summary>
+/// Service interface for Device Provisioning Service operations.
+/// </summary>
+public interface IDpsService
+{
+    /// <summary>
+    /// Lists Device Provisioning Service instances in a subscription.
+    /// </summary>
+    /// <param name="subscription">The subscription ID or name.</param>
+    /// <param name="resourceGroup">Optional resource group to filter instances.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="retryPolicy">Optional retry policy options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of DPS instances.</returns>
+    Task<List<DpsInstanceInfo>> ListInstancesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+}

@@ -248,6 +248,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure Device Provisioning Service (DPS)
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| dps_instance_list | List all Device Provisioning Service instances in my subscription |
+| dps_instance_list | Show me my DPS instances |
+| dps_instance_list | Show me the Device Provisioning Service instances in my subscription |
+| dps_instance_list | List DPS instances in resource group <resource_group_name> |
+| dps_instance_list | Show me the DPS instances in resource group <resource_group_name> |
+| dps_instance_list | What Device Provisioning Services do I have? |
+| dps_instance_list | Get all IoT Hub Device Provisioning Service instances |
+| dps_instance_list | List my Azure IoT DPS resources |
+
 ## Azure Event Grid
 
 | Tool Name | Test Prompt |
