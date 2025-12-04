@@ -519,6 +519,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     private const string CommandTitle = "Human Readable Title";
     private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
 
+    public override string Id => "<GUID>"
+
     public override string Name => "operation";
 
     public override string Description =>
@@ -561,7 +563,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Required validation step
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -583,7 +585,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
                 options.RequiredParam!,  // Required parameters end with !
                 options.OptionalParam,   // Optional parameters are nullable
                 options.Subscription!,   // From SubscriptionCommand
-                options.RetryPolicy);    // From GlobalCommand
+                options.RetryPolicy,     // From GlobalCommand
+                cancellationToken);      // Passed in ExecuteAsync
 
             // Set results if any were returned
             // For enumerable returns, coalesce null into an empty enumerable.
@@ -623,6 +626,10 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
 ```
+
+### Tool ID
+
+The `Id` is a unique GUID given to each tool that can be used to uniquely identify it from every other tool.
 
 ### ToolMetadata Properties
 
