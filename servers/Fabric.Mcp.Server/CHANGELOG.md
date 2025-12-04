@@ -5,16 +5,22 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.2] - Unreleased
+## [0.0.0-beta.3]  (2025-12-04)
 
-### Added
+### Features Added
 
-- Fix UI for server help messages and display to show Fabric.Mcp.Server. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+- Added Docker image release for Fabric MCP Server. [[#1241](https://github.com/microsoft/mcp/pull/1241)]
+- Added new item definitions for Lakehouse, Ontology, and Snowflake Database workloads. [[#1240](https://github.com/microsoft/mcp/pull/1240)]
+- Enhanced README documentation for released packages.
+
+### Bugs Fixed
+
+- Fixed UI for server help messages and display to show Fabric.Mcp.Server. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
 
-## [0.0.1] - 2025-09-16
+## [0.0.0-beta.2] (2025-11-21)
 
-### Added
+### Features Added
 
 Initial release of the Microsoft Fabric MCP Server in **Public Preview**.
 
@@ -28,20 +34,13 @@ Initial release of the Microsoft Fabric MCP Server in **Public Preview**.
 #### Tool Categories Added
 
 **Public API Operations**:
-- `publicapis list-workloads` - List all available Fabric workload types
-- `publicapis get-workload-apis` - Get workload-specific API specifications  
-- `publicapis get-platform-apis` - Get platform-level API specifications
+- `publicapis bestpractices examples get` - Retrieve example API request/response files
+- `publicapis bestpractices get` - Get embedded best practice documentation
+- `publicapis bestpractices itemdefinition get` - Get JSON schema definitions for workload items
+- `publicapis get` - Get workload-specific API specifications  
+- `publicapis list` - List all available Fabric workload types
+- `publicapis platform get` - Get platform-level API specifications
 
-**Best Practices & Examples**:
-- `bestpractices get-best-practices` - Get embedded best practice documentation
-- `bestpractices get-examples` - Retrieve example API request/response files
-- `itemdefinition get-workload-definition` - Get JSON schema definitions for workload items
-
-### Dependencies
-
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
-- ModelContextProtocol package
-- System.CommandLine package
 
 ### Known Limitations
 
