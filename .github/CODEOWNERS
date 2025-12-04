@@ -120,6 +120,12 @@
 # ServiceLabel: %tools-Grafana
 # ServiceOwners:                       @weng5e @xiangyan99
 
+# PRLabel: %tools-IoTHub
+/tools/Azure.Mcp.Tools.IoTHub/         @prerakpradhan @microsoft/azure-mcp
+
+# ServiceLabel: %tools-IoTHub
+# ServiceOwners:                       @prerakpradhan @microsoft/azure-mcp
+
 # PRLabel: %tools-KeyVault
 /tools/Azure.Mcp.Tools.KeyVault/       @vcolin7 @JonathanCrd @microsoft/azure-mcp
 

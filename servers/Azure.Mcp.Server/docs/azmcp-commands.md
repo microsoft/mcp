@@ -1240,6 +1240,39 @@ azmcp loadtesting testrun update --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp grafana list --subscription <subscription>
 ```
+### Azure IoT Hub Operations
+
+```bash
+# Create a new IoT Hub
+azmcp iothub create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name> \
+                    --location <location> \
+                    --sku <sku> \
+                    --capacity <capacity>
+
+# Delete an IoT Hub
+azmcp iothub delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name>
+
+# Get IoT Hub details or list all IoT Hubs in a subscription
+azmcp iothub get --subscription <subscription> \
+                 [--resource-group <resource-group>] \
+                 [--name <iothub-name>]
+
+# Get keys for an IoT Hub
+azmcp iothub keys --subscription <subscription> \
+                  --resource-group <resource-group> \
+                  --name <iothub-name>
+
+# Update an existing IoT Hub
+azmcp iothub update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name> \
+                    [--sku <sku>] \
+                    [--capacity <capacity>]
+```
 
 ### Azure Marketplace Operations
 
