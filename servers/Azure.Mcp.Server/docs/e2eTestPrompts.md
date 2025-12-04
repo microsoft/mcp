@@ -317,6 +317,36 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_get | Show me my Azure function apps |
 | functionapp_get | What function apps do I have? |
 
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_create | Create an IoT Hub named <iothub-name> in resource group <resource-group> in location <location> |
+| iothub_create | Create a new IoT Hub <iothub-name> with S1 SKU in resource group <resource-group> |
+| iothub_delete | Delete the IoT Hub <iothub-name> from resource group <resource-group> |
+| iothub_delete | Remove IoT Hub <iothub-name> in resource group <resource-group> |
+| iothub_device_list | List all devices in IoT Hub <iothub-name> |
+| iothub_device_list | Show me the devices in IoT Hub <iothub-name> in resource group <resource-group> |
+| iothub_device_list | List the first 10 devices in IoT Hub <iothub-name> |
+| iothub_device_list | What devices are registered in IoT Hub <iothub-name>? |
+| iothub_device_twin_get | Get the device twin for device <device-id> in IoT Hub <iothub-name> |
+| iothub_device_twin_get | Show me the twin for device <device-id> in IoT Hub <iothub-name> |
+| iothub_device_twin_get | Retrieve device twin details for <device-id> in IoT Hub <iothub-name> |
+| iothub_device_twin_query | Query device twins in IoT Hub <iothub-name> where temperature is greater than 70 |
+| iothub_device_twin_query | Find all devices in IoT Hub <iothub-name> with tag environment equal to production |
+| iothub_device_twin_query | Search for devices in IoT Hub <iothub-name> using query SELECT * FROM devices |
+| iothub_device_twin_query | List devices in IoT Hub <iothub-name> where properties.reported.status = 'online' |
+| iothub_device_twin_update | Update the device twin for device <device-id> in IoT Hub <iothub-name> with properties temperature 72 |
+| iothub_device_twin_update | Set tag environment to production for device <device-id> in IoT Hub <iothub-name> |
+| iothub_device_twin_update | Modify device twin <device-id> in IoT Hub <iothub-name> to add desired property targetTemperature |
+| iothub_get | List all IoT Hubs in my subscription |
+| iothub_get | Show me the IoT Hubs in resource group <resource-group> |
+| iothub_get | Get details for IoT Hub <iothub-name> in resource group <resource-group> |
+| iothub_keys | Get the connection keys for IoT Hub <iothub-name> in resource group <resource-group> |
+| iothub_keys | Show me the keys for IoT Hub <iothub-name> |
+| iothub_update | Update IoT Hub <iothub-name> in resource group <resource-group> to use S2 SKU |
+| iothub_update | Change the capacity of IoT Hub <iothub-name> to 2 units |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
