@@ -1627,6 +1627,7 @@ When creating new C# files, start with only the using statements you actually ne
 // Start minimal - only add what you actually use
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 
 // Add more using statements as you implement the code
 // Don't copy-paste using blocks from other files
@@ -1669,6 +1670,7 @@ dotnet build --verbosity normal | Select-String "warning"
 // Only what's actually used in this file
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 ```
 
 ✅ **Add using statements for better readability:**

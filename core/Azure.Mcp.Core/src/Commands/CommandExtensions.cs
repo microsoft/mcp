@@ -4,6 +4,7 @@
 using System.Buffers;
 using System.Text;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Commands;
 

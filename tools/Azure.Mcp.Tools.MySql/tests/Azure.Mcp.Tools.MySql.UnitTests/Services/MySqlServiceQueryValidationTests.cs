@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.UnitTests.Services;

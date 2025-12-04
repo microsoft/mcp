@@ -6,12 +6,12 @@ using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
-
 using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;

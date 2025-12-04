@@ -4,7 +4,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Models.Metadata;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Metadata;
 
 namespace Azure.Mcp.Core.Commands;
 

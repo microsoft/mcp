@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tests.Helpers;
