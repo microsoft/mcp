@@ -134,6 +134,13 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             Environment.SetEnvironmentVariable("TEST_PROXY_URL", fixture.Proxy.BaseUri.ToString());
         }
 
+        // ensure that insantiated clients also honor the PlaybackTokenCredential instead of the default chained credentials
+        // if we are running in playback mode
+        if (TestMode == TestMode.Playback)
+        {
+            Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
+        }
+
         // start recording/playback session
         await StartRecordOrPlayback();
 
