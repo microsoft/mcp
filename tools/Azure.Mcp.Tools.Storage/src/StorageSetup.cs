@@ -30,6 +30,8 @@ public class StorageSetup : IAreaSetup
 
         services.AddSingleton<ContainerCreateCommand>();
         services.AddSingleton<ContainerGetCommand>();
+
+        services.AddSingleton<TableListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)

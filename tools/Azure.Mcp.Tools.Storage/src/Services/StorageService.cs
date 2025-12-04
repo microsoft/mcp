@@ -461,7 +461,7 @@ public class StorageService(
 
     private static StorageAccountInfo ConvertToAccountInfoModel(JsonElement item)
     {
-        Models.StorageAccountData? storageAccount = Models.StorageAccountData.FromJson(item);
+        StorageAccountData? storageAccount = StorageAccountData.FromJson(item);
         if (storageAccount == null)
             throw new InvalidOperationException("Failed to parse storage account data");
 
@@ -478,7 +478,7 @@ public class StorageService(
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
     }
 
-        protected async Task<TableServiceClient> CreateTableServiceClient(
+    protected async Task<TableServiceClient> CreateTableServiceClient(
         string? account,
         string subscription,
         string? tenant = null,
