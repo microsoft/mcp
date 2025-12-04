@@ -87,6 +87,7 @@ internal class Program
             new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.Dps.DpsSetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
