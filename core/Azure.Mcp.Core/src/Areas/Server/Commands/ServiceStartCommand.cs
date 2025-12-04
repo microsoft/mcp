@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
@@ -81,6 +82,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -92,7 +94,28 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
             ValidateOutgoingAuthStrategy(commandResult);
+            ValidateSupportLoggingFolder(commandResult);
         });
+    }
+
+    /// <summary>
+    /// Validates that the support logging folder path is valid when specified.
+    /// </summary>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateSupportLoggingFolder(CommandResult commandResult)
+    {
+        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name);
+
+        if (string.IsNullOrEmpty(folderPath))
+        {
+            return; // Option not specified, nothing to validate
+        }
+
+        // Validate the folder path is not empty or whitespace
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            commandResult.AddError("The --dangerously-enable-support-logging-to-folder option requires a valid folder path.");
+        }
     }
 
     /// <summary>
@@ -123,7 +146,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
-            OutgoingAuthStrategy = outgoingAuthStrategy
+            OutgoingAuthStrategy = outgoingAuthStrategy,
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name)
         };
         return options;
     }
@@ -193,6 +217,40 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
             }
         }
+    }
+
+    /// <summary>
+    /// Configures support logging when a support logging folder is specified.
+    /// This enables debug-level logging for troubleshooting and support purposes.
+    /// </summary>
+    /// <param name="logging">The logging builder to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
+        {
+            return;
+        }
+
+        // Set minimum log level to Debug when support logging is enabled
+        logging.SetMinimumLevel(LogLevel.Debug);
+
+        // Configure console logging to stderr for debug-level logs
+        logging.AddConsole(consoleOptions =>
+        {
+            consoleOptions.LogToStandardErrorThreshold = LogLevel.Debug;
+            consoleOptions.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+        });
+        logging.AddSimpleConsole(simple =>
+        {
+            simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+            simple.IncludeScopes = true;
+            simple.SingleLine = true;
+            simple.TimestampFormat = "[yyyy-MM-dd HH:mm:ss.fff] ";
+        });
+
+        // Add file logging to the specified folder
+        logging.AddSupportFileLogging(options.SupportLoggingFolder);
     }
 
     /// <summary>
@@ -367,6 +425,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
                     logging.SetMinimumLevel(LogLevel.Debug);
                 }
+
+                ConfigureSupportLogging(logging, serverOptions);
             })
             .ConfigureServices(services =>
             {
@@ -393,6 +453,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -570,6 +631,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -766,6 +828,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
     {
         if (options.Transport != TransportTypes.Http)
+        {
+            return null;
+        }
+
+        // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+        // to telemetry endpoints. Support logging captures debug-level information that may contain
+        // sensitive data, so we disable all telemetry as a safety measure.
+        if (!string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
         {
             return null;
         }
