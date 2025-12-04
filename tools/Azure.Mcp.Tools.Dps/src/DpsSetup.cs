@@ -22,6 +22,7 @@ public class DpsSetup : IAreaSetup
     {
         services.AddSingleton<IDpsService, DpsService>();
         services.AddSingleton<InstanceListCommand>();
+        services.AddSingleton<InstanceCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -39,6 +40,9 @@ public class DpsSetup : IAreaSetup
         // Register instance commands
         var instanceList = serviceProvider.GetRequiredService<InstanceListCommand>();
         instance.AddCommand(instanceList.Name, instanceList);
+
+        var instanceCreate = serviceProvider.GetRequiredService<InstanceCreateCommand>();
+        instance.AddCommand(instanceCreate.Name, instanceCreate);
 
         return dps;
     }

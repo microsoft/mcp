@@ -2,11 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Dps.Commands;
 using Azure.Mcp.Tools.Dps.Models;
+using Azure.Mcp.Tools.Dps.Services.Models;
+using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.Dps.Services;
 
@@ -49,6 +54,124 @@ public class DpsService(
             return parts[rgIndex + 1];
         }
         return string.Empty;
+    }
+
+    /// <inheritdoc/>
+    public async Task<DpsInstanceResult> CreateInstanceAsync(
+        string instanceName,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? sku = null,
+        int? capacity = null,
+        string? allocationPolicy = null,
+        string? linkedHubConnectionString = null,
+        string? linkedHubLocation = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(instanceName), instanceName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        // Validate linked hub parameters
+        if (!string.IsNullOrEmpty(linkedHubConnectionString) && string.IsNullOrEmpty(linkedHubLocation))
+        {
+            throw new ArgumentException("The linked-hub-location parameter is required when linked-hub-connection-string is provided.");
+        }
+
+        try
+        {
+            // Create ArmClient for deployments
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.Devices/provisioningServices",
+                "2022-12-12",
+                tenant,
+                retryPolicy);
+
+            // Prepare resource identifier
+            ResourceIdentifier dpsId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Devices/provisioningServices/{instanceName}");
+
+            // Prepare create content
+            var createContent = new DpsInstanceCreateOrUpdateContent
+            {
+                Location = location,
+                Sku = new ResourceSku
+                {
+                    Name = string.IsNullOrEmpty(sku) ? "S1" : sku,
+                    Tier = "Standard",
+                    Capacity = capacity ?? 1
+                },
+                Properties = new DpsInstanceProperties
+                {
+                    AllocationPolicy = string.IsNullOrEmpty(allocationPolicy) ? "Hashed" : ValidateAllocationPolicy(allocationPolicy)
+                }
+            };
+
+            // Add linked IoT Hub if provided
+            if (!string.IsNullOrEmpty(linkedHubConnectionString))
+            {
+                createContent.Properties.IotHubs =
+                [
+                    new IotHubDefinition
+                    {
+                        ConnectionString = linkedHubConnectionString,
+                        Location = linkedHubLocation
+                    }
+                ];
+            }
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                dpsId,
+                location,
+                createContent,
+                DpsJsonContext.Default.DpsInstanceCreateOrUpdateContent);
+
+            if (!result.HasData)
+            {
+                return new DpsInstanceResult(
+                    HasData: false,
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    SkuName: null,
+                    SkuTier: null,
+                    Properties: null);
+            }
+            else
+            {
+                return new DpsInstanceResult(
+                    HasData: true,
+                    Id: result.Data.Id.ToString(),
+                    Name: result.Data.Name,
+                    Type: result.Data.ResourceType.ToString(),
+                    Location: result.Data.Location,
+                    SkuName: result.Data.Sku?.Name,
+                    SkuTier: result.Data.Sku?.Tier,
+                    Properties: result.Data.Properties?.ToObjectFromJson(DpsJsonContext.Default.IDictionaryStringObject));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error creating DPS instance '{instanceName}': {ex.Message}", ex);
+        }
+    }
+
+    private static string ValidateAllocationPolicy(string allocationPolicy)
+    {
+        var validPolicies = new[] { "Hashed", "GeoLatency", "Static" };
+        if (!validPolicies.Contains(allocationPolicy, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Invalid allocation policy '{allocationPolicy}'. Valid values are: {string.Join(", ", validPolicies)}.");
+        }
+        return allocationPolicy;
     }
 
     private static DpsInstanceInfo ConvertToDpsInstanceInfo(JsonElement item)
