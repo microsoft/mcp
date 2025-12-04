@@ -419,7 +419,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_tables_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_table_list",
+                "storage_table_list",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -438,7 +438,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_table_list",
+                "storage_table_list",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
