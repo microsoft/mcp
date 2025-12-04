@@ -729,8 +729,8 @@
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
   "storage_table_list": [
-    "List all tables in the storage account <storage-account>",
-    "Show me the tables in the storage account <storage-account>"
+    "List all tables in the storage account <account>",
+    "Show me the tables in the storage account <account>"
   ],
   "subscription_list": [
     "List all subscriptions for my account",

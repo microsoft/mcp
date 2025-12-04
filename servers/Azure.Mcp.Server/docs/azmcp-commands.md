@@ -1896,8 +1896,8 @@ azmcp storage blob upload --subscription <subscription> \
 ```bash
 # List tables in an Azure Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp stoage table list --subscription <subscription> \
-                        --storage-account <storage-account>
+azmcp storage table list --subscription <subscription> \
+                         --account <account>
 ```
 
 ### Azure Subscription Management

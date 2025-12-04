@@ -1,14 +1,14 @@
 # Tool Selection Analysis Setup
 
-**Setup completed:** 2025-12-03 17:48:49  
+**Setup completed:** 2025-12-04 10:25:24  
 **Tool count:** 181  
-**Database setup time:** 2.8152254s  
+**Database setup time:** 2.6007322s  
 
 ---
 
 # Tool Selection Analysis Results
 
-**Analysis Date:** 2025-12-03 17:48:49  
+**Analysis Date:** 2025-12-04 10:25:24  
 **Tool count:** 181  
 
 ## Table of Contents
@@ -505,11 +505,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.663621 | `azureaibestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.555579 | `get_bestpractices_get` | ❌ |
-| 3 | 0.501210 | `azureterraformbestpractices_get` | ❌ |
-| 4 | 0.480235 | `deploy_pipeline_guidance_get` | ❌ |
-| 5 | 0.477592 | `cloudarchitect_design` | ❌ |
+| 1 | 0.663676 | `azureaibestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.558572 | `get_bestpractices_get` | ❌ |
+| 3 | 0.501300 | `azureterraformbestpractices_get` | ❌ |
+| 4 | 0.480331 | `deploy_pipeline_guidance_get` | ❌ |
+| 5 | 0.477599 | `cloudarchitect_design` | ❌ |
 
 ---
 
@@ -522,11 +522,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.657782 | `foundry_agents_get-sdk-sample` | ❌ |
+| 1 | 0.657252 | `foundry_agents_get-sdk-sample` | ❌ |
 | 2 | 0.547125 | `azureaibestpractices_get` | ✅ **EXPECTED** |
-| 3 | 0.507257 | `foundry_agents_create` | ❌ |
+| 3 | 0.507392 | `foundry_agents_create` | ❌ |
 | 4 | 0.483323 | `foundry_threads_list` | ❌ |
-| 5 | 0.471393 | `foundry_threads_create` | ❌ |
+| 5 | 0.471432 | `foundry_threads_create` | ❌ |
 
 ---
 
@@ -539,11 +539,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.667712 | `foundry_agents_get-sdk-sample` | ❌ |
-| 2 | 0.605028 | `foundry_agents_create` | ❌ |
-| 3 | 0.533945 | `azureaibestpractices_get` | ✅ **EXPECTED** |
-| 4 | 0.513150 | `foundry_threads_create` | ❌ |
-| 5 | 0.498635 | `foundry_threads_list` | ❌ |
+| 1 | 0.667348 | `foundry_agents_get-sdk-sample` | ❌ |
+| 2 | 0.605032 | `foundry_agents_create` | ❌ |
+| 3 | 0.533982 | `azureaibestpractices_get` | ✅ **EXPECTED** |
+| 4 | 0.513223 | `foundry_threads_create` | ❌ |
+| 5 | 0.499381 | `foundry_agents_list` | ❌ |
 
 ---
 
@@ -577,7 +577,7 @@
 | 2 | 0.476439 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.473301 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.465270 | `foundry_openai_embeddings-create` | ❌ |
-| 5 | 0.438479 | `foundry_agents_list` | ❌ |
+| 5 | 0.440631 | `foundry_agents_list` | ❌ |
 
 ---
 
@@ -592,7 +592,7 @@
 |------|-------|------|--------|
 | 1 | 0.785967 | `search_knowledge_base_get` | ✅ **EXPECTED** |
 | 2 | 0.700824 | `search_knowledge_source_get` | ❌ |
-| 3 | 0.693471 | `search_service_list` | ❌ |
+| 3 | 0.693525 | `search_service_list` | ❌ |
 | 4 | 0.635863 | `search_knowledge_base_retrieve` | ❌ |
 | 5 | 0.586575 | `search_index_get` | ❌ |
 
@@ -607,11 +607,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.748213 | `search_knowledge_base_get` | ✅ **EXPECTED** |
-| 2 | 0.668487 | `search_knowledge_source_get` | ❌ |
-| 3 | 0.628582 | `search_knowledge_base_retrieve` | ❌ |
-| 4 | 0.624480 | `search_service_list` | ❌ |
-| 5 | 0.566618 | `search_index_get` | ❌ |
+| 1 | 0.748161 | `search_knowledge_base_get` | ✅ **EXPECTED** |
+| 2 | 0.668485 | `search_knowledge_source_get` | ❌ |
+| 3 | 0.628519 | `search_knowledge_base_retrieve` | ❌ |
+| 4 | 0.624510 | `search_service_list` | ❌ |
+| 5 | 0.566603 | `search_index_get` | ❌ |
 
 ---
 
@@ -627,8 +627,8 @@
 | 1 | 0.702942 | `search_knowledge_base_get` | ✅ **EXPECTED** |
 | 2 | 0.605964 | `search_knowledge_source_get` | ❌ |
 | 3 | 0.583234 | `search_knowledge_base_retrieve` | ❌ |
-| 4 | 0.513638 | `search_service_list` | ❌ |
-| 5 | 0.473040 | `foundry_knowledge_index_list` | ❌ |
+| 4 | 0.513647 | `search_service_list` | ❌ |
+| 5 | 0.471301 | `foundry_knowledge_index_list` | ❌ |
 
 ---
 
@@ -644,8 +644,8 @@
 | 1 | 0.688051 | `search_knowledge_base_get` | ✅ **EXPECTED** |
 | 2 | 0.599247 | `search_knowledge_source_get` | ❌ |
 | 3 | 0.578499 | `search_knowledge_base_retrieve` | ❌ |
-| 4 | 0.457619 | `search_service_list` | ❌ |
-| 5 | 0.441521 | `foundry_knowledge_index_list` | ❌ |
+| 4 | 0.457600 | `search_service_list` | ❌ |
+| 5 | 0.439996 | `foundry_knowledge_index_list` | ❌ |
 
 ---
 
@@ -658,11 +658,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.769383 | `search_knowledge_base_get` | ✅ **EXPECTED** |
-| 2 | 0.685640 | `search_knowledge_source_get` | ❌ |
-| 3 | 0.636958 | `search_knowledge_base_retrieve` | ❌ |
-| 4 | 0.585949 | `search_index_get` | ❌ |
-| 5 | 0.533701 | `search_service_list` | ❌ |
+| 1 | 0.769427 | `search_knowledge_base_get` | ✅ **EXPECTED** |
+| 2 | 0.685666 | `search_knowledge_source_get` | ❌ |
+| 3 | 0.636959 | `search_knowledge_base_retrieve` | ❌ |
+| 4 | 0.585946 | `search_index_get` | ❌ |
+| 5 | 0.533738 | `search_service_list` | ❌ |
 
 ---
 
@@ -678,7 +678,7 @@
 | 1 | 0.595585 | `search_knowledge_base_get` | ✅ **EXPECTED** |
 | 2 | 0.551922 | `search_knowledge_base_retrieve` | ❌ |
 | 3 | 0.515480 | `search_knowledge_source_get` | ❌ |
-| 4 | 0.366893 | `search_service_list` | ❌ |
+| 4 | 0.366869 | `search_service_list` | ❌ |
 | 5 | 0.365633 | `search_index_get` | ❌ |
 
 ---
@@ -696,7 +696,7 @@
 | 2 | 0.650590 | `search_knowledge_base_get` | ❌ |
 | 3 | 0.575306 | `search_index_query` | ❌ |
 | 4 | 0.567361 | `search_knowledge_source_get` | ❌ |
-| 5 | 0.480089 | `search_service_list` | ❌ |
+| 5 | 0.480092 | `search_service_list` | ❌ |
 
 ---
 
@@ -726,11 +726,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.657866 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
-| 2 | 0.557206 | `search_knowledge_base_get` | ❌ |
-| 3 | 0.463605 | `search_knowledge_source_get` | ❌ |
-| 4 | 0.436739 | `foundry_agents_query-and-evaluate` | ❌ |
-| 5 | 0.399079 | `foundry_agents_connect` | ❌ |
+| 1 | 0.658000 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
+| 2 | 0.557362 | `search_knowledge_base_get` | ❌ |
+| 3 | 0.463685 | `search_knowledge_source_get` | ❌ |
+| 4 | 0.436920 | `foundry_agents_query-and-evaluate` | ❌ |
+| 5 | 0.399387 | `foundry_agents_connect` | ❌ |
 
 ---
 
@@ -743,11 +743,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.633619 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
-| 2 | 0.589665 | `search_knowledge_base_get` | ❌ |
-| 3 | 0.501949 | `search_knowledge_source_get` | ❌ |
-| 4 | 0.422890 | `foundry_agents_query-and-evaluate` | ❌ |
-| 5 | 0.399535 | `search_index_query` | ❌ |
+| 1 | 0.633769 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
+| 2 | 0.589923 | `search_knowledge_base_get` | ❌ |
+| 3 | 0.502150 | `search_knowledge_source_get` | ❌ |
+| 4 | 0.422685 | `foundry_agents_query-and-evaluate` | ❌ |
+| 5 | 0.399575 | `search_index_query` | ❌ |
 
 ---
 
@@ -781,7 +781,7 @@
 | 2 | 0.631435 | `search_knowledge_base_get` | ❌ |
 | 3 | 0.581386 | `search_index_query` | ❌ |
 | 4 | 0.571156 | `search_knowledge_source_get` | ❌ |
-| 5 | 0.544501 | `search_service_list` | ❌ |
+| 5 | 0.544519 | `search_service_list` | ❌ |
 
 ---
 
@@ -811,11 +811,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.582662 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
-| 2 | 0.528610 | `search_knowledge_base_get` | ❌ |
-| 3 | 0.449336 | `search_knowledge_source_get` | ❌ |
-| 4 | 0.447780 | `foundry_agents_query-and-evaluate` | ❌ |
-| 5 | 0.401030 | `foundry_agents_connect` | ❌ |
+| 1 | 0.582543 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
+| 2 | 0.528449 | `search_knowledge_base_get` | ❌ |
+| 3 | 0.449181 | `search_knowledge_source_get` | ❌ |
+| 4 | 0.448002 | `foundry_agents_query-and-evaluate` | ❌ |
+| 5 | 0.401143 | `foundry_agents_connect` | ❌ |
 
 ---
 
@@ -829,7 +829,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.760416 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.691931 | `search_service_list` | ❌ |
+| 2 | 0.692002 | `search_service_list` | ❌ |
 | 3 | 0.665922 | `search_knowledge_base_get` | ❌ |
 | 4 | 0.573012 | `search_index_get` | ❌ |
 | 5 | 0.560779 | `search_knowledge_base_retrieve` | ❌ |
@@ -846,7 +846,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.737860 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.660169 | `search_service_list` | ❌ |
+| 2 | 0.660222 | `search_service_list` | ❌ |
 | 3 | 0.652969 | `search_knowledge_base_get` | ❌ |
 | 4 | 0.578836 | `search_index_get` | ❌ |
 | 5 | 0.560564 | `search_index_query` | ❌ |
@@ -862,11 +862,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.657936 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.558516 | `search_knowledge_base_get` | ❌ |
-| 3 | 0.511469 | `search_service_list` | ❌ |
-| 4 | 0.470560 | `search_knowledge_base_retrieve` | ❌ |
-| 5 | 0.436547 | `foundry_knowledge_index_list` | ❌ |
+| 1 | 0.658014 | `search_knowledge_source_get` | ✅ **EXPECTED** |
+| 2 | 0.558586 | `search_knowledge_base_get` | ❌ |
+| 3 | 0.511560 | `search_service_list` | ❌ |
+| 4 | 0.470601 | `search_knowledge_base_retrieve` | ❌ |
+| 5 | 0.435632 | `foundry_knowledge_index_list` | ❌ |
 
 ---
 
@@ -896,11 +896,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.825604 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.693438 | `search_knowledge_base_get` | ❌ |
-| 3 | 0.595643 | `search_index_get` | ❌ |
-| 4 | 0.540550 | `search_knowledge_base_retrieve` | ❌ |
-| 5 | 0.531247 | `search_service_list` | ❌ |
+| 1 | 0.825985 | `search_knowledge_source_get` | ✅ **EXPECTED** |
+| 2 | 0.693826 | `search_knowledge_base_get` | ❌ |
+| 3 | 0.596102 | `search_index_get` | ❌ |
+| 4 | 0.540908 | `search_knowledge_base_retrieve` | ❌ |
+| 5 | 0.531812 | `search_service_list` | ❌ |
 
 ---
 
@@ -917,7 +917,7 @@
 | 2 | 0.523643 | `search_knowledge_base_get` | ❌ |
 | 3 | 0.459923 | `search_knowledge_base_retrieve` | ❌ |
 | 4 | 0.371465 | `search_index_get` | ❌ |
-| 5 | 0.370838 | `search_service_list` | ❌ |
+| 5 | 0.370840 | `search_service_list` | ❌ |
 
 ---
 
@@ -934,7 +934,7 @@
 | 2 | 0.528153 | `search_knowledge_base_get` | ❌ |
 | 3 | 0.521765 | `search_knowledge_source_get` | ❌ |
 | 4 | 0.509719 | `foundry_knowledge_index_schema` | ❌ |
-| 5 | 0.490625 | `search_service_list` | ❌ |
+| 5 | 0.490677 | `search_service_list` | ❌ |
 
 ---
 
@@ -948,8 +948,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.640256 | `search_index_get` | ✅ **EXPECTED** |
-| 2 | 0.620140 | `search_service_list` | ❌ |
-| 3 | 0.539401 | `foundry_knowledge_index_list` | ❌ |
+| 2 | 0.620184 | `search_service_list` | ❌ |
+| 3 | 0.538456 | `foundry_knowledge_index_list` | ❌ |
 | 4 | 0.511485 | `search_knowledge_base_get` | ❌ |
 | 5 | 0.496094 | `search_knowledge_source_get` | ❌ |
 
@@ -965,8 +965,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.620759 | `search_index_get` | ✅ **EXPECTED** |
-| 2 | 0.562775 | `search_service_list` | ❌ |
-| 3 | 0.544692 | `foundry_knowledge_index_list` | ❌ |
+| 2 | 0.562792 | `search_service_list` | ❌ |
+| 3 | 0.543811 | `foundry_knowledge_index_list` | ❌ |
 | 4 | 0.500365 | `search_knowledge_base_get` | ❌ |
 | 5 | 0.490025 | `search_knowledge_source_get` | ❌ |
 
@@ -983,9 +983,9 @@
 |------|-------|------|--------|
 | 1 | 0.522826 | `search_index_get` | ❌ |
 | 2 | 0.515870 | `search_index_query` | ✅ **EXPECTED** |
-| 3 | 0.497467 | `search_service_list` | ❌ |
+| 3 | 0.497526 | `search_service_list` | ❌ |
 | 4 | 0.447977 | `search_knowledge_base_retrieve` | ❌ |
-| 5 | 0.437715 | `postgres_database_query` | ❌ |
+| 5 | 0.438026 | `postgres_database_query` | ❌ |
 
 ---
 
@@ -998,11 +998,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.793651 | `search_service_list` | ✅ **EXPECTED** |
+| 1 | 0.793665 | `search_service_list` | ✅ **EXPECTED** |
 | 2 | 0.553012 | `kusto_cluster_list` | ❌ |
-| 3 | 0.509460 | `subscription_list` | ❌ |
+| 3 | 0.509601 | `subscription_list` | ❌ |
 | 4 | 0.505971 | `search_index_get` | ❌ |
-| 5 | 0.504693 | `marketplace_product_list` | ❌ |
+| 5 | 0.504469 | `marketplace_product_list` | ❌ |
 
 ---
 
@@ -1015,8 +1015,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.686140 | `search_service_list` | ✅ **EXPECTED** |
-| 2 | 0.484092 | `marketplace_product_list` | ❌ |
+| 1 | 0.686113 | `search_service_list` | ✅ **EXPECTED** |
+| 2 | 0.483912 | `marketplace_product_list` | ❌ |
 | 3 | 0.479898 | `search_index_get` | ❌ |
 | 4 | 0.462337 | `search_knowledge_base_get` | ❌ |
 | 5 | 0.461786 | `kusto_cluster_list` | ❌ |
@@ -1032,7 +1032,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.553025 | `search_service_list` | ✅ **EXPECTED** |
+| 1 | 0.553002 | `search_service_list` | ✅ **EXPECTED** |
 | 2 | 0.436230 | `search_index_get` | ❌ |
 | 3 | 0.415277 | `search_knowledge_base_get` | ❌ |
 | 4 | 0.410461 | `search_knowledge_source_get` | ❌ |
@@ -1049,8 +1049,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682070 | `speech_tts_synthesize` | ❌ |
-| 2 | 0.666039 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 1 | 0.682065 | `speech_tts_synthesize` | ❌ |
+| 2 | 0.666038 | `speech_stt_recognize` | ✅ **EXPECTED** |
 | 3 | 0.381443 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.351127 | `deploy_plan_get` | ❌ |
 | 5 | 0.340630 | `azureaibestpractices_get` | ❌ |
@@ -1066,11 +1066,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.511342 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.344367 | `speech_tts_synthesize` | ❌ |
-| 3 | 0.200748 | `foundry_openai_embeddings-create` | ❌ |
-| 4 | 0.181312 | `foundry_openai_create-completion` | ❌ |
-| 5 | 0.175779 | `foundry_openai_chat-completions-create` | ❌ |
+| 1 | 0.511358 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.344413 | `speech_tts_synthesize` | ❌ |
+| 3 | 0.200821 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.181368 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.175840 | `foundry_openai_chat-completions-create` | ❌ |
 
 ---
 
@@ -1083,8 +1083,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.486643 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.335092 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.486489 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.335116 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.167783 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.164583 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.156850 | `deploy_pipeline_guidance_get` | ❌ |
@@ -1100,8 +1100,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.611883 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.573235 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.611992 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.573185 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.319169 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.251320 | `foundry_openai_create-completion` | ❌ |
 | 5 | 0.246500 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1117,8 +1117,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.410453 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.353775 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.410533 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.353783 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.159181 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.158411 | `foundry_models_deploy` | ❌ |
 | 5 | 0.151632 | `deploy_pipeline_guidance_get` | ❌ |
@@ -1134,8 +1134,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546383 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.480201 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.546259 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.480203 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.216567 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.200334 | `foundry_resource_get` | ❌ |
 | 5 | 0.183420 | `extension_azqr` | ❌ |
@@ -1151,8 +1151,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.539672 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.367355 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.539963 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.367401 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.240278 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.209541 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.205136 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1168,8 +1168,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.548741 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.468151 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.549151 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.468161 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.393434 | `azureaibestpractices_get` | ❌ |
 | 4 | 0.342537 | `extension_cli_generate` | ❌ |
 | 5 | 0.337387 | `cloudarchitect_design` | ❌ |
@@ -1185,11 +1185,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.532155 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.515508 | `speech_tts_synthesize` | ❌ |
-| 3 | 0.349391 | `azureaibestpractices_get` | ❌ |
-| 4 | 0.340575 | `foundry_openai_create-completion` | ❌ |
-| 5 | 0.335038 | `foundry_openai_embeddings-create` | ❌ |
+| 1 | 0.532541 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.515544 | `speech_tts_synthesize` | ❌ |
+| 3 | 0.349463 | `azureaibestpractices_get` | ❌ |
+| 4 | 0.340617 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.335067 | `foundry_openai_embeddings-create` | ❌ |
 
 ---
 
@@ -1202,8 +1202,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.453555 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.322691 | `speech_tts_synthesize` | ❌ |
+| 1 | 0.453396 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.322710 | `speech_tts_synthesize` | ❌ |
 | 3 | 0.173895 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.173205 | `deploy_pipeline_guidance_get` | ❌ |
 | 5 | 0.168275 | `foundry_openai_create-completion` | ❌ |
@@ -1219,8 +1219,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.521815 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.422548 | `speech_stt_recognize` | ❌ |
+| 1 | 0.521797 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.422457 | `speech_stt_recognize` | ❌ |
 | 3 | 0.208124 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.194603 | `foundry_openai_create-completion` | ❌ |
 | 5 | 0.181208 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1236,8 +1236,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.516962 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.485918 | `speech_stt_recognize` | ❌ |
+| 1 | 0.516973 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.486019 | `speech_stt_recognize` | ❌ |
 | 3 | 0.329765 | `deploy_pipeline_guidance_get` | ❌ |
 | 4 | 0.323728 | `extension_cli_generate` | ❌ |
 | 5 | 0.317525 | `azureterraformbestpractices_get` | ❌ |
@@ -1253,8 +1253,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.592165 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.533898 | `speech_stt_recognize` | ❌ |
+| 1 | 0.592156 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.534001 | `speech_stt_recognize` | ❌ |
 | 3 | 0.341214 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.337537 | `azureaibestpractices_get` | ❌ |
 | 5 | 0.326670 | `foundry_openai_create-completion` | ❌ |
@@ -1270,11 +1270,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.501078 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.452758 | `speech_stt_recognize` | ❌ |
-| 3 | 0.214674 | `foundry_openai_embeddings-create` | ❌ |
-| 4 | 0.193771 | `foundry_models_deploy` | ❌ |
-| 5 | 0.192473 | `foundry_openai_chat-completions-create` | ❌ |
+| 1 | 0.504898 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.455536 | `speech_stt_recognize` | ❌ |
+| 3 | 0.217105 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.194479 | `foundry_models_deploy` | ❌ |
+| 5 | 0.193409 | `foundry_openai_chat-completions-create` | ❌ |
 
 ---
 
@@ -1287,11 +1287,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.604855 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.496451 | `speech_stt_recognize` | ❌ |
-| 3 | 0.407368 | `foundry_openai_embeddings-create` | ❌ |
-| 4 | 0.383545 | `azureaibestpractices_get` | ❌ |
-| 5 | 0.369146 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.604875 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.496786 | `speech_stt_recognize` | ❌ |
+| 3 | 0.407328 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.383609 | `azureaibestpractices_get` | ❌ |
+| 5 | 0.369139 | `foundry_openai_create-completion` | ❌ |
 
 ---
 
@@ -1304,8 +1304,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.561286 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.511082 | `speech_stt_recognize` | ❌ |
+| 1 | 0.561284 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.510909 | `speech_stt_recognize` | ❌ |
 | 3 | 0.352089 | `azureaibestpractices_get` | ❌ |
 | 4 | 0.351339 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.347597 | `deploy_pipeline_guidance_get` | ❌ |
@@ -1321,11 +1321,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.527330 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.455480 | `speech_stt_recognize` | ❌ |
-| 3 | 0.348553 | `foundry_models_deploy` | ❌ |
-| 4 | 0.339510 | `foundry_resource_get` | ❌ |
-| 5 | 0.335994 | `foundry_openai_embeddings-create` | ❌ |
+| 1 | 0.527351 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.455791 | `speech_stt_recognize` | ❌ |
+| 3 | 0.348515 | `foundry_models_deploy` | ❌ |
+| 4 | 0.339514 | `foundry_resource_get` | ❌ |
+| 5 | 0.335969 | `foundry_openai_embeddings-create` | ❌ |
 
 ---
 
@@ -1338,8 +1338,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.432833 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.410488 | `speech_stt_recognize` | ❌ |
+| 1 | 0.432836 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.410086 | `speech_stt_recognize` | ❌ |
 | 3 | 0.251789 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.196153 | `extension_cli_generate` | ❌ |
 | 5 | 0.183982 | `foundry_openai_create-completion` | ❌ |
@@ -1355,8 +1355,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.428068 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.369154 | `speech_stt_recognize` | ❌ |
+| 1 | 0.428079 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.369045 | `speech_stt_recognize` | ❌ |
 | 3 | 0.235175 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.220111 | `foundry_openai_create-completion` | ❌ |
 | 5 | 0.217152 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1372,8 +1372,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.444389 | `speech_tts_synthesize` | ✅ **EXPECTED** |
-| 2 | 0.385180 | `speech_stt_recognize` | ❌ |
+| 1 | 0.444444 | `speech_tts_synthesize` | ✅ **EXPECTED** |
+| 2 | 0.385267 | `speech_stt_recognize` | ❌ |
 | 3 | 0.236455 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.232592 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.219091 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1390,10 +1390,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.786360 | `appconfig_account_list` | ✅ **EXPECTED** |
-| 2 | 0.530613 | `appconfig_kv_get` | ❌ |
-| 3 | 0.491358 | `postgres_server_list` | ❌ |
+| 2 | 0.530560 | `appconfig_kv_get` | ❌ |
+| 3 | 0.491380 | `postgres_server_list` | ❌ |
 | 4 | 0.481223 | `kusto_cluster_list` | ❌ |
-| 5 | 0.479988 | `subscription_list` | ❌ |
+| 5 | 0.478324 | `subscription_list` | ❌ |
 
 ---
 
@@ -1407,10 +1407,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.634978 | `appconfig_account_list` | ✅ **EXPECTED** |
-| 2 | 0.464865 | `appconfig_kv_get` | ❌ |
-| 3 | 0.398495 | `subscription_list` | ❌ |
-| 4 | 0.391291 | `redis_list` | ❌ |
-| 5 | 0.372428 | `postgres_server_list` | ❌ |
+| 2 | 0.464815 | `appconfig_kv_get` | ❌ |
+| 3 | 0.396832 | `subscription_list` | ❌ |
+| 4 | 0.391262 | `redis_list` | ❌ |
+| 5 | 0.372456 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -1424,9 +1424,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.565435 | `appconfig_account_list` | ✅ **EXPECTED** |
-| 2 | 0.465344 | `appconfig_kv_get` | ❌ |
+| 2 | 0.465228 | `appconfig_kv_get` | ❌ |
 | 3 | 0.355916 | `postgres_server_config_get` | ❌ |
-| 4 | 0.348661 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.348954 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.327234 | `appconfig_kv_set` | ❌ |
 
 ---
@@ -1440,11 +1440,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.618276 | `appconfig_kv_delete` | ✅ **EXPECTED** |
-| 2 | 0.464358 | `appconfig_kv_get` | ❌ |
-| 3 | 0.424344 | `appconfig_kv_set` | ❌ |
-| 4 | 0.422700 | `appconfig_kv_lock_set` | ❌ |
-| 5 | 0.392016 | `appconfig_account_list` | ❌ |
+| 1 | 0.618225 | `appconfig_kv_delete` | ✅ **EXPECTED** |
+| 2 | 0.464309 | `appconfig_kv_get` | ❌ |
+| 3 | 0.424280 | `appconfig_kv_set` | ❌ |
+| 4 | 0.422671 | `appconfig_kv_lock_set` | ❌ |
+| 5 | 0.392038 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -1457,11 +1457,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.632687 | `appconfig_kv_get` | ✅ **EXPECTED** |
-| 2 | 0.557810 | `appconfig_account_list` | ❌ |
-| 3 | 0.530884 | `appconfig_kv_set` | ❌ |
-| 4 | 0.464635 | `appconfig_kv_delete` | ❌ |
-| 5 | 0.439089 | `appconfig_kv_lock_set` | ❌ |
+| 1 | 0.632525 | `appconfig_kv_get` | ✅ **EXPECTED** |
+| 2 | 0.557925 | `appconfig_account_list` | ❌ |
+| 3 | 0.531008 | `appconfig_kv_set` | ❌ |
+| 4 | 0.464796 | `appconfig_kv_delete` | ❌ |
+| 5 | 0.438974 | `appconfig_kv_lock_set` | ❌ |
 
 ---
 
@@ -1474,10 +1474,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.612555 | `appconfig_kv_get` | ✅ **EXPECTED** |
+| 1 | 0.612476 | `appconfig_kv_get` | ✅ **EXPECTED** |
 | 2 | 0.522426 | `appconfig_account_list` | ❌ |
 | 3 | 0.512945 | `appconfig_kv_set` | ❌ |
-| 4 | 0.468503 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.468775 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.457866 | `appconfig_kv_lock_set` | ❌ |
 
 ---
@@ -1491,10 +1491,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.512883 | `appconfig_kv_get` | ✅ **EXPECTED** |
+| 1 | 0.512803 | `appconfig_kv_get` | ✅ **EXPECTED** |
 | 2 | 0.449905 | `appconfig_account_list` | ❌ |
 | 3 | 0.398684 | `appconfig_kv_set` | ❌ |
-| 4 | 0.380614 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.380781 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.346166 | `appconfig_kv_lock_set` | ❌ |
 
 ---
@@ -1508,11 +1508,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552319 | `appconfig_kv_get` | ✅ **EXPECTED** |
-| 2 | 0.448852 | `appconfig_kv_set` | ❌ |
-| 3 | 0.441706 | `appconfig_kv_delete` | ❌ |
-| 4 | 0.437467 | `appconfig_account_list` | ❌ |
-| 5 | 0.416136 | `appconfig_kv_lock_set` | ❌ |
+| 1 | 0.552203 | `appconfig_kv_get` | ✅ **EXPECTED** |
+| 2 | 0.448912 | `appconfig_kv_set` | ❌ |
+| 3 | 0.441804 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.437432 | `appconfig_account_list` | ❌ |
+| 5 | 0.416264 | `appconfig_kv_lock_set` | ❌ |
 
 ---
 
@@ -1526,9 +1526,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.591237 | `appconfig_kv_lock_set` | ✅ **EXPECTED** |
-| 2 | 0.487174 | `appconfig_kv_get` | ❌ |
+| 2 | 0.487111 | `appconfig_kv_get` | ❌ |
 | 3 | 0.445551 | `appconfig_kv_set` | ❌ |
-| 4 | 0.431516 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.431655 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.373656 | `appconfig_account_list` | ❌ |
 
 ---
@@ -1543,8 +1543,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.555699 | `appconfig_kv_lock_set` | ✅ **EXPECTED** |
-| 2 | 0.505681 | `appconfig_kv_get` | ❌ |
-| 3 | 0.476497 | `appconfig_kv_delete` | ❌ |
+| 2 | 0.505608 | `appconfig_kv_get` | ❌ |
+| 3 | 0.476645 | `appconfig_kv_delete` | ❌ |
 | 4 | 0.425488 | `appconfig_kv_set` | ❌ |
 | 5 | 0.409406 | `appconfig_account_list` | ❌ |
 
@@ -1561,8 +1561,8 @@
 |------|-------|------|--------|
 | 1 | 0.609635 | `appconfig_kv_set` | ✅ **EXPECTED** |
 | 2 | 0.536497 | `appconfig_kv_lock_set` | ❌ |
-| 3 | 0.512707 | `appconfig_kv_get` | ❌ |
-| 4 | 0.505571 | `appconfig_kv_delete` | ❌ |
+| 3 | 0.512696 | `appconfig_kv_get` | ❌ |
+| 4 | 0.505552 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.377919 | `appconfig_account_list` | ❌ |
 
 ---
@@ -1578,7 +1578,7 @@
 |------|-------|------|--------|
 | 1 | 0.595632 | `applens_resource_diagnose` | ✅ **EXPECTED** |
 | 2 | 0.336090 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.300678 | `deploy_architecture_diagram_generate` | ❌ |
+| 3 | 0.300786 | `deploy_architecture_diagram_generate` | ❌ |
 | 4 | 0.273083 | `cloudarchitect_design` | ❌ |
 | 5 | 0.254473 | `monitor_resource_log_query` | ❌ |
 
@@ -1593,11 +1593,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.502361 | `applens_resource_diagnose` | ✅ **EXPECTED** |
-| 2 | 0.316297 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.255520 | `deploy_architecture_diagram_generate` | ❌ |
-| 4 | 0.249583 | `monitor_resource_log_query` | ❌ |
-| 5 | 0.225972 | `quota_usage_check` | ❌ |
+| 1 | 0.502412 | `applens_resource_diagnose` | ✅ **EXPECTED** |
+| 2 | 0.316343 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.255571 | `deploy_architecture_diagram_generate` | ❌ |
+| 4 | 0.249630 | `monitor_resource_log_query` | ❌ |
+| 5 | 0.226039 | `quota_usage_check` | ❌ |
 
 ---
 
@@ -1611,9 +1611,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.492820 | `applens_resource_diagnose` | ✅ **EXPECTED** |
-| 2 | 0.256177 | `deploy_architecture_diagram_generate` | ❌ |
+| 2 | 0.256325 | `deploy_architecture_diagram_generate` | ❌ |
 | 3 | 0.242574 | `cloudarchitect_design` | ❌ |
-| 4 | 0.225608 | `resourcehealth_health-events_list` | ❌ |
+| 4 | 0.225501 | `resourcehealth_health-events_list` | ❌ |
 | 5 | 0.211565 | `deploy_app_logs_get` | ❌ |
 
 ---
@@ -1627,11 +1627,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.717942 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.401337 | `sql_db_rename` | ❌ |
-| 3 | 0.399820 | `sql_db_create` | ❌ |
-| 4 | 0.363331 | `sql_db_show` | ❌ |
-| 5 | 0.357806 | `sql_db_list` | ❌ |
+| 1 | 0.717873 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.401346 | `sql_db_rename` | ❌ |
+| 3 | 0.399840 | `sql_db_create` | ❌ |
+| 4 | 0.362783 | `sql_db_show` | ❌ |
+| 5 | 0.357728 | `sql_db_list` | ❌ |
 
 ---
 
@@ -1644,11 +1644,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.688141 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.498181 | `sql_db_rename` | ❌ |
-| 3 | 0.497498 | `sql_db_create` | ❌ |
-| 4 | 0.470295 | `sql_db_show` | ❌ |
-| 5 | 0.453096 | `sql_db_list` | ❌ |
+| 1 | 0.688535 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.498175 | `sql_db_rename` | ❌ |
+| 3 | 0.497521 | `sql_db_create` | ❌ |
+| 4 | 0.469525 | `sql_db_show` | ❌ |
+| 5 | 0.453088 | `sql_db_list` | ❌ |
 
 ---
 
@@ -1661,11 +1661,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.675863 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.464805 | `sql_db_create` | ❌ |
-| 3 | 0.452350 | `sql_db_rename` | ❌ |
-| 4 | 0.432971 | `mysql_server_list` | ❌ |
-| 5 | 0.410308 | `sql_db_show` | ❌ |
+| 1 | 0.675721 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.465671 | `sql_db_create` | ❌ |
+| 3 | 0.453109 | `sql_db_rename` | ❌ |
+| 4 | 0.433043 | `mysql_server_list` | ❌ |
+| 5 | 0.410294 | `sql_db_show` | ❌ |
 
 ---
 
@@ -1678,11 +1678,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.627818 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.444036 | `sql_db_create` | ❌ |
-| 3 | 0.404796 | `postgres_database_query` | ❌ |
-| 4 | 0.400964 | `postgres_database_list` | ❌ |
-| 5 | 0.400693 | `sql_db_rename` | ❌ |
+| 1 | 0.628422 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.443738 | `sql_db_create` | ❌ |
+| 3 | 0.403577 | `postgres_database_query` | ❌ |
+| 4 | 0.400725 | `postgres_database_list` | ❌ |
+| 5 | 0.400396 | `sql_db_rename` | ❌ |
 
 ---
 
@@ -1695,11 +1695,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.663339 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.446760 | `cosmos_database_list` | ❌ |
-| 3 | 0.441896 | `cosmos_database_container_item_query` | ❌ |
-| 4 | 0.427305 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.420729 | `sql_db_rename` | ❌ |
+| 1 | 0.663078 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.446465 | `cosmos_database_list` | ❌ |
+| 3 | 0.441986 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.427350 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.420445 | `sql_db_rename` | ❌ |
 
 ---
 
@@ -1712,10 +1712,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.733770 | `appservice_database_add` | ✅ **EXPECTED** |
+| 1 | 0.733846 | `appservice_database_add` | ✅ **EXPECTED** |
 | 2 | 0.454554 | `sql_db_create` | ❌ |
 | 3 | 0.415274 | `sql_db_rename` | ❌ |
-| 4 | 0.414101 | `sql_server_create` | ❌ |
+| 4 | 0.414045 | `sql_server_create` | ❌ |
 | 5 | 0.410260 | `sql_db_list` | ❌ |
 
 ---
@@ -1729,11 +1729,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.746401 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.441616 | `sql_db_rename` | ❌ |
-| 3 | 0.433929 | `sql_db_create` | ❌ |
-| 4 | 0.391303 | `sql_db_list` | ❌ |
-| 5 | 0.390621 | `sql_db_show` | ❌ |
+| 1 | 0.746564 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.441659 | `sql_db_rename` | ❌ |
+| 3 | 0.433974 | `sql_db_create` | ❌ |
+| 4 | 0.391287 | `sql_db_list` | ❌ |
+| 5 | 0.390188 | `sql_db_show` | ❌ |
 
 ---
 
@@ -1746,10 +1746,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.680433 | `appservice_database_add` | ✅ **EXPECTED** |
+| 1 | 0.680469 | `appservice_database_add` | ✅ **EXPECTED** |
 | 2 | 0.429317 | `sql_db_rename` | ❌ |
 | 3 | 0.406322 | `sql_db_create` | ❌ |
-| 4 | 0.396939 | `sql_db_show` | ❌ |
+| 4 | 0.396522 | `sql_db_show` | ❌ |
 | 5 | 0.391430 | `sql_db_list` | ❌ |
 
 ---
@@ -1763,10 +1763,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.640547 | `appservice_database_add` | ✅ **EXPECTED** |
+| 1 | 0.640613 | `appservice_database_add` | ✅ **EXPECTED** |
 | 2 | 0.456884 | `sql_db_create` | ❌ |
-| 3 | 0.402801 | `sql_db_show` | ❌ |
-| 4 | 0.402743 | `sql_db_rename` | ❌ |
+| 3 | 0.402743 | `sql_db_rename` | ❌ |
+| 4 | 0.402138 | `sql_db_show` | ❌ |
 | 5 | 0.394211 | `sql_db_list` | ❌ |
 
 ---
@@ -1780,10 +1780,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.688364 | `appservice_database_add` | ✅ **EXPECTED** |
+| 1 | 0.688503 | `appservice_database_add` | ✅ **EXPECTED** |
 | 2 | 0.449170 | `sql_db_rename` | ❌ |
 | 3 | 0.448382 | `sql_db_create` | ❌ |
-| 4 | 0.414936 | `sql_db_show` | ❌ |
+| 4 | 0.414329 | `sql_db_show` | ❌ |
 | 5 | 0.411782 | `sql_db_list` | ❌ |
 
 ---
@@ -1799,7 +1799,7 @@
 |------|-------|------|--------|
 | 1 | 0.572473 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
 | 2 | 0.451485 | `azureaibestpractices_get` | ❌ |
-| 3 | 0.445157 | `get_bestpractices_get` | ❌ |
+| 3 | 0.449579 | `get_bestpractices_get` | ❌ |
 | 4 | 0.390478 | `azureterraformbestpractices_get` | ❌ |
 | 5 | 0.383948 | `applens_resource_diagnose` | ❌ |
 
@@ -1816,7 +1816,7 @@
 |------|-------|------|--------|
 | 1 | 0.696531 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
 | 2 | 0.508138 | `azureaibestpractices_get` | ❌ |
-| 3 | 0.468384 | `get_bestpractices_get` | ❌ |
+| 3 | 0.470571 | `get_bestpractices_get` | ❌ |
 | 4 | 0.452231 | `applens_resource_diagnose` | ❌ |
 | 5 | 0.435241 | `azureterraformbestpractices_get` | ❌ |
 
@@ -1851,8 +1851,8 @@
 | 1 | 0.509502 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
 | 2 | 0.434220 | `azureaibestpractices_get` | ❌ |
 | 3 | 0.419670 | `applens_resource_diagnose` | ❌ |
-| 4 | 0.383767 | `get_bestpractices_get` | ❌ |
-| 5 | 0.367307 | `deploy_architecture_diagram_generate` | ❌ |
+| 4 | 0.386166 | `get_bestpractices_get` | ❌ |
+| 5 | 0.367278 | `deploy_architecture_diagram_generate` | ❌ |
 
 ---
 
@@ -1865,11 +1865,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.593241 | `storage_account_create` | ❌ |
+| 1 | 0.593588 | `storage_account_create` | ❌ |
 | 2 | 0.564940 | `storage_blob_container_create` | ❌ |
 | 3 | 0.493684 | `storage_account_get` | ❌ |
 | 4 | 0.474398 | `storage_blob_container_get` | ❌ |
-| 5 | 0.470546 | `redis_create` | ❌ |
+| 5 | 0.470489 | `redis_create` | ❌ |
 
 ---
 
@@ -1882,11 +1882,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.593467 | `search_service_list` | ❌ |
+| 1 | 0.593404 | `search_service_list` | ❌ |
 | 2 | 0.575274 | `kusto_cluster_list` | ❌ |
 | 3 | 0.549965 | `virtualdesktop_hostpool_list` | ❌ |
 | 4 | 0.544412 | `monitor_workspace_list` | ❌ |
-| 5 | 0.536252 | `subscription_list` | ❌ |
+| 5 | 0.536225 | `subscription_list` | ❌ |
 
 ---
 
@@ -1901,8 +1901,8 @@
 |------|-------|------|--------|
 | 1 | 0.710307 | `storage_account_get` | ❌ |
 | 2 | 0.602173 | `storage_blob_container_get` | ❌ |
-| 3 | 0.543448 | `storage_blob_get` | ❌ |
-| 4 | 0.519788 | `storage_account_create` | ❌ |
+| 3 | 0.543268 | `storage_blob_get` | ❌ |
+| 4 | 0.520507 | `storage_account_create` | ❌ |
 | 5 | 0.493145 | `cosmos_account_list` | ❌ |
 
 ---
@@ -1920,7 +1920,7 @@
 | 2 | 0.473250 | `extension_cli_generate` | ❌ |
 | 3 | 0.389354 | `azureterraformbestpractices_get` | ❌ |
 | 4 | 0.382389 | `deploy_plan_get` | ❌ |
-| 5 | 0.366012 | `get_bestpractices_get` | ❌ |
+| 5 | 0.369148 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -1935,7 +1935,7 @@
 |------|-------|------|--------|
 | 1 | 0.460416 | `extension_cli_install` | ✅ **EXPECTED** |
 | 2 | 0.429600 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.365212 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.365149 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.335279 | `deploy_plan_get` | ❌ |
 | 5 | 0.326135 | `deploy_pipeline_guidance_get` | ❌ |
 
@@ -1950,11 +1950,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622627 | `extension_cli_install` | ✅ **EXPECTED** |
-| 2 | 0.439362 | `get_bestpractices_get` | ❌ |
-| 3 | 0.432815 | `deploy_pipeline_guidance_get` | ❌ |
-| 4 | 0.430613 | `extension_cli_generate` | ❌ |
-| 5 | 0.418028 | `deploy_plan_get` | ❌ |
+| 1 | 0.622705 | `extension_cli_install` | ✅ **EXPECTED** |
+| 2 | 0.442495 | `get_bestpractices_get` | ❌ |
+| 3 | 0.432913 | `deploy_pipeline_guidance_get` | ❌ |
+| 4 | 0.430723 | `extension_cli_generate` | ❌ |
+| 5 | 0.418161 | `deploy_plan_get` | ❌ |
 
 ---
 
@@ -1970,7 +1970,7 @@
 | 1 | 0.743568 | `acr_registry_list` | ✅ **EXPECTED** |
 | 2 | 0.711580 | `acr_registry_repository_list` | ❌ |
 | 3 | 0.585675 | `kusto_cluster_list` | ❌ |
-| 4 | 0.541506 | `search_service_list` | ❌ |
+| 4 | 0.541471 | `search_service_list` | ❌ |
 | 5 | 0.514293 | `cosmos_account_list` | ❌ |
 
 ---
@@ -1987,8 +1987,8 @@
 | 1 | 0.586014 | `acr_registry_list` | ✅ **EXPECTED** |
 | 2 | 0.563636 | `acr_registry_repository_list` | ❌ |
 | 3 | 0.460544 | `storage_blob_container_get` | ❌ |
-| 4 | 0.415552 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.402247 | `redis_list` | ❌ |
+| 4 | 0.415647 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.402253 | `redis_list` | ❌ |
 
 ---
 
@@ -2005,7 +2005,7 @@
 | 2 | 0.563476 | `acr_registry_repository_list` | ❌ |
 | 3 | 0.516769 | `kusto_cluster_list` | ❌ |
 | 4 | 0.515378 | `storage_blob_container_get` | ❌ |
-| 5 | 0.480352 | `redis_list` | ❌ |
+| 5 | 0.480330 | `redis_list` | ❌ |
 
 ---
 
@@ -2056,7 +2056,7 @@
 | 2 | 0.617504 | `acr_registry_list` | ❌ |
 | 3 | 0.544172 | `kusto_cluster_list` | ❌ |
 | 4 | 0.508483 | `storage_blob_container_get` | ❌ |
-| 5 | 0.495526 | `postgres_server_list` | ❌ |
+| 5 | 0.495567 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -2072,8 +2072,8 @@
 | 1 | 0.546334 | `acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.469295 | `acr_registry_list` | ❌ |
 | 3 | 0.451083 | `storage_blob_container_get` | ❌ |
-| 4 | 0.407973 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.373492 | `storage_blob_get` | ❌ |
+| 4 | 0.408098 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.373464 | `storage_blob_get` | ❌ |
 
 ---
 
@@ -2089,8 +2089,8 @@
 | 1 | 0.674296 | `acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.541779 | `acr_registry_list` | ❌ |
 | 3 | 0.437510 | `storage_blob_container_get` | ❌ |
-| 4 | 0.433927 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.383106 | `kusto_database_list` | ❌ |
+| 4 | 0.434016 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.383183 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -2106,8 +2106,8 @@
 | 1 | 0.600780 | `acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.501842 | `acr_registry_list` | ❌ |
 | 3 | 0.430880 | `storage_blob_container_get` | ❌ |
-| 4 | 0.418623 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.378151 | `redis_list` | ❌ |
+| 4 | 0.418748 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.378199 | `redis_list` | ❌ |
 
 ---
 
@@ -2120,8 +2120,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498119 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.229043 | `communication_sms_send` | ❌ |
+| 1 | 0.498292 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.226847 | `communication_sms_send` | ❌ |
 | 3 | 0.188975 | `eventgrid_events_publish` | ❌ |
 | 4 | 0.149092 | `foundry_openai_chat-completions-create` | ❌ |
 | 5 | 0.145951 | `servicebus_topic_details` | ❌ |
@@ -2137,11 +2137,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498745 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.314412 | `communication_sms_send` | ❌ |
-| 3 | 0.239044 | `foundry_openai_chat-completions-create` | ❌ |
-| 4 | 0.215400 | `speech_tts_synthesize` | ❌ |
-| 5 | 0.211154 | `search_knowledge_base_retrieve` | ❌ |
+| 1 | 0.498417 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.313045 | `communication_sms_send` | ❌ |
+| 3 | 0.239071 | `foundry_openai_chat-completions-create` | ❌ |
+| 4 | 0.215324 | `speech_tts_synthesize` | ❌ |
+| 5 | 0.211103 | `search_knowledge_base_retrieve` | ❌ |
 
 ---
 
@@ -2154,11 +2154,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.519813 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.207568 | `communication_sms_send` | ❌ |
-| 3 | 0.152414 | `eventgrid_events_publish` | ❌ |
-| 4 | 0.151937 | `servicebus_topic_details` | ❌ |
-| 5 | 0.147574 | `foundry_agents_connect` | ❌ |
+| 1 | 0.520967 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.205130 | `communication_sms_send` | ❌ |
+| 3 | 0.152418 | `eventgrid_events_publish` | ❌ |
+| 4 | 0.152013 | `servicebus_topic_details` | ❌ |
+| 5 | 0.147540 | `foundry_agents_connect` | ❌ |
 
 ---
 
@@ -2171,11 +2171,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.533653 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.219537 | `communication_sms_send` | ❌ |
-| 3 | 0.106189 | `foundry_openai_chat-completions-create` | ❌ |
-| 4 | 0.106026 | `foundry_agents_query-and-evaluate` | ❌ |
-| 5 | 0.084905 | `cosmos_account_list` | ❌ |
+| 1 | 0.532999 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.217585 | `communication_sms_send` | ❌ |
+| 3 | 0.106416 | `foundry_openai_chat-completions-create` | ❌ |
+| 4 | 0.105929 | `foundry_agents_query-and-evaluate` | ❌ |
+| 5 | 0.085261 | `cosmos_account_list` | ❌ |
 
 ---
 
@@ -2188,8 +2188,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.541232 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.244473 | `communication_sms_send` | ❌ |
+| 1 | 0.540793 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.241620 | `communication_sms_send` | ❌ |
 | 3 | 0.138567 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.114324 | `foundry_agents_query-and-evaluate` | ❌ |
 | 5 | 0.087063 | `postgres_server_param_set` | ❌ |
@@ -2205,8 +2205,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.512233 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.200157 | `communication_sms_send` | ❌ |
+| 1 | 0.512623 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.198552 | `communication_sms_send` | ❌ |
 | 3 | 0.164115 | `mysql_server_param_set` | ❌ |
 | 4 | 0.158759 | `postgres_server_param_set` | ❌ |
 | 5 | 0.143574 | `appconfig_kv_set` | ❌ |
@@ -2222,11 +2222,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.472887 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.255183 | `communication_sms_send` | ❌ |
+| 1 | 0.473175 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.253449 | `communication_sms_send` | ❌ |
 | 3 | 0.168394 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.166531 | `foundry_openai_embeddings-create` | ❌ |
-| 5 | 0.156809 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.156897 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -2239,8 +2239,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.528971 | `communication_email_send` | ✅ **EXPECTED** |
-| 2 | 0.241086 | `communication_sms_send` | ❌ |
+| 1 | 0.528789 | `communication_email_send` | ✅ **EXPECTED** |
+| 2 | 0.239846 | `communication_sms_send` | ❌ |
 | 3 | 0.137538 | `confidentialledger_entries_append` | ❌ |
 | 4 | 0.108748 | `confidentialledger_entries_get` | ❌ |
 | 5 | 0.105033 | `storage_blob_upload` | ❌ |
@@ -2256,11 +2256,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.533764 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.251333 | `communication_email_send` | ❌ |
+| 1 | 0.533763 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.251429 | `communication_email_send` | ❌ |
 | 3 | 0.221055 | `foundry_openai_chat-completions-create` | ❌ |
-| 4 | 0.166034 | `speech_tts_synthesize` | ❌ |
-| 5 | 0.154678 | `foundry_threads_create` | ❌ |
+| 4 | 0.166041 | `speech_tts_synthesize` | ❌ |
+| 5 | 0.154703 | `foundry_threads_create` | ❌ |
 
 ---
 
@@ -2273,11 +2273,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.545909 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.294699 | `communication_email_send` | ❌ |
-| 3 | 0.204588 | `loadtesting_testrun_create` | ❌ |
+| 1 | 0.543748 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.294860 | `communication_email_send` | ❌ |
+| 3 | 0.204377 | `loadtesting_testrun_create` | ❌ |
 | 4 | 0.200481 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.139254 | `speech_tts_synthesize` | ❌ |
+| 5 | 0.139237 | `foundry_agents_create` | ❌ |
 
 ---
 
@@ -2290,8 +2290,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.545659 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.422414 | `communication_email_send` | ❌ |
+| 1 | 0.543753 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.421988 | `communication_email_send` | ❌ |
 | 3 | 0.189219 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.142029 | `foundry_agents_query-and-evaluate` | ❌ |
 | 5 | 0.106261 | `foundry_threads_get-messages` | ❌ |
@@ -2307,11 +2307,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.554928 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.268972 | `communication_email_send` | ❌ |
-| 3 | 0.191848 | `extension_azqr` | ❌ |
-| 4 | 0.186765 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.170726 | `foundry_agents_query-and-evaluate` | ❌ |
+| 1 | 0.548621 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.269081 | `communication_email_send` | ❌ |
+| 3 | 0.191793 | `extension_azqr` | ❌ |
+| 4 | 0.186701 | `foundry_openai_chat-completions-create` | ❌ |
+| 5 | 0.170739 | `foundry_agents_query-and-evaluate` | ❌ |
 
 ---
 
@@ -2324,10 +2324,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.538877 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.270002 | `communication_email_send` | ❌ |
-| 3 | 0.192505 | `foundry_agents_create` | ❌ |
-| 4 | 0.188153 | `loadtesting_testrun_create` | ❌ |
+| 1 | 0.534739 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.269794 | `communication_email_send` | ❌ |
+| 3 | 0.192503 | `foundry_agents_create` | ❌ |
+| 4 | 0.187922 | `loadtesting_testrun_create` | ❌ |
 | 5 | 0.185542 | `foundry_openai_chat-completions-create` | ❌ |
 
 ---
@@ -2341,11 +2341,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.474714 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.286354 | `communication_email_send` | ❌ |
-| 3 | 0.164395 | `foundry_agents_query-and-evaluate` | ❌ |
-| 4 | 0.150495 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.128722 | `cosmos_account_list` | ❌ |
+| 1 | 0.472380 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.286513 | `communication_email_send` | ❌ |
+| 3 | 0.164033 | `foundry_agents_query-and-evaluate` | ❌ |
+| 4 | 0.149894 | `foundry_openai_chat-completions-create` | ❌ |
+| 5 | 0.128541 | `cosmos_account_list` | ❌ |
 
 ---
 
@@ -2358,8 +2358,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.563970 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.302666 | `communication_email_send` | ❌ |
+| 1 | 0.563380 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.302363 | `communication_email_send` | ❌ |
 | 3 | 0.240744 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.183651 | `search_knowledge_base_retrieve` | ❌ |
 | 5 | 0.173726 | `foundry_openai_create-completion` | ❌ |
@@ -2375,8 +2375,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.598230 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.314411 | `communication_email_send` | ❌ |
+| 1 | 0.592519 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.314134 | `communication_email_send` | ❌ |
 | 3 | 0.206916 | `foundry_agents_query-and-evaluate` | ❌ |
 | 4 | 0.201433 | `foundry_openai_chat-completions-create` | ❌ |
 | 5 | 0.187824 | `confidentialledger_entries_append` | ❌ |
@@ -2412,7 +2412,7 @@
 | 1 | 0.602247 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
 | 2 | 0.357646 | `confidentialledger_entries_get` | ❌ |
 | 3 | 0.211990 | `appconfig_kv_lock_set` | ❌ |
-| 4 | 0.195471 | `keyvault_secret_create` | ❌ |
+| 4 | 0.195506 | `keyvault_secret_create` | ❌ |
 | 5 | 0.184077 | `keyvault_certificate_import` | ❌ |
 
 ---
@@ -2426,11 +2426,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546660 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
-| 2 | 0.451994 | `confidentialledger_entries_get` | ❌ |
-| 3 | 0.225141 | `appconfig_kv_lock_set` | ❌ |
-| 4 | 0.215932 | `appconfig_kv_set` | ❌ |
-| 5 | 0.203262 | `keyvault_certificate_import` | ❌ |
+| 1 | 0.546739 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
+| 2 | 0.451976 | `confidentialledger_entries_get` | ❌ |
+| 3 | 0.225138 | `appconfig_kv_lock_set` | ❌ |
+| 4 | 0.215944 | `appconfig_kv_set` | ❌ |
+| 5 | 0.203288 | `keyvault_certificate_import` | ❌ |
 
 ---
 
@@ -2443,11 +2443,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.496023 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
-| 2 | 0.340187 | `confidentialledger_entries_get` | ❌ |
-| 3 | 0.218473 | `monitor_activitylog_list` | ❌ |
-| 4 | 0.215229 | `storage_blob_container_create` | ❌ |
-| 5 | 0.204925 | `monitor_resource_log_query` | ❌ |
+| 1 | 0.495991 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
+| 2 | 0.340182 | `confidentialledger_entries_get` | ❌ |
+| 3 | 0.218460 | `monitor_activitylog_list` | ❌ |
+| 4 | 0.214966 | `storage_blob_container_create` | ❌ |
+| 5 | 0.204838 | `monitor_resource_log_query` | ❌ |
 
 ---
 
@@ -2463,7 +2463,7 @@
 | 1 | 0.622138 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
 | 2 | 0.524777 | `confidentialledger_entries_get` | ❌ |
 | 3 | 0.252508 | `appconfig_kv_lock_set` | ❌ |
-| 4 | 0.240252 | `keyvault_secret_create` | ❌ |
+| 4 | 0.240279 | `keyvault_secret_create` | ❌ |
 | 5 | 0.186890 | `appconfig_kv_set` | ❌ |
 
 ---
@@ -2498,7 +2498,7 @@
 | 2 | 0.416580 | `confidentialledger_entries_append` | ❌ |
 | 3 | 0.223959 | `loadtesting_testrun_get` | ❌ |
 | 4 | 0.218412 | `monitor_resource_log_query` | ❌ |
-| 5 | 0.217671 | `loadtesting_testrun_list` | ❌ |
+| 5 | 0.217685 | `loadtesting_testrun_list` | ❌ |
 
 ---
 
@@ -2513,8 +2513,8 @@
 |------|-------|------|--------|
 | 1 | 0.818357 | `cosmos_account_list` | ✅ **EXPECTED** |
 | 2 | 0.668480 | `cosmos_database_list` | ❌ |
-| 3 | 0.636036 | `subscription_list` | ❌ |
-| 4 | 0.615268 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.635401 | `subscription_list` | ❌ |
+| 4 | 0.615148 | `cosmos_database_container_list` | ❌ |
 | 5 | 0.601467 | `kusto_cluster_list` | ❌ |
 
 ---
@@ -2528,11 +2528,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.665447 | `cosmos_account_list` | ✅ **EXPECTED** |
-| 2 | 0.605357 | `cosmos_database_list` | ❌ |
-| 3 | 0.571613 | `cosmos_database_container_list` | ❌ |
-| 4 | 0.549391 | `cosmos_database_container_item_query` | ❌ |
-| 5 | 0.503830 | `storage_account_get` | ❌ |
+| 1 | 0.665332 | `cosmos_account_list` | ✅ **EXPECTED** |
+| 2 | 0.605274 | `cosmos_database_list` | ❌ |
+| 3 | 0.571515 | `cosmos_database_container_list` | ❌ |
+| 4 | 0.549390 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.503730 | `storage_account_get` | ❌ |
 
 ---
 
@@ -2546,10 +2546,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.752494 | `cosmos_account_list` | ✅ **EXPECTED** |
-| 2 | 0.607201 | `subscription_list` | ❌ |
+| 2 | 0.606676 | `subscription_list` | ❌ |
 | 3 | 0.605125 | `cosmos_database_list` | ❌ |
-| 4 | 0.566249 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.563854 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.566185 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.563909 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -2562,8 +2562,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.658679 | `cosmos_database_container_item_query` | ✅ **EXPECTED** |
-| 2 | 0.605253 | `cosmos_database_container_list` | ❌ |
+| 1 | 0.658696 | `cosmos_database_container_item_query` | ✅ **EXPECTED** |
+| 2 | 0.605176 | `cosmos_database_container_list` | ❌ |
 | 3 | 0.487612 | `storage_blob_container_get` | ❌ |
 | 4 | 0.477874 | `cosmos_database_list` | ❌ |
 | 5 | 0.447757 | `cosmos_account_list` | ❌ |
@@ -2579,11 +2579,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.852832 | `cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.681044 | `cosmos_database_list` | ❌ |
-| 3 | 0.680732 | `cosmos_database_container_item_query` | ❌ |
-| 4 | 0.632335 | `storage_blob_container_get` | ❌ |
-| 5 | 0.630659 | `cosmos_account_list` | ❌ |
+| 1 | 0.852754 | `cosmos_database_container_list` | ✅ **EXPECTED** |
+| 2 | 0.681006 | `cosmos_database_list` | ❌ |
+| 3 | 0.680807 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.632368 | `storage_blob_container_get` | ❌ |
+| 5 | 0.630666 | `cosmos_account_list` | ❌ |
 
 ---
 
@@ -2596,8 +2596,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.789395 | `cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.648086 | `cosmos_database_container_item_query` | ❌ |
+| 1 | 0.789368 | `cosmos_database_container_list` | ✅ **EXPECTED** |
+| 2 | 0.648129 | `cosmos_database_container_item_query` | ❌ |
 | 3 | 0.614220 | `cosmos_database_list` | ❌ |
 | 4 | 0.591361 | `storage_blob_container_get` | ❌ |
 | 5 | 0.562062 | `cosmos_account_list` | ❌ |
@@ -2613,11 +2613,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.815683 | `cosmos_database_list` | ✅ **EXPECTED** |
-| 2 | 0.668515 | `cosmos_account_list` | ❌ |
-| 3 | 0.665298 | `cosmos_database_container_list` | ❌ |
-| 4 | 0.606309 | `cosmos_database_container_item_query` | ❌ |
-| 5 | 0.583571 | `kusto_database_list` | ❌ |
+| 1 | 0.815729 | `cosmos_database_list` | ✅ **EXPECTED** |
+| 2 | 0.668546 | `cosmos_account_list` | ❌ |
+| 3 | 0.665272 | `cosmos_database_container_list` | ❌ |
+| 4 | 0.606441 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.583598 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -2630,11 +2630,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.749370 | `cosmos_database_list` | ✅ **EXPECTED** |
-| 2 | 0.624759 | `cosmos_database_container_list` | ❌ |
-| 3 | 0.614572 | `cosmos_account_list` | ❌ |
-| 4 | 0.579810 | `cosmos_database_container_item_query` | ❌ |
-| 5 | 0.538479 | `mysql_database_list` | ❌ |
+| 1 | 0.749298 | `cosmos_database_list` | ✅ **EXPECTED** |
+| 2 | 0.624777 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.614542 | `cosmos_account_list` | ❌ |
+| 4 | 0.579953 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.538146 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -2647,11 +2647,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.590264 | `kusto_cluster_get` | ✅ **EXPECTED** |
+| 1 | 0.592387 | `kusto_cluster_get` | ✅ **EXPECTED** |
 | 2 | 0.463832 | `kusto_cluster_list` | ❌ |
 | 3 | 0.428159 | `kusto_query` | ❌ |
-| 4 | 0.426914 | `kusto_table_schema` | ❌ |
-| 5 | 0.425665 | `kusto_database_list` | ❌ |
+| 4 | 0.425669 | `kusto_database_list` | ❌ |
+| 5 | 0.422577 | `kusto_table_schema` | ❌ |
 
 ---
 
@@ -2665,9 +2665,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.793744 | `kusto_cluster_list` | ✅ **EXPECTED** |
-| 2 | 0.630624 | `kusto_database_list` | ❌ |
-| 3 | 0.573395 | `kusto_cluster_get` | ❌ |
-| 4 | 0.525058 | `aks_cluster_get` | ❌ |
+| 2 | 0.630507 | `kusto_database_list` | ❌ |
+| 3 | 0.570615 | `kusto_cluster_get` | ❌ |
+| 4 | 0.525025 | `aks_cluster_get` | ❌ |
 | 5 | 0.509397 | `grafana_list` | ❌ |
 
 ---
@@ -2681,11 +2681,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.531346 | `kusto_cluster_list` | ✅ **EXPECTED** |
-| 2 | 0.465302 | `kusto_cluster_get` | ❌ |
-| 3 | 0.432346 | `kusto_database_list` | ❌ |
-| 4 | 0.369572 | `aks_cluster_get` | ❌ |
-| 5 | 0.367843 | `kusto_table_schema` | ❌ |
+| 1 | 0.531307 | `kusto_cluster_list` | ✅ **EXPECTED** |
+| 2 | 0.467086 | `kusto_cluster_get` | ❌ |
+| 3 | 0.432288 | `kusto_database_list` | ❌ |
+| 4 | 0.369596 | `aks_cluster_get` | ❌ |
+| 5 | 0.363119 | `kusto_table_schema` | ❌ |
 
 ---
 
@@ -2698,11 +2698,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.701484 | `kusto_cluster_list` | ✅ **EXPECTED** |
-| 2 | 0.571191 | `kusto_cluster_get` | ❌ |
-| 3 | 0.548769 | `kusto_database_list` | ❌ |
-| 4 | 0.498904 | `aks_cluster_get` | ❌ |
-| 5 | 0.474201 | `redis_list` | ❌ |
+| 1 | 0.701451 | `kusto_cluster_list` | ✅ **EXPECTED** |
+| 2 | 0.571302 | `kusto_cluster_get` | ❌ |
+| 3 | 0.548696 | `kusto_database_list` | ❌ |
+| 4 | 0.498885 | `aks_cluster_get` | ❌ |
+| 5 | 0.474229 | `redis_list` | ❌ |
 
 ---
 
@@ -2715,10 +2715,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.677146 | `kusto_database_list` | ✅ **EXPECTED** |
+| 1 | 0.677059 | `kusto_database_list` | ✅ **EXPECTED** |
 | 2 | 0.560592 | `kusto_cluster_list` | ❌ |
-| 3 | 0.556709 | `kusto_table_list` | ❌ |
-| 4 | 0.553191 | `postgres_database_list` | ❌ |
+| 3 | 0.556795 | `kusto_table_list` | ❌ |
+| 4 | 0.553218 | `postgres_database_list` | ❌ |
 | 5 | 0.549673 | `cosmos_database_list` | ❌ |
 
 ---
@@ -2732,11 +2732,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.623569 | `kusto_database_list` | ✅ **EXPECTED** |
+| 1 | 0.623523 | `kusto_database_list` | ✅ **EXPECTED** |
 | 2 | 0.509952 | `kusto_cluster_list` | ❌ |
-| 3 | 0.507024 | `kusto_table_list` | ❌ |
+| 3 | 0.507073 | `kusto_table_list` | ❌ |
 | 4 | 0.497144 | `cosmos_database_list` | ❌ |
-| 5 | 0.491400 | `mysql_database_list` | ❌ |
+| 5 | 0.491525 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -2749,11 +2749,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.423754 | `kusto_query` | ✅ **EXPECTED** |
-| 2 | 0.410997 | `kusto_table_schema` | ❌ |
-| 3 | 0.409589 | `postgres_database_query` | ❌ |
-| 4 | 0.407816 | `kusto_sample` | ❌ |
-| 5 | 0.404013 | `kusto_cluster_list` | ❌ |
+| 1 | 0.423682 | `kusto_query` | ✅ **EXPECTED** |
+| 2 | 0.409638 | `postgres_database_query` | ❌ |
+| 3 | 0.408262 | `kusto_table_schema` | ❌ |
+| 4 | 0.407829 | `kusto_sample` | ❌ |
+| 5 | 0.403991 | `kusto_cluster_list` | ❌ |
 
 ---
 
@@ -2766,11 +2766,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595523 | `kusto_sample` | ✅ **EXPECTED** |
-| 2 | 0.515062 | `kusto_table_schema` | ❌ |
-| 3 | 0.424250 | `kusto_table_list` | ❌ |
-| 4 | 0.400924 | `kusto_cluster_list` | ❌ |
-| 5 | 0.399525 | `kusto_cluster_get` | ❌ |
+| 1 | 0.595602 | `kusto_sample` | ✅ **EXPECTED** |
+| 2 | 0.510131 | `kusto_table_schema` | ❌ |
+| 3 | 0.424114 | `kusto_table_list` | ❌ |
+| 4 | 0.401141 | `kusto_cluster_get` | ❌ |
+| 5 | 0.400969 | `kusto_cluster_list` | ❌ |
 
 ---
 
@@ -2783,11 +2783,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.679610 | `kusto_table_list` | ✅ **EXPECTED** |
-| 2 | 0.585046 | `postgres_table_list` | ❌ |
-| 3 | 0.581247 | `kusto_database_list` | ❌ |
-| 4 | 0.556659 | `mysql_table_list` | ❌ |
-| 5 | 0.549847 | `monitor_table_list` | ❌ |
+| 1 | 0.679642 | `kusto_table_list` | ✅ **EXPECTED** |
+| 2 | 0.585247 | `postgres_table_list` | ❌ |
+| 3 | 0.581207 | `kusto_database_list` | ❌ |
+| 4 | 0.556724 | `mysql_table_list` | ❌ |
+| 5 | 0.549928 | `monitor_table_list` | ❌ |
 
 ---
 
@@ -2800,11 +2800,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.619277 | `kusto_table_list` | ✅ **EXPECTED** |
-| 2 | 0.559211 | `kusto_table_schema` | ❌ |
-| 3 | 0.527534 | `kusto_database_list` | ❌ |
-| 4 | 0.524618 | `mysql_table_list` | ❌ |
-| 5 | 0.523453 | `postgres_table_list` | ❌ |
+| 1 | 0.619252 | `kusto_table_list` | ✅ **EXPECTED** |
+| 2 | 0.554332 | `kusto_table_schema` | ❌ |
+| 3 | 0.527625 | `kusto_database_list` | ❌ |
+| 4 | 0.524691 | `mysql_table_list` | ❌ |
+| 5 | 0.523440 | `postgres_table_list` | ❌ |
 
 ---
 
@@ -2817,11 +2817,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.671993 | `kusto_table_schema` | ✅ **EXPECTED** |
-| 2 | 0.563981 | `postgres_table_schema_get` | ❌ |
-| 3 | 0.528064 | `mysql_table_schema_get` | ❌ |
-| 4 | 0.490997 | `kusto_sample` | ❌ |
-| 5 | 0.489909 | `kusto_table_list` | ❌ |
+| 1 | 0.667403 | `kusto_table_schema` | ✅ **EXPECTED** |
+| 2 | 0.564257 | `postgres_table_schema_get` | ❌ |
+| 3 | 0.527838 | `mysql_table_schema_get` | ❌ |
+| 4 | 0.491179 | `kusto_sample` | ❌ |
+| 5 | 0.489875 | `kusto_table_list` | ❌ |
 
 ---
 
@@ -2834,8 +2834,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.633968 | `postgres_database_list` | ❌ |
-| 2 | 0.623421 | `mysql_database_list` | ✅ **EXPECTED** |
+| 1 | 0.634056 | `postgres_database_list` | ❌ |
+| 2 | 0.623755 | `mysql_database_list` | ✅ **EXPECTED** |
 | 3 | 0.534457 | `mysql_table_list` | ❌ |
 | 4 | 0.498918 | `mysql_server_list` | ❌ |
 | 5 | 0.490148 | `sql_db_list` | ❌ |
@@ -2851,8 +2851,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.588121 | `mysql_database_list` | ✅ **EXPECTED** |
-| 2 | 0.573961 | `postgres_database_list` | ❌ |
+| 1 | 0.588571 | `mysql_database_list` | ✅ **EXPECTED** |
+| 2 | 0.574089 | `postgres_database_list` | ❌ |
 | 3 | 0.483855 | `mysql_table_list` | ❌ |
 | 4 | 0.463244 | `mysql_server_list` | ❌ |
 | 5 | 0.444547 | `sql_db_list` | ❌ |
@@ -2868,11 +2868,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.476369 | `mysql_table_list` | ❌ |
-| 2 | 0.455720 | `mysql_database_list` | ❌ |
-| 3 | 0.433329 | `mysql_database_query` | ✅ **EXPECTED** |
-| 4 | 0.419829 | `mysql_server_list` | ❌ |
-| 5 | 0.409401 | `mysql_table_schema_get` | ❌ |
+| 1 | 0.476402 | `mysql_table_list` | ❌ |
+| 2 | 0.456331 | `mysql_database_list` | ❌ |
+| 3 | 0.433390 | `mysql_database_query` | ✅ **EXPECTED** |
+| 4 | 0.419864 | `mysql_server_list` | ❌ |
+| 5 | 0.409438 | `mysql_table_schema_get` | ❌ |
 
 ---
 
@@ -2885,11 +2885,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.531892 | `postgres_server_config_get` | ❌ |
-| 2 | 0.516887 | `mysql_server_param_set` | ❌ |
+| 1 | 0.531887 | `postgres_server_config_get` | ❌ |
+| 2 | 0.516893 | `mysql_server_param_set` | ❌ |
 | 3 | 0.489816 | `mysql_server_config_get` | ✅ **EXPECTED** |
-| 4 | 0.477005 | `mysql_server_param_get` | ❌ |
-| 5 | 0.426563 | `mysql_table_schema_get` | ❌ |
+| 4 | 0.476863 | `mysql_server_param_get` | ❌ |
+| 5 | 0.426507 | `mysql_table_schema_get` | ❌ |
 
 ---
 
@@ -2902,8 +2902,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.678536 | `postgres_server_list` | ❌ |
-| 2 | 0.558177 | `mysql_database_list` | ❌ |
+| 1 | 0.678473 | `postgres_server_list` | ❌ |
+| 2 | 0.558219 | `mysql_database_list` | ❌ |
 | 3 | 0.554818 | `mysql_server_list` | ✅ **EXPECTED** |
 | 4 | 0.513706 | `kusto_cluster_list` | ❌ |
 | 5 | 0.501199 | `mysql_table_list` | ❌ |
@@ -2919,11 +2919,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.478518 | `mysql_database_list` | ❌ |
+| 1 | 0.478649 | `mysql_database_list` | ❌ |
 | 2 | 0.474586 | `mysql_server_list` | ✅ **EXPECTED** |
-| 3 | 0.435692 | `postgres_server_list` | ❌ |
+| 3 | 0.435642 | `postgres_server_list` | ❌ |
 | 4 | 0.412380 | `mysql_table_list` | ❌ |
-| 5 | 0.389882 | `postgres_database_list` | ❌ |
+| 5 | 0.389993 | `postgres_database_list` | ❌ |
 
 ---
 
@@ -2936,11 +2936,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.636471 | `postgres_server_list` | ❌ |
+| 1 | 0.636435 | `postgres_server_list` | ❌ |
 | 2 | 0.534266 | `mysql_server_list` | ✅ **EXPECTED** |
-| 3 | 0.530210 | `mysql_database_list` | ❌ |
+| 3 | 0.530323 | `mysql_database_list` | ❌ |
 | 4 | 0.475052 | `kusto_cluster_list` | ❌ |
-| 5 | 0.470468 | `redis_list` | ❌ |
+| 5 | 0.470458 | `redis_list` | ❌ |
 
 ---
 
@@ -2953,11 +2953,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.495623 | `mysql_server_param_get` | ✅ **EXPECTED** |
+| 1 | 0.495071 | `mysql_server_param_get` | ✅ **EXPECTED** |
 | 2 | 0.438075 | `mysql_server_param_set` | ❌ |
 | 3 | 0.333841 | `mysql_database_query` | ❌ |
 | 4 | 0.313150 | `mysql_table_schema_get` | ❌ |
-| 5 | 0.310834 | `postgres_server_param_get` | ❌ |
+| 5 | 0.310854 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -2970,11 +2970,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.449419 | `mysql_server_param_set` | ✅ **EXPECTED** |
-| 2 | 0.381632 | `mysql_server_param_get` | ❌ |
-| 3 | 0.303499 | `postgres_server_param_set` | ❌ |
-| 4 | 0.298911 | `mysql_database_query` | ❌ |
-| 5 | 0.254180 | `mysql_server_list` | ❌ |
+| 1 | 0.449446 | `mysql_server_param_set` | ✅ **EXPECTED** |
+| 2 | 0.381138 | `mysql_server_param_get` | ❌ |
+| 3 | 0.303454 | `postgres_server_param_set` | ❌ |
+| 4 | 0.298874 | `mysql_database_query` | ❌ |
+| 5 | 0.254154 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -2988,10 +2988,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.633448 | `mysql_table_list` | ✅ **EXPECTED** |
-| 2 | 0.573844 | `postgres_table_list` | ❌ |
-| 3 | 0.550833 | `postgres_database_list` | ❌ |
-| 4 | 0.546963 | `mysql_database_list` | ❌ |
-| 5 | 0.511880 | `kusto_table_list` | ❌ |
+| 2 | 0.573909 | `postgres_table_list` | ❌ |
+| 3 | 0.550898 | `postgres_database_list` | ❌ |
+| 4 | 0.547237 | `mysql_database_list` | ❌ |
+| 5 | 0.511847 | `kusto_table_list` | ❌ |
 
 ---
 
@@ -3005,10 +3005,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.609131 | `mysql_table_list` | ✅ **EXPECTED** |
-| 2 | 0.526236 | `postgres_table_list` | ❌ |
-| 3 | 0.525709 | `mysql_database_list` | ❌ |
+| 2 | 0.526289 | `postgres_table_list` | ❌ |
+| 3 | 0.525970 | `mysql_database_list` | ❌ |
 | 4 | 0.507258 | `mysql_table_schema_get` | ❌ |
-| 5 | 0.497934 | `postgres_database_list` | ❌ |
+| 5 | 0.498050 | `postgres_database_list` | ❌ |
 
 ---
 
@@ -3021,11 +3021,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.630646 | `mysql_table_schema_get` | ✅ **EXPECTED** |
-| 2 | 0.558501 | `postgres_table_schema_get` | ❌ |
-| 3 | 0.545137 | `mysql_table_list` | ❌ |
-| 4 | 0.523117 | `kusto_table_schema` | ❌ |
-| 5 | 0.457762 | `mysql_database_list` | ❌ |
+| 1 | 0.630623 | `mysql_table_schema_get` | ✅ **EXPECTED** |
+| 2 | 0.558306 | `postgres_table_schema_get` | ❌ |
+| 3 | 0.545025 | `mysql_table_list` | ❌ |
+| 4 | 0.517419 | `kusto_table_schema` | ❌ |
+| 5 | 0.457948 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -3038,11 +3038,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.815496 | `postgres_database_list` | ✅ **EXPECTED** |
-| 2 | 0.644014 | `postgres_table_list` | ❌ |
-| 3 | 0.622812 | `postgres_server_list` | ❌ |
+| 1 | 0.815617 | `postgres_database_list` | ✅ **EXPECTED** |
+| 2 | 0.643968 | `postgres_table_list` | ❌ |
+| 3 | 0.622790 | `postgres_server_list` | ❌ |
 | 4 | 0.542685 | `postgres_server_config_get` | ❌ |
-| 5 | 0.490904 | `postgres_server_param_get` | ❌ |
+| 5 | 0.490930 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -3055,11 +3055,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.759870 | `postgres_database_list` | ✅ **EXPECTED** |
-| 2 | 0.589811 | `postgres_server_list` | ❌ |
-| 3 | 0.585891 | `postgres_table_list` | ❌ |
+| 1 | 0.760033 | `postgres_database_list` | ✅ **EXPECTED** |
+| 2 | 0.589784 | `postgres_server_list` | ❌ |
+| 3 | 0.585834 | `postgres_table_list` | ❌ |
 | 4 | 0.552660 | `postgres_server_config_get` | ❌ |
-| 5 | 0.495629 | `postgres_server_param_get` | ❌ |
+| 5 | 0.495681 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -3072,11 +3072,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546104 | `postgres_database_list` | ❌ |
-| 2 | 0.523142 | `postgres_database_query` | ✅ **EXPECTED** |
-| 3 | 0.503267 | `postgres_table_list` | ❌ |
-| 4 | 0.466608 | `postgres_server_list` | ❌ |
-| 5 | 0.403969 | `postgres_server_param_get` | ❌ |
+| 1 | 0.546211 | `postgres_database_list` | ❌ |
+| 2 | 0.523215 | `postgres_database_query` | ✅ **EXPECTED** |
+| 3 | 0.503217 | `postgres_table_list` | ❌ |
+| 4 | 0.466599 | `postgres_server_list` | ❌ |
+| 5 | 0.404013 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -3091,9 +3091,9 @@
 |------|-------|------|--------|
 | 1 | 0.756593 | `postgres_server_config_get` | ✅ **EXPECTED** |
 | 2 | 0.615429 | `postgres_server_param_set` | ❌ |
-| 3 | 0.599471 | `postgres_server_param_get` | ❌ |
-| 4 | 0.534868 | `postgres_database_list` | ❌ |
-| 5 | 0.518593 | `postgres_server_list` | ❌ |
+| 3 | 0.599491 | `postgres_server_param_get` | ❌ |
+| 4 | 0.535050 | `postgres_database_list` | ❌ |
+| 5 | 0.518574 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -3106,9 +3106,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.900052 | `postgres_server_list` | ✅ **EXPECTED** |
-| 2 | 0.640606 | `postgres_database_list` | ❌ |
-| 3 | 0.565914 | `postgres_table_list` | ❌ |
+| 1 | 0.900023 | `postgres_server_list` | ✅ **EXPECTED** |
+| 2 | 0.640733 | `postgres_database_list` | ❌ |
+| 3 | 0.565843 | `postgres_table_list` | ❌ |
 | 4 | 0.538997 | `postgres_server_config_get` | ❌ |
 | 5 | 0.534239 | `kusto_cluster_list` | ❌ |
 
@@ -3123,11 +3123,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.674359 | `postgres_server_list` | ✅ **EXPECTED** |
-| 2 | 0.606903 | `postgres_database_list` | ❌ |
+| 1 | 0.674327 | `postgres_server_list` | ✅ **EXPECTED** |
+| 2 | 0.607062 | `postgres_database_list` | ❌ |
 | 3 | 0.576348 | `postgres_server_config_get` | ❌ |
-| 4 | 0.522995 | `postgres_table_list` | ❌ |
-| 5 | 0.506171 | `postgres_server_param_get` | ❌ |
+| 4 | 0.522907 | `postgres_table_list` | ❌ |
+| 5 | 0.506233 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -3140,11 +3140,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.832164 | `postgres_server_list` | ✅ **EXPECTED** |
-| 2 | 0.579078 | `postgres_database_list` | ❌ |
+| 1 | 0.832155 | `postgres_server_list` | ✅ **EXPECTED** |
+| 2 | 0.579232 | `postgres_database_list` | ❌ |
 | 3 | 0.531804 | `postgres_server_config_get` | ❌ |
-| 4 | 0.514445 | `postgres_table_list` | ❌ |
-| 5 | 0.505869 | `postgres_server_param_get` | ❌ |
+| 4 | 0.514354 | `postgres_table_list` | ❌ |
+| 5 | 0.505954 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -3157,11 +3157,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.594753 | `postgres_server_param_get` | ✅ **EXPECTED** |
+| 1 | 0.594739 | `postgres_server_param_get` | ✅ **EXPECTED** |
 | 2 | 0.552678 | `postgres_server_param_set` | ❌ |
 | 3 | 0.539671 | `postgres_server_config_get` | ❌ |
-| 4 | 0.489700 | `postgres_server_list` | ❌ |
-| 5 | 0.451742 | `postgres_database_list` | ❌ |
+| 4 | 0.489693 | `postgres_server_list` | ❌ |
+| 5 | 0.451871 | `postgres_database_list` | ❌ |
 
 ---
 
@@ -3176,9 +3176,9 @@
 |------|-------|------|--------|
 | 1 | 0.579873 | `postgres_server_param_set` | ✅ **EXPECTED** |
 | 2 | 0.488474 | `postgres_server_config_get` | ❌ |
-| 3 | 0.469833 | `postgres_server_list` | ❌ |
-| 4 | 0.447011 | `postgres_server_param_get` | ❌ |
-| 5 | 0.440620 | `postgres_database_list` | ❌ |
+| 3 | 0.469794 | `postgres_server_list` | ❌ |
+| 4 | 0.446994 | `postgres_server_param_get` | ❌ |
+| 5 | 0.440760 | `postgres_database_list` | ❌ |
 
 ---
 
@@ -3191,9 +3191,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.789883 | `postgres_table_list` | ✅ **EXPECTED** |
-| 2 | 0.750489 | `postgres_database_list` | ❌ |
-| 3 | 0.574946 | `postgres_server_list` | ❌ |
+| 1 | 0.789927 | `postgres_table_list` | ✅ **EXPECTED** |
+| 2 | 0.750580 | `postgres_database_list` | ❌ |
+| 3 | 0.574931 | `postgres_server_list` | ❌ |
 | 4 | 0.519820 | `postgres_table_schema_get` | ❌ |
 | 5 | 0.501400 | `postgres_server_config_get` | ❌ |
 
@@ -3208,10 +3208,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.736083 | `postgres_table_list` | ✅ **EXPECTED** |
-| 2 | 0.689974 | `postgres_database_list` | ❌ |
+| 1 | 0.736106 | `postgres_table_list` | ✅ **EXPECTED** |
+| 2 | 0.690112 | `postgres_database_list` | ❌ |
 | 3 | 0.558357 | `postgres_table_schema_get` | ❌ |
-| 4 | 0.543342 | `postgres_server_list` | ❌ |
+| 4 | 0.543331 | `postgres_server_list` | ❌ |
 | 5 | 0.521570 | `postgres_server_config_get` | ❌ |
 
 ---
@@ -3225,11 +3225,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.714877 | `postgres_table_schema_get` | ✅ **EXPECTED** |
-| 2 | 0.597846 | `postgres_table_list` | ❌ |
-| 3 | 0.574123 | `postgres_database_list` | ❌ |
-| 4 | 0.508243 | `kusto_table_schema` | ❌ |
-| 5 | 0.508082 | `postgres_server_config_get` | ❌ |
+| 1 | 0.715639 | `postgres_table_schema_get` | ✅ **EXPECTED** |
+| 2 | 0.598243 | `postgres_table_list` | ❌ |
+| 3 | 0.573533 | `postgres_database_list` | ❌ |
+| 4 | 0.507008 | `postgres_server_config_get` | ❌ |
+| 5 | 0.503158 | `kusto_table_schema` | ❌ |
 
 ---
 
@@ -3259,11 +3259,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.680719 | `deploy_architecture_diagram_generate` | ✅ **EXPECTED** |
+| 1 | 0.680640 | `deploy_architecture_diagram_generate` | ✅ **EXPECTED** |
 | 2 | 0.562521 | `deploy_plan_get` | ❌ |
 | 3 | 0.497193 | `deploy_pipeline_guidance_get` | ❌ |
 | 4 | 0.489344 | `cloudarchitect_design` | ❌ |
-| 5 | 0.435921 | `deploy_iac_rules_get` | ❌ |
+| 5 | 0.435904 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -3276,9 +3276,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.529092 | `deploy_iac_rules_get` | ✅ **EXPECTED** |
-| 2 | 0.479903 | `bicepschema_get` | ❌ |
-| 3 | 0.391965 | `get_bestpractices_get` | ❌ |
+| 1 | 0.529210 | `deploy_iac_rules_get` | ✅ **EXPECTED** |
+| 2 | 0.479971 | `bicepschema_get` | ❌ |
+| 3 | 0.394769 | `get_bestpractices_get` | ❌ |
 | 4 | 0.383210 | `azureterraformbestpractices_get` | ❌ |
 | 5 | 0.375561 | `extension_cli_generate` | ❌ |
 
@@ -3295,9 +3295,9 @@
 |------|-------|------|--------|
 | 1 | 0.638841 | `deploy_pipeline_guidance_get` | ✅ **EXPECTED** |
 | 2 | 0.499242 | `deploy_plan_get` | ❌ |
-| 3 | 0.448917 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.448870 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.388442 | `foundry_models_deploy` | ❌ |
-| 5 | 0.385920 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.386374 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -3312,8 +3312,8 @@
 |------|-------|------|--------|
 | 1 | 0.688055 | `deploy_plan_get` | ✅ **EXPECTED** |
 | 2 | 0.587903 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.499385 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.498520 | `deploy_architecture_diagram_generate` | ❌ |
+| 3 | 0.499345 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.498575 | `deploy_architecture_diagram_generate` | ❌ |
 | 5 | 0.448692 | `loadtesting_test_create` | ❌ |
 
 ---
@@ -3327,11 +3327,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.755365 | `eventgrid_events_publish` | ✅ **EXPECTED** |
-| 2 | 0.483021 | `eventgrid_subscription_list` | ❌ |
-| 3 | 0.466031 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.360676 | `eventhubs_eventhub_update` | ❌ |
-| 5 | 0.355598 | `servicebus_topic_details` | ❌ |
+| 1 | 0.755426 | `eventgrid_events_publish` | ✅ **EXPECTED** |
+| 2 | 0.483281 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.466338 | `eventgrid_topic_list` | ❌ |
+| 4 | 0.360458 | `eventhubs_eventhub_update` | ❌ |
+| 5 | 0.355373 | `servicebus_topic_details` | ❌ |
 
 ---
 
@@ -3361,11 +3361,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.600164 | `eventgrid_events_publish` | ✅ **EXPECTED** |
-| 2 | 0.521154 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.504698 | `eventgrid_subscription_list` | ❌ |
-| 4 | 0.411467 | `eventhubs_eventhub_consumergroup_update` | ❌ |
-| 5 | 0.389460 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 1 | 0.600274 | `eventgrid_events_publish` | ✅ **EXPECTED** |
+| 2 | 0.521240 | `eventgrid_topic_list` | ❌ |
+| 3 | 0.504808 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.411129 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 5 | 0.389472 | `eventhubs_eventhub_consumergroup_get` | ❌ |
 
 ---
 
@@ -3381,8 +3381,8 @@
 | 1 | 0.770140 | `eventgrid_topic_list` | ✅ **EXPECTED** |
 | 2 | 0.745471 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.561862 | `kusto_cluster_list` | ❌ |
-| 4 | 0.545540 | `search_service_list` | ❌ |
-| 5 | 0.526138 | `subscription_list` | ❌ |
+| 4 | 0.545573 | `search_service_list` | ❌ |
+| 5 | 0.526308 | `subscription_list` | ❌ |
 
 ---
 
@@ -3398,8 +3398,8 @@
 | 1 | 0.738258 | `eventgrid_topic_list` | ✅ **EXPECTED** |
 | 2 | 0.737486 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.492592 | `kusto_cluster_list` | ❌ |
-| 4 | 0.480287 | `subscription_list` | ❌ |
-| 5 | 0.475119 | `search_service_list` | ❌ |
+| 4 | 0.480416 | `subscription_list` | ❌ |
+| 5 | 0.475128 | `search_service_list` | ❌ |
 
 ---
 
@@ -3415,8 +3415,8 @@
 | 1 | 0.770140 | `eventgrid_topic_list` | ✅ **EXPECTED** |
 | 2 | 0.721362 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.535326 | `kusto_cluster_list` | ❌ |
-| 4 | 0.514248 | `search_service_list` | ❌ |
-| 5 | 0.495987 | `subscription_list` | ❌ |
+| 4 | 0.514277 | `search_service_list` | ❌ |
+| 5 | 0.496173 | `subscription_list` | ❌ |
 
 ---
 
@@ -3432,8 +3432,8 @@
 | 1 | 0.758816 | `eventgrid_topic_list` | ✅ **EXPECTED** |
 | 2 | 0.704462 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.609175 | `group_list` | ❌ |
-| 4 | 0.544809 | `monitor_webtests_list` | ❌ |
-| 5 | 0.524209 | `eventhubs_namespace_get` | ❌ |
+| 4 | 0.544779 | `monitor_webtests_list` | ❌ |
+| 5 | 0.524049 | `eventhubs_namespace_get` | ❌ |
 
 ---
 
@@ -3480,11 +3480,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.746815 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.746174 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.535569 | `monitor_webtests_list` | ❌ |
-| 4 | 0.524919 | `group_list` | ❌ |
-| 5 | 0.503158 | `servicebus_topic_details` | ❌ |
+| 1 | 0.746832 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.746211 | `eventgrid_topic_list` | ❌ |
+| 3 | 0.535527 | `monitor_webtests_list` | ❌ |
+| 4 | 0.524877 | `group_list` | ❌ |
+| 5 | 0.503137 | `servicebus_topic_details` | ❌ |
 
 ---
 
@@ -3499,9 +3499,9 @@
 |------|-------|------|--------|
 | 1 | 0.736436 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.659728 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.569254 | `subscription_list` | ❌ |
+| 3 | 0.569310 | `subscription_list` | ❌ |
 | 4 | 0.537922 | `kusto_cluster_list` | ❌ |
-| 5 | 0.518858 | `search_service_list` | ❌ |
+| 5 | 0.518853 | `search_service_list` | ❌ |
 
 ---
 
@@ -3516,7 +3516,7 @@
 |------|-------|------|--------|
 | 1 | 0.684543 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.656277 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.542388 | `subscription_list` | ❌ |
+| 3 | 0.542200 | `subscription_list` | ❌ |
 | 4 | 0.521053 | `kusto_cluster_list` | ❌ |
 | 5 | 0.510115 | `group_list` | ❌ |
 
@@ -3531,11 +3531,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.697421 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.691972 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.558686 | `group_list` | ❌ |
-| 4 | 0.512216 | `monitor_webtests_list` | ❌ |
-| 5 | 0.507088 | `resourcehealth_availability-status_list` | ❌ |
+| 1 | 0.696101 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.691739 | `eventgrid_topic_list` | ❌ |
+| 3 | 0.557573 | `group_list` | ❌ |
+| 4 | 0.510653 | `monitor_webtests_list` | ❌ |
+| 5 | 0.504984 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
 
@@ -3550,8 +3550,8 @@
 |------|-------|------|--------|
 | 1 | 0.709801 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.642095 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.506697 | `subscription_list` | ❌ |
-| 4 | 0.476763 | `search_service_list` | ❌ |
+| 3 | 0.506306 | `subscription_list` | ❌ |
+| 4 | 0.476788 | `search_service_list` | ❌ |
 | 5 | 0.475782 | `kusto_cluster_list` | ❌ |
 
 ---
@@ -3565,11 +3565,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.766944 | `eventhubs_eventhub_consumergroup_delete` | ✅ **EXPECTED** |
-| 2 | 0.675504 | `eventhubs_eventhub_consumergroup_update` | ❌ |
-| 3 | 0.641108 | `eventhubs_eventhub_consumergroup_get` | ❌ |
-| 4 | 0.633757 | `eventhubs_namespace_delete` | ❌ |
-| 5 | 0.605805 | `eventhubs_eventhub_delete` | ❌ |
+| 1 | 0.767054 | `eventhubs_eventhub_consumergroup_delete` | ✅ **EXPECTED** |
+| 2 | 0.675841 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 3 | 0.641075 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 4 | 0.633702 | `eventhubs_namespace_delete` | ❌ |
+| 5 | 0.605426 | `eventhubs_eventhub_delete` | ❌ |
 
 ---
 
@@ -3582,11 +3582,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.738456 | `eventhubs_eventhub_consumergroup_get` | ✅ **EXPECTED** |
-| 2 | 0.633802 | `eventhubs_eventhub_consumergroup_update` | ❌ |
-| 3 | 0.625958 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 4 | 0.606317 | `eventhubs_namespace_get` | ❌ |
-| 5 | 0.592656 | `eventhubs_eventhub_get` | ❌ |
+| 1 | 0.740726 | `eventhubs_eventhub_consumergroup_get` | ✅ **EXPECTED** |
+| 2 | 0.634857 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 3 | 0.627006 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 4 | 0.613964 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.601987 | `eventhubs_eventhub_get` | ❌ |
 
 ---
 
@@ -3599,11 +3599,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.712861 | `eventhubs_eventhub_consumergroup_get` | ✅ **EXPECTED** |
-| 2 | 0.637278 | `eventhubs_eventhub_consumergroup_update` | ❌ |
-| 3 | 0.625913 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 4 | 0.576800 | `eventhubs_namespace_get` | ❌ |
-| 5 | 0.529940 | `eventhubs_eventhub_get` | ❌ |
+| 1 | 0.712878 | `eventhubs_eventhub_consumergroup_get` | ✅ **EXPECTED** |
+| 2 | 0.637170 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 3 | 0.626316 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 4 | 0.576786 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.530377 | `eventhubs_eventhub_get` | ❌ |
 
 ---
 
@@ -3616,11 +3616,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.757172 | `eventhubs_eventhub_consumergroup_update` | ✅ **EXPECTED** |
-| 2 | 0.688923 | `eventhubs_eventhub_consumergroup_get` | ❌ |
-| 3 | 0.670026 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 1 | 0.757614 | `eventhubs_eventhub_consumergroup_update` | ✅ **EXPECTED** |
+| 2 | 0.688869 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 3 | 0.670136 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
 | 4 | 0.554315 | `eventhubs_eventhub_update` | ❌ |
-| 5 | 0.545003 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.545051 | `eventhubs_namespace_get` | ❌ |
 
 ---
 
@@ -3633,11 +3633,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.739238 | `eventhubs_eventhub_consumergroup_update` | ✅ **EXPECTED** |
-| 2 | 0.655614 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 3 | 0.642219 | `eventhubs_eventhub_consumergroup_get` | ❌ |
-| 4 | 0.552234 | `eventhubs_eventhub_update` | ❌ |
-| 5 | 0.524019 | `eventhubs_namespace_delete` | ❌ |
+| 1 | 0.738819 | `eventhubs_eventhub_consumergroup_update` | ✅ **EXPECTED** |
+| 2 | 0.655648 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 3 | 0.642255 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 4 | 0.552207 | `eventhubs_eventhub_update` | ❌ |
+| 5 | 0.524047 | `eventhubs_namespace_delete` | ❌ |
 
 ---
 
@@ -3650,11 +3650,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.699195 | `eventhubs_namespace_delete` | ❌ |
-| 2 | 0.688933 | `eventhubs_eventhub_delete` | ✅ **EXPECTED** |
-| 3 | 0.627617 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 4 | 0.578662 | `eventhubs_namespace_get` | ❌ |
-| 5 | 0.553034 | `eventhubs_eventhub_get` | ❌ |
+| 1 | 0.699213 | `eventhubs_namespace_delete` | ❌ |
+| 2 | 0.688502 | `eventhubs_eventhub_delete` | ✅ **EXPECTED** |
+| 3 | 0.627553 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 4 | 0.578610 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.553017 | `eventhubs_eventhub_get` | ❌ |
 
 ---
 
@@ -3667,11 +3667,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.773242 | `eventhubs_eventhub_get` | ✅ **EXPECTED** |
-| 2 | 0.687582 | `eventhubs_namespace_get` | ❌ |
+| 1 | 0.773294 | `eventhubs_eventhub_get` | ✅ **EXPECTED** |
+| 2 | 0.687605 | `eventhubs_namespace_get` | ❌ |
 | 3 | 0.578689 | `eventhubs_eventhub_update` | ❌ |
 | 4 | 0.561544 | `eventhubs_namespace_delete` | ❌ |
-| 5 | 0.545474 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 5 | 0.545614 | `eventhubs_eventhub_consumergroup_get` | ❌ |
 
 ---
 
@@ -3684,11 +3684,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.638229 | `eventhubs_namespace_get` | ❌ |
-| 2 | 0.628211 | `eventhubs_eventhub_get` | ✅ **EXPECTED** |
-| 3 | 0.571111 | `eventhubs_eventhub_consumergroup_get` | ❌ |
-| 4 | 0.527958 | `eventhubs_eventhub_update` | ❌ |
-| 5 | 0.521495 | `eventhubs_namespace_delete` | ❌ |
+| 1 | 0.637943 | `eventhubs_namespace_get` | ❌ |
+| 2 | 0.627924 | `eventhubs_eventhub_get` | ✅ **EXPECTED** |
+| 3 | 0.570983 | `eventhubs_eventhub_consumergroup_get` | ❌ |
+| 4 | 0.527639 | `eventhubs_eventhub_update` | ❌ |
+| 5 | 0.521797 | `eventhubs_namespace_delete` | ❌ |
 
 ---
 
@@ -3702,9 +3702,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.645976 | `eventhubs_eventhub_update` | ✅ **EXPECTED** |
-| 2 | 0.605856 | `eventhubs_namespace_get` | ❌ |
-| 3 | 0.574389 | `eventhubs_eventhub_get` | ❌ |
-| 4 | 0.571526 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 2 | 0.605797 | `eventhubs_namespace_get` | ❌ |
+| 3 | 0.574513 | `eventhubs_eventhub_get` | ❌ |
+| 4 | 0.571676 | `eventhubs_eventhub_consumergroup_update` | ❌ |
 | 5 | 0.557550 | `eventhubs_namespace_delete` | ❌ |
 
 ---
@@ -3719,9 +3719,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.655283 | `eventhubs_eventhub_update` | ✅ **EXPECTED** |
-| 2 | 0.571861 | `eventhubs_eventhub_delete` | ❌ |
-| 3 | 0.569283 | `eventhubs_eventhub_consumergroup_update` | ❌ |
-| 4 | 0.568396 | `eventhubs_namespace_get` | ❌ |
+| 2 | 0.571661 | `eventhubs_eventhub_delete` | ❌ |
+| 3 | 0.568605 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 4 | 0.568369 | `eventhubs_namespace_get` | ❌ |
 | 5 | 0.565977 | `eventhubs_namespace_delete` | ❌ |
 
 ---
@@ -3737,9 +3737,9 @@
 |------|-------|------|--------|
 | 1 | 0.623995 | `eventhubs_namespace_delete` | ✅ **EXPECTED** |
 | 2 | 0.525446 | `eventhubs_namespace_update` | ❌ |
-| 3 | 0.505082 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 4 | 0.449841 | `eventhubs_namespace_get` | ❌ |
-| 5 | 0.434938 | `workbooks_delete` | ❌ |
+| 3 | 0.505056 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 4 | 0.449796 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.438170 | `workbooks_delete` | ❌ |
 
 ---
 
@@ -3752,11 +3752,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.659838 | `eventhubs_eventhub_get` | ❌ |
-| 2 | 0.658827 | `eventhubs_namespace_get` | ✅ **EXPECTED** |
-| 3 | 0.607372 | `kusto_cluster_list` | ❌ |
-| 4 | 0.557200 | `eventgrid_topic_list` | ❌ |
-| 5 | 0.556126 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.659986 | `eventhubs_eventhub_get` | ❌ |
+| 2 | 0.658805 | `eventhubs_namespace_get` | ✅ **EXPECTED** |
+| 3 | 0.607335 | `kusto_cluster_list` | ❌ |
+| 4 | 0.557107 | `eventgrid_topic_list` | ❌ |
+| 5 | 0.556062 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -3769,11 +3769,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.509749 | `eventhubs_namespace_get` | ✅ **EXPECTED** |
-| 2 | 0.509432 | `monitor_webtests_get` | ❌ |
-| 3 | 0.497399 | `servicebus_queue_details` | ❌ |
-| 4 | 0.490055 | `eventhubs_namespace_update` | ❌ |
-| 5 | 0.472974 | `foundry_resource_get` | ❌ |
+| 1 | 0.509773 | `monitor_webtests_get` | ❌ |
+| 2 | 0.509594 | `eventhubs_namespace_get` | ✅ **EXPECTED** |
+| 3 | 0.497464 | `servicebus_queue_details` | ❌ |
+| 4 | 0.490104 | `eventhubs_namespace_update` | ❌ |
+| 5 | 0.472983 | `foundry_resource_get` | ❌ |
 
 ---
 
@@ -3786,11 +3786,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.610456 | `eventhubs_namespace_update` | ✅ **EXPECTED** |
-| 2 | 0.466721 | `eventhubs_namespace_get` | ❌ |
-| 3 | 0.458458 | `eventhubs_namespace_delete` | ❌ |
-| 4 | 0.456344 | `redis_create` | ❌ |
-| 5 | 0.449724 | `workbooks_create` | ❌ |
+| 1 | 0.610465 | `eventhubs_namespace_update` | ✅ **EXPECTED** |
+| 2 | 0.466727 | `eventhubs_namespace_get` | ❌ |
+| 3 | 0.458472 | `eventhubs_namespace_delete` | ❌ |
+| 4 | 0.456419 | `redis_create` | ❌ |
+| 5 | 0.450150 | `workbooks_create` | ❌ |
 
 ---
 
@@ -3805,8 +3805,8 @@
 |------|-------|------|--------|
 | 1 | 0.622338 | `eventhubs_namespace_update` | ✅ **EXPECTED** |
 | 2 | 0.474098 | `eventhubs_namespace_delete` | ❌ |
-| 3 | 0.448723 | `eventhubs_namespace_get` | ❌ |
-| 4 | 0.437370 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 3 | 0.448730 | `eventhubs_namespace_get` | ❌ |
+| 4 | 0.436549 | `eventhubs_eventhub_consumergroup_update` | ❌ |
 | 5 | 0.372632 | `sql_db_rename` | ❌ |
 
 ---
@@ -3820,11 +3820,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.660116 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.659909 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.451613 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.450457 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.390048 | `mysql_server_list` | ❌ |
-| 5 | 0.380314 | `get_bestpractices_get` | ❌ |
+| 5 | 0.379924 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -3837,10 +3837,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.607276 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.607230 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.447400 | `mysql_server_config_get` | ❌ |
 | 3 | 0.424693 | `appconfig_account_list` | ❌ |
-| 4 | 0.411267 | `appconfig_kv_get` | ❌ |
+| 4 | 0.411098 | `appconfig_kv_get` | ❌ |
 | 5 | 0.400402 | `deploy_app_logs_get` | ❌ |
 
 ---
@@ -3854,7 +3854,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622384 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.622354 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.413481 | `resourcehealth_availability-status_get` | ❌ |
 | 3 | 0.390708 | `resourcehealth_availability-status_list` | ❌ |
 | 4 | 0.383533 | `deploy_app_logs_get` | ❌ |
@@ -3871,11 +3871,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.690933 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.440301 | `foundry_resource_get` | ❌ |
-| 3 | 0.432317 | `resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.431821 | `applens_resource_diagnose` | ❌ |
-| 5 | 0.429077 | `storage_account_get` | ❌ |
+| 1 | 0.690776 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.440378 | `foundry_resource_get` | ❌ |
+| 3 | 0.432393 | `resourcehealth_availability-status_list` | ❌ |
+| 4 | 0.431809 | `applens_resource_diagnose` | ❌ |
+| 5 | 0.429079 | `storage_account_get` | ❌ |
 
 ---
 
@@ -3888,11 +3888,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.594124 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.413487 | `resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.411395 | `deploy_app_logs_get` | ❌ |
-| 4 | 0.394000 | `storage_account_get` | ❌ |
-| 5 | 0.393516 | `applens_resource_diagnose` | ❌ |
+| 1 | 0.592742 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.417817 | `resourcehealth_availability-status_get` | ❌ |
+| 3 | 0.409712 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.399953 | `storage_account_get` | ❌ |
+| 5 | 0.392237 | `applens_resource_diagnose` | ❌ |
 
 ---
 
@@ -3905,11 +3905,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.687356 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.687199 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.449589 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.428689 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.421759 | `foundry_resource_get` | ❌ |
-| 5 | 0.391781 | `monitor_webtests_get` | ❌ |
+| 5 | 0.392251 | `monitor_webtests_get` | ❌ |
 
 ---
 
@@ -3922,11 +3922,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.644882 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.430189 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.421082 | `storage_account_get` | ❌ |
-| 4 | 0.403311 | `signalr_runtime_get` | ❌ |
-| 5 | 0.384393 | `foundry_resource_get` | ❌ |
+| 1 | 0.644187 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.430094 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.420918 | `storage_account_get` | ❌ |
+| 4 | 0.403308 | `signalr_runtime_get` | ❌ |
+| 5 | 0.384145 | `foundry_resource_get` | ❌ |
 
 ---
 
@@ -3939,11 +3939,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.554980 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.426703 | `quota_usage_check` | ❌ |
+| 1 | 0.555049 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.426965 | `quota_usage_check` | ❌ |
 | 3 | 0.424610 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.408011 | `deploy_plan_get` | ❌ |
-| 5 | 0.381684 | `deploy_architecture_diagram_generate` | ❌ |
+| 5 | 0.381629 | `deploy_architecture_diagram_generate` | ❌ |
 
 ---
 
@@ -3956,7 +3956,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.565797 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.565700 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.403665 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.384159 | `resourcehealth_availability-status_list` | ❌ |
 | 4 | 0.369868 | `applens_resource_diagnose` | ❌ |
@@ -3973,9 +3973,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.646561 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.559382 | `search_service_list` | ❌ |
-| 3 | 0.534930 | `subscription_list` | ❌ |
+| 1 | 0.646690 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.559414 | `search_service_list` | ❌ |
+| 3 | 0.534187 | `subscription_list` | ❌ |
 | 4 | 0.529031 | `kusto_cluster_list` | ❌ |
 | 5 | 0.516618 | `cosmos_account_list` | ❌ |
 
@@ -3990,10 +3990,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.560249 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.560209 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.464985 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.412646 | `search_service_list` | ❌ |
-| 4 | 0.411323 | `get_bestpractices_get` | ❌ |
+| 3 | 0.413511 | `get_bestpractices_get` | ❌ |
+| 4 | 0.412610 | `search_service_list` | ❌ |
 | 5 | 0.398503 | `extension_cli_install` | ❌ |
 
 ---
@@ -4007,11 +4007,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.433675 | `functionapp_get` | ✅ **EXPECTED** |
+| 1 | 0.433579 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.346619 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.337966 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.316594 | `extension_cli_install` | ❌ |
-| 5 | 0.284362 | `get_bestpractices_get` | ❌ |
+| 5 | 0.286320 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -4024,11 +4024,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.604780 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
-| 2 | 0.532196 | `storage_account_get` | ❌ |
-| 3 | 0.496629 | `keyvault_key_get` | ❌ |
-| 4 | 0.452367 | `appconfig_kv_set` | ❌ |
-| 5 | 0.448039 | `keyvault_secret_get` | ❌ |
+| 1 | 0.604857 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
+| 2 | 0.532285 | `storage_account_get` | ❌ |
+| 3 | 0.496749 | `keyvault_key_get` | ❌ |
+| 4 | 0.452395 | `appconfig_kv_set` | ❌ |
+| 5 | 0.448160 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -4058,11 +4058,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.505750 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
-| 2 | 0.496540 | `appconfig_kv_set` | ❌ |
-| 3 | 0.420145 | `appconfig_kv_lock_set` | ❌ |
-| 4 | 0.419126 | `keyvault_key_get` | ❌ |
-| 5 | 0.410215 | `keyvault_secret_get` | ❌ |
+| 1 | 0.505922 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
+| 2 | 0.496465 | `appconfig_kv_set` | ❌ |
+| 3 | 0.420161 | `appconfig_kv_lock_set` | ❌ |
+| 4 | 0.419115 | `keyvault_key_get` | ❌ |
+| 5 | 0.410222 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -4126,11 +4126,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.591813 | `keyvault_certificate_create` | ✅ **EXPECTED** |
-| 2 | 0.562151 | `keyvault_certificate_import` | ❌ |
-| 3 | 0.522125 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.502711 | `keyvault_key_create` | ❌ |
-| 5 | 0.479904 | `keyvault_certificate_list` | ❌ |
+| 1 | 0.591697 | `keyvault_certificate_create` | ✅ **EXPECTED** |
+| 2 | 0.562265 | `keyvault_certificate_import` | ❌ |
+| 3 | 0.522147 | `keyvault_certificate_get` | ❌ |
+| 4 | 0.502529 | `keyvault_key_create` | ❌ |
+| 5 | 0.479992 | `keyvault_certificate_list` | ❌ |
 
 ---
 
@@ -4143,11 +4143,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622788 | `keyvault_certificate_create` | ✅ **EXPECTED** |
-| 2 | 0.558532 | `keyvault_certificate_import` | ❌ |
-| 3 | 0.534503 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.521316 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.465056 | `keyvault_key_create` | ❌ |
+| 1 | 0.621949 | `keyvault_certificate_create` | ✅ **EXPECTED** |
+| 2 | 0.557252 | `keyvault_certificate_import` | ❌ |
+| 3 | 0.533669 | `keyvault_certificate_get` | ❌ |
+| 4 | 0.519920 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.463755 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4228,11 +4228,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595959 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.527404 | `keyvault_certificate_list` | ❌ |
-| 3 | 0.519059 | `keyvault_certificate_import` | ❌ |
-| 4 | 0.501138 | `keyvault_certificate_create` | ❌ |
-| 5 | 0.465174 | `keyvault_key_get` | ❌ |
+| 1 | 0.596055 | `keyvault_certificate_get` | ✅ **EXPECTED** |
+| 2 | 0.527479 | `keyvault_certificate_list` | ❌ |
+| 3 | 0.519178 | `keyvault_certificate_import` | ❌ |
+| 4 | 0.501233 | `keyvault_certificate_create` | ❌ |
+| 5 | 0.465201 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -4262,11 +4262,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622115 | `keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.504315 | `keyvault_certificate_get` | ❌ |
-| 3 | 0.498837 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.448100 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.419834 | `keyvault_key_create` | ❌ |
+| 1 | 0.622236 | `keyvault_certificate_import` | ✅ **EXPECTED** |
+| 2 | 0.504533 | `keyvault_certificate_get` | ❌ |
+| 3 | 0.499028 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.448324 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.419861 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4296,11 +4296,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.619472 | `keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.517807 | `keyvault_certificate_get` | ❌ |
-| 3 | 0.480799 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.444404 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.381839 | `keyvault_key_create` | ❌ |
+| 1 | 0.619480 | `keyvault_certificate_import` | ✅ **EXPECTED** |
+| 2 | 0.517804 | `keyvault_certificate_get` | ❌ |
+| 3 | 0.480815 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.444386 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.381873 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4313,11 +4313,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595418 | `keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.452490 | `keyvault_certificate_create` | ❌ |
-| 3 | 0.441616 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.408018 | `keyvault_key_create` | ❌ |
-| 5 | 0.392244 | `keyvault_secret_create` | ❌ |
+| 1 | 0.595233 | `keyvault_certificate_import` | ✅ **EXPECTED** |
+| 2 | 0.452245 | `keyvault_certificate_create` | ❌ |
+| 3 | 0.441425 | `keyvault_certificate_get` | ❌ |
+| 4 | 0.407871 | `keyvault_key_create` | ❌ |
+| 5 | 0.392064 | `keyvault_secret_create` | ❌ |
 
 ---
 
@@ -4330,11 +4330,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.725896 | `keyvault_certificate_list` | ✅ **EXPECTED** |
-| 2 | 0.582700 | `keyvault_key_list` | ❌ |
-| 3 | 0.531547 | `keyvault_secret_list` | ❌ |
-| 4 | 0.515193 | `keyvault_certificate_get` | ❌ |
-| 5 | 0.485725 | `keyvault_certificate_create` | ❌ |
+| 1 | 0.726124 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 2 | 0.583079 | `keyvault_key_list` | ❌ |
+| 3 | 0.531962 | `keyvault_secret_list` | ❌ |
+| 4 | 0.515236 | `keyvault_certificate_get` | ❌ |
+| 5 | 0.485792 | `keyvault_certificate_create` | ❌ |
 
 ---
 
@@ -4349,7 +4349,7 @@
 |------|-------|------|--------|
 | 1 | 0.615541 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.522453 | `keyvault_certificate_get` | ❌ |
-| 3 | 0.474852 | `keyvault_key_list` | ❌ |
+| 3 | 0.475142 | `keyvault_key_list` | ❌ |
 | 4 | 0.460973 | `keyvault_certificate_create` | ❌ |
 | 5 | 0.448139 | `keyvault_key_get` | ❌ |
 
@@ -4368,7 +4368,7 @@
 | 2 | 0.519739 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.510048 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.505534 | `keyvault_certificate_import` | ❌ |
-| 5 | 0.497163 | `keyvault_key_list` | ❌ |
+| 5 | 0.497322 | `keyvault_key_list` | ❌ |
 
 ---
 
@@ -4382,8 +4382,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.672622 | `keyvault_certificate_list` | ✅ **EXPECTED** |
-| 2 | 0.553787 | `keyvault_key_list` | ❌ |
-| 3 | 0.511756 | `keyvault_secret_list` | ❌ |
+| 2 | 0.553960 | `keyvault_key_list` | ❌ |
+| 3 | 0.511869 | `keyvault_secret_list` | ❌ |
 | 4 | 0.507062 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.492357 | `keyvault_certificate_create` | ❌ |
 
@@ -4398,11 +4398,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.746561 | `keyvault_certificate_list` | ✅ **EXPECTED** |
-| 2 | 0.593359 | `keyvault_key_list` | ❌ |
-| 3 | 0.557769 | `keyvault_secret_list` | ❌ |
-| 4 | 0.516257 | `keyvault_certificate_get` | ❌ |
-| 5 | 0.491247 | `keyvault_certificate_create` | ❌ |
+| 1 | 0.747408 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 2 | 0.594121 | `keyvault_key_list` | ❌ |
+| 3 | 0.558713 | `keyvault_secret_list` | ❌ |
+| 4 | 0.515568 | `keyvault_certificate_get` | ❌ |
+| 5 | 0.490876 | `keyvault_certificate_create` | ❌ |
 
 ---
 
@@ -4417,9 +4417,9 @@
 |------|-------|------|--------|
 | 1 | 0.639711 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.512475 | `keyvault_certificate_get` | ❌ |
-| 3 | 0.507277 | `keyvault_key_list` | ❌ |
+| 3 | 0.507562 | `keyvault_key_list` | ❌ |
 | 4 | 0.482583 | `keyvault_certificate_create` | ❌ |
-| 5 | 0.464521 | `keyvault_secret_list` | ❌ |
+| 5 | 0.464695 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -4432,11 +4432,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.661466 | `keyvault_key_create` | ✅ **EXPECTED** |
-| 2 | 0.456580 | `keyvault_secret_create` | ❌ |
-| 3 | 0.451790 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.429614 | `keyvault_certificate_import` | ❌ |
-| 5 | 0.399326 | `keyvault_key_get` | ❌ |
+| 1 | 0.661489 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 2 | 0.456635 | `keyvault_secret_create` | ❌ |
+| 3 | 0.451749 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.429606 | `keyvault_certificate_import` | ❌ |
+| 5 | 0.399260 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -4449,11 +4449,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.641112 | `keyvault_key_create` | ✅ **EXPECTED** |
-| 2 | 0.428595 | `keyvault_key_get` | ❌ |
-| 3 | 0.422941 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.420381 | `keyvault_secret_create` | ❌ |
-| 5 | 0.405712 | `appconfig_kv_set` | ❌ |
+| 1 | 0.640538 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 2 | 0.427898 | `keyvault_key_get` | ❌ |
+| 3 | 0.422287 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.419478 | `keyvault_secret_create` | ❌ |
+| 5 | 0.405837 | `appconfig_kv_set` | ❌ |
 
 ---
 
@@ -4467,7 +4467,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.547493 | `keyvault_key_create` | ✅ **EXPECTED** |
-| 2 | 0.463557 | `keyvault_secret_create` | ❌ |
+| 2 | 0.463578 | `keyvault_secret_create` | ❌ |
 | 3 | 0.447410 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.420366 | `keyvault_key_get` | ❌ |
 | 5 | 0.404350 | `keyvault_certificate_import` | ❌ |
@@ -4483,11 +4483,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.641369 | `keyvault_key_create` | ✅ **EXPECTED** |
-| 2 | 0.501636 | `keyvault_secret_create` | ❌ |
-| 3 | 0.491735 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.464557 | `keyvault_certificate_import` | ❌ |
-| 5 | 0.451016 | `keyvault_key_get` | ❌ |
+| 1 | 0.641404 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 2 | 0.501773 | `keyvault_secret_create` | ❌ |
+| 3 | 0.491825 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.464702 | `keyvault_certificate_import` | ❌ |
+| 5 | 0.451019 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -4500,11 +4500,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.571718 | `keyvault_key_create` | ✅ **EXPECTED** |
-| 2 | 0.443369 | `keyvault_certificate_create` | ❌ |
-| 3 | 0.434675 | `keyvault_secret_create` | ❌ |
-| 4 | 0.421721 | `keyvault_key_get` | ❌ |
-| 5 | 0.400533 | `keyvault_certificate_import` | ❌ |
+| 1 | 0.571401 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 2 | 0.443052 | `keyvault_certificate_create` | ❌ |
+| 3 | 0.434308 | `keyvault_secret_create` | ❌ |
+| 4 | 0.421390 | `keyvault_key_get` | ❌ |
+| 5 | 0.400201 | `keyvault_certificate_import` | ❌ |
 
 ---
 
@@ -4517,11 +4517,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.549488 | `keyvault_key_get` | ✅ **EXPECTED** |
-| 2 | 0.468165 | `keyvault_secret_get` | ❌ |
-| 3 | 0.452816 | `keyvault_key_create` | ❌ |
-| 4 | 0.439557 | `keyvault_key_list` | ❌ |
-| 5 | 0.426545 | `keyvault_certificate_get` | ❌ |
+| 1 | 0.549503 | `keyvault_key_get` | ✅ **EXPECTED** |
+| 2 | 0.467969 | `keyvault_secret_get` | ❌ |
+| 3 | 0.452705 | `keyvault_key_create` | ❌ |
+| 4 | 0.439813 | `keyvault_key_list` | ❌ |
+| 5 | 0.426407 | `keyvault_certificate_get` | ❌ |
 
 ---
 
@@ -4602,9 +4602,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.701001 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 1 | 0.701419 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.601513 | `keyvault_certificate_list` | ❌ |
-| 3 | 0.587268 | `keyvault_secret_list` | ❌ |
+| 3 | 0.587418 | `keyvault_secret_list` | ❌ |
 | 4 | 0.498767 | `cosmos_account_list` | ❌ |
 | 5 | 0.480129 | `keyvault_admin_settings_get` | ❌ |
 
@@ -4619,7 +4619,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.549026 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 1 | 0.549442 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.506815 | `keyvault_key_get` | ❌ |
 | 3 | 0.475507 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.472465 | `keyvault_admin_settings_get` | ❌ |
@@ -4636,11 +4636,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.581680 | `keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.502242 | `keyvault_admin_settings_get` | ❌ |
-| 3 | 0.501506 | `keyvault_certificate_list` | ❌ |
-| 4 | 0.476443 | `keyvault_key_get` | ❌ |
-| 5 | 0.472321 | `keyvault_secret_list` | ❌ |
+| 1 | 0.581948 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 2 | 0.502245 | `keyvault_admin_settings_get` | ❌ |
+| 3 | 0.501481 | `keyvault_certificate_list` | ❌ |
+| 4 | 0.476470 | `keyvault_key_get` | ❌ |
+| 5 | 0.472385 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -4653,11 +4653,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.640963 | `keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.559550 | `keyvault_certificate_list` | ❌ |
-| 3 | 0.553429 | `keyvault_secret_list` | ❌ |
-| 4 | 0.486377 | `keyvault_admin_settings_get` | ❌ |
-| 5 | 0.475992 | `cosmos_account_list` | ❌ |
+| 1 | 0.641169 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 2 | 0.559453 | `keyvault_certificate_list` | ❌ |
+| 3 | 0.553439 | `keyvault_secret_list` | ❌ |
+| 4 | 0.486350 | `keyvault_admin_settings_get` | ❌ |
+| 5 | 0.475987 | `cosmos_account_list` | ❌ |
 
 ---
 
@@ -4670,11 +4670,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.722844 | `keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.611366 | `keyvault_certificate_list` | ❌ |
-| 3 | 0.611024 | `keyvault_secret_list` | ❌ |
-| 4 | 0.473886 | `keyvault_admin_settings_get` | ❌ |
-| 5 | 0.441881 | `keyvault_key_get` | ❌ |
+| 1 | 0.723071 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 2 | 0.610938 | `keyvault_certificate_list` | ❌ |
+| 3 | 0.610894 | `keyvault_secret_list` | ❌ |
+| 4 | 0.473606 | `keyvault_admin_settings_get` | ❌ |
+| 5 | 0.442753 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -4687,11 +4687,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.569980 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 1 | 0.570418 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.501073 | `keyvault_key_get` | ❌ |
 | 3 | 0.500103 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.496817 | `storage_account_get` | ❌ |
-| 5 | 0.490201 | `keyvault_secret_list` | ❌ |
+| 5 | 0.490338 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -4704,11 +4704,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.678482 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.553018 | `keyvault_key_create` | ❌ |
-| 3 | 0.512856 | `keyvault_secret_get` | ❌ |
-| 4 | 0.475097 | `keyvault_certificate_create` | ❌ |
-| 5 | 0.461437 | `appconfig_kv_set` | ❌ |
+| 1 | 0.678578 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 2 | 0.552976 | `keyvault_key_create` | ❌ |
+| 3 | 0.512999 | `keyvault_secret_get` | ❌ |
+| 4 | 0.475083 | `keyvault_certificate_create` | ❌ |
+| 5 | 0.461395 | `appconfig_kv_set` | ❌ |
 
 ---
 
@@ -4721,11 +4721,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.663094 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.519601 | `keyvault_secret_get` | ❌ |
-| 3 | 0.512233 | `appconfig_kv_set` | ❌ |
-| 4 | 0.458502 | `keyvault_key_create` | ❌ |
-| 5 | 0.429785 | `appconfig_kv_lock_set` | ❌ |
+| 1 | 0.663100 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 2 | 0.519513 | `keyvault_secret_get` | ❌ |
+| 3 | 0.512231 | `appconfig_kv_set` | ❌ |
+| 4 | 0.458565 | `keyvault_key_create` | ❌ |
+| 5 | 0.429798 | `appconfig_kv_lock_set` | ❌ |
 
 ---
 
@@ -4738,7 +4738,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.639897 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 1 | 0.639863 | `keyvault_secret_create` | ✅ **EXPECTED** |
 | 2 | 0.509674 | `keyvault_secret_get` | ❌ |
 | 3 | 0.485203 | `appconfig_kv_set` | ❌ |
 | 4 | 0.484680 | `keyvault_key_create` | ❌ |
@@ -4755,7 +4755,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.675145 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 1 | 0.675101 | `keyvault_secret_create` | ✅ **EXPECTED** |
 | 2 | 0.499612 | `keyvault_secret_get` | ❌ |
 | 3 | 0.498228 | `keyvault_key_create` | ❌ |
 | 4 | 0.479174 | `keyvault_certificate_import` | ❌ |
@@ -4772,11 +4772,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.571722 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.513928 | `keyvault_secret_get` | ❌ |
-| 3 | 0.441270 | `appconfig_kv_set` | ❌ |
-| 4 | 0.418098 | `appconfig_kv_lock_set` | ❌ |
-| 5 | 0.408325 | `keyvault_key_get` | ❌ |
+| 1 | 0.571567 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 2 | 0.513767 | `keyvault_secret_get` | ❌ |
+| 3 | 0.441223 | `appconfig_kv_set` | ❌ |
+| 4 | 0.417943 | `appconfig_kv_lock_set` | ❌ |
+| 5 | 0.408242 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -4791,8 +4791,8 @@
 |------|-------|------|--------|
 | 1 | 0.602769 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.504212 | `keyvault_key_get` | ❌ |
-| 3 | 0.501397 | `keyvault_secret_create` | ❌ |
-| 4 | 0.478668 | `keyvault_secret_list` | ❌ |
+| 3 | 0.501317 | `keyvault_secret_create` | ❌ |
+| 4 | 0.478708 | `keyvault_secret_list` | ❌ |
 | 5 | 0.439521 | `keyvault_certificate_get` | ❌ |
 
 ---
@@ -4810,7 +4810,7 @@
 | 2 | 0.566786 | `keyvault_key_get` | ❌ |
 | 3 | 0.517547 | `storage_account_get` | ❌ |
 | 4 | 0.496050 | `keyvault_certificate_get` | ❌ |
-| 5 | 0.485168 | `keyvault_secret_list` | ❌ |
+| 5 | 0.485180 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -4825,8 +4825,8 @@
 |------|-------|------|--------|
 | 1 | 0.578479 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.492213 | `keyvault_key_get` | ❌ |
-| 3 | 0.488705 | `keyvault_secret_create` | ❌ |
-| 4 | 0.443692 | `keyvault_secret_list` | ❌ |
+| 3 | 0.488631 | `keyvault_secret_create` | ❌ |
+| 4 | 0.443593 | `keyvault_secret_list` | ❌ |
 | 5 | 0.424167 | `keyvault_admin_settings_get` | ❌ |
 
 ---
@@ -4840,11 +4840,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.649211 | `keyvault_secret_get` | ✅ **EXPECTED** |
-| 2 | 0.546905 | `keyvault_key_get` | ❌ |
-| 3 | 0.497275 | `storage_account_get` | ❌ |
-| 4 | 0.492622 | `keyvault_certificate_get` | ❌ |
-| 5 | 0.491404 | `keyvault_secret_list` | ❌ |
+| 1 | 0.649267 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 2 | 0.546992 | `keyvault_key_get` | ❌ |
+| 3 | 0.497402 | `storage_account_get` | ❌ |
+| 4 | 0.492583 | `keyvault_certificate_get` | ❌ |
+| 5 | 0.491507 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -4859,8 +4859,8 @@
 |------|-------|------|--------|
 | 1 | 0.577477 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.475443 | `keyvault_key_get` | ❌ |
-| 3 | 0.466890 | `keyvault_secret_create` | ❌ |
-| 4 | 0.447659 | `keyvault_secret_list` | ❌ |
+| 3 | 0.466783 | `keyvault_secret_create` | ❌ |
+| 4 | 0.447550 | `keyvault_secret_list` | ❌ |
 | 5 | 0.439583 | `storage_account_get` | ❌ |
 
 ---
@@ -4874,8 +4874,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.701031 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.563437 | `keyvault_key_list` | ❌ |
+| 1 | 0.701171 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.563694 | `keyvault_key_list` | ❌ |
 | 3 | 0.538337 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.499642 | `keyvault_secret_get` | ❌ |
 | 5 | 0.455500 | `cosmos_account_list` | ❌ |
@@ -4891,11 +4891,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.555456 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.543861 | `keyvault_secret_get` | ❌ |
-| 3 | 0.497525 | `keyvault_key_get` | ❌ |
-| 4 | 0.464338 | `keyvault_key_list` | ❌ |
-| 5 | 0.453130 | `keyvault_admin_settings_get` | ❌ |
+| 1 | 0.555628 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.543902 | `keyvault_secret_get` | ❌ |
+| 3 | 0.497497 | `keyvault_key_get` | ❌ |
+| 4 | 0.464631 | `keyvault_key_list` | ❌ |
+| 5 | 0.453165 | `keyvault_admin_settings_get` | ❌ |
 
 ---
 
@@ -4908,9 +4908,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.572358 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 1 | 0.572484 | `keyvault_secret_list` | ✅ **EXPECTED** |
 | 2 | 0.529258 | `keyvault_secret_get` | ❌ |
-| 3 | 0.493517 | `keyvault_key_list` | ❌ |
+| 3 | 0.493728 | `keyvault_key_list` | ❌ |
 | 4 | 0.487620 | `keyvault_admin_settings_get` | ❌ |
 | 5 | 0.475273 | `keyvault_key_get` | ❌ |
 
@@ -4925,8 +4925,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.624144 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.559458 | `keyvault_key_list` | ❌ |
+| 1 | 0.624253 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.559621 | `keyvault_key_list` | ❌ |
 | 3 | 0.517516 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.479547 | `keyvault_secret_get` | ❌ |
 | 5 | 0.454288 | `storage_blob_container_get` | ❌ |
@@ -4942,8 +4942,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.742158 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.600884 | `keyvault_key_list` | ❌ |
+| 1 | 0.742266 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.601079 | `keyvault_key_list` | ❌ |
 | 3 | 0.567827 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.496127 | `keyvault_secret_get` | ❌ |
 | 5 | 0.437560 | `keyvault_admin_settings_get` | ❌ |
@@ -4959,10 +4959,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.566840 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 1 | 0.567059 | `keyvault_secret_list` | ✅ **EXPECTED** |
 | 2 | 0.522399 | `keyvault_secret_get` | ❌ |
-| 3 | 0.475991 | `keyvault_key_list` | ❌ |
-| 4 | 0.462677 | `keyvault_secret_create` | ❌ |
+| 3 | 0.476288 | `keyvault_key_list` | ❌ |
+| 4 | 0.462636 | `keyvault_secret_create` | ❌ |
 | 5 | 0.461326 | `keyvault_key_get` | ❌ |
 
 ---
@@ -4976,9 +4976,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.588349 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.544302 | `aks_nodepool_get` | ❌ |
-| 3 | 0.517279 | `kusto_cluster_get` | ❌ |
+| 1 | 0.588300 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.544457 | `aks_nodepool_get` | ❌ |
+| 3 | 0.515213 | `kusto_cluster_get` | ❌ |
 | 4 | 0.481416 | `mysql_server_config_get` | ❌ |
 | 5 | 0.430976 | `postgres_server_config_get` | ❌ |
 
@@ -4993,11 +4993,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.621748 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.575626 | `aks_nodepool_get` | ❌ |
-| 3 | 0.567870 | `kusto_cluster_get` | ❌ |
-| 4 | 0.461785 | `sql_db_show` | ❌ |
-| 5 | 0.444327 | `monitor_webtests_get` | ❌ |
+| 1 | 0.621759 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.575635 | `aks_nodepool_get` | ❌ |
+| 3 | 0.570494 | `kusto_cluster_get` | ❌ |
+| 4 | 0.461466 | `sql_db_show` | ❌ |
+| 5 | 0.444727 | `monitor_webtests_get` | ❌ |
 
 ---
 
@@ -5010,9 +5010,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.522555 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.483220 | `aks_nodepool_get` | ❌ |
-| 3 | 0.434684 | `kusto_cluster_get` | ❌ |
+| 1 | 0.522525 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.483301 | `aks_nodepool_get` | ❌ |
+| 3 | 0.436526 | `kusto_cluster_get` | ❌ |
 | 4 | 0.380301 | `mysql_server_config_get` | ❌ |
 | 5 | 0.366689 | `kusto_cluster_list` | ❌ |
 
@@ -5027,11 +5027,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.588635 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.550555 | `aks_nodepool_get` | ❌ |
-| 3 | 0.527511 | `kusto_cluster_get` | ❌ |
+| 1 | 0.588634 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.550556 | `aks_nodepool_get` | ❌ |
+| 3 | 0.525898 | `kusto_cluster_get` | ❌ |
 | 4 | 0.445722 | `storage_account_get` | ❌ |
-| 5 | 0.434587 | `functionapp_get` | ❌ |
+| 5 | 0.434554 | `functionapp_get` | ❌ |
 
 ---
 
@@ -5044,11 +5044,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.756523 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 1 | 0.756471 | `aks_cluster_get` | ✅ **EXPECTED** |
 | 2 | 0.749416 | `kusto_cluster_list` | ❌ |
-| 3 | 0.590166 | `aks_nodepool_get` | ❌ |
-| 4 | 0.568384 | `kusto_database_list` | ❌ |
-| 5 | 0.562043 | `search_service_list` | ❌ |
+| 3 | 0.590268 | `aks_nodepool_get` | ❌ |
+| 4 | 0.568403 | `kusto_database_list` | ❌ |
+| 5 | 0.561979 | `search_service_list` | ❌ |
 
 ---
 
@@ -5061,11 +5061,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.612132 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 1 | 0.612123 | `aks_cluster_get` | ✅ **EXPECTED** |
 | 2 | 0.586661 | `kusto_cluster_list` | ❌ |
-| 3 | 0.507757 | `aks_nodepool_get` | ❌ |
-| 4 | 0.489724 | `kusto_cluster_get` | ❌ |
-| 5 | 0.462804 | `kusto_database_list` | ❌ |
+| 3 | 0.507777 | `aks_nodepool_get` | ❌ |
+| 4 | 0.492285 | `kusto_cluster_get` | ❌ |
+| 5 | 0.462874 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -5078,11 +5078,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.628472 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.563189 | `aks_nodepool_get` | ❌ |
+| 1 | 0.628429 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.563327 | `aks_nodepool_get` | ❌ |
 | 3 | 0.526756 | `kusto_cluster_list` | ❌ |
-| 4 | 0.426157 | `kusto_cluster_get` | ❌ |
-| 5 | 0.409025 | `kusto_database_list` | ❌ |
+| 4 | 0.424219 | `kusto_cluster_get` | ❌ |
+| 5 | 0.409103 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -5095,9 +5095,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.728937 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.517021 | `kusto_cluster_get` | ❌ |
-| 3 | 0.509825 | `aks_cluster_get` | ❌ |
+| 1 | 0.728862 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.515863 | `kusto_cluster_get` | ❌ |
+| 3 | 0.509820 | `aks_cluster_get` | ❌ |
 | 4 | 0.468392 | `virtualdesktop_hostpool_list` | ❌ |
 | 5 | 0.463192 | `sql_elastic-pool_list` | ❌ |
 
@@ -5112,11 +5112,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.654106 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.458596 | `sql_elastic-pool_list` | ❌ |
-| 3 | 0.446023 | `aks_cluster_get` | ❌ |
-| 4 | 0.440182 | `virtualdesktop_hostpool_list` | ❌ |
-| 5 | 0.413758 | `kusto_cluster_get` | ❌ |
+| 1 | 0.654269 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.458899 | `sql_elastic-pool_list` | ❌ |
+| 3 | 0.446280 | `aks_cluster_get` | ❌ |
+| 4 | 0.440382 | `virtualdesktop_hostpool_list` | ❌ |
+| 5 | 0.415538 | `kusto_cluster_get` | ❌ |
 
 ---
 
@@ -5129,11 +5129,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.592906 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.402611 | `aks_cluster_get` | ❌ |
-| 3 | 0.385208 | `virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.383087 | `sql_elastic-pool_list` | ❌ |
-| 5 | 0.355198 | `kusto_cluster_get` | ❌ |
+| 1 | 0.592862 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.402528 | `aks_cluster_get` | ❌ |
+| 3 | 0.385258 | `virtualdesktop_hostpool_list` | ❌ |
+| 4 | 0.383089 | `sql_elastic-pool_list` | ❌ |
+| 5 | 0.352736 | `kusto_cluster_get` | ❌ |
 
 ---
 
@@ -5146,8 +5146,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.692231 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.519045 | `aks_cluster_get` | ❌ |
+| 1 | 0.692357 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.519037 | `aks_cluster_get` | ❌ |
 | 3 | 0.506624 | `virtualdesktop_hostpool_list` | ❌ |
 | 4 | 0.500749 | `kusto_cluster_list` | ❌ |
 | 5 | 0.487707 | `sql_elastic-pool_list` | ❌ |
@@ -5163,11 +5163,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.732132 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.561833 | `aks_cluster_get` | ❌ |
-| 3 | 0.510269 | `sql_elastic-pool_list` | ❌ |
-| 4 | 0.509732 | `virtualdesktop_hostpool_list` | ❌ |
-| 5 | 0.486700 | `kusto_cluster_list` | ❌ |
+| 1 | 0.732186 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.561899 | `aks_cluster_get` | ❌ |
+| 3 | 0.510251 | `sql_elastic-pool_list` | ❌ |
+| 4 | 0.509685 | `virtualdesktop_hostpool_list` | ❌ |
+| 5 | 0.486839 | `kusto_cluster_list` | ❌ |
 
 ---
 
@@ -5180,11 +5180,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.629358 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.456916 | `aks_cluster_get` | ❌ |
-| 3 | 0.443902 | `virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.433006 | `kusto_cluster_list` | ❌ |
-| 5 | 0.425448 | `sql_elastic-pool_list` | ❌ |
+| 1 | 0.629464 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.456897 | `aks_cluster_get` | ❌ |
+| 3 | 0.443966 | `virtualdesktop_hostpool_list` | ❌ |
+| 4 | 0.432981 | `kusto_cluster_list` | ❌ |
+| 5 | 0.425502 | `sql_elastic-pool_list` | ❌ |
 
 ---
 
@@ -5197,11 +5197,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.579089 | `loadtesting_test_create` | ✅ **EXPECTED** |
-| 2 | 0.520388 | `loadtesting_testresource_create` | ❌ |
-| 3 | 0.513329 | `loadtesting_testrun_create` | ❌ |
-| 4 | 0.473919 | `monitor_webtests_create` | ❌ |
-| 5 | 0.461918 | `loadtesting_testresource_list` | ❌ |
+| 1 | 0.577811 | `loadtesting_test_create` | ✅ **EXPECTED** |
+| 2 | 0.519418 | `loadtesting_testresource_create` | ❌ |
+| 3 | 0.511955 | `loadtesting_testrun_create` | ❌ |
+| 4 | 0.472753 | `monitor_webtests_create` | ❌ |
+| 5 | 0.460717 | `loadtesting_testresource_list` | ❌ |
 
 ---
 
@@ -5214,11 +5214,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.626226 | `loadtesting_testresource_list` | ❌ |
-| 2 | 0.619986 | `loadtesting_test_get` | ✅ **EXPECTED** |
-| 3 | 0.594666 | `loadtesting_testresource_create` | ❌ |
-| 4 | 0.590698 | `monitor_webtests_get` | ❌ |
-| 5 | 0.536024 | `monitor_webtests_list` | ❌ |
+| 1 | 0.626205 | `loadtesting_testresource_list` | ❌ |
+| 2 | 0.619844 | `loadtesting_test_get` | ✅ **EXPECTED** |
+| 3 | 0.594588 | `loadtesting_testresource_create` | ❌ |
+| 4 | 0.590939 | `monitor_webtests_get` | ❌ |
+| 5 | 0.536041 | `monitor_webtests_list` | ❌ |
 
 ---
 
@@ -5231,11 +5231,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.645509 | `loadtesting_testresource_create` | ✅ **EXPECTED** |
-| 2 | 0.618740 | `loadtesting_testresource_list` | ❌ |
-| 3 | 0.541648 | `loadtesting_test_create` | ❌ |
-| 4 | 0.539770 | `loadtesting_testrun_create` | ❌ |
-| 5 | 0.526623 | `monitor_webtests_list` | ❌ |
+| 1 | 0.645543 | `loadtesting_testresource_create` | ✅ **EXPECTED** |
+| 2 | 0.619105 | `loadtesting_testresource_list` | ❌ |
+| 3 | 0.541915 | `loadtesting_test_create` | ❌ |
+| 4 | 0.540134 | `loadtesting_testrun_create` | ❌ |
+| 5 | 0.526959 | `monitor_webtests_list` | ❌ |
 
 ---
 
@@ -5248,11 +5248,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.794317 | `loadtesting_testresource_list` | ✅ **EXPECTED** |
-| 2 | 0.653159 | `monitor_webtests_list` | ❌ |
-| 3 | 0.577430 | `group_list` | ❌ |
-| 4 | 0.575123 | `loadtesting_testresource_create` | ❌ |
-| 5 | 0.565597 | `datadog_monitoredresources_list` | ❌ |
+| 1 | 0.794326 | `loadtesting_testresource_list` | ✅ **EXPECTED** |
+| 2 | 0.653162 | `monitor_webtests_list` | ❌ |
+| 3 | 0.577408 | `group_list` | ❌ |
+| 4 | 0.575172 | `loadtesting_testresource_create` | ❌ |
+| 5 | 0.565565 | `datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -5265,11 +5265,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.689060 | `loadtesting_testrun_create` | ✅ **EXPECTED** |
-| 2 | 0.594928 | `loadtesting_testrun_update` | ❌ |
-| 3 | 0.557914 | `loadtesting_test_create` | ❌ |
-| 4 | 0.546222 | `loadtesting_testresource_create` | ❌ |
-| 5 | 0.495393 | `loadtesting_testresource_list` | ❌ |
+| 1 | 0.688964 | `loadtesting_testrun_create` | ✅ **EXPECTED** |
+| 2 | 0.594879 | `loadtesting_testrun_update` | ❌ |
+| 3 | 0.558636 | `loadtesting_test_create` | ❌ |
+| 4 | 0.547102 | `loadtesting_testresource_create` | ❌ |
+| 5 | 0.496224 | `loadtesting_testresource_list` | ❌ |
 
 ---
 
@@ -5282,11 +5282,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.619146 | `loadtesting_testresource_list` | ❌ |
-| 2 | 0.602055 | `loadtesting_test_get` | ❌ |
-| 3 | 0.597430 | `loadtesting_testresource_create` | ❌ |
-| 4 | 0.577532 | `monitor_webtests_get` | ❌ |
-| 5 | 0.565996 | `loadtesting_testrun_list` | ❌ |
+| 1 | 0.619163 | `loadtesting_testresource_list` | ❌ |
+| 2 | 0.601872 | `loadtesting_test_get` | ❌ |
+| 3 | 0.597504 | `loadtesting_testresource_create` | ❌ |
+| 4 | 0.577817 | `monitor_webtests_get` | ❌ |
+| 5 | 0.566070 | `loadtesting_testrun_list` | ❌ |
 
 ---
 
@@ -5299,11 +5299,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.669180 | `loadtesting_testresource_list` | ❌ |
-| 2 | 0.640360 | `loadtesting_testrun_list` | ✅ **EXPECTED** |
-| 3 | 0.601401 | `loadtesting_test_get` | ❌ |
-| 4 | 0.577461 | `loadtesting_testresource_create` | ❌ |
-| 5 | 0.569424 | `monitor_webtests_get` | ❌ |
+| 1 | 0.669172 | `loadtesting_testresource_list` | ❌ |
+| 2 | 0.640537 | `loadtesting_testrun_list` | ✅ **EXPECTED** |
+| 3 | 0.601155 | `loadtesting_test_get` | ❌ |
+| 4 | 0.577378 | `loadtesting_testresource_create` | ❌ |
+| 5 | 0.569817 | `monitor_webtests_get` | ❌ |
 
 ---
 
@@ -5316,11 +5316,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.706737 | `loadtesting_testrun_update` | ✅ **EXPECTED** |
-| 2 | 0.514428 | `loadtesting_testrun_create` | ❌ |
+| 1 | 0.706747 | `loadtesting_testrun_update` | ✅ **EXPECTED** |
+| 2 | 0.514654 | `loadtesting_testrun_create` | ❌ |
 | 3 | 0.486980 | `monitor_webtests_update` | ❌ |
 | 4 | 0.470337 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.468374 | `monitor_webtests_get` | ❌ |
+| 5 | 0.468145 | `monitor_webtests_get` | ❌ |
 
 ---
 
@@ -5335,9 +5335,9 @@
 |------|-------|------|--------|
 | 1 | 0.599427 | `kusto_cluster_list` | ❌ |
 | 2 | 0.578892 | `grafana_list` | ✅ **EXPECTED** |
-| 3 | 0.551851 | `search_service_list` | ❌ |
-| 4 | 0.550372 | `subscription_list` | ❌ |
-| 5 | 0.531259 | `redis_list` | ❌ |
+| 3 | 0.551817 | `search_service_list` | ❌ |
+| 4 | 0.549826 | `subscription_list` | ❌ |
+| 5 | 0.531197 | `redis_list` | ❌ |
 
 ---
 
@@ -5351,10 +5351,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.728113 | `managedlustre_fs_create` | ✅ **EXPECTED** |
-| 2 | 0.615922 | `managedlustre_fs_list` | ❌ |
-| 3 | 0.605775 | `managedlustre_fs_sku_get` | ❌ |
-| 4 | 0.598255 | `managedlustre_fs_update` | ❌ |
-| 5 | 0.557761 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 2 | 0.616164 | `managedlustre_fs_list` | ❌ |
+| 3 | 0.605812 | `managedlustre_fs_sku_get` | ❌ |
+| 4 | 0.598151 | `managedlustre_fs_update` | ❌ |
+| 5 | 0.557741 | `managedlustre_fs_subnetsize_validate` | ❌ |
 
 ---
 
@@ -5367,11 +5367,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.750340 | `managedlustre_fs_list` | ✅ **EXPECTED** |
-| 2 | 0.631770 | `managedlustre_fs_sku_get` | ❌ |
+| 1 | 0.750675 | `managedlustre_fs_list` | ✅ **EXPECTED** |
+| 2 | 0.631843 | `managedlustre_fs_sku_get` | ❌ |
 | 3 | 0.582660 | `managedlustre_fs_create` | ❌ |
 | 4 | 0.562377 | `kusto_cluster_list` | ❌ |
-| 5 | 0.513156 | `search_service_list` | ❌ |
+| 5 | 0.513113 | `search_service_list` | ❌ |
 
 ---
 
@@ -5384,11 +5384,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.743576 | `managedlustre_fs_list` | ✅ **EXPECTED** |
-| 2 | 0.613217 | `managedlustre_fs_sku_get` | ❌ |
-| 3 | 0.565856 | `managedlustre_fs_create` | ❌ |
-| 4 | 0.519986 | `datadog_monitoredresources_list` | ❌ |
-| 5 | 0.515433 | `loadtesting_testresource_list` | ❌ |
+| 1 | 0.743937 | `managedlustre_fs_list` | ✅ **EXPECTED** |
+| 2 | 0.613298 | `managedlustre_fs_sku_get` | ❌ |
+| 3 | 0.565830 | `managedlustre_fs_create` | ❌ |
+| 4 | 0.520073 | `datadog_monitoredresources_list` | ❌ |
+| 5 | 0.515499 | `loadtesting_testresource_list` | ❌ |
 
 ---
 
@@ -5401,11 +5401,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.827433 | `managedlustre_fs_sku_get` | ✅ **EXPECTED** |
-| 2 | 0.613407 | `managedlustre_fs_list` | ❌ |
-| 3 | 0.513329 | `managedlustre_fs_create` | ❌ |
-| 4 | 0.496309 | `managedlustre_fs_subnetsize_validate` | ❌ |
-| 5 | 0.470317 | `kusto_cluster_list` | ❌ |
+| 1 | 0.827381 | `managedlustre_fs_sku_get` | ✅ **EXPECTED** |
+| 2 | 0.613674 | `managedlustre_fs_list` | ❌ |
+| 3 | 0.513242 | `managedlustre_fs_create` | ❌ |
+| 4 | 0.496177 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 5 | 0.470241 | `kusto_cluster_list` | ❌ |
 
 ---
 
@@ -5418,11 +5418,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.739728 | `managedlustre_fs_subnetsize_ask` | ✅ **EXPECTED** |
-| 2 | 0.651481 | `managedlustre_fs_subnetsize_validate` | ❌ |
-| 3 | 0.594993 | `managedlustre_fs_sku_get` | ❌ |
-| 4 | 0.559072 | `managedlustre_fs_list` | ❌ |
-| 5 | 0.533854 | `managedlustre_fs_create` | ❌ |
+| 1 | 0.739766 | `managedlustre_fs_subnetsize_ask` | ✅ **EXPECTED** |
+| 2 | 0.651586 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 3 | 0.594726 | `managedlustre_fs_sku_get` | ❌ |
+| 4 | 0.559498 | `managedlustre_fs_list` | ❌ |
+| 5 | 0.533684 | `managedlustre_fs_create` | ❌ |
 
 ---
 
@@ -5435,11 +5435,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.879388 | `managedlustre_fs_subnetsize_validate` | ✅ **EXPECTED** |
-| 2 | 0.622519 | `managedlustre_fs_subnetsize_ask` | ❌ |
-| 3 | 0.542472 | `managedlustre_fs_sku_get` | ❌ |
-| 4 | 0.515697 | `managedlustre_fs_create` | ❌ |
-| 5 | 0.480293 | `managedlustre_fs_list` | ❌ |
+| 1 | 0.879409 | `managedlustre_fs_subnetsize_validate` | ✅ **EXPECTED** |
+| 2 | 0.622463 | `managedlustre_fs_subnetsize_ask` | ❌ |
+| 3 | 0.542931 | `managedlustre_fs_sku_get` | ❌ |
+| 4 | 0.515935 | `managedlustre_fs_create` | ❌ |
+| 5 | 0.480855 | `managedlustre_fs_list` | ❌ |
 
 ---
 
@@ -5452,11 +5452,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.739000 | `managedlustre_fs_update` | ✅ **EXPECTED** |
-| 2 | 0.527525 | `managedlustre_fs_create` | ❌ |
-| 3 | 0.487012 | `managedlustre_fs_list` | ❌ |
-| 4 | 0.385349 | `managedlustre_fs_sku_get` | ❌ |
-| 5 | 0.344954 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 1 | 0.738979 | `managedlustre_fs_update` | ✅ **EXPECTED** |
+| 2 | 0.527556 | `managedlustre_fs_create` | ❌ |
+| 3 | 0.487110 | `managedlustre_fs_list` | ❌ |
+| 4 | 0.385143 | `managedlustre_fs_sku_get` | ❌ |
+| 5 | 0.344820 | `managedlustre_fs_subnetsize_validate` | ❌ |
 
 ---
 
@@ -5469,8 +5469,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.570173 | `marketplace_product_get` | ✅ **EXPECTED** |
-| 2 | 0.499184 | `marketplace_product_list` | ❌ |
+| 1 | 0.570113 | `marketplace_product_get` | ✅ **EXPECTED** |
+| 2 | 0.499306 | `marketplace_product_list` | ❌ |
 | 3 | 0.353256 | `servicebus_topic_subscription_details` | ❌ |
 | 4 | 0.338943 | `foundry_resource_get` | ❌ |
 | 5 | 0.333160 | `servicebus_topic_details` | ❌ |
@@ -5486,10 +5486,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.607917 | `marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.442951 | `marketplace_product_get` | ❌ |
+| 1 | 0.608016 | `marketplace_product_list` | ✅ **EXPECTED** |
+| 2 | 0.443265 | `marketplace_product_get` | ❌ |
 | 3 | 0.380880 | `foundry_models_list` | ❌ |
-| 4 | 0.343549 | `search_service_list` | ❌ |
+| 4 | 0.343500 | `search_service_list` | ❌ |
 | 5 | 0.338190 | `foundry_threads_list` | ❌ |
 
 ---
@@ -5503,11 +5503,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.537726 | `marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.385180 | `marketplace_product_get` | ❌ |
+| 1 | 0.537769 | `marketplace_product_list` | ✅ **EXPECTED** |
+| 2 | 0.385199 | `marketplace_product_get` | ❌ |
 | 3 | 0.341241 | `foundry_models_list` | ❌ |
-| 4 | 0.288006 | `redis_list` | ❌ |
-| 5 | 0.260387 | `managedlustre_fs_sku_get` | ❌ |
+| 4 | 0.288002 | `redis_list` | ❌ |
+| 5 | 0.260364 | `managedlustre_fs_sku_get` | ❌ |
 
 ---
 
@@ -5520,10 +5520,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.647729 | `azureaibestpractices_get` | ❌ |
-| 2 | 0.646844 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.651583 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.647729 | `azureaibestpractices_get` | ❌ |
 | 3 | 0.635406 | `azureterraformbestpractices_get` | ❌ |
-| 4 | 0.586907 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.586978 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.531728 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -5537,9 +5537,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.600903 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.602644 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.548542 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.541091 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.541110 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.516852 | `deploy_plan_get` | ❌ |
 | 5 | 0.516443 | `deploy_pipeline_guidance_get` | ❌ |
 
@@ -5554,10 +5554,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.625259 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.625059 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.594323 | `azureterraformbestpractices_get` | ❌ |
 | 3 | 0.536035 | `azureaibestpractices_get` | ❌ |
-| 4 | 0.518643 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.518712 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.465573 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -5571,10 +5571,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.624273 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.629182 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.584533 | `azureaibestpractices_get` | ❌ |
 | 3 | 0.570488 | `azureterraformbestpractices_get` | ❌ |
-| 4 | 0.522998 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.523045 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.493998 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -5588,9 +5588,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.581850 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.584648 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.497350 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.495659 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.495667 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.486886 | `azureterraformbestpractices_get` | ❌ |
 | 5 | 0.474511 | `deploy_plan_get` | ❌ |
 
@@ -5605,11 +5605,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.610986 | `get_bestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.532790 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.518227 | `azureaibestpractices_get` | ❌ |
-| 4 | 0.487322 | `deploy_iac_rules_get` | ❌ |
-| 5 | 0.458060 | `deploy_pipeline_guidance_get` | ❌ |
+| 1 | 0.612708 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.532748 | `azureterraformbestpractices_get` | ❌ |
+| 3 | 0.518179 | `azureaibestpractices_get` | ❌ |
+| 4 | 0.487372 | `deploy_iac_rules_get` | ❌ |
+| 5 | 0.458080 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
 
@@ -5622,10 +5622,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.557862 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.559645 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.513262 | `azureterraformbestpractices_get` | ❌ |
 | 3 | 0.508975 | `azureaibestpractices_get` | ❌ |
-| 4 | 0.505123 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.505160 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.483705 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -5639,10 +5639,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.582541 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 1 | 0.584891 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.500368 | `azureterraformbestpractices_get` | ❌ |
 | 3 | 0.481102 | `azureaibestpractices_get` | ❌ |
-| 4 | 0.472112 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.472200 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.433134 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -5658,8 +5658,8 @@
 |------|-------|------|--------|
 | 1 | 0.488855 | `deploy_plan_get` | ❌ |
 | 2 | 0.460956 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.411825 | `foundry_agents_get-sdk-sample` | ❌ |
-| 4 | 0.390270 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.411193 | `foundry_agents_get-sdk-sample` | ❌ |
+| 4 | 0.390296 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.370298 | `azureterraformbestpractices_get` | ❌ |
 
 ---
@@ -5676,7 +5676,7 @@
 | 1 | 0.537893 | `monitor_activitylog_list` | ✅ **EXPECTED** |
 | 2 | 0.506212 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.371728 | `monitor_workspace_log_query` | ❌ |
-| 4 | 0.363798 | `resourcehealth_health-events_list` | ❌ |
+| 4 | 0.363951 | `resourcehealth_health-events_list` | ❌ |
 | 5 | 0.344629 | `datadog_monitoredresources_list` | ❌ |
 
 ---
@@ -5690,11 +5690,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.660947 | `monitor_healthmodels_entity_get` | ✅ **EXPECTED** |
-| 2 | 0.609276 | `resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.351697 | `resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.328321 | `resourcehealth_health-events_list` | ❌ |
-| 5 | 0.283143 | `foundry_models_deployments_list` | ❌ |
+| 1 | 0.661030 | `monitor_healthmodels_entity_get` | ✅ **EXPECTED** |
+| 2 | 0.609294 | `resourcehealth_availability-status_get` | ❌ |
+| 3 | 0.351713 | `resourcehealth_availability-status_list` | ❌ |
+| 4 | 0.328346 | `resourcehealth_health-events_list` | ❌ |
+| 5 | 0.283204 | `foundry_models_deployments_list` | ❌ |
 
 ---
 
@@ -5707,11 +5707,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.592640 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
+| 1 | 0.592731 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
 | 2 | 0.424141 | `monitor_metrics_query` | ❌ |
-| 3 | 0.368319 | `bicepschema_get` | ❌ |
+| 3 | 0.367956 | `bicepschema_get` | ❌ |
 | 4 | 0.333167 | `foundry_resource_get` | ❌ |
-| 5 | 0.332356 | `monitor_table_type_list` | ❌ |
+| 5 | 0.332357 | `monitor_table_type_list` | ❌ |
 
 ---
 
@@ -5724,11 +5724,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.607600 | `storage_account_get` | ❌ |
-| 2 | 0.587736 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
-| 3 | 0.544781 | `storage_blob_container_get` | ❌ |
-| 4 | 0.495701 | `storage_blob_get` | ❌ |
-| 5 | 0.473382 | `managedlustre_fs_list` | ❌ |
+| 1 | 0.607554 | `storage_account_get` | ❌ |
+| 2 | 0.587847 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
+| 3 | 0.544734 | `storage_blob_container_get` | ❌ |
+| 4 | 0.495790 | `storage_blob_get` | ❌ |
+| 5 | 0.473479 | `managedlustre_fs_list` | ❌ |
 
 ---
 
@@ -5741,11 +5741,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.633173 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
+| 1 | 0.633197 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
 | 2 | 0.495513 | `monitor_metrics_query` | ❌ |
 | 3 | 0.433945 | `monitor_resource_log_query` | ❌ |
 | 4 | 0.392960 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.388750 | `bicepschema_get` | ❌ |
+| 5 | 0.388479 | `bicepschema_get` | ❌ |
 
 ---
 
@@ -5761,7 +5761,7 @@
 | 1 | 0.555377 | `monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.527530 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.464743 | `applens_resource_diagnose` | ❌ |
-| 4 | 0.420462 | `resourcehealth_health-events_list` | ❌ |
+| 4 | 0.420433 | `resourcehealth_health-events_list` | ❌ |
 | 5 | 0.413282 | `applicationinsights_recommendation_list` | ❌ |
 
 ---
@@ -5778,8 +5778,8 @@
 | 1 | 0.557830 | `monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.476671 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.460611 | `resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.455904 | `quota_usage_check` | ❌ |
-| 5 | 0.438233 | `monitor_metrics_definitions` | ❌ |
+| 4 | 0.456308 | `quota_usage_check` | ❌ |
+| 5 | 0.438274 | `monitor_metrics_definitions` | ❌ |
 
 ---
 
@@ -5792,11 +5792,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.461249 | `monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.390029 | `monitor_metrics_definitions` | ❌ |
-| 3 | 0.338557 | `monitor_resource_log_query` | ❌ |
-| 4 | 0.334519 | `resourcehealth_availability-status_get` | ❌ |
-| 5 | 0.306338 | `resourcehealth_availability-status_list` | ❌ |
+| 1 | 0.461170 | `monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.390058 | `monitor_metrics_definitions` | ❌ |
+| 3 | 0.338607 | `monitor_resource_log_query` | ❌ |
+| 4 | 0.334500 | `resourcehealth_availability-status_get` | ❌ |
+| 5 | 0.306261 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
 
@@ -5809,11 +5809,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.496939 | `monitor_resource_log_query` | ❌ |
-| 2 | 0.492184 | `monitor_metrics_query` | ✅ **EXPECTED** |
-| 3 | 0.448250 | `applens_resource_diagnose` | ❌ |
-| 4 | 0.412228 | `resourcehealth_health-events_list` | ❌ |
-| 5 | 0.397344 | `quota_usage_check` | ❌ |
+| 1 | 0.496894 | `monitor_resource_log_query` | ❌ |
+| 2 | 0.492123 | `monitor_metrics_query` | ✅ **EXPECTED** |
+| 3 | 0.448236 | `applens_resource_diagnose` | ❌ |
+| 4 | 0.412162 | `resourcehealth_health-events_list` | ❌ |
+| 5 | 0.397798 | `quota_usage_check` | ❌ |
 
 ---
 
@@ -5826,11 +5826,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.525439 | `monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.406008 | `monitor_resource_log_query` | ❌ |
-| 3 | 0.384207 | `monitor_metrics_definitions` | ❌ |
-| 4 | 0.347568 | `monitor_workspace_log_query` | ❌ |
-| 5 | 0.330498 | `resourcehealth_availability-status_get` | ❌ |
+| 1 | 0.525585 | `monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.406185 | `monitor_resource_log_query` | ❌ |
+| 3 | 0.384584 | `monitor_metrics_definitions` | ❌ |
+| 4 | 0.347723 | `monitor_workspace_log_query` | ❌ |
+| 5 | 0.330713 | `resourcehealth_availability-status_get` | ❌ |
 
 ---
 
@@ -5846,8 +5846,8 @@
 | 1 | 0.480140 | `monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.444779 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.388382 | `applens_resource_diagnose` | ❌ |
-| 4 | 0.363411 | `quota_usage_check` | ❌ |
-| 5 | 0.350076 | `resourcehealth_health-events_list` | ❌ |
+| 4 | 0.363639 | `quota_usage_check` | ❌ |
+| 5 | 0.350034 | `resourcehealth_health-events_list` | ❌ |
 
 ---
 
@@ -5860,11 +5860,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.687851 | `monitor_resource_log_query` | ✅ **EXPECTED** |
-| 2 | 0.621912 | `monitor_workspace_log_query` | ❌ |
-| 3 | 0.598409 | `monitor_activitylog_list` | ❌ |
-| 4 | 0.485667 | `deploy_app_logs_get` | ❌ |
-| 5 | 0.469722 | `monitor_metrics_query` | ❌ |
+| 1 | 0.687852 | `monitor_resource_log_query` | ✅ **EXPECTED** |
+| 2 | 0.621919 | `monitor_workspace_log_query` | ❌ |
+| 3 | 0.598393 | `monitor_activitylog_list` | ❌ |
+| 4 | 0.485633 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.469703 | `monitor_metrics_query` | ❌ |
 
 ---
 
@@ -5877,11 +5877,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.850712 | `monitor_table_list` | ✅ **EXPECTED** |
-| 2 | 0.725738 | `monitor_table_type_list` | ❌ |
-| 3 | 0.620445 | `monitor_workspace_list` | ❌ |
-| 4 | 0.541985 | `kusto_table_list` | ❌ |
-| 5 | 0.539481 | `monitor_workspace_log_query` | ❌ |
+| 1 | 0.850790 | `monitor_table_list` | ✅ **EXPECTED** |
+| 2 | 0.725724 | `monitor_table_type_list` | ❌ |
+| 3 | 0.620507 | `monitor_workspace_list` | ❌ |
+| 4 | 0.541932 | `kusto_table_list` | ❌ |
+| 5 | 0.539571 | `monitor_workspace_log_query` | ❌ |
 
 ---
 
@@ -5894,8 +5894,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.798147 | `monitor_table_list` | ✅ **EXPECTED** |
-| 2 | 0.701122 | `monitor_table_type_list` | ❌ |
+| 1 | 0.798159 | `monitor_table_list` | ✅ **EXPECTED** |
+| 2 | 0.701071 | `monitor_table_type_list` | ❌ |
 | 3 | 0.599916 | `monitor_workspace_list` | ❌ |
 | 4 | 0.542820 | `monitor_workspace_log_query` | ❌ |
 | 5 | 0.502882 | `monitor_resource_log_query` | ❌ |
@@ -5911,8 +5911,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.881524 | `monitor_table_type_list` | ✅ **EXPECTED** |
-| 2 | 0.765557 | `monitor_table_list` | ❌ |
+| 1 | 0.881460 | `monitor_table_type_list` | ✅ **EXPECTED** |
+| 2 | 0.765588 | `monitor_table_list` | ❌ |
 | 3 | 0.569921 | `monitor_workspace_list` | ❌ |
 | 4 | 0.504683 | `mysql_table_list` | ❌ |
 | 5 | 0.497622 | `monitor_workspace_log_query` | ❌ |
@@ -5928,8 +5928,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.843139 | `monitor_table_type_list` | ✅ **EXPECTED** |
-| 2 | 0.736728 | `monitor_table_list` | ❌ |
+| 1 | 0.843083 | `monitor_table_type_list` | ✅ **EXPECTED** |
+| 2 | 0.736761 | `monitor_table_list` | ❌ |
 | 3 | 0.576731 | `monitor_workspace_list` | ❌ |
 | 4 | 0.509598 | `monitor_workspace_log_query` | ❌ |
 | 5 | 0.481189 | `mysql_table_list` | ❌ |
@@ -5945,11 +5945,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.650679 | `monitor_webtests_create` | ✅ **EXPECTED** |
-| 2 | 0.570256 | `monitor_webtests_list` | ❌ |
-| 3 | 0.550049 | `monitor_webtests_update` | ❌ |
-| 4 | 0.533394 | `monitor_webtests_get` | ❌ |
-| 5 | 0.482184 | `loadtesting_testresource_create` | ❌ |
+| 1 | 0.650734 | `monitor_webtests_create` | ✅ **EXPECTED** |
+| 2 | 0.570268 | `monitor_webtests_list` | ❌ |
+| 3 | 0.550072 | `monitor_webtests_update` | ❌ |
+| 4 | 0.533297 | `monitor_webtests_get` | ❌ |
+| 5 | 0.482145 | `loadtesting_testresource_create` | ❌ |
 
 ---
 
@@ -5962,11 +5962,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.759015 | `monitor_webtests_get` | ✅ **EXPECTED** |
-| 2 | 0.725442 | `monitor_webtests_list` | ❌ |
-| 3 | 0.583815 | `loadtesting_testresource_list` | ❌ |
-| 4 | 0.562797 | `monitor_webtests_update` | ❌ |
-| 5 | 0.530557 | `monitor_webtests_create` | ❌ |
+| 1 | 0.759073 | `monitor_webtests_get` | ✅ **EXPECTED** |
+| 2 | 0.725306 | `monitor_webtests_list` | ❌ |
+| 3 | 0.583643 | `loadtesting_testresource_list` | ❌ |
+| 4 | 0.562780 | `monitor_webtests_update` | ❌ |
+| 5 | 0.530453 | `monitor_webtests_create` | ❌ |
 
 ---
 
@@ -5979,11 +5979,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.730616 | `monitor_webtests_list` | ✅ **EXPECTED** |
+| 1 | 0.730700 | `monitor_webtests_list` | ✅ **EXPECTED** |
 | 2 | 0.610160 | `loadtesting_testresource_list` | ❌ |
 | 3 | 0.547708 | `grafana_list` | ❌ |
-| 4 | 0.520828 | `redis_list` | ❌ |
-| 5 | 0.496166 | `monitor_webtests_get` | ❌ |
+| 4 | 0.520875 | `redis_list` | ❌ |
+| 5 | 0.496272 | `monitor_webtests_get` | ❌ |
 
 ---
 
@@ -5996,9 +5996,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.793807 | `monitor_webtests_list` | ✅ **EXPECTED** |
+| 1 | 0.793833 | `monitor_webtests_list` | ✅ **EXPECTED** |
 | 2 | 0.675965 | `loadtesting_testresource_list` | ❌ |
-| 3 | 0.584429 | `monitor_webtests_get` | ❌ |
+| 3 | 0.584677 | `monitor_webtests_get` | ❌ |
 | 4 | 0.573602 | `group_list` | ❌ |
 | 5 | 0.546088 | `resourcehealth_availability-status_list` | ❌ |
 
@@ -6014,10 +6014,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.686449 | `monitor_webtests_update` | ✅ **EXPECTED** |
-| 2 | 0.559296 | `monitor_webtests_get` | ❌ |
+| 2 | 0.559086 | `monitor_webtests_get` | ❌ |
 | 3 | 0.558234 | `monitor_webtests_create` | ❌ |
-| 4 | 0.553726 | `monitor_webtests_list` | ❌ |
-| 5 | 0.508711 | `loadtesting_testrun_update` | ❌ |
+| 4 | 0.553785 | `monitor_webtests_list` | ❌ |
+| 5 | 0.508736 | `loadtesting_testrun_update` | ❌ |
 
 ---
 
@@ -6032,9 +6032,9 @@
 |------|-------|------|--------|
 | 1 | 0.813902 | `monitor_workspace_list` | ✅ **EXPECTED** |
 | 2 | 0.680201 | `grafana_list` | ❌ |
-| 3 | 0.659497 | `monitor_table_list` | ❌ |
+| 3 | 0.659518 | `monitor_table_list` | ❌ |
 | 4 | 0.610623 | `kusto_cluster_list` | ❌ |
-| 5 | 0.600802 | `search_service_list` | ❌ |
+| 5 | 0.600799 | `search_service_list` | ❌ |
 
 ---
 
@@ -6048,8 +6048,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.656194 | `monitor_workspace_list` | ✅ **EXPECTED** |
-| 2 | 0.584758 | `monitor_table_list` | ❌ |
-| 3 | 0.531083 | `monitor_table_type_list` | ❌ |
+| 2 | 0.584769 | `monitor_table_list` | ❌ |
+| 3 | 0.531075 | `monitor_table_type_list` | ❌ |
 | 4 | 0.518254 | `grafana_list` | ❌ |
 | 5 | 0.506772 | `monitor_workspace_log_query` | ❌ |
 
@@ -6066,7 +6066,7 @@
 |------|-------|------|--------|
 | 1 | 0.732962 | `monitor_workspace_list` | ✅ **EXPECTED** |
 | 2 | 0.601481 | `grafana_list` | ❌ |
-| 3 | 0.579669 | `monitor_table_list` | ❌ |
+| 3 | 0.579678 | `monitor_table_list` | ❌ |
 | 4 | 0.523782 | `monitor_workspace_log_query` | ❌ |
 | 5 | 0.522749 | `kusto_cluster_list` | ❌ |
 
@@ -6085,7 +6085,7 @@
 | 2 | 0.587614 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.527733 | `monitor_activitylog_list` | ❌ |
 | 4 | 0.498269 | `deploy_app_logs_get` | ❌ |
-| 5 | 0.485470 | `monitor_table_list` | ❌ |
+| 5 | 0.485482 | `monitor_table_list` | ❌ |
 
 ---
 
@@ -6099,7 +6099,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.668828 | `datadog_monitoredresources_list` | ✅ **EXPECTED** |
-| 2 | 0.454270 | `redis_list` | ❌ |
+| 2 | 0.454320 | `redis_list` | ❌ |
 | 3 | 0.413661 | `loadtesting_testresource_list` | ❌ |
 | 4 | 0.413173 | `monitor_metrics_query` | ❌ |
 | 5 | 0.401731 | `grafana_list` | ❌ |
@@ -6115,11 +6115,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.624117 | `datadog_monitoredresources_list` | ✅ **EXPECTED** |
-| 2 | 0.443537 | `monitor_metrics_query` | ❌ |
-| 3 | 0.440049 | `redis_list` | ❌ |
-| 4 | 0.424434 | `monitor_resource_log_query` | ❌ |
-| 5 | 0.385186 | `loadtesting_testresource_list` | ❌ |
+| 1 | 0.624066 | `datadog_monitoredresources_list` | ✅ **EXPECTED** |
+| 2 | 0.443481 | `monitor_metrics_query` | ❌ |
+| 3 | 0.440092 | `redis_list` | ❌ |
+| 4 | 0.424391 | `monitor_resource_log_query` | ❌ |
+| 5 | 0.385122 | `loadtesting_testresource_list` | ❌ |
 
 ---
 
@@ -6132,10 +6132,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.533164 | `quota_usage_check` | ❌ |
+| 1 | 0.533387 | `quota_usage_check` | ❌ |
 | 2 | 0.481143 | `azureterraformbestpractices_get` | ❌ |
 | 3 | 0.476826 | `extension_azqr` | ✅ **EXPECTED** |
-| 4 | 0.471499 | `subscription_list` | ❌ |
+| 4 | 0.471841 | `subscription_list` | ❌ |
 | 5 | 0.468404 | `applens_resource_diagnose` | ❌ |
 
 ---
@@ -6149,11 +6149,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.532792 | `azureterraformbestpractices_get` | ❌ |
-| 2 | 0.492863 | `get_bestpractices_get` | ❌ |
-| 3 | 0.476164 | `applicationinsights_recommendation_list` | ❌ |
-| 4 | 0.473451 | `azureaibestpractices_get` | ❌ |
-| 5 | 0.473365 | `deploy_iac_rules_get` | ❌ |
+| 1 | 0.532780 | `azureterraformbestpractices_get` | ❌ |
+| 2 | 0.492430 | `get_bestpractices_get` | ❌ |
+| 3 | 0.476184 | `applicationinsights_recommendation_list` | ❌ |
+| 4 | 0.473455 | `azureaibestpractices_get` | ❌ |
+| 5 | 0.473369 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -6169,7 +6169,7 @@
 | 1 | 0.536934 | `azureterraformbestpractices_get` | ❌ |
 | 2 | 0.516925 | `extension_azqr` | ✅ **EXPECTED** |
 | 3 | 0.514978 | `applicationinsights_recommendation_list` | ❌ |
-| 4 | 0.504673 | `quota_usage_check` | ❌ |
+| 4 | 0.504902 | `quota_usage_check` | ❌ |
 | 5 | 0.494872 | `deploy_plan_get` | ❌ |
 
 ---
@@ -6184,10 +6184,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.590878 | `quota_region_availability_list` | ✅ **EXPECTED** |
-| 2 | 0.413274 | `quota_usage_check` | ❌ |
-| 3 | 0.391332 | `redis_list` | ❌ |
+| 2 | 0.413587 | `quota_usage_check` | ❌ |
+| 3 | 0.391387 | `redis_list` | ❌ |
 | 4 | 0.372940 | `resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.369855 | `managedlustre_fs_sku_get` | ❌ |
+| 5 | 0.369870 | `managedlustre_fs_sku_get` | ❌ |
 
 ---
 
@@ -6200,11 +6200,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.609244 | `quota_usage_check` | ✅ **EXPECTED** |
-| 2 | 0.491058 | `quota_region_availability_list` | ❌ |
-| 3 | 0.386977 | `foundry_resource_get` | ❌ |
-| 4 | 0.384350 | `resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.376368 | `resourcehealth_availability-status_get` | ❌ |
+| 1 | 0.609868 | `quota_usage_check` | ✅ **EXPECTED** |
+| 2 | 0.491285 | `quota_region_availability_list` | ❌ |
+| 3 | 0.386918 | `foundry_resource_get` | ❌ |
+| 4 | 0.384067 | `resourcehealth_availability-status_list` | ❌ |
+| 5 | 0.376125 | `resourcehealth_availability-status_get` | ❌ |
 
 ---
 
@@ -6218,7 +6218,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.645258 | `role_assignment_list` | ✅ **EXPECTED** |
-| 2 | 0.539760 | `subscription_list` | ❌ |
+| 2 | 0.539435 | `subscription_list` | ❌ |
 | 3 | 0.483988 | `group_list` | ❌ |
 | 4 | 0.478700 | `grafana_list` | ❌ |
 | 5 | 0.471364 | `cosmos_account_list` | ❌ |
@@ -6234,11 +6234,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.609669 | `role_assignment_list` | ✅ **EXPECTED** |
-| 2 | 0.514706 | `subscription_list` | ❌ |
-| 3 | 0.456871 | `grafana_list` | ❌ |
-| 4 | 0.449192 | `eventgrid_subscription_list` | ❌ |
-| 5 | 0.445105 | `redis_list` | ❌ |
+| 1 | 0.609704 | `role_assignment_list` | ✅ **EXPECTED** |
+| 2 | 0.514314 | `subscription_list` | ❌ |
+| 3 | 0.456956 | `grafana_list` | ❌ |
+| 4 | 0.449210 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.445141 | `redis_list` | ❌ |
 
 ---
 
@@ -6251,11 +6251,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.685016 | `redis_create` | ✅ **EXPECTED** |
-| 2 | 0.491883 | `redis_list` | ❌ |
-| 3 | 0.489615 | `storage_account_create` | ❌ |
-| 4 | 0.457263 | `workbooks_create` | ❌ |
-| 5 | 0.440953 | `eventhubs_namespace_update` | ❌ |
+| 1 | 0.685025 | `redis_create` | ✅ **EXPECTED** |
+| 2 | 0.491981 | `redis_list` | ❌ |
+| 3 | 0.489818 | `storage_account_create` | ❌ |
+| 4 | 0.457353 | `workbooks_create` | ❌ |
+| 5 | 0.440892 | `eventhubs_namespace_update` | ❌ |
 
 ---
 
@@ -6268,11 +6268,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.639021 | `redis_create` | ✅ **EXPECTED** |
-| 2 | 0.479139 | `redis_list` | ❌ |
+| 1 | 0.639067 | `redis_create` | ✅ **EXPECTED** |
+| 2 | 0.479259 | `redis_list` | ❌ |
 | 3 | 0.374539 | `loadtesting_testresource_create` | ❌ |
-| 4 | 0.318545 | `loadtesting_testrun_create` | ❌ |
-| 5 | 0.287562 | `workbooks_create` | ❌ |
+| 4 | 0.318335 | `loadtesting_testrun_create` | ❌ |
+| 5 | 0.287554 | `workbooks_create` | ❌ |
 
 ---
 
@@ -6285,11 +6285,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622333 | `redis_create` | ✅ **EXPECTED** |
-| 2 | 0.475871 | `storage_account_create` | ❌ |
-| 3 | 0.464164 | `redis_list` | ❌ |
+| 1 | 0.622341 | `redis_create` | ✅ **EXPECTED** |
+| 2 | 0.476190 | `storage_account_create` | ❌ |
+| 3 | 0.464227 | `redis_list` | ❌ |
 | 4 | 0.419051 | `eventhubs_namespace_update` | ❌ |
-| 5 | 0.408175 | `workbooks_create` | ❌ |
+| 5 | 0.408257 | `workbooks_create` | ❌ |
 
 ---
 
@@ -6302,11 +6302,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595067 | `redis_create` | ✅ **EXPECTED** |
-| 2 | 0.425864 | `redis_list` | ❌ |
-| 3 | 0.403540 | `kusto_cluster_get` | ❌ |
+| 1 | 0.595118 | `redis_create` | ✅ **EXPECTED** |
+| 2 | 0.425935 | `redis_list` | ❌ |
+| 3 | 0.399764 | `kusto_cluster_get` | ❌ |
 | 4 | 0.377343 | `eventhubs_namespace_update` | ❌ |
-| 5 | 0.361824 | `storage_account_create` | ❌ |
+| 5 | 0.362221 | `storage_account_create` | ❌ |
 
 ---
 
@@ -6319,11 +6319,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.810504 | `redis_list` | ✅ **EXPECTED** |
+| 1 | 0.810555 | `redis_list` | ✅ **EXPECTED** |
 | 2 | 0.587836 | `grafana_list` | ❌ |
 | 3 | 0.512954 | `kusto_cluster_list` | ❌ |
 | 4 | 0.508532 | `datadog_monitoredresources_list` | ❌ |
-| 5 | 0.501201 | `postgres_server_list` | ❌ |
+| 5 | 0.501218 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -6336,8 +6336,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.685128 | `redis_list` | ✅ **EXPECTED** |
-| 2 | 0.470200 | `redis_create` | ❌ |
+| 1 | 0.685231 | `redis_list` | ✅ **EXPECTED** |
+| 2 | 0.470244 | `redis_create` | ❌ |
 | 3 | 0.374327 | `grafana_list` | ❌ |
 | 4 | 0.364197 | `datadog_monitoredresources_list` | ❌ |
 | 5 | 0.359659 | `mysql_server_list` | ❌ |
@@ -6353,11 +6353,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.781228 | `redis_list` | ✅ **EXPECTED** |
+| 1 | 0.781282 | `redis_list` | ✅ **EXPECTED** |
 | 2 | 0.539177 | `grafana_list` | ❌ |
-| 3 | 0.519706 | `redis_create` | ❌ |
+| 3 | 0.519682 | `redis_create` | ❌ |
 | 4 | 0.449276 | `datadog_monitoredresources_list` | ❌ |
-| 5 | 0.448989 | `postgres_server_list` | ❌ |
+| 5 | 0.449014 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -6370,11 +6370,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.572767 | `redis_list` | ✅ **EXPECTED** |
-| 2 | 0.379486 | `redis_create` | ❌ |
-| 3 | 0.316630 | `mysql_database_list` | ❌ |
-| 4 | 0.301714 | `postgres_database_list` | ❌ |
-| 5 | 0.286513 | `mysql_server_list` | ❌ |
+| 1 | 0.572745 | `redis_list` | ✅ **EXPECTED** |
+| 2 | 0.379442 | `redis_create` | ❌ |
+| 3 | 0.316660 | `mysql_database_list` | ❌ |
+| 4 | 0.301777 | `postgres_database_list` | ❌ |
+| 5 | 0.286496 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -6387,11 +6387,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.478070 | `redis_list` | ✅ **EXPECTED** |
+| 1 | 0.478125 | `redis_list` | ✅ **EXPECTED** |
 | 2 | 0.456308 | `kusto_cluster_list` | ❌ |
-| 3 | 0.425811 | `redis_create` | ❌ |
-| 4 | 0.384630 | `kusto_cluster_get` | ❌ |
-| 5 | 0.359482 | `kusto_database_list` | ❌ |
+| 3 | 0.425871 | `redis_create` | ❌ |
+| 4 | 0.382336 | `kusto_cluster_get` | ❌ |
+| 5 | 0.359434 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -6405,10 +6405,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.755935 | `group_list` | ✅ **EXPECTED** |
-| 2 | 0.566566 | `workbooks_list` | ❌ |
+| 2 | 0.566552 | `workbooks_list` | ❌ |
 | 3 | 0.564566 | `loadtesting_testresource_list` | ❌ |
 | 4 | 0.552633 | `datadog_monitoredresources_list` | ❌ |
-| 5 | 0.549477 | `monitor_webtests_list` | ❌ |
+| 5 | 0.549476 | `monitor_webtests_list` | ❌ |
 
 ---
 
@@ -6422,7 +6422,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.529504 | `group_list` | ✅ **EXPECTED** |
-| 2 | 0.464690 | `redis_list` | ❌ |
+| 2 | 0.464762 | `redis_list` | ❌ |
 | 3 | 0.463685 | `datadog_monitoredresources_list` | ❌ |
 | 4 | 0.462391 | `mysql_server_list` | ❌ |
 | 5 | 0.460280 | `loadtesting_testresource_list` | ❌ |
@@ -6438,11 +6438,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.665772 | `group_list` | ✅ **EXPECTED** |
-| 2 | 0.532656 | `datadog_monitoredresources_list` | ❌ |
-| 3 | 0.532505 | `redis_list` | ❌ |
-| 4 | 0.532054 | `eventgrid_topic_list` | ❌ |
-| 5 | 0.531920 | `resourcehealth_availability-status_list` | ❌ |
+| 1 | 0.665765 | `group_list` | ✅ **EXPECTED** |
+| 2 | 0.532673 | `datadog_monitoredresources_list` | ❌ |
+| 3 | 0.532565 | `redis_list` | ❌ |
+| 4 | 0.532078 | `eventgrid_topic_list` | ❌ |
+| 5 | 0.531922 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
 
@@ -6455,11 +6455,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.556629 | `resourcehealth_availability-status_get` | ✅ **EXPECTED** |
-| 2 | 0.538273 | `resourcehealth_availability-status_list` | ❌ |
-| 3 | 0.377586 | `quota_usage_check` | ❌ |
-| 4 | 0.373112 | `monitor_healthmodels_entity_get` | ❌ |
-| 5 | 0.360140 | `foundry_resource_get` | ❌ |
+| 1 | 0.556547 | `resourcehealth_availability-status_get` | ✅ **EXPECTED** |
+| 2 | 0.538188 | `resourcehealth_availability-status_list` | ❌ |
+| 3 | 0.377824 | `quota_usage_check` | ❌ |
+| 4 | 0.372975 | `monitor_healthmodels_entity_get` | ❌ |
+| 5 | 0.359994 | `foundry_resource_get` | ❌ |
 
 ---
 
@@ -6475,7 +6475,7 @@
 | 1 | 0.576591 | `storage_account_get` | ❌ |
 | 2 | 0.564128 | `resourcehealth_availability-status_get` | ✅ **EXPECTED** |
 | 3 | 0.556167 | `storage_blob_container_get` | ❌ |
-| 4 | 0.487390 | `storage_blob_get` | ❌ |
+| 4 | 0.487207 | `storage_blob_get` | ❌ |
 | 5 | 0.466885 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
@@ -6493,7 +6493,7 @@
 | 2 | 0.501568 | `resourcehealth_availability-status_get` | ✅ **EXPECTED** |
 | 3 | 0.424939 | `mysql_server_list` | ❌ |
 | 4 | 0.412025 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.393420 | `managedlustre_fs_list` | ❌ |
+| 5 | 0.393479 | `managedlustre_fs_list` | ❌ |
 
 ---
 
@@ -6507,10 +6507,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.737219 | `resourcehealth_availability-status_list` | ✅ **EXPECTED** |
-| 2 | 0.585501 | `redis_list` | ❌ |
+| 2 | 0.585499 | `redis_list` | ❌ |
 | 3 | 0.549914 | `loadtesting_testresource_list` | ❌ |
 | 4 | 0.548549 | `grafana_list` | ❌ |
-| 5 | 0.544505 | `subscription_list` | ❌ |
+| 5 | 0.543849 | `subscription_list` | ❌ |
 
 ---
 
@@ -6525,9 +6525,9 @@
 |------|-------|------|--------|
 | 1 | 0.644982 | `resourcehealth_availability-status_list` | ✅ **EXPECTED** |
 | 2 | 0.545208 | `resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.509740 | `resourcehealth_health-events_list` | ❌ |
-| 4 | 0.508252 | `quota_usage_check` | ❌ |
-| 5 | 0.505776 | `redis_list` | ❌ |
+| 3 | 0.509722 | `resourcehealth_health-events_list` | ❌ |
+| 4 | 0.508683 | `quota_usage_check` | ❌ |
+| 5 | 0.505780 | `redis_list` | ❌ |
 
 ---
 
@@ -6542,7 +6542,7 @@
 |------|-------|------|--------|
 | 1 | 0.596890 | `resourcehealth_availability-status_list` | ✅ **EXPECTED** |
 | 2 | 0.549900 | `resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.496640 | `resourcehealth_health-events_list` | ❌ |
+| 3 | 0.496580 | `resourcehealth_health-events_list` | ❌ |
 | 4 | 0.441921 | `applens_resource_diagnose` | ❌ |
 | 5 | 0.433614 | `loadtesting_testresource_list` | ❌ |
 
@@ -6557,8 +6557,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.690720 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
-| 2 | 0.554895 | `search_service_list` | ❌ |
+| 1 | 0.690468 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
+| 2 | 0.554923 | `search_service_list` | ❌ |
 | 3 | 0.534251 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.529761 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.518372 | `resourcehealth_availability-status_list` | ❌ |
@@ -6574,11 +6574,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.686448 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
+| 1 | 0.686484 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
 | 2 | 0.534556 | `eventgrid_subscription_list` | ❌ |
-| 3 | 0.513815 | `search_service_list` | ❌ |
+| 3 | 0.513780 | `search_service_list` | ❌ |
 | 4 | 0.513259 | `eventgrid_topic_list` | ❌ |
-| 5 | 0.501135 | `subscription_list` | ❌ |
+| 5 | 0.501325 | `subscription_list` | ❌ |
 
 ---
 
@@ -6591,11 +6591,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.450841 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
+| 1 | 0.450788 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
 | 2 | 0.267663 | `applens_resource_diagnose` | ❌ |
 | 3 | 0.245720 | `cloudarchitect_design` | ❌ |
 | 4 | 0.216847 | `resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.211842 | `search_service_list` | ❌ |
+| 5 | 0.211815 | `search_service_list` | ❌ |
 
 ---
 
@@ -6608,10 +6608,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.685391 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
+| 1 | 0.685133 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
 | 2 | 0.527905 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.524063 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.520197 | `search_service_list` | ❌ |
+| 4 | 0.520209 | `search_service_list` | ❌ |
 | 5 | 0.502064 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
@@ -6625,11 +6625,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.565851 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
-| 2 | 0.437868 | `search_service_list` | ❌ |
+| 1 | 0.565794 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
+| 2 | 0.437848 | `search_service_list` | ❌ |
 | 3 | 0.403665 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.402493 | `resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.397735 | `quota_usage_check` | ❌ |
+| 5 | 0.398047 | `quota_usage_check` | ❌ |
 
 ---
 
@@ -6694,7 +6694,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.532544 | `signalr_runtime_get` | ✅ **EXPECTED** |
-| 2 | 0.355028 | `redis_list` | ❌ |
+| 2 | 0.355050 | `redis_list` | ❌ |
 | 3 | 0.336067 | `foundry_resource_get` | ❌ |
 | 4 | 0.319981 | `sql_server_show` | ❌ |
 | 5 | 0.304420 | `servicebus_queue_details` | ❌ |
@@ -6713,7 +6713,7 @@
 | 1 | 0.573446 | `signalr_runtime_get` | ✅ **EXPECTED** |
 | 2 | 0.337342 | `sql_server_show` | ❌ |
 | 3 | 0.322982 | `foundry_resource_get` | ❌ |
-| 4 | 0.305021 | `redis_list` | ❌ |
+| 4 | 0.305048 | `redis_list` | ❌ |
 | 5 | 0.300956 | `servicebus_topic_details` | ❌ |
 
 ---
@@ -6744,11 +6744,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.715975 | `signalr_runtime_get` | ✅ **EXPECTED** |
-| 2 | 0.469304 | `foundry_resource_get` | ❌ |
-| 3 | 0.430805 | `resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.430712 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.417004 | `functionapp_get` | ❌ |
+| 1 | 0.715974 | `signalr_runtime_get` | ✅ **EXPECTED** |
+| 2 | 0.469364 | `foundry_resource_get` | ❌ |
+| 3 | 0.430829 | `resourcehealth_availability-status_list` | ❌ |
+| 4 | 0.430765 | `loadtesting_testresource_list` | ❌ |
+| 5 | 0.417016 | `functionapp_get` | ❌ |
 
 ---
 
@@ -6761,11 +6761,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.564071 | `signalr_runtime_get` | ✅ **EXPECTED** |
-| 2 | 0.501077 | `redis_list` | ❌ |
-| 3 | 0.494478 | `resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.481428 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.462090 | `mysql_server_list` | ❌ |
+| 1 | 0.564095 | `signalr_runtime_get` | ✅ **EXPECTED** |
+| 2 | 0.501113 | `redis_list` | ❌ |
+| 3 | 0.494437 | `resourcehealth_availability-status_list` | ❌ |
+| 4 | 0.481414 | `loadtesting_testresource_list` | ❌ |
+| 5 | 0.462063 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -6779,10 +6779,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.530646 | `signalr_runtime_get` | ✅ **EXPECTED** |
-| 2 | 0.507608 | `postgres_server_list` | ❌ |
-| 3 | 0.495157 | `redis_list` | ❌ |
+| 2 | 0.507654 | `postgres_server_list` | ❌ |
+| 3 | 0.495145 | `redis_list` | ❌ |
 | 4 | 0.494498 | `kusto_cluster_list` | ❌ |
-| 5 | 0.487856 | `subscription_list` | ❌ |
+| 5 | 0.487134 | `subscription_list` | ❌ |
 
 ---
 
@@ -6796,7 +6796,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.516780 | `sql_db_create` | ✅ **EXPECTED** |
-| 2 | 0.470913 | `sql_server_create` | ❌ |
+| 2 | 0.470892 | `sql_server_create` | ❌ |
 | 3 | 0.420504 | `sql_db_rename` | ❌ |
 | 4 | 0.408515 | `sql_db_delete` | ❌ |
 | 5 | 0.404860 | `sql_server_delete` | ❌ |
@@ -6813,9 +6813,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.571760 | `sql_db_create` | ✅ **EXPECTED** |
-| 2 | 0.459683 | `sql_server_create` | ❌ |
+| 2 | 0.459672 | `sql_server_create` | ❌ |
 | 3 | 0.437525 | `sql_server_delete` | ❌ |
-| 4 | 0.421733 | `sql_db_show` | ❌ |
+| 4 | 0.420843 | `sql_db_show` | ❌ |
 | 5 | 0.417661 | `sql_db_delete` | ❌ |
 
 ---
@@ -6830,9 +6830,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.604472 | `sql_db_create` | ✅ **EXPECTED** |
-| 2 | 0.545986 | `sql_server_create` | ❌ |
+| 2 | 0.545906 | `sql_server_create` | ❌ |
 | 3 | 0.504013 | `sql_db_rename` | ❌ |
-| 4 | 0.494988 | `sql_db_show` | ❌ |
+| 4 | 0.494377 | `sql_db_show` | ❌ |
 | 5 | 0.473975 | `sql_db_list` | ❌ |
 
 ---
@@ -6846,11 +6846,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.568163 | `sql_db_delete` | ✅ **EXPECTED** |
-| 2 | 0.567344 | `sql_server_delete` | ❌ |
-| 3 | 0.391507 | `sql_db_rename` | ❌ |
-| 4 | 0.386515 | `sql_server_firewall-rule_delete` | ❌ |
-| 5 | 0.365103 | `sql_db_show` | ❌ |
+| 1 | 0.568196 | `sql_db_delete` | ✅ **EXPECTED** |
+| 2 | 0.567412 | `sql_server_delete` | ❌ |
+| 3 | 0.391509 | `sql_db_rename` | ❌ |
+| 4 | 0.386617 | `sql_server_firewall-rule_delete` | ❌ |
+| 5 | 0.364776 | `sql_db_show` | ❌ |
 
 ---
 
@@ -6865,7 +6865,7 @@
 |------|-------|------|--------|
 | 1 | 0.567513 | `sql_server_delete` | ❌ |
 | 2 | 0.543440 | `sql_db_delete` | ✅ **EXPECTED** |
-| 3 | 0.501201 | `sql_db_show` | ❌ |
+| 3 | 0.500756 | `sql_db_show` | ❌ |
 | 4 | 0.481083 | `sql_db_rename` | ❌ |
 | 5 | 0.478729 | `sql_db_list` | ❌ |
 
@@ -6882,8 +6882,8 @@
 |------|-------|------|--------|
 | 1 | 0.509916 | `sql_db_delete` | ✅ **EXPECTED** |
 | 2 | 0.490893 | `sql_server_delete` | ❌ |
-| 3 | 0.364399 | `postgres_database_list` | ❌ |
-| 4 | 0.355416 | `mysql_database_list` | ❌ |
+| 3 | 0.364494 | `postgres_database_list` | ❌ |
+| 4 | 0.355109 | `mysql_database_list` | ❌ |
 | 5 | 0.347837 | `sql_db_rename` | ❌ |
 
 ---
@@ -6898,10 +6898,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.643186 | `sql_db_list` | ✅ **EXPECTED** |
-| 2 | 0.639694 | `mysql_database_list` | ❌ |
-| 3 | 0.609101 | `postgres_database_list` | ❌ |
+| 2 | 0.639609 | `mysql_database_list` | ❌ |
+| 3 | 0.609178 | `postgres_database_list` | ❌ |
 | 4 | 0.602889 | `cosmos_database_list` | ❌ |
-| 5 | 0.570172 | `kusto_database_list` | ❌ |
+| 5 | 0.570140 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -6916,9 +6916,9 @@
 |------|-------|------|--------|
 | 1 | 0.617746 | `sql_server_show` | ❌ |
 | 2 | 0.609322 | `sql_db_list` | ✅ **EXPECTED** |
-| 3 | 0.557353 | `mysql_database_list` | ❌ |
+| 3 | 0.557483 | `mysql_database_list` | ❌ |
 | 4 | 0.553488 | `mysql_server_config_get` | ❌ |
-| 5 | 0.525020 | `sql_db_show` | ❌ |
+| 5 | 0.524274 | `sql_db_show` | ❌ |
 
 ---
 
@@ -6931,11 +6931,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.593348 | `sql_db_rename` | ✅ **EXPECTED** |
-| 2 | 0.425282 | `sql_server_delete` | ❌ |
-| 3 | 0.416207 | `sql_db_delete` | ❌ |
-| 4 | 0.396947 | `sql_db_create` | ❌ |
-| 5 | 0.346459 | `sql_db_show` | ❌ |
+| 1 | 0.592965 | `sql_db_rename` | ✅ **EXPECTED** |
+| 2 | 0.425325 | `sql_server_delete` | ❌ |
+| 3 | 0.416315 | `sql_db_delete` | ❌ |
+| 4 | 0.396756 | `sql_db_create` | ❌ |
+| 5 | 0.346101 | `sql_db_show` | ❌ |
 
 ---
 
@@ -6948,11 +6948,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.711063 | `sql_db_rename` | ✅ **EXPECTED** |
-| 2 | 0.516485 | `sql_server_delete` | ❌ |
-| 3 | 0.506499 | `sql_db_delete` | ❌ |
-| 4 | 0.501476 | `sql_db_create` | ❌ |
-| 5 | 0.433898 | `sql_server_show` | ❌ |
+| 1 | 0.710829 | `sql_db_rename` | ✅ **EXPECTED** |
+| 2 | 0.516449 | `sql_server_delete` | ❌ |
+| 3 | 0.506542 | `sql_db_delete` | ❌ |
+| 4 | 0.501328 | `sql_db_create` | ❌ |
+| 5 | 0.433724 | `sql_server_show` | ❌ |
 
 ---
 
@@ -6965,11 +6965,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.611308 | `sql_server_show` | ❌ |
-| 2 | 0.592982 | `postgres_server_config_get` | ❌ |
-| 3 | 0.530794 | `mysql_server_config_get` | ❌ |
-| 4 | 0.530062 | `sql_db_show` | ✅ **EXPECTED** |
-| 5 | 0.466053 | `sql_db_list` | ❌ |
+| 1 | 0.610991 | `sql_server_show` | ❌ |
+| 2 | 0.593150 | `postgres_server_config_get` | ❌ |
+| 3 | 0.530422 | `mysql_server_config_get` | ❌ |
+| 4 | 0.528136 | `sql_db_show` | ✅ **EXPECTED** |
+| 5 | 0.465693 | `sql_db_list` | ❌ |
 
 ---
 
@@ -6982,11 +6982,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.530726 | `sql_db_show` | ✅ **EXPECTED** |
-| 2 | 0.503787 | `sql_server_show` | ❌ |
-| 3 | 0.439320 | `sql_db_list` | ❌ |
-| 4 | 0.438657 | `mysql_table_schema_get` | ❌ |
-| 5 | 0.432385 | `mysql_database_list` | ❌ |
+| 1 | 0.530095 | `sql_db_show` | ✅ **EXPECTED** |
+| 2 | 0.503681 | `sql_server_show` | ❌ |
+| 3 | 0.440073 | `sql_db_list` | ❌ |
+| 4 | 0.438622 | `mysql_table_schema_get` | ❌ |
+| 5 | 0.433376 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -6999,10 +6999,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.603465 | `sql_db_update` | ✅ **EXPECTED** |
+| 1 | 0.603256 | `sql_db_update` | ✅ **EXPECTED** |
 | 2 | 0.467571 | `sql_db_create` | ❌ |
 | 3 | 0.440493 | `sql_db_rename` | ❌ |
-| 4 | 0.428029 | `sql_db_show` | ❌ |
+| 4 | 0.427621 | `sql_db_show` | ❌ |
 | 5 | 0.413941 | `sql_server_delete` | ❌ |
 
 ---
@@ -7016,11 +7016,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.550485 | `sql_db_update` | ✅ **EXPECTED** |
+| 1 | 0.550482 | `sql_db_update` | ✅ **EXPECTED** |
 | 2 | 0.418358 | `sql_server_delete` | ❌ |
 | 3 | 0.401817 | `sql_db_list` | ❌ |
 | 4 | 0.395518 | `sql_db_rename` | ❌ |
-| 5 | 0.395280 | `sql_db_show` | ❌ |
+| 5 | 0.394770 | `sql_db_show` | ❌ |
 
 ---
 
@@ -7035,8 +7035,8 @@
 |------|-------|------|--------|
 | 1 | 0.678124 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
 | 2 | 0.502376 | `sql_db_list` | ❌ |
-| 3 | 0.498367 | `mysql_database_list` | ❌ |
-| 4 | 0.485249 | `aks_nodepool_get` | ❌ |
+| 3 | 0.498344 | `mysql_database_list` | ❌ |
+| 4 | 0.485256 | `aks_nodepool_get` | ❌ |
 | 5 | 0.479044 | `sql_server_show` | ❌ |
 
 ---
@@ -7050,11 +7050,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.606425 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
-| 2 | 0.502877 | `sql_server_show` | ❌ |
-| 3 | 0.457164 | `sql_db_list` | ❌ |
-| 4 | 0.450743 | `aks_nodepool_get` | ❌ |
-| 5 | 0.432816 | `mysql_database_list` | ❌ |
+| 1 | 0.606373 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
+| 2 | 0.502886 | `sql_server_show` | ❌ |
+| 3 | 0.457152 | `sql_db_list` | ❌ |
+| 4 | 0.450757 | `aks_nodepool_get` | ❌ |
+| 5 | 0.432892 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -7068,8 +7068,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.592709 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
-| 2 | 0.420325 | `mysql_database_list` | ❌ |
-| 3 | 0.407169 | `aks_nodepool_get` | ❌ |
+| 2 | 0.420550 | `mysql_database_list` | ❌ |
+| 3 | 0.407157 | `aks_nodepool_get` | ❌ |
 | 4 | 0.402616 | `mysql_server_list` | ❌ |
 | 5 | 0.397670 | `sql_db_list` | ❌ |
 
@@ -7084,11 +7084,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682483 | `sql_server_create` | ✅ **EXPECTED** |
-| 2 | 0.563828 | `sql_db_create` | ❌ |
-| 3 | 0.528986 | `sql_server_list` | ❌ |
-| 4 | 0.482031 | `storage_account_create` | ❌ |
-| 5 | 0.476556 | `redis_create` | ❌ |
+| 1 | 0.682605 | `sql_server_create` | ✅ **EXPECTED** |
+| 2 | 0.563707 | `sql_db_create` | ❌ |
+| 3 | 0.529198 | `sql_server_list` | ❌ |
+| 4 | 0.482080 | `storage_account_create` | ❌ |
+| 5 | 0.476202 | `redis_create` | ❌ |
 
 ---
 
@@ -7101,11 +7101,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.618460 | `sql_server_create` | ✅ **EXPECTED** |
-| 2 | 0.510169 | `sql_db_create` | ❌ |
-| 3 | 0.472455 | `sql_server_show` | ❌ |
-| 4 | 0.441162 | `sql_server_delete` | ❌ |
-| 5 | 0.417660 | `redis_create` | ❌ |
+| 1 | 0.618327 | `sql_server_create` | ✅ **EXPECTED** |
+| 2 | 0.510180 | `sql_db_create` | ❌ |
+| 3 | 0.472485 | `sql_server_show` | ❌ |
+| 4 | 0.441163 | `sql_server_delete` | ❌ |
+| 5 | 0.417772 | `redis_create` | ❌ |
 
 ---
 
@@ -7118,11 +7118,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.589934 | `sql_server_create` | ✅ **EXPECTED** |
-| 2 | 0.501403 | `sql_db_create` | ❌ |
-| 3 | 0.497890 | `sql_server_list` | ❌ |
-| 4 | 0.461181 | `sql_db_rename` | ❌ |
-| 5 | 0.442934 | `mysql_server_list` | ❌ |
+| 1 | 0.589755 | `sql_server_create` | ✅ **EXPECTED** |
+| 2 | 0.501340 | `sql_db_create` | ❌ |
+| 3 | 0.497885 | `sql_server_list` | ❌ |
+| 4 | 0.460918 | `sql_db_rename` | ❌ |
+| 5 | 0.442764 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -7135,11 +7135,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.656631 | `sql_server_delete` | ✅ **EXPECTED** |
-| 2 | 0.548116 | `sql_db_delete` | ❌ |
-| 3 | 0.517966 | `sql_server_list` | ❌ |
-| 4 | 0.495706 | `sql_server_create` | ❌ |
-| 5 | 0.483076 | `workbooks_delete` | ❌ |
+| 1 | 0.656593 | `sql_server_delete` | ✅ **EXPECTED** |
+| 2 | 0.548064 | `sql_db_delete` | ❌ |
+| 3 | 0.518037 | `sql_server_list` | ❌ |
+| 4 | 0.495550 | `sql_server_create` | ❌ |
+| 5 | 0.484737 | `workbooks_delete` | ❌ |
 
 ---
 
@@ -7153,7 +7153,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.615073 | `sql_server_delete` | ✅ **EXPECTED** |
-| 2 | 0.393923 | `postgres_server_list` | ❌ |
+| 2 | 0.393885 | `postgres_server_list` | ❌ |
 | 3 | 0.379760 | `sql_db_delete` | ❌ |
 | 4 | 0.376660 | `sql_server_show` | ❌ |
 | 5 | 0.350103 | `sql_server_list` | ❌ |
@@ -7171,9 +7171,9 @@
 |------|-------|------|--------|
 | 1 | 0.624310 | `sql_server_delete` | ✅ **EXPECTED** |
 | 2 | 0.454892 | `sql_db_delete` | ❌ |
-| 3 | 0.362389 | `sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.362439 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.341503 | `sql_server_show` | ❌ |
-| 5 | 0.318947 | `eventhubs_eventhub_delete` | ❌ |
+| 5 | 0.318758 | `eventhubs_eventhub_delete` | ❌ |
 
 ---
 
@@ -7186,10 +7186,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.783479 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
+| 1 | 0.783495 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
 | 2 | 0.456051 | `sql_server_show` | ❌ |
 | 3 | 0.434868 | `sql_server_list` | ❌ |
-| 4 | 0.401801 | `sql_server_firewall-rule_list` | ❌ |
+| 4 | 0.401908 | `sql_server_firewall-rule_list` | ❌ |
 | 5 | 0.376055 | `sql_db_list` | ❌ |
 
 ---
@@ -7203,11 +7203,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.713306 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
+| 1 | 0.713280 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
 | 2 | 0.413144 | `sql_server_show` | ❌ |
 | 3 | 0.368082 | `sql_server_list` | ❌ |
 | 4 | 0.315966 | `sql_db_list` | ❌ |
-| 5 | 0.311071 | `postgres_server_list` | ❌ |
+| 5 | 0.311085 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -7220,10 +7220,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.646419 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
+| 1 | 0.646388 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
 | 2 | 0.356025 | `sql_server_show` | ❌ |
 | 3 | 0.322155 | `sql_server_list` | ❌ |
-| 4 | 0.307885 | `sql_server_create` | ❌ |
+| 4 | 0.307823 | `sql_server_create` | ❌ |
 | 5 | 0.269788 | `sql_server_delete` | ❌ |
 
 ---
@@ -7237,10 +7237,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.635072 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.532677 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.522184 | `sql_server_firewall-rule_delete` | ❌ |
-| 4 | 0.448938 | `sql_server_create` | ❌ |
+| 1 | 0.635467 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
+| 2 | 0.532712 | `sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.522117 | `sql_server_firewall-rule_delete` | ❌ |
+| 4 | 0.448822 | `sql_server_create` | ❌ |
 | 5 | 0.440845 | `sql_server_delete` | ❌ |
 
 ---
@@ -7254,9 +7254,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.670248 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.533502 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.503648 | `sql_server_firewall-rule_delete` | ❌ |
+| 1 | 0.670189 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
+| 2 | 0.533562 | `sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.503584 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.316619 | `sql_server_list` | ❌ |
 | 5 | 0.302362 | `sql_server_delete` | ❌ |
 
@@ -7271,10 +7271,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.684644 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.574315 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.539577 | `sql_server_firewall-rule_delete` | ❌ |
-| 4 | 0.428986 | `sql_server_create` | ❌ |
+| 1 | 0.685107 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
+| 2 | 0.574336 | `sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.539584 | `sql_server_firewall-rule_delete` | ❌ |
+| 4 | 0.428920 | `sql_server_create` | ❌ |
 | 5 | 0.395165 | `sql_db_create` | ❌ |
 
 ---
@@ -7288,10 +7288,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.691421 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.691423 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.584379 | `sql_server_delete` | ❌ |
-| 3 | 0.543844 | `sql_server_firewall-rule_list` | ❌ |
-| 4 | 0.539983 | `sql_server_firewall-rule_create` | ❌ |
+| 3 | 0.543857 | `sql_server_firewall-rule_list` | ❌ |
+| 4 | 0.540333 | `sql_server_firewall-rule_create` | ❌ |
 | 5 | 0.498444 | `sql_db_delete` | ❌ |
 
 ---
@@ -7305,9 +7305,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.670179 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
-| 2 | 0.574320 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.530097 | `sql_server_firewall-rule_create` | ❌ |
+| 1 | 0.670164 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 2 | 0.574340 | `sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.530419 | `sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.488418 | `sql_server_delete` | ❌ |
 | 5 | 0.360381 | `sql_db_delete` | ❌ |
 
@@ -7322,9 +7322,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.671211 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
-| 2 | 0.601228 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.576869 | `sql_server_firewall-rule_create` | ❌ |
+| 1 | 0.671236 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 2 | 0.601231 | `sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.577330 | `sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.499272 | `sql_server_delete` | ❌ |
 | 5 | 0.378586 | `sql_db_delete` | ❌ |
 
@@ -7339,9 +7339,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.729292 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
-| 2 | 0.549322 | `sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.513114 | `sql_server_firewall-rule_delete` | ❌ |
+| 1 | 0.729372 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
+| 2 | 0.549667 | `sql_server_firewall-rule_create` | ❌ |
+| 3 | 0.513108 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.468812 | `sql_server_show` | ❌ |
 | 5 | 0.418817 | `sql_server_list` | ❌ |
 
@@ -7356,9 +7356,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.630688 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
-| 2 | 0.523793 | `sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.476757 | `sql_server_firewall-rule_delete` | ❌ |
+| 1 | 0.630731 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
+| 2 | 0.524126 | `sql_server_firewall-rule_create` | ❌ |
+| 3 | 0.476738 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.410680 | `sql_server_show` | ❌ |
 | 5 | 0.348100 | `sql_server_list` | ❌ |
 
@@ -7373,9 +7373,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.630473 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
-| 2 | 0.532179 | `sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.473501 | `sql_server_firewall-rule_delete` | ❌ |
+| 1 | 0.630546 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
+| 2 | 0.532454 | `sql_server_firewall-rule_create` | ❌ |
+| 3 | 0.473522 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.412957 | `sql_server_show` | ❌ |
 | 5 | 0.350513 | `sql_server_list` | ❌ |
 
@@ -7394,7 +7394,7 @@
 | 2 | 0.596686 | `mysql_server_list` | ❌ |
 | 3 | 0.578238 | `sql_db_list` | ❌ |
 | 4 | 0.515851 | `sql_elastic-pool_list` | ❌ |
-| 5 | 0.509906 | `sql_db_show` | ❌ |
+| 5 | 0.509789 | `sql_db_show` | ❌ |
 
 ---
 
@@ -7407,11 +7407,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.618239 | `sql_server_list` | ✅ **EXPECTED** |
-| 2 | 0.593855 | `mysql_server_list` | ❌ |
-| 3 | 0.542358 | `sql_db_list` | ❌ |
-| 4 | 0.507506 | `resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.496275 | `group_list` | ❌ |
+| 1 | 0.618218 | `sql_server_list` | ✅ **EXPECTED** |
+| 2 | 0.593837 | `mysql_server_list` | ❌ |
+| 3 | 0.542398 | `sql_db_list` | ❌ |
+| 4 | 0.507404 | `resourcehealth_availability-status_list` | ❌ |
+| 5 | 0.496200 | `group_list` | ❌ |
 
 ---
 
@@ -7424,11 +7424,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.629852 | `sql_db_show` | ❌ |
-| 2 | 0.595184 | `sql_server_show` | ✅ **EXPECTED** |
-| 3 | 0.587728 | `sql_server_list` | ❌ |
-| 4 | 0.559893 | `mysql_server_list` | ❌ |
-| 5 | 0.540218 | `sql_db_list` | ❌ |
+| 1 | 0.629641 | `sql_db_show` | ❌ |
+| 2 | 0.595094 | `sql_server_show` | ✅ **EXPECTED** |
+| 3 | 0.587808 | `sql_server_list` | ❌ |
+| 4 | 0.560086 | `mysql_server_list` | ❌ |
+| 5 | 0.540300 | `sql_db_list` | ❌ |
 
 ---
 
@@ -7444,8 +7444,8 @@
 | 1 | 0.658817 | `sql_server_show` | ✅ **EXPECTED** |
 | 2 | 0.610507 | `postgres_server_config_get` | ❌ |
 | 3 | 0.538034 | `mysql_server_config_get` | ❌ |
-| 4 | 0.471959 | `sql_db_show` | ❌ |
-| 5 | 0.445430 | `postgres_server_param_get` | ❌ |
+| 4 | 0.471541 | `sql_db_show` | ❌ |
+| 5 | 0.445449 | `postgres_server_param_get` | ❌ |
 
 ---
 
@@ -7460,9 +7460,9 @@
 |------|-------|------|--------|
 | 1 | 0.563143 | `sql_server_show` | ✅ **EXPECTED** |
 | 2 | 0.392532 | `postgres_server_config_get` | ❌ |
-| 3 | 0.380021 | `postgres_server_param_get` | ❌ |
-| 4 | 0.372050 | `sql_server_firewall-rule_list` | ❌ |
-| 5 | 0.370895 | `sql_db_show` | ❌ |
+| 3 | 0.380080 | `postgres_server_param_get` | ❌ |
+| 4 | 0.372194 | `sql_server_firewall-rule_list` | ❌ |
+| 5 | 0.370539 | `sql_db_show` | ❌ |
 
 ---
 
@@ -7475,7 +7475,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.533552 | `storage_account_create` | ✅ **EXPECTED** |
+| 1 | 0.533761 | `storage_account_create` | ✅ **EXPECTED** |
 | 2 | 0.438046 | `storage_blob_container_create` | ❌ |
 | 3 | 0.418191 | `storage_account_get` | ❌ |
 | 4 | 0.414518 | `storage_blob_container_get` | ❌ |
@@ -7492,11 +7492,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.500638 | `storage_account_create` | ✅ **EXPECTED** |
+| 1 | 0.500815 | `storage_account_create` | ✅ **EXPECTED** |
 | 2 | 0.483202 | `managedlustre_fs_create` | ❌ |
 | 3 | 0.407222 | `storage_account_get` | ❌ |
 | 4 | 0.406804 | `storage_blob_container_create` | ❌ |
-| 5 | 0.400151 | `managedlustre_fs_sku_get` | ❌ |
+| 5 | 0.400175 | `managedlustre_fs_sku_get` | ❌ |
 
 ---
 
@@ -7509,7 +7509,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.589002 | `storage_account_create` | ✅ **EXPECTED** |
+| 1 | 0.589180 | `storage_account_create` | ✅ **EXPECTED** |
 | 2 | 0.535501 | `managedlustre_fs_create` | ❌ |
 | 3 | 0.509731 | `storage_blob_container_create` | ❌ |
 | 4 | 0.462519 | `storage_account_get` | ❌ |
@@ -7528,8 +7528,8 @@
 |------|-------|------|--------|
 | 1 | 0.673750 | `storage_account_get` | ✅ **EXPECTED** |
 | 2 | 0.608256 | `storage_blob_container_get` | ❌ |
-| 3 | 0.556382 | `storage_blob_get` | ❌ |
-| 4 | 0.483435 | `storage_account_create` | ❌ |
+| 3 | 0.556457 | `storage_blob_get` | ❌ |
+| 4 | 0.483831 | `storage_account_create` | ❌ |
 | 5 | 0.439236 | `cosmos_account_list` | ❌ |
 
 ---
@@ -7545,8 +7545,8 @@
 |------|-------|------|--------|
 | 1 | 0.692687 | `storage_account_get` | ✅ **EXPECTED** |
 | 2 | 0.577547 | `storage_blob_container_get` | ❌ |
-| 3 | 0.529161 | `storage_blob_get` | ❌ |
-| 4 | 0.518215 | `storage_account_create` | ❌ |
+| 3 | 0.529205 | `storage_blob_get` | ❌ |
+| 4 | 0.518495 | `storage_account_create` | ❌ |
 | 5 | 0.448506 | `storage_blob_container_create` | ❌ |
 
 ---
@@ -7561,9 +7561,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.649215 | `storage_account_get` | ✅ **EXPECTED** |
-| 2 | 0.557015 | `managedlustre_fs_sku_get` | ❌ |
+| 2 | 0.557048 | `managedlustre_fs_sku_get` | ❌ |
 | 3 | 0.550148 | `storage_blob_container_get` | ❌ |
-| 4 | 0.547647 | `subscription_list` | ❌ |
+| 4 | 0.546905 | `subscription_list` | ❌ |
 | 5 | 0.536909 | `cosmos_account_list` | ❌ |
 
 ---
@@ -7579,9 +7579,9 @@
 |------|-------|------|--------|
 | 1 | 0.556860 | `storage_account_get` | ✅ **EXPECTED** |
 | 2 | 0.482418 | `storage_blob_container_get` | ❌ |
-| 3 | 0.461262 | `managedlustre_fs_list` | ❌ |
+| 3 | 0.461284 | `managedlustre_fs_list` | ❌ |
 | 4 | 0.421642 | `cosmos_account_list` | ❌ |
-| 5 | 0.410817 | `storage_blob_get` | ❌ |
+| 5 | 0.410587 | `storage_blob_get` | ❌ |
 
 ---
 
@@ -7596,9 +7596,9 @@
 |------|-------|------|--------|
 | 1 | 0.619462 | `storage_account_get` | ✅ **EXPECTED** |
 | 2 | 0.556436 | `storage_blob_container_get` | ❌ |
-| 3 | 0.518409 | `storage_blob_get` | ❌ |
+| 3 | 0.518229 | `storage_blob_get` | ❌ |
 | 4 | 0.473598 | `cosmos_account_list` | ❌ |
-| 5 | 0.465571 | `subscription_list` | ❌ |
+| 5 | 0.464923 | `subscription_list` | ❌ |
 
 ---
 
@@ -7613,9 +7613,9 @@
 |------|-------|------|--------|
 | 1 | 0.649793 | `storage_blob_container_create` | ✅ **EXPECTED** |
 | 2 | 0.583896 | `storage_blob_container_get` | ❌ |
-| 3 | 0.524779 | `storage_account_create` | ❌ |
-| 4 | 0.496515 | `storage_blob_get` | ❌ |
-| 5 | 0.447784 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.524868 | `storage_account_create` | ❌ |
+| 4 | 0.496679 | `storage_blob_get` | ❌ |
+| 5 | 0.447701 | `cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -7628,11 +7628,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682161 | `storage_blob_container_create` | ✅ **EXPECTED** |
-| 2 | 0.590160 | `storage_blob_container_get` | ❌ |
-| 3 | 0.559021 | `storage_blob_get` | ❌ |
-| 4 | 0.500625 | `storage_account_create` | ❌ |
-| 5 | 0.420514 | `storage_account_get` | ❌ |
+| 1 | 0.682143 | `storage_blob_container_create` | ✅ **EXPECTED** |
+| 2 | 0.590181 | `storage_blob_container_get` | ❌ |
+| 3 | 0.559330 | `storage_blob_get` | ❌ |
+| 4 | 0.500284 | `storage_account_create` | ❌ |
+| 5 | 0.420537 | `storage_account_get` | ❌ |
 
 ---
 
@@ -7647,9 +7647,9 @@
 |------|-------|------|--------|
 | 1 | 0.625397 | `storage_blob_container_create` | ✅ **EXPECTED** |
 | 2 | 0.543503 | `storage_blob_container_get` | ❌ |
-| 3 | 0.497525 | `storage_blob_get` | ❌ |
-| 4 | 0.463198 | `storage_account_create` | ❌ |
-| 5 | 0.435099 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.497804 | `storage_blob_get` | ❌ |
+| 4 | 0.463025 | `storage_account_create` | ❌ |
+| 5 | 0.435101 | `cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -7663,10 +7663,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.701642 | `storage_blob_container_get` | ✅ **EXPECTED** |
-| 2 | 0.623607 | `storage_blob_get` | ❌ |
+| 2 | 0.623681 | `storage_blob_get` | ❌ |
 | 3 | 0.577921 | `storage_account_get` | ❌ |
 | 4 | 0.549804 | `storage_blob_container_create` | ❌ |
-| 5 | 0.523289 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.523202 | `cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -7680,8 +7680,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.712037 | `storage_blob_container_get` | ✅ **EXPECTED** |
-| 2 | 0.680321 | `storage_blob_get` | ❌ |
-| 3 | 0.613933 | `cosmos_database_container_list` | ❌ |
+| 2 | 0.680802 | `storage_blob_get` | ❌ |
+| 3 | 0.613844 | `cosmos_database_container_list` | ❌ |
 | 4 | 0.556319 | `storage_blob_container_create` | ❌ |
 | 5 | 0.518266 | `storage_account_get` | ❌ |
 
@@ -7697,8 +7697,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.713527 | `storage_blob_container_get` | ✅ **EXPECTED** |
-| 2 | 0.592373 | `cosmos_database_container_list` | ❌ |
-| 3 | 0.586047 | `storage_blob_get` | ❌ |
+| 2 | 0.592329 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.586169 | `storage_blob_get` | ❌ |
 | 4 | 0.523322 | `storage_account_get` | ❌ |
 | 5 | 0.487520 | `storage_blob_container_create` | ❌ |
 
@@ -7713,11 +7713,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.700919 | `storage_blob_get` | ✅ **EXPECTED** |
+| 1 | 0.700972 | `storage_blob_get` | ✅ **EXPECTED** |
 | 2 | 0.646973 | `storage_blob_container_get` | ❌ |
 | 3 | 0.541019 | `storage_blob_container_create` | ❌ |
 | 4 | 0.527427 | `storage_account_get` | ❌ |
-| 5 | 0.477946 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.477894 | `cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -7730,11 +7730,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.694914 | `storage_blob_get` | ✅ **EXPECTED** |
-| 2 | 0.631161 | `storage_blob_container_get` | ❌ |
-| 3 | 0.589151 | `storage_blob_container_create` | ❌ |
-| 4 | 0.580226 | `storage_account_get` | ❌ |
-| 5 | 0.457038 | `storage_account_create` | ❌ |
+| 1 | 0.694823 | `storage_blob_get` | ✅ **EXPECTED** |
+| 2 | 0.631016 | `storage_blob_container_get` | ❌ |
+| 3 | 0.589012 | `storage_blob_container_create` | ❌ |
+| 4 | 0.579630 | `storage_account_get` | ❌ |
+| 5 | 0.456912 | `storage_account_create` | ❌ |
 
 ---
 
@@ -7747,11 +7747,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.733250 | `storage_blob_get` | ✅ **EXPECTED** |
-| 2 | 0.700891 | `storage_blob_container_get` | ❌ |
-| 3 | 0.605993 | `storage_blob_container_create` | ❌ |
-| 4 | 0.579070 | `cosmos_database_container_list` | ❌ |
-| 5 | 0.506690 | `cosmos_database_container_item_query` | ❌ |
+| 1 | 0.733523 | `storage_blob_get` | ✅ **EXPECTED** |
+| 2 | 0.700886 | `storage_blob_container_get` | ❌ |
+| 3 | 0.606022 | `storage_blob_container_create` | ❌ |
+| 4 | 0.579023 | `cosmos_database_container_list` | ❌ |
+| 5 | 0.506655 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -7764,10 +7764,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.704286 | `storage_blob_get` | ✅ **EXPECTED** |
+| 1 | 0.704426 | `storage_blob_get` | ✅ **EXPECTED** |
 | 2 | 0.664940 | `storage_blob_container_get` | ❌ |
 | 3 | 0.561557 | `storage_blob_container_create` | ❌ |
-| 4 | 0.533515 | `cosmos_database_container_list` | ❌ |
+| 4 | 0.533535 | `cosmos_database_container_list` | ❌ |
 | 5 | 0.484018 | `storage_account_get` | ❌ |
 
 ---
@@ -7781,45 +7781,45 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.566269 | `storage_blob_upload` | ✅ **EXPECTED** |
-| 2 | 0.525749 | `storage_blob_container_create` | ❌ |
-| 3 | 0.517549 | `storage_blob_get` | ❌ |
-| 4 | 0.473705 | `storage_blob_container_get` | ❌ |
-| 5 | 0.382145 | `storage_account_create` | ❌ |
+| 1 | 0.566203 | `storage_blob_upload` | ✅ **EXPECTED** |
+| 2 | 0.525595 | `storage_blob_container_create` | ❌ |
+| 3 | 0.517609 | `storage_blob_get` | ❌ |
+| 4 | 0.473624 | `storage_blob_container_get` | ❌ |
+| 5 | 0.381836 | `storage_account_create` | ❌ |
 
 ---
 
 ## Test 430
 
 **Expected Tool:** `storage_table_list`  
-**Prompt:** List all tables in the storage account <storage-account>  
+**Prompt:** List all tables in the storage account <account>  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.574655 | `storage_blob_container_get` | ❌ |
-| 2 | 0.570966 | `monitor_table_list` | ❌ |
-| 3 | 0.548671 | `mysql_table_list` | ❌ |
-| 4 | 0.530862 | `kusto_table_list` | ❌ |
-| 5 | 0.516365 | `storage_account_get` | ❌ |
+| 1 | 0.584789 | `storage_blob_container_get` | ❌ |
+| 2 | 0.574335 | `monitor_table_list` | ❌ |
+| 3 | 0.552523 | `mysql_table_list` | ❌ |
+| 4 | 0.530506 | `kusto_table_list` | ❌ |
+| 5 | 0.521830 | `storage_account_get` | ❌ |
 
 ---
 
 ## Test 431
 
 **Expected Tool:** `storage_table_list`  
-**Prompt:** Show me the tables in the storage account <storage-account>  
+**Prompt:** Show me the tables in the storage account <account>  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.577541 | `storage_blob_container_get` | ❌ |
-| 2 | 0.526684 | `storage_account_get` | ❌ |
-| 3 | 0.526496 | `monitor_table_list` | ❌ |
-| 4 | 0.521996 | `mysql_table_list` | ❌ |
-| 5 | 0.514746 | `storage_blob_get` | ❌ |
+| 1 | 0.582290 | `storage_blob_container_get` | ❌ |
+| 2 | 0.529801 | `storage_account_get` | ❌ |
+| 3 | 0.521270 | `monitor_table_list` | ❌ |
+| 4 | 0.520811 | `mysql_table_list` | ❌ |
+| 5 | 0.516088 | `storage_blob_get` | ❌ |
 
 ---
 
@@ -7832,11 +7832,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.654071 | `subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.653413 | `subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.512964 | `cosmos_account_list` | ❌ |
-| 3 | 0.471615 | `postgres_server_list` | ❌ |
+| 3 | 0.471653 | `postgres_server_list` | ❌ |
 | 4 | 0.469023 | `kusto_cluster_list` | ❌ |
-| 5 | 0.461078 | `redis_list` | ❌ |
+| 5 | 0.461043 | `redis_list` | ❌ |
 
 ---
 
@@ -7849,11 +7849,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.458799 | `subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.407447 | `eventgrid_subscription_list` | ❌ |
-| 3 | 0.393668 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.391508 | `redis_list` | ❌ |
-| 5 | 0.381192 | `postgres_server_list` | ❌ |
+| 1 | 0.458050 | `subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.407471 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.393695 | `eventgrid_topic_list` | ❌ |
+| 4 | 0.391493 | `redis_list` | ❌ |
+| 5 | 0.381238 | `postgres_server_list` | ❌ |
 
 ---
 
@@ -7866,9 +7866,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.433196 | `subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.319579 | `marketplace_product_list` | ❌ |
-| 3 | 0.315404 | `marketplace_product_get` | ❌ |
+| 1 | 0.432664 | `subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.319379 | `marketplace_product_list` | ❌ |
+| 3 | 0.315768 | `marketplace_product_get` | ❌ |
 | 4 | 0.293772 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.289334 | `eventgrid_topic_list` | ❌ |
 
@@ -7883,10 +7883,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.477591 | `subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.476091 | `subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.357625 | `eventgrid_subscription_list` | ❌ |
-| 3 | 0.354286 | `marketplace_product_list` | ❌ |
-| 4 | 0.344549 | `redis_list` | ❌ |
+| 3 | 0.354013 | `marketplace_product_list` | ❌ |
+| 4 | 0.344502 | `redis_list` | ❌ |
 | 5 | 0.340836 | `eventgrid_topic_list` | ❌ |
 
 ---
@@ -7900,11 +7900,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.686886 | `azureterraformbestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.625270 | `deploy_iac_rules_get` | ❌ |
-| 3 | 0.605048 | `get_bestpractices_get` | ❌ |
-| 4 | 0.482936 | `deploy_pipeline_guidance_get` | ❌ |
-| 5 | 0.480772 | `azureaibestpractices_get` | ❌ |
+| 1 | 0.686947 | `azureterraformbestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.625353 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.605968 | `get_bestpractices_get` | ❌ |
+| 4 | 0.483044 | `deploy_pipeline_guidance_get` | ❌ |
+| 5 | 0.480804 | `azureaibestpractices_get` | ❌ |
 
 ---
 
@@ -7918,8 +7918,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.581316 | `azureterraformbestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.512141 | `get_bestpractices_get` | ❌ |
-| 3 | 0.510005 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.516349 | `get_bestpractices_get` | ❌ |
+| 3 | 0.510013 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.473597 | `keyvault_secret_get` | ❌ |
 | 5 | 0.456419 | `azureaibestpractices_get` | ❌ |
 
@@ -7937,8 +7937,8 @@
 | 1 | 0.711969 | `virtualdesktop_hostpool_list` | ✅ **EXPECTED** |
 | 2 | 0.659763 | `virtualdesktop_hostpool_host_list` | ❌ |
 | 3 | 0.620665 | `kusto_cluster_list` | ❌ |
-| 4 | 0.548888 | `search_service_list` | ❌ |
-| 5 | 0.535777 | `virtualdesktop_hostpool_host_user-list` | ❌ |
+| 4 | 0.548798 | `search_service_list` | ❌ |
+| 5 | 0.535739 | `virtualdesktop_hostpool_host_user-list` | ❌ |
 
 ---
 
@@ -7951,11 +7951,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.727059 | `virtualdesktop_hostpool_host_list` | ✅ **EXPECTED** |
-| 2 | 0.714577 | `virtualdesktop_hostpool_host_user-list` | ❌ |
-| 3 | 0.573304 | `virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.438703 | `aks_nodepool_get` | ❌ |
-| 5 | 0.393782 | `sql_elastic-pool_list` | ❌ |
+| 1 | 0.727054 | `virtualdesktop_hostpool_host_list` | ✅ **EXPECTED** |
+| 2 | 0.714468 | `virtualdesktop_hostpool_host_user-list` | ❌ |
+| 3 | 0.573352 | `virtualdesktop_hostpool_list` | ❌ |
+| 4 | 0.438676 | `aks_nodepool_get` | ❌ |
+| 5 | 0.393721 | `sql_elastic-pool_list` | ❌ |
 
 ---
 
@@ -7968,11 +7968,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.812787 | `virtualdesktop_hostpool_host_user-list` | ✅ **EXPECTED** |
-| 2 | 0.659213 | `virtualdesktop_hostpool_host_list` | ❌ |
-| 3 | 0.501168 | `virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.357561 | `aks_nodepool_get` | ❌ |
-| 5 | 0.336385 | `monitor_workspace_list` | ❌ |
+| 1 | 0.812595 | `virtualdesktop_hostpool_host_user-list` | ✅ **EXPECTED** |
+| 2 | 0.658061 | `virtualdesktop_hostpool_host_list` | ❌ |
+| 3 | 0.500135 | `virtualdesktop_hostpool_list` | ❌ |
+| 4 | 0.354931 | `aks_nodepool_get` | ❌ |
+| 5 | 0.336450 | `monitor_workspace_list` | ❌ |
 
 ---
 
@@ -7985,11 +7985,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552212 | `workbooks_create` | ✅ **EXPECTED** |
+| 1 | 0.552365 | `workbooks_create` | ✅ **EXPECTED** |
 | 2 | 0.417950 | `workbooks_update` | ❌ |
-| 3 | 0.361358 | `workbooks_delete` | ❌ |
-| 4 | 0.329118 | `workbooks_show` | ❌ |
-| 5 | 0.328048 | `workbooks_list` | ❌ |
+| 3 | 0.359305 | `workbooks_delete` | ❌ |
+| 4 | 0.328977 | `workbooks_show` | ❌ |
+| 5 | 0.328113 | `workbooks_list` | ❌ |
 
 ---
 
@@ -8002,10 +8002,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.621432 | `workbooks_delete` | ✅ **EXPECTED** |
-| 2 | 0.498518 | `workbooks_show` | ❌ |
-| 3 | 0.432454 | `workbooks_create` | ❌ |
-| 4 | 0.425491 | `workbooks_list` | ❌ |
+| 1 | 0.621240 | `workbooks_delete` | ✅ **EXPECTED** |
+| 2 | 0.498515 | `workbooks_show` | ❌ |
+| 3 | 0.432453 | `workbooks_create` | ❌ |
+| 4 | 0.425569 | `workbooks_list` | ❌ |
 | 5 | 0.421897 | `workbooks_update` | ❌ |
 
 ---
@@ -8019,10 +8019,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.772172 | `workbooks_list` | ✅ **EXPECTED** |
-| 2 | 0.562485 | `workbooks_create` | ❌ |
+| 1 | 0.772430 | `workbooks_list` | ✅ **EXPECTED** |
+| 2 | 0.563085 | `workbooks_create` | ❌ |
 | 3 | 0.516739 | `grafana_list` | ❌ |
-| 4 | 0.494073 | `workbooks_show` | ❌ |
+| 4 | 0.494143 | `workbooks_show` | ❌ |
 | 5 | 0.488599 | `group_list` | ❌ |
 
 ---
@@ -8036,10 +8036,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.708216 | `workbooks_list` | ✅ **EXPECTED** |
-| 2 | 0.570260 | `workbooks_create` | ❌ |
-| 3 | 0.499716 | `workbooks_show` | ❌ |
-| 4 | 0.485528 | `workbooks_delete` | ❌ |
+| 1 | 0.708612 | `workbooks_list` | ✅ **EXPECTED** |
+| 2 | 0.570791 | `workbooks_create` | ❌ |
+| 3 | 0.499765 | `workbooks_show` | ❌ |
+| 4 | 0.485715 | `workbooks_delete` | ❌ |
 | 5 | 0.472378 | `grafana_list` | ❌ |
 
 ---
@@ -8053,11 +8053,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.686087 | `workbooks_show` | ✅ **EXPECTED** |
-| 2 | 0.498390 | `workbooks_create` | ❌ |
-| 3 | 0.494491 | `workbooks_list` | ❌ |
+| 1 | 0.686052 | `workbooks_show` | ✅ **EXPECTED** |
+| 2 | 0.498789 | `workbooks_create` | ❌ |
+| 3 | 0.494708 | `workbooks_list` | ❌ |
 | 4 | 0.463156 | `workbooks_update` | ❌ |
-| 5 | 0.452555 | `workbooks_delete` | ❌ |
+| 5 | 0.451870 | `workbooks_delete` | ❌ |
 
 ---
 
@@ -8070,11 +8070,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.581501 | `workbooks_show` | ✅ **EXPECTED** |
-| 2 | 0.500194 | `workbooks_list` | ❌ |
-| 3 | 0.468996 | `workbooks_create` | ❌ |
+| 1 | 0.581440 | `workbooks_show` | ✅ **EXPECTED** |
+| 2 | 0.500475 | `workbooks_list` | ❌ |
+| 3 | 0.469354 | `workbooks_create` | ❌ |
 | 4 | 0.466266 | `workbooks_update` | ❌ |
-| 5 | 0.455490 | `workbooks_delete` | ❌ |
+| 5 | 0.454632 | `workbooks_delete` | ❌ |
 
 ---
 
@@ -8088,10 +8088,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.586347 | `workbooks_update` | ✅ **EXPECTED** |
-| 2 | 0.382651 | `workbooks_create` | ❌ |
-| 3 | 0.349749 | `workbooks_delete` | ❌ |
-| 4 | 0.347944 | `workbooks_show` | ❌ |
-| 5 | 0.292870 | `loadtesting_testrun_update` | ❌ |
+| 2 | 0.382852 | `workbooks_create` | ❌ |
+| 3 | 0.348750 | `workbooks_delete` | ❌ |
+| 4 | 0.347788 | `workbooks_show` | ❌ |
+| 5 | 0.292904 | `loadtesting_testrun_update` | ❌ |
 
 ---
 
@@ -8104,11 +8104,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.543154 | `bicepschema_get` | ✅ **EXPECTED** |
-| 2 | 0.485889 | `deploy_iac_rules_get` | ❌ |
+| 1 | 0.543671 | `bicepschema_get` | ✅ **EXPECTED** |
+| 2 | 0.485962 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.478349 | `azureaibestpractices_get` | ❌ |
 | 4 | 0.478288 | `foundry_models_deploy` | ❌ |
-| 5 | 0.448373 | `get_bestpractices_get` | ❌ |
+| 5 | 0.449944 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -8124,8 +8124,8 @@
 | 1 | 0.502125 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.290902 | `storage_blob_upload` | ❌ |
 | 3 | 0.259162 | `managedlustre_fs_create` | ❌ |
-| 4 | 0.255080 | `deploy_architecture_diagram_generate` | ❌ |
-| 5 | 0.245079 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 4 | 0.254991 | `deploy_architecture_diagram_generate` | ❌ |
+| 5 | 0.245059 | `managedlustre_fs_subnetsize_validate` | ❌ |
 
 ---
 
@@ -8139,10 +8139,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.508153 | `cloudarchitect_design` | ✅ **EXPECTED** |
-| 2 | 0.377913 | `deploy_architecture_diagram_generate` | ❌ |
+| 2 | 0.377941 | `deploy_architecture_diagram_generate` | ❌ |
 | 3 | 0.346820 | `azureaibestpractices_get` | ❌ |
 | 4 | 0.341462 | `deploy_pipeline_guidance_get` | ❌ |
-| 5 | 0.328747 | `get_bestpractices_get` | ❌ |
+| 5 | 0.331880 | `get_bestpractices_get` | ❌ |
 
 ---
 
@@ -8157,7 +8157,7 @@
 |------|-------|------|--------|
 | 1 | 0.423577 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.271943 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.265951 | `deploy_architecture_diagram_generate` | ❌ |
+| 3 | 0.265972 | `deploy_architecture_diagram_generate` | ❌ |
 | 4 | 0.251503 | `azureaibestpractices_get` | ❌ |
 | 5 | 0.242581 | `deploy_plan_get` | ❌ |
 
@@ -8175,7 +8175,7 @@
 | 1 | 0.534690 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.369969 | `deploy_pipeline_guidance_get` | ❌ |
 | 3 | 0.356331 | `managedlustre_fs_create` | ❌ |
-| 4 | 0.352763 | `deploy_architecture_diagram_generate` | ❌ |
+| 4 | 0.352797 | `deploy_architecture_diagram_generate` | ❌ |
 | 5 | 0.332027 | `azureaibestpractices_get` | ❌ |
 
 ---
@@ -8190,9 +8190,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.653761 | `foundry_agents_connect` | ✅ **EXPECTED** |
-| 2 | 0.593439 | `foundry_agents_get-sdk-sample` | ❌ |
+| 2 | 0.592329 | `foundry_agents_get-sdk-sample` | ❌ |
 | 3 | 0.587483 | `foundry_threads_list` | ❌ |
-| 4 | 0.560051 | `foundry_agents_list` | ❌ |
+| 4 | 0.563619 | `foundry_agents_list` | ❌ |
 | 5 | 0.553874 | `foundry_threads_get-messages` | ❌ |
 
 ---
@@ -8206,9 +8206,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.651748 | `foundry_agents_create` | ✅ **EXPECTED** |
-| 2 | 0.605298 | `foundry_threads_create` | ❌ |
-| 3 | 0.592591 | `foundry_agents_get-sdk-sample` | ❌ |
+| 1 | 0.651806 | `foundry_agents_create` | ✅ **EXPECTED** |
+| 2 | 0.605374 | `foundry_threads_create` | ❌ |
+| 3 | 0.591850 | `foundry_agents_get-sdk-sample` | ❌ |
 | 4 | 0.507379 | `foundry_threads_list` | ❌ |
 | 5 | 0.450138 | `foundry_threads_get-messages` | ❌ |
 
@@ -8226,7 +8226,7 @@
 | 1 | 0.544099 | `foundry_agents_query-and-evaluate` | ❌ |
 | 2 | 0.497672 | `foundry_agents_connect` | ❌ |
 | 3 | 0.469428 | `foundry_agents_evaluate` | ✅ **EXPECTED** |
-| 4 | 0.283016 | `foundry_agents_list` | ❌ |
+| 4 | 0.283236 | `foundry_agents_list` | ❌ |
 | 5 | 0.268553 | `foundry_threads_get-messages` | ❌ |
 
 ---
@@ -8240,9 +8240,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.640177 | `foundry_agents_get-sdk-sample` | ✅ **EXPECTED** |
-| 2 | 0.542864 | `foundry_threads_create` | ❌ |
-| 3 | 0.542298 | `foundry_agents_create` | ❌ |
+| 1 | 0.639914 | `foundry_agents_get-sdk-sample` | ✅ **EXPECTED** |
+| 2 | 0.542979 | `foundry_threads_create` | ❌ |
+| 3 | 0.542346 | `foundry_agents_create` | ❌ |
 | 4 | 0.473155 | `foundry_agents_connect` | ❌ |
 | 5 | 0.464149 | `foundry_threads_list` | ❌ |
 
@@ -8257,9 +8257,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.681576 | `foundry_threads_list` | ❌ |
-| 2 | 0.680850 | `foundry_agents_list` | ✅ **EXPECTED** |
-| 3 | 0.574383 | `foundry_agents_get-sdk-sample` | ❌ |
+| 1 | 0.681707 | `foundry_agents_list` | ✅ **EXPECTED** |
+| 2 | 0.681576 | `foundry_threads_list` | ❌ |
+| 3 | 0.573415 | `foundry_agents_get-sdk-sample` | ❌ |
 | 4 | 0.565382 | `foundry_resource_get` | ❌ |
 | 5 | 0.553438 | `foundry_threads_get-messages` | ❌ |
 
@@ -8274,9 +8274,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.656082 | `foundry_agents_list` | ✅ **EXPECTED** |
+| 1 | 0.657507 | `foundry_agents_list` | ✅ **EXPECTED** |
 | 2 | 0.639619 | `foundry_threads_list` | ❌ |
-| 3 | 0.613719 | `foundry_agents_get-sdk-sample` | ❌ |
+| 3 | 0.613018 | `foundry_agents_get-sdk-sample` | ❌ |
 | 4 | 0.546827 | `foundry_resource_get` | ❌ |
 | 5 | 0.538991 | `foundry_threads_get-messages` | ❌ |
 
@@ -8294,8 +8294,8 @@
 | 1 | 0.623476 | `foundry_agents_connect` | ❌ |
 | 2 | 0.585061 | `foundry_agents_query-and-evaluate` | ✅ **EXPECTED** |
 | 3 | 0.508685 | `foundry_agents_evaluate` | ❌ |
-| 4 | 0.499770 | `foundry_agents_list` | ❌ |
-| 5 | 0.468929 | `foundry_agents_get-sdk-sample` | ❌ |
+| 4 | 0.502639 | `foundry_agents_list` | ❌ |
+| 5 | 0.467801 | `foundry_agents_get-sdk-sample` | ❌ |
 
 ---
 
@@ -8308,9 +8308,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.708961 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
+| 1 | 0.709443 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
 | 2 | 0.549219 | `foundry_knowledge_index_schema` | ❌ |
-| 3 | 0.498884 | `foundry_agents_list` | ❌ |
+| 3 | 0.499661 | `foundry_agents_list` | ❌ |
 | 4 | 0.462128 | `foundry_models_deployments_list` | ❌ |
 | 5 | 0.449142 | `foundry_threads_list` | ❌ |
 
@@ -8325,10 +8325,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.597462 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
+| 1 | 0.597932 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
 | 2 | 0.499788 | `foundry_knowledge_index_schema` | ❌ |
-| 3 | 0.425795 | `foundry_agents_get-sdk-sample` | ❌ |
-| 4 | 0.416167 | `foundry_agents_list` | ❌ |
+| 3 | 0.426400 | `foundry_agents_get-sdk-sample` | ❌ |
+| 4 | 0.417648 | `foundry_agents_list` | ❌ |
 | 5 | 0.411250 | `foundry_resource_get` | ❌ |
 
 ---
@@ -8342,11 +8342,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.716936 | `foundry_knowledge_index_schema` | ✅ **EXPECTED** |
-| 2 | 0.563824 | `foundry_knowledge_index_list` | ❌ |
-| 3 | 0.445932 | `kusto_table_schema` | ❌ |
-| 4 | 0.440366 | `foundry_resource_get` | ❌ |
-| 5 | 0.439018 | `bicepschema_get` | ❌ |
+| 1 | 0.716937 | `foundry_knowledge_index_schema` | ✅ **EXPECTED** |
+| 2 | 0.564734 | `foundry_knowledge_index_list` | ❌ |
+| 3 | 0.442894 | `kusto_table_schema` | ❌ |
+| 4 | 0.440492 | `foundry_resource_get` | ❌ |
+| 5 | 0.438965 | `bicepschema_get` | ❌ |
 
 ---
 
@@ -8361,7 +8361,7 @@
 |------|-------|------|--------|
 | 1 | 0.652246 | `foundry_knowledge_index_schema` | ✅ **EXPECTED** |
 | 2 | 0.432758 | `postgres_table_schema_get` | ❌ |
-| 3 | 0.416152 | `kusto_table_schema` | ❌ |
+| 3 | 0.417421 | `kusto_table_schema` | ❌ |
 | 4 | 0.398186 | `mysql_table_schema_get` | ❌ |
 | 5 | 0.393541 | `search_knowledge_base_get` | ❌ |
 
@@ -8377,8 +8377,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.565477 | `foundry_models_deploy` | ✅ **EXPECTED** |
-| 2 | 0.310121 | `foundry_openai_models-list` | ❌ |
-| 3 | 0.298490 | `loadtesting_testrun_create` | ❌ |
+| 2 | 0.310151 | `foundry_openai_models-list` | ❌ |
+| 3 | 0.298364 | `loadtesting_testrun_create` | ❌ |
 | 4 | 0.293050 | `loadtesting_testresource_create` | ❌ |
 | 5 | 0.282464 | `mysql_server_list` | ❌ |
 
@@ -8394,7 +8394,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.672200 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
-| 2 | 0.646986 | `foundry_openai_models-list` | ❌ |
+| 2 | 0.646999 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.589990 | `foundry_resource_get` | ❌ |
 | 4 | 0.579329 | `foundry_threads_list` | ❌ |
 | 5 | 0.565886 | `foundry_models_list` | ❌ |
@@ -8410,11 +8410,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.602710 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
-| 2 | 0.582738 | `foundry_openai_models-list` | ❌ |
-| 3 | 0.550339 | `foundry_resource_get` | ❌ |
-| 4 | 0.532076 | `foundry_threads_list` | ❌ |
-| 5 | 0.527871 | `foundry_models_deploy` | ❌ |
+| 1 | 0.602765 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
+| 2 | 0.582771 | `foundry_openai_models-list` | ❌ |
+| 3 | 0.550358 | `foundry_resource_get` | ❌ |
+| 4 | 0.532100 | `foundry_threads_list` | ❌ |
+| 5 | 0.527865 | `foundry_models_deploy` | ❌ |
 
 ---
 
@@ -8429,7 +8429,7 @@
 |------|-------|------|--------|
 | 1 | 0.572716 | `foundry_models_list` | ✅ **EXPECTED** |
 | 2 | 0.549981 | `foundry_threads_list` | ❌ |
-| 3 | 0.519108 | `foundry_openai_models-list` | ❌ |
+| 3 | 0.519095 | `foundry_openai_models-list` | ❌ |
 | 4 | 0.483640 | `foundry_resource_get` | ❌ |
 | 5 | 0.478754 | `foundry_models_deployments_list` | ❌ |
 
@@ -8446,8 +8446,8 @@
 |------|-------|------|--------|
 | 1 | 0.524253 | `foundry_models_list` | ✅ **EXPECTED** |
 | 2 | 0.480785 | `foundry_threads_list` | ❌ |
-| 3 | 0.458633 | `foundry_openai_models-list` | ❌ |
-| 4 | 0.450464 | `foundry_agents_get-sdk-sample` | ❌ |
+| 3 | 0.458613 | `foundry_openai_models-list` | ❌ |
+| 4 | 0.451337 | `foundry_agents_get-sdk-sample` | ❌ |
 | 5 | 0.448242 | `foundry_resource_get` | ❌ |
 
 ---
@@ -8461,11 +8461,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.571108 | `foundry_openai_chat-completions-create` | ✅ **EXPECTED** |
-| 2 | 0.471628 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.405501 | `foundry_threads_create` | ❌ |
-| 4 | 0.349782 | `foundry_agents_get-sdk-sample` | ❌ |
-| 5 | 0.347113 | `foundry_agents_create` | ❌ |
+| 1 | 0.571040 | `foundry_openai_chat-completions-create` | ✅ **EXPECTED** |
+| 2 | 0.471693 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.405384 | `foundry_threads_create` | ❌ |
+| 4 | 0.350213 | `foundry_agents_get-sdk-sample` | ❌ |
+| 5 | 0.346970 | `foundry_agents_create` | ❌ |
 
 ---
 
@@ -8478,11 +8478,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.652748 | `foundry_openai_create-completion` | ✅ **EXPECTED** |
-| 2 | 0.527216 | `foundry_openai_chat-completions-create` | ❌ |
-| 3 | 0.439706 | `deploy_pipeline_guidance_get` | ❌ |
-| 4 | 0.434029 | `extension_cli_generate` | ❌ |
-| 5 | 0.411037 | `foundry_models_deploy` | ❌ |
+| 1 | 0.652799 | `foundry_openai_create-completion` | ✅ **EXPECTED** |
+| 2 | 0.527263 | `foundry_openai_chat-completions-create` | ❌ |
+| 3 | 0.439739 | `deploy_pipeline_guidance_get` | ❌ |
+| 4 | 0.433982 | `extension_cli_generate` | ❌ |
+| 5 | 0.411306 | `foundry_models_deploy` | ❌ |
 
 ---
 
@@ -8498,7 +8498,7 @@
 | 1 | 0.751801 | `foundry_openai_embeddings-create` | ✅ **EXPECTED** |
 | 2 | 0.532600 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.532551 | `foundry_models_deploy` | ❌ |
-| 4 | 0.521119 | `foundry_openai_models-list` | ❌ |
+| 4 | 0.521111 | `foundry_openai_models-list` | ❌ |
 | 5 | 0.494236 | `foundry_resource_get` | ❌ |
 
 ---
@@ -8516,7 +8516,7 @@
 | 2 | 0.425667 | `foundry_resource_get` | ❌ |
 | 3 | 0.413294 | `foundry_models_deploy` | ❌ |
 | 4 | 0.411815 | `foundry_openai_create-completion` | ❌ |
-| 5 | 0.405965 | `foundry_agents_create` | ❌ |
+| 5 | 0.405917 | `foundry_agents_create` | ❌ |
 
 ---
 
@@ -8529,11 +8529,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.784809 | `foundry_openai_models-list` | ✅ **EXPECTED** |
-| 2 | 0.644223 | `foundry_models_deployments_list` | ❌ |
-| 3 | 0.635099 | `foundry_resource_get` | ❌ |
-| 4 | 0.631818 | `foundry_agents_list` | ❌ |
-| 5 | 0.624124 | `foundry_models_list` | ❌ |
+| 1 | 0.783771 | `foundry_openai_models-list` | ✅ **EXPECTED** |
+| 2 | 0.642953 | `foundry_models_deployments_list` | ❌ |
+| 3 | 0.634098 | `foundry_resource_get` | ❌ |
+| 4 | 0.631262 | `foundry_agents_list` | ❌ |
+| 5 | 0.622537 | `foundry_models_list` | ❌ |
 
 ---
 
@@ -8546,7 +8546,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.729835 | `foundry_openai_models-list` | ✅ **EXPECTED** |
+| 1 | 0.729853 | `foundry_openai_models-list` | ✅ **EXPECTED** |
 | 2 | 0.655589 | `foundry_models_deploy` | ❌ |
 | 3 | 0.639541 | `foundry_models_deployments_list` | ❌ |
 | 4 | 0.617675 | `foundry_resource_get` | ❌ |
@@ -8565,9 +8565,9 @@
 |------|-------|------|--------|
 | 1 | 0.630611 | `foundry_resource_get` | ✅ **EXPECTED** |
 | 2 | 0.596863 | `foundry_threads_list` | ❌ |
-| 3 | 0.558609 | `foundry_openai_models-list` | ❌ |
-| 4 | 0.542902 | `redis_list` | ❌ |
-| 5 | 0.526428 | `foundry_agents_list` | ❌ |
+| 3 | 0.558613 | `foundry_openai_models-list` | ❌ |
+| 4 | 0.542898 | `redis_list` | ❌ |
+| 5 | 0.527098 | `foundry_agents_list` | ❌ |
 
 ---
 
@@ -8580,11 +8580,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.634839 | `foundry_resource_get` | ✅ **EXPECTED** |
-| 2 | 0.527671 | `foundry_openai_models-list` | ❌ |
-| 3 | 0.524778 | `foundry_threads_list` | ❌ |
-| 4 | 0.488532 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.480089 | `foundry_agents_list` | ❌ |
+| 1 | 0.632544 | `foundry_resource_get` | ✅ **EXPECTED** |
+| 2 | 0.527933 | `foundry_openai_models-list` | ❌ |
+| 3 | 0.526209 | `foundry_threads_list` | ❌ |
+| 4 | 0.487852 | `loadtesting_testresource_list` | ❌ |
+| 5 | 0.483865 | `foundry_agents_list` | ❌ |
 
 ---
 
@@ -8598,9 +8598,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.728275 | `foundry_resource_get` | ✅ **EXPECTED** |
-| 2 | 0.544746 | `foundry_openai_models-list` | ❌ |
-| 3 | 0.506476 | `monitor_webtests_get` | ❌ |
-| 4 | 0.481577 | `functionapp_get` | ❌ |
+| 2 | 0.544802 | `foundry_openai_models-list` | ❌ |
+| 3 | 0.506925 | `monitor_webtests_get` | ❌ |
+| 4 | 0.481417 | `functionapp_get` | ❌ |
 | 5 | 0.480676 | `foundry_openai_embeddings-create` | ❌ |
 
 ---
@@ -8614,11 +8614,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.671344 | `foundry_threads_create` | ✅ **EXPECTED** |
+| 1 | 0.671430 | `foundry_threads_create` | ✅ **EXPECTED** |
 | 2 | 0.551672 | `foundry_threads_get-messages` | ❌ |
 | 3 | 0.545637 | `foundry_threads_list` | ❌ |
-| 4 | 0.493505 | `foundry_agents_get-sdk-sample` | ❌ |
-| 5 | 0.487134 | `foundry_agents_create` | ❌ |
+| 4 | 0.494177 | `foundry_agents_get-sdk-sample` | ❌ |
+| 5 | 0.487203 | `foundry_agents_create` | ❌ |
 
 ---
 
@@ -8631,11 +8631,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.662733 | `foundry_threads_get-messages` | ✅ **EXPECTED** |
-| 2 | 0.553252 | `foundry_threads_create` | ❌ |
-| 3 | 0.538595 | `foundry_threads_list` | ❌ |
-| 4 | 0.419581 | `foundry_agents_get-sdk-sample` | ❌ |
-| 5 | 0.404275 | `foundry_agents_create` | ❌ |
+| 1 | 0.662599 | `foundry_threads_get-messages` | ✅ **EXPECTED** |
+| 2 | 0.553109 | `foundry_threads_create` | ❌ |
+| 3 | 0.538582 | `foundry_threads_list` | ❌ |
+| 4 | 0.419993 | `foundry_agents_get-sdk-sample` | ❌ |
+| 5 | 0.403918 | `foundry_agents_create` | ❌ |
 
 ---
 
@@ -8648,22 +8648,22 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.720810 | `foundry_threads_list` | ✅ **EXPECTED** |
-| 2 | 0.598905 | `foundry_threads_get-messages` | ❌ |
-| 3 | 0.572442 | `foundry_threads_create` | ❌ |
-| 4 | 0.479863 | `foundry_agents_get-sdk-sample` | ❌ |
-| 5 | 0.396691 | `foundry_resource_get` | ❌ |
+| 1 | 0.720787 | `foundry_threads_list` | ✅ **EXPECTED** |
+| 2 | 0.598835 | `foundry_threads_get-messages` | ❌ |
+| 3 | 0.572475 | `foundry_threads_create` | ❌ |
+| 4 | 0.480243 | `foundry_agents_get-sdk-sample` | ❌ |
+| 5 | 0.396690 | `foundry_resource_get` | ❌ |
 
 ---
 
 ## Summary
 
 **Total Prompts Tested:** 480  
-**Analysis Execution Time:** 98.1532487s  
+**Analysis Execution Time:** 151.8837557s  
 
 ### Success Rate Metrics
 
-**Top Choice Success:** 91.7% (440/480 tests)  
+**Top Choice Success:** 91.9% (441/480 tests)  
 
 #### Confidence Level Distribution
 
@@ -8678,9 +8678,9 @@
 
 **💪 Top Choice + Very High Confidence (≥0.8):** 3.1% (15/480 tests)  
 **🎯 Top Choice + High Confidence (≥0.7):** 21.5% (103/480 tests)  
-**✅ Top Choice + Good Confidence (≥0.6):** 58.5% (281/480 tests)  
-**👍 Top Choice + Fair Confidence (≥0.5):** 85.8% (412/480 tests)  
-**👌 Top Choice + Acceptable Confidence (≥0.4):** 91.7% (440/480 tests)  
+**✅ Top Choice + Good Confidence (≥0.6):** 59.0% (283/480 tests)  
+**👍 Top Choice + Fair Confidence (≥0.5):** 86.0% (413/480 tests)  
+**👌 Top Choice + Acceptable Confidence (≥0.4):** 91.9% (441/480 tests)  
 
 ### Success Rate Analysis
 

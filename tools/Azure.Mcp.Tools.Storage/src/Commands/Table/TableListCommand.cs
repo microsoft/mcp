@@ -14,6 +14,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
     private const string CommandTitle = "List Tables in Azure Storage";
     private readonly ILogger<TableListCommand> _logger = logger;
 
+    public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
+
     public override string Name => "list";
 
     public override string Description => "List all tables in an Azure Storage account.";
@@ -29,8 +31,6 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
         LocalRequired = false,
         Secret = false
     };
-
-    public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
