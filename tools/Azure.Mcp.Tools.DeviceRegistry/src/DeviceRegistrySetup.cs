@@ -18,6 +18,8 @@ public class DeviceRegistrySetup : IAreaSetup
     {
         services.AddSingleton<IDeviceRegistryService, DeviceRegistryService>();
         services.AddSingleton<NamespaceListCommand>();
+        services.AddSingleton<NamespaceCreateCommand>();
+        services.AddSingleton<NamespaceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,6 +34,12 @@ public class DeviceRegistrySetup : IAreaSetup
         // Register Namespace commands
         var namespaceList = serviceProvider.GetRequiredService<NamespaceListCommand>();
         namespaces.AddCommand(namespaceList.Name, namespaceList);
+
+        var namespaceCreate = serviceProvider.GetRequiredService<NamespaceCreateCommand>();
+        namespaces.AddCommand(namespaceCreate.Name, namespaceCreate);
+
+        var namespaceGet = serviceProvider.GetRequiredService<NamespaceGetCommand>();
+        namespaces.AddCommand(namespaceGet.Name, namespaceGet);
 
         return deviceRegistry;
     }

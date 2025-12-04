@@ -50,4 +50,71 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
 
         return namespaces;
     }
+
+    public async Task<DeviceRegistryNamespaceResource> CreateNamespaceAsync(
+        string subscriptionId,
+        string resourceGroupName,
+        string namespaceName,
+        string location,
+        Dictionary<string, string>? tags = null,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscriptionId), subscriptionId),
+            (nameof(resourceGroupName), resourceGroupName),
+            (nameof(namespaceName), namespaceName),
+            (nameof(location), location));
+
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var armClient = new ArmClient(credential);
+        var subscription = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+        
+        var resourceGroup = await subscription.GetResourceGroupAsync(resourceGroupName, cancellationToken);
+        var namespacesCollection = resourceGroup.Value.GetDeviceRegistryNamespaces();
+
+        var namespaceData = new DeviceRegistryNamespaceData(new AzureLocation(location));
+
+        if (tags != null)
+        {
+            foreach (var tag in tags)
+            {
+                namespaceData.Tags.Add(tag.Key, tag.Value);
+            }
+        }
+
+        var operation = await namespacesCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            namespaceName,
+            namespaceData,
+            cancellationToken);
+
+        return operation.Value;
+    }
+
+    public async Task<DeviceRegistryNamespaceResource> GetNamespaceAsync(
+        string subscriptionId,
+        string resourceGroupName,
+        string namespaceName,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscriptionId), subscriptionId),
+            (nameof(resourceGroupName), resourceGroupName),
+            (nameof(namespaceName), namespaceName));
+
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var armClient = new ArmClient(credential);
+        var subscription = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+        
+        var resourceGroup = await subscription.GetResourceGroupAsync(resourceGroupName, cancellationToken);
+        var namespacesCollection = resourceGroup.Value.GetDeviceRegistryNamespaces();
+
+        var namespaceResource = await namespacesCollection.GetAsync(namespaceName, cancellationToken);
+        
+        return namespaceResource.Value;
+    }
 }

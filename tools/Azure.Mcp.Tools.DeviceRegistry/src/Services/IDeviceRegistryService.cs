@@ -14,4 +14,22 @@ public interface IDeviceRegistryService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<DeviceRegistryNamespaceResource> CreateNamespaceAsync(
+        string subscriptionId,
+        string resourceGroupName,
+        string namespaceName,
+        string location,
+        Dictionary<string, string>? tags = null,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DeviceRegistryNamespaceResource> GetNamespaceAsync(
+        string subscriptionId,
+        string resourceGroupName,
+        string namespaceName,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
