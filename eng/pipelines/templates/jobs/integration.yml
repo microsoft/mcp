@@ -34,6 +34,13 @@ jobs:
       ${{ else }}:
         Tag: pre
 
+  - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
+    parameters:
+      PathToArtifacts: $(Pipeline.Workspace)/packages_npm
+      Registry: https://dev.azure.com/1es-mcp/1es-mcp/_artifacts/feed/1es-mcp-registry
+      Tag: dev
+      CustomEndpoint: 'azure-sdk-internal-Azure SDK Artifacts'
+
   - task: 1ES.PublishNuget@1
     displayName: Publish Nuget packages to dev feed
     inputs:
