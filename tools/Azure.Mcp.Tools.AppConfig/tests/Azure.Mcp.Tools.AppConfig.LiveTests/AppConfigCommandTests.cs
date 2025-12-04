@@ -28,6 +28,12 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     private readonly ILogger<AppConfigService> _logger;
     private readonly ServiceProvider _httpClientProvider;
 
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// AZSDK3447 = $..key
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493", "AZSDK3447" }).ToList();
+
     public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
         _logger = NullLogger<AppConfigService>.Instance;
