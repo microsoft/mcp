@@ -5,6 +5,9 @@ parameters:
     type: string
   - name: Tag
     type: string
+  - name: CustomEndpoint
+    type: string
+    default: ''
 
 steps:
   - template: /eng/common/pipelines/templates/steps/set-default-branch.yml
@@ -13,6 +16,7 @@ steps:
     parameters:
       npmrcPath: ${{parameters.PathToArtifacts}}/.npmrc
       registryUrl: ${{parameters.Registry}}
+      customEndpoint: ${{parameters.CustomEndpoint}}
 
   - pwsh: |
       $tgzFiles = Get-ChildItem -Path . -Filter *.tgz -Recurse

@@ -6,6 +6,9 @@ parameters:
   - name: CustomCondition
     type: string
     default: succeeded()
+  - name: customEndpoint
+    type: string
+    default: ''
 
 steps:
 - pwsh: |
@@ -26,3 +29,4 @@ steps:
   condition: ${{ parameters.CustomCondition }}
   inputs:
     workingFile: ${{ parameters.npmrcPath }}
+    customEndpoint: ${{ parameters.customEndpoint }}

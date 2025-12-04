@@ -111,3 +111,9 @@ jobs:
             PathToArtifacts: $(Pipeline.Workspace)/drop
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
+        - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
+          parameters:
+            PathToArtifacts: $(Pipeline.Workspace)/drop
+            Registry: https://dev.azure.com/1es-mcp/1es-mcp/_artifacts/feed/1es-mcp-registry
+            Tag: latest
+            CustomEndpoint: 'azure-sdk-internal-Azure SDK Artifacts'
