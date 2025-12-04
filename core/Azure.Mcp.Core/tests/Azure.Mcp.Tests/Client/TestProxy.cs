@@ -35,49 +35,58 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedRootDir;
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
+    private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
     private async Task<string> _getClient()
     {
-        if (_cachedExecutable != null)
+        await s_downloadLock.WaitAsync();
+        try
         {
-            return _cachedExecutable;
-        }
+            if (_cachedExecutable != null)
+            {
+                return _cachedExecutable;
+            }
 
-        var proxyDir = GetProxyDirectory();
-        var version = GetTargetVersion();
+            var proxyDir = GetProxyDirectory();
+            var version = GetTargetVersion();
 
-        if (CheckProxyVersion(proxyDir, version))
-        {
+            if (CheckProxyVersion(proxyDir, version))
+            {
+                _cachedExecutable = FindExecutableInDirectory(proxyDir);
+                return _cachedExecutable;
+            }
+
+            var assetName = GetAssetNameForPlatform();
+            var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
+            var downloadPath = Path.Combine(proxyDir, assetName);
+            if (!File.Exists(downloadPath))
+            {
+                using var client = new HttpClient();
+                var bytes = await client.GetByteArrayAsync(url);
+                await File.WriteAllBytesAsync(downloadPath, bytes);
+                // record the downloaded version right here so we don't need to parse anything other than what
+                // is in this folder later
+                await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
+            }
+
+            // if we've gotten to here then we need to decompress
+            if (assetName.EndsWith(".tar.gz"))
+            {
+                await using var compressedStream = File.OpenRead(downloadPath);
+                using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
+                TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
+            }
+            else
+            {
+                ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
+            }
+
             _cachedExecutable = FindExecutableInDirectory(proxyDir);
-            return _cachedExecutable;
         }
-
-        var assetName = GetAssetNameForPlatform();
-        var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
-        var downloadPath = Path.Combine(proxyDir, assetName);
-        if (!File.Exists(downloadPath))
+        finally
         {
-            using var client = new HttpClient();
-            var bytes = await client.GetByteArrayAsync(url);
-            await File.WriteAllBytesAsync(downloadPath, bytes);
-            // record the downloaded version right here so we don't need to parse anything other than what
-            // is in this folder later
-            await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
+            s_downloadLock.Release();
         }
-
-        // if we've gotten to here then we need to decompress
-        if (assetName.EndsWith(".tar.gz"))
-        {
-            await using var compressedStream = File.OpenRead(downloadPath);
-            using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
-            TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
-        }
-        else
-        {
-            ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
-        }
-
-        _cachedExecutable = FindExecutableInDirectory(proxyDir);
 
         return _cachedExecutable;
     }
