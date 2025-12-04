@@ -29,4 +29,4 @@ steps:
   condition: ${{ parameters.CustomCondition }}
   inputs:
     workingFile: ${{ parameters.npmrcPath }}
-    customEndpoint: ${{ parameters.customEndpoint }}
+    azureDevOpsServiceConnection: ${{ parameters.customEndpoint }}
