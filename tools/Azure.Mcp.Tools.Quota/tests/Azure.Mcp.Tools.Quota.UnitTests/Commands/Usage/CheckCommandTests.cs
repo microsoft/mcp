@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Usage;
 
-[Trait("Area", "Quota")]
 public sealed class CheckCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

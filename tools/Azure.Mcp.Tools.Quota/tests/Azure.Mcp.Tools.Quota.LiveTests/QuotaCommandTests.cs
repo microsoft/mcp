@@ -8,7 +8,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
-[Trait("Area", "Quota")]
 public class QuotaCommandTests : CommandTestsBase
 {
     public QuotaCommandTests(ITestOutputHelper output) : base(output)
@@ -16,7 +15,6 @@ public class QuotaCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_check_azure_quota()
     {
         // act
@@ -65,7 +63,6 @@ public class QuotaCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_check_azure_regions()
     {
         // act
@@ -99,7 +96,6 @@ public class QuotaCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_check_regions_with_cognitive_services()
     {
         // act

@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Subscription;
 
-[Trait("Area", "EventGrid")]
 public class SubscriptionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

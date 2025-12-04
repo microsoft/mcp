@@ -7,7 +7,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.Services;
 
-[Trait("Area", "AppConfig")]
 public class AppConfigServiceTests
 {
     /// <summary>

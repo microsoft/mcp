@@ -9,8 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.LiveTests;
 
-[Trait("Area", "Acr")]
-[Trait("Category", "Live")]
 public class AcrCommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {
