@@ -4,9 +4,9 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Interface for all commands

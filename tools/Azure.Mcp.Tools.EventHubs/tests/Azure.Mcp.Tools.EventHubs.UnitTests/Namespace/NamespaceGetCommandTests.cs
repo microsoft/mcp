@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.EventHubs.Services;
 using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

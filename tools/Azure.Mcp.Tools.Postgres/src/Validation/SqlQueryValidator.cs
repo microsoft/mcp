@@ -3,7 +3,7 @@
 
 using System.Net;
 using System.Text.RegularExpressions;
-using Azure.Mcp.Core.Exceptions;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Postgres.Validation;
 

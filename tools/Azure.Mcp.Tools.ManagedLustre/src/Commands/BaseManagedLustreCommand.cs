@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 
