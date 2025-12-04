@@ -137,7 +137,7 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
         try {
             Deploy-TestResources @jobInput
         } catch {
-            Write-Error "Deployment failed for '$($jobInput.Path)': $($_.Exception.Message)"
+            Write-Host "Deployment failed for '$($jobInput.Path)'" -ForegroundColor Red
             Write-Error $_
             $failedPaths += $jobInput.Path
         }
