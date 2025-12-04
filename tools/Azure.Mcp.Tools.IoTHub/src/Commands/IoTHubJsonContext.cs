@@ -12,5 +12,11 @@ namespace Azure.Mcp.Tools.IoTHub.Commands;
 [JsonSerializable(typeof(IoTHubKey))]
 [JsonSerializable(typeof(List<IoTHubKey>))]
 [JsonSerializable(typeof(IoTHubDeleteCommandResult))]
+[JsonSerializable(typeof(DeviceTwin))]
+[JsonSerializable(typeof(List<DeviceTwin>))]
+[JsonSerializable(typeof(DeviceIdentity))]
+[JsonSerializable(typeof(List<DeviceIdentity>))]
+[JsonSerializable(typeof(TwinPatch))]
+[JsonSerializable(typeof(object))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class IoTHubJsonContext : JsonSerializerContext;

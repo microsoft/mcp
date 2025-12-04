@@ -11,6 +11,10 @@ public static class IoTHubOptionDefinitions
     public const string LocationName = "location";
     public const string SkuName = "sku";
     public const string CapacityName = "capacity";
+    public const string DeviceIdName = "device-id";
+    public const string MaxCountName = "max-count";
+    public const string QueryName = "query";
+    public const string PatchName = "patch";
 
     public static readonly Option<string> Name = new(
         $"--{NameName}"
@@ -41,6 +45,38 @@ public static class IoTHubOptionDefinitions
     )
     {
         Description = "The capacity of the IoT Hub.",
+        Required = true
+    };
+
+    public static readonly Option<string> DeviceId = new(
+        $"--{DeviceIdName}"
+    )
+    {
+        Description = "The device identifier in the IoT Hub device registry.",
+        Required = true
+    };
+
+    public static readonly Option<int?> MaxCount = new(
+        $"--{MaxCountName}"
+    )
+    {
+        Description = "The maximum number of devices to return.",
+        Required = false
+    };
+
+    public static readonly Option<string> Query = new(
+        $"--{QueryName}"
+    )
+    {
+        Description = "The IoT Hub query language expression to filter devices.",
+        Required = true
+    };
+
+    public static readonly Option<string> Patch = new(
+        $"--{PatchName}"
+    )
+    {
+        Description = "The JSON patch document to update the device twin (e.g., {\"properties\":{\"desired\":{\"temperature\":72}}}).",
         Required = true
     };
 }
