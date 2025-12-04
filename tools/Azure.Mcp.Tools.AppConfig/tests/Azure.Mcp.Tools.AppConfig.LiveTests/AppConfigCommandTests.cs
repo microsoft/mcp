@@ -38,7 +38,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(TestMode, NullLoggerFactory.Instance);
+        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
         _httpClientProvider = TestHttpClientFactoryProvider.Create();
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);

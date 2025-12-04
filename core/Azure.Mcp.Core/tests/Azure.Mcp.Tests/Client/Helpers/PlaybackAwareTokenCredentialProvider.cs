@@ -13,21 +13,22 @@ namespace Azure.Mcp.Tests.Client.Helpers;
 
 public sealed class PlaybackAwareTokenCredentialProvider : IAzureTokenCredentialProvider
 {
-    private readonly TestMode _testMode;
+    private readonly Func<TestMode> _testModeAccessor;
     private readonly ILoggerFactory _loggerFactory;
     private readonly TokenCredential _playbackCredential = new PlaybackTokenCredential();
     private readonly Lazy<IAzureTokenCredentialProvider> _liveProvider;
 
-    public PlaybackAwareTokenCredentialProvider(TestMode testMode, ILoggerFactory loggerFactory)
+    public PlaybackAwareTokenCredentialProvider(Func<TestMode> testModeAccessor, ILoggerFactory loggerFactory)
     {
-        _testMode = testMode;
+        ArgumentNullException.ThrowIfNull(testModeAccessor);
+        _testModeAccessor = testModeAccessor;
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _liveProvider = new Lazy<IAzureTokenCredentialProvider>(() => new SingleIdentityTokenCredentialProvider(_loggerFactory));
     }
 
     public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellation)
     {
-        if (_testMode == TestMode.Playback)
+        if (_testModeAccessor() == TestMode.Playback)
         {
             return Task.FromResult<TokenCredential>(_playbackCredential);
         }
