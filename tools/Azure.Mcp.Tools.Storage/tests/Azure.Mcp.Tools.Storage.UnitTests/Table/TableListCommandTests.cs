@@ -56,7 +56,7 @@ public class TableListCommandTests
             .Returns(expectedTables);
 
         var args = _commandDefinition.Parse([
-            "--storage-account", _knownStorageAccount,
+            "--account", _knownStorageAccount,
             "--subscription", _knownSubscription
         ]);
 
@@ -87,7 +87,7 @@ public class TableListCommandTests
             .Returns([]);
 
         var args = _commandDefinition.Parse([
-            "--storage-account", _knownStorageAccount,
+            "--account", _knownStorageAccount,
             "--subscription", _knownSubscription
         ]);
 
@@ -107,7 +107,7 @@ public class TableListCommandTests
 
     [Theory]
     [InlineData("--subscription sub123")] // Missing Storage account
-    [InlineData("--storage-account mystorageaccount")] // Missing subscription
+    [InlineData("--account mystorageaccount")] // Missing subscription
     [InlineData("")] // No arguments
     public async Task ExecuteAsync_ValidatesMissingSubscriptionCorrectly(string args)
     {
@@ -136,7 +136,7 @@ public class TableListCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _command.GetCommand().Parse([
-            "--storage-account", _knownStorageAccount,
+            "--account", _knownStorageAccount,
             "--subscription", _knownSubscription
         ]);
 
