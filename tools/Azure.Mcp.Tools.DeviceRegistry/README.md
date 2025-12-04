@@ -84,6 +84,7 @@ Creates a new Device Registry namespace in the specified resource group.
 - `--name` (required): Name of the Device Registry namespace to create
 - `--location` (required): Azure region where the namespace will be created (e.g., 'eastus', 'westus2')
 - `--tags` (optional): Tags for the namespace in key=value format. Can be specified multiple times
+- `--enable-system-assigned-identity` (optional): Enable system-assigned managed identity for the namespace
 - `--tenant` (optional): Azure tenant ID
 
 **Example:**
@@ -93,6 +94,9 @@ azure-mcp deviceregistry namespace create --subscription <subscription-id> --res
 
 # Create a namespace with tags
 azure-mcp deviceregistry namespace create --subscription <subscription-id> --resource-group <resource-group-name> --name <namespace-name> --location eastus --tags environment=production team=iot
+
+# Create a namespace with system-assigned managed identity
+azure-mcp deviceregistry namespace create --subscription <subscription-id> --resource-group <resource-group-name> --name <namespace-name> --location eastus --enable-system-assigned-identity
 ```
 
 **Returns:**

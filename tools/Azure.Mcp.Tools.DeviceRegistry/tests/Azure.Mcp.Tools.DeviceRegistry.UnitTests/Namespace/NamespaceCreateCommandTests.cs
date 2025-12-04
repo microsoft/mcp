@@ -56,4 +56,15 @@ public class NamespaceCreateCommandTests : CommandTestBase<NamespaceCreateComman
         // Assert
         Assert.Contains(cliCommand.Options, o => o.Name == "tags");
     }
+
+    [Fact]
+    public void Command_HasOptionalEnableSystemAssignedIdentityOption()
+    {
+        // Arrange & Act
+        var command = GetCommand();
+        var cliCommand = command.Build();
+
+        // Assert
+        Assert.Contains(cliCommand.Options, o => o.Name == "enable-system-assigned-identity");
+    }
 }

@@ -62,6 +62,13 @@ public sealed class NamespaceCreateCommand(ILogger<NamespaceCreateCommand> logge
             Required = false,
             AllowMultipleArgumentsPerToken = true
         });
+        command.Options.Add(new Option<bool>(
+            "--enable-system-assigned-identity"
+        )
+        {
+            Description = "Enable system-assigned managed identity for the namespace",
+            Required = false
+        });
     }
 
     protected override NamespaceCreateOptions BindOptions(ParseResult parseResult)
@@ -85,6 +92,8 @@ public sealed class NamespaceCreateCommand(ILogger<NamespaceCreateCommand> logge
             }
         }
         
+        options.EnableSystemAssignedIdentity = parseResult.GetValueOrDefault<bool>("--enable-system-assigned-identity");
+        
         return options;
     }
 
@@ -106,6 +115,7 @@ public sealed class NamespaceCreateCommand(ILogger<NamespaceCreateCommand> logge
                 options.Name!,
                 options.Location!,
                 options.Tags,
+                options.EnableSystemAssignedIdentity,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

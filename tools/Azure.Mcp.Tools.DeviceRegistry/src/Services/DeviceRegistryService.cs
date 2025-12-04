@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Azure.ResourceManager.DeviceRegistry;
+using Azure.ResourceManager.DeviceRegistry.Models;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Services;
@@ -57,6 +58,7 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
         string namespaceName,
         string location,
         Dictionary<string, string>? tags = null,
+        bool enableSystemAssignedIdentity = false,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -82,6 +84,11 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
             {
                 namespaceData.Tags.Add(tag.Key, tag.Value);
             }
+        }
+
+        if (enableSystemAssignedIdentity)
+        {
+            namespaceData.Identity = new SystemAssignedServiceIdentity(SystemAssignedServiceIdentityType.SystemAssigned);
         }
 
         var operation = await namespacesCollection.CreateOrUpdateAsync(

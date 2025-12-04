@@ -21,6 +21,7 @@ public interface IDeviceRegistryService
         string namespaceName,
         string location,
         Dictionary<string, string>? tags = null,
+        bool enableSystemAssignedIdentity = false,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
