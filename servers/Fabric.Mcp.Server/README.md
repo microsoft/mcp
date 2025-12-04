@@ -47,7 +47,7 @@ Key capabilities:
 - **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
 
 # Installation
-<!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-fabric.vscode-fabric-mcp-server)}} -->
+<!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can configure MCP servers to start automatically using the `chat.mcp.autostart` setting.}} -->
 <!-- insert-section: vsix {{    }} -->
@@ -79,7 +79,7 @@ Start using Fabric MCP with your favorite IDE. We recommend VS Code:
 Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
 
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
-1. Install the [Fabric MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-fabric.vscode-fabric-mcp-server) extension.
+1. Install the [Fabric MCP Server](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) extension.
 
 ### Manual Setup
 Fabric MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
