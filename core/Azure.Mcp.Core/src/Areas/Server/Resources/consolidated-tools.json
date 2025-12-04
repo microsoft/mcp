@@ -981,6 +981,74 @@
       ]
     },
     {
+      "name": "query_azure_iothub_devices",
+      "description": "List, query, and retrieve device information from Azure IoT Hub device registry including device twins and their properties.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only read operations without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as device connection information and authentication keys."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_list",
+        "iothub_device_twin_get",
+        "iothub_device_twin_query"
+      ]
+    },
+    {
+      "name": "manage_azure_iothub_device_twins",
+      "description": "Update device twin properties and tags in Azure IoT Hub device registry using JSON patch format.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by updating device twin data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as device connection information and authentication keys."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_twin_update"
+      ]
+    },
+    {
       "name": "import_azure_key_vault_certificates",
       "description": "Import external certificates into Azure Key Vault",
       "toolMetadata": {

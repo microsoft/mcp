@@ -68,11 +68,11 @@ public class IoTHubService(
 
         var subResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var rg = await subResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
-        
+
         var data = new IotHubDescriptionData(new AzureLocation(location), new IotHubSkuInfo(new IotHubSku(sku)) { Capacity = capacity });
         var collection = rg.Value.GetIotHubDescriptions();
         var operation = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data, null, cancellationToken);
-        
+
         return ConvertToIoTHubDescription(operation.Value);
     }
 
@@ -105,7 +105,7 @@ public class IoTHubService(
         }
         else if (capacity.HasValue)
         {
-             data.Sku.Capacity = capacity.Value;
+            data.Sku.Capacity = capacity.Value;
         }
 
         var operation = await rg.Value.GetIotHubDescriptions().CreateOrUpdateAsync(WaitUntil.Completed, name, data, null, cancellationToken);
@@ -145,7 +145,7 @@ public class IoTHubService(
         var subResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var rg = await subResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var hub = await rg.Value.GetIotHubDescriptionAsync(name, cancellationToken);
-        
+
         var keys = new List<IoTHubKey>();
         await foreach (var key in hub.Value.GetKeysAsync(cancellationToken))
         {
@@ -172,7 +172,7 @@ public class IoTHubService(
     {
         var properties = element.GetProperty("properties");
         var sku = element.GetProperty("sku");
-        
+
         return new IoTHubDescription(
             element.GetProperty("id").GetString()!,
             element.GetProperty("name").GetString()!,

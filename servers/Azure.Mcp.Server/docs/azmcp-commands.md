@@ -1242,6 +1242,8 @@ azmcp grafana list --subscription <subscription>
 ```
 ### Azure IoT Hub Operations
 
+#### Hub Management
+
 ```bash
 # Create a new IoT Hub
 azmcp iothub create --subscription <subscription> \
@@ -1272,6 +1274,44 @@ azmcp iothub update --subscription <subscription> \
                     --name <iothub-name> \
                     [--sku <sku>] \
                     [--capacity <capacity>]
+```
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --name <iothub-name> \
+                         [--max-count <max-count>]
+
+# Get device twin
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --name <iothub-name> \
+                             --device-id <device-id>
+
+# Update device twin
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --name <iothub-name> \
+                                --device-id <device-id> \
+                                --json-patch <json-patch>
+
+# Query device twins using IoT Hub query language
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin query --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --name <iothub-name> \
+                               --query <sql-query>
+
+# Example queries:
+# - List all devices: "SELECT * FROM devices"
+# - Filter by tag: "SELECT * FROM devices WHERE tags.environment = 'production'"
+# - Filter by property: "SELECT * FROM devices WHERE properties.reported.temperature > 75"
 ```
 
 ### Azure Marketplace Operations

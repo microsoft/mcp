@@ -202,12 +202,12 @@ public class IoTHubDeviceService(
         var expiry = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
         var resourceUri = Uri.EscapeDataString(hostname);
         var toSign = $"{resourceUri}\n{expiry}";
-        
+
         var keyBytes = Convert.FromBase64String(sharedAccessKey);
         using var hmac = new System.Security.Cryptography.HMACSHA256(keyBytes);
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(toSign));
         var signature = Uri.EscapeDataString(Convert.ToBase64String(hash));
-        
+
         return Task.FromResult($"sr={resourceUri}&sig={signature}&se={expiry}");
     }
 }
