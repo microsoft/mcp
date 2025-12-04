@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
@@ -11,6 +11,6 @@
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ToolMetadataExporter\ToolMetadataExporter.csproj" />
+    <ProjectReference Include="..\..\src\ToolMetadataExporter.csproj" />
   </ItemGroup>
 </Project>
