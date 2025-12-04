@@ -509,7 +509,7 @@ tools/Azure.Mcp.Tools.{Service}/
 ### Tool Description Quality Validation
 ```powershell
 # Validate command descriptions for AI agent compatibility
-pushd 'eng/tools/ToolDescriptionEvaluator'
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
 
 # Single prompt validation
 dotnet run -- --validate --tool-description "Get storage accounts in a subscription" --prompt "show me my storage accounts"
