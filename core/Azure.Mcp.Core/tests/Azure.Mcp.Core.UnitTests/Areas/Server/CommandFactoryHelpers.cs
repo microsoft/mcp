@@ -101,7 +101,9 @@ internal class CommandFactoryHelpers
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
         var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);

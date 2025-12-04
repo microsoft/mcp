@@ -513,6 +513,7 @@ function Get-ServerDetails {
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
+            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
         }
     }
 

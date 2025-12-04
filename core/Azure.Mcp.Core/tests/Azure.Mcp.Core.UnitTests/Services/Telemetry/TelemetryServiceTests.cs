@@ -20,7 +20,9 @@ public class TelemetryServiceTests
     {
         Name = "TestService",
         Version = "1.0.0",
-        IsTelemetryEnabled = true
+        IsTelemetryEnabled = true,
+        DisplayName = "Test Display",
+        RootCommandGroupName = "azmcp"
     };
     private readonly IOptions<AzureMcpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
@@ -149,7 +151,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -179,7 +183,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -210,7 +216,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -247,7 +255,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -279,7 +289,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
