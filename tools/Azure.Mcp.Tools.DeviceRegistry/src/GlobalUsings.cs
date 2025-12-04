@@ -1,0 +1,13 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+global using System.CommandLine;
+global using System.CommandLine.Parsing;
+global using Azure.Mcp.Core.Commands;
+global using Azure.Mcp.Core.Models;
+global using Azure.Mcp.Core.Models.Command;
+global using Azure.Mcp.Core.Options;
+global using Azure.Mcp.Core.Services.Azure;
+global using Azure.Mcp.Core.Services.Azure.Subscription;
+global using Azure.Mcp.Core.Services.Azure.Tenant;
+global using Microsoft.Extensions.Logging;
