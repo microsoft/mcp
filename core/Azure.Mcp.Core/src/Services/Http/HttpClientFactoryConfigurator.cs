@@ -83,6 +83,16 @@ public static class HttpClientFactoryConfigurator
     }
 
 #if DEBUG
+    /// <summary>
+    /// This function will only ever run in debug mode. It resolves the recording proxy URI either from from either a provided resolver function
+    /// or the TEST_PROXY_URL environment variable. This is necessary for livetest scenarios that directly invoke a service rather than going through CallToolAsync(),
+    /// as scenarios like this require that the proxy be set up at the ClientFactory level, where globally set environment variables would break other tests running in parallel.
+    /// 
+    /// See <see cref="RecordingRedirectHandler"/> for more details on how the recording proxy function is provided.
+    /// </summary>
+    /// <param name="recordingProxyResolver">Optional function that will resolve a proxy uri.</param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     private static Uri? ResolveRecordingProxy(Func<Uri?>? recordingProxyResolver)
     {
         Uri? proxyUri = null;
