@@ -62,9 +62,9 @@ function BuildServer($server) {
         $platforms = $server.platforms | Where-Object { $_.name -eq $PlatformName }
 
         if ($platforms.Count -eq 0) {
-            LogError "No build configuration found for $serverName on $os-$arch with Native=$Native and Trimmed=$Trimmed"
+            LogError "No build configuration found for $serverName with platform name $PlatformName"
             $script:exitCode = 1
-            continue
+            return
         }
     } else {
         $platforms = $server.platforms
@@ -189,9 +189,13 @@ if($PSCmdlet.ParameterSetName -eq 'SpecificPlatform') {
         $BuildInfoPath = "$RepoRoot/.work/build_info.json"
     }
 
-    $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
-
-    $servers = $buildInfo.servers
+    if (!(Test-Path $BuildInfoPath)) {
+        LogError "Build info file not found at path '$BuildInfoPath'. Please provide a valid path using -BuildInfoPath."
+        $exitCode = 1
+    } else {
+        $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+        $servers = $buildInfo.servers
+    }
 
     if ($ServerName) {
         $servers = $servers | Where-Object { $_.name -eq $ServerName }

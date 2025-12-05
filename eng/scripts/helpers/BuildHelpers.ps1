@@ -15,7 +15,7 @@ function Get-RepoRelativePath {
     )
 
     process {
-        $root = Resolve-Path (Join-Path $PSScriptRoot ".." "..")
+        $root = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
         $relativePath = Resolve-Path -LiteralPath $Path -Relative -RelativeBasePath $root
 
         # trim the leading ./
