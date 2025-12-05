@@ -147,7 +147,7 @@ function CreateServersWithPlatforms {
     $serverProjects | ForEach-Object {
         $serverName = $_.BaseName
         $projectPath = $_.FullName
-        $properties = . "$PsScriptRoot/Get-ProjectProperties.ps1" -Path $projectPath
+        $properties = . "$PSScriptRoot/Get-ProjectProperties.ps1" -Path $projectPath
 
         $platforms = @($OperatingSystems | ForEach-Object {
             $os = $osDetails | Where-Object name -eq $_
