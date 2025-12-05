@@ -19,7 +19,7 @@ public class IoTHubSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IIoTHubService, IoTHubService>();
-        services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
+        //services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
 
         services.AddSingleton<IoTHubCreateCommand>();
         services.AddSingleton<IoTHubGetCommand>();
@@ -27,10 +27,12 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IoTHubDeleteCommand>();
         services.AddSingleton<IoTHubKeysGetCommand>();
 
+        /*
         services.AddSingleton<IoTHubDeviceListCommand>();
         services.AddSingleton<IoTHubDeviceTwinGetCommand>();
         services.AddSingleton<IoTHubDeviceTwinUpdateCommand>();
         services.AddSingleton<IoTHubDeviceTwinQueryCommand>();
+        */
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -57,6 +59,7 @@ public class IoTHubSetup : IAreaSetup
         var keysGetCommand = serviceProvider.GetRequiredService<IoTHubKeysGetCommand>();
         hub.AddCommand(keysGetCommand.Name, keysGetCommand);
 
+        /*
         var device = new CommandGroup("device", "IoT Hub device registry operations.");
         iothub.AddSubGroup(device);
 
@@ -71,6 +74,7 @@ public class IoTHubSetup : IAreaSetup
 
         var deviceTwinQueryCommand = serviceProvider.GetRequiredService<IoTHubDeviceTwinQueryCommand>();
         device.AddCommand(deviceTwinQueryCommand.Name, deviceTwinQueryCommand);
+        */
 
         return iothub;
     }
