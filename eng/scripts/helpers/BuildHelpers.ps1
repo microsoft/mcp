@@ -1,3 +1,11 @@
+function Get-OperatingSystems {
+    return @(
+        @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
+        @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
+        @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
+    )
+}
+
 function Get-RepoRelativePath {
     [CmdletBinding()]
     param(
