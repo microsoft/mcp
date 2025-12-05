@@ -44,6 +44,11 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
     private async Task<string> _getClient()
     {
+        if (_cachedExecutable != null)
+        {
+            return _cachedExecutable;
+        }
+
         await s_downloadLock.WaitAsync();
         FileStream? lockStream = null;
         try
