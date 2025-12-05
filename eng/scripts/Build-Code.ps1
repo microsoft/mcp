@@ -150,7 +150,7 @@ function CreateServersWithPlatforms {
         $properties = . "$PsScriptRoot/Get-ProjectProperties.ps1" -Path $projectPath
 
         $platforms = @($OperatingSystems | ForEach-Object {
-            $os = $osDetails | Where-Object Name -eq -value $_
+            $os = $osDetails | Where-Object Name -eq $_
 
             if(-not $os) {
                 LogError "Unsupported operating system specified: '$_'. Supported OS are: $($osDetails.Name -join ', ')"
