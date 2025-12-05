@@ -88,7 +88,7 @@ public class DpsService(
             // Create ArmClient for deployments
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.Devices/provisioningServices",
-                "2022-12-12",
+                "2025-02-01-preview",
                 tenant,
                 retryPolicy);
 
@@ -222,6 +222,17 @@ public class DpsService(
             if (properties.TryGetProperty("state", out var state))
             {
                 instance.State = state.GetString();
+            }
+
+            if (properties.TryGetProperty("deviceRegistryNamespace", out var deviceRegistryNamespace))
+            {
+                if (deviceRegistryNamespace.TryGetProperty("resourceId", out var resourceId))
+                {
+                    instance.DeviceRegistryNamespace = new DeviceRegistryNamespaceProperties
+                    {
+                        ResourceId = resourceId.GetString()
+                    };
+                }
             }
         }
 

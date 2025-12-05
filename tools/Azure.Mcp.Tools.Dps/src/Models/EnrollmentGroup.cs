@@ -44,7 +44,7 @@ namespace Azure.Mcp.Tools.Dps.Models
         public string AllocationPolicy { get; set; } = string.Empty;
 
         [JsonPropertyName("iotHubs")]
-        public List<string> IotHubs { get; set; } = new();
+        public List<string> IotHubs { get; set; } = [];
 
         [JsonPropertyName("attestation")]
         public Attestation Attestation { get; set; } = new();
@@ -54,6 +54,9 @@ namespace Azure.Mcp.Tools.Dps.Models
 
         [JsonPropertyName("reprovisionPolicy")]
         public ReprovisionPolicy ReprovisionPolicy { get; set; } = new();
+
+        [JsonPropertyName("credentialPolicyName")]
+        public string CredentialPolicyName { get; set; } = string.Empty;
 
         [JsonPropertyName("etag")]
         public string Etag { get; set; } = string.Empty;
