@@ -63,15 +63,12 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
-        -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -Native:$$(Native)
+        -ServerName '${{ parameters.ServerName }}'
+        -PlatformName '$(PlatformName)'
         -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
-        -Trimmed:$$(Trimmed)
         -SingleFile
 
   - task: Powershell@2

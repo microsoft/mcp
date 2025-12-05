@@ -1,3 +1,11 @@
+function Get-OperatingSystems {
+    return @(
+        @{ Name = 'linux'; NodeName = 'linux'; DotNetName = 'linux'; Extension = '' }
+        @{ Name = 'macos'; NodeName = 'darwin'; DotNetName = 'osx'; Extension = '' }
+        @{ Name = 'windows'; NodeName = 'win32'; DotNetName = 'win'; Extension = '.exe' }
+    )
+}
+
 function Get-RepoRelativePath {
     [CmdletBinding()]
     param(
@@ -7,7 +15,7 @@ function Get-RepoRelativePath {
     )
 
     process {
-        $root = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
+        $root = Resolve-Path (Join-Path $PSScriptRoot ".." "..")
         $relativePath = Resolve-Path -LiteralPath $Path -Relative -RelativeBasePath $root
 
         # trim the leading ./
