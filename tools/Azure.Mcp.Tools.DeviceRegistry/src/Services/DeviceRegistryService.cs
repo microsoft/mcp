@@ -34,7 +34,7 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
             // List namespaces in a specific resource group
             var resourceGroup = await subscription.GetResourceGroupAsync(resourceGroupName, cancellationToken);
             var namespacesCollection = resourceGroup.Value.GetDeviceRegistryNamespaces();
-            
+
             await foreach (var ns in namespacesCollection.GetAllAsync(cancellationToken: cancellationToken))
             {
                 namespaces.Add(ns);
@@ -72,7 +72,7 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
         var credential = await GetCredential(tenantId, cancellationToken);
         var armClient = new ArmClient(credential);
         var subscription = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
-        
+
         var resourceGroup = await subscription.GetResourceGroupAsync(resourceGroupName, cancellationToken);
         var namespacesCollection = resourceGroup.Value.GetDeviceRegistryNamespaces();
 
@@ -116,12 +116,12 @@ public sealed class DeviceRegistryService(ITenantService tenantService) : BaseAz
         var credential = await GetCredential(tenantId, cancellationToken);
         var armClient = new ArmClient(credential);
         var subscription = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
-        
+
         var resourceGroup = await subscription.GetResourceGroupAsync(resourceGroupName, cancellationToken);
         var namespacesCollection = resourceGroup.Value.GetDeviceRegistryNamespaces();
 
         var namespaceResource = await namespacesCollection.GetAsync(namespaceName, cancellationToken);
-        
+
         return namespaceResource.Value;
     }
 }

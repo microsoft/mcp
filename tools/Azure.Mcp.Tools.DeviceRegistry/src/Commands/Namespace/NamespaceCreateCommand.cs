@@ -77,7 +77,7 @@ public sealed class NamespaceCreateCommand(ILogger<NamespaceCreateCommand> logge
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>("--name");
         options.Location = parseResult.GetValueOrDefault<string>("--location");
-        
+
         var tags = parseResult.GetValueOrDefault<string[]>("--tags");
         if (tags != null && tags.Length > 0)
         {
@@ -91,9 +91,9 @@ public sealed class NamespaceCreateCommand(ILogger<NamespaceCreateCommand> logge
                 }
             }
         }
-        
+
         options.EnableSystemAssignedIdentity = parseResult.GetValueOrDefault<bool>("--enable-system-assigned-identity");
-        
+
         return options;
     }
 

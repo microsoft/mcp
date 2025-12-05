@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Dps.Options.Instance;
 
 /// <summary>
 /// Options for creating a DPS instance.
 /// </summary>
-public class InstanceCreateOptions : BaseDpsOptions
+public class InstanceCreateOptions : SubscriptionOptions
 {
     /// <summary>
     /// Gets or sets the name of the DPS instance to create.

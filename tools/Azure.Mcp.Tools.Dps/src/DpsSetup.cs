@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Dps.Commands.EnrollmentGroup;
 using Azure.Mcp.Tools.Dps.Commands.Instance;
 using Azure.Mcp.Tools.Dps.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,11 @@ public class DpsSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IDpsService, DpsService>();
+        services.AddSingleton<IEnrollmentGroupService, EnrollmentGroupService>();
         services.AddSingleton<InstanceListCommand>();
+        services.AddSingleton<EnrollmentGroupListCommand>();
+        services.AddSingleton<EnrollmentGroupGetCommand>();
+        services.AddSingleton<EnrollmentGroupCreateCommand>();
         services.AddSingleton<InstanceCreateCommand>();
     }
 
@@ -38,11 +43,23 @@ public class DpsSetup : IAreaSetup
         dps.AddSubGroup(instance);
 
         // Register instance commands
-        var instanceList = serviceProvider.GetRequiredService<InstanceListCommand>();
+        InstanceListCommand instanceList = serviceProvider.GetRequiredService<InstanceListCommand>();
         instance.AddCommand(instanceList.Name, instanceList);
 
         var instanceCreate = serviceProvider.GetRequiredService<InstanceCreateCommand>();
         instance.AddCommand(instanceCreate.Name, instanceCreate);
+
+        var enrollmentGroup = new CommandGroup("enrollmentGroup", "DPS enrollment group operations - Commands for listing and viewing enrollment groups within a Device Provisioning Service instance.");
+        dps.AddSubGroup(enrollmentGroup);
+
+        EnrollmentGroupListCommand enrollmentGroupList = serviceProvider.GetRequiredService<EnrollmentGroupListCommand>();
+        enrollmentGroup.AddCommand(enrollmentGroupList.Name, enrollmentGroupList);
+
+        EnrollmentGroupGetCommand enrollmentGroupGet = serviceProvider.GetRequiredService<EnrollmentGroupGetCommand>();
+        enrollmentGroup.AddCommand(enrollmentGroupGet.Name, enrollmentGroupGet);
+
+        EnrollmentGroupCreateCommand enrollmentGroupCreate = serviceProvider.GetRequiredService<EnrollmentGroupCreateCommand>();
+        enrollmentGroup.AddCommand(enrollmentGroupCreate.Name, enrollmentGroupCreate);
 
         return dps;
     }
