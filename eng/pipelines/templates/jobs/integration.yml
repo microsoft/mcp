@@ -39,7 +39,7 @@ jobs:
       PathToArtifacts: $(Pipeline.Workspace)/packages_npm
       Registry: https://dev.azure.com/1es-mcp/1es-mcp/_artifacts/feed/1es-mcp-registry
       Tag: dev
-      CustomEndpoint: 'Azure SDK Artifacts'
+      CustomEndpoint: 'Azure SDK MCP Server Connection'
 
   - task: 1ES.PublishNuget@1
     displayName: Publish Nuget packages to dev feed
