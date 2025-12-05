@@ -40,15 +40,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(_ =>
-        {
-            if (fixture.Proxy?.BaseUri is string proxyUrl && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
-            {
-                return proxyUri;
-            }
-
-            return null;
-        });
+        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);

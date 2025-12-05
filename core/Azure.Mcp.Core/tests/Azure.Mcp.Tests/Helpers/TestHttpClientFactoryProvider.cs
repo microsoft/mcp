@@ -4,6 +4,7 @@
 using System;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Http;
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tests.Helpers;
@@ -20,13 +21,28 @@ public static class TestHttpClientFactoryProvider
     /// <returns>
     /// A <see cref="ServiceProvider"/> containing the configured HTTP client services for use in tests.
     /// </returns>
-    public static ServiceProvider Create(Func<IServiceProvider, Uri?>? recordingProxyResolver = null)
+    public static ServiceProvider Create(TestProxyFixture? fixture = null)
     {
         var services = new ServiceCollection();
         services.AddOptions();
         services.Configure<HttpClientOptions>(_ => { });
         services.Configure<ServiceStartOptions>(_ => { });
         services.AddHttpClient();
+        Func<IServiceProvider, Uri?>? recordingProxyResolver = null;
+
+        if (fixture != null)
+        {
+            recordingProxyResolver = _ =>
+            {
+                if (fixture.Proxy?.BaseUri is string proxyUrl && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
+                {
+                    return proxyUri;
+                }
+
+                return null;
+            };
+        }
+
         services.ConfigureDefaultHttpClient(recordingProxyResolver);
         return services.BuildServiceProvider();
     }
