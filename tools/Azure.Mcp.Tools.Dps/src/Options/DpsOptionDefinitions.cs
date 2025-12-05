@@ -17,4 +17,23 @@ public static class DpsOptionDefinitions
         Description = "The name of the Device Provisioning Service instance.",
         Required = false
     };
+
+    public const string HostnameName = "hostname";
+
+    public static readonly Option<string> Hostname = new(
+    $"--{HostnameName}")
+    {
+        Description = "The hostname of the Device Provisioning Service instance.",
+        Required = true,
+    };
+
+    public const string EnrollmentGroupIdName = "enrollmentGroupId";
+
+    public static readonly Option<string> EnrollmentGroupId = new(
+        $"--{EnrollmentGroupIdName}"
+    )
+    {
+        Description = "The ID of the enrollment group.",
+        Required = false
+    };
 }
