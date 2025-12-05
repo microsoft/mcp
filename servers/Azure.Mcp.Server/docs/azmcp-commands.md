@@ -204,22 +204,6 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
-
-### Azure AI Best Practices
-
-```bash
-# Get best practices for building AI applications, workflows and agents in Azure
-# Call this before generating code for any AI application, building with Microsoft Foundry models,
-# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azureaibestpractices get
-
-# Includes guidance on:
-#   - Microsoft Agent Framework usage and patterns
-#   - Microsoft Foundry model selection
-#   - Best practices for ai app / agent development in Azure
-```
-
 ### Azure AI Search Operations
 
 ```bash
@@ -1286,6 +1270,16 @@ azmcp get bestpractices get --resource <resource> --action <action>
 #   code-generation - Best practices for code generation (for general and azurefunctions)
 #   deployment      - Best practices for deployment (for general and azurefunctions)
 
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Microsoft Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+azmcp get bestpractices ai_app
+
+# AI App Development:
+#   ai_app - Comprehensive guidance for AI applications including:
+#     • Microsoft Agent Framework usage and patterns
+#     • Microsoft Foundry model selection
+#     • Best practices for AI app/agent development in Azure
 ```
 
 ### Azure MCP Tools
