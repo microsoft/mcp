@@ -1669,6 +1669,7 @@ dotnet build --verbosity normal | Select-String "warning"
 // Only what's actually used in this file
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 ```
 
 ✅ **Add using statements for better readability:**

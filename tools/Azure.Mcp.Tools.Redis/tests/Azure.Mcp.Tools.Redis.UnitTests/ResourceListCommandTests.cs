@@ -3,8 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
@@ -12,6 +10,7 @@ using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

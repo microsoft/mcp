@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
-
 namespace Azure.Mcp.Core.Services.Http;
 
 /// <summary>
