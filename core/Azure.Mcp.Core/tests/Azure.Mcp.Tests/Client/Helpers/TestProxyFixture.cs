@@ -51,5 +51,15 @@ namespace Azure.Mcp.Tests.Client.Helpers
             }
             return ValueTask.CompletedTask;
         }
+
+        public Uri? GetProxyUri()
+        {
+            if (Proxy?.BaseUri is string proxyUrl && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
+            {
+                return proxyUri;
+            }
+
+            return null;
+        }
     }
 }
