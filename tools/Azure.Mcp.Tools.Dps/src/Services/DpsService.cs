@@ -88,7 +88,7 @@ public class DpsService(
             // Create ArmClient for deployments
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.Devices/provisioningServices",
-                "2022-12-12",
+                "2025-02-01-preview",
                 tenant,
                 retryPolicy);
 
