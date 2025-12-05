@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -30,16 +31,18 @@ public static class HttpClientFactoryConfigurator
         s_platform = RuntimeInformation.OSDescription;
     }
 
-    public static IServiceCollection ConfigureDefaultHttpClient(this IServiceCollection services)
+    public static IServiceCollection ConfigureDefaultHttpClient(
+        this IServiceCollection services,
+        Func<Uri?>? recordingProxyResolver = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.ConfigureHttpClientDefaults(ConfigureHttpClientBuilder);
+        services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
         return services;
     }
 
-    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder)
+    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder, Func<Uri?>? recordingProxyResolver)
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
@@ -50,15 +53,12 @@ public static class HttpClientFactoryConfigurator
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 
-        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
-        {
-            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-            return CreateHttpMessageHandler(httpClientOptions);
-        });
+        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider => CreateHttpMessageHandler(serviceProvider, recordingProxyResolver));
     }
 
-    private static HttpMessageHandler CreateHttpMessageHandler(HttpClientOptions options)
+    private static HttpMessageHandler CreateHttpMessageHandler(IServiceProvider serviceProvider, Func<Uri?>? recordingProxyResolver)
     {
+        var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
         var handler = new HttpClientHandler();
 
         var proxy = CreateProxy(options);
@@ -69,8 +69,8 @@ public static class HttpClientFactoryConfigurator
         }
 
 #if DEBUG
-        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
+        var proxyUri = ResolveRecordingProxy(recordingProxyResolver);
+        if (proxyUri != null)
         {
             return new RecordingRedirectHandler(proxyUri)
             {
@@ -81,6 +81,43 @@ public static class HttpClientFactoryConfigurator
 
         return handler;
     }
+
+#if DEBUG
+    /// <summary>
+    /// This function will only ever run in debug mode. It resolves the recording proxy URI either from from either a provided resolver function
+    /// or the TEST_PROXY_URL environment variable. This is necessary for livetest scenarios that directly invoke a service rather than going through CallToolAsync(),
+    /// as scenarios like this require that the proxy be set up at the ClientFactory level, where globally set environment variables would break other tests running in parallel.
+    /// 
+    /// See <see cref="RecordingRedirectHandler"/> for more details on how the recording proxy function is provided.
+    /// </summary>
+    /// <param name="recordingProxyResolver">Optional function that will resolve a proxy uri.</param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static Uri? ResolveRecordingProxy(Func<Uri?>? recordingProxyResolver)
+    {
+        Uri? proxyUri = null;
+
+        if (recordingProxyResolver != null)
+        {
+            proxyUri = recordingProxyResolver();
+            if (proxyUri != null && !proxyUri.IsAbsoluteUri)
+            {
+                throw new InvalidOperationException("Recording proxy resolver must return an absolute URI.");
+            }
+        }
+
+        if (proxyUri == null)
+        {
+            var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+            if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var envProxy))
+            {
+                proxyUri = envProxy;
+            }
+        }
+
+        return proxyUri;
+    }
+#endif
 
     private static WebProxy? CreateProxy(HttpClientOptions options)
     {
