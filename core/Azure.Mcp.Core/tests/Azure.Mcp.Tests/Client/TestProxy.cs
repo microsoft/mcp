@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Azure.Mcp.Tests.Generated;
 
 namespace Azure.Mcp.Tests.Client;
@@ -36,12 +36,45 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
+    private static readonly Mutex s_crossProcessDownloadMutex = CreateDownloadMutex();
+
+    private static Mutex CreateDownloadMutex()
+    {
+        string name = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "Global\\AzureMcpTestProxyDownload"
+            : "AzureMcpTestProxyDownload";
+
+        try
+        {
+            return new Mutex(initiallyOwned: false, name);
+        }
+        catch
+        {
+            // Fallback to unnamed mutex if named mutex cannot be created (e.g., due to permissions).
+            return new Mutex(initiallyOwned: false);
+        }
+    }
 
     private async Task<string> _getClient()
     {
         await s_downloadLock.WaitAsync();
+        bool mutexAcquired = false;
         try
         {
+            try
+            {
+                mutexAcquired = s_crossProcessDownloadMutex.WaitOne(TimeSpan.FromMinutes(5));
+            }
+            catch (AbandonedMutexException)
+            {
+                mutexAcquired = true;
+            }
+
+            if (!mutexAcquired)
+            {
+                throw new TimeoutException("Timed out waiting for test proxy download mutex.");
+            }
+
             if (_cachedExecutable != null)
             {
                 return _cachedExecutable;
@@ -85,6 +118,10 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         finally
         {
+            if (mutexAcquired)
+            {
+                s_crossProcessDownloadMutex.ReleaseMutex();
+            }
             s_downloadLock.Release();
         }
 
