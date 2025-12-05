@@ -23,25 +23,13 @@ public static class TestHttpClientFactoryProvider
     /// </returns>
     public static ServiceProvider Create(TestProxyFixture? fixture = null)
     {
+        Func<Uri?>? recordingProxyResolver = fixture == null ? null : fixture.GetProxyUri;
+
         var services = new ServiceCollection();
         services.AddOptions();
         services.Configure<HttpClientOptions>(_ => { });
         services.Configure<ServiceStartOptions>(_ => { });
         services.AddHttpClient();
-        Func<IServiceProvider, Uri?>? recordingProxyResolver = null;
-
-        if (fixture != null)
-        {
-            recordingProxyResolver = _ =>
-            {
-                if (fixture.Proxy?.BaseUri is string proxyUrl && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
-                {
-                    return proxyUri;
-                }
-
-                return null;
-            };
-        }
 
         services.ConfigureDefaultHttpClient(recordingProxyResolver);
         return services.BuildServiceProvider();

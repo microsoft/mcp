@@ -33,7 +33,7 @@ public static class HttpClientFactoryConfigurator
 
     public static IServiceCollection ConfigureDefaultHttpClient(
         this IServiceCollection services,
-        Func<IServiceProvider, Uri?>? recordingProxyResolver = null)
+        Func<Uri?>? recordingProxyResolver = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -42,7 +42,7 @@ public static class HttpClientFactoryConfigurator
         return services;
     }
 
-    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder, Func<IServiceProvider, Uri?>? recordingProxyResolver)
+    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder, Func<Uri?>? recordingProxyResolver)
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
@@ -53,13 +53,10 @@ public static class HttpClientFactoryConfigurator
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 
-        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
-        {
-            return CreateHttpMessageHandler(serviceProvider, recordingProxyResolver);
-        });
+        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider => CreateHttpMessageHandler(serviceProvider, recordingProxyResolver));
     }
 
-    private static HttpMessageHandler CreateHttpMessageHandler(IServiceProvider serviceProvider, Func<IServiceProvider, Uri?>? recordingProxyResolver)
+    private static HttpMessageHandler CreateHttpMessageHandler(IServiceProvider serviceProvider, Func<Uri?>? recordingProxyResolver)
     {
         var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
         var handler = new HttpClientHandler();
@@ -72,7 +69,7 @@ public static class HttpClientFactoryConfigurator
         }
 
 #if DEBUG
-        var proxyUri = ResolveRecordingProxy(serviceProvider, recordingProxyResolver);
+        var proxyUri = ResolveRecordingProxy(recordingProxyResolver);
         if (proxyUri != null)
         {
             return new RecordingRedirectHandler(proxyUri)
@@ -86,13 +83,13 @@ public static class HttpClientFactoryConfigurator
     }
 
 #if DEBUG
-    private static Uri? ResolveRecordingProxy(IServiceProvider serviceProvider, Func<IServiceProvider, Uri?>? recordingProxyResolver)
+    private static Uri? ResolveRecordingProxy(Func<Uri?>? recordingProxyResolver)
     {
         Uri? proxyUri = null;
 
         if (recordingProxyResolver != null)
         {
-            proxyUri = recordingProxyResolver(serviceProvider);
+            proxyUri = recordingProxyResolver();
             if (proxyUri != null && !proxyUri.IsAbsoluteUri)
             {
                 throw new InvalidOperationException("Recording proxy resolver must return an absolute URI.");
