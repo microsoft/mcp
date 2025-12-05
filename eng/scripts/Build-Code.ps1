@@ -150,19 +150,19 @@ function CreateServersWithPlatforms {
         $properties = . "$PsScriptRoot/Get-ProjectProperties.ps1" -Path $projectPath
 
         $platforms = @($OperatingSystems | ForEach-Object {
-            $os = $osDetails | Where-Object name -eq $_
+            $os = $osDetails | Where-Object Name -eq $_
 
             if(-not $os) {
-                LogError "Unsupported operating system specified: '$_'. Supported OS are: $($osDetails.name -join ', ')"
+                LogError "Unsupported operating system specified: '$_'. Supported OS are: $($osDetails.Name -join ', ')"
                 $script:exitCode = 1
                 return
             }
 
             $Architectures | ForEach-Object {
-                $platform = "$($os.name)-$_"
+                $platform = "$($os.Name)-$_"
                 [ordered]@{
                     name = $platform
-                    dotnetOs = $os.dotnetName
+                    dotnetOs = $os.DotNetName
                     architecture = $_
                     artifactPath = "$serverName/$platform"
                     native = $Native

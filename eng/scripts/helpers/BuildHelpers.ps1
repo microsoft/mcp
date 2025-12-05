@@ -1,8 +1,8 @@
 function Get-OperatingSystems {
     return @(
-        @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
-        @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
-        @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
+        @{ Name = 'linux'; NodeName = 'linux'; DotNetName = 'linux'; Extension = '' }
+        @{ Name = 'macos'; NodeName = 'darwin'; DotNetName = 'osx'; Extension = '' }
+        @{ Name = 'windows'; NodeName = 'win32'; DotNetName = 'win'; Extension = '.exe' }
     )
 }
 

@@ -431,18 +431,18 @@ function Get-ServerDetails {
         $platforms = @()
         foreach ($os in $operatingSystems) {
             foreach ($arch in $architectures) {
-                $name = "$($os.name)-$arch"
+                $name = "$($os.Name)-$arch"
                 $nativeName = "$name-native"
 
                 if ($excludedPlatforms -notcontains $name) {
                     $platforms += [ordered]@{
                         name = $name
                         artifactPath = "$serverName/$name"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
+                        operatingSystem = $os.Name
+                        nodeOs = $os.NodeName
+                        dotnetOs = $os.DotNetName
                         architecture = $arch
-                        extension = $os.extension
+                        extension = $os.Extension
                         native = $false
                         trimmed = $true
                     }
@@ -456,11 +456,11 @@ function Get-ServerDetails {
                     $platforms += [ordered]@{
                         name = $nativeName
                         artifactPath = "$serverName/$nativeName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
+                        operatingSystem = $os.Name
+                        nodeOs = $os.NodeName
+                        dotnetOs = $os.DotNetName
                         architecture = $arch
-                        extension = $os.extension
+                        extension = $os.Extension
                         native = $true
                         trimmed = $false
                     }
@@ -471,11 +471,11 @@ function Get-ServerDetails {
                     $platforms += [ordered]@{
                         name = $untrimmedName
                         artifactPath = "$serverName/$untrimmedName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
+                        operatingSystem = $os.Name
+                        nodeOs = $os.NodeName
+                        dotnetOs = $os.DotNetName
                         architecture = $arch
-                        extension = $os.extension
+                        extension = $os.Extension
                         native = $false
                         trimmed = $false
                         specialPurpose = 'untrimmed'
@@ -522,7 +522,7 @@ function Get-BuildMatrices {
     Write-Host "Forming build matrices"
     $matrices = [ordered]@{}
 
-    foreach ($os in $operatingSystems.name) {
+    foreach ($os in $operatingSystems.Name) {
         $buildMatrix = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
 
