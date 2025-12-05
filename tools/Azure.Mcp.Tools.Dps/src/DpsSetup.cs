@@ -27,6 +27,7 @@ public class DpsSetup : IAreaSetup
         services.AddSingleton<EnrollmentGroupListCommand>();
         services.AddSingleton<EnrollmentGroupGetCommand>();
         services.AddSingleton<EnrollmentGroupCreateCommand>();
+        services.AddSingleton<InstanceCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -44,6 +45,9 @@ public class DpsSetup : IAreaSetup
         // Register instance commands
         InstanceListCommand instanceList = serviceProvider.GetRequiredService<InstanceListCommand>();
         instance.AddCommand(instanceList.Name, instanceList);
+
+        var instanceCreate = serviceProvider.GetRequiredService<InstanceCreateCommand>();
+        instance.AddCommand(instanceCreate.Name, instanceCreate);
 
         var enrollmentGroup = new CommandGroup("enrollmentGroup", "DPS enrollment group operations - Commands for listing and viewing enrollment groups within a Device Provisioning Service instance.");
         dps.AddSubGroup(enrollmentGroup);

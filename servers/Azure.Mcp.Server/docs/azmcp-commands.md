@@ -1253,6 +1253,79 @@ azmcp loadtesting testrun update --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp grafana list --subscription <subscription>
 ```
+### Azure IoT Hub Operations
+
+#### Hub Management
+
+```bash
+# Create a new IoT Hub
+azmcp iothub create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name> \
+                    --location <location> \
+                    --sku <sku> \
+                    --capacity <capacity>
+
+# Delete an IoT Hub
+azmcp iothub delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name>
+
+# Get IoT Hub details or list all IoT Hubs in a subscription
+azmcp iothub get --subscription <subscription> \
+                 [--resource-group <resource-group>] \
+                 [--name <iothub-name>]
+
+# Get keys for an IoT Hub
+azmcp iothub keys --subscription <subscription> \
+                  --resource-group <resource-group> \
+                  --name <iothub-name>
+
+# Update an existing IoT Hub
+azmcp iothub update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --name <iothub-name> \
+                    [--sku <sku>] \
+                    [--capacity <capacity>]
+```
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --name <iothub-name> \
+                         [--max-count <max-count>]
+
+# Get device twin
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --name <iothub-name> \
+                             --device-id <device-id>
+
+# Update device twin
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --name <iothub-name> \
+                                --device-id <device-id> \
+                                --json-patch <json-patch>
+
+# Query device twins using IoT Hub query language
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub device twin query --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --name <iothub-name> \
+                               --query <sql-query>
+
+# Example queries:
+# - List all devices: "SELECT * FROM devices"
+# - Filter by tag: "SELECT * FROM devices WHERE tags.environment = 'production'"
+# - Filter by property: "SELECT * FROM devices WHERE properties.reported.temperature > 75"
+```
 
 ### Azure Marketplace Operations
 

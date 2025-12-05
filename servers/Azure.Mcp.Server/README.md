@@ -554,6 +554,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Functions** - Function App management
+- 🌐 **Azure IoT Hub** - IoT device management and messaging
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
