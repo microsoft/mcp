@@ -128,12 +128,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // start MCP client with proxy URL available
         await base.InitializeAsyncInternal(fixture);
 
-        // ensure that clients use the test proxy URL
-        if (fixture.Proxy != null && fixture.Proxy.BaseUri != null)
-        {
-            Environment.SetEnvironmentVariable("TEST_PROXY_URL", fixture.Proxy.BaseUri.ToString());
-        }
-
         // start recording/playback session
         await StartRecordOrPlayback();
 

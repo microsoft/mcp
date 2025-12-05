@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -30,16 +31,18 @@ public static class HttpClientFactoryConfigurator
         s_platform = RuntimeInformation.OSDescription;
     }
 
-    public static IServiceCollection ConfigureDefaultHttpClient(this IServiceCollection services)
+    public static IServiceCollection ConfigureDefaultHttpClient(
+        this IServiceCollection services,
+        Func<IServiceProvider, Uri?>? recordingProxyResolver = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.ConfigureHttpClientDefaults(ConfigureHttpClientBuilder);
+        services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
         return services;
     }
 
-    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder)
+    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder, Func<IServiceProvider, Uri?>? recordingProxyResolver)
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
@@ -52,13 +55,13 @@ public static class HttpClientFactoryConfigurator
 
         builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
         {
-            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-            return CreateHttpMessageHandler(httpClientOptions);
+            return CreateHttpMessageHandler(serviceProvider, recordingProxyResolver);
         });
     }
 
-    private static HttpMessageHandler CreateHttpMessageHandler(HttpClientOptions options)
+    private static HttpMessageHandler CreateHttpMessageHandler(IServiceProvider serviceProvider, Func<IServiceProvider, Uri?>? recordingProxyResolver)
     {
+        var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
         var handler = new HttpClientHandler();
 
         var proxy = CreateProxy(options);
@@ -69,8 +72,8 @@ public static class HttpClientFactoryConfigurator
         }
 
 #if DEBUG
-        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
+        var proxyUri = ResolveRecordingProxy(serviceProvider, recordingProxyResolver);
+        if (proxyUri != null)
         {
             return new RecordingRedirectHandler(proxyUri)
             {
@@ -81,6 +84,33 @@ public static class HttpClientFactoryConfigurator
 
         return handler;
     }
+
+#if DEBUG
+    private static Uri? ResolveRecordingProxy(IServiceProvider serviceProvider, Func<IServiceProvider, Uri?>? recordingProxyResolver)
+    {
+        Uri? proxyUri = null;
+
+        if (recordingProxyResolver != null)
+        {
+            proxyUri = recordingProxyResolver(serviceProvider);
+            if (proxyUri != null && !proxyUri.IsAbsoluteUri)
+            {
+                throw new InvalidOperationException("Recording proxy resolver must return an absolute URI.");
+            }
+        }
+
+        if (proxyUri == null)
+        {
+            var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+            if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var envProxy))
+            {
+                proxyUri = envProxy;
+            }
+        }
+
+        return proxyUri;
+    }
+#endif
 
     private static WebProxy? CreateProxy(HttpClientOptions options)
     {
