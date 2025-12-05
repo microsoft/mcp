@@ -35,7 +35,7 @@ public static class IaCRulesTemplateUtil
         parameters.DeploymentToolRules = GenerateDeploymentToolRules(parameters);
         parameters.IacTypeRules = GenerateIaCTypeRules(parameters);
         parameters.ResourceSpecificRules = GenerateResourceSpecificRules(parameters);
-        parameters.FinalInstructions =  GenerateFinalInstructions(parameters);
+        parameters.FinalInstructions = GenerateFinalInstructions(parameters);
         parameters.RequiredTools = BuildRequiredTools(deploymentTool, resourceTypes);
         parameters.AdditionalNotes = BuildAdditionalNotes(deploymentTool, iacType);
 
