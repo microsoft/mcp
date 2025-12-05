@@ -179,11 +179,7 @@ function CreateServersWithPlatforms {
     }
 }
 
-$servers = @()
-
-if ($PSCmdlet.ParameterSetName -eq 'CustomPlatform') {
-    $servers = CreateServersWithPlatforms
-} else {
+function GetServersFromBuildInfo {
     if (!$BuildInfoPath) {
         $BuildInfoPath = "$RepoRoot/.work/build_info.json"
     }
@@ -203,6 +199,16 @@ if ($PSCmdlet.ParameterSetName -eq 'CustomPlatform') {
             exit 1
         }
     }
+
+    return $servers
+}
+
+$servers = @()
+
+if ($PSCmdlet.ParameterSetName -eq 'CustomPlatform') {
+    $servers = CreateServersWithPlatforms
+} else {
+    $servers = GetServersFromBuildInfo
 }
 
 # Exit early if there were parameter errors
