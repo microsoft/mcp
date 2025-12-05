@@ -36,6 +36,10 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedRootDir;
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
+
+    /// <summary>
+    /// In-process synchronization lock to avoid proxy exe mismanagement.
+    /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
     private async Task<string> _getClient()
@@ -96,6 +100,14 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedExecutable;
     }
 
+    /// <summary>
+    /// Multiple test assemblies are likely to be running in the same process due to MCP repo's usage of dotnet test
+    ///
+    /// This can lead to race conditions on making the proxy exe available on disk. To avoid this, we use a semaphore slim
+    /// to maintain in-process synchronization, and a file lock to maintain cross-process synchronization.
+    /// </summary>
+    /// <param name="proxyDirectory"></param>
+    /// <returns></returns>
     private static async Task<FileStream> AcquireDownloadLockAsync(string proxyDirectory)
     {
         var lockPath = Path.Combine(proxyDirectory, ".download.lock");

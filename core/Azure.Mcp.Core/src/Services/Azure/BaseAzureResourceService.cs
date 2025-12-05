@@ -35,7 +35,7 @@ public abstract class BaseAzureResourceService(
     {
         if (tenantId == null)
         {
-            throw new ArgumentException("Tenant ID cannot be null or empty", nameof(tenantId));
+            throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
         }
 
         // Get all tenants and find the matching one (GetTenants already has caching)
