@@ -223,6 +223,17 @@ public class DpsService(
             {
                 instance.State = state.GetString();
             }
+
+            if (properties.TryGetProperty("deviceRegistryNamespace", out var deviceRegistryNamespace))
+            {
+                if (deviceRegistryNamespace.TryGetProperty("resourceId", out var resourceId))
+                {
+                    instance.DeviceRegistryNamespace = new DeviceRegistryNamespaceProperties
+                    {
+                        ResourceId = resourceId.GetString()
+                    };
+                }
+            }
         }
 
         // Extract SKU if available

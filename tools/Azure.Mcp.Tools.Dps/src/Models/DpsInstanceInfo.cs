@@ -75,4 +75,13 @@ public record DpsInstanceInfo
     /// </summary>
     [JsonPropertyName("state")]
     public string? State { get; set; }
+
+    [JsonPropertyName("deviceRegistryNamespace")]
+    public DeviceRegistryNamespaceProperties? DeviceRegistryNamespace { get; set; }
+}
+
+public record DeviceRegistryNamespaceProperties
+{
+    [JsonPropertyName("resourceId")]
+    public string? ResourceId { get; set; }
 }

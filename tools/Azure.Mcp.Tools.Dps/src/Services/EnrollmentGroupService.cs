@@ -40,7 +40,7 @@ public class EnrollmentGroupService(
     ITenantService tenantService) : BaseAzureResourceService(subscriptionService, tenantService), IEnrollmentGroupService
 {
     private readonly ILogger<EnrollmentGroupService> _logger = logger;
-    private const string ApiVersion = "2021-10-01";
+    private const string ApiVersion = "2025-07-01-preview";
     private static readonly string[] s_scopes = ["https://azure-devices-provisioning.net/.default"];
 
     private async Task<HttpClient> GetHttpClientAsync(
