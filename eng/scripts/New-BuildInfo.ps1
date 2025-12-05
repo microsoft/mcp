@@ -558,12 +558,9 @@ function Get-BuildMatrices {
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
             $buildMatrix[$legName] = [ordered]@{
-                PlatformName = $platform.name
+                BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
-                Architecture = $arch
-                Native = $platform.native
-                Trimmed = $platform.trimmed
                 RunUnitTests = $runUnitTests
                 RunRecordedTests = $runRecordedTests
             }

@@ -66,7 +66,7 @@ jobs:
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
         -ServerName '${{ parameters.ServerName }}'
-        -PlatformName '$(PlatformName)'
+        -PlatformName '$(BuildPlatformName)'
         -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
         -SingleFile
@@ -104,7 +104,7 @@ jobs:
     condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
-      testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
+      testRunTitle: "unit_$(System.JobName)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
@@ -113,7 +113,7 @@ jobs:
     condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/recordedTestResults/*.trx"
-      testRunTitle: "recorded-${{ parameters.OSName }}-$(Architecture)"
+      testRunTitle: "recorded_$(System.JobName)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
