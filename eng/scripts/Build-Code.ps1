@@ -1,8 +1,8 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
-# When calling with BuildInfoPath or PlatformName, we build according to the platform definitions in build_info.json
-# file.  Otherwise, we build based on the custom build parameters.
+# When calling with BuildInfoPath or PlatformName, we build according to the platform definitions in build_info.json.
+# Otherwise, we build based on the custom build parameters.
 [CmdletBinding(DefaultParameterSetName='CustomPlatform')]
 param (
     # Common Parameters
