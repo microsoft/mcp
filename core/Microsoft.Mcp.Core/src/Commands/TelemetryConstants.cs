@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.Mcp.Core.Commands;
+namespace Azure.Mcp.Core.Services.Telemetry;
 
 /// <summary>
 /// Name of tags published.

@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.SignalR.Options;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 

@@ -6,11 +6,13 @@ using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Telemetry;
 
-namespace Microsoft.Mcp.Core.Commands;
+namespace Azure.Mcp.Core.Commands;
 
 public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
 {

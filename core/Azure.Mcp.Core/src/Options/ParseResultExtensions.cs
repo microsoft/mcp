@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
-using Microsoft.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Options;
 

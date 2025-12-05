@@ -3,7 +3,7 @@
 
 using System.Net;
 
-namespace Microsoft.Mcp.Core.Commands;
+namespace Azure.Mcp.Core.Exceptions;
 
 /// <summary>
 /// Represents a structured validation failure during command handling.

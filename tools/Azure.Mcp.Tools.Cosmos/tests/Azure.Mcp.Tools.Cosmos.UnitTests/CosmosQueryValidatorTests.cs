@@ -1,5 +1,5 @@
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Tools.Cosmos.Validation;
-using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;

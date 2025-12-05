@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;

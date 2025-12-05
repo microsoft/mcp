@@ -3,7 +3,7 @@
 
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp;
 

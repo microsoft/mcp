@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Workbooks;
 

@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.Mcp.Core.Models.Metadata;
+namespace Azure.Mcp.Core.Models.Metadata;
 
 public sealed class MetadataDefinition
 {

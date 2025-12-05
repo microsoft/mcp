@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Data.Common;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.UnitTests.Services.Support;
-using Microsoft.Mcp.Core.Commands;
 using Npgsql;
 using NSubstitute;
 using Xunit;

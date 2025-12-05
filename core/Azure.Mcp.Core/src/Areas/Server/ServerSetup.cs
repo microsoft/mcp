@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Commands;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Server;
 

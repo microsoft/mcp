@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Services.Telemetry;

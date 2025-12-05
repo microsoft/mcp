@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Server.Models;
 

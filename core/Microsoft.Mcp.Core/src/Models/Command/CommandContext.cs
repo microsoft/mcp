@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Mcp.Core.Models.Command;
+namespace Azure.Mcp.Core.Models.Command;
 
 /// <summary>
 /// Provides context for command execution including service access and response management

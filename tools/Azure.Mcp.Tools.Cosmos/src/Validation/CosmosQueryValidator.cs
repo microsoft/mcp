@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using Microsoft.Mcp.Core.Commands;
+using Azure.Mcp.Core.Exceptions;
 
 namespace Azure.Mcp.Tools.Cosmos.Validation;
 

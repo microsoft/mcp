@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 
-namespace Microsoft.Mcp.Core.Extensions;
+namespace Azure.Mcp.Core.Extensions;
 
 public static class CommandResultExtensions
 {

@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Metadata;
+using Azure.Mcp.Core.Models.Metadata;
 
-namespace Microsoft.Mcp.Core.Commands;
+namespace Azure.Mcp.Core.Commands;
 
 /// <summary>
 /// Provides metadata about an MCP tool describing its behavioral characteristics.
