@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers

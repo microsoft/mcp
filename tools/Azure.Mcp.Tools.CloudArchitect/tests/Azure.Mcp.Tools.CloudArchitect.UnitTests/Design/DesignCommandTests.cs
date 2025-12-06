@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 using Azure.Mcp.Tools.CloudArchitect.Options;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.CloudArchitect.UnitTests.Design;
 

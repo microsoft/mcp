@@ -3,12 +3,12 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Models;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 

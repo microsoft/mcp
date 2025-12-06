@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 

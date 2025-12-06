@@ -7,12 +7,13 @@ using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Commands;
 

@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 

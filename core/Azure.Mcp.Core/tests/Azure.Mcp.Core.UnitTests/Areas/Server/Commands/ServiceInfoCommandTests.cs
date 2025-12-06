@@ -5,9 +5,9 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 

@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Services.Telemetry;
 

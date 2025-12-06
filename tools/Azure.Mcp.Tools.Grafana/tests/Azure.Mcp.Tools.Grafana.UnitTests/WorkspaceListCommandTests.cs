@@ -3,15 +3,14 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 

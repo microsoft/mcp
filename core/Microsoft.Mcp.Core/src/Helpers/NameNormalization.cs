@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Helpers;
+namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
 /// Normalization helpers for command and option identifiers.

@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tools.Communication.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests.Email;

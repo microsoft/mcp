@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Extensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Extensions;

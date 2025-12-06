@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Core.Helpers
 {

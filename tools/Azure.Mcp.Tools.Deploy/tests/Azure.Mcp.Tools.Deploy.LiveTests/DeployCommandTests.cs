@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
-using ModelContextProtocol.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;

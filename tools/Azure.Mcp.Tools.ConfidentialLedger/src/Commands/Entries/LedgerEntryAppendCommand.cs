@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;

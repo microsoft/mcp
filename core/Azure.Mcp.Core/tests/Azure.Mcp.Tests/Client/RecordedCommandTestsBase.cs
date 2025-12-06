@@ -4,18 +4,11 @@
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
-using Microsoft.Extensions.Options;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
