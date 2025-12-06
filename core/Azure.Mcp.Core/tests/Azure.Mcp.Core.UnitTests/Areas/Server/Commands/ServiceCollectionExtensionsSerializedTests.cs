@@ -16,7 +16,6 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
 // conflicts with Azure.Mcp.Core.Areas.Server.Options
 using Options = Microsoft.Extensions.Options.Options;
 
-[Collection("Sequential")]
 public class ServiceCollectionExtensionsSerializedTests
 {
     private IServiceCollection SetupBaseServices()
