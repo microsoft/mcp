@@ -103,18 +103,7 @@ public static class DeploymentPlanTemplateUtil
     {
         var steps = new List<string>();
 
-        var deployTitle = isAks ? "" : " And Deploy the Application";
-        var checkLog = isAks ? "" : "6. Check the application log with tool `azd-app-log-get` to ensure the services are running.";
-
-        var azdStepReplacements = new Dictionary<string, string>
-        {
-            { "DeployTitle", deployTitle },
-            { "IacType", parameters.IacType },
-            { "CheckLog", checkLog }
-        };
-
-        var azdSteps = TemplateService.ProcessTemplate("Plan/azd-steps", azdStepReplacements);
-        steps.Add(azdSteps);
+        steps.Add("Agent must call tool #mcp_azure_mcp_azd with input command='plan_init' to get instructions for AZD project initialization.");
 
         if (isAks)
         {
