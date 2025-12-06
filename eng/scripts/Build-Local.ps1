@@ -30,21 +30,29 @@ Remove-Item -Path $packageOutputPath -Recurse -Force -ErrorAction SilentlyContin
     -BuildId 12345 `
     -IncludeNative:$IncludeNative
 
+$oses = $AllPlatforms ? @('linux', 'windows', 'macos') : $null
+$architectures = $AllPlatforms ? @('x64', 'arm64') : $null
+
 & "$RepoRoot/eng/scripts/Build-Code.ps1" `
+    -ServerName $ServerName `
     -SelfContained:(!$NoSelfContained) `
     -Trimmed:(!$NoTrimmed) `
     -ReleaseBuild:$ReleaseBuild `
-    -AllPlatforms:$AllPlatforms
+    -OperatingSystems $oses `
+    -Architectures $architectures
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
 
 if ($IncludeNative) {
-    & "$RepoRoot/eng/scripts/Build-Code.ps1" `
-        -ReleaseBuild:$ReleaseBuild `
-        -AllPlatforms:$AllPlatforms `
-        -Native
+& "$RepoRoot/eng/scripts/Build-Code.ps1" `
+    -SelfContained:(!$NoSelfContained) `
+    -Trimmed:(!$NoTrimmed) `
+    -ReleaseBuild:$ReleaseBuild `
+    -OperatingSystems $oses `
+    -Architectures $architectures `
+    -Native
 }
 
 # build_info.json is initialized with all buildable platforms, native and not
@@ -67,7 +75,7 @@ $buildInfo | ConvertTo-Json -Depth 10 | Set-Content -Path $buildInfoPath
 & "$RepoRoot/eng/scripts/Pack-Npm.ps1" -UsePaths:(!$NoUsePaths)
 
 if ($VerifyNpx -and !$NoUsePaths) {
-    $tgzFiles = Get-ChildItem -Path $packageOutputPath -Filter '*.tgz'
+    $tgzFiles = Get-ChildItem -Path $packageOutputPath -Filter '*.tgz' -Recurse
     | Where-Object { $_.Directory.Name -eq 'wrapper' }
 
     foreach($tgzFile in $tgzFiles) {

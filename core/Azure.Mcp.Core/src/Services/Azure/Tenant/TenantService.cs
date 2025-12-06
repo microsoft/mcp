@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
@@ -43,6 +44,7 @@ public class TenantService : BaseAzureService, ITenantService
         var results = new List<TenantResource>();
 
         var options = AddDefaultPolicies(new ArmClientOptions());
+        options.Transport = new HttpClientTransport(GetClient());
         var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
         await foreach (var tenant in client.GetTenants())

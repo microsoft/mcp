@@ -33,9 +33,9 @@ public abstract class BaseAzureResourceService(
     /// <returns>The tenant resource associated with the subscription</returns>
     private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken = default)
     {
-        if (tenantId == null || tenantId == Guid.Empty)
+        if (tenantId == null)
         {
-            throw new ArgumentException("Tenant ID cannot be null or empty", nameof(tenantId));
+            throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
         }
 
         // Get all tenants and find the matching one (GetTenants already has caching)
