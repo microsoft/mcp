@@ -36,7 +36,7 @@ public class IoTHubService(
         string? additionalFilter = null;
         if (!string.IsNullOrEmpty(name))
         {
-            additionalFilter = $"| where name =~ '{name}'";
+            additionalFilter = $"name =~ '{name}'";
         }
 
         return await ExecuteResourceQueryAsync(
@@ -97,11 +97,10 @@ public class IoTHubService(
         var data = hub.Value.Data;
         if (sku != null)
         {
-            data.Sku = new IotHubSkuInfo(new IotHubSku(sku));
-            if (capacity.HasValue)
+            data.Sku = new IotHubSkuInfo(new IotHubSku(sku))
             {
-                data.Sku.Capacity = capacity.Value;
-            }
+                Capacity = capacity ?? data.Sku.Capacity
+            };
         }
         else if (capacity.HasValue)
         {
@@ -127,7 +126,7 @@ public class IoTHubService(
         var subResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var rg = await subResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var hub = await rg.Value.GetIotHubDescriptionAsync(name, cancellationToken);
-        await hub.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await hub.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
     }
 
     public async Task<List<IoTHubKey>> GetIoTHubKeys(

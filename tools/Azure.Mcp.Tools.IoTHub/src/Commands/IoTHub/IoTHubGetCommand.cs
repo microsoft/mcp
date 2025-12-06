@@ -40,6 +40,7 @@ public sealed class IoTHubGetCommand(IIoTHubService service, ILogger<IoTHubGetCo
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

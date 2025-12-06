@@ -43,9 +43,12 @@ public sealed class IoTHubCreateCommand(IIoTHubService service, ILogger<IoTHubCr
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
         options.Location = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Location.Name);
         options.Sku = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Sku.Name);
         options.Capacity = parseResult.GetValueOrDefault<long>(IoTHubOptionDefinitions.Capacity.Name);
+        
         return options;
     }
 
