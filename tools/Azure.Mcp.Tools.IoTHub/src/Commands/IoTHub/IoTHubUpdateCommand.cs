@@ -42,6 +42,7 @@ public sealed class IoTHubUpdateCommand(IIoTHubService service, ILogger<IoTHubUp
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Sku = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Sku.Name);
         options.Capacity = parseResult.GetValueOrDefault<long?>(IoTHubOptionDefinitions.Capacity.Name);
         return options;
