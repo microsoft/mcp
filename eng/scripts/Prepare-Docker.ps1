@@ -55,10 +55,16 @@ Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -Pro
 Push-Location $RepoRoot
 try {
     $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-    $platformName = "linux-x64-untrimmed"
+    $platformName = "linux-musl-x64-docker"
 
     foreach($server in $buildInfo.servers) {
-        $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
+        $platform = $server.platforms | Where-Object { $_.name -eq $platformName }
+        if(-not $platform) {
+            LogError "Server $($server.name) does not have a platform named $platformName in build_info.json"
+            $exitCode = 1
+            continue
+        }
+
         $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
 
         New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
