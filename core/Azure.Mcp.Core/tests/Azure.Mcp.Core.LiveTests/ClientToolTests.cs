@@ -104,7 +104,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
     {
-        await Client.SetLoggingLevel(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
+        await Client.SetLoggingLevelAsync(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Fact]

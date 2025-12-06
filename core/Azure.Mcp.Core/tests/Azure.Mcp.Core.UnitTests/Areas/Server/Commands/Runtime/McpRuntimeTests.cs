@@ -53,7 +53,7 @@ public class McpRuntimeTests
         };
     }
 
-    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName = "test-tool", IReadOnlyDictionary<string, JsonElement>? arguments = null)
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName = "test-tool", IDictionary<string, JsonElement>? arguments = null)
     {
         return new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall })
         {

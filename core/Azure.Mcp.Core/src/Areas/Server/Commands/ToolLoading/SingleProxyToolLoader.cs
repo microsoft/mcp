@@ -357,7 +357,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             {
                 Progress = 0f,
                 Message = message,
-            }, cancellationToken);
+            }, cancellationToken: cancellationToken);
     }
 
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, string toolsJson, CancellationToken cancellationToken)
@@ -366,11 +366,12 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
         var samplingRequest = new CreateMessageRequestParams
         {
+            MaxTokens = 1000,
             Messages = [
                 new SamplingMessage
                 {
                     Role = Role.Assistant,
-                    Content = new TextContentBlock{
+                    Content = [new TextContentBlock{
                         Text = $"""
                             The following is a list of available tools for the Azure server.
 
@@ -385,14 +386,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
                             Available Tools:
                             {toolsJson}
                             """
-                    }
+                    }]
                 }
             ],
         };
         try
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
-            var samplingContent = samplingResponse.Content as TextContentBlock;
+            var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
             var toolName = samplingContent?.Text?.Trim();
             if (!string.IsNullOrEmpty(toolName) && toolName != "Unknown")
             {
@@ -421,11 +422,12 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
         var samplingRequest = new CreateMessageRequestParams
         {
+            MaxTokens = 1000,
             Messages = [
                 new SamplingMessage
                 {
                     Role = Role.Assistant,
-                    Content = new TextContentBlock{
+                    Content = [new TextContentBlock{
                         Text = $"""
                             This is a list of available commands for the {tool} server.
 
@@ -449,14 +451,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
                             Available Commands:
                             {toolsJson}
                             """
-                    }
+                    }]
                 }
             ],
         };
         try
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
-            var samplingContent = samplingResponse.Content as TextContentBlock;
+            var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
             var toolCallJson = samplingContent?.Text?.Trim();
             string? commandName = null;
             Dictionary<string, object?> parameters = [];

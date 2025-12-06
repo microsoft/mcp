@@ -28,7 +28,7 @@ public class CompositeToolLoaderTests
         };
     }
 
-    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IReadOnlyDictionary<string, JsonElement>? arguments = null)
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<McpServer>();
         return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
