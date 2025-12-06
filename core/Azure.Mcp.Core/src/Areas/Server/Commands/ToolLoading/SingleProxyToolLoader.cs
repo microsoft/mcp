@@ -193,7 +193,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     }
 
     /// <summary>
-    /// Gets the set of <see cref="Microsoft.Mcp.Core.Commands.IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="Microsoft.Mcp.Core.Commands.IBaseCommand"/> within an <see cref="Microsoft.Mcp.Core.Areas.IAreaSetup">.
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
