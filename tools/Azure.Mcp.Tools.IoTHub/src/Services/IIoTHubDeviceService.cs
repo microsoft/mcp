@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Models;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;

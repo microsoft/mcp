@@ -8,6 +8,7 @@ using System.Web;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
@@ -19,12 +20,14 @@ public class IoTHubDeviceService(
     IIoTHubService ioTHubService,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientService httpClientService,
+    ITenantService tenantService,
     ILogger<IoTHubDeviceService> logger)
-    : BaseAzureService(null!), IIoTHubDeviceService
+    : BaseAzureService(tenantService), IIoTHubDeviceService
 {
     private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
     private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider ?? throw new ArgumentNullException(nameof(credentialProvider));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ILogger<IoTHubDeviceService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<DeviceIdentity>> ListDevices(
@@ -48,7 +51,7 @@ public class IoTHubDeviceService(
 
         var hostname = hubDetails[0].HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
         var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, retryPolicy, cancellationToken);
-        var connectionString = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)?.PrimaryKey
+        var key = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)
             ?? throw new InvalidOperationException("No key with RegistryRead rights found");
 
         using var httpClient = _httpClientService.CreateClient();
@@ -56,7 +59,7 @@ public class IoTHubDeviceService(
         var maxCountParam = maxCount.HasValue ? $"&top={maxCount.Value}" : string.Empty;
         var requestUri = $"https://{hostname}/devices?api-version={apiVersion}{maxCountParam}";
 
-        var token = await GetSasToken(hostname, connectionString);
+        var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
         var response = await httpClient.GetAsync(requestUri, cancellationToken);
@@ -88,14 +91,14 @@ public class IoTHubDeviceService(
 
         var hostname = hubDetails[0].HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
         var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, retryPolicy, cancellationToken);
-        var connectionString = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)?.PrimaryKey
+        var key = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)
             ?? throw new InvalidOperationException("No key with RegistryRead rights found");
 
         using var httpClient = _httpClientService.CreateClient();
         var apiVersion = "2021-04-12";
         var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={apiVersion}";
 
-        var token = await GetSasToken(hostname, connectionString);
+        var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
         var response = await httpClient.GetAsync(requestUri, cancellationToken);
@@ -133,14 +136,14 @@ public class IoTHubDeviceService(
 
         var hostname = hubDetails[0].HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
         var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, retryPolicy, cancellationToken);
-        var connectionString = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryWrite") == true)?.PrimaryKey
+        var key = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryWrite") == true)
             ?? throw new InvalidOperationException("No key with RegistryWrite rights found");
 
         using var httpClient = _httpClientService.CreateClient();
         var apiVersion = "2021-04-12";
         var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={apiVersion}";
 
-        var token = await GetSasToken(hostname, connectionString);
+        var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
         var patchJson = JsonSerializer.Serialize(patch, IoTHubJsonContext.Default.TwinPatch);
@@ -175,14 +178,14 @@ public class IoTHubDeviceService(
 
         var hostname = hubDetails[0].HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
         var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, retryPolicy, cancellationToken);
-        var connectionString = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)?.PrimaryKey
+        var key = keys.FirstOrDefault(k => k.Rights?.Contains("RegistryRead") == true)
             ?? throw new InvalidOperationException("No key with RegistryRead rights found");
 
         using var httpClient = _httpClientService.CreateClient();
         var apiVersion = "2021-04-12";
         var requestUri = $"https://{hostname}/devices/query?api-version={apiVersion}";
 
-        var token = await GetSasToken(hostname, connectionString);
+        var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
         var queryObject = new { query };
@@ -196,7 +199,7 @@ public class IoTHubDeviceService(
         return JsonSerializer.Deserialize(responseContent, IoTHubJsonContext.Default.ListDeviceTwin) ?? [];
     }
 
-    private static Task<string> GetSasToken(string hostname, string sharedAccessKey)
+    private static string GetSasToken(string hostname, string policyName, string sharedAccessKey)
     {
         // Generate SAS token for IoT Hub authentication
         var expiry = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
@@ -204,10 +207,10 @@ public class IoTHubDeviceService(
         var toSign = $"{resourceUri}\n{expiry}";
 
         var keyBytes = Convert.FromBase64String(sharedAccessKey);
-        using var hmac = new System.Security.Cryptography.HMACSHA256(keyBytes);
+        using var hmac = new HMACSHA256(keyBytes);
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(toSign));
         var signature = Uri.EscapeDataString(Convert.ToBase64String(hash));
 
-        return Task.FromResult($"sr={resourceUri}&sig={signature}&se={expiry}");
+        return $"sr={resourceUri}&sig={signature}&se={expiry}&skn={policyName}";
     }
 }
