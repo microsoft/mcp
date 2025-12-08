@@ -59,6 +59,12 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-Aks
+/tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Aks
+# ServiceOwners:                       @jongio @anuchandy
+
 # PRLabel: %tools-AppService
 /tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
 
@@ -181,7 +187,6 @@
 # ServiceLabel: %tools-Postgres
 # ServiceOwners:                       @kk-src @shreyaaithal @maxluk
 
-
 # PRLabel: %tools-Search
 /tools/Azure.Mcp.Tools.Search/         @pablocastro @jongio @microsoft/azure-mcp
 
@@ -194,6 +199,12 @@
 
 # ServiceLabel: %tools-ServiceBus
 # ServiceOwners:                       @shankarsama @EldertGrootenboer
+
+# PRLabel: %tools-Speech
+/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Speech
+# ServiceOwners:                       @dilin-MS2
 
 # PRLabel: %tools-Redis
 /tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
