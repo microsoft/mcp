@@ -101,6 +101,38 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         TestVariables[name] = value;
     }
 
+    /// <summary>
+    /// Registers a variable to or retrieves it from the session record. This is a convenience equivalent to calling
+    /// <see cref="RegisterVariable(string, string)"/> and then retrieving the value from <see cref="TestVariables"/>.
+    /// If the test mode is playback, it will load attempt to load the variable and return it. If the test mode is
+    /// record, it will store the value and return it.
+    /// </summary>
+    /// <param name="name">The name of the variable to register or retrieve.</param>
+    /// <param name="value">The value reference to register or retrieve.</param>
+    /// <returns>The value of the variable.</returns>
+    public virtual string RegisterOrRetrieveVariable(string name, string value)
+    {
+        if (TestMode == TestMode.Record)
+        {
+            // store the value in the recording
+            TestVariables[name] = value;
+        }
+        else if (TestMode == TestMode.Playback)
+        {
+            // retrieve the value from the recording
+            if (TestVariables.TryGetValue(name, out var recordedValue))
+            {
+                return recordedValue;
+            }
+            else
+            {
+                throw new XunitException($"Variable '{name}' not found in recording.");
+            }
+        }
+
+        return value;
+    }
+
     // used to resolve a recording "path" given an invoking test
     protected static readonly RecordingPathResolver PathResolver = new();
 

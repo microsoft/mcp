@@ -25,6 +25,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
         Assert.Equal(JsonValueKind.Array, fileSystems.ValueKind);
         var found = false;
 
+        var resourceBaseName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceBaseName);
         foreach (var fs in fileSystems.EnumerateArray())
         {
             if (fs.ValueKind != JsonValueKind.Object)
@@ -32,14 +33,14 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
 
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
             {
                 found = true;
                 break;
             }
         }
 
-        Assert.True(found, $"Expected at least one filesystem in resource group with name '{Settings.ResourceBaseName}'.");
+        Assert.True(found, $"Expected at least one filesystem in resource group with name '{resourceBaseName}'.");
     }
 
     [Fact]
@@ -116,25 +117,25 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
     public async Task Should_create_azure_managed_lustre_no_blob_no_cmk()
     {
         var fsName = $"amlfs-{Guid.NewGuid().ToString("N")[..8]}";
-        var subnetId = Settings.DeploymentOutputs["AMLFS_SUBNET_ID"];
-        var location = Settings.DeploymentOutputs["LOCATION"];
+        var subnetId = RegisterOrRetrieveVariable("amlfsSubnetId", Settings.DeploymentOutputs["AMLFS_SUBNET_ID"]);
+        var location = RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs["LOCATION"]);
 
         // Calculate CMK required variables
 
-        var keyUri = Settings.DeploymentOutputs["KEY_URI_WITH_VERSION"];
-        var keyVaultResourceId = Settings.DeploymentOutputs["KEY_VAULT_RESOURCE_ID"];
-        var userAssignedIdentityId = Settings.DeploymentOutputs["USER_ASSIGNED_IDENTITY_RESOURCE_ID"];
+        var keyUri = RegisterOrRetrieveVariable("keyUriWithVersion", Settings.DeploymentOutputs["KEY_URI_WITH_VERSION"]);
+        var keyVaultResourceId = RegisterOrRetrieveVariable("keyVaultResourceId", Settings.DeploymentOutputs["KEY_VAULT_RESOURCE_ID"]);
+        var userAssignedIdentityId = RegisterOrRetrieveVariable("userAssignedIdentityId", Settings.DeploymentOutputs["USER_ASSIGNED_IDENTITY_RESOURCE_ID"]);
 
         // Calculate HSM required variables
-        var hsmDataContainerId = Settings.DeploymentOutputs["HSM_CONTAINER_ID"];
-        var hsmLogContainerId = Settings.DeploymentOutputs["HSM_LOGS_CONTAINER_ID"];
+        var hsmDataContainerId = RegisterOrRetrieveVariable("hsmContainerId", Settings.DeploymentOutputs["HSM_CONTAINER_ID"]);
+        var hsmLogContainerId = RegisterOrRetrieveVariable("hsmLogsContainerId", Settings.DeploymentOutputs["HSM_LOGS_CONTAINER_ID"]);
 
         var result = await CallToolAsync(
             "managedlustre_fs_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
                 { "location", location },
                 { "name", fsName },
                 { "sku", "AMLFS-Durable-Premium-500" },
@@ -172,14 +173,15 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
     [Fact]
     public async Task Should_update_maintenance_and_verify_with_list()
     {
+        var resourceBaseName = RegisterOrRetrieveVariable("resourceBaseName", Settings.ResourceBaseName);
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
             "managedlustre_fs_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "name", resourceBaseName },
                 { "maintenance-day", "Wednesday" },
                 { "maintenance-time", "11:00" }
             });
@@ -206,7 +208,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
 
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
             {
                 // Check maintenance fields
                 if (fs.TryGetProperty("maintenanceDay", out var dayProp) && dayProp.ValueKind == JsonValueKind.String &&
@@ -220,7 +222,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
             }
         }
 
-        Assert.True(found, $"Expected filesystem '{Settings.ResourceBaseName}' to have maintenance Wednesday at 11:00.");
+        Assert.True(found, $"Expected filesystem '{resourceBaseName}' to have maintenance Wednesday at 11:00.");
     }
 
     [Fact]
@@ -233,8 +235,8 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
                 { "subscription", Settings.SubscriptionId },
                 { "sku", "AMLFS-Durable-Premium-40" },
                 { "size", 480 },
-                { "location", Settings.DeploymentOutputs["LOCATION"] },
-                { "subnet-id", Settings.DeploymentOutputs["AMLFS_SUBNET_ID"] }
+                { "location", RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs["LOCATION"]) },
+                { "subnet-id", RegisterOrRetrieveVariable("amlfsSubnetId", Settings.DeploymentOutputs["AMLFS_SUBNET_ID"]) }
             });
 
         var valid = result.AssertProperty("valid");
@@ -252,8 +254,8 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
                 { "subscription", Settings.SubscriptionId },
                 { "sku", "AMLFS-Durable-Premium-40" },
                 { "size", 1008 },
-                { "location", Settings.DeploymentOutputs["LOCATION"] },
-                { "subnet-id", Settings.DeploymentOutputs["AMLFS_SUBNET_SMALL_ID"] }
+                { "location", RegisterOrRetrieveVariable("Location", Settings.DeploymentOutputs["LOCATION"]) },
+                { "subnet-id", RegisterOrRetrieveVariable("amlfsSubnetSmallId", Settings.DeploymentOutputs["AMLFS_SUBNET_SMALL_ID"]) }
             });
 
         var valid = result.AssertProperty("valid");
@@ -264,14 +266,15 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
     [Fact]
     public async Task Should_update_root_squash_and_verify_with_list()
     {
+        var resourceBaseName = RegisterOrRetrieveVariable("resourceBaseName", Settings.ResourceBaseName);
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
             "managedlustre_fs_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "name", resourceBaseName },
                 { "root-squash-mode", "All" },
                 { "squash-uid", 2000 },
                 { "squash-gid", 2000 },
@@ -308,7 +311,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
             {
                 // Assert required root squash fields (must be present)
                 var listMode = fs.AssertProperty("rootSquashMode");
@@ -331,6 +334,6 @@ public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixtur
             }
         }
 
-        Assert.True(found, $"Expected filesystem '{Settings.ResourceBaseName}' to be present after root squash update.");
+        Assert.True(found, $"Expected filesystem '{resourceBaseName}' to be present after root squash update.");
     }
 }
