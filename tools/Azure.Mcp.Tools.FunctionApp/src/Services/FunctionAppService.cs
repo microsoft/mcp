@@ -25,7 +25,7 @@ public sealed class FunctionAppService(
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private const string CacheGroup = "functionapp";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
     private static readonly HashSet<string> SupportedRuntimes = new()
     {
@@ -99,7 +99,7 @@ public sealed class FunctionAppService(
         string? storageAccountName,
         string? containerAppsEnvironmentName)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, functionAppName, location);
+        ValidateRequiredParameters((nameof(subscription), subscription),(nameof(resourceGroup), resourceGroup),(nameof(functionAppName), functionAppName),(nameof(location), location));
 
         var inputs = new NormalizedInputs(
             string.IsNullOrWhiteSpace(runtime) ? "dotnet" : runtime.Trim().ToLowerInvariant(),
@@ -124,78 +124,22 @@ public sealed class FunctionAppService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
+        var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
+        var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
+        if (cachedResults != null)
+        {
+            return cachedResults;
+        }
+
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var functionApps = new List<FunctionAppInfo>();
 
-        await foreach (var site in subscriptionResource.GetWebSitesAsync())
+        await foreach (var site in subscriptionResource.GetWebSitesAsync(cancellationToken))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
-
-            var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
-            if (cachedResults != null)
-            {
-                return cachedResults;
-            }
-
-            try
-            {
-                if (string.IsNullOrEmpty(resourceGroup))
-                {
-                    await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps);
-                }
-                else
-                {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    if (!resourceGroupResource.HasValue)
-                    {
-                        throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                    }
-
-                    await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps);
-                }
-
-                await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error listing Function Apps: {ex.Message}", ex);
-            }
+            if (site?.Data is { } d && IsFunctionApp(d))
+                functionApps.Add(ConvertToFunctionAppModel(site));
         }
-        else
-        {
-            ValidateRequiredParameters(
-                (nameof(functionAppName), functionAppName),
-                (nameof(resourceGroup), resourceGroup));
-
-            var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{functionAppName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{functionAppName}";
-
-            var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
-            if (cachedResults != null)
-            {
-                return cachedResults;
-            }
-
-            try
-            {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (!resourceGroupResource.HasValue)
-                {
-                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                }
-                var site = await resourceGroupResource.Value.GetWebSites().GetAsync(functionAppName, cancellationToken);
-
-                TryAddFunctionApp(site.Value, functionApps);
-                await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving Function App '{functionAppName}' in resource group '{resourceGroup}': {ex.Message}", ex);
-            }
-        }
-        await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, CacheDuration);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
 
         return functionApps;
     }
@@ -225,20 +169,21 @@ public sealed class FunctionAppService(
         string? storageAccountName = null,
         string? containerAppsEnvironmentName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         var inputs = ValidateAndNormalizeInputs(
             subscription, resourceGroup, functionAppName, location,
             runtime, runtimeVersion, hostingKind, sku, os,
             storageAccountName, containerAppsEnvironmentName);
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         ResourceGroupResource rg;
-        var resourceGroupResponse = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResponse = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         if (resourceGroupResponse?.Value == null)
         {
             var rgData = new ResourceGroupData(location);
-            var rgOp = await subscriptionResource.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, resourceGroup, rgData);
+            var rgOp = await subscriptionResource.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, resourceGroup, rgData, cancellationToken);
             rg = rgOp.Value;
         }
         else

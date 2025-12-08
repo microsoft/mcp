@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
@@ -29,6 +30,8 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     private readonly Option<string> _osOption = FunctionAppOptionDefinitions.OperatingSystem;
     private readonly Option<string> _storageAccountOption = FunctionAppOptionDefinitions.StorageAccount;
     private readonly Option<string> _containerAppsEnvironmentOption = FunctionAppOptionDefinitions.ContainerAppsEnvironment;
+
+    public override string Id => "a19eaab4-4822-41cb-a6ec-ffdc56405400";
 
     public override string Name => "create";
 
@@ -124,7 +127,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
 
@@ -166,7 +169,8 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
                 options.StorageAccount,
                 options.ContainerAppsEnvironment,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new FunctionAppCreateCommandResult(result),

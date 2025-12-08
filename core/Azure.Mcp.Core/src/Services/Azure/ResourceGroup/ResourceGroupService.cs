@@ -114,7 +114,7 @@ public class ResourceGroupService(
 
     public async Task<ResourceGroupResource> CreateOrUpdateResourceGroup(string subscription, string resourceGroupName, string location, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroupName, location);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName), (nameof(location), location));
 
         try
         {
