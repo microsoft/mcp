@@ -39,6 +39,28 @@ core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting inf
 
 The `.proxy` directory is recreated whenever a recorded test run needs the Test Proxy. This folder is gitignored by default. Do not commit these binaries.
 
+## Migration Guide (Live ➜ Recorded)
+
+1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
+2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
+3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `IHttpClientFactory.CreateClient()` to benefit from playback redirection.
+4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<LiveTest.CsProj.Folder>/assets.json`:
+   ```json
+   {
+     "AssetsRepo": "Azure/azure-sdk-assets",
+     "AssetsRepoPrefixPath": "",
+     "TagPrefix": "Azure.Mcp.Tools.YourService",
+     "Tag": ""
+   }
+   ```
+   If using `copilot` for initial migration, ensure that it indeed created this file.
+5. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
+6. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
+
+Example Migrations:
+ - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)
+
+
 ## Recording Workflow
 
 Follow this checklist any time you need to update recordings:
@@ -55,14 +77,14 @@ Follow this checklist any time you need to update recordings:
 2. **Run tests** – Invoke the live test project (e.g. `dotnet test tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests`). The harness boots the proxy, registers default sanitizers, and writes fresh recordings under `.assets/`.
 3. **Inspect recordings** – Use the helper to locate the exact folder:
    ```powershell
-   ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
+   ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/assets.json
    ```
    Review each JSON recording and confirm no secrets or unstable data were missed by existing sanitizers.
    - Note that on `unix` platforms there is no `.exe` suffix.
 4. **Switch to playback** – Change the `TestMode` value in `.testsettings.json` to `Playback`. Re-run the tests to verify they pass without hitting live resources.
 5. **Push assets** – When satisfied, publish the updated recordings:
    ```powershell
-   ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
+   ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/assets.json
    ```
    This stages the local recording updates for commit, creates a new tag in `Azure/azure-sdk-assets`, and updates the `Tag` field in local `assets.json` to reflect new recording location.
 6. **Commit** to `mcp` repo – Include:
@@ -77,25 +99,6 @@ Follow this checklist any time you need to update recordings:
 | Restore recordings referenced by an assets file | `./.proxy/Azure.Sdk.Tools.TestProxy.exe restore -a path/to/assets.json` |
 | Reset local clone to the current tag | `./.proxy/Azure.Sdk.Tools.TestProxy.exe reset -a path/to/assets.json` |
 
-## Migration Guide (Live ➜ Recorded)
-
-1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
-2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
-3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `HttpClientService.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<LiveTest.CsProj.Folder>/assets.json`:
-   ```json
-   {
-     "AssetsRepo": "Azure/azure-sdk-assets",
-     "AssetsRepoPrefixPath": "",
-     "TagPrefix": "Azure.Mcp.Tools.YourService",
-     "Tag": ""
-   }
-   ```
-5. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
-6. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
-
-Example Migrations:
- - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)
 
 ## Working With Sanitizers and Matchers
 
