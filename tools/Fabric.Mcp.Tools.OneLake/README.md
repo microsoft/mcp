@@ -389,12 +389,12 @@ dotnet run -- onelake file delete --workspace-id "47242da5-ff3b-46fb-a94f-977909
 }
 ```
 
-#### Upload Blob (Blob Endpoint)
+#### Upload File (Blob Endpoint)
 
 Uploads binary content to OneLake using the native blob endpoint. Supports inline content, local files, and content-type overrides while returning rich service metadata.
 
 ```bash
-dotnet run -- onelake blob upload --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite --content-type application/octet-stream
+dotnet run -- onelake upload file --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite --content-type application/octet-stream
 ```
 
 **Parameters:**
@@ -426,23 +426,23 @@ dotnet run -- onelake blob upload --workspace-id "47242da5-ff3b-46fb-a94f-977909
     "encryptionScope": "onelake-default",
     "clientRequestId": "c0a7efbb-fbd7-484e-95c1-e606f9387e0d",
     "rootActivityId": "1c95a779-7d14-4596-9b54-81197cda059b",
-    "message": "Blob uploaded successfully."
+    "message": "File uploaded successfully."
   }
 }
 ```
 
-#### Get Blob (Blob Endpoint)
+#### Download File (Blob Endpoint)
 
-Downloads a blob via the OneLake blob endpoint, returning metadata, a base64 representation, and decoded text content when applicable.
+Downloads a file via the OneLake blob endpoint, returning metadata, a base64 representation, and decoded text content when applicable.
 
 ```bash
-dotnet run -- onelake blob download --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --file-path "Files/data/archive.bin"
+dotnet run -- onelake download file --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --file-path "Files/data/archive.bin"
 ```
 
 **Parameters:**
 - `--workspace`/`--workspace-id`: Workspace friendly name or ID
 - `--item`/`--item-id`: Item friendly name or ID
-- `--file-path`: Path to the blob under `Files/`
+- `--file-path`: Path to the file under `Files/`
 
 **Example Output:**
 ```json
@@ -465,7 +465,7 @@ dotnet run -- onelake blob download --workspace "Analytics Workspace" --item "Sa
       "clientRequestId": "c0a7efbb-fbd7-484e-95c1-e606f9387e0d",
       "rootActivityId": "1c95a779-7d14-4596-9b54-81197cda059b"
     },
-    "message": "Blob retrieved successfully."
+    "message": "File retrieved successfully."
   }
 }
 ```
@@ -736,11 +736,11 @@ fabmcp.exe onelake file read --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" 
 # Delete a file
 fabmcp.exe onelake file delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
 
-# Upload a blob (Blob endpoint)
-fabmcp.exe onelake blob upload --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite
+# Upload a file (Blob endpoint)
+fabmcp.exe onelake upload file --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin" --local-file-path "C:\data\archive.bin" --overwrite
 
-# Download a blob with metadata (Blob endpoint)
-fabmcp.exe onelake blob download --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
+# Download a file with metadata (Blob endpoint)
+fabmcp.exe onelake download file --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
 
 # Delete a blob (Blob endpoint)
 fabmcp.exe onelake blob delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"

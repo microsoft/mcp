@@ -29,7 +29,7 @@ public class BlobGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
 
-        Assert.Equal("download", command.Name);
+        Assert.Equal("file", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -97,7 +97,7 @@ public class BlobGetCommandTests
 
         using var document = JsonDocument.Parse(SerializeResult(context.Response.Results));
         var root = document.RootElement;
-        Assert.Equal("Blob retrieved successfully.", root.GetProperty("message").GetString());
+        Assert.Equal("File retrieved successfully.", root.GetProperty("message").GetString());
         var blob = root.GetProperty("blob");
         Assert.Equal(encodedContent, blob.GetProperty("contentBase64").GetString());
         Assert.Equal("hello", blob.GetProperty("contentText").GetString());

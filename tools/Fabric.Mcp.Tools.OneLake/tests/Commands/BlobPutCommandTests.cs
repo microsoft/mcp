@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -27,8 +28,8 @@ public class BlobPutCommandTests
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new BlobPutCommand(NullLogger<BlobPutCommand>.Instance, oneLakeService);
 
-        Assert.Equal("upload", command.Name);
-        Assert.Contains("Upload content to OneLake", command.Description);
+        Assert.Equal("file", command.Name);
+        Assert.Contains("Upload content to OneLake", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
     }
@@ -42,7 +43,7 @@ public class BlobPutCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("upload", systemCommand.Name);
+        Assert.Equal("file", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 

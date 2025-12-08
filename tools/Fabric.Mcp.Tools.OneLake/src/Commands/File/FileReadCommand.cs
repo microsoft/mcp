@@ -10,6 +10,7 @@ using System.Text;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -20,6 +21,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
+[HiddenCommand]
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions>()

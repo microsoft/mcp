@@ -26,9 +26,9 @@ public sealed class BlobPutCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "upload";
-    public override string Title => "Upload OneLake Blob";
-    public override string Description => "Upload content to OneLake via the blob endpoint. Supports inline content or local file uploads with optional overwrite control.";
+    public override string Name => "file";
+    public override string Title => "Upload OneLake File";
+    public override string Description => "Upload content to OneLake storage. Supports inline content or local file uploads with optional overwrite control.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -129,7 +129,7 @@ public sealed class BlobPutCommand(
                 result.VersionId,
                 result.ClientRequestId,
                 result.RootActivityId,
-                options.Overwrite ? "Blob uploaded successfully (overwritten)." : "Blob uploaded successfully.");
+                options.Overwrite ? "File uploaded successfully (overwritten)." : "File uploaded successfully.");
 
             context.Response.Status = HttpStatusCode.Created;
             context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobPutCommandResult);

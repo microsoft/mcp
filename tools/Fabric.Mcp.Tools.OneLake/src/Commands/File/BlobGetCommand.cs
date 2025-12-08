@@ -32,9 +32,9 @@ public sealed class BlobGetCommand(
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
     public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
-    public override string Name => "download";
-    public override string Title => "Get OneLake Blob";
-    public override string Description => "Retrieve a blob from OneLake using the blob endpoint, returning metadata, base64 content, and text when applicable.";
+    public override string Name => "file";
+    public override string Title => "Download OneLake File";
+    public override string Description => "Retrieve a file from OneLake storage, returning metadata, base64 content, and text when applicable.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -145,15 +145,15 @@ public sealed class BlobGetCommand(
             if (downloadPath is not null)
             {
                 var resolvedPath = result.ContentFilePath ?? downloadPath;
-                messageBuilder.Append($"Blob downloaded to local file '{resolvedPath}'.");
+                messageBuilder.Append($"File downloaded to local file '{resolvedPath}'.");
             }
             else if (result.InlineContentTruncated)
             {
-                messageBuilder.Append($"Blob metadata retrieved. Content exceeds the inline limit of {InlineContentLimitBytes:N0} bytes; provide --download-file-path when running locally to save the content.");
+                messageBuilder.Append($"File metadata retrieved. Content exceeds the inline limit of {InlineContentLimitBytes:N0} bytes; provide --download-file-path when running locally to save the content.");
             }
             else
             {
-                messageBuilder.Append("Blob retrieved successfully.");
+                messageBuilder.Append("File retrieved successfully.");
             }
 
             var finalMessage = messageBuilder.ToString();

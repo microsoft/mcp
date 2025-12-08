@@ -230,15 +230,13 @@ The Fabric MCP Server exposes the following tools for AI agents:
 
 | Command | Purpose |
 |---|---|
-| `onelake blob download` | Download a OneLake file to disk. |
+| `onelake download file` | Download a OneLake file to disk. |
 | `onelake blob list` | List blobs (DFS paths) under a given directory. |
-| `onelake blob upload` | Upload a local file into OneLake via the blob endpoint. |
+| `onelake upload file` | Upload a local file into OneLake via the blob endpoint. |
 | `onelake blob delete` | Remove blobs via the OneLake blob endpoint (returns Fabric request identifiers). |
 | `onelake directory create` | Create a directory via the DFS endpoint. |
 | `onelake directory delete` | Delete a directory (optionally recursive). |
 | `onelake file list` | List files using the hierarchical file-list endpoint. |
-| `onelake file read` | Download file contents from OneLake storage. |
-| `onelake file write` | Upload text or local files with optional overwrite. |
 | `onelake file delete` | Remove individual files from OneLake storage. |
 | `onelake item list` | List workspace items and high-level metadata. |
 | `onelake item list-data` | List Fabric items via the DFS endpoint. |

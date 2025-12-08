@@ -73,6 +73,12 @@ public class FabricOneLakeSetup : IAreaSetup
         var blobGroup = new CommandGroup("blob", "Blob operations - Commands for interacting with OneLake's blob-compatible endpoints.");
         fabricOneLake.AddSubGroup(blobGroup);
 
+        var uploadGroup = new CommandGroup("upload", "Upload operations - Commands for uploading files into OneLake storage.");
+        fabricOneLake.AddSubGroup(uploadGroup);
+
+        var downloadGroup = new CommandGroup("download", "Download operations - Commands for retrieving files from OneLake storage.");
+        fabricOneLake.AddSubGroup(downloadGroup);
+
         var directoryGroup = new CommandGroup("directory", "Directory operations - Commands for creating and deleting OneLake directories.");
         fabricOneLake.AddSubGroup(directoryGroup);
 
@@ -101,10 +107,10 @@ public class FabricOneLakeSetup : IAreaSetup
         fileGroup.AddCommand(pathListCommand.Name, pathListCommand);
 
         var blobPutCommand = serviceProvider.GetRequiredService<BlobPutCommand>();
-        blobGroup.AddCommand(blobPutCommand.Name, blobPutCommand);
+        uploadGroup.AddCommand(blobPutCommand.Name, blobPutCommand);
 
         var blobGetCommand = serviceProvider.GetRequiredService<BlobGetCommand>();
-        blobGroup.AddCommand(blobGetCommand.Name, blobGetCommand);
+        downloadGroup.AddCommand(blobGetCommand.Name, blobGetCommand);
 
         var blobDeleteCommand = serviceProvider.GetRequiredService<BlobDeleteCommand>();
         blobGroup.AddCommand(blobDeleteCommand.Name, blobDeleteCommand);

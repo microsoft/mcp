@@ -102,7 +102,8 @@ tests/
 - ✅ **OneLake Workspace Listing** (`onelake workspace list`)
 - ✅ **Path Listing** (`onelake file list`) - File system browsing
 - ✅ **Blob Listing** (`onelake blob list`) - Blob storage access
-- ✅ **Blob Retrieval** (`onelake blob download`) - OneLake blob endpoint download
+- ✅ **File Upload** (`onelake upload file`) - OneLake blob endpoint upload
+- ✅ **File Download** (`onelake download file`) - OneLake blob endpoint download
 - ✅ **Blob Deletion** (`onelake blob delete`) - OneLake blob endpoint removal
 - ✅ **OneLake Item Listing** (`onelake item list`) - Item enumeration
 - ✅ **OneLake Data Item Listing** (`onelake item list-data`) - DFS API item enumeration
@@ -210,8 +211,8 @@ For this implementation, we chose to:
 | Directory Create | `onelake directory create` | Full ✅ |
 | Directory Delete | `onelake directory delete` | Full ✅ |
 | Blob List | `onelake blob list` | Full ✅ |
-| Blob Upload | `onelake blob upload` | Full ✅ |
-| Blob Download | `onelake blob download` | Full ✅ |
+| Upload File | `onelake upload file` | Full ✅ |
+| Download File | `onelake download file` | Full ✅ |
 | Blob Delete | `onelake blob delete` | Full ✅ |
 
 ## Key Achievements 🚀
