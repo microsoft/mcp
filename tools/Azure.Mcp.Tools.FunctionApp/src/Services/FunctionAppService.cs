@@ -99,7 +99,7 @@ public sealed class FunctionAppService(
         string? storageAccountName,
         string? containerAppsEnvironmentName)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription),(nameof(resourceGroup), resourceGroup),(nameof(functionAppName), functionAppName),(nameof(location), location));
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(functionAppName), functionAppName), (nameof(location), location));
 
         var inputs = new NormalizedInputs(
             string.IsNullOrWhiteSpace(runtime) ? "dotnet" : runtime.Trim().ToLowerInvariant(),
