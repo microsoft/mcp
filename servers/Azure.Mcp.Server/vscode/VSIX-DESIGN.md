@@ -96,6 +96,8 @@ You're now ready to use Azure MCP features in VS Code!
   - Targets the appropriate server binary from the flat `server/` folder.
   - Registers the server with VS Code using the MCP API.
 
+- When debugging the extension in VS Code, instead of targeting the server binary from the `server/` folder in the extension directory, the extension will target the server binary in the default build artifacts directory using a relative path `../src/bin/Debug/net9.0/` relative to the extension directory. By default it will be the directory containing the build artifacts of the `dotnet build` command when building Azure MCP server. This relative path can be customized in the `launch.json` file as an environment variable `DEBUG_AZMCP_BINARY_RELATIVE_PATH`.
+
 #### Example (simplified):
 
 ```typescript

@@ -16,7 +16,8 @@
             "env": {
                 // Disable telemetry when running the extension under the debugger.
                 // Set this to "verbose" to show telemetry in the console during debugging.
-                "DEBUGTELEMETRY": "true"
+                "DEBUGTELEMETRY": "true",
+                "DEBUG_AZMCP_BINARY_RELATIVE_PATH": "../src/bin/Debug/net9.0"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js",
