@@ -63,15 +63,12 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
-        -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -Native:$$(Native)
+        -ServerName '${{ parameters.ServerName }}'
+        -PlatformName '$(BuildPlatformName)'
         -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
-        -Trimmed:$$(Trimmed)
         -SingleFile
 
   - task: Powershell@2
@@ -107,7 +104,7 @@ jobs:
     condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
-      testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
+      testRunTitle: "unit_$(System.JobName)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
@@ -116,7 +113,7 @@ jobs:
     condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/recordedTestResults/*.trx"
-      testRunTitle: "recorded-${{ parameters.OSName }}-$(Architecture)"
+      testRunTitle: "recorded_$(System.JobName)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 

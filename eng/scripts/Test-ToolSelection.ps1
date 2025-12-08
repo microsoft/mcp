@@ -66,7 +66,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3.0
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
-$toolSelectionPath = "$RepoRoot/eng/tools/ToolDescriptionEvaluator"
+$toolSelectionPath = "$RepoRoot/eng/tools/ToolDescriptionEvaluator/src"
 $defaultMarkdownPrompts = "$RepoRoot/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md"
 
 if (-not (Test-Path $toolSelectionPath)) {

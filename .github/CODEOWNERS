@@ -77,6 +77,12 @@
 # ServiceLabel: %tools-BestPractices
 # ServiceOwners:                       @g2vinay @conniey @fanyang-mono
 
+# PRLabel: %tools-Bicep
+/tools/Azure.Mcp.Tools.BicepSchema/             @msalaman @saikoumudi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Bicep
+# ServiceOwners:                       @msalaman @saikoumudi
+
 # PRLabel: %tools-CloudArchitect
 /tools/Azure.Mcp.Tools.CloudArchitect/                         @msalaman @microsoft/azure-mcp
 
