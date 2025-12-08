@@ -208,7 +208,7 @@ public sealed class FunctionAppGetCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns([new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null)]);
+                .Returns([new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", "windows", null)]);
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -222,7 +222,7 @@ public sealed class FunctionAppGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsFunctionApp()
     {
-        var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null);
+        var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", "windows", null);
         _service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Any<string?>(),

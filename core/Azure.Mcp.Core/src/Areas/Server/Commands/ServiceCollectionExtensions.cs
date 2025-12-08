@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -250,8 +249,6 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    [RequiresDynamicCode()]
-    [RequiresUnreferencedCode()]
     public static void InitializeConfigurationAndOptions(this IServiceCollection services)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
