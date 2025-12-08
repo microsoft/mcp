@@ -1041,6 +1041,16 @@ azmcp eventhubs namespace update --subscription <subscription> \
 ### Azure Function App Operations
 
 ```bash
+# Create a function app with automatic provisioning of dependencies
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functionapp create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --function-app <function-app-name> \
+                          --location <location> \
+                          [--plan-type <consumption|flex|premium|appservice|containerapp>] \
+                          [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
+                          [--os <windows|linux>]
+
 # Get detailed properties of function apps
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp functionapp get --subscription <subscription> \
