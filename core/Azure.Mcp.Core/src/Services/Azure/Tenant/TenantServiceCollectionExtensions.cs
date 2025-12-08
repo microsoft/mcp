@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -36,7 +37,7 @@ public static class TenantServiceCollectionExtensions
     /// </item>
     /// </list>
     /// </remarks>
-    public static IServiceCollection AddAzureTenantService(this IServiceCollection services)
+    public static IServiceCollection AddAzureTenantService(this IServiceCollection services, bool addUserAgentClient = false)
     {
         // !!! HACK !!!
         // Program.cs for the CLI servers have their own DI containers vs ServiceStartCommand.
@@ -48,6 +49,12 @@ public static class TenantServiceCollectionExtensions
         // container to be populated with the correct authentication strategy, such as OBO for
         // running as a remote HTTP MCP service.
         services.AddSingleIdentityTokenCredentialProvider();
+
+        services.AddHttpClient();
+        if (addUserAgentClient)
+        {
+            services.ConfigureDefaultHttpClient();
+        }
 
         services.TryAddSingleton<ITenantService, TenantService>();
         return services;

@@ -8,7 +8,7 @@ namespace Azure.Mcp.Core.Services.Http;
 /// <summary>
 /// DelegatingHandler that rewrites outgoing requests to a recording/replace proxy specified by TEST_PROXY_URL.
 /// It also sets the x-recording-upstream-base-uri header once per request to preserve the original target.
-/// 
+///
 /// This handler is intended to be injected as the LAST delegating handler (closest to the transport) so
 /// that it rewrites the final outgoing wire request.
 /// </summary>

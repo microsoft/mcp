@@ -13,7 +13,7 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
-. "$PSScriptRoot/helpers/PathHelpers.ps1"
+. "$PSScriptRoot/helpers/BuildHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
@@ -64,11 +64,7 @@ $coreDirectories = Get-ChildItem "$RepoRoot/core" -Directory
 
 $architectures = @('x64', 'arm64')
 
-$operatingSystems = @(
-    @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
-    @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
-    @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
-)
+$operatingSystems = Get-OperatingSystems
 
 # Public releases always use the version from the repo without a dynamic prerelease suffix, except for test pipelines
 # which always use a dynamic prerelease suffix to allow for multiple releases from the same commit
@@ -513,6 +509,7 @@ function Get-ServerDetails {
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
+            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
         }
     }
 
@@ -561,11 +558,9 @@ function Get-BuildMatrices {
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
             $buildMatrix[$legName] = [ordered]@{
+                BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
-                Architecture = $arch
-                Native = $platform.native
-                Trimmed = $platform.trimmed
                 RunUnitTests = $runUnitTests
                 RunRecordedTests = $runRecordedTests
             }

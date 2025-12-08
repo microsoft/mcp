@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
@@ -13,16 +14,19 @@ public class TenantService : BaseAzureService, ITenantService
 {
     private readonly IAzureTokenCredentialProvider _credentialProvider;
     private readonly ICacheService _cacheService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
 
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IHttpClientFactory clientFactory)
     {
         _credentialProvider = credentialProvider;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _httpClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
         TenantService = this;
     }
 
@@ -40,6 +44,7 @@ public class TenantService : BaseAzureService, ITenantService
         var results = new List<TenantResource>();
 
         var options = AddDefaultPolicies(new ArmClientOptions());
+        options.Transport = new HttpClientTransport(GetClient());
         var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
         await foreach (var tenant in client.GetTenants())
@@ -101,5 +106,11 @@ public class TenantService : BaseAzureService, ITenantService
     public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)
     {
         return await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public HttpClient GetClient()
+    {
+        return _httpClientFactory.CreateClient();
     }
 }

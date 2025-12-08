@@ -246,7 +246,6 @@ The Fabric MCP Server exposes the following tools for AI agents:
 
 All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 
-
 # Support and Reference
 
 ## Documentation
@@ -285,7 +284,6 @@ Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/
 * 🔄 Making pull requests
 
 ## Code of Conduct
-
 This project has adopted the
 [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information, see the

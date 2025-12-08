@@ -1,37 +1,65 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : CommandTestsBase
+public class AppConfigCommandTests : RecordedCommandTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
     private readonly ILogger<AppConfigService> _logger;
+    private readonly ServiceProvider _httpClientProvider;
 
-    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// AZSDK3447 = $..key
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493", "AZSDK3447" }).ToList();
+
+    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var tenantService = new TenantService(tokenProvider, cacheService);
+        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger);
+        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientFactory);
+    }
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
+    {
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "\"domains\"\\s*:\\s*\\[(?s)(?<domains>.*?)\\]",
+          GroupForReplace = "domains",
+          Value = "\"contoso.com\""
+        })
+    };
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        _httpClientProvider.Dispose();
     }
 
     [Fact]

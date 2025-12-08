@@ -292,8 +292,8 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 ./eng/scripts/Analyze-AOT-Compact.ps1
 
 # Tool description quality validation
-pushd 'eng/tools/ToolDescriptionEvaluator'
-dotnet run -- --validate --tool-description "Your command description" --prompt "user query"
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
+dotnet run -- --validate --tool-description "Your command description" --prompt "user query" --test-single-tool 'your-tool-name'
 popd
 ```
 
@@ -509,7 +509,7 @@ tools/Azure.Mcp.Tools.{Service}/
 ### Tool Description Quality Validation
 ```powershell
 # Validate command descriptions for AI agent compatibility
-pushd 'eng/tools/ToolDescriptionEvaluator'
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
 
 # Single prompt validation
 dotnet run -- --validate --tool-description "Get storage accounts in a subscription" --prompt "show me my storage accounts"

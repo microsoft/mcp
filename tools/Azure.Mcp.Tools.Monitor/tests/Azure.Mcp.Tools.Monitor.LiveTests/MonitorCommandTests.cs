@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -10,8 +11,10 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -41,7 +44,9 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var tenantService = new TenantService(tokenProvider, cacheService);
+        var _httpClientProvider = TestHttpClientFactoryProvider.Create();
+        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
