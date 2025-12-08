@@ -103,7 +103,8 @@ public static class DeploymentPlanTemplateUtil
     {
         var steps = new List<string>();
 
-        steps.Add("Agent must call tool #mcp_azure_mcp_azd with input command='plan_init' to get instructions for AZD project initialization.");
+        steps.Add("Agent must call tool #mcp_azure_mcp_azd with input command='plan_init' to get instructions for AZD project initialization.  And call tool #mcp_azure_mcp_azd with input command='discovery_analysis' to get instructions for performing comprehensive discovery and analysis of application components to prepare for azd initialization.
+Then call tool #mcp_azure_mcp_azd with input command='infrastructure_generation' to get instructions for generating modular Bicep infrastructure templates following Azure security and operational best practices for azd projects.");
 
         if (isAks)
         {
