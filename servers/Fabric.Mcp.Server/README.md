@@ -156,6 +156,8 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | `publicapis examples get --workload-type <workload>` | Retrieve example request/response files for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
 | `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
 
+> Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
+
 ## OneLake (`onelake`)
 | Command | Purpose |
 |---|---|
@@ -174,7 +176,7 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | `onelake item list-data` | List Fabric items via the DFS endpoint. |
 | `onelake item create` | Provision new Fabric items (lakehouse, notebook, etc.). |
 
-All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item-create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
+All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 
 ---
 <!-- remove-section: end -->
