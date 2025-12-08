@@ -71,7 +71,21 @@ public class BlobGetCommandTests
             "client-request-id",
             "root-activity-id");
 
-        service.GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>()).Returns(result);
+        service.GetBlobAsync(
+                workspaceId,
+                itemId,
+                blobPath,
+                Arg.Do<BlobDownloadOptions>(options =>
+                {
+                    Assert.NotNull(options);
+                    Assert.True(options.IncludeInlineContent);
+                    Assert.True(options.InlineContentLimit.HasValue);
+                    Assert.Equal(1024 * 1024L, options.InlineContentLimit);
+                    Assert.Null(options.DestinationStream);
+                    Assert.Null(options.LocalFilePath);
+                }),
+                Arg.Any<CancellationToken>())
+            .Returns(result);
 
         var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath}");
         var context = CreateContext();

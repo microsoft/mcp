@@ -16,10 +16,12 @@ using Fabric.Mcp.Tools.OneLake.Models;
 
 namespace Fabric.Mcp.Tools.OneLake.Services;
 
-public class OneLakeService(HttpClient httpClient) : IOneLakeService
+public class OneLakeService(HttpClient httpClient, TokenCredential? credential = null) : IOneLakeService
 {
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-    private readonly DefaultAzureCredential _credential = new();
+    private readonly TokenCredential _credential = credential ?? new DefaultAzureCredential();
+    private const string UserAgentHeaderName = "User-Agent";
+    private const string UserAgentHeaderValue = "OneLake MCP";
 
     // Workspace Operations
     public async Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
@@ -989,11 +991,16 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         }).ToList();
     }
 
-    public async Task<Stream> ReadFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
+    public Task<BlobGetResult> ReadFileAsync(string workspaceId, string itemId, string filePath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
-        var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await response.Content.ReadAsStreamAsync(cancellationToken);
+        return DownloadBlobAsync(
+            OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl,
+            workspaceId,
+            itemId,
+            filePath,
+            downloadOptions,
+            queryString: null,
+            cancellationToken);
     }
 
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
@@ -1114,11 +1121,46 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             rootActivityId);
     }
 
-    public async Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
+    public Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
-        downloadOptions ??= new BlobDownloadOptions();
+        return DownloadBlobAsync(
+            OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl,
+            workspaceId,
+            itemId,
+            blobPath,
+            downloadOptions,
+            queryString: null,
+            cancellationToken);
+    }
 
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+    private async Task<BlobGetResult> DownloadBlobAsync(
+        string baseUrl,
+        string workspaceId,
+        string itemId,
+        string path,
+        BlobDownloadOptions? downloadOptions,
+        string? queryString,
+        CancellationToken cancellationToken)
+    {
+        var effectiveOptions = downloadOptions ?? new BlobDownloadOptions();
+
+        var trimmedPath = path.TrimStart('/');
+        var urlBuilder = new StringBuilder($"{baseUrl}/{workspaceId}/{itemId}/{trimmedPath}");
+
+        if (!string.IsNullOrWhiteSpace(queryString))
+        {
+            if (queryString.StartsWith("?", StringComparison.Ordinal))
+            {
+                urlBuilder.Append(queryString);
+            }
+            else
+            {
+                urlBuilder.Append('?');
+                urlBuilder.Append(queryString);
+            }
+        }
+
+        var url = urlBuilder.ToString();
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
@@ -1144,10 +1186,10 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         var contentCrc64 = GetHeaderValue(response.Headers, "x-ms-content-crc64");
 
-        var inlineRequested = downloadOptions.IncludeInlineContent;
-        var inlineLimit = downloadOptions.InlineContentLimit;
-        var destinationStream = downloadOptions.DestinationStream;
-        var contentFilePath = downloadOptions.LocalFilePath;
+        var inlineRequested = effectiveOptions.IncludeInlineContent;
+        var inlineLimit = effectiveOptions.InlineContentLimit;
+        var destinationStream = effectiveOptions.DestinationStream;
+        var contentFilePath = effectiveOptions.LocalFilePath;
 
         var shouldReadInline = inlineRequested;
         var inlineContentTruncated = false;
@@ -1236,7 +1278,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         return new BlobGetResult(
             workspaceId,
             itemId,
-            blobPath,
+            path,
             contentLength,
             string.IsNullOrWhiteSpace(contentType) ? contentTypeHeader?.MediaType : contentType,
             charset,
@@ -1330,6 +1372,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
         using var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        ApplyUserAgent(request);
 
         if (!string.IsNullOrEmpty(jsonContent))
         {
@@ -1350,6 +1393,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         using var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
+        ApplyUserAgent(request);
 
         if (!string.IsNullOrEmpty(jsonContent))
         {
@@ -1376,11 +1420,22 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
         request.Headers.Add("x-ms-date", DateTime.UtcNow.ToString("R"));
+        ApplyUserAgent(request);
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         return response;
+    }
+
+    private static void ApplyUserAgent(HttpRequestMessage request)
+    {
+        if (request.Headers.Contains(UserAgentHeaderName))
+        {
+            request.Headers.Remove(UserAgentHeaderName);
+        }
+
+        request.Headers.TryAddWithoutValidation(UserAgentHeaderName, UserAgentHeaderValue);
     }
 
     private static string? GetHeaderValue(HttpHeaders? headers, string name)

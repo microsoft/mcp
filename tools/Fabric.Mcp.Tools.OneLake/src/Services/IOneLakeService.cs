@@ -36,7 +36,7 @@ public interface IOneLakeService
     // Raw Response Methods for Debug/Analysis
     Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
     Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
-    Task<Stream> ReadFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
+    Task<BlobGetResult> ReadFileAsync(string workspaceId, string itemId, string filePath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default);
     Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
     Task<BlobPutResult> PutBlobAsync(string workspaceId, string itemId, string blobPath, Stream content, long contentLength, string? contentType = null, bool overwrite = false, CancellationToken cancellationToken = default);
     Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default);
