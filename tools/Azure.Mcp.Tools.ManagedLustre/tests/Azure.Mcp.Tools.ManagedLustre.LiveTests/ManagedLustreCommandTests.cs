@@ -4,11 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.LiveTests;
 
-public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_filesystems_by_subscription()
