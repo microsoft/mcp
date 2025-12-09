@@ -13,7 +13,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests.Email;
 
-[Trait("Area", "Communication")]
 [Trait("Command", "EmailSendCommand")]
 public class EmailSendCommandLiveTests : CommandTestsBase
 {

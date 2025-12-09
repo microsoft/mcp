@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Topic;
 
-[Trait("Area", "EventGrid")]
 public class TopicListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

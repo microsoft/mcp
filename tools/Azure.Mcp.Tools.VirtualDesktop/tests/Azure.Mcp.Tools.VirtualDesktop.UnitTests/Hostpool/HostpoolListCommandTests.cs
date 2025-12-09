@@ -15,7 +15,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.Hostpool;
 
-[Trait("Area", "VirtualDesktop")]
 public class HostpoolListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

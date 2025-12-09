@@ -18,7 +18,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Events;
 
-[Trait("Area", "EventGrid")]
 public class EventsPublishCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

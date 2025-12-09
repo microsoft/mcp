@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
-[Trait("Area", "AppConfig")]
 public class KeyValueDeleteCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

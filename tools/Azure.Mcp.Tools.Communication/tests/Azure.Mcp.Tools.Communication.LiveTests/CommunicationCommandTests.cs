@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
-[Trait("Area", "Communication")]
 [Trait("Command", "SmsSendCommand")]
 public class CommunicationCommandTests : CommandTestsBase
 {

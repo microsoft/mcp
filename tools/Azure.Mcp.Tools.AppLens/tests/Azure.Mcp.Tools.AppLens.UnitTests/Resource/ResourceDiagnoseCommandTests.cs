@@ -15,7 +15,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppLens.UnitTests.Resource;
 
-[Trait("Area", "AppLens")]
 public class ResourceDiagnoseCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

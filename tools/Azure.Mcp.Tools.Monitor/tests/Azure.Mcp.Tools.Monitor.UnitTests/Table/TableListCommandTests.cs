@@ -16,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Table;
 
-[Trait("Area", "Monitor")]
 public sealed class TableListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
