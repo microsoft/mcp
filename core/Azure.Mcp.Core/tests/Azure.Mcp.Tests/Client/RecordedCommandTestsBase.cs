@@ -114,14 +114,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         else if (TestMode == TestMode.Playback)
         {
             // retrieve the value from the recording
-            if (TestVariables.TryGetValue(name, out var recordedValue))
-            {
-                return recordedValue;
-            }
-            else
-            {
-                throw new XunitException($"Variable '{name}' not found in recording.");
-            }
+            value = TestVariables[name];
         }
 
         return value;
