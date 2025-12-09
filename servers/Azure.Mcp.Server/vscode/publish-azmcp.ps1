@@ -1,5 +1,4 @@
 #!/usr/bin/env pwsh
-# Enable strict error handling
 
 Write-Host "Publishing Azure MCP Server..." -ForegroundColor Cyan
 
