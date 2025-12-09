@@ -4,13 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 

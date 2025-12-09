@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 

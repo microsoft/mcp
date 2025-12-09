@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using System.Threading;
 using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client.Attributes;

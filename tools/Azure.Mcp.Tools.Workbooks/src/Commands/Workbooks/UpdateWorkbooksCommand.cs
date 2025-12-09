@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 

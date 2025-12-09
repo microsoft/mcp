@@ -4,19 +4,18 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Region;
 
-[Trait("Area", "Quota")]
 public sealed class AvailabilityListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

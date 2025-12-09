@@ -1,20 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Communication.Commands.Sms;
-using Azure.Mcp.Tools.Communication.Options.Sms;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Sms;
 
-[Trait("Area", "Communication")]
-[Trait("Category", "Unit")]
 public class SmsSendCommandTests
 {
     [Fact]
