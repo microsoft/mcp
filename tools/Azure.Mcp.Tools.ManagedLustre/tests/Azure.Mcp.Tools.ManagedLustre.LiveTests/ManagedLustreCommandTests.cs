@@ -334,6 +334,163 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     }
 
     [Fact]
+    public async Task Should_create_autoimport_job()
+    {
+        var result = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = result.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, jobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(jobName.GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_autoimport_job_with_custom_parameters()
+    {
+        var customJobName = $"autoimport-test-{Guid.NewGuid().ToString("N")[..8]}";
+        
+        var result = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", customJobName },
+                { "conflict-resolution-mode", "Skip" },
+                { "autoimport-prefixes", new[] { "/data/", "/logs/" } },
+                { "admin-status", "Enable" },
+                { "enable-deletions", false },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = result.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, jobName.ValueKind);
+        Assert.Equal(customJobName, jobName.GetString());
+    }
+
+    [Fact]
+    public async Task Should_list_autoimport_jobs()
+    {
+        // First create an autoimport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // List all autoimport jobs
+        var listResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobs = listResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
+        
+        var found = false;
+        foreach (var job in jobs.EnumerateArray())
+        {
+            if (job.TryGetProperty("jobName", out var jobNameProp) &&
+                jobNameProp.ValueKind == JsonValueKind.String &&
+                jobNameProp.GetString() == createdJobName)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        Assert.True(found, $"Expected to find autoimport job '{createdJobName}' in the list.");
+    }
+
+    [Fact]
+    public async Task Should_get_autoimport_job()
+    {
+        // First create an autoimport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Get the specific job
+        var getResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var job = getResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, job.ValueKind);
+        
+        var jobName = job.AssertProperty("jobName");
+        Assert.Equal(createdJobName, jobName.GetString());
+    }
+
+    [Fact]
+    public async Task Should_cancel_autoimport_job()
+    {
+        // First create an autoimport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Cancel the job
+        var cancelResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var success = cancelResult.AssertProperty("success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+        Assert.True(success.GetBoolean());
+    }
+
+
+    [Fact]
     public async Task Should_create_autoexport_job()
     {
         var result = await CallToolAsync(
@@ -349,5 +506,184 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
         var jobName = result.AssertProperty("jobName");
         Assert.Equal(JsonValueKind.String, jobName.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(jobName.GetString()));
+    }
+
+    [Fact]
+    public async Task Should_list_autoexport_jobs()
+    {
+        // First create an autoexport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // List all autoexport jobs
+        var listResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobs = listResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
+        
+        var found = false;
+        foreach (var job in jobs.EnumerateArray())
+        {
+            if (job.TryGetProperty("jobName", out var jobNameProp) &&
+                jobNameProp.ValueKind == JsonValueKind.String &&
+                jobNameProp.GetString() == createdJobName)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        Assert.True(found, $"Expected to find autoexport job '{createdJobName}' in the list.");
+    }
+
+    [Fact]
+    public async Task Should_get_autoexport_job()
+    {
+        // First create an autoexport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Get the specific job
+        var getResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var job = getResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, job.ValueKind);
+        
+        var jobName = job.AssertProperty("jobName");
+        Assert.Equal(createdJobName, jobName.GetString());
+    }
+
+    [Fact]
+    public async Task Should_cancel_autoexport_job()
+    {
+        // First create an autoexport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Cancel the job
+        var cancelResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var success = cancelResult.AssertProperty("success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+        Assert.True(success.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Should_delete_autoimport_job()
+    {
+        // First create an autoimport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Delete the job
+        var deleteResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var success = deleteResult.AssertProperty("success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+        Assert.True(success.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Should_delete_autoexport_job()
+    {
+        // First create an autoexport job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString();
+
+        // Delete the job
+        var deleteResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", createdJobName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var success = deleteResult.AssertProperty("success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+        Assert.True(success.GetBoolean());
     }
 }

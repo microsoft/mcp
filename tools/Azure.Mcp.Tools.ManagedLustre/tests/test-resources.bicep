@@ -17,10 +17,6 @@ param amlfsSubnetPrefix string = '10.20.1.0/24'
 @description('Subnet prefix for AMLFS small, for subnet validation live tests.')
 param amlfsSubnetSmallPrefix string = '10.20.2.0/28'
 
-@description('The client OID to grant access to test resources.')
-param testApplicationOid string = deployer().objectId
-
-
 @description('AMLFS SKU name')
 @allowed([
   'AMLFS-Durable-Premium-40'
@@ -100,6 +96,109 @@ resource natPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = {
   }
 }
 
+// Deployment script to get HPC Cache Resource Provider service principal object ID
+resource getHpcCacheSpObjectId 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  name: '${baseName}-get-hpccache-sp'
+  location: location
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
+  properties: {
+    azPowerShellVersion: '11.0'
+    retentionInterval: 'PT1H'
+    scriptContent: '''
+      $sp = Get-AzADServicePrincipal -DisplayName 'HPC Cache Resource Provider'
+      if (-not $sp) {
+        Write-Error "Service principal 'HPC Cache Resource Provider' not found"
+        exit 1
+      }
+      $DeploymentScriptOutputs = @{}
+      $DeploymentScriptOutputs['objectId'] = $sp.Id
+    '''
+    timeout: 'PT5M'
+    cleanupPreference: 'OnSuccess'
+  }
+}
+
+@minLength(3)
+@maxLength(24)
+@description('Storage account name for HSM hydration and logging containers')
+param storageAccountName string = baseName
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    // Restrict network access to the specified subnet (default Deny others)
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: [
+        {
+          id: filesystemSubnetId
+          action: 'Allow'
+        }
+      ]
+      ipRules: []
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+// Role assignments granting the HPC Cache RP required access to the storage account for HSM (imports/exports)
+// Storage Account Contributor
+resource storageAccountContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, '17d1049b-9a84-46fb-8f53-869881c3d3ab', 'hpc-cache-rp-sa-contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
+    principalId: getHpcCacheSpObjectId.properties.outputs.objectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe', 'hpc-cache-rp-blob-contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: getHpcCacheSpObjectId.properties.outputs.objectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {}
+}
+
+resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'data'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource loggingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'logging'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 var filesystemSubnetId = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'amlfs')
 var filesystemSmallSubnetId = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'amlfs-small')
 
@@ -112,50 +211,24 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   properties: {
     storageCapacityTiB: amlfsCapacityTiB
     filesystemSubnet: filesystemSubnetId
+    hsm: {
+      settings: {
+        // Resource IDs for the blob containers used by HSM
+        // Use symbolic resource IDs so deployment engine creates dependency on containers
+        container: dataContainer.id
+        loggingContainer: loggingContainer.id
+        // Only blobs prefixed with one of these paths will be imported during initial creation
+        importPrefixesInitial: [
+          '/'
+        ]
+      }
+    }
     maintenanceWindow: {
       dayOfWeek: 'Sunday'
       timeOfDayUTC: '02:00'
     }
   }
 }
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
-  name: baseName
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    allowBlobPublicAccess: false
-    minimumTlsVersion: 'TLS1_2'
-    supportsHttpsTrafficOnly: true
-  }
-}
-
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' existing = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource hsmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
-  parent : blobService
-  name: 'hsm-data'
-  properties: {
-    publicAccess: 'None'
-  }
-  dependsOn: [ blobService ]
-}
-
-resource hsmLogsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
-  parent : blobService
-  name: 'hsm-logs'
-  properties: {
-    publicAccess: 'None'
-  }
-  dependsOn: [ blobService ]
-}
-
 
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: userAssignedName
@@ -200,8 +273,8 @@ resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
 
 // Outputs for tests
 output STORAGE_ACCOUNT_ID string = storageAccount.id
-output HSM_CONTAINER_ID string = hsmContainer.id
-output HSM_LOGS_CONTAINER_ID string = hsmLogsContainer.id
+output HSM_CONTAINER_ID string = dataContainer.id
+output HSM_LOGS_CONTAINER_ID string = loggingContainer.id
 output KEY_VAULT_RESOURCE_ID string = keyVault.id
 output KEY_VAULT_NAME string = keyVault.name
 output USER_ASSIGNED_IDENTITY_RESOURCE_ID string = userAssignedIdentity.id
