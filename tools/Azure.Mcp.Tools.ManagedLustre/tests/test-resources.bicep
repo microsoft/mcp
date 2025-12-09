@@ -177,13 +177,13 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments
   }
 }
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01' = {
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' = {
   parent: storageAccount
   name: 'default'
   properties: {}
 }
 
-resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
   parent: blobService
   name: 'data'
   properties: {
@@ -191,7 +191,7 @@ resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   }
 }
 
-resource loggingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+resource loggingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
   parent: blobService
   name: 'logging'
   properties: {
