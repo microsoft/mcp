@@ -5,7 +5,10 @@
             "label": "npm watch",
             "type": "npm",
             "script": "watch",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$ts-webpack-watch",
+                "$tslint-webpack-watch"
+            ],
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
@@ -19,7 +22,10 @@
             "label": "npm dev-build",
             "type": "npm",
             "script": "dev-build",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$ts-webpack-watch",
+                "$tslint-webpack-watch"
+            ],
             "presentation": {
                 "reveal": "never"
             },
