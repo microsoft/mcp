@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
-using Microsoft.Extensions.FileSystemGlobbing;
 using NSubstitute;
 using Xunit;
 using Xunit.v3;

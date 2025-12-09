@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Models.Metadata;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Metadata;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -23,7 +25,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             if (!root.TryGetProperty(name, out var prop))
                 return new MetadataDefinition { Value = defaultValue, Description = string.Empty };
 
-            var meta = JsonSerializer.Deserialize(prop.GetRawText(), ServerJsonContext.Default.MetadataDefinition)
+            var meta = JsonSerializer.Deserialize(prop.GetRawText(), CoreJsonContext.Default.MetadataDefinition)
                        ?? new MetadataDefinition { Value = defaultValue, Description = string.Empty };
             return meta;
         }
@@ -44,7 +46,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         void WriteMetadata(string name, MetadataDefinition def)
         {
             writer.WritePropertyName(name);
-            JsonSerializer.Serialize(writer, def, ServerJsonContext.Default.MetadataDefinition);
+            JsonSerializer.Serialize(writer, def, CoreJsonContext.Default.MetadataDefinition);
         }
 
         WriteMetadata("destructive", value.DestructiveProperty);

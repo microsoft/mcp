@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Commands;
+using System.CommandLine;
+
+namespace Microsoft.Mcp.Core.Commands;
 
 public class CommandGroup(string name, string description, string? title = null)
 {

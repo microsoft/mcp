@@ -3,12 +3,12 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -193,7 +193,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     }
 
     /// <summary>
-    /// Gets the set of <see cref="Core.Commands.IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="Microsoft.Mcp.Core.Commands.IBaseCommand"/> within an <see cref="Microsoft.Mcp.Core.Areas.IAreaSetup">.
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>

@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation
-using System;
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tools.Communication.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;

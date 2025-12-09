@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Services.Http;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 
 namespace Fabric.Mcp.Tools.PublicApi.Tests;

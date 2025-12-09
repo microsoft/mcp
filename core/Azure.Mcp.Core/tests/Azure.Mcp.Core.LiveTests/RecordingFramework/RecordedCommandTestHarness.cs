@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
