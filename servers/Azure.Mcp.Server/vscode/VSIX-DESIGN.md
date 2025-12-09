@@ -96,6 +96,8 @@ You're now ready to use Azure MCP features in VS Code!
   - Targets the appropriate server binary from the flat `server/` folder.
   - Registers the server with VS Code using the MCP API.
 
+> Note: When debugging the extension in VS Code, a preLaunchTask will publish an Azure MCP Server executable to the extension directory from the locally built Azure MCP Server binaries. See `launch.json` and `tasks.json` to learn more about how the preLaunchTask works.
+
 #### Example (simplified):
 
 ```typescript
