@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.OneLake.Commands;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
