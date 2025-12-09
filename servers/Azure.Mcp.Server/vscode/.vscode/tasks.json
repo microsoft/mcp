@@ -5,10 +5,7 @@
             "label": "npm watch",
             "type": "npm",
             "script": "watch",
-            "problemMatcher": [
-                "$ts-webpack-watch",
-                "$tslint-webpack-watch"
-            ],
+            "problemMatcher": [],
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
@@ -22,10 +19,7 @@
             "label": "npm dev-build",
             "type": "npm",
             "script": "dev-build",
-            "problemMatcher": [
-                "$ts-webpack-watch",
-                "$tslint-webpack-watch"
-            ],
+            "problemMatcher": [],
             "presentation": {
                 "reveal": "never"
             },
@@ -40,6 +34,24 @@
             "problemMatcher": [],
             "label": "npm: ci-build",
             "detail": "npm run lint && npm run build"
+        },
+        {
+            "label": "publish-azmcp-binary",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/publish-azmcp.ps1"
+            ],
+            "dependsOn": "npm dev-build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            },
+            "problemMatcher": []
         }
     ]
 }

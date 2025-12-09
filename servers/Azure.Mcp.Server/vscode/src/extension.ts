@@ -46,14 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Use the binary from the extension's server/os folder
-    const debugAzmcpBinaryRelativePathEnvName = "DEBUG_AZMCP_BINARY_RELATIVE_PATH";
-    let binPath: string;
-    if (context.extensionMode === vscode.ExtensionMode.Development && process.env[debugAzmcpBinaryRelativePathEnvName]) {
-        // When debugging from VS Code, context.extensionPath will be the extension folder
-        binPath = path.join(context.extensionPath, process.env[debugAzmcpBinaryRelativePathEnvName], binary);
-    } else {
-        binPath = path.join(context.extensionPath, 'server', binary);
-    }
+    const binPath = path.join(context.extensionPath, 'server', binary);
     if (!fs.existsSync(binPath)) {
         throw new Error(`azmcp binary not found at ${binPath}. Please ensure the server binary is present.`);
     }
