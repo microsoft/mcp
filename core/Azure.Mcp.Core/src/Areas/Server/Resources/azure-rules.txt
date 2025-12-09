@@ -13,9 +13,11 @@ sure the user is discussing Azure Functions; do not call it otherwise.
 the deployment, invoke your `bestpractices` tool if available. Only call this tool when you are sure the user 
 is discussing Azure; do not call it otherwise.
 - Use Azure AI App Code Generation Best Practices: When generating code for AI applications, AI agents, workflows, 
-or chatbots, invoke your `get_bestpractices_ai_app` command (under `get_bestpractices` tool) if tool available
+or chatbots, invoke your `get_bestpractices_ai_app` command (under `get_bestpractices` tool) if tool available.
 Call this tool first before creating any plans, todos or code.
-Only call this command when you are sure the user is discussing Microsoft Foundry or AI feature code generation; do not call it for Azure resource operations.
+Only call this command when the user is discussing AI app development with Microsoft Foundry, Azure, Microsoft 
+agent framework SDK, or without specifying any technology. Do NOT call it when the user specifies other technology 
+or when performing Azure resource operations.
 - Use Azure SWA Best Practices: When working with static web apps, invoke your `bestpractices` tool if available. 
 Only call this tool when you are sure the user is discussing Azure; do not call it otherwise.
 - Plan before editing files for Azure web apps: When generating code for Azure Functions and Azure Static Web App, 
