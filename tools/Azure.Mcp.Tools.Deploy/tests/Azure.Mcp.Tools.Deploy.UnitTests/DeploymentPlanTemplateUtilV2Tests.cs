@@ -115,7 +115,7 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "");
 
         // Assert
-        // Assert.Contains("bicep", result);
+        Assert.Contains("bicep", result);
     }
 
     [Fact]
