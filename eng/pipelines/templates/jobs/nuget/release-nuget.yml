@@ -38,6 +38,7 @@ jobs:
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
+              useDotNetTask: true
 
           - task: 1ES.PublishNuget@1
             displayName: Publish wrapper Nuget to Prod Feed
@@ -46,6 +47,7 @@ jobs:
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
+              useDotNetTask: true
 
           # Publish platform-specific packages first to ensure they are available before publishing wrapper package
           - task: 1ES.PublishNuget@1
@@ -54,6 +56,7 @@ jobs:
               packageParentPath: '$(Pipeline.Workspace)'
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
+              useDotNetTask: true
 
           - task: 1ES.PublishNuget@1
             displayName: Publish wrapper Nuget to Dev Feed
@@ -61,3 +64,4 @@ jobs:
               packageParentPath: '$(Pipeline.Workspace)'
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
+              useDotNetTask: true

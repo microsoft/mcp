@@ -40,6 +40,7 @@ jobs:
       packageParentPath: '$(Pipeline.Workspace)'
       packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/**/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/**/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
+      useDotNetTask: true
 
   - task: PowerShell@2
     displayName: 'Attach usage instructions to build summary'
