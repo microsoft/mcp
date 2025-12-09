@@ -9,7 +9,6 @@ using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
