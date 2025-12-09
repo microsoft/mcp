@@ -398,7 +398,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_and_get_appconfig_kv_with_content_type()
     {
         // arrange
@@ -454,7 +453,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_and_get_content_type_directly_using_service()
     {
         // arrange
@@ -487,7 +485,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_single_tag()
     {
         // arrange
@@ -519,7 +516,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_multiple_tags()
     {
         // arrange
@@ -556,7 +552,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_tags_containing_spaces()
     {
         // arrange
