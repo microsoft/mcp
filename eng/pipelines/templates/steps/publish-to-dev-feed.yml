@@ -8,6 +8,9 @@ parameters:
   - name: CustomEndpoint
     type: string
     default: ''
+  - name: Access
+    type: string
+    default: 'public'
 
 steps:
   - template: /eng/common/pipelines/templates/steps/set-default-branch.yml
@@ -32,9 +35,20 @@ steps:
         Write-Host "  - $($file.FullName)"
       }
 
+      $access = '${{parameters.Access}}'
       $tag = '${{parameters.Tag}}'
+
       foreach ($file in $tgzFiles) {
-        $command = "npm publish '$file' --access public --tag '$tag'"
+        $command = "npm publish '$file' --loglevel verbose"
+
+        if (![string]::IsNullOrEmpty($access)) {
+          $command += " --access $access"
+        }
+
+        if (![string]::IsNullOrEmpty($tag)) {
+          $command += " --tag '$tag'"
+        }
+
         Write-Host "> $command"
         Invoke-Expression $command
         if (!$?) {
