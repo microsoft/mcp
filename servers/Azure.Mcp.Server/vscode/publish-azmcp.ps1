@@ -22,8 +22,8 @@ try {
 
     # Run dotnet publish with explicit error handling
     Write-Host "Running dotnet publish..." -ForegroundColor Yellow
-    $output = dotnet publish $projectPath -c Release --self-contained true -o $dstBase 2>&1
-    
+    $output = dotnet publish $projectPath -c Release --self-contained false -o $dstBase 2>&1
+
     if ($LASTEXITCODE -ne 0) {
         Write-Host "dotnet publish failed with exit code $LASTEXITCODE" -ForegroundColor Red
         Write-Host "Output:" -ForegroundColor Red
