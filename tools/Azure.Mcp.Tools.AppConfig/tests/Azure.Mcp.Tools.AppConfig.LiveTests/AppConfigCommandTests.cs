@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -32,7 +31,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     /// AZSDK3493 = $..name
     /// AZSDK3447 = $..key
     /// </summary>
-    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493", "AZSDK3447" }).ToList();
+    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493", "AZSDK3447"];
 
     public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {

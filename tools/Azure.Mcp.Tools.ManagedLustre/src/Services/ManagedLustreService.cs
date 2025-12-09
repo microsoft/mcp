@@ -377,7 +377,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             var collection = rg.GetAmlFileSystems();
+#if DEBUG
+            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Started, name, data, cancellationToken);
+            await createOperationResult.WaitForCompletionAsync(TimeSpan.FromMilliseconds(1), cancellationToken);
+#else
             var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken);
+#endif
             var fileSystemResource = createOperationResult.Value;
             return Map(fileSystemResource);
         }
