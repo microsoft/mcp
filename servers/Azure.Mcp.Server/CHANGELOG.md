@@ -4,13 +4,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 2.0.0-beta.8 (Unreleased)
 
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
-
 ### Other Changes
+
+- Move Azure AI Best Practices tool into Best Practice namespace [[#1323](https://github.com/microsoft/mcp/pull/1323)]
 
 ## 2.0.0-beta.7 (2025-11-25)
 

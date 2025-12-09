@@ -114,9 +114,12 @@ Model selection is required for any AI code generation in Azure - all AI apps (M
   - This shows which models the user can actually access (documentation may list models not available to them)
 
 ## Think and Output Your Thoughts
-Always output your thoughts on model and SDK selection before planning and coding.
+**IMPORTANT**: You MUST output your thoughts on model and SDK selection BEFORE creating any plans or todos. Do NOT proceed to planning until all three subsections below are output.
 
 **How to output**: Present your analysis and reasoning directly in your response as readable text for the user. Write your thinking process inline as part of your answer. This ensures transparency and helps the user understand your decision-making process.
+
+**Why output is critical**: When context becomes long during implementation, information from earlier searches may be lost or truncated. By outputting your analysis explicitly, you preserve the critical decision-making information (SDK selection, model choice, feature mappings) for reference throughout the entire implementation process. This prevents loss of context and ensures consistent decisions.
+
 Follow the exact format structure below in the specified order. Each section (1, 2, 3) must be completed with the prescribed output format.
 
 ### 1. User Requirements Analysis
