@@ -31,12 +31,14 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_list_workbooks()
     {
+        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
+
         var result = await CallToolAsync(
             "workbooks_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName }
+                { "resource-group", TestVariables["ResourceGroupName"] }
             });
 
         var workbooks = result.AssertProperty("Workbooks");
@@ -57,6 +59,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_show_workbook_details()
     {
+        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
+
         // First get the list of workbooks to find a valid ID
         var listResult = await CallToolAsync(
             "workbooks_list",
@@ -93,6 +97,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_perform_basic_crud_operations()
     {
+        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
+
         var workbookName = $"Test Workbook {Guid.NewGuid():N}";
         string? workbookId = null;
 
@@ -165,6 +171,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_delete_workbook()
     {
+        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
         var workbookName = $"Delete Test Workbook {Guid.NewGuid():N}";
 
         // Create a workbook to delete
@@ -173,7 +180,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", TestVariables["ResourceGroupName"] },
                 { "display-name", workbookName },
                 { "serialized-content", TestWorkbookContent },
                 { "source-id", "azure monitor" }
@@ -183,6 +190,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var workbookIdProperty = createdWorkbook.AssertProperty("WorkbookId");
         string? workbookId = workbookIdProperty.GetString();
         Assert.NotNull(workbookId);
+        RegisterVariable("WorkbookId", workbookId);
 
         // Delete the workbook
         var deleteResult = await CallToolAsync(
@@ -204,7 +212,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             "workbooks_show",
             new()
             {
-                { "workbook-id", workbookId }
+                { "workbook-id", TestVariables["WorkbookId"] }
             });
 
         // Should return an error response (500) since workbook was deleted
