@@ -185,4 +185,3 @@ var client = new PersistentAgentsClient(  // ❌ WRONG: Use AIProjectClient inst
     "https://<resource>.services.ai.azure.com/api/projects/<project>",
     new AzureCliCredential());
 ```
-
