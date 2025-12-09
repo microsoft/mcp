@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
@@ -44,9 +43,8 @@ using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 

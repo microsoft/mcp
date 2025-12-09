@@ -839,11 +839,11 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 
@@ -1631,8 +1631,8 @@ When creating new C# files, start with only the using statements you actually ne
 
 ```csharp
 // Start minimal - only add what you actually use
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 // Add more using statements as you implement the code
 // Don't copy-paste using blocks from other files
@@ -1675,6 +1675,7 @@ dotnet build --verbosity normal | Select-String "warning"
 // Only what's actually used in this file
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 ```
 
 ✅ **Add using statements for better readability:**
@@ -2181,7 +2182,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 - **Solution**: Use correct generic type: `ILogger<BaseDatabaseCommand<TOptions>>`
 
 **Issue: Missing using statements for TrimAnnotations**
-- **Solution**: Add `using Azure.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
+- **Solution**: Add `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
 
 ### AOT Compilation Issues
 

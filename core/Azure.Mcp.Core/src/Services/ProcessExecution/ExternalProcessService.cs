@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using static Azure.Mcp.Core.Services.ProcessExecution.ProcessExtensions;

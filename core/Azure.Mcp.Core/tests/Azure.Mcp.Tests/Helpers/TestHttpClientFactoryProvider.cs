@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests.Client.Helpers;

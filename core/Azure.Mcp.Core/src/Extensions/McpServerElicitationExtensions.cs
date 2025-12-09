@@ -3,7 +3,6 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
-using static ModelContextProtocol.Protocol.ElicitRequestParams;
 
 namespace Azure.Mcp.Core.Extensions;
 
