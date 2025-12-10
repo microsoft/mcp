@@ -12,6 +12,7 @@ namespace Azure.Mcp.Tools.Sql.LiveTests;
 
 public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
 
     [Fact]
     public async Task Should_ShowDatabase_Successfully()
