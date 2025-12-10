@@ -5,12 +5,42 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.LiveTests;
 
 public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    private readonly string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    public override List<UriRegexSanitizer> UriRegexSanitizers => new List<UriRegexSanitizer>
+    {
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "workbooks\\/([^?\\/]+)",
+            Value = EmptyGuid,
+            GroupForReplace = "1"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "resource[gG]roups\\/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    };
+
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+
+        // we're inserting this in front of others to ensure it runs first
+        GeneralRegexSanitizers.Insert(0, new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "Sanitized",
+        }));
+    }
+
     // Test workbook content for CRUD operations
     private const string TestWorkbookContent = """
         {
@@ -31,14 +61,12 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_list_workbooks()
     {
-        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
-
         var result = await CallToolAsync(
             "workbooks_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", TestVariables["ResourceGroupName"] }
+                { "resource-group", Settings.ResourceGroupName }
             });
 
         var workbooks = result.AssertProperty("Workbooks");
@@ -59,8 +87,6 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_show_workbook_details()
     {
-        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
-
         // First get the list of workbooks to find a valid ID
         var listResult = await CallToolAsync(
             "workbooks_list",
@@ -97,9 +123,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_perform_basic_crud_operations()
     {
-        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
-
-        var workbookName = $"Test Workbook {Guid.NewGuid():N}";
+        var workbookName = RegisterOrRetrieveVariable("workbookName", $"Test Workbook {Guid.NewGuid():N}");
         string? workbookId = null;
 
         try
@@ -125,7 +149,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.Equal(workbookName, displayNameProperty.GetString());
 
             // UPDATE
-            var updatedName = $"Updated {workbookName}";
+            var updatedName = RegisterOrRetrieveVariable("updatedName", $"Updated {workbookName}");
             var updateResult = await CallToolAsync(
                 "workbooks_update",
                 new()
@@ -171,8 +195,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_delete_workbook()
     {
-        RegisterVariable("ResourceGroupName", Settings.ResourceGroupName);
-        var workbookName = $"Delete Test Workbook {Guid.NewGuid():N}";
+        var workBookName = RegisterOrRetrieveVariable("WorkBookName", $"Delete Test Workbook {Guid.NewGuid():N}");
 
         // Create a workbook to delete
         var createResult = await CallToolAsync(
@@ -180,8 +203,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", TestVariables["ResourceGroupName"] },
-                { "display-name", workbookName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "display-name", workBookName },
                 { "serialized-content", TestWorkbookContent },
                 { "source-id", "azure monitor" }
             });
@@ -190,7 +213,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var workbookIdProperty = createdWorkbook.AssertProperty("WorkbookId");
         string? workbookId = workbookIdProperty.GetString();
         Assert.NotNull(workbookId);
-        RegisterVariable("WorkbookId", workbookId);
+        workbookId = RetrieveSanitizedVariable("WorkbookId", workbookId);
 
         // Delete the workbook
         var deleteResult = await CallToolAsync(
@@ -212,7 +235,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             "workbooks_show",
             new()
             {
-                { "workbook-id", TestVariables["WorkbookId"] }
+                { "workbook-id", workbookId }
             });
 
         // Should return an error response (500) since workbook was deleted
@@ -223,6 +246,21 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.Contains("not found", errorMessage.GetString(), StringComparison.OrdinalIgnoreCase);
     }
 
-
+    private string RetrieveSanitizedVariable(string name, string value)
+    {
+        if (this.TestMode == Azure.Mcp.Tests.Helpers.TestMode.Live)
+        {
+            return value;
+        }
+        else if (this.TestMode == Azure.Mcp.Tests.Helpers.TestMode.Record)
+        {
+            RegisterVariable(name, value.Replace(Settings.SubscriptionId, EmptyGuid).Replace(Settings.ResourceGroupName.ToLower(), "Sanitized"));
+            return value;
+        }
+        else
+        {
+            return TestVariables[name];
+        }
+    }
 }
 

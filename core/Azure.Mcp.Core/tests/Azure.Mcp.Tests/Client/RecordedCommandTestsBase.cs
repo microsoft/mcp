@@ -4,18 +4,11 @@
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
-using Microsoft.Extensions.Options;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -89,6 +82,31 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// When set, applies a custom matcher for _all_ playback tests from this test class. This can be overridden on a per-test basis using the <see cref="CustomMatcherAttribute"/> attribute on test methods.
     /// </summary>
     public virtual CustomDefaultMatcher? TestMatcher { get; set; } = null;
+
+    /// <summary>
+    /// Registers a variable to or retrieves it from the session record. This is a convenience equivalent to calling
+    /// <see cref="RegisterVariable(string, string)"/> and then retrieving the value from <see cref="TestVariables"/>.
+    /// If the test mode is playback, it will load attempt to load the variable and return it. If the test mode isExpand commentComment on line R100Code has comments. Press enter to view.
+    /// record, it will store the value and return it.
+    /// </summary>
+    /// <param name="name">The name of the variable to register or retrieve.</param>
+    /// <param name="value">The value reference to register or retrieve.</param>
+    /// <returns>The value of the variable.</returns>
+    public virtual string RegisterOrRetrieveVariable(string name, string value)
+    {
+        if (TestMode == TestMode.Record)
+        {
+            // store the value in the recording
+            TestVariables[name] = value;
+        }
+        else if (TestMode == TestMode.Playback)
+        {
+            // retrieve the value from the recording
+            value = TestVariables[name];
+        }
+
+        return value;
+    }
 
     public virtual void RegisterVariable(string name, string value)
     {
