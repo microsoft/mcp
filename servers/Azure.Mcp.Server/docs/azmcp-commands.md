@@ -22,7 +22,37 @@ The following options are available for all commands:
 
 ### Server Operations
 
-The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools:
++The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools.
++
++#### Using `azmcp` locally vs in container images
++
++The commands in this document assume you are running the **`azmcp` CLI locally**
++for example as a .NET global tool. In that case the executable is called
++`azmcp` and commands such as:
++
++```bash
++azmcp server start --mode namespace --transport=stdio
++```
++
++are valid.
++
++When you run the **Azure MCP Server container image**
++`mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
++the image already contains an entrypoint that starts the MCP server process. The
++image does **not** expose an `azmcp` executable intended to be used as the
++container command.
++
++- Do **not** override the container command / entrypoint with `azmcp ...` when
++  deploying the image. Doing so will cause the container to fail to start.
++- Leave the command / entrypoint blank in Azure Container Apps so the default
++  image entrypoint is used.
++- If you need to customize the startup command or add extra arguments, build
++  your own image based on the Azure MCP Server, configure the entrypoint there,
++  and then deploy that custom image instead of overriding the command in the
++  platform.
++
++The remaining sections describe the different server modes that apply to both
++the CLI and the container image entrypoint.
 
 #### Default Mode (Namespace)
 
