@@ -22,7 +22,7 @@ The following options are available for all commands:
 
 ### Server Operations
 
-+The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools.
++The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools:
 +
 +#### Using `azmcp` locally vs in container images
 +
