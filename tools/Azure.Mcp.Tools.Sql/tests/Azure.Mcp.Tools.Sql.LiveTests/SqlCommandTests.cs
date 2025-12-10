@@ -12,6 +12,9 @@ namespace Azure.Mcp.Tools.Sql.LiveTests;
 
 public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// </summary>
     public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
 
     [Fact]
@@ -340,7 +343,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     {
         // Use the deployed test SQL server
         var serverName = Settings.ResourceBaseName;
-        var ruleName = $"test-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var ruleName = RegisterOrRetrieveVariable("ruleName", $"test-rule-{DateTime.UtcNow:yyyyMMddHHmmss}");
         var startIp = "192.168.1.100";
         var endIp = "192.168.1.200";
 
@@ -375,7 +378,13 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
 
         var id = firewallRule.GetProperty("id").GetString();
         Assert.NotNull(id);
-        Assert.Contains(serverName, id);
+
+        // the matched response body at rest is properly storing "Sanitized" under server name,
+        // but for some reason when sql service gets all 0s back for the subid, it replaces the name with all 0s as well.
+        if (TestMode != Tests.Helpers.TestMode.Playback)
+        {
+            Assert.Contains(serverName, id);
+        }
         Assert.Contains(ruleName, id);
     }
 
@@ -384,7 +393,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     {
         // Use the deployed test SQL server
         var serverName = Settings.ResourceBaseName;
-        var ruleName = $"test-delete-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var ruleName = RegisterOrRetrieveVariable("rulename", $"test-delete-rule-{DateTime.UtcNow:yyyyMMddHHmmss}");
         var startIp = "192.168.2.100";
         var endIp = "192.168.2.200";
 
