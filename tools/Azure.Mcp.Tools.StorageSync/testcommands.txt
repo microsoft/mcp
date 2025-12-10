@@ -1,0 +1,1 @@
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp

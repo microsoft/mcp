@@ -1,0 +1,810 @@
+namespace Azure.Mcp.Tools.StorageSync.Services;
+
+using global::Azure.Core;
+using global::Azure.Identity;
+using global::Azure.ResourceManager.Storage;
+using global::Azure.ResourceManager.Subscription;
+using global::Azure.ResourceManager;
+using Microsoft.Mcp.Core.Authentication;
+using Microsoft.Mcp.Core.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+/// <summary>
+/// Service for managing Azure Storage Sync resources.
+/// </summary>
+public sealed class StorageSyncService : IStorageSyncService
+{
+    private readonly ISubscriptionService _subscriptionService;
+    private readonly IAzureTokenCredentialProvider _tokenCredentialProvider;
+
+    public StorageSyncService(
+        ISubscriptionService subscriptionService,
+        IAzureTokenCredentialProvider tokenCredentialProvider)
+    {
+        _subscriptionService = subscriptionService;
+        _tokenCredentialProvider = tokenCredentialProvider;
+    }
+
+    /// <summary>
+    /// Lists all storage sync services in a subscription or resource group.
+    /// </summary>
+    public async Task<List<StorageSyncServiceData>> ListStorageSyncServicesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        var client = new ArmClient(credential);
+        var resources = new List<StorageSyncServiceData>();
+
+        try
+        {
+            // List all storage sync services
+            // Note: This is a placeholder implementation
+            // Real implementation would use Resource Graph queries or specific Azure SDK calls
+            var query = "resources | where type == 'microsoft.storagesync/storagesyncservices'";
+
+            if (!string.IsNullOrEmpty(resourceGroup))
+            {
+                query += $" | where resourceGroup == '{resourceGroup}'";
+            }
+
+            // TODO: Implement actual Resource Graph query or use Azure SDK storage sync client
+            // This would require the Azure.ResourceManager.StorageSync NuGet package
+
+            return resources;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to list storage sync services in subscription '{subscription}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific storage sync service.
+    /// </summary>
+    public async Task<StorageSyncServiceData> GetStorageSyncServiceAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            var client = new ArmClient(credential);
+            var resourceId = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}";
+
+            // TODO: Implement actual Azure SDK call to get storage sync service
+            // Example pattern:
+            // var resource = await client.GetGenericResources()
+            //     .GetAsync(new ResourceIdentifier(resourceId), cancellationToken: cancellationToken);
+
+            return new StorageSyncServiceData
+            {
+                Id = resourceId,
+                Name = serviceName,
+                Type = "Microsoft.StorageSync/storageSyncServices",
+                Location = "eastus",
+                Properties = new()
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to get storage sync service '{serviceName}' in resource group '{resourceGroup}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates a new storage sync service.
+    /// </summary>
+    public async Task<StorageSyncServiceData> CreateStorageSyncServiceAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string location,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            var client = new ArmClient(credential);
+
+            // TODO: Implement actual Azure SDK call to create storage sync service
+            // This requires constructing proper ARM template or using direct API calls
+
+            var resourceData = new StorageSyncServiceData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}",
+                Name = serviceName,
+                Type = "Microsoft.StorageSync/storageSyncServices",
+                Location = location,
+                Tags = tags ?? new(),
+                Properties = new()
+            };
+
+            return resourceData;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create storage sync service '{serviceName}' in resource group '{resourceGroup}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing storage sync service.
+    /// </summary>
+    public async Task<StorageSyncServiceData> UpdateStorageSyncServiceAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string? incomingTrafficPolicy = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to update storage sync service
+
+            return new StorageSyncServiceData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}",
+                Name = serviceName,
+                Type = "Microsoft.StorageSync/storageSyncServices",
+                Tags = tags ?? new(),
+                Properties = new() { IncomingTrafficPolicy = incomingTrafficPolicy }
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to update storage sync service '{serviceName}' in resource group '{resourceGroup}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a storage sync service.
+    /// </summary>
+    public async Task DeleteStorageSyncServiceAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to delete storage sync service
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete storage sync service '{serviceName}' in resource group '{resourceGroup}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Lists all sync groups for a storage sync service.
+    /// </summary>
+    public async Task<List<SyncGroupData>> ListSyncGroupsAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to list sync groups
+            return new List<SyncGroupData>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to list sync groups for service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific sync group.
+    /// </summary>
+    public async Task<SyncGroupData> GetSyncGroupAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to get sync group
+            return new SyncGroupData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}",
+                Name = groupName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to get sync group '{groupName}' in service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates a new sync group.
+    /// </summary>
+    public async Task<SyncGroupData> CreateSyncGroupAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to create sync group
+            return new SyncGroupData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}",
+                Name = groupName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create sync group '{groupName}' in service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a sync group.
+    /// </summary>
+    public async Task DeleteSyncGroupAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to delete sync group
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete sync group '{groupName}' in service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Lists all cloud endpoints for a sync group.
+    /// </summary>
+    public async Task<List<CloudEndpointData>> ListCloudEndpointsAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to list cloud endpoints
+            return new List<CloudEndpointData>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to list cloud endpoints for sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific cloud endpoint.
+    /// </summary>
+    public async Task<CloudEndpointData> GetCloudEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to get cloud endpoint
+            return new CloudEndpointData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}/cloudEndpoints/{endpointName}",
+                Name = endpointName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups/cloudEndpoints"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to get cloud endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates a new cloud endpoint.
+    /// </summary>
+    public async Task<CloudEndpointData> CreateCloudEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string storageAccountResourceId,
+        string azureFileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to create cloud endpoint
+            return new CloudEndpointData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}/cloudEndpoints/{endpointName}",
+                Name = endpointName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups/cloudEndpoints",
+                Properties = new()
+                {
+                    StorageAccountResourceId = storageAccountResourceId,
+                    AzureFileShareName = azureFileShareName
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create cloud endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a cloud endpoint.
+    /// </summary>
+    public async Task DeleteCloudEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to delete cloud endpoint
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete cloud endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Triggers change detection on a cloud endpoint.
+    /// </summary>
+    public async Task TriggerChangeDetectionAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string? directoryPath = null,
+        List<string>? filePaths = null,
+        bool recursive = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to trigger change detection
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to trigger change detection on cloud endpoint '{endpointName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Lists all server endpoints for a sync group.
+    /// </summary>
+    public async Task<List<ServerEndpointData>> ListServerEndpointsAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to list server endpoints
+            return new List<ServerEndpointData>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to list server endpoints for sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific server endpoint.
+    /// </summary>
+    public async Task<ServerEndpointData> GetServerEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to get server endpoint
+            return new ServerEndpointData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}/serverEndpoints/{endpointName}",
+                Name = endpointName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups/serverEndpoints"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to get server endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates a new server endpoint.
+    /// </summary>
+    public async Task<ServerEndpointData> CreateServerEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string serverResourceId,
+        string serverLocalPath,
+        bool? cloudTiering = null,
+        int? volumeFreeSpacePercent = null,
+        int? tierFilesOlderThanDays = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to create server endpoint
+            return new ServerEndpointData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}/serverEndpoints/{endpointName}",
+                Name = endpointName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups/serverEndpoints",
+                Properties = new()
+                {
+                    ServerResourceId = serverResourceId,
+                    ServerLocalPath = serverLocalPath,
+                    CloudTiering = cloudTiering,
+                    VolumeFreeSpacePercent = volumeFreeSpacePercent,
+                    TierFilesOlderThanDays = tierFilesOlderThanDays
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create server endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing server endpoint.
+    /// </summary>
+    public async Task<ServerEndpointData> UpdateServerEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        bool? cloudTiering = null,
+        int? volumeFreeSpacePercent = null,
+        int? tierFilesOlderThanDays = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to update server endpoint
+            return new ServerEndpointData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/syncGroups/{groupName}/serverEndpoints/{endpointName}",
+                Name = endpointName,
+                Type = "Microsoft.StorageSync/storageSyncServices/syncGroups/serverEndpoints",
+                Properties = new()
+                {
+                    CloudTiering = cloudTiering,
+                    VolumeFreeSpacePercent = volumeFreeSpacePercent,
+                    TierFilesOlderThanDays = tierFilesOlderThanDays
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to update server endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a server endpoint.
+    /// </summary>
+    public async Task DeleteServerEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string groupName,
+        string endpointName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to delete server endpoint
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete server endpoint '{endpointName}' in sync group '{groupName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Lists all registered servers.
+    /// </summary>
+    public async Task<List<RegisteredServerData>> ListRegisteredServersAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to list registered servers
+            return new List<RegisteredServerData>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to list registered servers for service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific registered server.
+    /// </summary>
+    public async Task<RegisteredServerData> GetRegisteredServerAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string serverId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to get registered server
+            return new RegisteredServerData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/registeredServers/{serverId}",
+                Name = serverId,
+                Type = "Microsoft.StorageSync/storageSyncServices/registeredServers"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to get registered server '{serverId}' in service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Registers a new server.
+    /// </summary>
+    public async Task<RegisteredServerData> RegisterServerAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string serverId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to register server
+            return new RegisteredServerData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/registeredServers/{serverId}",
+                Name = serverId,
+                Type = "Microsoft.StorageSync/storageSyncServices/registeredServers"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to register server '{serverId}' with service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Updates a registered server.
+    /// </summary>
+    public async Task<RegisteredServerData> UpdateServerAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string serverId,
+        Dictionary<string, object>? properties = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to update registered server
+            return new RegisteredServerData
+            {
+                Id = $"/subscriptions/{subscriptionResource.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.StorageSync/storageSyncServices/{serviceName}/registeredServers/{serverId}",
+                Name = serverId,
+                Type = "Microsoft.StorageSync/storageSyncServices/registeredServers"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to update registered server '{serverId}' in service '{serviceName}'.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Unregisters a server.
+    /// </summary>
+    public async Task UnregisterServerAsync(
+        string subscription,
+        string resourceGroup,
+        string serviceName,
+        string serverId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _tokenCredentialProvider.GetCredentialAsync(tenant, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            // TODO: Implement actual Azure SDK call to unregister server
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to unregister server '{serverId}' from service '{serviceName}'.", ex);
+        }
+    }
+}
