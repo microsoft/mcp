@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.Workbooks.LiveTests;
 
 public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    private readonly string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     public override List<UriRegexSanitizer> UriRegexSanitizers => new List<UriRegexSanitizer>
     {
         new UriRegexSanitizer(new UriRegexSanitizerBody
@@ -26,6 +26,15 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
+        })
+    };
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers => new List<BodyKeySanitizer>()
+    {
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.query")
+        {
+            Regex = "\\r\\n",
+            Value = "\\n"
         })
     };
 
@@ -195,7 +204,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     [Fact]
     public async Task Should_delete_workbook()
     {
-        var workBookName = RegisterOrRetrieveVariable("WorkBookName", $"Delete Test Workbook {Guid.NewGuid():N}");
+        var workbookName = RegisterOrRetrieveVariable("WorkBookName", $"Delete Test Workbook {Guid.NewGuid():N}");
 
         // Create a workbook to delete
         var createResult = await CallToolAsync(
@@ -204,7 +213,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "display-name", workBookName },
+                { "display-name", workbookName },
                 { "serialized-content", TestWorkbookContent },
                 { "source-id", "azure monitor" }
             });
