@@ -11,7 +11,8 @@ param(
     [switch] $CollectCoverage,
     [switch] $OpenReport,
     [switch] $TestNativeBuild,
-    [switch] $OnlyBuild
+    [switch] $OnlyBuild,
+    [string] $ScopingBuildInfoPath = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,6 +21,15 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $debugLogs = $env:SYSTEM_DEBUG -eq 'true' -or $DebugPreference -eq 'Continue'
+
+$BuildInfo = $null
+if ($ScopingBuildInfoPath) {
+    if (!(Test-Path $ScopingBuildInfoPath)) {
+        Write-Error "BuildInfo path was provided, but not found at path: $ScopingBuildInfoPath"
+        exit 1
+    }
+    $BuildInfo = Get-Content $ScopingBuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+}
 
 $workPath = "$RepoRoot/.work/tests"
 Remove-Item -Recurse -Force $workPath -ErrorAction SilentlyContinue
@@ -47,12 +57,21 @@ function FilterTestProjects {
         Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
     }}
 
-    # until all LiveTest projects are migrated to recorded tests, we _must_ complete
-    # an additional filter such that we'll only invoke those csprojs where playback is possible
     if ($testType -eq 'Recorded') {
+        # until all LiveTest projects are migrated to recorded tests, we _must_ complete
+        # an additional filter such that we'll only invoke those csprojs where playback is possible
         $testProjects = $testProjects | Where-Object {
             $projectDirectory = Split-Path -Path $_.FullName -Parent
             Test-Path -Path (Join-Path -Path $projectDirectory -ChildPath 'assets.json')
+        }
+
+        if ($BuildInfo){
+            $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
+
+            $testProjects = $testProjects | Where-Object {
+                $prefix = $_.Relative
+                ($changedPaths | Where-Object { $prefix.StartsWith($_) }).Count -gt 0
+            }
         }
     }
 
