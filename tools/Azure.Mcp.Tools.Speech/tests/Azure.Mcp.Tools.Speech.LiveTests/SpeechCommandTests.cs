@@ -4,14 +4,50 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
-public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    // Sanitize subscription IDs in URIs
+    public override List<UriRegexSanitizer> UriRegexSanitizers => new()
+    {
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/subscriptions/(?<sub>[^/]+)/",
+            GroupForReplace = "sub",
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    };
+
+    // Sanitize authorization tokens in headers
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
+    {
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Authorization")
+        {
+            Regex = "Bearer (?<token>.+)",
+            GroupForReplace = "token",
+            Value = "Sanitized"
+        })
+    };
+
+    // Sanitize cognitive services hostnames in body content
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
+    {
+        // Sanitizes all hostnames in URLs to remove actual cognitive services endpoint names
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody
+        {
+            Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)\\.cognitiveservices\\.azure\\.com",
+            GroupForReplace = "host",
+            Value = "sanitized"
+        })
+    };
+
     #region SpeechToText Tests
 
     [Fact]

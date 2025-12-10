@@ -125,7 +125,8 @@ public class FastTranscriptionRecognizer(
                 };
 
                 // Make the request using HttpClient from service
-                var response = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
+                using var httpClient = _httpClientService.CreateClient();
+                var response = await httpClient.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
