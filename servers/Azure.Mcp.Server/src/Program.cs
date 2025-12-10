@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -14,6 +13,9 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
@@ -70,7 +72,6 @@ internal class Program
 
         return [
             // Register core areas
-            new Azure.Mcp.Tools.AzureAIBestPractices.AzureAIBestPracticesSetup(),
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),

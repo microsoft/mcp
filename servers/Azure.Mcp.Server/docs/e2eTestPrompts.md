@@ -2,16 +2,6 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
-## Azure AI Best Practices
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azureaibestpractices_get | Get best practices for building AI applications in Azure |
-| azureaibestpractices_get | Show me the best practices for Microsoft Foundry agents code generation |
-| azureaibestpractices_get | Get guidance for building agents with Microsoft Foundry |
-| azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
-| azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
-
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
@@ -435,7 +425,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
 | get_bestpractices_get | What are azure function best practices? |
 | get_bestpractices_get | configure azure mcp in coding agent for my repo |
-
+| get_bestpractices_ai_app | Get best practices for building AI applications in Azure |
+| get_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
+| get_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
+| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
+| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
 ## Azure Monitor
 
 | Tool Name | Test Prompt |

@@ -71,6 +71,7 @@ try {
 
             $dockerArch = switch($platform.architecture) {
                 "x64" { "amd64" }
+                "musl-x64" { "amd64" }
                 "arm64" { "arm64" }
                 default {
                     LogWarning "Skipping unsupported architecture $($platform.architecture) for server $serverName"

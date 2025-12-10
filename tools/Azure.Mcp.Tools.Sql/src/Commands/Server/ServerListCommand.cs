@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Net;
-using Azure;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;

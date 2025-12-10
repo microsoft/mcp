@@ -846,11 +846,11 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 
@@ -1075,6 +1075,14 @@ Guidelines:
    - ❌ Bad: `_service.{Operation}(Arg.Is<T>(t => t == value)).Returns(return)`
 - CancellationToken in mocks: Always use `Arg.Any<CancellationToken>()` for CancellationToken parameters when setting up mocks
 - CancellationToken in product code invocation: When invoking real product code objects in unit tests, use `TestContext.Current.CancellationToken` for the CancellationToken parameter
+- If any test mutates environment variables, to prevent conflicts between tests, the test project must:
+  - Reference project `$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj`
+  - Include an `AssemblyAttributes.cs` file with the following contents :
+    ```csharp
+    [assembly: Azure.Mcp.Tests.Helpers.ClearEnvironmentVariablesBeforeTest]
+    [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
+    ```
+
 ### 7. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
@@ -1513,8 +1521,6 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-[Trait("Toolset", "{Toolset}")]
-[Trait("Category", "Live")]
 public class {Toolset}CommandTests( ITestOutputHelper output)
     : CommandTestsBase(output)
 {
@@ -1632,8 +1638,8 @@ When creating new C# files, start with only the using statements you actually ne
 
 ```csharp
 // Start minimal - only add what you actually use
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 // Add more using statements as you implement the code
 // Don't copy-paste using blocks from other files
@@ -1676,6 +1682,7 @@ dotnet build --verbosity normal | Select-String "warning"
 // Only what's actually used in this file
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 ```
 
 ✅ **Add using statements for better readability:**
@@ -2182,7 +2189,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 - **Solution**: Use correct generic type: `ILogger<BaseDatabaseCommand<TOptions>>`
 
 **Issue: Missing using statements for TrimAnnotations**
-- **Solution**: Add `using Azure.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
+- **Solution**: Add `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
 
 ### AOT Compilation Issues
 

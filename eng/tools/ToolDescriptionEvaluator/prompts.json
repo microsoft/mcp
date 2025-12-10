@@ -1,11 +1,4 @@
 {
-  "azureaibestpractices_get": [
-    "Get best practices for building AI applications in Azure",
-    "Show me the best practices for Microsoft Foundry agents code generation",
-    "Get guidance for building agents with Microsoft Foundry",
-    "Create an AI app that helps me to manage travel queries.",
-    "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
-  ],
   "search_knowledge_base_get": [
     "List all knowledge bases in the Azure AI Search service <service-name>",
     "Show me the knowledge bases in the Azure AI Search service <service-name>",
@@ -504,6 +497,13 @@
     "Get the latest Azure Static Web Apps best practices",
     "What are azure function best practices?",
     "configure azure mcp in coding agent for my repo"
+  ],
+  "get_bestpractices_ai_app": [
+    "Get best practices for building AI applications in Azure",
+    "Show me the best practices for Microsoft Foundry agents code generation",
+    "Get guidance for building agents with Microsoft Foundry",
+    "Create an AI app that helps me to manage travel queries.",
+    "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
   ],
   "monitor_activitylog_list": [
     "List the activity logs of the last month for <resource_name>"

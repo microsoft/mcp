@@ -40,6 +40,24 @@
             "problemMatcher": [],
             "label": "npm: ci-build",
             "detail": "npm run lint && npm run build"
+        },
+        {
+            "label": "publish-azmcp-binary",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/publish-azmcp.ps1"
+            ],
+            "dependsOn": "npm dev-build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            },
+            "problemMatcher": []
         }
     ]
 }

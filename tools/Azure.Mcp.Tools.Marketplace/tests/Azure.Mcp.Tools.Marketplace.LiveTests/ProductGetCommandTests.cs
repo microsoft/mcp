@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -17,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-[Trait("Area", "Marketplace")]
 public class ProductGetCommandTests : CommandTestsBase
 {
     private const string ProductKey = "product";
@@ -49,7 +47,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product()
     {
         var result = await CallToolAsync(
@@ -69,7 +66,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_language_option()
     {
         var result = await CallToolAsync(
@@ -90,7 +86,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_market_option()
     {
         var result = await CallToolAsync(
@@ -111,7 +106,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
         var result = await CallToolAsync(
