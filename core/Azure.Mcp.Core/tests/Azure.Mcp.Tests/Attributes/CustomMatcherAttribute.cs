@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using Xunit;
 using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client.Attributes;
@@ -46,5 +47,48 @@ public sealed class CustomMatcherAttribute : BeforeAfterTestAttribute
         Current.Value = null;
     }
 
-    internal static CustomMatcherAttribute? GetActive() => Current.Value;
+    internal static CustomMatcherAttribute? GetActive()
+    {
+        if (Current.Value is { } active)
+        {
+            return active;
+        }
+
+        var methodInfo = TryResolveCurrentMethodInfo();
+        return methodInfo?.GetCustomAttribute<CustomMatcherAttribute>();
+    }
+
+    private static MethodInfo? TryResolveCurrentMethodInfo()
+    {
+        var test = TestContext.Current?.Test;
+        if (test == null)
+        {
+            return null;
+        }
+
+        var testCase = GetPropertyValue(test, "TestCase");
+        if (testCase == null)
+        {
+            return null;
+        }
+
+        var testMethod = GetPropertyValue(testCase, "TestMethod");
+        if (testMethod == null)
+        {
+            return null;
+        }
+
+        var method = GetPropertyValue(testMethod, "Method") as MethodInfo
+                     ?? GetPropertyValue(testMethod, "MethodInfo") as MethodInfo;
+
+        return method;
+    }
+
+    private static object? GetPropertyValue(object instance, string propertyName)
+    {
+        return instance
+            .GetType()
+            .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?
+            .GetValue(instance);
+    }
 }
