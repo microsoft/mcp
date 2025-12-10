@@ -916,7 +916,7 @@ Server logs can be obtained by capturing events for provider "Microsoft-Extensio
 
 #### Support Logging
 
-For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-enable-support-logging-to-folder` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-write-support-logs-to-dir` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
 
 > [!WARNING]
 > Support logging may include sensitive information. Use with extreme caution and only when requested by support.
@@ -937,7 +937,7 @@ For troubleshooting scenarios, you can enable detailed debug-level logging using
         "@azure/mcp@latest",
         "server",
         "start",
-        "--dangerously-enable-support-logging-to-folder",
+        "--dangerously-write-support-logs-to-dir",
         "/path/to/logs"
       ]
     }
@@ -948,7 +948,7 @@ For troubleshooting scenarios, you can enable detailed debug-level logging using
 **Command-line usage:**
 
 ```bash
-azmcp server start --dangerously-enable-support-logging-to-folder /path/to/logs
+azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
 ```
 
 The log files will be created with timestamp-based names (e.g., `azmcp_20251202_143052.log`) and will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.

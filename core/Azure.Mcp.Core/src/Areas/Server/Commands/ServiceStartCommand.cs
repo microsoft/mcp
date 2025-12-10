@@ -83,7 +83,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -105,9 +105,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">Command result to update on failure.</param>
     private static void ValidateSupportLoggingFolder(CommandResult commandResult)
     {
-        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name);
+        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name);
 
-        if (string.IsNullOrEmpty(folderPath))
+        if (folderPath is null)
         {
             return; // Option not specified, nothing to validate
         }
@@ -115,7 +115,19 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Validate the folder path is not empty or whitespace
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            commandResult.AddError("The --dangerously-enable-support-logging-to-folder option requires a valid folder path.");
+            commandResult.AddError("The --dangerously-write-support-logs-to-dir option requires a valid folder path.");
+            return;
+        }
+
+        // Validate the folder path is actually a valid path format
+        try
+        {
+            // GetFullPath will throw for invalid path characters and other path format issues
+            _ = Path.GetFullPath(folderPath);
+        }
+        catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
+        {
+            commandResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path: {ex.Message}");
         }
     }
 
@@ -148,7 +160,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
-            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyEnableSupportLoggingToFolder.Name)
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name)
         };
         return options;
     }
@@ -228,27 +240,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="options">The server configuration options.</param>
     private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
     {
-        if (string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
+        if (options.SupportLoggingFolder is null)
         {
             return;
         }
 
         // Set minimum log level to Debug when support logging is enabled
         logging.SetMinimumLevel(LogLevel.Debug);
-
-        // Configure console logging to stderr for debug-level logs
-        logging.AddConsole(consoleOptions =>
-        {
-            consoleOptions.LogToStandardErrorThreshold = LogLevel.Debug;
-            consoleOptions.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-        });
-        logging.AddSimpleConsole(simple =>
-        {
-            simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-            simple.IncludeScopes = true;
-            simple.SingleLine = true;
-            simple.TimestampFormat = "[yyyy-MM-dd HH:mm:ss.fff] ";
-        });
 
         // Add file logging to the specified folder
         logging.AddSupportFileLogging(options.SupportLoggingFolder);
