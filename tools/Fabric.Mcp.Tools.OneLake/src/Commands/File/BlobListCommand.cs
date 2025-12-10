@@ -6,6 +6,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -16,6 +17,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
+[HiddenCommand]
 public sealed class BlobListCommand(
     ILogger<BlobListCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<BlobListOptions>()
