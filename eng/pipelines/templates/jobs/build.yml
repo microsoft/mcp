@@ -95,6 +95,7 @@ jobs:
       arguments: >
         -TestType 'Recorded'
         -TestResultsPath '$(Build.ArtifactStagingDirectory)/recordedTestResults'
+        -ScopingBuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
       workingDirectory: $(Build.SourcesDirectory)
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
