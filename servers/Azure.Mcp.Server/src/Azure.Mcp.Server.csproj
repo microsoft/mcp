@@ -25,7 +25,7 @@
     <DnxPackageTags>azure,mcp</DnxPackageTags>
 
     <!-- pypi settings -->
-    <PypiPackageName>$(CliName)</PypiPackageName>
+    <PypiPackageName>msmcp-azure</PypiPackageName>
     <PypiPackageKeywords>azure,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
   </PropertyGroup>
 

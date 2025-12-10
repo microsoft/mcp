@@ -3,17 +3,22 @@
 
 <#
 .SYNOPSIS
-    Packs Azure MCP Server binaries into PyPI packages for distribution.
+    Packs Azure MCP Server binaries into PyPI wheels for distribution.
 
 .DESCRIPTION
-    This script creates PyPI packages for the Azure MCP Server, similar to the npm package structure.
-    It creates:
-    - A wrapper package (e.g., azmcp) that detects the platform and delegates to platform-specific packages
-    - Platform-specific packages (e.g., azmcp-win32-x64, azmcp-darwin-arm64) containing the actual binaries
+    This script creates platform-specific PyPI wheels for the Azure MCP Server.
+    Each wheel contains the binary for a specific platform (OS + architecture).
+    
+    The wheels are named according to PyPI conventions:
+    - msmcp_azure-1.0.0-py3-none-win_amd64.whl
+    - msmcp_azure-1.0.0-py3-none-macosx_11_0_arm64.whl
+    - msmcp_azure-1.0.0-py3-none-manylinux_2_17_x86_64.whl
+    etc.
 
     Users can install with:
-    - pip install azmcp
-    - uvx azmcp
+    - pip install msmcp-azure
+    - uvx msmcp-azure
+    - pipx install msmcp-azure
 
 .PARAMETER ArtifactsPath
     Path to the build artifacts containing the server binaries.
@@ -48,8 +53,7 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
-$wrapperSourcePath = "$RepoRoot/eng/pypi/wrapper"
-$platformSourcePath = "$RepoRoot/eng/pypi/platform"
+$pypiSourcePath = "$RepoRoot/eng/pypi"
 
 # When running locally, ignore missing artifacts instead of failing
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
@@ -86,11 +90,15 @@ $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 $tempFolder = "$RepoRoot/.work/temp_pypi"
 
-# Map node OS names to PyPI OS names
-$osNameMap = @{
-    'win32'  = 'win32'
-    'darwin' = 'darwin'
-    'linux'  = 'linux'
+# Map node OS names to PyPI wheel platform tags
+# See: https://packaging.python.org/en/latest/specifications/platform-compatibility-tags/
+$wheelPlatformMap = @{
+    'win32-x64'      = 'win_amd64'
+    'win32-arm64'    = 'win_arm64'
+    'darwin-x64'     = 'macosx_11_0_x86_64'
+    'darwin-arm64'   = 'macosx_11_0_arm64'
+    'linux-x64'      = 'manylinux_2_17_x86_64.manylinux2014_x86_64'
+    'linux-arm64'    = 'manylinux_2_17_aarch64.manylinux2014_aarch64'
 }
 
 # Map OS names to Python classifier OS names
@@ -129,30 +137,25 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     }
 
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+    New-Item -ItemType Directory -Force -Path $serverOutputPath | Out-Null
 
-    $wrapperOutputPath = "$serverOutputPath/wrapper"
-    New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
-
-    $platformOutputPath = "$serverOutputPath/platform"
-    New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-
-    # Use npm package name pattern but for PyPI (without @scope/)
+    # Use PyPI package name from csproj
     $basePackageName = $server.pypiPackageName ?? $server.cliName
     $description = $server.pypiDescription ?? $server.description
     $cliName = $server.cliName
     $keywords = @($server.pypiPackageKeywords ?? $server.npmPackageKeywords)
+    $moduleName = Get-ModuleName $basePackageName
 
     if ($native) {
         $basePackageName += "-native"
         $description += " with native dependencies"
         $keywords += "native"
+        $moduleName = Get-ModuleName $basePackageName
     }
 
-    # Track platform dependencies for wrapper package
-    $platformDependencies = @{}
-    $supportedPlatforms = @()
+    $builtPlatforms = @()
 
-    # Build the platform packages
+    # Build a wheel for each platform
     foreach ($platform in $filteredPlatforms) {
         $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
 
@@ -167,43 +170,52 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             return
         }
 
-        $pypiOs = $osNameMap[$platform.nodeOs]
+        $pypiOs = $platform.nodeOs
         $arch = $platform.architecture
-        $platformPackageName = "$basePackageName-$pypiOs-$arch"
-        $moduleName = Get-ModuleName $platformPackageName
+        $platformKey = "$pypiOs-$arch"
+        $wheelPlatformTag = $wheelPlatformMap[$platformKey]
 
+        if (!$wheelPlatformTag) {
+            Write-Warning "Unknown platform: $platformKey, skipping"
+            continue
+        }
+
+        $osClassifier = $osClassifierMap[$pypiOs]
         $extension = $platform.extension
-        $binPath = "bin/$cliName$extension"
 
+        Write-Host "`nBuilding wheel for $basePackageName ($platformKey)" -ForegroundColor Cyan
+
+        # Clean temp folder
         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
         New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName/bin" | Out-Null
 
-        Write-Host "Copying $platformPackageName platform files from $platformDirectory to $tempFolder/src/$moduleName/bin"
+        # Copy binary files
+        Write-Host "  Copying binaries from $platformDirectory"
         Copy-Item -Path "$platformDirectory/*" -Destination "$tempFolder/src/$moduleName/bin" -Recurse -Force
 
-        Write-Host "Copying platform script files from $platformSourcePath to $tempFolder/src/$moduleName"
-        Copy-Item -Path "$platformSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
+        # Copy package __init__.py
+        Copy-Item -Path "$pypiSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
 
         # Remove symbols files before packing
-        Write-Host "Removing symbol files from $tempFolder"
+        Write-Host "  Removing symbol files"
         Get-ChildItem -Path $tempFolder -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
         # Read template and replace placeholders
-        $pyprojectTemplate = Get-Content "$platformSourcePath/pyproject.toml.template" -Raw
-        $osClassifier = $osClassifierMap[$pypiOs]
+        $pyprojectTemplate = Get-Content "$pypiSourcePath/pyproject.toml.template" -Raw
 
         $pyprojectContent = $pyprojectTemplate `
-            -replace '{{PACKAGE_NAME}}', $platformPackageName `
+            -replace '{{PACKAGE_NAME}}', $basePackageName `
             -replace '{{VERSION}}', $server.version `
-            -replace '{{DESCRIPTION}}', "$description, for $pypiOs on $arch" `
+            -replace '{{DESCRIPTION}}', $description `
             -replace '{{KEYWORDS}}', (Get-KeywordsString $keywords) `
             -replace '{{OS_CLASSIFIER}}', $osClassifier `
+            -replace '{{CLI_NAME}}', $cliName `
             -replace '{{MODULE_NAME}}', $moduleName `
             -replace '{{HOMEPAGE}}', $server.readmeUrl
 
         $pyprojectPath = "$tempFolder/pyproject.toml"
-        Write-Host "Writing $pyprojectPath"
+        Write-Host "  Writing pyproject.toml"
         $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
 
         # Update version in __init__.py
@@ -213,15 +225,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows
+        $binPath = "bin/$cliName$extension"
         if (!$IsWindows) {
-            Write-Host "Setting executable permissions for $tempFolder/src/$moduleName/$binPath" -ForegroundColor Yellow
+            Write-Host "  Setting executable permissions" -ForegroundColor Yellow
             $binFullPath = "$tempFolder/src/$moduleName/$binPath"
             if (Test-Path $binFullPath) {
                 Invoke-LoggedCommand "chmod +x `"$binFullPath`""
             }
         }
         else {
-            Write-Warning "Executable permissions are not set when packing on a Windows agent."
+            Write-Warning "  Executable permissions are not set when packing on a Windows agent."
         }
 
         # Process and copy README
@@ -232,76 +245,84 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             -InsertPayload @{ ToolTitle = 'PyPI Package' } `
             -OutputDirectory $tempFolder
 
-        Write-Host "Copying LICENSE and NOTICE.txt to $tempFolder"
+        Write-Host "  Copying LICENSE and NOTICE.txt"
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
         Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
 
-        # Build the wheel and sdist
-        Write-Host "Building PyPI package for $platformPackageName" -ForegroundColor Green
+        # Build the wheel with platform-specific tag
+        Write-Host "  Building wheel" -ForegroundColor Green
         Push-Location $tempFolder
         try {
-            # Check if python or python3 is available
             $pythonCmd = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } else { "python" }
             
-            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build"
-            Invoke-LoggedCommand "$pythonCmd -m build --wheel --sdist"
+            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build wheel"
+            
+            # Build wheel only (no sdist for platform packages)
+            # We use --wheel and then rename to set the correct platform tag
+            Invoke-LoggedCommand "$pythonCmd -m build --wheel"
 
-            # Copy the built packages to output
+            # Rename the wheel to include the correct platform tag
             $distPath = "$tempFolder/dist"
             if (Test-Path $distPath) {
-                $platformPackageOutputPath = "$platformOutputPath/$platformPackageName"
-                New-Item -ItemType Directory -Force -Path $platformPackageOutputPath | Out-Null
-                Copy-Item -Path "$distPath/*" -Destination $platformPackageOutputPath -Force
-                Write-Host "Package created at $platformPackageOutputPath" -ForegroundColor Green
+                $wheels = Get-ChildItem -Path $distPath -Filter "*.whl"
+                foreach ($wheel in $wheels) {
+                    # The default wheel name is like: msmcp_azure-1.0.0-py3-none-any.whl
+                    # We need to change it to: msmcp_azure-1.0.0-py3-none-<platform>.whl
+                    $newName = $wheel.Name -replace '-py3-none-any\.whl$', "-py3-none-$wheelPlatformTag.whl"
+                    $newPath = Join-Path $distPath $newName
+                    
+                    Write-Host "  Renaming wheel to $newName"
+                    Move-Item -Path $wheel.FullName -Destination $newPath -Force
+                    
+                    # Copy to output
+                    Copy-Item -Path $newPath -Destination $serverOutputPath -Force
+                    Write-Host "  ✅ Created: $newName" -ForegroundColor Green
+                }
             }
         }
         finally {
             Pop-Location
         }
 
-        # Track for wrapper package
-        $platformKey = "$pypiOs-$arch"
-        $platformDependencies[$platformKey] = "$platformPackageName==$($server.version)"
-        $supportedPlatforms += [ordered]@{
-            os   = $pypiOs
-            arch = $arch
-            name = $platformPackageName
-        }
+        $builtPlatforms += $platformKey
     }
 
-    # Now build the wrapper package
-    Write-Host "`nBuilding wrapper package $basePackageName" -ForegroundColor Cyan
+    # Build a source distribution (sdist) - just once, platform-independent
+    # The sdist doesn't include binaries, it's for reference/transparency only
+    Write-Host "`nBuilding source distribution for $basePackageName" -ForegroundColor Cyan
 
     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
+    New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName" | Out-Null
 
-    $wrapperModuleName = Get-ModuleName $basePackageName
-    New-Item -ItemType Directory -Force -Path "$tempFolder/src/$wrapperModuleName" | Out-Null
+    # Copy package __init__.py (without binaries)
+    Copy-Item -Path "$pypiSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
 
-    # Copy wrapper __init__.py
-    Copy-Item -Path "$wrapperSourcePath/__init__.py" -Destination "$tempFolder/src/$wrapperModuleName/__init__.py" -Force
+    # Create pyproject.toml for sdist (OS Independent)
+    $pyprojectTemplate = Get-Content "$pypiSourcePath/pyproject.toml.template" -Raw
 
-    # Update version in __init__.py
-    $initPyPath = "$tempFolder/src/$wrapperModuleName/__init__.py"
-    $initPyContent = Get-Content $initPyPath -Raw
-    $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$($server.version)`""
-    $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
-
-    # Generate pyproject.toml for wrapper
-    $wrapperPyprojectTemplate = Get-Content "$wrapperSourcePath/pyproject.toml.template" -Raw
-
-    $wrapperPyprojectContent = $wrapperPyprojectTemplate `
+    $pyprojectContent = $pyprojectTemplate `
         -replace '{{PACKAGE_NAME}}', $basePackageName `
         -replace '{{VERSION}}', $server.version `
         -replace '{{DESCRIPTION}}', $description `
         -replace '{{KEYWORDS}}', (Get-KeywordsString $keywords) `
+        -replace '{{OS_CLASSIFIER}}', 'OS Independent' `
         -replace '{{CLI_NAME}}', $cliName `
-        -replace '{{MODULE_NAME}}', $wrapperModuleName `
+        -replace '{{MODULE_NAME}}', $moduleName `
         -replace '{{HOMEPAGE}}', $server.readmeUrl
 
+    # Remove the artifacts line for sdist since there are no binaries
+    $pyprojectContent = $pyprojectContent -replace 'artifacts = \["src/{{MODULE_NAME}}/bin/\*"\]\n', ''
+    $pyprojectContent = $pyprojectContent -replace 'artifacts = \["src/[^"]+/bin/\*"\]\n', ''
+
     $pyprojectPath = "$tempFolder/pyproject.toml"
-    Write-Host "Writing $pyprojectPath"
-    $wrapperPyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
+    $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
+
+    # Update version in __init__.py
+    $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
+    $initPyContent = Get-Content $initPyPath -Raw
+    $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$($server.version)`""
+    $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
     # Process and copy README
     & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
@@ -311,26 +332,20 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -InsertPayload @{ ToolTitle = 'PyPI Package' } `
         -OutputDirectory $tempFolder
 
-    Write-Host "Copying LICENSE and NOTICE.txt to $tempFolder"
     Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
 
-    # Build the wrapper wheel and sdist
-    Write-Host "Building PyPI wrapper package for $basePackageName" -ForegroundColor Green
     Push-Location $tempFolder
     try {
         $pythonCmd = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } else { "python" }
         
         Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build"
-        Invoke-LoggedCommand "$pythonCmd -m build --wheel --sdist"
+        Invoke-LoggedCommand "$pythonCmd -m build --sdist"
 
-        # Copy the built packages to output
         $distPath = "$tempFolder/dist"
         if (Test-Path $distPath) {
-            $wrapperPackageOutputPath = "$wrapperOutputPath/$basePackageName"
-            New-Item -ItemType Directory -Force -Path $wrapperPackageOutputPath | Out-Null
-            Copy-Item -Path "$distPath/*" -Destination $wrapperPackageOutputPath -Force
-            Write-Host "Wrapper package created at $wrapperPackageOutputPath" -ForegroundColor Green
+            Copy-Item -Path "$distPath/*.tar.gz" -Destination $serverOutputPath -Force
+            Write-Host "  ✅ Created source distribution" -ForegroundColor Green
         }
     }
     finally {
@@ -338,8 +353,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     }
 
     Write-Host "`n✅ PyPI packages built successfully for $($server.name)" -ForegroundColor Green
-    Write-Host "   Wrapper: $basePackageName"
-    Write-Host "   Platforms: $($supportedPlatforms.name -join ', ')"
+    Write-Host "   Package: $basePackageName"
+    Write-Host "   Platforms: $($builtPlatforms -join ', ')"
 }
 
 # Main execution

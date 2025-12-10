@@ -1,66 +1,48 @@
 # PyPI Packaging for Azure MCP Server
 
-This document describes how the Azure MCP Server is packaged for distribution on [PyPI](https://pypi.org), enabling installation via `pip` or execution via `uvx`.
+This document describes how the Azure MCP Server is packaged for distribution on [PyPI](https://pypi.org), enabling installation via `pip`, `pipx`, or execution via `uvx`.
 
-## Package Structure
+## Package Architecture
 
-Similar to the [npm package structure](../npm/wrapperBinariesArchitecture.md), the Azure MCP Server is distributed as multiple PyPI packages:
+The Azure MCP Server is published as a single package (`msmcp-azure`) with platform-specific wheels. Each wheel contains the pre-compiled binary for a specific OS and architecture combination.
 
-### Wrapper Package
+### Wheel Naming Convention
 
-The main package (e.g., `azmcp`) is a cross-platform wrapper that:
+Wheels follow PyPI's platform tag conventions:
 
-1. Detects the current platform (OS and architecture)
-2. Loads the appropriate platform-specific package
-3. Delegates CLI execution to the platform package
+- `msmcp_azure-1.0.0-py3-none-win_amd64.whl` - Windows x64
+- `msmcp_azure-1.0.0-py3-none-win_arm64.whl` - Windows ARM64
+- `msmcp_azure-1.0.0-py3-none-macosx_11_0_x86_64.whl` - macOS x64 (Intel)
+- `msmcp_azure-1.0.0-py3-none-macosx_11_0_arm64.whl` - macOS ARM64 (Apple Silicon)
+- `msmcp_azure-1.0.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl` - Linux x64
+- `msmcp_azure-1.0.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl` - Linux ARM64
 
-The wrapper package includes:
-- `__init__.py` - Main entry point with platform detection logic
-- Minimal dependencies for maximum compatibility
-
-### Platform Packages
-
-Platform-specific packages (e.g., `azmcp-win32-x64`, `azmcp-darwin-arm64`) contain:
-
-1. The compiled .NET binaries for that specific platform
-2. An `__init__.py` with the `run_executable()` function
-3. Platform-specific metadata
-
-Supported platforms:
-- `win32-x64` - Windows x64
-- `win32-arm64` - Windows ARM64
-- `darwin-x64` - macOS x64 (Intel)
-- `darwin-arm64` - macOS ARM64 (Apple Silicon)
-- `linux-x64` - Linux x64
-- `linux-arm64` - Linux ARM64
+When you install with `pip install msmcp-azure`, pip automatically selects the correct wheel for your platform.
 
 ## Installation Methods
 
 ### Using pip
 
 ```bash
-# Install the wrapper package
-pip install azmcp
+# Install - pip automatically selects the correct wheel for your platform
+pip install msmcp-azure
 
-# The platform-specific package will be auto-installed on first run
-azmcp --version
+# Run
+azmcp server start
 ```
 
 ### Using uvx (recommended for MCP servers)
 
 ```bash
 # Run directly without installation
-uvx azmcp server start
-
-# Or with specific platform extra
-uvx --with azmcp[darwin-arm64] azmcp server start
+uvx msmcp-azure server start
 ```
 
 ### Using pipx
 
 ```bash
 # Install as a global tool
-pipx install azmcp
+pipx install msmcp-azure
 
 # Run
 azmcp server start
@@ -68,14 +50,14 @@ azmcp server start
 
 ## Configuration with MCP Clients
 
-### VS Code / Copilot
+### VS Code / GitHub Copilot
 
 ```json
 {
   "mcpServers": {
     "azure": {
       "command": "uvx",
-      "args": ["azmcp", "server", "start"]
+      "args": ["msmcp-azure", "server", "start"]
     }
   }
 }
@@ -88,7 +70,7 @@ azmcp server start
   "mcpServers": {
     "azure": {
       "command": "uvx",
-      "args": ["azmcp", "server", "start"]
+      "args": ["msmcp-azure", "server", "start"]
     }
   }
 }
@@ -129,8 +111,7 @@ For quick local testing:
 ./eng/scripts/Pack-Pypi.ps1 -UsePaths
 
 # Install locally for testing
-pip install .work/packages_pypi/Azure.Mcp.Server/wrapper/azmcp/azmcp-*.whl
-pip install .work/packages_pypi/Azure.Mcp.Server/platform/azmcp-<platform>/azmcp-*.whl
+pip install .work/packages_pypi/Azure.Mcp.Server/*.whl
 ```
 
 ## Publishing to PyPI
@@ -139,17 +120,17 @@ pip install .work/packages_pypi/Azure.Mcp.Server/platform/azmcp-<platform>/azmcp
 
 ```bash
 # Upload to Test PyPI
-twine upload --repository testpypi .work/packages_pypi/**/*.whl .work/packages_pypi/**/*.tar.gz
+twine upload --repository testpypi .work/packages_pypi/Azure.Mcp.Server/*.whl .work/packages_pypi/Azure.Mcp.Server/*.tar.gz
 
 # Test installation
-pip install --index-url https://test.pypi.org/simple/ azmcp
+pip install --index-url https://test.pypi.org/simple/ msmcp-azure
 ```
 
 ### Production PyPI
 
 ```bash
 # Upload to production PyPI
-twine upload .work/packages_pypi/**/*.whl .work/packages_pypi/**/*.tar.gz
+twine upload .work/packages_pypi/Azure.Mcp.Server/*.whl .work/packages_pypi/Azure.Mcp.Server/*.tar.gz
 ```
 
 ## Project Structure
@@ -157,15 +138,11 @@ twine upload .work/packages_pypi/**/*.whl .work/packages_pypi/**/*.tar.gz
 ```
 eng/
 ├── pypi/
-│   ├── wrapper/
-│   │   ├── __init__.py              # Cross-platform entry point
-│   │   └── pyproject.toml.template  # Template for wrapper pyproject.toml
-│   ├── platform/
-│   │   ├── __init__.py              # Platform binary executor
-│   │   └── pyproject.toml.template  # Template for platform pyproject.toml
-│   └── README.md                    # This file
+│   ├── __init__.py              # Package entry point with binary execution
+│   ├── pyproject.toml.template  # Template for pyproject.toml
+│   └── README.md                # This file
 └── scripts/
-    └── Pack-Pypi.ps1                # Packaging script
+    └── Pack-Pypi.ps1            # Packaging script
 ```
 
 ## Debugging
@@ -182,28 +159,16 @@ DEBUG=mcp azmcp server start
 
 ## Troubleshooting
 
-### Platform package not found
+### Unsupported platform
 
-If you see an error about missing platform packages:
-
-1. Install the platform package manually:
-   ```bash
-   pip install azmcp-<os>-<arch>
-   ```
-
-2. Check your platform is supported (see list above)
-
-3. Try installing with the platform extra:
-   ```bash
-   pip install azmcp[darwin-arm64]
-   ```
+If you see an error about an unsupported platform, check that your OS and architecture combination is in the supported list above.
 
 ### Permission denied on Unix
 
-The package automatically sets executable permissions, but if you encounter issues:
+The package sets executable permissions during installation, but if you encounter issues:
 
 ```bash
-chmod +x $(python -c "import azmcp_darwin_arm64; print(azmcp_darwin_arm64.get_executable_path())")
+chmod +x $(python -c "import msmcp_azure; print(msmcp_azure.get_executable_path())")
 ```
 
 ### Reporting Issues

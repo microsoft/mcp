@@ -26,6 +26,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+{{CLI_NAME}} = "{{MODULE_NAME}}:main"
 
 [project.urls]
 Homepage = "{{HOMEPAGE}}"

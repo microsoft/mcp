@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Azure MCP Server - Platform-specific package.
+Azure MCP Server - PyPI package.
 
-This module contains the platform-specific binary and provides the run_executable
-function to execute the Azure MCP Server CLI.
+This module provides the entry point for the Azure MCP Server CLI.
+The binary is bundled directly in the wheel for the target platform.
 """
 
 import os
@@ -52,27 +52,24 @@ def run_executable(args=None):
     
     Args:
         args: List of command-line arguments to pass to the executable.
-              Defaults to an empty list if not provided.
+              Defaults to sys.argv[1:] if not provided.
     
     Returns:
         The exit code from the executable.
     """
     if args is None:
-        args = []
-
-    debug_log("\nPlatform package starting")
-    debug_log(f"Arguments: {args}")
+        args = sys.argv[1:]
 
     executable_path = get_executable_path()
 
     if not executable_path.exists():
         print(f"Error: Executable not found at {executable_path}", file=sys.stderr)
+        print(f"This may indicate a packaging issue or unsupported platform.", file=sys.stderr)
         return 1
 
-    debug_log(f"Starting {executable_path}")
+    debug_log(f"Running: {executable_path} {' '.join(args)}")
 
     try:
-        # Run the executable and inherit stdio
         result = subprocess.run(
             [str(executable_path)] + list(args),
             stdin=sys.stdin,
@@ -81,35 +78,17 @@ def run_executable(args=None):
         )
         return result.returncode
     except PermissionError:
-        # Try to make it executable on Unix systems
-        if platform.system().lower() != "windows":
-            try:
-                os.chmod(executable_path, 0o755)
-                result = subprocess.run(
-                    [str(executable_path)] + list(args),
-                    stdin=sys.stdin,
-                    stdout=sys.stdout,
-                    stderr=sys.stderr,
-                )
-                return result.returncode
-            except Exception as e:
-                print(f"Error: Failed to execute {executable_path}: {e}", file=sys.stderr)
-                return 1
-        else:
-            print(f"Error: Permission denied executing {executable_path}", file=sys.stderr)
-            return 1
-    except FileNotFoundError:
-        print(f"Error: Executable not found: {executable_path}", file=sys.stderr)
-        return 1
-    except Exception as e:
+        print(f"Error: Permission denied executing {executable_path}", file=sys.stderr)
+        print("Try: chmod +x " + str(executable_path), file=sys.stderr)
+        return 126
+    except OSError as e:
         print(f"Error executing {executable_path}: {e}", file=sys.stderr)
         return 1
 
 
 def main():
-    """Main entry point when run directly."""
-    exit_code = run_executable(sys.argv[1:])
-    sys.exit(exit_code)
+    """Main entry point for the CLI."""
+    sys.exit(run_executable())
 
 
 if __name__ == "__main__":
