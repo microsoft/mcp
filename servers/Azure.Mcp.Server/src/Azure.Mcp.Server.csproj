@@ -23,6 +23,10 @@
     <DnxPackageId>Azure.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>azure,mcp</DnxPackageTags>
+
+    <!-- pypi settings -->
+    <PypiPackageName>$(CliName)</PypiPackageName>
+    <PypiPackageKeywords>azure,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
   </PropertyGroup>
 
   <PropertyGroup>
