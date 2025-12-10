@@ -74,7 +74,7 @@
     <PackageVersion Include="Microsoft.Identity.Web.Azure" Version="4.0.1" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.4-preview.2" />
-    <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.802" />
+    <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.804" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
