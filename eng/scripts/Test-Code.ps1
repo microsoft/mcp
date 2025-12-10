@@ -69,8 +69,8 @@ function FilterTestProjects {
             $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
 
             $testProjects = $testProjects | Where-Object {
-                $prefix = $_.Relative
-                ($changedPaths | Where-Object { $prefix.StartsWith($_) }).Count -gt 0
+                $testProjectPath = $_.Relative
+                ($changedPaths | Where-Object { $testProjectPath.StartsWith($_) }).Count -gt 0
             }
         }
     }
