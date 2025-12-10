@@ -7,7 +7,7 @@ updates:
     # Check the NuGet registry for updates every day (weekdays)
     schedule:
       interval: "daily"
-    # Currently only enablding this for Azure.Bicep.Types package used by Azure MCP server
+    # Currently only enabling this for Azure.Bicep.Types package used by Azure MCP server
     # Feel free to extend this to other packages as needed
     allow:
       - dependency-name: "Azure.Bicep.Types"
