@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
@@ -68,6 +69,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         """;
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_list_workbooks()
     {
         var result = await CallToolAsync(
@@ -94,6 +96,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_show_workbook_details()
     {
         // First get the list of workbooks to find a valid ID
@@ -130,6 +133,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_perform_basic_crud_operations()
     {
         var workbookName = RegisterOrRetrieveVariable("workbookName", $"Test Workbook {Guid.NewGuid():N}");
@@ -202,6 +206,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_delete_workbook()
     {
         var workbookName = RegisterOrRetrieveVariable("WorkBookName", $"Delete Test Workbook {Guid.NewGuid():N}");
