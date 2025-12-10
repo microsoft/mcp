@@ -7,8 +7,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Generated.Internal;
+using Azure.Mcp.Tests.Generated.Models;
 
 namespace Azure.Mcp.Tests.Generated
 {

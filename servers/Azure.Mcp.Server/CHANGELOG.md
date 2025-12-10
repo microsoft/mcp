@@ -17,6 +17,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Move Azure AI Best Practices tool into Best Practice namespace [[#1323](https://github.com/microsoft/mcp/pull/1323)]
+
+#### Dependency updates
+
+- Updated `Azure.Bicep.Types` from `0.6.1` to `0.6.27`. [[#1331](https://github.com/microsoft/mcp/pull/1331)]
+
+- Updated `Microsoft.Azure.Mcp.AzTypes.Internal.Compact` from `0.2.802` to `0.2.804`. [[#1348](https://github.com/microsoft/mcp/pull/1348)]
 
 ## 2.0.0-beta.7 (2025-11-25)
 

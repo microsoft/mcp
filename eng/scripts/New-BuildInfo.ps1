@@ -19,26 +19,44 @@ $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
-# We currently only want to build linux-x64 native
-$nativePlatforms = @(
-    'linux-x64-native'
-    #'linux-arm64-native'  We can't currently build arm64 native in a CI run
-    #'macos-x64-native'
-    #'macos-arm64-native'
-    #'windows-x64-native'
-    #'windows-arm64-native'
+$architectures = @('x64', 'arm64')
+
+# Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
+$operatingSystems = Get-OperatingSystems
+
+# Platform names, e.g. windows-arm64, from the standard $operatingSystems X $architectures combinations that should not be built.
+$excludedPlatforms = @(
+    # Currently, all standard platforms are included
 )
 
-# When native builds are shipped, we still may want to build only linux-x64 native in pull requests for pipeline performance
-# if ($isPipelineRun -and $PublishTarget -eq 'none') {
-#     $nativePlatforms = @('linux-x64-native')
-# }
-
-# Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
-# are untrimmed versions of certain platforms available to the docker packaging step
-$additionalUntrimmedPlatforms = @(
-    'linux-x64'
+# Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
+# be targeted or excluded in packaging scripts
+$additionalPlatforms = @(
+    # Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
+    # are untrimmed versions of certain identity-compatible platforms available to the docker packaging step
+    @{
+        name = 'linux-musl-x64-docker'
+        operatingSystem = 'linux'
+        architecture = 'musl-x64'
+        native = $false
+        trimmed = $false
+        specialPurpose = 'docker'
+    }
 )
+
+if ($IncludeNative) {
+    # We currently only want to build linux-x64 native
+    # When native builds are shipped, we still may want to build only linux-x64 native in pull requests for pipeline performance
+
+    $additionalPlatforms += @{
+        name = 'linux-x64-native'
+        operatingSystem = 'linux'
+        architecture = 'x64'
+        native = $true
+        trimmed = $false
+        specialPurpose = 'native'
+    }
+}
 
 if ($BuildId -eq 0) {
     if ($isPipelineRun) {
@@ -61,10 +79,6 @@ if(!$OutputPath) {
 $serverDirectories = Get-ChildItem "$RepoRoot/servers" -Directory
 $toolDirectories = Get-ChildItem "$RepoRoot/tools" -Directory
 $coreDirectories = Get-ChildItem "$RepoRoot/core" -Directory
-
-$architectures = @('x64', 'arm64')
-
-$operatingSystems = Get-OperatingSystems
 
 # Public releases always use the version from the repo without a dynamic prerelease suffix, except for test pipelines
 # which always use a dynamic prerelease suffix to allow for multiple releases from the same commit
@@ -432,7 +446,6 @@ function Get-ServerDetails {
         foreach ($os in $operatingSystems) {
             foreach ($arch in $architectures) {
                 $name = "$($os.name)-$arch"
-                $nativeName = "$name-native"
 
                 if ($excludedPlatforms -notcontains $name) {
                     $platforms += [ordered]@{
@@ -447,40 +460,30 @@ function Get-ServerDetails {
                         trimmed = $true
                     }
                 }
+            }
+        }
 
-                $shouldIncludeNative = $IncludeNative -and
-                    $props.IsAotCompatible -eq 'true' -and
-                    $nativePlatforms -contains $nativeName
+        foreach ($additionalPlatform in $additionalPlatforms) {
+            $name = $additionalPlatform.name
+            $os = $operatingSystems | Where-Object { $_.name -eq $additionalPlatform.operatingSystem }
 
-                if($shouldIncludeNative) {
-                    $platforms += [ordered]@{
-                        name = $nativeName
-                        artifactPath = "$serverName/$nativeName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
-                        architecture = $arch
-                        extension = $os.extension
-                        native = $true
-                        trimmed = $false
-                    }
-                }
+            if (-not $os) {
+                LogError "Additional platform $name has unknown operating system $($additionalPlatform.operatingSystem)"
+                $script:exitCode = 1
+                continue
+            }
 
-                if($additionalUntrimmedPlatforms -contains $name) {
-                    $untrimmedName = "$name-untrimmed"
-                    $platforms += [ordered]@{
-                        name = $untrimmedName
-                        artifactPath = "$serverName/$untrimmedName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
-                        architecture = $arch
-                        extension = $os.extension
-                        native = $false
-                        trimmed = $false
-                        specialPurpose = 'untrimmed'
-                    }
-                }
+            $platforms += [ordered]@{
+                name = $name
+                artifactPath = "$serverName/$name"
+                operatingSystem = $os.name
+                nodeOs = $os.nodeName
+                dotnetOs = $os.dotnetName
+                architecture = $additionalPlatform.architecture
+                extension = $os.extension
+                native = $additionalPlatform.native
+                trimmed = $additionalPlatform.trimmed
+                specialPurpose = $additionalPlatform.specialPurpose
             }
         }
 
@@ -590,7 +593,7 @@ function Get-ServerMatrix {
     Write-Host "Forming server matrix"
 
     $serverMatrix = [ordered]@{}
-    $platformName = "linux-x64-untrimmed"
+    $platformName = "linux-musl-x64-docker"
 
     foreach ($server in $servers) {
         $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }

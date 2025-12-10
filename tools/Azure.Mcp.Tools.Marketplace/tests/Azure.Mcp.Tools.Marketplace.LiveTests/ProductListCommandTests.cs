@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -17,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-[Trait("Area", "Marketplace")]
 public class ProductListCommandTests : CommandTestsBase
 {
     private const string ProductsKey = "products";
@@ -47,7 +45,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products()
     {
         var result = await CallToolAsync(
@@ -69,7 +66,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_language_option()
     {
         var result = await CallToolAsync(
@@ -89,7 +85,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_french_language_option()
     {
         var result = await CallToolAsync(
@@ -109,7 +104,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_language_and_search_options()
     {
         var result = await CallToolAsync(
@@ -131,7 +125,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_search_option()
     {
         var result = await CallToolAsync(
@@ -152,7 +145,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_multiple_options()
     {
         var result = await CallToolAsync(
@@ -173,7 +165,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_filter_option()
     {
         var result = await CallToolAsync(
@@ -193,7 +184,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_orderby_option()
     {
         var result = await CallToolAsync(
@@ -213,7 +203,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_select_option()
     {
         var result = await CallToolAsync(
@@ -238,7 +227,6 @@ public class ProductListCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_multiple_odata_options()
     {
         var result = await CallToolAsync(

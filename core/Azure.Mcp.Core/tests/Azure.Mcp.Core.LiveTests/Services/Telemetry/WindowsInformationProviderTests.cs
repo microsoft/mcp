@@ -14,7 +14,6 @@ namespace Azure.Mcp.Core.LiveTests.Services.Telemetry;
 public class WindowsInformationProviderTests
 {
     [Fact]
-    [Trait("Category", "Live")]
     public async Task GetOrCreateDeviceId_WorksCorrectly()
     {
         Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
