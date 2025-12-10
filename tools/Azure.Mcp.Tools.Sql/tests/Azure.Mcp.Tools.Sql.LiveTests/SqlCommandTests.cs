@@ -5,11 +5,12 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
 
-public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
 
     [Fact]
