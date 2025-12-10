@@ -65,6 +65,7 @@ function FilterTestProjects {
             Test-Path -Path (Join-Path -Path $projectDirectory -ChildPath 'assets.json')
         }
 
+        # if provided a buildinfo, further scope the recorded tests to only those impacted by changes
         if ($BuildInfo){
             $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
 
