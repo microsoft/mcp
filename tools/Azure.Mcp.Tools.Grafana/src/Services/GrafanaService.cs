@@ -11,7 +11,6 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 

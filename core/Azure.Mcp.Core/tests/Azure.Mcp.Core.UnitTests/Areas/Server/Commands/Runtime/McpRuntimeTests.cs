@@ -11,11 +11,11 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Runtime;
 
@@ -390,7 +390,7 @@ public class McpRuntimeTests
         GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
 
         Assert.DoesNotContain(activity.TagObjects,
-            x => string.Equals(x.Key, TagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
+            x => string.Equals(x.Key, AzureTagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -682,7 +682,7 @@ public class McpRuntimeTests
         // Assert
         Assert.Equal(expectedResult, result);
 
-        var actualSubscription = activity.Tags.SingleOrDefault(e => TagName.SubscriptionGuid == e.Key);
+        var actualSubscription = activity.Tags.SingleOrDefault(e => AzureTagName.SubscriptionGuid == e.Key);
         Assert.Equal(testSubscriptionId, actualSubscription.Value);
 
         var actualToolName = activity.Tags.SingleOrDefault(e => TagName.ToolName == e.Key);

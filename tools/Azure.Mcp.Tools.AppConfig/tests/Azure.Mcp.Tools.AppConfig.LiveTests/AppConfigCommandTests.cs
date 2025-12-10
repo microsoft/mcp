@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -32,7 +31,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     /// AZSDK3493 = $..name
     /// AZSDK3447 = $..key
     /// </summary>
-    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493", "AZSDK3447" }).ToList();
+    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493", "AZSDK3447"];
 
     public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
@@ -398,7 +397,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_and_get_appconfig_kv_with_content_type()
     {
         // arrange
@@ -454,7 +452,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_and_get_content_type_directly_using_service()
     {
         // arrange
@@ -487,7 +484,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_single_tag()
     {
         // arrange
@@ -519,7 +515,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_multiple_tags()
     {
         // arrange
@@ -556,7 +551,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_set_kv_with_tags_containing_spaces()
     {
         // arrange
