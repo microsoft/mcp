@@ -49,6 +49,7 @@ jobs:
   - task: PowerShell@2
     displayName: 'Attach usage instructions to build summary'
     inputs:
+      pwsh: true
       targetType: 'filePath'
       filePath: 'eng/scripts/Get-PackageUsageText.ps1'
       arguments: >
