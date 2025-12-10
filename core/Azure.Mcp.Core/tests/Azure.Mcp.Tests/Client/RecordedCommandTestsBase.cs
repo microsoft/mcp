@@ -247,7 +247,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
             {
                 Regex = Settings.ResourceGroupName,
-                Value = EmptyGuid,
+                Value = "Sanitized",
             }));
             // Sanitize out the resource basename by default!
             // This implies that tests shouldn't use this baseresourcename as part of their validation logic, as sanitization will replace it with "Sanitized" and cause confusion.
