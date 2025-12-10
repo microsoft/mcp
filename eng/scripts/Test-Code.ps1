@@ -26,7 +26,6 @@ $BuildInfo = $null
 if ($ScopingBuildInfoPath) {
     if (!(Test-Path $ScopingBuildInfoPath)) {
         Write-Error "BuildInfo path was provided, but not found at path: $ScopingBuildInfoPath"
-        exit 1
     }
     $BuildInfo = Get-Content $ScopingBuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 }
