@@ -36,6 +36,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedRootDir;
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
+    private static readonly TimeSpan[] DownloadRetryDelays = new[]
+    {
+        TimeSpan.FromSeconds(1),
+        TimeSpan.FromSeconds(10),
+        TimeSpan.FromSeconds(60)
+    };
 
     /// <summary>
     /// In-process synchronization lock to avoid proxy exe mismanagement.
@@ -75,7 +81,24 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             if (!File.Exists(downloadPath))
             {
                 using var client = new HttpClient();
-                var bytes = await client.GetByteArrayAsync(url);
+                byte[] bytes;
+                var attempt = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        bytes = await client.GetByteArrayAsync(url);
+                        break;
+                    }
+                    catch when (attempt < DownloadRetryDelays.Length)
+                    {
+                        var delay = DownloadRetryDelays[attempt];
+                        await Task.Delay(delay);
+                        attempt++;
+                    }
+                }
+
                 await File.WriteAllBytesAsync(downloadPath, bytes);
                 // record the downloaded version right here so we don't need to parse anything other than what
                 // is in this folder later
