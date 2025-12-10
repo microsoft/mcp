@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Monitor.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 

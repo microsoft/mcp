@@ -4,19 +4,18 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.TableType;
 
-[Trait("Area", "Monitor")]
 public sealed class TableTypeListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
-using System.Text.Json;
-
 namespace Azure.Mcp.Tools.Kusto.Services;
 
 public sealed class KustoResult
