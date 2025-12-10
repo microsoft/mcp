@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 

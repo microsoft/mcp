@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers
@@ -50,6 +49,16 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 Proxy.Dispose();
             }
             return ValueTask.CompletedTask;
+        }
+
+        public Uri? GetProxyUri()
+        {
+            if (Proxy?.BaseUri is string proxyUrl && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
+            {
+                return proxyUri;
+            }
+
+            return null;
         }
     }
 }

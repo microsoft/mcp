@@ -539,7 +539,6 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
-- 🤖 **Azure AI Best Practices** - AI app development guidance for Microsoft Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance

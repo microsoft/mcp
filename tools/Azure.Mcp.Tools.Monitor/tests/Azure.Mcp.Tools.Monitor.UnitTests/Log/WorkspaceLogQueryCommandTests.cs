@@ -4,18 +4,17 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
-[Trait("Area", "Monitor")]
 public sealed class WorkspaceLogQueryCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

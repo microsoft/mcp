@@ -1,6 +1,6 @@
 ﻿using System.Net;
-using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Tools.Postgres.Options;
+using Microsoft.Mcp.Core.Commands;
 using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Providers

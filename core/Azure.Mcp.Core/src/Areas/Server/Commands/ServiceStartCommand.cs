@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
@@ -23,11 +22,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 

@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using System.Threading;
-using Azure.Mcp.Core.Services.Http;
+﻿using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Services
