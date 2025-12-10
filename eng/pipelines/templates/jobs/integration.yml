@@ -10,6 +10,11 @@ jobs:
 - job: PublishToDev
   displayName: Publish packages to dev feeds
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    # On linux, we'd need mono to run nuget, so just use windows
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
   steps:
   - checkout: self
 
@@ -44,6 +49,7 @@ jobs:
   - task: PowerShell@2
     displayName: 'Attach usage instructions to build summary'
     inputs:
+      pwsh: true
       targetType: 'filePath'
       filePath: 'eng/scripts/Get-PackageUsageText.ps1'
       arguments: >
