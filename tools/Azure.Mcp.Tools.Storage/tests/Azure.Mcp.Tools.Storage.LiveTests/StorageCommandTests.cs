@@ -4,11 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
 {
-    public class StorageCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+    public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
     {
         [Fact]
         public async Task Should_list_storage_accounts_by_subscription_id()
