@@ -14,6 +14,9 @@ public class GlobalOptions
     [JsonPropertyName(OptionDefinitions.Common.TenantName)]
     public string? Tenant { get; set; }
 
+    [JsonPropertyName(OptionDefinitions.Common.AuthorityHostName)]
+    public Uri? AuthorityHost { get; set; }
+
     [JsonPropertyName(OptionDefinitions.Common.AuthMethodName)]
     public AuthMethod? AuthMethod { get; set; }
 

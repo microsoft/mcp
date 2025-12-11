@@ -29,6 +29,7 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
     /// <inheritdoc/>
     public Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
+        Uri? authorityHost,
         CancellationToken cancellation)
     {
         if (tenantId is null)

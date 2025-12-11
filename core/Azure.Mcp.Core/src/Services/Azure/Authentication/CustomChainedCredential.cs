@@ -67,20 +67,20 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
-internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
+internal class CustomChainedCredential(string? tenantId = null, Uri? authorityHost = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, authorityHost, _logger);
         return _credential.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, authorityHost, _logger);
         return _credential.GetTokenAsync(requestContext, cancellationToken);
     }
 
@@ -95,7 +95,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 
-    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
+    private static TokenCredential CreateCredential(string? tenantId, Uri? authorityHost, ILogger<CustomChainedCredential>? logger = null)
     {
 
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
@@ -134,12 +134,12 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         if (isVsCodeContext && !hasExplicitCredentialSetting)
         {
             logger?.LogDebug("VS Code context detected (VSCODE_PID set). Prioritizing VS Code Credential in chain.");
-            creds.Add(CreateVsCodePrioritizedCredential(tenantId));
+            creds.Add(CreateVsCodePrioritizedCredential(tenantId, authorityHost));
         }
         else
         {
             // Use the default credential chain (respects AZURE_TOKEN_CREDENTIALS if set)
-            creds.Add(CreateDefaultCredential(tenantId));
+            creds.Add(CreateDefaultCredential(tenantId, authorityHost));
         }
 
         // Only add InteractiveBrowserCredential as fallback when:
@@ -195,7 +195,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds));
     }
 
-    private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
+    private static ChainedTokenCredential CreateDefaultCredential(string? tenantId, Uri? authorityHost)
     {
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         var credentials = new List<TokenCredential>();
@@ -207,55 +207,55 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             {
                 case "dev":
                     // Dev chain: VS -> VSCode -> CLI -> PowerShell -> AzD
-                    AddVisualStudioCredential(credentials, tenantId);
-                    AddVisualStudioCodeCredential(credentials, tenantId);
-                    AddAzureCliCredential(credentials, tenantId);
-                    AddAzurePowerShellCredential(credentials, tenantId);
-                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    AddVisualStudioCredential(credentials, tenantId, authorityHost);
+                    AddVisualStudioCodeCredential(credentials, tenantId, authorityHost);
+                    AddAzureCliCredential(credentials, tenantId, authorityHost);
+                    AddAzurePowerShellCredential(credentials, tenantId, authorityHost);
+                    AddAzureDeveloperCliCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "prod":
                     // Prod chain: Environment -> WorkloadIdentity -> ManagedIdentity
-                    AddEnvironmentCredential(credentials);
-                    AddWorkloadIdentityCredential(credentials, tenantId);
-                    AddManagedIdentityCredential(credentials);
+                    AddEnvironmentCredential(credentials, authorityHost);
+                    AddWorkloadIdentityCredential(credentials, tenantId, authorityHost);
+                    AddManagedIdentityCredential(credentials, authorityHost);
                     break;
 
                 case "environmentcredential":
-                    AddEnvironmentCredential(credentials);
+                    AddEnvironmentCredential(credentials, authorityHost);
                     break;
 
                 case "workloadidentitycredential":
-                    AddWorkloadIdentityCredential(credentials, tenantId);
+                    AddWorkloadIdentityCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "managedidentitycredential":
-                    AddManagedIdentityCredential(credentials);
+                    AddManagedIdentityCredential(credentials, authorityHost);
                     break;
 
                 case "visualstudiocredential":
-                    AddVisualStudioCredential(credentials, tenantId);
+                    AddVisualStudioCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "visualstudiocodecredential":
-                    AddVisualStudioCodeCredential(credentials, tenantId);
+                    AddVisualStudioCodeCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "azureclicredential":
-                    AddAzureCliCredential(credentials, tenantId);
+                    AddAzureCliCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "azurepowershellcredential":
-                    AddAzurePowerShellCredential(credentials, tenantId);
+                    AddAzurePowerShellCredential(credentials, tenantId, authorityHost);
                     break;
 
                 case "azuredeveloperclicredential":
-                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    AddAzureDeveloperCliCredential(credentials, tenantId, authorityHost);
                     break;
 
                 default:
                     // Unknown value, fall back to default chain
-                    AddDefaultCredentialChain(credentials, tenantId);
+                    AddDefaultCredentialChain(credentials, tenantId, authorityHost);
                     break;
             }
         }
@@ -268,36 +268,51 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return new ChainedTokenCredential([.. credentials]);
     }
 
-    private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId)
+    private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost = null)
     {
         // Default chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
-        AddEnvironmentCredential(credentials);
-        AddVisualStudioCredential(credentials, tenantId);
-        AddVisualStudioCodeCredential(credentials, tenantId);
-        AddAzureCliCredential(credentials, tenantId);
-        AddAzurePowerShellCredential(credentials, tenantId);
-        AddAzureDeveloperCliCredential(credentials, tenantId);
+        AddEnvironmentCredential(credentials, authorityHost);
+        AddVisualStudioCredential(credentials, tenantId, authorityHost);
+        AddVisualStudioCodeCredential(credentials, tenantId, authorityHost);
+        AddAzureCliCredential(credentials, tenantId, authorityHost);
+        AddAzurePowerShellCredential(credentials, tenantId, authorityHost);
+        AddAzureDeveloperCliCredential(credentials, tenantId, authorityHost);
     }
 
-    private static void AddEnvironmentCredential(List<TokenCredential> credentials)
+    private static void AddEnvironmentCredential(List<TokenCredential> credentials, Uri? authorityHost)
     {
+        EnvironmentCredentialOptions envCredOptions = new();
+        if (authorityHost != null)
+        {
+            envCredOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential"));
     }
 
-    private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var workloadOptions = new WorkloadIdentityCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             workloadOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            workloadOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential"));
     }
 
-    private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
+    private static void AddManagedIdentityCredential(List<TokenCredential> credentials, Uri? authorityHost)
     {
         // Check if AZURE_CLIENT_ID is set for User-Assigned Managed Identity
         string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+
+        ManagedIdentityCredentialOptions miOptions = new ManagedIdentityCredentialOptions();
+        if (authorityHost != null)
+        {
+            miOptions.AuthorityHost = authorityHost;
+        }
 
         ManagedIdentityCredential managedIdentityCredential = string.IsNullOrEmpty(clientId)
             ? new ManagedIdentityCredential() // System-Assigned MI
@@ -306,68 +321,88 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
 
-    private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var vsOptions = new VisualStudioCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             vsOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            vsOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential"));
     }
 
-    private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var vscodeOptions = new VisualStudioCodeCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             vscodeOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            vscodeOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential"));
     }
 
-    private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var cliOptions = new AzureCliCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             cliOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            cliOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential"));
     }
 
-    private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var psOptions = new AzurePowerShellCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             psOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            psOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential"));
     }
 
-    private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId)
+    private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId, Uri? authorityHost)
     {
         var azdOptions = new AzureDeveloperCliCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             azdOptions.TenantId = tenantId;
         }
+        if (authorityHost != null)
+        {
+            azdOptions.AuthorityHost = authorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
     }
 
-    private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId)
+    private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId, Uri? authorityHost)
     {
         var credentials = new List<TokenCredential>();
 
         // VS Code first, then the rest of the default chain (excluding VS Code to avoid duplication)
-        AddVisualStudioCodeCredential(credentials, tenantId);
-        AddEnvironmentCredential(credentials);
-        AddVisualStudioCredential(credentials, tenantId);
+        AddVisualStudioCodeCredential(credentials, tenantId, authorityHost);
+        AddEnvironmentCredential(credentials, authorityHost);
+        AddVisualStudioCredential(credentials, tenantId, authorityHost);
         // Skip VS Code credential here since it's already first
-        AddAzureCliCredential(credentials, tenantId);
-        AddAzurePowerShellCredential(credentials, tenantId);
-        AddAzureDeveloperCliCredential(credentials, tenantId);
+        AddAzureCliCredential(credentials, tenantId, authorityHost);
+        AddAzurePowerShellCredential(credentials, tenantId, authorityHost);
+        AddAzureDeveloperCliCredential(credentials, tenantId, authorityHost);
 
         return new ChainedTokenCredential([.. credentials]);
     }

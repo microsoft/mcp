@@ -52,5 +52,6 @@ public interface IAzureTokenCredentialProvider
     /// </exception>
     Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
+        Uri? authorityHost,
         CancellationToken cancellation);
 }
