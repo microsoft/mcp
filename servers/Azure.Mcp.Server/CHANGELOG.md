@@ -6,6 +6,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added Azure Storage Sync (StorageSync) module with 24 commands for managing cloud synchronization of file shares:
+  - **CloudEndpoint** commands (5): Create, Delete, Get, List, TriggerChangeDetection
+  - **RegisteredServer** commands (5): Get, List, Register, Unregister, Update
+  - **ServerEndpoint** commands (5): Create, Delete, Get, List, Update
+  - **StorageSyncService** commands (5): Create, Delete, Get, List, Update
+  - **SyncGroup** commands (4): Create, Delete, Get, List
+  - Full unit test coverage (49 tests passing) and live test framework included
+  - Comprehensive help documentation for all commands
+
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
 ### Breaking Changes
