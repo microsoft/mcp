@@ -11,6 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 ### Bugs Fixed
+- Updated Azure Function code generation best practices instrunctions to include Azure examples to help LLM not generating undesiable patterns. [[#1267](https://github.com/microsoft/mcp/pull/1267)]
 
 - Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
