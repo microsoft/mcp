@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added Azure File Shares operations toolset with 11 commands for managing file shares and snapshots.
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
 ### Breaking Changes

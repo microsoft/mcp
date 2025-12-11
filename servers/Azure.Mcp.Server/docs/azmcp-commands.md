@@ -1022,6 +1022,84 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--tags <json-tags>]
 ```
 
+### Azure File Shares Operations
+
+```bash
+# List File Shares in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare list --subscription <subscription> \
+                                [--resource-group <resource-group>] \
+                                [--filter <filter-expression>]
+
+# Get a specific File Share
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --name <file-share-name>
+
+# Create or update a File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name> \
+                                  [--quota <quota-in-gib>] \
+                                  [--access-tier <tier>] \
+                                  [--enable-smb3 <true/false>]
+
+# Delete a File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name>
+
+# Check File Share name availability
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare checkname --subscription <subscription> \
+                                     --name <file-share-name>
+```
+
+```bash
+# List snapshots for a File Share
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot list --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --file-share-name <file-share-name>
+
+# Get a specific File Share snapshot
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot get --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --file-share-name <file-share-name> \
+                                        --snapshot-name <snapshot-name>
+
+# Create a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot create --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name>
+```
+
+```bash
+# Get File Shares limits and quotas for a region
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares getlimits --subscription <subscription> \
+                           --location <azure-region>
+
+# Get provisioning recommendations for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares getprovisioningrecommendation --subscription <subscription> \
+                                               --location <azure-region> \
+                                               --workload-profile <workload-type> \
+                                               [--estimated-throughput <mb-per-second>] \
+                                               [--estimated-size <size-in-gb>]
+
+# Get usage data and metrics for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares getusagedata --subscription <subscription> \
+                              --location <azure-region> \
+                              [--time-range <time-range>]
+```
+
 ### Azure Function App Operations
 
 ```bash
