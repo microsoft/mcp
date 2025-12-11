@@ -1404,7 +1404,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, validate subnet configurations against SKU and size requirements, and list or get details about HSM autoimport and autoexport jobs.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1434,6 +1434,10 @@
       "mappedToolList": [
         "managedlustre_fs_list",
         "managedlustre_fs_sku_get",
+        "managedlustre_fs_autoexport-job_get",
+        "managedlustre_fs_autoexport-job_list",
+        "managedlustre_fs_autoimport-job_get",
+        "managedlustre_fs_autoimport-job_list",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
