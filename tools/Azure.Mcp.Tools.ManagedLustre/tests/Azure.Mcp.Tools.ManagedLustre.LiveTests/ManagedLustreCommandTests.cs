@@ -14,6 +14,11 @@ namespace Azure.Mcp.Tools.ManagedLustre.LiveTests;
 
 public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    // Shared job names to ensure only one autoimport and one autoexport job are created
+    private static string? _sharedAutoimportJobName;
+    private static string? _sharedAutoexportJobName;
+    private static readonly SemaphoreSlim _jobCreationLock = new(1, 1);
+
     private static readonly string[] _sanitizedHeaders =
     [
         "x-ms-correlation-request-id",
@@ -438,6 +443,65 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
     [GeneratedRegex("/subscriptions/(.*?)/resourceGroups")]
     private static partial Regex SubscriptionSanitizationRegex();
+
+    private async Task<string> GetOrCreateAutoimportJobAsync()
+    {
+        await _jobCreationLock.WaitAsync();
+        try
+        {
+            if (_sharedAutoimportJobName != null)
+            {
+                return _sharedAutoimportJobName;
+            }
+
+            var result = await CallToolAsync(
+                "managedlustre_fs_autoimport-job_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "filesystem-name", Settings.ResourceBaseName },
+                    { "tenant", Settings.TenantId }
+                });
+
+            _sharedAutoimportJobName = result.AssertProperty("jobName").GetString();
+            return _sharedAutoimportJobName!;
+        }
+        finally
+        {
+            _jobCreationLock.Release();
+        }
+    }
+
+    private async Task<string> GetOrCreateAutoexportJobAsync()
+    {
+        await _jobCreationLock.WaitAsync();
+        try
+        {
+            if (_sharedAutoexportJobName != null)
+            {
+                return _sharedAutoexportJobName;
+            }
+
+            var result = await CallToolAsync(
+                "managedlustre_fs_autoexport-job_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "filesystem-name", Settings.ResourceBaseName },
+                    { "tenant", Settings.TenantId }
+                });
+
+            _sharedAutoexportJobName = result.AssertProperty("jobName").GetString();
+            return _sharedAutoexportJobName!;
+        }
+        finally
+        {
+            _jobCreationLock.Release();
+        }
+    }
+
     [Fact]
     public async Task Should_create_autoimport_job()
     {
@@ -484,18 +548,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_list_autoimport_jobs()
     {
-        // First create an autoimport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoimport job
+        var createdJobName = await GetOrCreateAutoimportJobAsync();
 
         // List all autoimport jobs
         var listResult = await CallToolAsync(
@@ -529,18 +583,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_get_autoimport_job()
     {
-        // First create an autoimport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoimport job
+        var createdJobName = await GetOrCreateAutoimportJobAsync();
 
         // Get the specific job
         var getResult = await CallToolAsync(
@@ -564,18 +608,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_cancel_autoimport_job()
     {
-        // First create an autoimport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoimport job
+        var createdJobName = await GetOrCreateAutoimportJobAsync();
 
         // Cancel the job
         var cancelResult = await CallToolAsync(
@@ -616,18 +650,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_list_autoexport_jobs()
     {
-        // First create an autoexport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoexport job
+        var createdJobName = await GetOrCreateAutoexportJobAsync();
 
         // List all autoexport jobs
         var listResult = await CallToolAsync(
@@ -661,18 +685,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_get_autoexport_job()
     {
-        // First create an autoexport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoexport job
+        var createdJobName = await GetOrCreateAutoexportJobAsync();
 
         // Get the specific job
         var getResult = await CallToolAsync(
@@ -696,18 +710,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_cancel_autoexport_job()
     {
-        // First create an autoexport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoexport job
+        var createdJobName = await GetOrCreateAutoexportJobAsync();
 
         // Cancel the job
         var cancelResult = await CallToolAsync(
@@ -729,18 +733,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_delete_autoimport_job()
     {
-        // First create an autoimport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoimport job
+        var createdJobName = await GetOrCreateAutoimportJobAsync();
 
         // Delete the job
         var deleteResult = await CallToolAsync(
@@ -762,18 +756,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_delete_autoexport_job()
     {
-        // First create an autoexport job
-        var createResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var createdJobName = createResult.AssertProperty("jobName").GetString();
+        // Use the shared autoexport job
+        var createdJobName = await GetOrCreateAutoexportJobAsync();
 
         // Delete the job
         var deleteResult = await CallToolAsync(
