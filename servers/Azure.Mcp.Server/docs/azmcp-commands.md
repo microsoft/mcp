@@ -1885,6 +1885,208 @@ azmcp storage blob upload --subscription <subscription> \
                           --local-file-path <path-to-local-file>
 ```
 
+### Azure Storage Sync Operations
+
+#### Storage Sync Service
+
+```bash
+# Create a new Storage Sync Service for cloud file share synchronization
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service create --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 --location <location>
+
+# Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name>
+
+# Get detailed properties of a specific Storage Sync Service
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service get --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              [--name <service-name>]
+
+# List all Storage Sync Services in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service list --subscription <subscription> \
+                               [--resource-group <resource-group>]
+
+# Update an existing Storage Sync Service configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 [--tags <tag-key=tag-value>]
+```
+
+#### Sync Group
+
+```bash
+# Create a new Sync Group within a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup create --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Delete a Sync Group (idempotent – succeeds even if the group does not exist)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup delete --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Get detailed properties of a specific Sync Group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --service <service-name> \
+                                [--name <syncgroup-name>]
+
+# List all Sync Groups in a Storage Sync Service
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --service <service-name>
+```
+
+#### Cloud Endpoint
+
+```bash
+# Create a new Cloud Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name> \
+                                       --storage-account <storage-account-name> \
+                                       --share <share-name>
+
+# Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name>
+
+# Get detailed properties of a specific Cloud Endpoint
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint get --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --service <service-name> \
+                                    --syncgroup <syncgroup-name> \
+                                    [--name <endpoint-name>]
+
+# List all Cloud Endpoints in a Sync Group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint list --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --service <service-name> \
+                                     --syncgroup <syncgroup-name>
+
+# Trigger change detection on a Cloud Endpoint
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --service <service-name> \
+                                                --syncgroup <syncgroup-name> \
+                                                --name <endpoint-name> \
+                                                [--directory-path <path>]
+```
+
+#### Registered Server
+
+```bash
+# Get detailed properties of a specific Registered Server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       [--server <server-name>]
+
+# List all Registered Servers in a Storage Sync Service
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name>
+
+# Register a new server with a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver register --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --service <service-name> \
+                                            --server <server-name> \
+                                            --server-id <unique-server-id>
+
+# Unregister a server from a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver unregister --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --service <service-name> \
+                                              --server <server-name>
+
+# Update a Registered Server configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver update --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --service <service-name> \
+                                          --server <server-name> \
+                                          [--certificate <certificate-path>]
+```
+
+#### Server Endpoint
+
+```bash
+# Create a new Server Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --server <server-name> \
+                                        --name <endpoint-name> \
+                                        --server-local-path <local-path>
+
+# Delete a Server Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name>
+
+# Get detailed properties of a specific Server Endpoint
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --service <service-name> \
+                                     --syncgroup <syncgroup-name> \
+                                     [--name <endpoint-name>]
+
+# List all Server Endpoints in a Sync Group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint list --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --service <service-name> \
+                                      --syncgroup <syncgroup-name>
+
+# Update a Server Endpoint configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint update --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name> \
+                                        [--cloud-tiering <Enabled|Disabled>] \
+                                        [--tiering-policy-days <days>] \
+                                        [--tiering-policy-volume-free-percent <percent>]
+```
+
 ### Azure Subscription Management
 
 ```bash
