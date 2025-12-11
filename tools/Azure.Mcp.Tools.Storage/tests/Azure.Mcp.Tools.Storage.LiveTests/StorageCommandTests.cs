@@ -5,12 +5,28 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
 {
     public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
     {
+        public override List<BodyKeySanitizer> BodyKeySanitizers =>
+        [
+            .. base.BodyKeySanitizers,
+            new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
+            {
+                Value = "Sanitized"
+            })
+        ];
+
+        public override List<string> DisabledDefaultSanitizers =>
+        [
+            ..base.DisabledDefaultSanitizers,
+            "AZSDK2003"
+        ];
+
         [Fact]
         public async Task Should_list_storage_accounts_by_subscription_id()
         {
@@ -52,7 +68,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind.GetString());
 
             var skuName = account.GetProperty("skuName");
-            Assert.Equal("Standard_LRS", skuName.GetString());
+            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
 
             var hnsEnabled = account.GetProperty("hnsEnabled");
             Assert.True(hnsEnabled.GetBoolean());
@@ -228,7 +244,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_upload_blob()
         {
             // Create a temporary file to upload
-            var tempFileName = $"test-upload-{DateTime.UtcNow.Ticks}.txt";
+            var tempFileName = RegisterOrRetrieveVariable("blobName", $"test-upload-{DateTime.UtcNow.Ticks}.txt");
             var tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
             var testContent = "This is a test file for blob upload";
 
@@ -334,7 +350,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         [Fact]
         public async Task Should_create_container()
         {
-            var containerName = $"test-container-{DateTime.UtcNow.Ticks}";
+            var containerName = RegisterOrRetrieveVariable("containerName", $"test-container-{DateTime.UtcNow.Ticks}");
 
             var result = await CallToolAsync(
                 "storage_blob_container_create",
@@ -356,7 +372,8 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_CreateStorageAccount_Successfully()
         {
             // Arrange - Use a unique account name for testing
-            var uniqueAccountName = $"testacct{DateTime.UtcNow:MMddHHmmss}";
+            var uniqueAccountName = RegisterOrRetrieveVariable("createdAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+            var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
             var result = await CallToolAsync(
                 "storage_account_create",
@@ -364,7 +381,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "account", uniqueAccountName },
-                    { "resource-group", Settings.ResourceGroupName },
+                    { "resource-group", resourceGroupName },
                     { "location", "eastus" },
                     { "sku", "Standard_LRS" },
                     { "kind", "StorageV2" }
@@ -376,7 +393,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // Check account properties
             var name = account.GetProperty("name").GetString();
-            Assert.Equal(uniqueAccountName, name);
+            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
 
             var location = account.GetProperty("location").GetString();
             Assert.Equal("eastus", location);
@@ -385,7 +402,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind);
 
             var skuName = account.GetProperty("skuName").GetString();
-            Assert.Equal("Standard_LRS", skuName);
+            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" :"Standard_LRS", skuName);
         }
 
         [Theory]
