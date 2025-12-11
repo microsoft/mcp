@@ -1891,31 +1891,26 @@ azmcp storage blob upload --subscription <subscription> \
 
 ```bash
 # Create a new Storage Sync Service for cloud file share synchronization
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
                                  --location <location>
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name>
 
 # Get detailed properties of a specific Storage Sync Service
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service get --subscription <subscription> \
                               --resource-group <resource-group> \
                               [--name <service-name>]
 
 # List all Storage Sync Services in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service list --subscription <subscription> \
                                [--resource-group <resource-group>]
 
 # Update an existing Storage Sync Service configuration
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service update --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
@@ -1933,7 +1928,7 @@ azmcp storagesync syncgroup create --subscription <subscription> \
                                    --name <syncgroup-name>
 
 # Delete a Sync Group (idempotent – succeeds even if the group does not exist)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync syncgroup delete --subscription <subscription> \
                                    --resource-group <resource-group> \
                                    --service <service-name> \
@@ -1967,7 +1962,7 @@ azmcp storagesync cloudendpoint create --subscription <subscription> \
                                        --share <share-name>
 
 # Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint delete --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --service <service-name> \
@@ -1990,7 +1985,6 @@ azmcp storagesync cloudendpoint list --subscription <subscription> \
                                      --syncgroup <syncgroup-name>
 
 # Trigger change detection on a Cloud Endpoint
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
                                                 --resource-group <resource-group> \
                                                 --service <service-name> \
@@ -2016,7 +2010,7 @@ azmcp storagesync registeredserver list --subscription <subscription> \
                                         --service <service-name>
 
 # Register a new server with a Storage Sync Service
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver register --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --service <service-name> \
@@ -2031,7 +2025,7 @@ azmcp storagesync registeredserver unregister --subscription <subscription> \
                                               --server <server-name>
 
 # Update a Registered Server configuration
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver update --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --service <service-name> \
@@ -2053,7 +2047,7 @@ azmcp storagesync serverendpoint create --subscription <subscription> \
                                         --server-local-path <local-path>
 
 # Delete a Server Endpoint (idempotent – succeeds even if the endpoint does not exist)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint delete --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --service <service-name> \
@@ -2076,7 +2070,7 @@ azmcp storagesync serverendpoint list --subscription <subscription> \
                                       --syncgroup <syncgroup-name>
 
 # Update a Server Endpoint configuration
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint update --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --service <service-name> \
