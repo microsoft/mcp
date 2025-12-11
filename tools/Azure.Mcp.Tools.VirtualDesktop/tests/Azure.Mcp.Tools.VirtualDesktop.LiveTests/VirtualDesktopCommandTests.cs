@@ -14,7 +14,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output, TestProxyFixtu
 {
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
     {
-        new BodyRegexSanitizer(new BodyRegexSanitizerBody() 
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody()
         {
             Regex = "\"displayName\"\\s*:\\s*\"[^\"]+\"",
             Value = "\"displayName\": \"Sanitized\""
