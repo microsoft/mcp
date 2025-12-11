@@ -84,7 +84,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             });
 
         // assert
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result);
+        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result);
     }
 
     [Fact]
