@@ -48,7 +48,7 @@ public class GuidanceGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result.Message);
+        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result.Message);
     }
 
     [Fact]

@@ -21,7 +21,7 @@ public static class PipelineGenerationUtil
     {
         if (options.UseAZDPipelineConfig)
         {
-            return TemplateService.LoadTemplate("Pipeline/azd-pipeline");
+            return "Run `azd pipeline config` to help the user create a deployment pipeline.";
         }
         else
         {

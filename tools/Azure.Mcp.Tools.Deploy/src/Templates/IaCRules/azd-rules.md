@@ -1,5 +1,0 @@
-- Ensure an User-Assigned Managed Identity exists.
-- Resource Group resource (if exists) must have tag "azd-env-name" = environmentName. Apply this tag to resource group resource ONLY.
-- Expected parameters in {{IacType}} parameters: environmentName='${{AZURE_ENV_NAME}}', location='${{AZURE_LOCATION}}'. resourceGroupName='rg-${{AZURE_ENV_NAME}}' is required if scope is subscription.
-- All container apps, app services, function apps, static web apps (and nothing else) must have tag "azd-service-name" matching the service name in azure.yaml.
-- Expected output in {{OutputFileName}}: RESOURCE_GROUP_ID.{{ContainerRegistryOutput}}

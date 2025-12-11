@@ -69,7 +69,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Expected parameters in terraform parameters", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("main.tf", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
