@@ -105,12 +105,13 @@ public static class DeploymentPlanTemplateUtil
 
         var deployTitle = isAks ? "" : " And Deploy the Application";
         var checkLog = isAks ? "" : "6. Check the application log with tool `azd-app-log-get` to ensure the services are running.";
-
+        var iacRuleTool = parameters.IacType.ToLowerInvariant() == "bicep" ? "Then call tool #mcp_azure_mcp_azd with input command='infrastructure_generation' to get instructions for generating modular Bicep infrastructure templates following Azure security and operational best practices for azd projects." : "Get the IaC rules from the tool `iac-rules-get`.";
         var azdStepReplacements = new Dictionary<string, string>
         {
             { "DeployTitle", deployTitle },
             { "IacType", parameters.IacType },
-            { "CheckLog", checkLog }
+            { "CheckLog", checkLog },
+            { "IaCRuleTool", iacRuleTool}
         };
 
         var azdSteps = TemplateService.ProcessTemplate("Plan/azd-steps", azdStepReplacements);
