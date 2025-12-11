@@ -34,25 +34,43 @@ The following options are available for all commands:
 +azmcp server start --mode namespace --transport=stdio
 +```
 +
-+are valid.
-+
-+When you run the **Azure MCP Server container image**
-+`mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
-+the image already contains an entrypoint that starts the MCP server process. The
-+image does **not** expose an `azmcp` executable intended to be used as the
-+container command.
-+
-+- Do **not** override the container command / entrypoint with `azmcp ...` when
-+  deploying the image. Doing so will cause the container to fail to start.
-+- Leave the command / entrypoint blank in Azure Container Apps so the default
-+  image entrypoint is used.
-+- If you need to customize the startup command or add extra arguments, build
-+  your own image based on the Azure MCP Server, configure the entrypoint there,
-+  and then deploy that custom image instead of overriding the command in the
-+  platform.
-+
-+The remaining sections describe the different server modes that apply to both
-+the CLI and the container image entrypoint.
+are valid.
+
+When you run the **Azure MCP Server container image**
+`mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
+the image already contains an entrypoint that starts the MCP server process. The
+image does **not** expose an `azmcp` executable intended to be used as the
+container command.
+
+- Do **not** override the container command / entrypoint with `azmcp ...` when
+  deploying the image. Doing so will cause the container to fail to start.
+- Leave the command / entrypoint blank in Azure Container Apps so the default
+  image entrypoint is used.
+- If you need to customize the startup command or add extra arguments, build
+  your own image based on the Azure MCP Server and set the ENTRYPOINT and/or
+  CMD values in your Dockerfile there. That way you control exactly how the
+  server starts without replacing the upstream image entrypoint at runtime.
+
+Note: ENTRYPOINT defines the executable that always runs; CMD provides
+default arguments to that executable. Overriding the container command in
+many PaaS providers replaces the image's ENTRYPOINT/CMD behavior, which can
+break startup. The Azure MCP Server image ENTRYPOINT in the repository is:
+
+```text
+ENTRYPOINT ["./server-binary", "server", "start"]
+```
+
+Because the image sets a fixed entrypoint, passing a container command such
+as `azmcp ...` will replace or conflict with that entrypoint. If you must
+change startup behavior, create a small derived Dockerfile that modifies the
+ENTRYPOINT/CMD as needed and deploy your custom image instead of overriding
+the command in the PaaS UI.
+
+For the exact Dockerfile used to build the image see:
+https://github.com/microsoft/mcp/blob/main/Dockerfile
+
+The remaining sections describe the different server modes that apply to both
+the CLI and the container image entrypoint.
 
 #### Default Mode (Namespace)
 
