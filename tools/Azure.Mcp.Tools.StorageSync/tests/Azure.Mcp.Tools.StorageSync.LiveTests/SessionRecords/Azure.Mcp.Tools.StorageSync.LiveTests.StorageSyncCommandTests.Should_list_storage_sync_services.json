@@ -1,0 +1,27 @@
+{
+  "Interactions": [
+    {
+      "Request": {
+        "Method": "GET",
+        "Uri": "https://management.azure.com/subscriptions/fbf948b5-161f-4473-bffa-d92bed92d668/resourceGroups/ankushb-mcp252dc347/providers/Microsoft.StorageSync/storageSyncServices?api-version=2022-06-01",
+        "Body": null,
+        "Headers": {
+          "User-Agent": "azsdk-net-identity/1.0.0 (.NET Framework 4.7.2; Microsoft Windows 10.0.19045)",
+          "Accept": "application/json",
+          "Authorization": "Bearer REDACTED"
+        }
+      },
+      "Response": {
+        "Status": 200,
+        "Headers": {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+          "Expires": "-1"
+        },
+        "Body": "{\"value\":[{\"id\":\"/subscriptions/fbf948b5-161f-4473-bffa-d92bed92d668/resourceGroups/ankushb-mcp252dc347/providers/Microsoft.StorageSync/storageSyncServices/mcp252dc347\",\"type\":\"Microsoft.StorageSync/storageSyncServices\",\"name\":\"mcp252dc347\",\"location\":\"westus\",\"properties\":{}}],\"nextLink\":null}"
+      }
+    }
+  ],
+  "Variables": {}
+}

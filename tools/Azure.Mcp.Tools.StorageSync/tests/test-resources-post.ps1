@@ -52,8 +52,35 @@ try {
         Write-Host "Cloud Endpoint '$cloudEndpointName' not yet available (this is normal during initial setup)" -ForegroundColor Yellow
     }
 
+    # Get Registered Server if it exists
+    $registeredServerName = "$BaseName-rs"
+    $registeredServer = Get-AzStorageSyncServer -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -ServerName $registeredServerName -ErrorAction SilentlyContinue
+
+    if ($registeredServer) {
+        Write-Host "Registered Server found: $registeredServerName" -ForegroundColor Green
+        Write-Host "  - Server Name: $($registeredServer.ServerName)" -ForegroundColor Gray
+        Write-Host "  - Friendly Name: $($registeredServer.FriendlyName)" -ForegroundColor Gray
+    }
+    else {
+        Write-Host "Registered Server '$registeredServerName' not yet available (requires Storage Sync Agent)" -ForegroundColor Yellow
+    }
+
+    # Get Server Endpoint if it exists
+    $serverEndpointName = "$BaseName-se"
+    $serverEndpoint = Get-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ErrorAction SilentlyContinue
+
+    if ($serverEndpoint) {
+        Write-Host "Server Endpoint found: $serverEndpointName" -ForegroundColor Green
+        Write-Host "  - Server Local Path: $($serverEndpoint.ServerLocalPath)" -ForegroundColor Gray
+        Write-Host "  - Cloud Tiering: $($serverEndpoint.CloudTiering)" -ForegroundColor Gray
+    }
+    else {
+        Write-Host "Server Endpoint '$serverEndpointName' not yet available (requires active registered server)" -ForegroundColor Yellow
+    }
+
     Write-Host "Storage Sync Service setup completed successfully" -ForegroundColor Green
 }
 catch {
     Write-Error "Error setting up Storage Sync Service: $_" -ErrorAction Stop
 }
+
