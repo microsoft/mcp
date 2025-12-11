@@ -231,7 +231,7 @@ function Get-PathsToTest {
         )
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
-        $changedFiles = Get-ChangedFiles
+        $changedFiles = Get-ChangedFiles        
         # Assuming $changedFiles = [
         #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
         #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
@@ -255,8 +255,7 @@ function Get-PathsToTest {
         ) #>
 
         if($changedPaths.Count -eq 0) {
-            Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
-            $changedPaths = @('core/Microsoft.Mcp.Core')
+            Write-Host "No files or only skipped files changed. No testable paths detected." -ForegroundColor Yellow
         } else {
             Write-Host "Changed paths detected: $($changedPaths -join ', ')"
         }
@@ -271,8 +270,8 @@ function Get-PathsToTest {
             }
         }
 
-        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
-        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
+        # All PRs that aren't only skipped files should include Azure.Mcp.Server to run ConsolidatedModeTests.cs
+        if ($changedPaths -and $pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
             Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
             $pathsToTest += 'servers/Azure.Mcp.Server'
         }
@@ -529,54 +528,59 @@ function Get-BuildMatrices {
         $buildMatrix = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
 
-        $supportedPlatforms = $servers.platforms
-        | Where-Object { $_.operatingSystem -eq $os }
-        # Reduce the platform objects to unique combinations of architecture, native, and trimmed
-        # Select-Object -Unique doesn't work here because we're working with hashtable
-        | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64, non-native before native, non-special before special purpose
+        if($pathsToTest.Count -eq 0) {
+            Write-Host "No testable paths detected. Skipping build matrix generation for $os."
+        } else {
+            $supportedPlatforms = $servers.platforms
+            | Where-Object { $_.operatingSystem -eq $os }
+            # Reduce the platform objects to unique combinations of architecture, native, and trimmed
+            # Select-Object -Unique doesn't work here because we're working with hashtable
+            | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64, non-native before native, non-special before special purpose
 
-        foreach($platform in $supportedPlatforms) {
-            $arch = $platform.architecture
-            $legName = $platform.name -replace '\W', '_' # e.g. linux-arm64 or windows-x64-native
+            foreach($platform in $supportedPlatforms) {
+                $arch = $platform.architecture
+                $legName = $platform.name -replace '\W', '_' # e.g. linux-arm64 or windows-x64-native
 
-            if ($excludedPlatforms -contains $platform.name) {
-                Write-Host "Excluding build leg $legName"
-                continue
-            }
+                if ($excludedPlatforms -contains $platform.name) {
+                    Write-Host "Excluding build leg $legName"
+                    continue
+                }
 
-            $pool = switch($os) {
-                'windows' { $windowsPool }
-                'linux' { $linuxPool }
-                'macos' { $macPool }
-            }
+                $pool = switch($os) {
+                    'windows' { $windowsPool }
+                    'linux' { $linuxPool }
+                    'macos' { $macPool }
+                }
 
-            $vmImage = switch($os) {
-                'windows' { $windowsVmImage }
-                'linux' { $linuxVmImage }
-                'macos' { $macVmImage }
-            }
+                $vmImage = switch($os) {
+                    'windows' { $windowsVmImage }
+                    'linux' { $linuxVmImage }
+                    'macos' { $macVmImage }
+                }
 
-            $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
+                $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
 
-            $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+                $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
-            $buildMatrix[$legName] = [ordered]@{
-                BuildPlatformName = $platform.name
-                Pool = $pool
-                OSVmImage = $vmImage
-                RunUnitTests = $runUnitTests
-                RunRecordedTests = $runRecordedTests
-            }
-
-            if($runUnitTests) {
-                $smokeTestMatrix[$legName] = [ordered]@{
+                $buildMatrix[$legName] = [ordered]@{
+                    BuildPlatformName = $platform.name
                     Pool = $pool
                     OSVmImage = $vmImage
-                    Architecture = $arch
+                    RunUnitTests = $runUnitTests
+                    RunRecordedTests = $runRecordedTests
+                }
+
+                if($runUnitTests) {
+                    $smokeTestMatrix[$legName] = [ordered]@{
+                        Pool = $pool
+                        OSVmImage = $vmImage
+                        Architecture = $arch
+                    }
                 }
             }
         }
 
+        # Even if there are no build legs, we still want to create empty matrices for this OS
         $matrices["${os}BuildMatrix"] = $buildMatrix
         $matrices["${os}SmokeTestMatrix"] = $smokeTestMatrix
     }
@@ -627,10 +631,6 @@ try {
 
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
-            if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
-                $matrices[$key] = @{}
-            }
-
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
