@@ -159,7 +159,12 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' = {
   parent: storageAccount
   name: 'default'
-  properties: {}
+  properties: {
+    changeFeed: {
+      enabled: true
+      retentionInDays: 7
+    }
+  }
 }
 
 resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
