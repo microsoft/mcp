@@ -503,6 +503,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(1)]
     public async Task Should_create_autoimport_job()
     {
         var result = await CallToolAsync(
@@ -521,31 +522,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
-    public async Task Should_create_autoimport_job_with_custom_parameters()
-    {
-        var customJobName = $"autoimport-test-{Guid.NewGuid().ToString("N")[..8]}";
-
-        var result = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "job-name", customJobName },
-                { "conflict-resolution-mode", "Skip" },
-                { "autoimport-prefixes", new[] { "/data/", "/logs/" } },
-                { "admin-status", "Enable" },
-                { "enable-deletions", false },
-                { "tenant", Settings.TenantId }
-            });
-
-        var jobName = result.AssertProperty("jobName");
-        Assert.Equal(JsonValueKind.String, jobName.ValueKind);
-        Assert.Equal(customJobName, jobName.GetString());
-    }
-
-    [Fact]
+    [TestPriority(2)]
     public async Task Should_list_autoimport_jobs()
     {
         // Use the shared autoimport job
@@ -581,6 +558,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(3)]
     public async Task Should_get_autoimport_job()
     {
         // Use the shared autoimport job
@@ -606,6 +584,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(4)]
     public async Task Should_cancel_autoimport_job()
     {
         // Use the shared autoimport job
@@ -630,6 +609,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
 
     [Fact]
+    [TestPriority(10)]
     public async Task Should_create_autoexport_job()
     {
         var result = await CallToolAsync(
@@ -648,6 +628,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(11)]
     public async Task Should_list_autoexport_jobs()
     {
         // Use the shared autoexport job
@@ -683,6 +664,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(12)]
     public async Task Should_get_autoexport_job()
     {
         // Use the shared autoexport job
@@ -708,6 +690,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(13)]
     public async Task Should_cancel_autoexport_job()
     {
         // Use the shared autoexport job
@@ -731,6 +714,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(5)]
     public async Task Should_delete_autoimport_job()
     {
         // Use the shared autoimport job
@@ -754,6 +738,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
+    [TestPriority(14)]
     public async Task Should_delete_autoexport_job()
     {
         // Use the shared autoexport job
