@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
@@ -16,6 +17,37 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     /// AZSDK3493 = $..name
     /// </summary>
     public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
+
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
+    {
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "resource[gG]roups\\/([^?\\/]+)",
+            Value = "sanitized",
+            GroupForReplace = "1"
+        })
+    }.ToList();
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
+    {
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        })
+    }.ToList();
 
     [Fact]
     public async Task Should_ShowDatabase_Successfully()

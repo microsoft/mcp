@@ -45,8 +45,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         ResourceBaseName = "Sanitized",
         SubscriptionName = "Sanitized",
         TenantName = "Sanitized",
-        TestMode = TestMode.Playback,
-        ResourceGroupName = "Sanitized"
+        ResourceGroupName = "Sanitized",
+        TestMode = TestMode.Playback
     };
 
     protected virtual async ValueTask LoadSettingsAsync()

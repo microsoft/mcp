@@ -247,11 +247,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         {
             GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
             {
-                Regex = Settings.ResourceGroupName,
-                Value = "Sanitized",
-            }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
             }));
