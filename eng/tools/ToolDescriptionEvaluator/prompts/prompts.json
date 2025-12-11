@@ -547,7 +547,11 @@
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "managedlustre_fs_autoexport-job_create": [
-    "Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+    "Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Create an autoexport job named <job_name> for filesystem <filesystem_name>",
+    "Set up autoexport with prefix /data for filesystem <filesystem_name>",
+    "Start exporting data from filesystem <filesystem_name> to blob storage",
+    "Create disabled autoexport job for filesystem <filesystem_name>"
   ],
   "managedlustre_fs_autoexport-job_cancel": [
     "Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
@@ -568,6 +572,34 @@
     "Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
     "Remove the autoexport job <job_name> from filesystem <filesystem_name>",
     "Clean up autoexport job <job_name>"
+  ],
+  "managedlustre_fs_autoimport-job_create": [
+    "Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Create an autoimport job named <job_name> for filesystem <filesystem_name>",
+    "Set up autoimport for filesystem <filesystem_name>",
+    "Start importing from blob storage to filesystem <filesystem_name> with prefixes /data and /logs",
+    "Create autoimport job with conflict resolution mode OverwriteIfDirty for filesystem <filesystem_name>",
+    "Import data from blob storage to filesystem <filesystem_name> with Skip conflict resolution"
+  ],
+  "managedlustre_fs_autoimport-job_cancel": [
+    "Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Stop the autoimport job <job_name> on filesystem <filesystem_name>",
+    "Terminate autoimport job <job_name>"
+  ],
+  "managedlustre_fs_autoimport-job_get": [
+    "Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Show me the status of autoimport job <job_name> on filesystem <filesystem_name>",
+    "What is the state of autoimport job <job_name>"
+  ],
+  "managedlustre_fs_autoimport-job_list": [
+    "List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Show me all autoimport jobs on filesystem <filesystem_name>",
+    "What autoimport jobs are running on filesystem <filesystem_name>"
+  ],
+  "managedlustre_fs_autoimport-job_delete": [
+    "Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Remove the autoimport job <job_name> from filesystem <filesystem_name>",
+    "Clean up autoimport job <job_name>"
   ],
   "marketplace_product_get": [
     "Get details about marketplace product <product_name>"

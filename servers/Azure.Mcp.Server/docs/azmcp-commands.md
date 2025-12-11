@@ -1570,7 +1570,10 @@ azmcp managedlustre fs sku get --subscription <subscription> \
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs autoexport-job create --subscription <subscription> \
                                              --resource-group <resource-group> \
-                                             --filesystem-name <filesystem-name>
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--autoexport-prefix <prefix>] \
+                                             [--admin-status <Enable|Disable>]
 
 # Cancel an autoexport job for an Azure Managed Lustre filesystem
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1619,7 +1622,7 @@ azmcp managedlustre fs autoimport-job create --subscription <subscription> \
                                              --filesystem-name <filesystem-name> \
                                              [--job-name <job-name>] \
                                              [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
-                                             [--autoimport-prefixes <prefix1> <prefix2> ...] \
+                                             [--autoimport-prefixes <prefix1> --autoimport-prefixes<prefix2> ...] \
                                              [--admin-status <Enable|Disable>] \
                                              [--enable-deletions <true|false>] \
                                              [--maximum-errors <number>]

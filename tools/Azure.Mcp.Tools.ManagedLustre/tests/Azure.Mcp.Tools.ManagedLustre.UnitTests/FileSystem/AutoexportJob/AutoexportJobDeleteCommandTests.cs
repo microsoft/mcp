@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -56,10 +57,7 @@ public class AutoexportJobDeleteCommandTests
     {
         // Arrange
         _managedLustreService.DeleteAutoexportJobAsync(
-            Arg.Is(_subscription),
-            Arg.Is(_resourceGroup),
-            Arg.Is(_fileSystemName),
-            Arg.Is(_jobName),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -80,10 +78,10 @@ public class AutoexportJobDeleteCommandTests
         Assert.NotNull(response.Results);
 
         await _managedLustreService.Received(1).DeleteAutoexportJobAsync(
-            _subscription,
-            _resourceGroup,
-            _fileSystemName,
-            _jobName,
+            Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Is(_jobName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

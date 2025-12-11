@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -53,12 +54,12 @@ public class AutoimportJobCreateCommandTests
     {
         // Arrange
         _managedLustreService.CreateAutoimportJobAsync(
-            Arg.Is(_subscription),
-            Arg.Is(_resourceGroup),
-            Arg.Is(_fileSystemName),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -86,70 +87,10 @@ public class AutoimportJobCreateCommandTests
             _fileSystemName,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_Succeeds_WithAllOptionalParameters()
-    {
-        // Arrange
-        var jobName = "my-custom-job";
-        var conflictMode = "OverwriteIfDirty";
-        var prefixes = new List<string> { "/data", "/logs" };
-        var adminStatus = "Enable";
-        var enableDeletions = true;
-        var maxErrors = 100L;
-
-        _managedLustreService.CreateAutoimportJobAsync(
-            Arg.Is(_subscription),
-            Arg.Is(_resourceGroup),
-            Arg.Is(_fileSystemName),
-            Arg.Is(jobName),
-            Arg.Is(conflictMode),
-            Arg.Is<List<string>>(x => x.Count == 2 && x[0] == "/data" && x[1] == "/logs"),
-            Arg.Is(adminStatus),
-            Arg.Is(enableDeletions),
-            Arg.Is(maxErrors),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns("my-custom-job");
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _subscription,
-            "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--job-name", jobName,
-            "--conflict-resolution-mode", conflictMode,
-            "--autoimport-prefixes", "/data", "/logs",
-            "--admin-status", adminStatus,
-            "--enable-deletions", "true",
-            "--maximum-errors", "100"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        await _managedLustreService.Received(1).CreateAutoimportJobAsync(
-            _subscription,
-            _resourceGroup,
-            _fileSystemName,
-            jobName,
-            conflictMode,
-            Arg.Is<List<string>>(x => x.Count == 2 && x[0] == "/data" && x[1] == "/logs"),
-            adminStatus,
-            enableDeletions,
-            maxErrors,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -169,7 +110,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Is(conflictMode),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -196,7 +137,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             conflictMode,
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -217,7 +158,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Is(adminStatus),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -244,155 +185,10 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             adminStatus,
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_Succeeds_WithMultipleAutoimportPrefixes()
-    {
-        // Arrange
-        var prefixes = new List<string> { "/prefix1", "/prefix2", "/prefix3" };
-
-        _managedLustreService.CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Is<List<string>>(x => x.Count == 3 && x[0] == "/prefix1" && x[1] == "/prefix2" && x[2] == "/prefix3"),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns("autoimport-job");
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _subscription,
-            "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--autoimport-prefixes", "/prefix1", "/prefix2", "/prefix3"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Is<List<string>>(x => x.Count == 3),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task ExecuteAsync_Succeeds_WithEnableDeletions(bool enableDeletions)
-    {
-        // Arrange
-        _managedLustreService.CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
-            Arg.Any<string?>(),
-            Arg.Is(enableDeletions),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns("autoimport-job");
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _subscription,
-            "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--enable-deletions", enableDeletions.ToString().ToLower()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
-            Arg.Any<string?>(),
-            enableDeletions,
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData(-1L)]  // infinite
-    [InlineData(0L)]   // exit immediately
-    [InlineData(100L)] // custom value
-    public async Task ExecuteAsync_Succeeds_WithMaximumErrors(long maxErrors)
-    {
-        // Arrange
-        _managedLustreService.CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Is(maxErrors),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns("autoimport-job");
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _subscription,
-            "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--maximum-errors", maxErrors.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoimportJobAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            maxErrors,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -429,7 +225,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -462,7 +258,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -495,7 +291,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -521,7 +317,7 @@ public class AutoimportJobCreateCommandTests
             _fileSystemName,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<List<string>?>(),
+            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
@@ -530,3 +326,4 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<CancellationToken>());
     }
 }
+

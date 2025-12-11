@@ -500,6 +500,9 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string subscription,
         string resourceGroup,
         string filesystemName,
+        string? jobName = null,
+        string? autoexportPrefix = null,
+        string? adminStatus = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -509,7 +512,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(resourceGroup), resourceGroup),
             (nameof(filesystemName), filesystemName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -520,11 +523,33 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
             }
 
-            // Generate job name from timestamp
-            var jobName = $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            // Generate job name from timestamp if not provided
+            jobName ??= $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Validate admin status if provided
+            if (!string.IsNullOrEmpty(adminStatus))
+            {
+                var validStatuses = new[] { "Enable", "Disable" };
+                if (!validStatuses.Contains(adminStatus, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"Invalid admin status '{adminStatus}'. Valid values are: {string.Join(", ", validStatuses)}", nameof(adminStatus));
+                }
+            }
 
             // Create auto export job data with filesystem location
             var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
+
+            // Set admin status if provided (default is Enable per SDK docs)
+            if (!string.IsNullOrEmpty(adminStatus))
+            {
+                autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus, ignoreCase: true);
+            }
+
+            // Set autoexport prefix if provided (SDK allows only 1 prefix)
+            if (!string.IsNullOrEmpty(autoexportPrefix))
+            {
+                autoExportJobData.AutoExportPrefixes.Add(autoexportPrefix);
+            }
 
             // Create the auto export job
             var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
@@ -560,7 +585,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -571,10 +596,16 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
             }
 
-            // Delete (cancel) the auto export job
-            await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
-            await fs.Value.GetAutoExportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+            // Get the auto export job
+            var job = await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            // Create patch data to update admin status to Disable
+            var patchData = new AutoExportJobPatch();
+            patchData.AdminStatus = AutoExportJobAdminStatus.Disable;
+
+            await job.Value.UpdateAsync(
                 WaitUntil.Completed,
+                patchData,
                 cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
@@ -584,10 +615,6 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         catch (RequestFailedException rfe)
         {
             throw new Exception($"Failed to cancel auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to cancel auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
 
@@ -608,7 +635,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -620,7 +647,24 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             {
                 Name = job.Value.Data.Name,
                 Id = job.Value.Data.Id.ToString(),
-                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown"
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
+                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
+                AutoExportPrefixes = job.Value.Data.AutoExportPrefixes?.ToArray(),
+                State = job.Value.Data.State?.ToString(),
+                StatusCode = job.Value.Data.StatusCode,
+                StatusMessage = job.Value.Data.StatusMessage,
+                TotalFilesExported = job.Value.Data.TotalFilesExported,
+                TotalMiBExported = job.Value.Data.TotalMiBExported,
+                TotalFilesFailed = job.Value.Data.TotalFilesFailed,
+                ExportIterationCount = job.Value.Data.ExportIterationCount,
+                LastSuccessfulIterationCompletionTimeUTC = job.Value.Data.LastSuccessfulIterationCompletionTimeUTC,
+                CurrentIterationFilesDiscovered = job.Value.Data.CurrentIterationFilesDiscovered,
+                CurrentIterationMiBDiscovered = job.Value.Data.CurrentIterationMiBDiscovered,
+                CurrentIterationFilesExported = job.Value.Data.CurrentIterationFilesExported,
+                CurrentIterationMiBExported = job.Value.Data.CurrentIterationMiBExported,
+                CurrentIterationFilesFailed = job.Value.Data.CurrentIterationFilesFailed,
+                LastStartedTimeUTC = job.Value.Data.LastStartedTimeUTC,
+                LastCompletionTimeUTC = job.Value.Data.LastCompletionTimeUTC
             };
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
@@ -652,7 +696,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -665,7 +709,24 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 {
                     Name = job.Data.Name,
                     Id = job.Data.Id.ToString(),
-                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown"
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
+                    AdminStatus = job.Data.AdminStatus?.ToString(),
+                    AutoExportPrefixes = job.Data.AutoExportPrefixes?.ToArray(),
+                    State = job.Data.State?.ToString(),
+                    StatusCode = job.Data.StatusCode,
+                    StatusMessage = job.Data.StatusMessage,
+                    TotalFilesExported = job.Data.TotalFilesExported,
+                    TotalMiBExported = job.Data.TotalMiBExported,
+                    TotalFilesFailed = job.Data.TotalFilesFailed,
+                    ExportIterationCount = job.Data.ExportIterationCount,
+                    LastSuccessfulIterationCompletionTimeUTC = job.Data.LastSuccessfulIterationCompletionTimeUTC,
+                    CurrentIterationFilesDiscovered = job.Data.CurrentIterationFilesDiscovered,
+                    CurrentIterationMiBDiscovered = job.Data.CurrentIterationMiBDiscovered,
+                    CurrentIterationFilesExported = job.Data.CurrentIterationFilesExported,
+                    CurrentIterationMiBExported = job.Data.CurrentIterationMiBExported,
+                    CurrentIterationFilesFailed = job.Data.CurrentIterationFilesFailed,
+                    LastStartedTimeUTC = job.Data.LastStartedTimeUTC,
+                    LastCompletionTimeUTC = job.Data.LastCompletionTimeUTC
                 });
             }
 
@@ -700,7 +761,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -750,7 +811,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(resourceGroup), resourceGroup),
             (nameof(filesystemName), filesystemName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -846,7 +907,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -857,10 +918,16 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
             }
 
-            // Delete (cancel) the auto import job
-            await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
-            await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+            // Get the auto import job
+            var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            // Create patch data to update admin status to Disable
+            var patchData = new AutoImportJobPatch();
+            patchData.AdminStatus = AutoImportJobUpdatePropertiesAdminStatus.Disable;
+
+            await job.Value.UpdateAsync(
                 WaitUntil.Completed,
+                patchData,
                 cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
@@ -870,10 +937,6 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         catch (RequestFailedException rfe)
         {
             throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
 
@@ -894,7 +957,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -906,7 +969,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             {
                 Name = job.Value.Data.Name,
                 Id = job.Value.Data.Id.ToString(),
-                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown"
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
+                ConflictResolutionMode = job.Value.Data.ConflictResolutionMode?.ToString(),
+                AutoImportPrefixes = job.Value.Data.AutoImportPrefixes?.ToArray(),
+                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
+                EnableDeletions = job.Value.Data.EnableDeletions,
+                MaximumErrors = (int?)job.Value.Data.MaximumErrors,
+                TotalBlobsImported = job.Value.Data.TotalBlobsImported,
+                TotalConflicts = job.Value.Data.TotalConflicts,
+                TotalErrors = job.Value.Data.TotalErrors
             };
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
@@ -938,7 +1009,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -951,7 +1022,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 {
                     Name = job.Data.Name,
                     Id = job.Data.Id.ToString(),
-                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown"
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
+                    ConflictResolutionMode = job.Data.ConflictResolutionMode?.ToString(),
+                    AutoImportPrefixes = job.Data.AutoImportPrefixes?.ToArray(),
+                    AdminStatus = job.Data.AdminStatus?.ToString(),
+                    EnableDeletions = job.Data.EnableDeletions,
+                    MaximumErrors = (int?)job.Data.MaximumErrors,
+                    TotalBlobsImported = job.Data.TotalBlobsImported,
+                    TotalConflicts = job.Data.TotalConflicts,
+                    TotalErrors = job.Data.TotalErrors
                 });
             }
 
@@ -986,7 +1065,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
