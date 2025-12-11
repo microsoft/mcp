@@ -4,32 +4,66 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
+using YamlDotNet.Core.Tokens;
 
-namespace Azure.Mcp.Tools.SignalR.LiveTests
+namespace Azure.Mcp.Tools.SignalR.LiveTests;
+
+public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public class SignalRCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+    private const string SanitizedValue = "Sanitized";
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
+     {
+         new(new UriRegexSanitizerBody
+         {
+             Regex = "resource[Gg]roups/([^?\\/]+)",
+             Value = SanitizedValue,
+             GroupForReplace = "1"
+         }),
+         new(new UriRegexSanitizerBody
+         {
+             Regex = "signalR/([^?\\/]+)",
+             Value = SanitizedValue,
+             GroupForReplace = "1"
+         })
+      };
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>
     {
-        [Fact]
-        public async Task Should_get_signalr_runtimes_by_subscription_id()
+        new(new BodyKeySanitizerBody("$..displayName")
         {
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", Settings.SubscriptionId } });
+            Value = SanitizedValue
+        }),
+    };
 
-            var runtimes = result.AssertProperty("runtimes");
-            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            foreach (var runtime in runtimes.EnumerateArray())
-            {
-                Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
 
-                // Verify required properties exist
-                var nameProperty = runtime.AssertProperty("name");
-                Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
-                var kindProperty = runtime.AssertProperty("kind");
-                Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
-            }
+    [Fact]
+    public async Task Should_get_signalr_runtimes_by_subscription_id()
+    {
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", Settings.SubscriptionId } });
+
+        var runtimes = result.AssertProperty("runtimes");
+        Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+        foreach (var runtime in runtimes.EnumerateArray())
+        {
+            Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
+
+            // Verify required properties exist
+            var nameProperty = runtime.AssertProperty("name");
+            Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
+            var kindProperty = runtime.AssertProperty("kind");
+            Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
         }
+    }
 
         [Fact]
         public async Task Should_handle_empty_subscription_gracefully()
@@ -110,28 +144,29 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
             // Note: Array might be empty if no SignalR runtimes exist in subscription
         }
 
-        [Fact]
-        public async Task Should_get_signalr_runtime_detail()
-        {
-            var getResult = await CallToolAsync(
-                "signalr_runtime_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
+    [Fact]
+    public async Task Should_get_signalr_runtime_detail()
+    {
+        var capturedRuntimeName = Settings.ResourceBaseName;
 
-            var runtimes = getResult.AssertProperty("runtimes");
-            var runtime = runtimes[0];
-            Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
+        var getResult = await CallToolAsync(
+            "signalr_runtime_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "signalr", capturedRuntimeName }
+            });
 
-            // Verify essential properties exist
-            var nameProperty = runtime.AssertProperty("name");
-            Assert.Equal(Settings.ResourceBaseName, nameProperty.GetString());
+        var runtimes = getResult.AssertProperty("runtimes");
+        var runtime = runtimes[0];
+        Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
 
-            var kindProperty = runtime.AssertProperty("kind");
-            Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
-        }
+        // Verify essential properties exist
+        var nameProperty = runtime.AssertProperty("name");
+        Assert.Equal(capturedRuntimeName, nameProperty.GetString());
+
+        var kindProperty = runtime.AssertProperty("kind");
+        Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
     }
 }
