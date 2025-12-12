@@ -7,7 +7,6 @@ using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
-using YamlDotNet.Core.Tokens;
 
 namespace Azure.Mcp.Tools.SignalR.LiveTests;
 
