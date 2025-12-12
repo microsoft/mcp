@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+- Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
 
 ### Breaking Changes
 

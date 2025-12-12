@@ -61,4 +61,11 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<string>> ListTables(
+        string account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
