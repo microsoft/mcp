@@ -1,0 +1,26 @@
+jobs:
+- job: PublishSymbols
+  displayName: "Publish symbols"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  timeoutInMinutes: 120
+  steps:
+  - checkout: azure-sdk-build-tools
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - download: current
+    displayName: Download binaries_signed
+    artifact: binaries_signed
+
+  - template: /pipelines/steps/publish-symbols.yml@azure-sdk-build-tools
+    parameters:
+      BuildToolsRepositoryPath: $(Build.SourcesDirectory)
+      PackagesPath: $(Pipeline.Workspace)/binaries_signed
+      StagingDirectory: $(Build.ArtifactStagingDirectory)
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: symbols_published
