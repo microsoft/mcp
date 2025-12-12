@@ -65,84 +65,84 @@ public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixtu
         }
     }
 
-        [Fact]
-        public async Task Should_handle_empty_subscription_gracefully()
-        {
-            // Empty subscription should trigger validation failure (400) -> null results
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", "" } });
+    [Fact]
+    public async Task Should_handle_empty_subscription_gracefully()
+    {
+        // Empty subscription should trigger validation failure (400) -> null results
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", "" } });
 
-            Assert.Null(result);
-        }
+        Assert.Null(result);
+    }
 
-        [Fact]
-        public async Task Should_handle_invalid_subscription_gracefully()
-        {
-            // Invalid identifier should reach execution and return structured error details (HasValue)
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new()
-                {
+    [Fact]
+    public async Task Should_handle_invalid_subscription_gracefully()
+    {
+        // Invalid identifier should reach execution and return structured error details (HasValue)
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new()
+            {
                     { "subscription", "invalid-subscription" }
-                });
+            });
 
-            Assert.NotNull(result);
-            var message = result.AssertProperty("message");
-            Assert.Contains("invalid-subscription", message.GetString(), StringComparison.OrdinalIgnoreCase);
-        }
+        Assert.NotNull(result);
+        var message = result.AssertProperty("message");
+        Assert.Contains("invalid-subscription", message.GetString(), StringComparison.OrdinalIgnoreCase);
+    }
 
-        [Fact]
-        public async Task Should_get_signalr_runtimes_by_subscription_name()
-        {
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", Settings.SubscriptionName } });
+    [Fact]
+    public async Task Should_get_signalr_runtimes_by_subscription_name()
+    {
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", Settings.SubscriptionName } });
 
-            var runtimes = result.AssertProperty("runtimes");
-            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            // Note: Array might be empty if no SignalR runtimes exist in subscription
-        }
+        var runtimes = result.AssertProperty("runtimes");
+        Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+        // Note: Array might be empty if no SignalR runtimes exist in subscription
+    }
 
-        [Fact]
-        public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_id()
-        {
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantId } });
+    [Fact]
+    public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_id()
+    {
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantId } });
 
-            var runtimes = result.AssertProperty("runtimes");
-            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            // Note: Array might be empty if no SignalR runtimes exist in subscription
-        }
+        var runtimes = result.AssertProperty("runtimes");
+        Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+        // Note: Array might be empty if no SignalR runtimes exist in subscription
+    }
 
-        [Fact]
-        public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_name()
-        {
-            Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
+    [Fact]
+    public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_name()
+    {
+        Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantName } });
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantName } });
 
-            var runtimes = result.AssertProperty("runtimes");
-            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            // Note: Array might be empty if no SignalR runtimes exist in subscription
-        }
+        var runtimes = result.AssertProperty("runtimes");
+        Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+        // Note: Array might be empty if no SignalR runtimes exist in subscription
+    }
 
-        [Fact]
-        public async Task Should_get_signalr_runtimes_by_subscription_with_resource_group()
-        {
-            Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
+    [Fact]
+    public async Task Should_get_signalr_runtimes_by_subscription_with_resource_group()
+    {
+        Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
-            var result = await CallToolAsync(
-                "signalr_runtime_get",
-                new() { { "subscription", Settings.SubscriptionName }, { "resource-group", Settings.ResourceGroupName } });
+        var result = await CallToolAsync(
+            "signalr_runtime_get",
+            new() { { "subscription", Settings.SubscriptionName }, { "resource-group", Settings.ResourceGroupName } });
 
-            var runtimes = result.AssertProperty("runtimes");
-            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            // Note: Array might be empty if no SignalR runtimes exist in subscription
-        }
+        var runtimes = result.AssertProperty("runtimes");
+        Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+        // Note: Array might be empty if no SignalR runtimes exist in subscription
+    }
 
     [Fact]
     public async Task Should_get_signalr_runtime_detail()
