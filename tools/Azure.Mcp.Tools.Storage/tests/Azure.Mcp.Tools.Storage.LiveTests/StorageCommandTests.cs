@@ -402,7 +402,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind);
 
             var skuName = account.GetProperty("skuName").GetString();
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" :"Standard_LRS", skuName);
+            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
         }
 
         [Theory]
