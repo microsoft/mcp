@@ -19,6 +19,7 @@ public interface IOneLakeService
     Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<string> ListOneLakeItemsDfsJsonAsync(string workspaceId, bool recursive = true, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<OneLakeItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
+    Task<string> ResolveItemIdentifierAsync(string workspaceId, string itemIdentifier, CancellationToken cancellationToken = default);
 
     // OneLake Shortcuts Operations
     Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default);

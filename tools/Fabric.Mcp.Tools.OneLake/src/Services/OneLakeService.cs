@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,91 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     private readonly TokenCredential _credential = credential ?? new DefaultAzureCredential();
     private const string UserAgentHeaderName = "User-Agent";
     private const string UserAgentHeaderValue = "OneLake MCP";
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _itemIdentifierCache = new(StringComparer.OrdinalIgnoreCase);
+
+    public async Task<string> ResolveItemIdentifierAsync(string workspaceId, string itemIdentifier, CancellationToken cancellationToken = default)
+    {
+        var normalizedWorkspaceId = NormalizeWorkspaceIdentifier(workspaceId);
+        var normalizedItemInput = NormalizeItemIdentifier(itemIdentifier);
+
+        if (Guid.TryParse(normalizedItemInput, out _))
+        {
+            return normalizedItemInput;
+        }
+
+        if (normalizedItemInput.Contains('.'))
+        {
+            return normalizedItemInput.TrimEnd('/');
+        }
+
+        var workspaceCache = GetWorkspaceItemCache(normalizedWorkspaceId);
+        if (workspaceCache.TryGetValue(normalizedItemInput, out var cachedIdentifier))
+        {
+            return cachedIdentifier;
+        }
+
+        var items = await ListOneLakeItemsAsync(normalizedWorkspaceId, cancellationToken: cancellationToken);
+        foreach (var item in items)
+        {
+            if (string.IsNullOrWhiteSpace(item.Id))
+            {
+                continue;
+            }
+
+            var artifactId = NormalizeItemIdentifier(item.Id);
+            workspaceCache.TryAdd(artifactId, artifactId);
+
+            if (!string.IsNullOrWhiteSpace(item.DisplayName))
+            {
+                workspaceCache.TryAdd(item.DisplayName.Trim(), artifactId);
+            }
+
+            var artifactGuid = item.Metadata?.ArtifactId;
+            if (!string.IsNullOrWhiteSpace(artifactGuid))
+            {
+                workspaceCache.TryAdd(artifactGuid.Trim(), artifactId);
+            }
+        }
+
+        if (workspaceCache.TryGetValue(normalizedItemInput, out cachedIdentifier))
+        {
+            return cachedIdentifier;
+        }
+
+        throw new InvalidOperationException($"Unable to resolve item '{itemIdentifier}' in workspace '{workspaceId}'. Provide the full item identifier including its suffix, for example 'ItemName.Lakehouse'.");
+    }
+
+    private ConcurrentDictionary<string, string> GetWorkspaceItemCache(string workspaceId)
+    {
+        return _itemIdentifierCache.GetOrAdd(workspaceId, static _ => new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static string NormalizeWorkspaceIdentifier(string workspaceId)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceId))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceId));
+        }
+
+        return workspaceId.Trim();
+    }
+
+    private static string NormalizeItemIdentifier(string itemIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        return itemIdentifier.Trim().TrimEnd('/');
+    }
+
+    private async Task<(string WorkspaceId, string ItemId)> GetNormalizedIdentifiersAsync(string workspaceId, string itemId, CancellationToken cancellationToken)
+    {
+        var normalizedWorkspaceId = NormalizeWorkspaceIdentifier(workspaceId);
+        var normalizedItemId = await ResolveItemIdentifierAsync(normalizedWorkspaceId, itemId, cancellationToken);
+        return (normalizedWorkspaceId, normalizedItemId);
+    }
 
     // Workspace Operations
     public async Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
@@ -117,7 +203,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     // OneLake Shortcuts Operations  
     public async Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var result = await JsonSerializer.DeserializeAsync<ShortcutsResponse>(response, OneLakeJsonContext.Default.ShortcutsResponse, cancellationToken);
         return result?.Value ?? [];
@@ -125,14 +212,16 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
     }
 
     public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, string path, CreateShortcutRequest request, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateShortcutRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
@@ -140,14 +229,16 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
         await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
     // Data Operations (OneLake Data Plane)
     public async Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/Files/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Head, url, cancellationToken: cancellationToken);
 
         return new OneLakeFileInfo
@@ -164,14 +255,16 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
         {
-            return await ListBlobsIntelligentAsync(workspaceId, itemId, recursive, cancellationToken);
+            return await ListBlobsIntelligentAsync(normalizedWorkspaceId, normalizedItemId, recursive, cancellationToken);
         }
 
         // Use the OneLake blob endpoint to list files for specific path
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
 
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
@@ -222,6 +315,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsIntelligentAsync(string workspaceId, string itemId, bool recursive, CancellationToken cancellationToken)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // Intelligent discovery: Try to list contents from both Files and Tables folders
         var allFiles = new List<OneLakeFileInfo>();
         var topLevelFolders = new[] { "Files", "Tables" };
@@ -230,7 +324,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         {
             try
             {
-                var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
                 url += $"?restype=container&comp=list";
                 if (recursive)
                 {
@@ -329,6 +423,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<List<FileSystemItem>> ListPathIntelligentAsync(string workspaceId, string itemId, bool recursive, CancellationToken cancellationToken)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // Intelligent discovery: Try to list contents from both Files and Tables folders using DFS API
         var allItems = new List<FileSystemItem>();
         var topLevelFolders = new[] { "Files", "Tables" };
@@ -337,7 +432,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         {
             try
             {
-                var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
                 url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
                 var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
@@ -447,14 +542,15 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
         {
-            return await ListPathIntelligentAsync(workspaceId, itemId, recursive, cancellationToken);
+            return await ListPathIntelligentAsync(normalizedWorkspaceId, normalizedItemId, recursive, cancellationToken);
         }
 
         // Use ADLS Gen2 filesystem API format instead of blob container format
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
 
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
@@ -613,6 +709,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
         {
@@ -624,7 +721,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             {
                 try
                 {
-                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
                     url += $"?restype=container&comp=list";
                     if (recursive)
                     {
@@ -645,7 +742,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         // Use the OneLake blob endpoint to list files for specific path
-        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
+        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
 
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
@@ -683,6 +780,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
         {
@@ -694,7 +792,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             {
                 try
                 {
-                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
                     url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
                     var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
@@ -711,7 +809,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         // Use ADLS Gen2 filesystem API format instead of blob container format
-        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
+        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
 
         // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
         // or a sub-path within Files
@@ -1005,8 +1103,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // Use DFS endpoint for file operations (similar to directory creation)
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
 
         // Create or overwrite file using DFS API
         using var createRequest = new HttpRequestMessage(HttpMethod.Put, url + "?resource=file");
@@ -1040,7 +1139,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         ArgumentNullException.ThrowIfNull(content);
 
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
 
         if (content.CanSeek)
         {
@@ -1102,8 +1202,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         return new BlobPutResult(
-            workspaceId,
-            itemId,
+            normalizedWorkspaceId,
+            normalizedItemId,
             blobPath,
             contentLength,
             string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType!,
@@ -1142,10 +1242,11 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         string? queryString,
         CancellationToken cancellationToken)
     {
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var effectiveOptions = downloadOptions ?? new BlobDownloadOptions();
 
         var trimmedPath = path.TrimStart('/');
-        var urlBuilder = new StringBuilder($"{baseUrl}/{workspaceId}/{itemId}/{trimmedPath}");
+        var urlBuilder = new StringBuilder($"{baseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{trimmedPath}");
 
         if (!string.IsNullOrWhiteSpace(queryString))
         {
@@ -1276,8 +1377,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
 
         return new BlobGetResult(
-            workspaceId,
-            itemId,
+            normalizedWorkspaceId,
+            normalizedItemId,
             path,
             contentLength,
             string.IsNullOrWhiteSpace(contentType) ? contentTypeHeader?.MediaType : contentType,
@@ -1307,7 +1408,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{workspaceId}/{itemId}/{blobPath.TrimStart('/')}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
         using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
@@ -1319,8 +1421,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
 
         return new BlobDeleteResult(
-            workspaceId,
-            itemId,
+            normalizedWorkspaceId,
+            normalizedItemId,
             blobPath,
             version,
             versionId,
@@ -1331,14 +1433,16 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{filePath.TrimStart('/')}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
     public async Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default)
     {
         // Use blob endpoint for directory deletion, similar to file deletion
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}";
 
         if (recursive)
         {
@@ -1356,7 +1460,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
         // However, we can create an empty directory using a PUT request with the appropriate headers
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{directoryPath.TrimStart('/')}?resource=directory";
+        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}?resource=directory";
 
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
         request.Headers.Add("x-ms-resource", "directory");
