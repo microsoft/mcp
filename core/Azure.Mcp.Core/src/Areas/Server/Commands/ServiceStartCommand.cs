@@ -178,8 +178,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         if (activity != null)
         {
-            activity.SetTag(TagName.Transport, options.Transport);
-            activity.SetTag(TagName.ServerMode, options.Mode);
             activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
             activity.SetTag(TagName.InsecureDisableElicitation, options.InsecureDisableElicitation);
             activity.SetTag(TagName.DangerouslyDisableHttpIncomingAuth, options.DangerouslyDisableHttpIncomingAuth);

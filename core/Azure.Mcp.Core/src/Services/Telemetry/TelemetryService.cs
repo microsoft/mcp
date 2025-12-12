@@ -48,6 +48,7 @@ internal class TelemetryService : ITelemetryService
         if (serverOptions?.Value != null)
         {
             _tagsList.Add(new(TagName.ServerMode, serverOptions.Value.Mode));
+            _tagsList.Add(new(TagName.Transport, serverOptions.Value.Transport));
         }
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);

@@ -62,7 +62,6 @@ public sealed class McpRuntime : IMcpRuntime
     {
         using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo);
         CaptureToolCallMeta(activity, request.Params?.Meta);
-        activity?.SetTag(TagName.Transport, request.Server.Services?.GetService<HttpClientService>() != null ? TransportTypes.Http : TransportTypes.StdIo);
 
         if (request.Params == null)
         {
@@ -179,7 +178,6 @@ public sealed class McpRuntime : IMcpRuntime
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo);
-        activity?.SetTag(TagName.Transport, request.Server.Services?.GetService<HttpClientService>() != null ? TransportTypes.Http : TransportTypes.StdIo);
 
         try
         {
