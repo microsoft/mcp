@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -20,20 +18,20 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 
-    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
         // Sanitizes all hostnames in URLs to remove actual vault names (not limited to `kid` fields)
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
           Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
           GroupForReplace = "host",
         })
-    };
+    ];
 
     public override List<BodyKeySanitizer> BodyKeySanitizers
     {
         get
         {
-            return new List<BodyKeySanitizer>()
-            {
+            return
+            [
                 new BodyKeySanitizer(new BodyKeySanitizerBody("value")
                 {
                     Value = _importCertificateAssets.PfxBase64
@@ -46,7 +44,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
                 {
                     Value = _importCertificateAssets.CsrBase64
                 })
-            };
+            ];
         }
     }
 
@@ -92,9 +90,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_create_key()
     {
-        var keyName = "key" + Random.Shared.NextInt64();
-
-        RegisterVariable("keyName", keyName);
+        var keyName = RegisterOrRetrieveVariable("keyName", "key" + Random.Shared.NextInt64());
 
         var result = await CallToolAsync(
             "keyvault_key_create",
@@ -102,13 +98,13 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             {
                 { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
-                { "key", TestVariables["keyName"]},
+                { "key", keyName},
                 { "key-type", KeyType.Rsa.ToString() }
             });
 
         var createdKeyName = result.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, createdKeyName.ValueKind);
-        Assert.Equal(TestVariables["keyName"], createdKeyName.GetString());
+        Assert.Equal(keyName, createdKeyName.GetString());
 
         var keyType = result.AssertProperty("keyType");
         Assert.Equal(JsonValueKind.String, keyType.ValueKind);
@@ -195,9 +191,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_create_certificate()
     {
-        var certificateName = "certificate" + Random.Shared.NextInt64();
-
-        RegisterVariable("certificateName", certificateName);
+        var certificateName = RegisterOrRetrieveVariable("certificateName", "certificate" + Random.Shared.NextInt64());
 
         var result = await CallToolAsync(
             "keyvault_certificate_create",
@@ -205,12 +199,12 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             {
                 { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
-                { "certificate", TestVariables["certificateName"]}
+                { "certificate", certificateName}
             });
 
         var createdCertificateName = result.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-        Assert.Equal(TestVariables["certificateName"], createdCertificateName.GetString());
+        Assert.Equal(certificateName, createdCertificateName.GetString());
 
         // Verify that the certificate has some expected properties
         ValidateCertificate(result);
@@ -226,9 +220,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
         try
         {
-            var certificateName = "certificateimport" + Random.Shared.NextInt64();
-
-            RegisterVariable("certificateName", certificateName);
+            var certificateName = RegisterOrRetrieveVariable("certificateName", "certificateimport" + Random.Shared.NextInt64());
 
             var result = await CallToolAsync(
                 "keyvault_certificate_import",
@@ -236,13 +228,13 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "vault", Settings.ResourceBaseName },
-                    { "certificate", TestVariables["certificateName"] },
+                    { "certificate", certificateName },
                     { "certificate-data", tempPath },
                     { "password", fakePassword }
                 });
             var createdCertificateName = result.AssertProperty("name");
             Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-            Assert.Equal(TestVariables["certificateName"], createdCertificateName.GetString());
+            Assert.Equal(certificateName, createdCertificateName.GetString());
             // Validate basic certificate properties
             ValidateCertificate(result);
         }

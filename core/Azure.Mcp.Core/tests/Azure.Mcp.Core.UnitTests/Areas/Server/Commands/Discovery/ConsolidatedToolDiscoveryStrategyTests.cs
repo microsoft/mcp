@@ -23,7 +23,9 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         });
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
         var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, configurationOptions, logger);

@@ -5,9 +5,10 @@ using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Azure.Mcp.Tests.Generated;
 
 namespace Azure.Mcp.Tests.Client;
@@ -35,6 +36,17 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedRootDir;
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
+    private static readonly TimeSpan[] DownloadRetryDelays = new[]
+    {
+        TimeSpan.FromSeconds(1),
+        TimeSpan.FromSeconds(10),
+        TimeSpan.FromSeconds(60)
+    };
+
+    /// <summary>
+    /// In-process synchronization lock to avoid proxy exe mismanagement.
+    /// </summary>
+    private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
     private async Task<string> _getClient()
     {
@@ -43,43 +55,102 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return _cachedExecutable;
         }
 
-        var proxyDir = GetProxyDirectory();
-        var version = GetTargetVersion();
-
-        if (CheckProxyVersion(proxyDir, version))
+        await s_downloadLock.WaitAsync();
+        FileStream? lockStream = null;
+        try
         {
+            var proxyDir = GetProxyDirectory();
+            lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
+
+            if (_cachedExecutable != null)
+            {
+                return _cachedExecutable;
+            }
+
+            var version = GetTargetVersion();
+
+            if (CheckProxyVersion(proxyDir, version))
+            {
+                _cachedExecutable = FindExecutableInDirectory(proxyDir);
+                return _cachedExecutable;
+            }
+
+            var assetName = GetAssetNameForPlatform();
+            var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
+            var downloadPath = Path.Combine(proxyDir, assetName);
+            if (!File.Exists(downloadPath))
+            {
+                using var client = new HttpClient();
+                byte[] bytes;
+                var attempt = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        bytes = await client.GetByteArrayAsync(url);
+                        break;
+                    }
+                    catch when (attempt < DownloadRetryDelays.Length)
+                    {
+                        var delay = DownloadRetryDelays[attempt];
+                        await Task.Delay(delay);
+                        attempt++;
+                    }
+                }
+
+                await File.WriteAllBytesAsync(downloadPath, bytes);
+                // record the downloaded version right here so we don't need to parse anything other than what
+                // is in this folder later
+                await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
+            }
+
+            // if we've gotten to here then we need to decompress
+            if (assetName.EndsWith(".tar.gz"))
+            {
+                await using var compressedStream = File.OpenRead(downloadPath);
+                using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
+                TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
+            }
+            else
+            {
+                ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
+            }
+
             _cachedExecutable = FindExecutableInDirectory(proxyDir);
-            return _cachedExecutable;
         }
-
-        var assetName = GetAssetNameForPlatform();
-        var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
-        var downloadPath = Path.Combine(proxyDir, assetName);
-        if (!File.Exists(downloadPath))
+        finally
         {
-            using var client = new HttpClient();
-            var bytes = await client.GetByteArrayAsync(url);
-            await File.WriteAllBytesAsync(downloadPath, bytes);
-            // record the downloaded version right here so we don't need to parse anything other than what
-            // is in this folder later
-            await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
+            lockStream?.Dispose();
+            s_downloadLock.Release();
         }
-
-        // if we've gotten to here then we need to decompress
-        if (assetName.EndsWith(".tar.gz"))
-        {
-            await using var compressedStream = File.OpenRead(downloadPath);
-            using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
-            TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
-        }
-        else
-        {
-            ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
-        }
-
-        _cachedExecutable = FindExecutableInDirectory(proxyDir);
 
         return _cachedExecutable;
+    }
+
+    /// <summary>
+    /// Multiple test assemblies are likely to be running in the same process due to MCP repo's usage of dotnet test
+    ///
+    /// This can lead to race conditions on making the proxy exe available on disk. To avoid this, we use a semaphore slim
+    /// to maintain in-process synchronization, and a file lock to maintain cross-process synchronization.
+    /// </summary>
+    /// <param name="proxyDirectory"></param>
+    /// <returns></returns>
+    private static async Task<FileStream> AcquireDownloadLockAsync(string proxyDirectory)
+    {
+        var lockPath = Path.Combine(proxyDirectory, ".download.lock");
+
+        while (true)
+        {
+            try
+            {
+                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, bufferSize: 1, FileOptions.DeleteOnClose);
+            }
+            catch (IOException)
+            {
+                await Task.Delay(200).ConfigureAwait(false);
+            }
+        }
     }
 
     private bool CheckProxyVersion(string proxyDirectory, string version)

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -46,7 +45,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         ResourceBaseName = "Sanitized",
         SubscriptionName = "Sanitized",
         TenantName = "Sanitized",
-        TestMode = TestMode.Playback
+        TestMode = TestMode.Playback,
+        ResourceGroupName = "Sanitized"
     };
 
     protected virtual async ValueTask LoadSettingsAsync()

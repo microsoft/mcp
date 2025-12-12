@@ -6,11 +6,24 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
+- Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
+
 ### Other Changes
+
+- Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Move Azure AI Best Practices tool into Best Practice namespace [[#1323](https://github.com/microsoft/mcp/pull/1323)]
+
+#### Dependency updates
+
+- Updated `Azure.Bicep.Types` from `0.6.1` to `0.6.27`. [[#1331](https://github.com/microsoft/mcp/pull/1331)]
+
+- Updated `Microsoft.Azure.Mcp.AzTypes.Internal.Compact` from `0.2.802` to `0.2.804`. [[#1348](https://github.com/microsoft/mcp/pull/1348)]
 
 ## 2.0.0-beta.7 (2025-11-25)
 
@@ -61,6 +74,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1178](https://github.com/microsoft/mcp/pull/1178)]
+- Update server to support official MCP repository. [[#1104](https://github.com/microsoft/mcp/pull/1104)]
 
 ## 2.0.0-beta.4 (2025-11-13)
 

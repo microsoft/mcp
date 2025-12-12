@@ -5,6 +5,8 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 

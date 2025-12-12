@@ -3,9 +3,7 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Azure;
@@ -28,24 +26,6 @@ public static class OpenTelemetryExtensions
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
-        services.AddOptions<AzureMcpServerConfiguration>()
-            .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
-            {
-                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
-                // the assembly that will run the tool calls.
-                var entryAssembly = Assembly.GetEntryAssembly();
-                if (entryAssembly != null)
-                {
-                    options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
-                }
-
-                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
-                // over any other settings.
-                var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
-
-                options.IsTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-            });
-
         services.AddSingleton<ITelemetryService, TelemetryService>();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

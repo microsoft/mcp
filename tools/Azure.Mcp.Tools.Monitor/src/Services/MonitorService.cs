@@ -13,8 +13,8 @@ using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
+using Azure.Monitor.Query.Logs;
+using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -56,7 +56,7 @@ public class MonitorService(
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
         var client = new LogsQueryClient(credential, options);
-        var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+        var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
         try
         {
@@ -126,7 +126,7 @@ public class MonitorService(
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
-                new QueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
+                new LogsQueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
                 options: null,
                 cancellationToken
             );
@@ -261,7 +261,7 @@ public class MonitorService(
                 options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
             var client = new LogsQueryClient(credential, options);
-            var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+            var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,

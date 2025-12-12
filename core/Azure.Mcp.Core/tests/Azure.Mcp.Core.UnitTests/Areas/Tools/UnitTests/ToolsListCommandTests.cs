@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Tools.Commands;
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
@@ -16,7 +14,8 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -401,7 +400,9 @@ public class ToolsListCommandTests
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         });
 
         // Create a NEW service collection just for the empty command factory

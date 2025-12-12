@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
@@ -44,9 +43,8 @@ using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -101,7 +99,9 @@ internal class CommandFactoryHelpers
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
         {
             Name = "Test Server",
-            Version = "Test Version"
+            Version = "Test Version",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
         var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);

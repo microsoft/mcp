@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Extensions;
+
 namespace Azure.Mcp.Core.Extensions;
 
 public static class ParseResultExtensions

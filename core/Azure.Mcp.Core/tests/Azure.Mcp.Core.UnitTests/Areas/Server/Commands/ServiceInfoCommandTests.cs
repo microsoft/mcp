@@ -5,9 +5,9 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -32,7 +32,9 @@ public class ServiceInfoCommandTests
         _mcpServerConfiguration = new AzureMcpServerConfiguration
         {
             Name = "Test-Name?",
-            Version = "Test-Version?"
+            Version = "Test-Version?",
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
         _command = new(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration), _logger);
         _commandDefinition = _command.GetCommand();
