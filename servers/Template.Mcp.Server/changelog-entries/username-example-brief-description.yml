@@ -1,0 +1,5 @@
+pr: 123                                                          # Optional - Auto-detected from git commit during compilation if not provided
+changes:                                                         # Required
+  - section: "Other Changes"                                     # Required - Valid sections: "New Features", "Breaking Changes", "Bug Fixes", "Other Changes"
+    description: "Updated ModelContextProtocol to version 2.1.0" # Required
+    subsection: "Dependency Updates"                             # Optional - Valid subsections: "Dependency Updates"
