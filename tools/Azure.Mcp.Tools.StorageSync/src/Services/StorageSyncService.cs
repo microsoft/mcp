@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.StorageSync.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.StorageSync.Models;
 
 namespace Azure.Mcp.Tools.StorageSync.Services;
 
