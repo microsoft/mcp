@@ -16,7 +16,11 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     /// <summary>
     /// AZSDK3493 = $..name
     /// </summary>
-    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
+    public override List<string> DisabledDefaultSanitizers => 
+    [ 
+        .. base.DisabledDefaultSanitizers
+        "AZSDK3493" 
+    ];
 
     public override bool EnableDefaultSanitizerAdditions => false;
 
