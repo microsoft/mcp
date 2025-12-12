@@ -11,6 +11,7 @@ namespace Azure.Mcp.Tools.Sql.LiveTests;
 
 public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
+
     [Fact]
     public async Task Should_ShowDatabase_Successfully()
     {
