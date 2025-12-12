@@ -3,6 +3,12 @@ jobs:
   displayName: "Publish symbols"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   timeoutInMinutes: 120
+  pool:
+    # Symbols conversion tool only runs on Windows
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+
   steps:
   - checkout: azure-sdk-build-tools
 
@@ -13,6 +19,13 @@ jobs:
   - download: current
     displayName: Download binaries_signed
     artifact: binaries_signed
+
+  - pwsh: |
+      $toolPath = "$(Build.SourcesDirectory)/tools/symboltool/pdb2pdb.exe"
+      $parent = Split-Path -Path $toolPath -Parent
+      Get-ChildItem -Path $parent | Out-Host
+      Write-Host "TestPath $toolPath`: $(Test-Path -Path $toolPath)"
+    displayName: 'Pdb2Pdb tool directory listing'
 
   - template: /pipelines/steps/publish-symbols.yml@azure-sdk-build-tools
     parameters:
