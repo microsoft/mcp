@@ -4,12 +4,22 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.LiveTests;
 
 public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>
+    {
+        new(new BodyKeySanitizerBody("$..displayName")
+        {
+            Value = "Sanitized"
+        }),
+    };
+
     [Fact]
     public async Task Should_list_redis_caches_by_subscription_id()
     {
