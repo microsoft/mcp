@@ -339,7 +339,7 @@ public sealed class NamespaceToolLoader(
                 var elicitationResult = await HandleSecretElicitationAsync(
                     request,
                     $"{namespaceName} {command}",
-                    _options.Value.InsecureDisableElicitation,
+                    _options.Value.DangerouslyDisableElicitation,
                     _logger,
                     cancellationToken);
 

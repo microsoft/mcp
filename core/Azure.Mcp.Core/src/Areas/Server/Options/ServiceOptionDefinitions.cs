@@ -12,7 +12,7 @@ public static class ServiceOptionDefinitions
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
     public const string DangerouslyDisableHttpIncomingAuthName = "dangerously-disable-http-incoming-auth";
-    public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
+    public const string DangerouslyDisableElicitationName = "dangerously-disable-elicitation";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
@@ -76,8 +76,8 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> InsecureDisableElicitation = new(
-        $"--{InsecureDisableElicitationName}")
+    public static readonly Option<bool> DangerouslyDisableElicitation = new(
+        $"--{DangerouslyDisableElicitationName}")
     {
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
