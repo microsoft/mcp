@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.LiveTests;
 
-public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_redis_caches_by_subscription_id()
