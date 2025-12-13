@@ -106,7 +106,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
 ## IDE
@@ -127,7 +127,7 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
     - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
 1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
 1. Click **install while downloading** to complete the installation.
-   
+
 For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
@@ -239,7 +239,7 @@ Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 ```bash
 dotnet tool install Azure.Mcp
 ```
-or 
+or
 ```bash
 dotnet tool install Azure.Mcp --version <version>
 ```
@@ -382,7 +382,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * Create Microsoft Foundry agent threads
 * List Microsoft Foundry agent threads
 * Get messages of a Microsoft Foundry thread
-  
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -472,6 +472,20 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### 📂 Azure File Shares
+
+* "List all my file shares in my storage account"
+* "Get details about a specific file share"
+* "Create a new file share in my storage account"
+* "Delete a file share"
+* "Check if a file share name is available"
+* "List all snapshots for a file share"
+* "Get details about a file share snapshot"
+* "Create a snapshot of a file share"
+* "Get file share limits and quotas"
+* "Get provisioning recommendations for file shares"
+* "Get file share usage data and metrics"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -552,6 +566,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
+- 📂 **Azure File Shares** - Azure File Shares management and snapshots
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
