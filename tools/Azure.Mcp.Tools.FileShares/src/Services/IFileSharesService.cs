@@ -1,210 +1,150 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tools.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
+/// <summary>
+/// Service interface for Azure File Shares operations.
+/// </summary>
 public interface IFileSharesService
 {
     /// <summary>
-    /// Lists all file shares in a subscription or resource group.
+    /// List file shares in a subscription or resource group.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">Optional resource group name to filter results</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>List of file share names</returns>
-    Task<List<string>> ListFileShares(
+    Task<List<FileShareInfo>> ListFileSharesAsync(
         string subscription,
         string? resourceGroup = null,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a specific file share by name.
+    /// Get details of a specific file share.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group containing the file share</param>
-    /// <param name="name">The name of the file share</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>File share details</returns>
-    Task<FileShareDetail> GetFileShare(
+    Task<FileShareInfo> GetFileShareAsync(
         string subscription,
         string resourceGroup,
-        string name,
-        string? tenantId = null,
+        string fileShareName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a file share name is available in a location.
+    /// Create or update a file share.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="location">The Azure region to check</param>
-    /// <param name="name">The proposed file share name</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Name availability result</returns>
-    Task<NameAvailabilityResult> CheckNameAvailability(
+    Task<FileShareInfo> CreateOrUpdateFileShareAsync(
         string subscription,
+        string resourceGroup,
+        string fileShareName,
         string location,
-        string name,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a file share.
+    /// Delete a file share.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group containing the file share</param>
-    /// <param name="name">The name of the file share to delete</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    Task DeleteFileShare(
-        string subscription,
-        string resourceGroup,
-        string name,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Lists all snapshots for a file share.
-    /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group containing the file share</param>
-    /// <param name="fileShareName">The name of the file share</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>List of snapshot names</returns>
-    Task<List<string>> ListFileShareSnapshots(
+    Task DeleteFileShareAsync(
         string subscription,
         string resourceGroup,
         string fileShareName,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a specific file share snapshot.
+    /// Check if a file share name is available.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group containing the file share</param>
-    /// <param name="fileShareName">The name of the parent file share</param>
-    /// <param name="snapshotName">The name of the snapshot</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Snapshot details</returns>
-    Task<FileShareSnapshot> GetFileShareSnapshot(
+    Task<bool> CheckNameAvailabilityAsync(
+        string subscription,
+        string fileShareName,
+        string location,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List snapshots of a file share.
+    /// </summary>
+    Task<List<FileShareSnapshotInfo>> ListFileShareSnapshotsAsync(
         string subscription,
         string resourceGroup,
         string fileShareName,
-        string snapshotName,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Creates a snapshot of a file share.
+    /// Get details of a file share snapshot.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group containing the file share</param>
-    /// <param name="fileShareName">The name of the file share</param>
-    /// <param name="snapshotName">The name for the new snapshot</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Created snapshot details</returns>
-    Task<FileShareSnapshot> CreateFileShareSnapshot(
+    Task<FileShareSnapshotInfo> GetFileShareSnapshotAsync(
         string subscription,
         string resourceGroup,
         string fileShareName,
-        string? snapshotName = null,
-        string? tenantId = null,
+        string snapshotId,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Lists all private endpoint connections for a file share resource.
+    /// Create a snapshot of a file share.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group name</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>List of private endpoint connections</returns>
-    Task<List<PrivateEndpointConnectionData>> ListPrivateEndpointConnections(
+    Task<FileShareSnapshotInfo> CreateFileShareSnapshotAsync(
         string subscription,
         string resourceGroup,
-        string? tenantId = null,
+        string fileShareName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a specific private endpoint connection.
+    /// List private endpoint connections for a file share.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group name</param>
-    /// <param name="connectionName">The name of the private endpoint connection</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Private endpoint connection details</returns>
-    Task<PrivateEndpointConnectionData?> GetPrivateEndpointConnection(
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
         string subscription,
         string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get details of a private endpoint connection.
+    /// </summary>
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
         string connectionName,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Updates the approval status of a private endpoint connection.
+    /// Update the approval state of a private endpoint connection.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group name</param>
-    /// <param name="connectionName">The name of the private endpoint connection</param>
-    /// <param name="status">The connection status (Approved or Rejected)</param>
-    /// <param name="description">Optional reason for approval/rejection</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Updated private endpoint connection</returns>
-    Task<PrivateEndpointConnectionData?> UpdatePrivateEndpointConnection(
+    Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
         string subscription,
         string resourceGroup,
+        string fileShareName,
         string connectionName,
         string status,
-        string? description = null,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a private endpoint connection.
+    /// Delete a private endpoint connection.
     /// </summary>
-    /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="resourceGroup">The resource group name</param>
-    /// <param name="connectionName">The name of the private endpoint connection to delete</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    Task DeletePrivateEndpointConnection(
+    Task DeletePrivateEndpointConnectionAsync(
         string subscription,
         string resourceGroup,
+        string fileShareName,
         string connectionName,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Models;
 
 /// <summary>
-/// Represents an Azure private endpoint connection.
+/// Represents an Azure private endpoint connection schema.
 /// </summary>
-public sealed class PrivateEndpointConnectionData
+public sealed class PrivateEndpointConnectionDataSchema
 {
     /// <summary>
     /// Gets or sets the resource ID.
@@ -29,22 +30,28 @@ public sealed class PrivateEndpointConnectionData
     public string? Type { get; set; }
 
     /// <summary>
+    /// Gets or sets the system data.
+    /// </summary>
+    [JsonPropertyName("systemData")]
+    public SystemDataSchema? SystemData { get; set; }
+
+    /// <summary>
     /// Gets or sets the private endpoint connection properties.
     /// </summary>
     [JsonPropertyName("properties")]
-    public PrivateEndpointConnectionProperties? Properties { get; set; }
+    public PrivateEndpointConnectionPropertiesSchema? Properties { get; set; }
 }
 
 /// <summary>
-/// Properties of a private endpoint connection.
+/// Properties of a private endpoint connection schema.
 /// </summary>
-public sealed class PrivateEndpointConnectionProperties
+public sealed class PrivateEndpointConnectionPropertiesSchema
 {
     /// <summary>
     /// Gets or sets the private endpoint resource.
     /// </summary>
     [JsonPropertyName("privateEndpoint")]
-    public PrivateEndpoint? PrivateEndpoint { get; set; }
+    public PrivateEndpointSchema? PrivateEndpoint { get; set; }
 
     /// <summary>
     /// Gets or sets the group IDs for the private endpoint resource.
@@ -56,7 +63,7 @@ public sealed class PrivateEndpointConnectionProperties
     /// Gets or sets the private link service connection state.
     /// </summary>
     [JsonPropertyName("privateLinkServiceConnectionState")]
-    public PrivateLinkServiceConnectionState? PrivateLinkServiceConnectionState { get; set; }
+    public PrivateLinkServiceConnectionStateSchema? PrivateLinkServiceConnectionState { get; set; }
 
     /// <summary>
     /// Gets or sets the provisioning state.
@@ -66,9 +73,9 @@ public sealed class PrivateEndpointConnectionProperties
 }
 
 /// <summary>
-/// Represents a private endpoint resource.
+/// Represents a private endpoint resource schema.
 /// </summary>
-public sealed class PrivateEndpoint
+public sealed class PrivateEndpointSchema
 {
     /// <summary>
     /// Gets or sets the ARM identifier for the private endpoint.
@@ -78,9 +85,9 @@ public sealed class PrivateEndpoint
 }
 
 /// <summary>
-/// State of the connection between service consumer and provider.
+/// State of the connection between service consumer and provider schema.
 /// </summary>
-public sealed class PrivateLinkServiceConnectionState
+public sealed class PrivateLinkServiceConnectionStateSchema
 {
     /// <summary>
     /// Gets or sets the connection status (Pending, Approved, Rejected).

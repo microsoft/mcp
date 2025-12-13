@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options.FileShare;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -9,17 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
-public sealed class FileShareListCommand(ILogger<FileShareListCommand> logger)
-    : BaseFileSharesCommand<FileShareListOptions>
+/// <summary>
+/// Command to list file shares in a subscription or resource group.
+/// </summary>
+public sealed class FileShareListCommand(ILogger<FileShareListCommand> logger) : SubscriptionCommand<SubscriptionOptions>()
 {
-    private const string CommandTitle = "List File Shares";
     private readonly ILogger<FileShareListCommand> _logger = logger;
 
-    public override string Id => "f1a2b3c4-d5e6-47f8-a9b0-c1d2e3f4a5b6";
-
+    public override string Id => "d1e0e0e1-e2e3-e4e5-e6e7-e8e9eaebeced";
     public override string Name => "list";
-
-    public override string Title => CommandTitle;
+    public override string Description => "List file shares in a subscription or resource group.";
+    public override string Title => "List File Shares";
 
     public override ToolMetadata Metadata => new()
     {
@@ -30,24 +31,6 @@ public sealed class FileShareListCommand(ILogger<FileShareListCommand> logger)
         LocalRequired = false,
         Secret = false
     };
-
-    public override string Description =>
-        "List all file shares in a subscription or resource group.";
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.Filter);
-    }
-
-    protected override FileShareListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Filter.Name);
-        return options;
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -60,24 +43,25 @@ public sealed class FileShareListCommand(ILogger<FileShareListCommand> logger)
 
         try
         {
-            var fileSharesService = context.GetService<IFileSharesService>();
-            var fileShares = await fileSharesService.ListFileShares(
+            var service = context.GetService<IFileSharesService>() ?? throw new InvalidOperationException("FileShares service is not available.");
+            var results = await service.ListFileSharesAsync(
                 options.Subscription!,
-                options.ResourceGroup,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+                tenant: options.Tenant,
+                retryPolicy: options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareListCommandResult);
+            var result = new FileShareListCommandResult(results ?? []);
+            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred listing file shares.");
+            _logger.LogError(ex, "Failed to list file shares");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record FileShareListCommandResult(List<string> FileShares);
+    internal record FileShareListCommandResult(IEnumerable<FileShareInfo> FileShares);
 }
+
