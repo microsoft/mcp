@@ -1,20 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.FileShares.Commands.Informational;
-using Azure.Mcp.Tools.FileShares.Models;
-using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using Xunit;
-
 namespace Azure.Mcp.Tools.FileShares.UnitTests.Informational;
 
 /// <summary>

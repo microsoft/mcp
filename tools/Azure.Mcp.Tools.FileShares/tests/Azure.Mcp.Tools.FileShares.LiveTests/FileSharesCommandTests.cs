@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Core.Tests;
+using Azure.Mcp.Core.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.LiveTests;
@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.FileShares.LiveTests;
 /// Live tests for FileShares commands.
 /// These tests exercise the actual Azure FileShares resource provider with real resources.
 /// </summary>
-public class FileSharesCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     /// <summary>
     /// Tests listing file shares by subscription ID.

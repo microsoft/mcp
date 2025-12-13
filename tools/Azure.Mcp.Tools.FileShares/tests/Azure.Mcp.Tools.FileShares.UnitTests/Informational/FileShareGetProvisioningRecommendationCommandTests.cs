@@ -1,18 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.Net;
-using Azure.Mcp.Tools.FileShares.Commands.Informational;
-using Azure.Mcp.Tools.FileShares.Models;
-using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using Xunit;
-
 namespace Azure.Mcp.Tools.FileShares.UnitTests.Informational;
 
 /// <summary>
@@ -266,7 +254,14 @@ public class FileShareGetProvisioningRecommendationCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
-}
+
+    [Fact]
+    public void ToolMetadata_IsIdempotent()
+    {
+        // Arrange
+        var command = new FileShareGetProvisioningRecommendationCommand(_logger, _fileSharesService, _subscriptionService, _tenantService);
+
+        // Assert
         Assert.True(command.ToolMetadata.Idempotent);
     }
 }
