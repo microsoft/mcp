@@ -45,6 +45,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         ResourceBaseName = "Sanitized",
         SubscriptionName = "Sanitized",
         TenantName = "Sanitized",
+        ResourceGroupName = "Sanitized",
         TestMode = TestMode.Playback
     };
 
