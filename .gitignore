@@ -22,3 +22,4 @@ node_modules/
 generated/
 /docs/commandline
 .DS_Store
+.vscode/mcp.json

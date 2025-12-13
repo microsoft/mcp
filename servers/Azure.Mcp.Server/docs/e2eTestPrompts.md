@@ -625,6 +625,40 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
 
+## Azure Storage Sync
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| storagesync_service_create | Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location> |
+| storagesync_service_delete | Delete the Storage Sync Service <service-name> from resource group <resource-group-name> |
+| storagesync_service_get | Get the details of Storage Sync Service <service-name> in resource group <resource-group-name> |
+| storagesync_service_get | List all Storage Sync Services in resource group <resource-group-name> |
+| storagesync_service_list | List all Storage Sync Services in my subscription |
+| storagesync_service_list | Show me all Storage Sync Services in resource group <resource-group-name> |
+| storagesync_service_update | Update Storage Sync Service <service-name> with new tags |
+| storagesync_registeredserver_get | Get the details of registered server <server-name> in service <service-name> |
+| storagesync_registeredserver_get | List all registered servers in service <service-name> |
+| storagesync_registeredserver_list | List all registered servers in service <service-name> in resource group <resource-group-name> |
+| storagesync_registeredserver_register | Register a new server <server-name> with service <service-name> using server ID <server-id> |
+| storagesync_registeredserver_unregister | Unregister server <server-name> from service <service-name> |
+| storagesync_registeredserver_update | Update registered server <server-name> configuration in service <service-name> |
+| storagesync_syncgroup_create | Create a new sync group named <syncgroup-name> in service <service-name> |
+| storagesync_syncgroup_delete | Delete the sync group <syncgroup-name> from service <service-name> |
+| storagesync_syncgroup_get | Get the details of sync group <syncgroup-name> in service <service-name> |
+| storagesync_syncgroup_list | List all sync groups in service <service-name> in resource group <resource-group-name> |
+| storagesync_cloudendpoint_changedetection | Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> |
+| storagesync_cloudendpoint_create | Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name> |
+| storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> |
+| storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> |
+| storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> |
+| storagesync_cloudendpoint_list | List all cloud endpoints in sync group <syncgroup-name> in service <service-name> |
+| storagesync_serverendpoint_create | Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name> |
+| storagesync_serverendpoint_delete | Delete the server endpoint <endpoint-name> from sync group <syncgroup-name> |
+| storagesync_serverendpoint_get | Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name> |
+| storagesync_serverendpoint_get | List all server endpoints in sync group <syncgroup-name> |
+| storagesync_serverendpoint_list | List all server endpoints in sync group <syncgroup-name> in service <service-name> |
+| storagesync_serverendpoint_update | Update server endpoint <endpoint-name> with cloud tiering enabled and tiering policy in sync group <syncgroup-name> |
+
 ## Azure Subscription Management
 
 | Tool Name | Test Prompt |
