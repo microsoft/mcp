@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Tests;
-using Azure.Mcp.Core.Tests.Client;
+using Azure.Mcp.Tests;
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.LiveTests;
@@ -12,11 +15,16 @@ namespace Azure.Mcp.Tools.FileShares.LiveTests;
 /// Live tests for FileShares commands.
 /// These tests exercise the actual Azure FileShares resource provider with real resources.
 /// </summary>
-public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
+public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    /// <summary>
-    /// Tests listing file shares by subscription ID.
-    /// </summary>
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
+        // Sanitizes all URLs to remove actual service names
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
+          GroupForReplace = "host",
+        })
+    ];
+{
     [Fact]
     public async Task Should_list_file_shares_by_subscription_id()
     {
@@ -32,9 +40,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotEmpty(fileShares.EnumerateArray());
     }
 
-    /// <summary>
-    /// Tests listing file shares by subscription name.
-    /// </summary>
     [Fact]
     public async Task Should_list_file_shares_by_subscription_name()
     {
@@ -50,9 +55,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotEmpty(fileShares.EnumerateArray());
     }
 
-    /// <summary>
-    /// Tests listing file shares by resource group.
-    /// </summary>
     [Fact]
     public async Task Should_list_file_shares_by_resource_group()
     {
@@ -66,13 +68,9 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
 
         var fileShares = result.AssertProperty("fileShares");
         Assert.Equal(JsonValueKind.Array, fileShares.ValueKind);
-        // File shares should exist in the test resource group
         Assert.NotEmpty(fileShares.EnumerateArray());
     }
 
-    /// <summary>
-    /// Tests getting a specific file share by name.
-    /// </summary>
     [Fact]
     public async Task Should_get_file_share_details_by_subscription_and_name()
     {
@@ -98,9 +96,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotNull(provisioningState.GetString());
     }
 
-    /// <summary>
-    /// Tests getting file share details with tenant ID.
-    /// </summary>
     [Fact]
     public async Task Should_get_file_share_details_with_tenant_id()
     {
@@ -121,9 +116,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotNull(name.GetString());
     }
 
-    /// <summary>
-    /// Tests getting file share details with tenant name (if not service principal).
-    /// </summary>
     [Fact]
     public async Task Should_get_file_share_details_with_tenant_name()
     {
@@ -146,9 +138,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotNull(name.GetString());
     }
 
-    /// <summary>
-    /// Tests listing file share snapshots.
-    /// </summary>
     [Fact]
     public async Task Should_list_file_share_snapshots()
     {
@@ -163,17 +152,12 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
 
         var snapshots = result.AssertProperty("snapshots");
         Assert.Equal(JsonValueKind.Array, snapshots.ValueKind);
-        // Snapshots should exist from test resource deployment
         Assert.NotEmpty(snapshots.EnumerateArray());
     }
 
-    /// <summary>
-    /// Tests getting a specific file share snapshot.
-    /// </summary>
     [Fact]
     public async Task Should_get_file_share_snapshot_details()
     {
-        // First list snapshots to get a snapshot name
         var listResult = await CallToolAsync(
             "fileshares_snapshot_list",
             new()
@@ -209,9 +193,6 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         }
     }
 
-    /// <summary>
-    /// Tests getting file share usage data.
-    /// </summary>
     [Fact]
     public async Task Should_get_file_share_usage_data()
     {
@@ -227,8 +208,5 @@ public class FileSharesCommandTests(ITestOutputHelper output) : RecordedCommandT
         Assert.NotNull(usageData);
     }
 
-    /// <summary>
-    /// Reason for skipping tenant name test when using service principal.
-    /// </summary>
     private const string TenantNameReason = "Tenant name resolution is not supported for service principals";
 }
