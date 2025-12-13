@@ -10,25 +10,30 @@ namespace Azure.Mcp.Core.Logging;
 /// <summary>
 /// A file logger provider that writes logs to a file using a background thread for improved performance.
 /// Log entries are queued and written asynchronously to avoid blocking the calling thread.
-/// Log files are automatically created with timestamp-based filenames.
+/// Log files are automatically created with timestamp-based filenames and rotated hourly.
 /// </summary>
 public sealed class FileLoggerProvider : ILoggerProvider
 {
-    private readonly string _filePath;
+    private readonly string _folderPath;
     private readonly BlockingCollection<string> _logQueue;
     private readonly Thread _writerThread;
     private readonly CancellationTokenSource _cancellationTokenSource;
+    private readonly object _writerLock = new();
     private StreamWriter? _writer;
+    private DateTime _currentFileHour;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FileLoggerProvider"/> class.
     /// Creates a log file with an auto-generated timestamp-based filename in the specified folder.
+    /// Log files are rotated hourly to prevent excessively large files during long-running sessions.
     /// </summary>
     /// <param name="folderPath">The folder path where the log file should be created.</param>
     public FileLoggerProvider(string folderPath)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
+
+        _folderPath = folderPath;
 
         // Ensure the directory exists
         if (!Directory.Exists(folderPath))
@@ -36,19 +41,12 @@ public sealed class FileLoggerProvider : ILoggerProvider
             Directory.CreateDirectory(folderPath);
         }
 
-        // Generate timestamp-based filename: azmcp_yyyyMMdd_HHmmss.log
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-        var fileName = $"azmcp_{timestamp}.log";
-        _filePath = Path.Combine(folderPath, fileName);
-
         _logQueue = new BlockingCollection<string>(boundedCapacity: 10000);
         _cancellationTokenSource = new CancellationTokenSource();
 
-        // Create the log file
-        _writer = new StreamWriter(_filePath, append: true)
-        {
-            AutoFlush = true
-        };
+        // Create the initial log file
+        _currentFileHour = GetCurrentHour();
+        _writer = CreateLogFileWriter(_currentFileHour);
 
         // Start the background writer thread
         _writerThread = new Thread(ProcessLogQueue)
@@ -57,6 +55,63 @@ public sealed class FileLoggerProvider : ILoggerProvider
             Name = "FileLoggerWriter"
         };
         _writerThread.Start();
+    }
+
+    /// <summary>
+    /// Gets the current time truncated to the hour for file rotation comparison.
+    /// </summary>
+    private static DateTime GetCurrentHour()
+    {
+        var now = DateTime.Now;
+        return new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Local);
+    }
+
+    /// <summary>
+    /// Creates a new StreamWriter for a log file based on the specified hour.
+    /// </summary>
+    /// <param name="hour">The hour to use for the filename.</param>
+    /// <returns>A StreamWriter configured for the log file.</returns>
+    private StreamWriter CreateLogFileWriter(DateTime hour)
+    {
+        // Generate timestamp-based filename: azmcp_yyyyMMdd_HH.log (hourly rotation)
+        var timestamp = hour.ToString("yyyyMMdd_HH", CultureInfo.InvariantCulture);
+        var fileName = $"azmcp_{timestamp}.log";
+        var filePath = Path.Combine(_folderPath, fileName);
+
+        return new StreamWriter(filePath, append: true)
+        {
+            AutoFlush = true
+        };
+    }
+
+    /// <summary>
+    /// Rotates the log file if the current hour has changed since the last write.
+    /// This method is called from the background writer thread before each write operation.
+    /// </summary>
+    private void RotateFileIfNeeded()
+    {
+        var currentHour = GetCurrentHour();
+        if (currentHour == _currentFileHour)
+        {
+            return;
+        }
+
+        // Hour has changed, rotate to a new file
+        lock (_writerLock)
+        {
+            // Double-check after acquiring the lock
+            if (currentHour == _currentFileHour)
+            {
+                return;
+            }
+
+            // Close the old writer
+            _writer?.Dispose();
+
+            // Create a new writer for the new hour
+            _currentFileHour = currentHour;
+            _writer = CreateLogFileWriter(_currentFileHour);
+        }
     }
 
     /// <inheritdoc/>
@@ -83,6 +138,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
 
     /// <summary>
     /// Background thread method that processes the log queue and writes entries to the file.
+    /// Handles hourly log file rotation automatically.
     /// </summary>
     private void ProcessLogQueue()
     {
@@ -92,6 +148,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
             {
                 try
                 {
+                    RotateFileIfNeeded();
                     _writer?.WriteLine(message);
                 }
                 catch (ObjectDisposedException)

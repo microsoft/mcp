@@ -127,7 +127,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
         catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
         {
-            commandResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path: {ex.Message}");
+            commandResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{folderPath}': {ex.Message}");
         }
     }
 

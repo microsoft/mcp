@@ -13,7 +13,8 @@ public static class FileLoggingExtensions
 {
     /// <summary>
     /// Configures file logging to write debug-level logs to a folder for support and troubleshooting purposes.
-    /// Log files are automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log).
+    /// Log files are automatically created with timestamp-based filenames (e.g., azmcp_20251202_14.log)
+    /// and rotated hourly to prevent excessively large files during long-running sessions.
     /// </summary>
     /// <param name="builder">The logging builder to configure.</param>
     /// <param name="logFolderPath">The folder path where log files should be written.</param>
