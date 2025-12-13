@@ -56,41 +56,41 @@ public class ServiceStartCommandTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void InsecureDisableElicitationOption_ParsesCorrectly(bool expectedValue)
+    public void DangerouslyDisableElicitationOption_ParsesCorrectly(bool expectedValue)
     {
         // Arrange
-        var parseResult = CreateParseResultWithInsecureDisableElicitation(expectedValue);
+        var parseResult = CreateParseResultWithDangerouslyDisableElicitation(expectedValue);
 
         // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.InsecureDisableElicitation);
+        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyDisableElicitation);
 
         // Assert
         Assert.Equal(expectedValue, actualValue);
     }
 
     [Fact]
-    public void InsecureDisableElicitationOption_DefaultsToFalse()
+    public void DangerouslyDisableElicitationOption_DefaultsToFalse()
     {
         // Arrange
         var parseResult = CreateParseResult(null);
 
         // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.InsecureDisableElicitation);
+        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyDisableElicitation);
 
         // Assert
         Assert.False(actualValue);
     }
 
     [Fact]
-    public void AllOptionsRegistered_IncludesInsecureDisableElicitation()
+    public void AllOptionsRegistered_IncludesDangerouslyDisableElicitation()
     {
         // Arrange & Act
         var command = _command.GetCommand();
 
         // Assert
-        var hasInsecureDisableElicitationOption = command.Options.Any(o =>
-            o.Name == ServiceOptionDefinitions.InsecureDisableElicitation.Name);
-        Assert.True(hasInsecureDisableElicitationOption, "InsecureDisableElicitation option should be registered");
+        var hasDangerouslyDisableElicitationOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.DangerouslyDisableElicitation.Name);
+        Assert.True(hasDangerouslyDisableElicitationOption, "DangerouslyDisableElicitation option should be registered");
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class ServiceStartCommandTests
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
-        Assert.True(options.InsecureDisableElicitation);
+        Assert.True(options.DangerouslyDisableElicitation);
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public class ServiceStartCommandTests
         Assert.False(options.ReadOnly); // Default readonly
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
-        Assert.False(options.InsecureDisableElicitation);
+        Assert.False(options.DangerouslyDisableElicitation);
     }
 
     [Fact]
@@ -513,7 +513,7 @@ public class ServiceStartCommandTests
             ReadOnly = false,
             Debug = true,
             Namespace = ["storage", "keyvault"],
-            InsecureDisableElicitation = false,
+            DangerouslyDisableElicitation = false,
             DangerouslyDisableHttpIncomingAuth = true,
         };
         var activity = new Activity("test-activity");
@@ -530,8 +530,8 @@ public class ServiceStartCommandTests
         var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
         Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
 
-        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
-        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+        var dangerouslyDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
 
         var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
         Assert.Equal(serviceStartOptions.Transport, transport);
@@ -563,7 +563,7 @@ public class ServiceStartCommandTests
             Mode = null,
             ReadOnly = true,
             Debug = false,
-            InsecureDisableElicitation = true,
+            DangerouslyDisableElicitation = true,
             DangerouslyDisableHttpIncomingAuth = false,
         };
         var activity = new Activity("test-activity");
@@ -582,8 +582,8 @@ public class ServiceStartCommandTests
         var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
         Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
 
-        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
-        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+        var dangerouslyDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
 
         var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
         Assert.Equal(serviceStartOptions.Transport, transport);
@@ -621,7 +621,7 @@ public class ServiceStartCommandTests
         return root.Parse([.. args]);
     }
 
-    private ParseResult CreateParseResultWithInsecureDisableElicitation(bool insecureDisableElicitation)
+    private ParseResult CreateParseResultWithDangerouslyDisableElicitation(bool dangerouslyDisableElicitation)
     {
         var args = new List<string>
         {
@@ -629,9 +629,9 @@ public class ServiceStartCommandTests
             "stdio"
         };
 
-        if (insecureDisableElicitation)
+        if (dangerouslyDisableElicitation)
         {
-            args.Add("--insecure-disable-elicitation");
+            args.Add("--dangerously-disable-elicitation");
         }
 
         return _command.GetCommand().Parse([.. args]);
@@ -690,7 +690,7 @@ public class ServiceStartCommandTests
             "--mode", "all",
             "--read-only",
             "--debug",
-            "--insecure-disable-elicitation"
+            "--dangerously-disable-elicitation"
         };
 
         return _command.GetCommand().Parse([.. args]);
