@@ -92,5 +92,5 @@ public sealed class ServerEndpointListCommand(ILogger<ServerEndpointListCommand>
     }
 
     [JsonSerializable(typeof(ServerEndpointListCommandResult))]
-    internal record ServerEndpointListCommandResult(List<ServerEndpointData> Results);
+    internal record ServerEndpointListCommandResult(List<ServerEndpointDataSchema> Results);
 }

@@ -101,5 +101,5 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
     }
 
     [JsonSerializable(typeof(CloudEndpointCreateCommandResult))]
-    internal record CloudEndpointCreateCommandResult(CloudEndpointData Result);
+    internal record CloudEndpointCreateCommandResult(CloudEndpointDataSchema Result);
 }

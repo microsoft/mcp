@@ -17,7 +17,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Lists all storage sync services in a subscription or resource group.
     /// </summary>
-    Task<List<StorageSyncServiceData>> ListStorageSyncServicesAsync(
+    Task<List<StorageSyncServiceDataSchema>> ListStorageSyncServicesAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -27,7 +27,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Gets a specific storage sync service.
     /// </summary>
-    Task<StorageSyncServiceData?> GetStorageSyncServiceAsync(
+    Task<StorageSyncServiceDataSchema?> GetStorageSyncServiceAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -38,7 +38,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Creates a new storage sync service.
     /// </summary>
-    Task<StorageSyncServiceData> CreateStorageSyncServiceAsync(
+    Task<StorageSyncServiceDataSchema> CreateStorageSyncServiceAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -51,7 +51,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Updates a storage sync service.
     /// </summary>
-    Task<StorageSyncServiceData> UpdateStorageSyncServiceAsync(
+    Task<StorageSyncServiceDataSchema> UpdateStorageSyncServiceAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -78,7 +78,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Lists all sync groups in a storage sync service.
     /// </summary>
-    Task<List<SyncGroupData>> ListSyncGroupsAsync(
+    Task<List<SyncGroupDataSchema>> ListSyncGroupsAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -89,7 +89,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Gets a specific sync group.
     /// </summary>
-    Task<SyncGroupData?> GetSyncGroupAsync(
+    Task<SyncGroupDataSchema?> GetSyncGroupAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -101,7 +101,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Creates a new sync group.
     /// </summary>
-    Task<SyncGroupData> CreateSyncGroupAsync(
+    Task<SyncGroupDataSchema> CreateSyncGroupAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -129,7 +129,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Lists all cloud endpoints in a sync group.
     /// </summary>
-    Task<List<CloudEndpointData>> ListCloudEndpointsAsync(
+    Task<List<CloudEndpointDataSchema>> ListCloudEndpointsAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -141,7 +141,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Gets a specific cloud endpoint.
     /// </summary>
-    Task<CloudEndpointData?> GetCloudEndpointAsync(
+    Task<CloudEndpointDataSchema?> GetCloudEndpointAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -154,7 +154,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Creates a new cloud endpoint.
     /// </summary>
-    Task<CloudEndpointData> CreateCloudEndpointAsync(
+    Task<CloudEndpointDataSchema> CreateCloudEndpointAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -202,7 +202,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Lists all server endpoints in a sync group.
     /// </summary>
-    Task<List<ServerEndpointData>> ListServerEndpointsAsync(
+    Task<List<ServerEndpointDataSchema>> ListServerEndpointsAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -214,7 +214,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Gets a specific server endpoint.
     /// </summary>
-    Task<ServerEndpointData?> GetServerEndpointAsync(
+    Task<ServerEndpointDataSchema?> GetServerEndpointAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -227,7 +227,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Creates a new server endpoint.
     /// </summary>
-    Task<ServerEndpointData> CreateServerEndpointAsync(
+    Task<ServerEndpointDataSchema> CreateServerEndpointAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -245,7 +245,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Updates a server endpoint's configuration.
     /// </summary>
-    Task<ServerEndpointData> UpdateServerEndpointAsync(
+    Task<ServerEndpointDataSchema> UpdateServerEndpointAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -278,7 +278,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Lists all servers registered to a storage sync service.
     /// </summary>
-    Task<List<RegisteredServerData>> ListRegisteredServersAsync(
+    Task<List<RegisteredServerDataSchema>> ListRegisteredServersAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -289,7 +289,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Gets a specific registered server.
     /// </summary>
-    Task<RegisteredServerData?> GetRegisteredServerAsync(
+    Task<RegisteredServerDataSchema?> GetRegisteredServerAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -301,7 +301,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Registers a new server to a storage sync service.
     /// </summary>
-    Task<RegisteredServerData> RegisterServerAsync(
+    Task<RegisteredServerDataSchema> RegisterServerAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
@@ -325,7 +325,7 @@ public interface IStorageSyncService
     /// <summary>
     /// Updates a registered server.
     /// </summary>
-    Task<RegisteredServerData> UpdateServerAsync(
+    Task<RegisteredServerDataSchema> UpdateServerAsync(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,

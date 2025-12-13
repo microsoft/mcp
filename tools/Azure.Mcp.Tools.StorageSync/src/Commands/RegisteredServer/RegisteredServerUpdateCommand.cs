@@ -93,5 +93,5 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
     }
 
     [JsonSerializable(typeof(RegisteredServerUpdateCommandResult))]
-    internal record RegisteredServerUpdateCommandResult(RegisteredServerData Result);
+    internal record RegisteredServerUpdateCommandResult(RegisteredServerDataSchema Result);
 }

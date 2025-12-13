@@ -89,5 +89,5 @@ public sealed class RegisteredServerListCommand(ILogger<RegisteredServerListComm
     }
 
     [JsonSerializable(typeof(RegisteredServerListCommandResult))]
-    internal record RegisteredServerListCommandResult(List<RegisteredServerData> Results);
+    internal record RegisteredServerListCommandResult(List<RegisteredServerDataSchema> Results);
 }

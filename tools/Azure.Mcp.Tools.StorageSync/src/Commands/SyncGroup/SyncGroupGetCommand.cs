@@ -100,5 +100,5 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
     }
 
     [JsonSerializable(typeof(SyncGroupGetCommandResult))]
-    internal record SyncGroupGetCommandResult(SyncGroupData Result);
+    internal record SyncGroupGetCommandResult(SyncGroupDataSchema Result);
 }

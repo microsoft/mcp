@@ -104,5 +104,5 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
     }
 
     [JsonSerializable(typeof(ServerEndpointCreateCommandResult))]
-    internal record ServerEndpointCreateCommandResult(ServerEndpointData Result);
+    internal record ServerEndpointCreateCommandResult(ServerEndpointDataSchema Result);
 }

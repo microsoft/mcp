@@ -92,5 +92,5 @@ public sealed class CloudEndpointListCommand(ILogger<CloudEndpointListCommand> l
     }
 
     [JsonSerializable(typeof(CloudEndpointListCommandResult))]
-    internal record CloudEndpointListCommandResult(List<CloudEndpointData> Results);
+    internal record CloudEndpointListCommandResult(List<CloudEndpointDataSchema> Results);
 }

@@ -89,5 +89,5 @@ public sealed class SyncGroupListCommand(ILogger<SyncGroupListCommand> logger, I
     }
 
     [JsonSerializable(typeof(SyncGroupListCommandResult))]
-    internal record SyncGroupListCommandResult(List<SyncGroupData> Results);
+    internal record SyncGroupListCommandResult(List<SyncGroupDataSchema> Results);
 }

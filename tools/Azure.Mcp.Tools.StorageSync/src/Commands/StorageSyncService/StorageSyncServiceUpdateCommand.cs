@@ -90,5 +90,5 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
     }
 
     [JsonSerializable(typeof(StorageSyncServiceUpdateCommandResult))]
-    internal record StorageSyncServiceUpdateCommandResult(StorageSyncServiceData Result);
+    internal record StorageSyncServiceUpdateCommandResult(StorageSyncServiceDataSchema Result);
 }

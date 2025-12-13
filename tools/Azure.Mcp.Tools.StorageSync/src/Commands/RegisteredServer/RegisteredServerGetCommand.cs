@@ -100,5 +100,5 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
     }
 
     [JsonSerializable(typeof(RegisteredServerGetCommandResult))]
-    internal record RegisteredServerGetCommandResult(RegisteredServerData Result);
+    internal record RegisteredServerGetCommandResult(RegisteredServerDataSchema Result);
 }
