@@ -54,7 +54,8 @@ try {
 
     # Get Registered Server if it exists
     $registeredServerName = "$BaseName-rs"
-    $registeredServer = Get-AzStorageSyncServer -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -ServerName $registeredServerName -ErrorAction SilentlyContinue
+    $registeredServers = Get-AzStorageSyncServer -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -ErrorAction SilentlyContinue
+    $registeredServer = $registeredServers | Where-Object { $_.FriendlyName -eq $registeredServerName } | Select-Object -First 1
 
     if ($registeredServer) {
         Write-Host "Registered Server found: $registeredServerName" -ForegroundColor Green

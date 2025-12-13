@@ -29,10 +29,10 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName }
+                { "resource-group", Settings.ResourceGroupName }
             });
 
-        var services = result.AssertProperty("services");
+        var services = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, services.ValueKind);
     }
 
@@ -44,11 +44,11 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName },
-                { "service", Settings.ResourceBaseName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName }
             });
 
-        var service = result.AssertProperty("service");
+        var service = result.AssertProperty("result");
         Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
     }
 
@@ -60,11 +60,11 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName },
-                { "service", Settings.ResourceBaseName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName }
             });
 
-        var syncGroups = result.AssertProperty("syncGroups");
+        var syncGroups = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, syncGroups.ValueKind);
     }
 
@@ -76,12 +76,12 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName },
-                { "service", Settings.ResourceBaseName },
-                { "syncGroup", $"{Settings.ResourceBaseName}-sg" }
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
             });
 
-        var endpoints = result.AssertProperty("cloudEndpoints");
+        var endpoints = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, endpoints.ValueKind);
     }
 
@@ -93,11 +93,11 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName },
-                { "service", Settings.ResourceBaseName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName }
             });
 
-        var servers = result.AssertProperty("registeredServers");
+        var servers = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, servers.ValueKind);
     }
 
@@ -109,12 +109,12 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceGroupName },
-                { "service", Settings.ResourceBaseName },
-                { "syncGroup", $"{Settings.ResourceBaseName}-sg" }
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
             });
 
-        var endpoints = result.AssertProperty("serverEndpoints");
+        var endpoints = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, endpoints.ValueKind);
     }
 }

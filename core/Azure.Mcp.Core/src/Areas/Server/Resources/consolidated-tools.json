@@ -2339,7 +2339,6 @@
       "mappedToolList": [
         "storagesync_registeredserver_get",
         "storagesync_registeredserver_list",
-        "storagesync_registeredserver_register",
         "storagesync_registeredserver_unregister",
         "storagesync_registeredserver_update"
       ]

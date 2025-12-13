@@ -22,7 +22,6 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(StorageSyncServiceDeleteCommand.StorageSyncServiceDeleteCommandResult))]
 [JsonSerializable(typeof(RegisteredServerListCommand.RegisteredServerListCommandResult))]
 [JsonSerializable(typeof(RegisteredServerGetCommand.RegisteredServerGetCommandResult))]
-[JsonSerializable(typeof(RegisteredServerRegisterCommand.RegisteredServerRegisterCommandResult))]
 [JsonSerializable(typeof(RegisteredServerUpdateCommand.RegisteredServerUpdateCommandResult))]
 [JsonSerializable(typeof(RegisteredServerUnregisterCommand.RegisteredServerUnregisterCommandResult))]
 [JsonSerializable(typeof(SyncGroupListCommand.SyncGroupListCommandResult))]
