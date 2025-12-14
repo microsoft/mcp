@@ -46,10 +46,6 @@
     <CopyOutputSymbolsToPublishDirectory>true</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <McpServerJsonTemplateFile>$(RepoRoot)eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(BuildNative)' == 'true'">
     <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>
