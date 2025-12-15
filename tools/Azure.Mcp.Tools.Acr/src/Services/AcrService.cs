@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -84,6 +85,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
