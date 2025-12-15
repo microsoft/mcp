@@ -23,6 +23,32 @@ public class OneLakeServiceUserAgentTests
         // Arrange
         var handler = new CapturingHttpMessageHandler(request =>
         {
+            if (request.RequestUri is { } uri && uri.Query.Contains("comp=list", StringComparison.OrdinalIgnoreCase))
+            {
+                const string xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<EnumerationResults>
+    <Blobs>
+        <BlobPrefix>
+            <Name>item.Lakehouse/</Name>
+            <Properties>
+                <Creation-Time>2024-01-01T00:00:00Z</Creation-Time>
+                <Last-Modified>2024-01-01T00:00:00Z</Last-Modified>
+            </Properties>
+            <Metadata>
+                <ArtifactId>item.Lakehouse</ArtifactId>
+            </Metadata>
+        </BlobPrefix>
+    </Blobs>
+</EnumerationResults>
+""";
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(xml, Encoding.UTF8, "application/xml")
+                };
+            }
+
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent("sample"u8.ToArray())
