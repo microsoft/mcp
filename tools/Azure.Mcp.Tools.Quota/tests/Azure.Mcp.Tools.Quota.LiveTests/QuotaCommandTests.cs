@@ -4,15 +4,13 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
-public class QuotaCommandTests : CommandTestsBase
+public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public QuotaCommandTests(ITestOutputHelper output) : base(output)
-    {
-    }
 
     [Fact]
     public async Task Should_check_azure_quota()
