@@ -36,19 +36,16 @@ internal class TelemetryService : ITelemetryService
 
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<AzureMcpServerConfiguration> options,
-        IOptions<ServiceStartOptions>? serverOptions,
+        IOptions<ServiceStartOptions> serverOptions,
         ILogger<TelemetryService> logger)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList =
         [
             new(TagName.AzureMcpVersion, options.Value.Version),
+            new(TagName.ServerMode, serverOptions.Value.Mode),
+            new(TagName.Transport, serverOptions.Value.Transport)
         ];
-
-        if (serverOptions?.Value != null)
-        {
-            _tagsList.Add(new(TagName.ServerMode, serverOptions.Value.Mode));
-        }
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;
