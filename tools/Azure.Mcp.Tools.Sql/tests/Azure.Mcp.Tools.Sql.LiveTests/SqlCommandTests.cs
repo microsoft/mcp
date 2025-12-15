@@ -19,7 +19,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     public override List<string> DisabledDefaultSanitizers =>
     [
         ..base.DisabledDefaultSanitizers,
-            "AZSDK3493"
+        "AZSDK3493"
     ];
 
     public override bool EnableDefaultSanitizerAdditions => false;
