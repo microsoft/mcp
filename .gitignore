@@ -22,3 +22,11 @@ node_modules/
 generated/
 /docs/commandline
 .DS_Store
+/tools/Azure.Mcp.Tools.FileShares/fileshares
+tools/Azure.Mcp.Tools.FileShares/DILIGENT_IMPLEMENTATION_SUMMARY.md
+tools/Azure.Mcp.Tools.FileShares/FILEsharesservice_DILIGENT_SCAN.md
+tools/Azure.Mcp.Tools.FileShares/genericresource.md
+tools/Azure.Mcp.Tools.FileShares/IMPLEMENTATION_COMPLETE.md
+tools/Azure.Mcp.Tools.FileShares/METHOD_REFERENCE_GUIDE.md
+tools/Azure.Mcp.Tools.FileShares/SERVICE_IMPLEMENTATION.md
+/tools/Azure.Mcp.Tools.StorageSync
