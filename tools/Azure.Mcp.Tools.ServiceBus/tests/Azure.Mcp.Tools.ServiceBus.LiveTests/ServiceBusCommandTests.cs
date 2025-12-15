@@ -18,29 +18,6 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 {
     public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
     {
-        protected override async ValueTask LoadSettingsAsync()
-        {
-            await base.LoadSettingsAsync();
-
-            TryAddSanitizer(Settings.ResourceGroupName);
-            TryAddSanitizer(Settings.SubscriptionName);
-            TryAddSanitizer(Settings.TenantName);
-        }
-
-        private void TryAddSanitizer(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value) || string.Equals(value, "Sanitized", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            GeneralRegexSanitizers.Insert(0, new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
-            {
-                Regex = value,
-                Value = "Sanitized",
-            }));
-        }
-
         private const string QueueName = "queue1";
         private const string TopicName = "topic1";
         private const string SubscriptionName = "subscription1";
