@@ -231,7 +231,7 @@ The Fabric MCP Server exposes the following tools for AI agents:
 | Command | Purpose |
 |---|---|
 | `onelake download file` | Download a OneLake file to disk. |
-| `onelake upload file` | Upload a local file into OneLake via the blob endpoint. |
+| `onelake upload file` | Upload a local file into OneLake. |
 | `onelake directory create` | Create a directory via the DFS endpoint. |
 | `onelake directory delete` | Delete a directory (optionally recursive). |
 | `onelake file list` | List files using the hierarchical file-list endpoint. |
