@@ -5,12 +5,53 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
 
-public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
+    {
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "resource[gG]roups\\/([^?\\/]+)",
+            Value = "sanitized",
+            GroupForReplace = "1"
+        })
+    }.ToList();
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
+    {
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        })
+    }.ToList();
 
     [Fact]
     public async Task Should_ShowDatabase_Successfully()
@@ -338,7 +379,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         // Use the deployed test SQL server
         var serverName = Settings.ResourceBaseName;
-        var ruleName = $"test-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var ruleName = RegisterOrRetrieveVariable("ruleName", $"test-rule-{DateTime.UtcNow:yyyyMMddHHmmss}");
         var startIp = "192.168.1.100";
         var endIp = "192.168.1.200";
 
@@ -373,7 +414,8 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
 
         var id = firewallRule.GetProperty("id").GetString();
         Assert.NotNull(id);
-        Assert.Contains(serverName, id);
+
+        Assert.Contains(TestMode == Tests.Helpers.TestMode.Playback ? "sanitized" : serverName, id);
         Assert.Contains(ruleName, id);
     }
 
@@ -382,7 +424,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         // Use the deployed test SQL server
         var serverName = Settings.ResourceBaseName;
-        var ruleName = $"test-delete-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var ruleName = RegisterOrRetrieveVariable("rulename", $"test-delete-rule-{DateTime.UtcNow:yyyyMMddHHmmss}");
         var startIp = "192.168.2.100";
         var endIp = "192.168.2.200";
 
