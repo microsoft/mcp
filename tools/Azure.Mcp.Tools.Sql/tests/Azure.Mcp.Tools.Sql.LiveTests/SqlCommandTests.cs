@@ -16,7 +16,11 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     /// <summary>
     /// AZSDK3493 = $..name
     /// </summary>
-    public override List<string> DisabledDefaultSanitizers => base.DisabledDefaultSanitizers.Concat(new[] { "AZSDK3493" }).ToList();
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+            "AZSDK3493"
+    ];
 
     public override bool EnableDefaultSanitizerAdditions => false;
 
@@ -411,12 +415,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
         var id = firewallRule.GetProperty("id").GetString();
         Assert.NotNull(id);
 
-        // the matched response body at rest is properly storing "Sanitized" under server name,
-        // but for some reason when sql service gets all 0s back for the subid, it replaces the name with all 0s as well.
-        if (TestMode != Tests.Helpers.TestMode.Playback)
-        {
-            Assert.Contains(serverName, id);
-        }
+        Assert.Contains(TestMode == Tests.Helpers.TestMode.Playback ? "sanitized" : serverName, id);
         Assert.Contains(ruleName, id);
     }
 
