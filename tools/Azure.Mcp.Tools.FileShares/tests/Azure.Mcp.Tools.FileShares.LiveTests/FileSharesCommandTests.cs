@@ -24,7 +24,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
           GroupForReplace = "host",
         })
     ];
-{
+
     [Fact]
     public async Task Should_list_file_shares_by_subscription_id()
     {
@@ -84,16 +84,16 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             });
 
         var fileShare = result.AssertProperty("fileShare");
-        Assert.NotNull(fileShare);
+        Assert.NotEqual(JsonValueKind.Null, fileShare.ValueKind);
 
         var name = fileShare.GetProperty("name");
-        Assert.NotNull(name.GetString());
+        Assert.Equal(Settings.ResourceBaseName, name.GetString());
 
         var location = fileShare.GetProperty("location");
-        Assert.NotNull(location.GetString());
+        Assert.NotEqual(JsonValueKind.Null, location.ValueKind);
 
         var provisioningState = fileShare.GetProperty("provisioningState");
-        Assert.NotNull(provisioningState.GetString());
+        Assert.NotEqual(JsonValueKind.Null, provisioningState.ValueKind);
     }
 
     [Fact]
@@ -110,10 +110,10 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             });
 
         var fileShare = result.AssertProperty("fileShare");
-        Assert.NotNull(fileShare);
+        Assert.NotEqual(JsonValueKind.Null, fileShare.ValueKind);
 
         var name = fileShare.GetProperty("name");
-        Assert.NotNull(name.GetString());
+        Assert.Equal(Settings.ResourceBaseName, name.GetString());
     }
 
     [Fact]
@@ -132,10 +132,10 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             });
 
         var fileShare = result.AssertProperty("fileShare");
-        Assert.NotNull(fileShare);
+        Assert.NotEqual(JsonValueKind.Null, fileShare.ValueKind);
 
         var name = fileShare.GetProperty("name");
-        Assert.NotNull(name.GetString());
+        Assert.Equal(Settings.ResourceBaseName, name.GetString());
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                 });
 
             var snapshot = result.AssertProperty("snapshot");
-            Assert.NotNull(snapshot);
+            Assert.NotEqual(JsonValueKind.Null, snapshot.ValueKind);
 
             var name = snapshot.GetProperty("name");
             Assert.Equal(snapshotName, name.GetString());
@@ -200,13 +200,12 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             "fileshares_fileshare_get_usage_data",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "location", Settings.Location }
+                { "subscription", Settings.SubscriptionId }
             });
 
         var usageData = result.AssertProperty("usageData");
-        Assert.NotNull(usageData);
+        Assert.NotEqual(JsonValueKind.Null, usageData.ValueKind);
     }
 
-    private const string TenantNameReason = "Tenant name resolution is not supported for service principals";
+    private new const string TenantNameReason = "Tenant name resolution is not supported for service principals";
 }

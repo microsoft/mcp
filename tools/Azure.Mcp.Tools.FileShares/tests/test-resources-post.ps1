@@ -8,17 +8,35 @@
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory)]
+    [string]
+    $TenantId,
+
+    [string]
+    $TestApplicationId,
+
     [string]
     $ResourceGroupName,
 
-    [Parameter(Mandatory)]
+    [string]
+    $BaseName,
+
     [hashtable]
     $DeploymentOutputs,
 
-    [Parameter(Mandatory)]
-    [hashtable]
-    $AdditionalParameters
+    [string]
+    $SubscriptionId,
+
+    [string]
+    $TestResourcesDirectory,
+
+    [int]
+    $DeleteAfterHours,
+
+    [switch]
+    $Force,
+
+    [string]
+    $TestApplicationSecret
 )
 
 Write-Host "Running FileShares post-deployment setup..."
@@ -53,7 +71,6 @@ try {
     Write-Host "  ✓ FileShare Snapshots (2x Microsoft.FileShares/fileShares/fileShareSnapshots)"
     Write-Host "  ✓ Private Endpoint (Microsoft.Network/privateEndpoints)"
     Write-Host "  ✓ Role Assignments (Microsoft.Authorization/roleAssignments)"
-    Write-Host "  ✓ Virtual Network and Subnet"
     Write-Host ""
     Write-Host "Ready for MFS (Microsoft FileShares) testing and exercises."
 }

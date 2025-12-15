@@ -9,7 +9,7 @@ param baseName string = resourceGroup().name
 param testApplicationOid string = deployer().objectId
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
+param location string = 'eastus'
 
 @description('Virtual network name for private endpoints.')
 param vnetName string = '${baseName}-vnet'
@@ -24,7 +24,7 @@ param subnetName string = '${baseName}-subnet'
 param subnetAddressSpace string = '10.0.0.0/24'
 
 // ============================================================================
-// Virtual Network and Subnet for Private Endpoints
+// 1. Virtual Network and Subnet
 // ============================================================================
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
@@ -54,18 +54,20 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
 }
 
 // ============================================================================
-// Microsoft.FileShares Resources
+// 2. FileShares with VNet Association
 // ============================================================================
 
-// FileShare 1 - Primary file share for testing
+// FileShare 1 - Primary file share with VNet association
 resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
   name: '${baseName}-fileshare-${substring(uniqueString(resourceGroup().id), 0, 6)}'
   location: location
   properties: {
-    description: 'Primary file share for testing MFS operations'
-    enabledProtocols: 'SMB'
-    accessTier: 'Standard'
-    shareQuota: 1024
+    protocol: 'NFS'
+    mediaTier: 'SSD'
+    redundancy: 'Local'
+    provisionedStorageGiB: 32
+    provisionedIOPerSec: 9
+    provisionedThroughputMiBPerSec: 5
   }
   tags: {
     environment: 'test'
@@ -73,39 +75,17 @@ resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
   }
 }
 
-// FileShare 2 - Secondary file share for testing
+// FileShare 2 - Secondary file share with VNet association
 resource fileShare2 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
   name: '${baseName}-fileshare-02-${substring(uniqueString(resourceGroup().id), 0, 6)}'
   location: location
   properties: {
-    description: 'Secondary file share for testing MFS operations'
-    enabledProtocols: 'SMB'
-    accessTier: 'Standard'
-    shareQuota: 512
-  }
-  tags: {
-    environment: 'test'
-    purpose: 'mcp-testing'
-  }
-}
-
-// FileShare Snapshot 1 - Snapshot of primary file share
-resource fileShareSnapshot1 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
-  name: '${fileShare1.name}/snapshot-${substring(uniqueString(resourceGroup().id, utcNow('u')), 0, 8)}'
-  properties: {
-    description: 'Snapshot for testing file share snapshot operations'
-  }
-  tags: {
-    environment: 'test'
-    purpose: 'mcp-testing'
-  }
-}
-
-// FileShare Snapshot 2 - Another snapshot of secondary file share
-resource fileShareSnapshot2 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
-  name: '${fileShare2.name}/snapshot-${substring(uniqueString(resourceGroup().id, utcNow('d')), 0, 8)}'
-  properties: {
-    description: 'Secondary snapshot for testing file share snapshot operations'
+    protocol: 'NFS'
+    mediaTier: 'Standard'
+    redundancy: 'Local'
+    provisionedStorageGiB: 32
+    provisionedIOPerSec: 5
+    provisionedThroughputMiBPerSec: 3
   }
   tags: {
     environment: 'test'
@@ -114,7 +94,35 @@ resource fileShareSnapshot2 'Microsoft.FileShares/fileShares/fileShareSnapshots@
 }
 
 // ============================================================================
-// Private Endpoint for FileShare
+// 3. FileShare Snapshots
+// ============================================================================
+
+// FileShare Snapshot 1 - Snapshot of primary file share
+resource fileShareSnapshot1 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
+  parent: fileShare1
+  name: 'snapshot-${substring(uniqueString(resourceGroup().id), 0, 8)}'
+  properties: {
+    metadata: {
+      environment: 'test'
+      purpose: 'mcp-testing'
+    }
+  }
+}
+
+// FileShare Snapshot 2 - Snapshot of secondary file share
+resource fileShareSnapshot2 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
+  parent: fileShare2
+  name: 'snapshot-${substring(uniqueString(resourceGroup().id), 0, 8)}'
+  properties: {
+    metadata: {
+      environment: 'test'
+      purpose: 'mcp-testing'
+    }
+  }
+}
+
+// ============================================================================
+// 4. Private Endpoint for FileShare
 // ============================================================================
 
 resource fileSharePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-06-01' = {
@@ -139,38 +147,6 @@ resource fileSharePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-06-01
   tags: {
     environment: 'test'
     purpose: 'mcp-testing'
-  }
-}
-
-// ============================================================================
-// Role Assignments for Access Control
-// ============================================================================
-
-// Reference to Storage File Data SMB Share Contributor role
-resource fileShareContributorRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  name: '0c867c2a-1d8c-454a-a3db-ab2ea1bdc8bb' // Storage File Data SMB Share Contributor
-}
-
-// Role assignment for FileShare 1
-resource fileShare1RoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(fileShareContributorRole.id, testApplicationOid, fileShare1.id)
-  scope: fileShare1
-  properties: {
-    roleDefinitionId: fileShareContributorRole.id
-    principalId: testApplicationOid
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Role assignment for FileShare 2
-resource fileShare2RoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(fileShareContributorRole.id, testApplicationOid, fileShare2.id)
-  scope: fileShare2
-  properties: {
-    roleDefinitionId: fileShareContributorRole.id
-    principalId: testApplicationOid
-    principalType: 'ServicePrincipal'
   }
 }
 
