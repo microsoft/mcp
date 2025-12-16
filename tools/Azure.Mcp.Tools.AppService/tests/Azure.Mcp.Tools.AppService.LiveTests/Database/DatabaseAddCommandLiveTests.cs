@@ -3,26 +3,46 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
 
 [Trait("Command", "DatabaseAddCommand")]
-public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.selfLink")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.customDomainVerificationId")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.inboundIpAddress")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleInboundIpAddresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.inboundIpv6Address")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleInboundIpv6Addresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.ftpsHostName")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.outboundIpAddresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpAddresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.outboundIpv6Addresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpv6Addresses")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.homeStamp")),
+    ];
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsSuccessResult()
     {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
-            new Dictionary<string, object?>
+            new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "app", Settings.ResourceBaseName + "-webapp" },
+                { "resource-group", resourceGroupName },
+                { "app", resourceBaseName + "-webapp" },
                 { "database-type", "SqlServer" },
-                { "database-server", Settings.ResourceBaseName + "-sql.database.windows.net" },
-                { "database", Settings.ResourceBaseName + "db" }
+                { "database-server", resourceBaseName + "-sql.database.windows.net" },
+                { "database", resourceBaseName + "db" }
             });
 
         // Test should validate actual command execution and error handling
@@ -44,7 +64,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
     {
         var result = await CallToolAsync(
             "appservice_database_add",
-            new Dictionary<string, object?>
+            new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "test-rg" },
@@ -81,16 +101,18 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
     [InlineData("random")]
     public async Task ExecuteAsync_WithInvalidDatabaseTypes_ReturnsValidationError(string invalidDatabaseType)
     {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
-            new Dictionary<string, object?>
+            new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "app", Settings.ResourceBaseName + "-webapp" },
+                { "resource-group", resourceGroupName },
+                { "app", resourceBaseName + "-webapp" },
                 { "database-type", invalidDatabaseType },
-                { "database-server", Settings.ResourceBaseName + "-sql.database.windows.net" },
-                { "database", Settings.ResourceBaseName + "db" }
+                { "database-server", resourceBaseName + "-sql.database.windows.net" },
+                { "database", resourceBaseName + "db" }
             });
 
         // For invalid types, the tool may either return no JSON (error case) or a JSON error payload.
