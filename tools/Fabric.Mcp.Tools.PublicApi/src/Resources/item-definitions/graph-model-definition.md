@@ -8,10 +8,10 @@ This table lists the Graph Model definition parts.
 
 | Definition part path   | type                                          | Required | Description                       |
 | ---------------------- | --------------------------------------------- | -------- | --------------------------------- |
-| `dataSources`          | [DataSource](#DataSource)[]                   | true     | The array of data sources         |
-| `graphDefinition`      | [GraphDefinition](#GraphDefinition)           | true     | The data mapping graph definition |
-| `graphType`            | [GraphType](#GraphType)                       | true     | The graph structure               |
-| `stylingConfiguration` | [StylingConfiguration](#StylingConfiguration) | true     | The graph styling configuration   |
+| `dataSources`          | [DataSource](#datasource)[]                   | true     | The array of data sources         |
+| `graphDefinition`      | [GraphDefinition](#graphdefinition)           | true     | The data mapping graph definition |
+| `graphType`            | [GraphType](#graphtype)                       | true     | The graph structure               |
+| `stylingConfiguration` | [StylingConfiguration](#stylingconfiguration) | true     | The graph styling configuration   |
 
 ### DataSource
 
@@ -21,7 +21,7 @@ Describes the structure of the data source.
 | ---------- | --------------------------------------------- | --------------------------- |
 | name       | String                                        | The name of the data source |
 | type       | "DeltaTable"                                  | The data source type        |
-| properties | [DataSourceProperties](#DataSourceProperties) | The data source properties  |
+| properties | [DataSourceProperties](#datasourceproperties) | The data source properties  |
 
 ### DataSourceProperties
 
@@ -38,8 +38,8 @@ Describes the data mapping graph definition.
 
 | Name       | Type                      | Description                                |
 | ---------- | ------------------------- | ------------------------------------------ |
-| nodeTables | [NodeTable](#NodeTable)[] | The array of node data mapping definitions |
-| edgeTables | [EdgeTable](#EdgeTable)[] | The array of edge data mapping definitions |
+| nodeTables | [NodeTable](#nodetable)[] | The array of node data mapping definitions |
+| edgeTables | [EdgeTable](#edgetable)[] | The array of edge data mapping definitions |
 
 ### NodeTable
 
@@ -50,7 +50,7 @@ Describes the structure of node data mapping definition.
 | id               | String                                | ID of the node data mapping definition         |
 | nodeTypeAlias    | String                                | Alias of the node as defined in graph          |
 | dataSourceName   | String                                | The name of the data source                    |
-| propertyMappings | [PropertyMapping](#PropertyMapping)[] | The array of property data mapping definitions |
+| propertyMappings | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions |
 
 ### EdgeTable
 
@@ -63,7 +63,7 @@ Describes the structure of edge data mapping definition.
 | dataSourceName       | String                                | The name of the data source                      |
 | sourceNodeKeyColumns | String[]                              | The array of columns that map to the source node |
 | targetNodeKeyColumns | String[]                              | The array of columns that map to the target node |
-| propertyMappings     | [PropertyMapping](#PropertyMapping)[] | The array of property data mapping definitions   |
+| propertyMappings     | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions   |
 
 ### PropertyMapping
 
@@ -73,7 +73,7 @@ Describes the structure of property data mapping definition.
 | ------------ | ----------------------------------------------------------- | ----------------------------- |
 | propertyName | String                                                      | The name of the property      |
 | sourceColumn | String                                                      | The name of the source column |
-| filter       | [SingleFilter](#SingleFilter) / [GroupFilter](#GroupFilter) | The filter definition         |
+| filter       | [SingleFilter](#singlefilter) / [GroupFilter](#groupfilter) | The filter definition         |
 
 ### SingleFilter
 
@@ -92,9 +92,9 @@ Describes the structure of a group filter.
 | Name     | Type                                                            | Description                      |
 | -------- | --------------------------------------------------------------- | -------------------------------- |
 | operator | String                                                          | The operator name of the filter  |
-| filters  | [SingleFilter](#SingleFilter)[] / [GroupFilter](#GroupFilter)[] | The filters of this group filter |
-| and      | [SingleFilter](#SingleFilter)[] / [GroupFilter](#GroupFilter)[] | The filters for logical AND      |
-| or       | [SingleFilter](#SingleFilter)[] / [GroupFilter](#GroupFilter)[] | The filters for logical OR       |
+| filters  | [SingleFilter](#singlefilter)[] / [GroupFilter](#groupfilter)[] | The filters of this group filter |
+| and      | [SingleFilter](#singlefilter)[] / [GroupFilter](#groupfilter)[] | The filters for logical AND      |
+| or       | [SingleFilter](#singlefilter)[] / [GroupFilter](#groupfilter)[] | The filters for logical OR       |
 
 ### GraphType
 
@@ -102,8 +102,8 @@ Describes the structure of a graph.
 
 | Name      | Type                    | Description                  |
 | --------- | ----------------------- | ---------------------------- |
-| nodeTypes | [NodeType](#NodeType)[] | The array of node structures |
-| edgeTypes | [EdgeType](#EdgeType)[] | The array of edge structures |
+| nodeTypes | [NodeType](#nodetype)[] | The array of node structures |
+| edgeTypes | [EdgeType](#edgetype)[] | The array of edge structures |
 
 ### NodeType
 
@@ -114,7 +114,7 @@ Describes the structure of a node.
 | alias                | String                  | The alias                           |
 | labels               | String[]                | The array of labels                 |
 | primaryKeyProperties | String[]                | The array of primary key properties |
-| properties           | [Property](#Property)[] | The array of properties             |
+| properties           | [Property](#property)[] | The array of properties             |
 
 ### EdgeType
 
@@ -124,9 +124,9 @@ Describes the structure of an edge.
 | ------------------- | --------------------------------------- | ------------------------------ |
 | alias               | String                                  | The alias                      |
 | labels              | String[]                                | The array of labels            |
-| sourceNodeType      | [NodeTypeReference](#NodeTypeReference) | The source node structure      |
-| destinationNodeType | [NodeTypeReference](#NodeTypeReference) | The destination node structure |
-| properties          | [Property](#Property)[]                 | The array of properties        |
+| sourceNodeType      | [NodeTypeReference](#nodetypereference) | The source node structure      |
+| destinationNodeType | [NodeTypeReference](#nodetypereference) | The destination node structure |
+| properties          | [Property](#property)[]                 | The array of properties        |
 
 ### Property
 
@@ -151,7 +151,7 @@ Describes the structure of the styling configuration.
 
 | Name        | Type                        | Description                                              |
 | ----------- | --------------------------- | -------------------------------------------------------- |
-| modelLayout | [ModelLayout](#ModelLayout) | The styling and layout configuration for the graph model |
+| modelLayout | [ModelLayout](#modellayout) | The styling and layout configuration for the graph model |
 
 ### ModelLayout
 
@@ -159,9 +159,9 @@ Describes the model styles configuration.
 
 | Name      | Type                                          | Description                    |
 | --------- | --------------------------------------------- | ------------------------------ |
-| positions | Dictionary<string, [Position](#Position)>     | The positions of nodes         |
-| styles    | Dictionary<string, [ModelStyle](#ModelStyle)> | The styles of graph model      |
-| pan       | [Position](#Position)                         | The pan of model canvas        |
+| positions | Dictionary<string, [Position](#position)>     | The positions of nodes         |
+| styles    | Dictionary<string, [ModelStyle](#modelstyle)> | The styles of graph model      |
+| pan       | [Position](#position)                         | The pan of model canvas        |
 | zoomLevel | Integer                                       | The zoom level of model canvas |
 
 ### Position
