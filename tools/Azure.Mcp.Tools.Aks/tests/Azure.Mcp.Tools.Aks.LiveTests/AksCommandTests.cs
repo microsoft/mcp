@@ -172,7 +172,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Verify the cluster details
         var nameProperty = cluster.AssertProperty("name");
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" :clusterName, nameProperty.GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : clusterName, nameProperty.GetString());
 
         var rgProperty = cluster.AssertProperty("resourceGroupName");
         Assert.Equal(resourceGroupName, rgProperty.GetString());
