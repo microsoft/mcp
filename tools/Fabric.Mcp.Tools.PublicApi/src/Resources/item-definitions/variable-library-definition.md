@@ -1,12 +1,3 @@
----
-title: Variable library definition
-description: Learn how to create a Variable library item definition when using the Microsoft Fabric REST API.
-ms.title: Variable library item definition
-author: kkorablov
-ms.author: kkorablov
-ms.service: fabric
-ms.date: 01/14/2025
----
   
 # Variable library definition
   

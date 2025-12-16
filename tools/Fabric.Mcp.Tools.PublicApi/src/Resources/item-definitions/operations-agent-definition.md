@@ -1,13 +1,3 @@
----
-title: Operations agent definition
-description: Learn how to structure an operations agent item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric operations agent item definition
-author: jeromez
-ms.author: jeromez
-ms.service: fabric
-ms.date: 09/18/2025
----
-
 # Operations Agent definition
 
 This article provides a breakdown of the definition structure for operations agent items.

@@ -1,13 +1,3 @@
----
-title: Dataflow definition
-description: Learn how to structure a dataflow item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric dataflow item definition
-author: rnandurimsft
-ms.author: rnanduri
-ms.service: fabric
-ms.date: 03/28/2025
----
-
 # Dataflow definition
 
 This article provides a breakdown of the definition structure for dataflow items.

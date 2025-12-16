@@ -1,13 +1,3 @@
----
-title: Notebook definition
-description: Learn how to structure a notebook item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric notebook item definition
-author: billmath
-ms.author: billmath
-ms.service: fabric
-ms.date: 04/23/2025
----
-
 # Notebook definition
 
 This article provides a breakdown of the definition structure for notebook items.

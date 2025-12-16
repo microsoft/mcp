@@ -16,26 +16,7 @@
                 {
                     "$ref": "../common/definitions.json#/definitions/Item"
                 }
-            ],
-            "properties": {
-                "properties": {
-                    "description": "The GraphModel properties.",
-                    "$ref": "#/definitions/GraphModelProperties"
-                }
-            }
-        },
-        "GraphModelProperties": {
-            "description": "The GraphModel properties.",
-            "type": "object",
-            "required": [
-                "oneLakeRootPath"
-            ],
-            "properties": {
-                "oneLakeRootPath": {
-                    "description": "OneLake path to the GraphModel root directory.",
-                    "type": "string"
-                }
-            }
+            ]
         },
         "GraphModels": {
             "description": "A list of Public Facing Collection Names.",
@@ -111,7 +92,7 @@
             }
         },
         "GraphModelPublicDefinition": {
-            "description": "GraphModel public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-model) for more details on how to craft a GraphModel public definition.",
+            "description": "GraphModel public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) for more details on how to craft a GraphModel public definition.",
             "type": "object",
             "required": [
                 "parts"

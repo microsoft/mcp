@@ -63,7 +63,7 @@
       },
       "post": {
         "summary": "Creates a GraphModel in the specified workspace.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create GraphModel with a public definition, refer to [GraphModel](/rest/api/fabric/articles/item-management/definitions/graph-model) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a GraphModel the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create GraphModel with a public definition, refer to [GraphModel](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a GraphModel the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -512,11 +512,11 @@
     "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/executeQuery": {
       "post": {
         "summary": "Executes a query on the specified graph model.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
         "tags": [
           "Items"
         ],
-        "operationId": "Items_ExecuteQuery_(preview)",
+        "operationId": "Items_Execute_Query_(preview)",
         "consumes": [
           "application/json"
         ],
@@ -550,11 +550,11 @@
             "required": true
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "required": true,
             "type": "boolean",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in preview."
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta."
           }
         ],
         "responses": {
@@ -582,11 +582,11 @@
     "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/getQueryableGraphType": {
       "get": {
         "summary": "Get the current queryable graph type.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n The caller must have *read* permissions for the graph model. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n The caller must have *read* permissions for the graph model. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
         "tags": [
           "Items"
         ],
-        "operationId": "Items_GetQueryableGraphType_(preview)",
+        "operationId": "Items_Get_Queryable_Graph_Type_(preview)",
         "produces": [
           "application/json"
         ],
@@ -608,11 +608,11 @@
             "required": true
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "required": true,
             "type": "boolean",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in preview."
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta."
           }
         ],
         "responses": {

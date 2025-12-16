@@ -34,7 +34,61 @@
                         "Month",
                         "Quarter",
                         "Year"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "Unit",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Microsecond",
+                                "description": "Microsecond unit."
+                            },
+                            {
+                                "value": "Millisecond",
+                                "description": "Millisecond unit."
+                            },
+                            {
+                                "value": "Second",
+                                "description": "Second unit."
+                            },
+                            {
+                                "value": "Minute",
+                                "description": "Minute unit."
+                            },
+                            {
+                                "value": "Hour",
+                                "description": "Hour unit."
+                            },
+                            {
+                                "value": "Day",
+                                "description": "Day unit."
+                            },
+                            {
+                                "value": "Weekday",
+                                "description": "Weekday unit."
+                            },
+                            {
+                                "value": "Week",
+                                "description": "Week unit."
+                            },
+                            {
+                                "value": "DayOfYear",
+                                "description": "DayOfYear unit."
+                            },
+                            {
+                                "value": "Month",
+                                "description": "Month unit."
+                            },
+                            {
+                                "value": "Quarter",
+                                "description": "Quarter unit."
+                            },
+                            {
+                                "value": "Year",
+                                "description": "Year unit."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -103,7 +157,57 @@
                         "Sum",
                         "Variance",
                         "VariancePopulation"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "AggregationFunction",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Average",
+                                "description": "Average aggregation function."
+                            },
+                            {
+                                "value": "Count",
+                                "description": "Count aggregation function."
+                            },
+                            {
+                                "value": "Maximum",
+                                "description": "Maximum aggregation function."
+                            },
+                            {
+                                "value": "Minimum",
+                                "description": "Minimum aggregation function."
+                            },
+                            {
+                                "value": "PercentileContinuous",
+                                "description": "PercentileContinuous aggregation function."
+                            },
+                            {
+                                "value": "PercentileDiscrete",
+                                "description": "PercentileDiscrete aggregation function."
+                            },
+                            {
+                                "value": "StandardDeviation",
+                                "description": "StandardDeviation aggregation function."
+                            },
+                            {
+                                "value": "StandardDeviationPopulation",
+                                "description": "StandardDeviationPopulation aggregation function."
+                            },
+                            {
+                                "value": "Sum",
+                                "description": "Sum aggregation function."
+                            },
+                            {
+                                "value": "Variance",
+                                "description": "Variance aggregation function."
+                            },
+                            {
+                                "value": "VariancePopulation",
+                                "description": "VariancePopulation aggregation function."
+                            }
+                        ]
+                    }
                 },
                 "arguments": {
                     "type": "array",
@@ -176,7 +280,77 @@
                         "IsNull",
                         "IsNotNull",
                         "IsNotNullOrEmpty"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "OperatorType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Equals",
+                                "description": "Equals operator."
+                            },
+                            {
+                                "value": "NotEquals",
+                                "description": "NotEquals operator."
+                            },
+                            {
+                                "value": "GreaterThan",
+                                "description": "GreaterThan operator."
+                            },
+                            {
+                                "value": "GreaterThanOrEquals",
+                                "description": "GreaterThanOrEquals operator."
+                            },
+                            {
+                                "value": "LessThan",
+                                "description": "LessThan operator."
+                            },
+                            {
+                                "value": "LessThanOrEquals",
+                                "description": "LessThanOrEquals operator."
+                            },
+                            {
+                                "value": "Contains",
+                                "description": "Contains operator."
+                            },
+                            {
+                                "value": "DoesNotContain",
+                                "description": "DoesNotContain operator."
+                            },
+                            {
+                                "value": "StartsWith",
+                                "description": "StartsWith operator."
+                            },
+                            {
+                                "value": "DoesNotStartWith",
+                                "description": "DoesNotStartWith operator."
+                            },
+                            {
+                                "value": "EndsWith",
+                                "description": "EndsWith operator."
+                            },
+                            {
+                                "value": "DoesNotEndWith",
+                                "description": "DoesNotEndWith operator."
+                            },
+                            {
+                                "value": "IsEmpty",
+                                "description": "IsEmpty operator."
+                            },
+                            {
+                                "value": "IsNull",
+                                "description": "IsNull operator."
+                            },
+                            {
+                                "value": "IsNotNull",
+                                "description": "IsNotNull operator."
+                            },
+                            {
+                                "value": "IsNotNullOrEmpty",
+                                "description": "IsNotNullOrEmpty operator."
+                            }
+                        ]
+                    }
                 },
                 "value": {
                     "$ref": "#/definitions/LiteralExpression"
@@ -199,7 +373,33 @@
                         "Sliding",
                         "Snapshot",
                         "Session"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "GroupByWindowType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Tumbling",
+                                "description": "Tumbling window type."
+                            },
+                            {
+                                "value": "Hopping",
+                                "description": "Hopping window type."
+                            },
+                            {
+                                "value": "Sliding",
+                                "description": "Sliding window type."
+                            },
+                            {
+                                "value": "Snapshot",
+                                "description": "Snapshot window type."
+                            },
+                            {
+                                "value": "Session",
+                                "description": "Session window type."
+                            }
+                        ]
+                    }
                 }
             },
             "discriminator": "type"

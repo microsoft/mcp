@@ -1,13 +1,3 @@
----
-title: Environment definition
-description: Learn how to structure a environment item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric environment item definition
-author: nis-goel
-ms.author: nisgoel
-ms.service: fabric
-ms.date: 02/27/2025
----
-
 # Environment definition
 
 This article provides a breakdown of the definition structure for environment items.

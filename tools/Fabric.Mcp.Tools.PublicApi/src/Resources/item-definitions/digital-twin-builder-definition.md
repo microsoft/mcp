@@ -1,13 +1,3 @@
----
-title: Digital twin builder item definition
-description: Learn how to create a digital twin builder item definition when using the Microsoft Fabric REST API.
-author: vidyashreeb
-ms.author: vidyashreeb
-ms.title: Digital twin builder item definition
-ms.service: fabric
-ms.date: 04/29/2025
----
-
 # Digital twin builder definition
 
 This article provides a breakdown of the structure for digital twin builder definition items.

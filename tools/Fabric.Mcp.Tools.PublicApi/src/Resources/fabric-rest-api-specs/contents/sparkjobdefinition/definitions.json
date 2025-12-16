@@ -118,8 +118,7 @@
             ],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Supported format: `SparkJobDefinitionV1`.",
-                    "type": "string",
+                    "$ref": "#/definitions/SparkJobDefinitionFormat",
                     "readOnly": false
                 },
                 "parts": {
@@ -218,6 +217,25 @@
             "description": "The fully qualified path of libraries.",
             "type": "string",
             "readOnly": false
+        },
+        "SparkJobDefinitionFormat": {
+            "type": "string",
+            "description": "The format of the request. Can be either `SparkJobDefinitionV1` or `SparkJobDefinitionV2`. Additional Format types may be added over time.",
+            "enum": ["SparkJobDefinitionV1", "SparkJobDefinitionV2"],
+            "x-ms-enum": {
+                "name": "SparkJobDefinitionFormat",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "SparkJobDefinitionV1",
+                        "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for more details."
+                    },
+                    {
+                        "value": "SparkJobDefinitionV2",
+                        "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for more details."
+                    }
+                ]
+            }
         }
     }
 }

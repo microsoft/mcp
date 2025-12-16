@@ -38,14 +38,7 @@
             "name": "continuationToken",
             "description": "A token for retrieving the next page of results.",
             "type": "string",
-            "required": false
-      
-       
-              
-                
-                                                                
-                
-              
+            "required": false   
           }
         ],
         "responses": {
@@ -92,13 +85,6 @@
             "required": true
           },
           {
-              
-                
-                                                                
-                
-              
-      
-       
             "in": "body",
             "name": "createUserDataFunctionRequest",
             "description": "Create item request payload.",
@@ -237,13 +223,6 @@
             "required": true
           },
           {
-              
-                
-                                                                
-                
-              
-      
-       
             "in": "body",
             "name": "updateUserDataFunctionRequest",
             "description": "Update UserDataFunction request payload.",
@@ -298,14 +277,7 @@
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",
-            "required": true
-      
-       
-              
-                
-                                                                
-                
-              
+            "required": true 
           }
         ],
         "responses": {
@@ -357,13 +329,6 @@
           },
           {
             "in": "query",
-                
-                                                                
-                
-              
-      
-       
-              
             "name": "format",
             "description": "The format of the UserDataFunction public definition.",
             "type": "string",
@@ -440,13 +405,6 @@
           },
           {
             "in": "query",
-                
-                                                                
-                
-              
-      
-       
-              
             "name": "updateMetadata",
             "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
             "type": "boolean",

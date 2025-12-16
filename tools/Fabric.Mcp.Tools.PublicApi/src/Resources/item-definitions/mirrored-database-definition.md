@@ -1,13 +1,3 @@
----
-title: Mirrored database item definition
-description: Learn how to structure a mirrored database definition when using the Microsoft Fabric REST API.
-author: xuyangit1
-ms.title: Microsoft Fabric Mirrored database item definition
-ms.author: xuyan
-ms.service: fabric
-ms.date: 10/24/2024
----
-
 # Mirrored database definition
 
 This article provides a breakdown of the definition structure for mirrored database items.

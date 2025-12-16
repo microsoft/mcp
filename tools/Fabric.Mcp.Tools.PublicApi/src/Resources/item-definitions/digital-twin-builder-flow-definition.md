@@ -1,13 +1,3 @@
---- 
-title: Digital twin builder flow item definition
-description: Learn how to create a digital twin builder flow item definition when using the Microsoft Fabric REST API.
-author: vidyashreeb
-ms.author: vidyashreeb
-ms.title: Digital twin builder flow item definition
-ms.service: fabric
-ms.date: 04/25/2025
----
-
 # Digital twin builder flow definition
 
 This article provides a breakdown of the structure for digital twin builder flow definition items.

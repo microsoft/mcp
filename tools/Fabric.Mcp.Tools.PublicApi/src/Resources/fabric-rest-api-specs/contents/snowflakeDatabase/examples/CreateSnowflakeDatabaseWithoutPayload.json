@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createSnowflakeDatabaseRequest": {
+            "displayName": "My Database",
+            "description": "This is an example Snowflake Database item without creation payload."
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "description": "This is an example Snowflake Database item without creation payload.",
+                "displayName": "My Database",
+                "id": "123e4567-e89b-12d3-a456-426614174001",
+                "type": "SnowflakeDatabase",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

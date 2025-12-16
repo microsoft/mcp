@@ -1,12 +1,3 @@
----
-title: Snowflake Database item definition
-description: Learn how to structure a Snowflake Database definition when using the Microsoft Fabric REST API.
-author: venkatrg
-ms.title: Microsoft Fabric Snowflake Database item definition
-ms.author: venkatrg
-ms.service: fabric
-ms.date: 06/03/2025
----
 # Snowflake Database definition
 
 This article provides a breakdown of the structure for Snowflake Database definition items.

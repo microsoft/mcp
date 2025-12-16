@@ -1,12 +1,3 @@
----
-title: EventSchemaSet definition
-description: Learn how to create a EventSchemaSet item definition when using the Microsoft Fabric REST API.
-ms.title: EventSchemaSet item definition
-author: Vanson230
-ms.author: seanvovan
-ms.service: fabric
-ms.date: 7/7/2025
----
   
 # EventSchemaSet definition
   

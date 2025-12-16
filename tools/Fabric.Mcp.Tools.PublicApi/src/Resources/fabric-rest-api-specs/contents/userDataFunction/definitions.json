@@ -14,24 +14,7 @@
                 {
                     "$ref": "../common/definitions.json#/definitions/Item"
                 }
-            ],
-            "properties": {
-                "properties": {
-                    "description": "The UserDataFunction properties.",
-                    "$ref": "#/definitions/UserDataFunctionProperties"
-                }
-            }
-        },
-        "UserDataFunctionProperties": {
-            "description": "The UserDataFunction properties.",
-            "type": "object",
-            "required": ["oneLakeRootPath"],
-            "properties": {
-                "oneLakeRootPath": {
-                    "description": "OneLake path to the UserDataFunction root directory.",
-                    "type": "string"
-                }
-            }
+            ]
         },
         "UserDataFunctions": {
             "description": "A list of User Data Functions.",

@@ -1,12 +1,3 @@
----
-title: Mirrored Azure Databricks Unity Catalog item definition
-description: Learn how to structure a mirrored Azure Databricks Unity Catalog definition when using the Microsoft Fabric REST API.
-author: nsarang
-ms.title: Microsoft Fabric Mirrored Azure Databricks Unity Catalog item definition
-ms.author: nsarang
-ms.service: fabric
-ms.date: 02/06/2025
----
 # Mirrored Azure Databricks Unity Catalog definition
   
 This article provides a breakdown of the definition structure for mirrored Azure Databricks Unity Catalog items.

@@ -191,6 +191,7 @@
                 "Initialized",
                 "Starting",
                 "Running",
+                "Paused",
                 "Stopping",
                 "Stopped"
             ],
@@ -213,6 +214,10 @@
                     {
                         "value": "Running",
                         "description": "The mirroring instance for the mirrored database is running."
+                    },
+                    {
+                        "value": "Paused",
+                        "description": "The mirroring instance for the mirrored database is paused."
                     },
                     {
                         "value": "Stopping",

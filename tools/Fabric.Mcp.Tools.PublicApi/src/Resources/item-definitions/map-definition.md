@@ -1,13 +1,3 @@
----
-title: Map item definition
-description: Learn how to create a Map item definition when using the Microsoft Fabric REST API.
-author: ismaelna
-ms.author: ismaelna
-ms.title: Map item definition
-ms.service: fabric
-ms.date: 09/15/2025
----
-
 # Map item definition
 
 This article explains how to create and structure a Map item definition using the Microsoft Fabric REST API.

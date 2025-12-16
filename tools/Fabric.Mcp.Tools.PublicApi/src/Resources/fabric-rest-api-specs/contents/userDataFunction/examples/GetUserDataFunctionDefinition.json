@@ -1,8 +1,7 @@
 {
     "parameters": {
         "workspaceId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
-        "UserDataFunctionId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
-        "preview": true
+        "UserDataFunctionId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
     },
     "responses": {
         "200": {

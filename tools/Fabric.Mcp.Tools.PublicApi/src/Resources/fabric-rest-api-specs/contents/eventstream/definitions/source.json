@@ -15,21 +15,25 @@
                 "ApacheKafka",
                 "AzureBlobStorageEvents",
                 "AzureCosmosDBCDC",
+                "AzureDataExplorer",
+                "AzureEventGridNamespace",
                 "AzureEventHub",
                 "AzureIoTHub",
                 "AzureSQLDBCDC",
                 "AzureSQLMIDBCDC",
                 "ConfluentCloud",
                 "CustomEndpoint",
-                "FabricCapacityUtilizationEvents",
                 "FabricJobEvents",
                 "FabricOneLakeEvents",
                 "FabricWorkspaceItemEvents",
                 "GooglePubSub",
+                "Mqtt",
                 "MySQLCDC",
                 "PostgreSQLCDC",
+                "RealTimeWeather",
                 "SQLServerOnVMDBCDC",
-                "SampleData"
+                "SampleData",
+                "SolacePubSub"
             ],
             "x-ms-enum": {
                 "name": "SourceType",
@@ -56,6 +60,14 @@
                         "description": "The Azure Cosmos DB CDC source type."
                     },
                     {
+                        "value": "AzureDataExplorer",
+                        "description": "The Azure Data Explorer source type."
+                    },
+                    {
+                        "value": "AzureEventGridNamespace",
+                        "description": "The Azure Event Grid Namespace source type."
+                    },
+                    {
                         "value": "AzureEventHub",
                         "description": "The Azure Event Hub source type."
                     },
@@ -80,10 +92,6 @@
                         "description": "The Custom Endpoint source type."
                     },
                     {
-                        "value": "FabricCapacityUtilizationEvents",
-                        "description": "The Fabric Capacity Utilization Events source type."
-                    },
-                    {
                         "value": "FabricJobEvents",
                         "description": "The Fabric Job Events source type."
                     },
@@ -100,6 +108,10 @@
                         "description": "The Google PubSub source type."
                     },
                     {
+                        "value": "Mqtt",
+                        "description": "The MQTT source type."
+                    },
+                    {
                         "value": "MySQLCDC",
                         "description": "The MySQL CDC source type."
                     },
@@ -108,12 +120,20 @@
                         "description": "The PostgreSQL CDC source type."
                     },
                     {
+                        "value": "RealTimeWeather",
+                        "description": "The Real Time Weather source type."
+                    },
+                    {
                         "value": "SQLServerOnVMDBCDC",
                         "description": "The SQL Server on VM DB CDC source type."
                     },
                     {
                         "value": "SampleData",
                         "description": "The Sample Data source type."
+                    },
+                    {
+                        "value": "SolacePubSub",
+                        "description": "The Solace PubSub source type."
                     }
                 ]
             }
@@ -173,6 +193,25 @@
                     "$ref": "common.json#/definitions/BaseCustomEndpointConnection"
                 }
             ]
+        },
+        "AzureEventGridNamespaceSourceResponse": {
+            "type": "object",
+            "description": "Azure Event Grid Namespace source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Event Grid Namespace source.",
+                    "$ref": "#/definitions/AzureEventGridNamespaceSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureEventGridNamespace"
         },
         "AzureEventHubSourceResponse": {
             "type": "object",
@@ -269,6 +308,25 @@
             ],
             "x-ms-discriminator-value": "SampleData"
         },
+        "SolacePubSubSourceResponse": {
+            "type": "object",
+            "description": "Solace PubSub source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Solace PubSub source.",
+                    "$ref": "#/definitions/SolacePubSubSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "SolacePubSub"
+        },
         "AmazonKinesisSourceResponse": {
             "type": "object",
             "description": "Amazon Kinesis source properties response.",
@@ -363,6 +421,25 @@
             ],
             "x-ms-discriminator-value": "AzureCosmosDBCDC"
         },
+        "AzureDataExplorerSourceResponse": {
+            "type": "object",
+            "description": "Azure Data Explorer source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Data Explorer source.",
+                    "$ref": "#/definitions/AzureDataExplorerSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureDataExplorer"
+        },
         "AzureSQLDBCDCSourceResponse": {
             "type": "object",
             "description": "Azure SQL DB CDC source response.",
@@ -452,6 +529,25 @@
             ],
             "x-ms-discriminator-value": "PostgreSQLCDC"
         },
+        "RealTimeWeatherSourceResponse": {
+            "type": "object",
+            "description": "Real Time Weather source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Real Time Weather source.",
+                    "$ref": "#/definitions/RealTimeWeatherSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "RealTimeWeather"
+        },
         "GooglePubSubSourceResponse": {
             "type": "object",
             "description": "Google Pub/Sub source response.",
@@ -471,16 +567,16 @@
             ],
             "x-ms-discriminator-value": "GooglePubSub"
         },
-        "FabricCapacityUtilizationEventsSourceResponse": {
+        "MqttSourceResponse": {
             "type": "object",
-            "description": "Fabric Capacity Utilization events source response.",
+            "description": "MQTT source response.",
             "required": [
                 "properties"
             ],
             "properties": {
                 "properties": {
-                    "description": "The properties of the Fabric Capacity Utilization events source.",
-                    "$ref": "#/definitions/FabricCapacityUtilizationEventsSourceProperties"
+                    "description": "The properties of the MQTT source.",
+                    "$ref": "#/definitions/MqttSourceProperties"
                 }
             },
             "allOf": [
@@ -488,7 +584,7 @@
                     "$ref": "#/definitions/SourceResponse"
                 }
             ],
-            "x-ms-discriminator-value": "FabricCapacityUtilizationEvents"
+            "x-ms-discriminator-value": "Mqtt"
         },
         "FabricJobEventsSourceResponse": {
             "type": "object",
@@ -546,6 +642,24 @@
                 }
             ],
             "x-ms-discriminator-value": "FabricWorkspaceItemEvents"
+        },
+        "AzureEventGridNamespaceSourceProperties": {
+            "type": "object",
+            "description": "Azure Event Grid Namespace source properties.",
+            "required": [
+                "namespaceResourceId",
+                "topic"
+            ],
+            "properties": {
+                "namespaceResourceId": {
+                    "type": "string",
+                    "description": "The Azure Event Grid Namespace resource identifier."
+                },
+                "topic": {
+                    "type": "string",
+                    "description": "The topic name."
+                }
+            }
         },
         "AzureEventHubSourceProperties": {
             "type": "object",
@@ -647,7 +761,53 @@
                             "Microsoft.Storage.BlobInventoryPolicyCompleted",
                             "Microsoft.Storage.AsyncOperationInitiated",
                             "Microsoft.Storage.LifecyclePolicyCompleted"
-                        ]
+                        ],
+                        "x-ms-enum": {
+                            "name": "IncludedEventTypes",
+                            "modelAsString": true,
+                            "values": [
+                                {
+                                    "value": "Microsoft.Storage.BlobCreated",
+                                    "description": "Blob created event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.BlobDeleted",
+                                    "description": "Blob deleted event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.BlobRenamed",
+                                    "description": "Blob renamed event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.BlobTierChanged",
+                                    "description": "Blob tier changed event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.DirectoryCreated",
+                                    "description": "Directory created event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.DirectoryDeleted",
+                                    "description": "Directory deleted event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.DirectoryRenamed",
+                                    "description": "Directory renamed event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.BlobInventoryPolicyCompleted",
+                                    "description": "Blob inventory policy completed event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.AsyncOperationInitiated",
+                                    "description": "Async operation initiated event."
+                                },
+                                {
+                                    "value": "Microsoft.Storage.LifecyclePolicyCompleted",
+                                    "description": "Lifecycle policy completed event."
+                                }
+                            ]
+                        }
                     }
                 }
             }
@@ -670,10 +830,135 @@
                     "enum": [
                         "YellowTaxi",
                         "StockMarket",
-                        "Bicycles"
-                    ]
+                        "Bicycles",
+                        "Buses",
+                        "SP500Stocks",
+                        "SemanticModelLogs"
+                    ],
+                    "x-ms-enum": {
+                        "name": "Type",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "YellowTaxi",
+                                "description": "Yellow Taxi sample data."
+                            },
+                            {
+                                "value": "StockMarket",
+                                "description": "Stock Market sample data."
+                            },
+                            {
+                                "value": "Bicycles",
+                                "description": "Bicycles sample data."
+                            },
+                            {
+                                "value": "Buses",
+                                "description": "Buses sample data."
+                            },
+                            {
+                                "value": "SP500Stocks",
+                                "description": "S&P 500 Stocks sample data."
+                            },
+                            {
+                                "value": "SemanticModelLogs",
+                                "description": "Semantic Model Logs sample data."
+                            }
+                        ]
+                    }
                 }
             }
+        },
+        "SolacePubSubSourceProperties": {
+            "type": "object",
+            "description": "Solace PubSub source properties.",
+            "required": [
+                "dataConnectionId",
+                "pubSubType",
+                "messageVpnName"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Solace PubSub data connection identifier.",
+                    "format": "uuid"
+                },
+                "pubSubType": {
+                    "type": "string",
+                    "description": "The Solace PubSub type.",
+                    "enum": [
+                        "Topics",
+                        "Queue"
+                    ],
+                    "x-ms-enum": {
+                        "name": "PubSubType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Topics",
+                                "description": "The Solace PubSub topics type."
+                            },
+                            {
+                                "value": "Queue",
+                                "description": "The Solace PubSub queue type."
+                            }
+                        ]
+                    }
+                },
+                "messageVpnName": {
+                    "type": "string",
+                    "description": "The Solace PubSub message VPN name."
+                },
+                "mapUserProperties": {
+                    "type": "boolean",
+                    "description": "Indicates whether to map user properties from Solace message to Kafka record headers."
+                },
+                "mapSolaceProperties": {
+                    "type": "boolean",
+                    "description": "Indicates whether to map Solace standard message properties to Kafka record headers."
+                }
+            },
+            "discriminator": "pubSubType"
+        },
+        "SolacePubSubTopicsSourceProperties": {
+            "type": "object",
+            "description": "Solace PubSub topics source properties.",
+            "required": [
+                "topics"
+            ],
+            "properties": {
+                "topics": {
+                    "type": "array",
+                    "description": "The Solace PubSub topics.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SolacePubSubSourceProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "Topics"
+        },
+        "SolacePubSubQueueSourceProperties": {
+            "type": "object",
+            "description": "Solace PubSub queue source properties.",
+            "required": [
+                "queue"
+            ],
+            "properties": {
+                "queue": {
+                    "type": "string",
+                    "description": "The Solace PubSub queue name."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SolacePubSubSourceProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "Queue"
         },
         "AmazonKinesisSourceProperties": {
             "type": "object",
@@ -724,7 +1009,141 @@
                         "us-gov-west-1",
                         "us-west-1",
                         "us-west-2"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "Region",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "af-south-1",
+                                "description": "Africa (Cape Town) region."
+                            },
+                            {
+                                "value": "ap-east-1",
+                                "description": "Asia Pacific (Hong Kong) region."
+                            },
+                            {
+                                "value": "ap-northeast-1",
+                                "description": "Asia Pacific (Tokyo) region."
+                            },
+                            {
+                                "value": "ap-northeast-2",
+                                "description": "Asia Pacific (Seoul) region."
+                            },
+                            {
+                                "value": "ap-northeast-3",
+                                "description": "Asia Pacific (Osaka) region."
+                            },
+                            {
+                                "value": "ap-south-1",
+                                "description": "Asia Pacific (Mumbai) region."
+                            },
+                            {
+                                "value": "ap-south-2",
+                                "description": "Asia Pacific (Hyderabad) region."
+                            },
+                            {
+                                "value": "ap-southeast-1",
+                                "description": "Asia Pacific (Singapore) region."
+                            },
+                            {
+                                "value": "ap-southeast-2",
+                                "description": "Asia Pacific (Sydney) region."
+                            },
+                            {
+                                "value": "ap-southeast-3",
+                                "description": "Asia Pacific (Jakarta) region."
+                            },
+                            {
+                                "value": "ap-southeast-4",
+                                "description": "Asia Pacific (Melbourne) region."
+                            },
+                            {
+                                "value": "ap-southeast-5",
+                                "description": "Asia Pacific (Malaysia) region."
+                            },
+                            {
+                                "value": "ca-central-1",
+                                "description": "Canada (Central) region."
+                            },
+                            {
+                                "value": "ca-west-1",
+                                "description": "Canada West (Calgary) region."
+                            },
+                            {
+                                "value": "eu-central-1",
+                                "description": "Europe (Frankfurt) region."
+                            },
+                            {
+                                "value": "eu-central-2",
+                                "description": "Europe (Zurich) region."
+                            },
+                            {
+                                "value": "eu-north-1",
+                                "description": "Europe (Stockholm) region."
+                            },
+                            {
+                                "value": "eu-south-1",
+                                "description": "Europe (Milan) region."
+                            },
+                            {
+                                "value": "eu-south-2",
+                                "description": "Europe (Spain) region."
+                            },
+                            {
+                                "value": "eu-west-1",
+                                "description": "Europe (Ireland) region."
+                            },
+                            {
+                                "value": "eu-west-2",
+                                "description": "Europe (London) region."
+                            },
+                            {
+                                "value": "eu-west-3",
+                                "description": "Europe (Paris) region."
+                            },
+                            {
+                                "value": "il-central-1",
+                                "description": "Israel (Tel Aviv) region."
+                            },
+                            {
+                                "value": "me-central-1",
+                                "description": "Middle East (UAE) region."
+                            },
+                            {
+                                "value": "me-south-1",
+                                "description": "Middle East (Bahrain) region."
+                            },
+                            {
+                                "value": "sa-east-1",
+                                "description": "South America (São Paulo) region."
+                            },
+                            {
+                                "value": "us-east-1",
+                                "description": "US East (N. Virginia) region."
+                            },
+                            {
+                                "value": "us-east-2",
+                                "description": "US East (Ohio) region."
+                            },
+                            {
+                                "value": "us-gov-east-1",
+                                "description": "AWS GovCloud (US-East) region."
+                            },
+                            {
+                                "value": "us-gov-west-1",
+                                "description": "AWS GovCloud (US-West) region."
+                            },
+                            {
+                                "value": "us-west-1",
+                                "description": "US West (N. California) region."
+                            },
+                            {
+                                "value": "us-west-2",
+                                "description": "US West (Oregon) region."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -759,6 +1178,24 @@
                         "Earliest",
                         "Latest"
                     ],
+                    "x-ms-enum": {
+                        "name": "AutoOffsetReset",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "None",
+                                "description": "The auto offset reset is None."
+                            },
+                            {
+                                "value": "Earliest",
+                                "description": "The auto offset reset is Earliest."
+                            },
+                            {
+                                "value": "Latest",
+                                "description": "The auto offset reset is Latest."
+                            }
+                        ]
+                    },
                     "default": "None"
                 }
             }
@@ -778,7 +1215,25 @@
                         "PLAIN",
                         "SCRAM-SHA-256",
                         "SCRAM-SHA-512"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "SaslMechanism",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "PLAIN",
+                                "description": "The SASL mechanism is PLAIN."
+                            },
+                            {
+                                "value": "SCRAM-SHA-256",
+                                "description": "The SASL mechanism is SCRAM-SHA-256."
+                            },
+                            {
+                                "value": "SCRAM-SHA-512",
+                                "description": "The SASL mechanism is SCRAM-SHA-512."
+                            }
+                        ]
+                    }
                 },
                 "securityProtocol": {
                     "type": "string",
@@ -788,7 +1243,29 @@
                         "PLAINTEXT",
                         "SASL_SSL",
                         "SSL"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "SecurityProtocol",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "SASL_PLAINTEXT",
+                                "description": "The security protocol is SASL_PLAINTEXT."
+                            },
+                            {
+                                "value": "PLAINTEXT",
+                                "description": "The security protocol is PLAINTEXT."
+                            },
+                            {
+                                "value": "SASL_SSL",
+                                "description": "The security protocol is SASL_SSL."
+                            },
+                            {
+                                "value": "SSL",
+                                "description": "The security protocol is SSL."
+                            }
+                        ]
+                    }
                 }
             },
             "allOf": [
@@ -812,7 +1289,25 @@
                         "PLAIN",
                         "SCRAM-SHA-256",
                         "SCRAM-SHA-512"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "SaslMechanism",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "PLAIN",
+                                "description": "The SASL mechanism is PLAIN."
+                            },
+                            {
+                                "value": "SCRAM-SHA-256",
+                                "description": "The SASL mechanism is SCRAM-SHA-256."
+                            },
+                            {
+                                "value": "SCRAM-SHA-512",
+                                "description": "The SASL mechanism is SCRAM-SHA-512."
+                            }
+                        ]
+                    }
                 },
                 "securityProtocol": {
                     "type": "string",
@@ -822,7 +1317,29 @@
                         "PLAINTEXT",
                         "SASL_SSL",
                         "SSL"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "SecurityProtocol",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "SASL_PLAINTEXT",
+                                "description": "The security protocol is SASL_PLAINTEXT."
+                            },
+                            {
+                                "value": "PLAINTEXT",
+                                "description": "The security protocol is PLAINTEXT."
+                            },
+                            {
+                                "value": "SASL_SSL",
+                                "description": "The security protocol is SASL_SSL."
+                            },
+                            {
+                                "value": "SSL",
+                                "description": "The security protocol is SSL."
+                            }
+                        ]
+                    }
                 }
             },
             "allOf": [
@@ -860,7 +1377,45 @@
                     "enum": [
                         "Earliest",
                         "Latest"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "OffsetPolicy",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Earliest",
+                                "description": "The offset policy is Earliest."
+                            },
+                            {
+                                "value": "Latest",
+                                "description": "The offset policy is Latest."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "AzureDataExplorerSourceProperties": {
+            "type": "object",
+            "description": "Azure Data Explorer source properties.",
+            "required": [
+                "dataConnectionId",
+                "databaseName",
+                "tableNames"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure Data Explorer data connection identifier.",
+                    "format": "uuid"
+                },
+                "databaseName": {
+                    "type": "string",
+                    "description": "The database name."
+                },
+                "tableNames": {
+                    "type": "string",
+                    "description": "The list of comma-separated table names."
                 }
             }
         },
@@ -929,6 +1484,24 @@
                 }
             }
         },
+        "RealTimeWeatherSourceProperties": {
+            "type": "object",
+            "description": "Real Time Weather source properties.",
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "latitude": {
+                    "type": "number",
+                    "description": "The latitude for the weather data."
+                },
+                "longitude": {
+                    "type": "number",
+                    "description": "The longitude for the weather data."
+                }
+            }
+        },
         "GooglePubSubSourceProperties": {
             "type": "object",
             "description": "Google Pub/Sub source properties.",
@@ -943,39 +1516,45 @@
                 }
             }
         },
-        "FabricCapacityUtilizationEventsSourceProperties": {
+        "MqttSourceProperties": {
             "type": "object",
-            "description": "Fabric Capacity Utilization events source properties.",
+            "description": "MQTT source properties.",
             "required": [
-                "eventScope",
-                "capacityId"
+                "dataConnectionId",
+                "serverVersion",
+                "topic"
             ],
             "properties": {
-                "eventScope": {
+                "dataConnectionId": {
                     "type": "string",
-                    "enum": [
-                        "Tenant",
-                        "Capacity",
-                        "Workspace",
-                        "Item",
-                        "SubItem"
-                    ]
-                },
-                "capacityId": {
-                    "type": "string",
-                    "description": "The capacity identifier.",
+                    "description": "The MQTT data connection identifier.",
                     "format": "uuid"
                 },
-                "includedEventTypes": {
-                    "type": "array",
-                    "description": "The included event types.",
-                    "items": {
-                        "type": "string"
+                "serverVersion": {
+                    "type": "string",
+                    "description": "The MQTT server version.",
+                    "enum": [
+                        "V3",
+                        "V5"
+                    ],
+                    "x-ms-enum": {
+                        "name": "ServerVersion",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "V3",
+                                "description": "The MQTT server version is V3."
+                            },
+                            {
+                                "value": "V5",
+                                "description": "The MQTT server version is V5."
+                            }
+                        ]
                     }
                 },
-                "filters": {
-                    "type": "object",
-                    "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
+                "topic": {
+                    "type": "string",
+                    "description": "The MQTT topic."
                 }
             }
         },
@@ -996,7 +1575,33 @@
                         "Workspace",
                         "Item",
                         "SubItem"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "EventScope",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Tenant",
+                                "description": "The event scope is Tenant."
+                            },
+                            {
+                                "value": "Capacity",
+                                "description": "The event scope is Capacity."
+                            },
+                            {
+                                "value": "Workspace",
+                                "description": "The event scope is Workspace."
+                            },
+                            {
+                                "value": "Item",
+                                "description": "The event scope is Item."
+                            },
+                            {
+                                "value": "SubItem",
+                                "description": "The event scope is SubItem."
+                            }
+                        ]
+                    }
                 },
                 "workspaceId": {
                     "type": "string",
@@ -1082,7 +1687,33 @@
                         "Workspace",
                         "Item",
                         "SubItem"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "EventScope",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Tenant",
+                                "description": "The event scope is Tenant."
+                            },
+                            {
+                                "value": "Capacity",
+                                "description": "The event scope is Capacity."
+                            },
+                            {
+                                "value": "Workspace",
+                                "description": "The event scope is Workspace."
+                            },
+                            {
+                                "value": "Item",
+                                "description": "The event scope is Item."
+                            },
+                            {
+                                "value": "SubItem",
+                                "description": "The event scope is SubItem."
+                            }
+                        ]
+                    }
                 },
                 "workspaceId": {
                     "type": "string",

@@ -14,24 +14,7 @@
                 {
                     "$ref": "../common/definitions.json#/definitions/Item"
                 }
-            ],
-            "properties": {
-                "properties": {
-                    "description": "The AnomalyDetector properties.",
-                    "$ref": "#/definitions/AnomalyDetectorProperties"
-                }
-            }
-        },
-        "AnomalyDetectorProperties": {
-            "description": "The AnomalyDetector properties.",
-            "type": "object",
-            "required": ["oneLakeRootPath"],
-            "properties": {
-                "oneLakeRootPath": {
-                    "description": "OneLake path to the AnomalyDetector root directory.",
-                    "type": "string"
-                }
-            }
+            ]
         },
         "AnomalyDetectors": {
             "description": "A list of Collection Names.",

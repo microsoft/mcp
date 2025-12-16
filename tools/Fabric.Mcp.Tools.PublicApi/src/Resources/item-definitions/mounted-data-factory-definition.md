@@ -1,12 +1,3 @@
----
-title: Mounted Data Factory definition
-description: Learn how to create a Mounted Data Factory item definition when using the Microsoft Fabric REST API.
-ms.title: Mounted Data Factory item definition
-author: rnandurimsft
-ms.author: rnanduri
-ms.service: fabric
-ms.date: 01/16/2025
----
   
 # Mounted Data Factory definition
   

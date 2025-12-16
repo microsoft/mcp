@@ -1,8 +1,7 @@
 {
   "parameters": {
     "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
-    "dataflowId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
-    "jobType": "Execute"
+    "dataflowId": "dddddddd-9999-0000-1111-eeeeeeeeeeee"
   },
   "responses": {
     "202": {

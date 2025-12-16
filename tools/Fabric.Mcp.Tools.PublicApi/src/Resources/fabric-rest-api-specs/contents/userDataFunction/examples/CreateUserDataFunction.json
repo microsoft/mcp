@@ -1,7 +1,6 @@
 {
     "parameters": {
         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
-        "preview": true,
         "createUserDataFunctionRequest": {
             "displayName": "UserDataFunction 1",
             "description": "A UserDataFunction description.",

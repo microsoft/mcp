@@ -1,13 +1,3 @@
----
-title: Anomaly detector definition
-description: Learn how to structure an anomaly detector item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric anomaly detector item definition
-author: rnandurimsft
-ms.author: rnanduri
-ms.service: fabric
-ms.date: 08/11/2025
----
-
 # Anomaly detector definition
 
 This article provides a breakdown of the definition structure for anomaly detector items.

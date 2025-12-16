@@ -229,7 +229,21 @@
                     "enum": [
                         "DirectIngestion",
                         "ProcessedIngestion"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "DataIngestionMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "DirectIngestion",
+                                "description": "Ingests your event data directly into the Eventhouse without any processing."
+                            },
+                            {
+                                "value": "ProcessedIngestion",
+                                "description": "Processes your event data before ingesting it into the Eventhouse."
+                            }
+                        ]
+                    }
                 },
                 "workspaceId": {
                     "type": "string",

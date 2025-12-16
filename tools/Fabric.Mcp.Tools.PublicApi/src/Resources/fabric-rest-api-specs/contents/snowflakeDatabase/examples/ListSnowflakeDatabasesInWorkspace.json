@@ -1,0 +1,31 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+  },
+  "responses": {
+    "200": {
+      "value": [
+        {
+          "description": "This is an example Snowflake Database item.",
+          "displayName": "My Database",
+          "id": "123e4567-e89b-12d3-a456-426614174001",
+          "properties": {
+            "snowflakeDatabaseName": "ExampleDatabase",
+            "onelakeTablesPath": "https://onelake.dfs.fabric.microsoft.com/path/to/Tables",
+            "snowflakeVolumePath": "https://onelake.dfs.fabric.microsoft.com/path/to/SnowflakeVolume",
+            "sqlEndpointProperties": {
+              "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+              "id": "123e4567-e89b-12d3-a456-426614174004",
+              "provisioningStatus": "Success"
+            },
+            "defaultSchema": "PUBLIC"
+          },
+          "type": "SnowflakeDatabase",
+          "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+        }
+      ],
+      "continuationToken": "token123",
+      "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff229/snowflakeDatabases?continuationToken=token123"
+    }
+  }
+}
