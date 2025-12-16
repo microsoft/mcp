@@ -1462,10 +1462,12 @@
             "$ref": "./examples/platform/ListItemJobInstancesWithContinuation.json"
           }
         }
-      },
+      }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances": {
       "post": {
         "summary": "Run on-demand item job instance.",
-        "description": "## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.Execute.All \n- Specific scope: *itemType*.Execute.All (for example: Notebook.Execute.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n ## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.Execute.All \n- Specific scope: *itemType*.Execute.All (for example: Notebook.Execute.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "JobScheduler"
         ],
@@ -1491,7 +1493,7 @@
             "required": true
           },
           {
-            "in": "query",
+            "in": "path",
             "name": "jobType",
             "description": "Job type",
             "type": "string",
@@ -2784,6 +2786,9 @@
           "Create shortcut Azure Blob Storage target example": {
             "$ref": "./examples/platform/CreateShortcutAzureBlobStorageTarget.json"
           },
+          "Create shortcut OneDriveSharePoint or OneDrive for Business or SharePoint Online target example": {
+            "$ref": "./examples/platform/CreateShortcutOneDriveSharePointTarget.json"
+          },
           "Create or update shortcut target to OneLake": {
             "$ref": "./examples/platform/CreateOrOverwriteShortcutOneLakeTarget.json"
           },
@@ -2868,6 +2873,9 @@
           },
           "Get shortcut transform with One Lake target example": {
             "$ref": "./examples/platform/GetShortcutTransformOneLakeTarget.json"
+          },
+          "Get shortcut OneDriveSharePoint or OneDrive for Business or SharePoint Online target example": {
+            "$ref": "./examples/platform/GetShortcutOneDriveSharePointTarget.json"
           }
         }
       },

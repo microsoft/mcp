@@ -1,12 +1,3 @@
----
-title: DataBuildToolJob item definition
-description: Learn how to create a dbt job item definition when using the Microsoft Fabric REST API.
-ms.title: DataBuildToolJob item definition
-author: dylanb-microsoft
-ms.author: dylanboliske
-ms.service: fabric
-ms.date: 10/28/2024
----
   
 # DataBuildToolJob item definition
 

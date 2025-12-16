@@ -1,14 +1,3 @@
----
-title: KQL Queryset definition
-description: Learn how to create a KQL Queryset (Real-Time Queryset) item definition when using the Microsoft Fabric REST API.
-author: shsagir
-ms.title: KQL Queryset item definition
-ms.author: shsagir
-ms.reviewer: rotamir
-ms.service: fabric
-ms.date: 03/11/2025
----
-
 # KQL Queryset definition
 
 This article provides a breakdown of the structure for KQL Queryset (Real-Time Queryset) definition items.

@@ -1,13 +1,3 @@
----
-title: Eventstream definition
-description: Learn how to create an Eventstream definition when using the Microsoft Fabric REST API.
-ms.title: Eventstream definition
-author: alexlzx
-ms.author: zhenxilin
-ms.service: fabric
-ms.date: 05/14/2025
----
-
 # Eventstream definition
 
 This article provides a breakdown of the definition structure for Eventstream items.
