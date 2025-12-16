@@ -1,13 +1,3 @@
----
-title: Graph QuerySet definition
-description: Learn how to create a Graph QuerySet item definition when using the Microsoft Fabric REST API.
-ms.title: Graph QuerySet item definition
-author: fluffycc
-ms.author: cacao
-ms.service: fabric
-ms.date: 09/02/2025
----
-
 # Graph QuerySet definition
   
 This article provides a breakdown of the definition structure for Graph QuerySet items.

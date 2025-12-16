@@ -192,7 +192,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -305,9 +305,9 @@
               "value": "CopyJob",
               "description": "A Copy job."
             },
-            {
-              "value": "VariableLibrary",
-              "description": "A VariableLibrary."
+			{
+                "value": "VariableLibrary",
+                "description": "A VariableLibrary."                          
             },
             {
               "value": "MirroredAzureDatabricksCatalog",
@@ -348,6 +348,18 @@
             {
                 "value": "GraphQuerySet",
                 "description": "A Graph QuerySet."
+            },
+            {
+              "value": "SnowflakeDatabase",
+              "description": "A Snowflake Database to store Iceberg tables created from Snowflake account."
+            },
+            {
+                "value": "OperationsAgent",
+                "description": "A OperationsAgent."
+            },
+            {
+                "value": "CosmosDBDatabase",
+                "description": "A Cosmos DB Database."
             }
           ]
         },

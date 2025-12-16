@@ -131,6 +131,49 @@
                     "readOnly": false
                 }
             }
+        },
+        "ApacheAirflowJobFileMetadata": {
+            "description": "Apache Airflow job file metadata.",
+            "type": "object",
+            "required": [
+                "filePath",
+                "sizeInBytes"
+            ],
+            "properties": {
+                "filePath": {
+                    "description": "The file path relative to the Apache Airflow job root. It must begin with either 'dags/' or 'plugins/' (for example, `dags/example_dag.py`).",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "sizeInBytes": {
+                    "description": "The file size, in bytes.",
+                    "type": "integer",
+                    "format": "int64",
+                    "readOnly": true
+                }
+            }
+        },
+        "ApacheAirflowJobFiles": {
+            "description": "A list of Apache Airflow job files.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of Apache Airflow job files.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ApacheAirflowJobFileMetadata"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
         }
     }
 }
