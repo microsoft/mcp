@@ -4,13 +4,50 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.LiveTests;
 
-public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private const string IndexName = "products";
+    private const string SanitizedValue = "Sanitized";
+
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
+        {
+            Value = SanitizedValue
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..vectorSearch.vectorizers[*].azureOpenAIParameters.authIdentity.userAssignedIdentity")
+        {
+            Regex = "user[aA]ssignedIdentities/([^?\\/]+)",
+            GroupForReplace = "1",
+            Value = "sanitized-identity"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
+     {
+         new(new UriRegexSanitizerBody
+         {
+             Regex = "resource[Gg]roups/([^?\\/]+)",
+             Value = SanitizedValue,
+             GroupForReplace = "1"
+         })
+      };
 
     [Fact]
     public async Task Should_list_search_services_by_subscription_id()
