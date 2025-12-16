@@ -4,12 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class AksCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
 
     [Fact]
@@ -149,8 +149,8 @@ public sealed class AksCommandTests(ITestOutputHelper output)
 
         // Get the first cluster's details
         var firstCluster = clusters.EnumerateArray().First();
-        var clusterName = firstCluster.GetProperty("name").GetString()!;
-        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
+        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
+        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
 
         // Now test the get command
         var getResult = await CallToolAsync(
@@ -172,33 +172,33 @@ public sealed class AksCommandTests(ITestOutputHelper output)
 
         // Verify the cluster details
         var nameProperty = cluster.AssertProperty("name");
-        Assert.Equal(clusterName, nameProperty.GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" :clusterName, nameProperty.GetString());
 
         var rgProperty = cluster.AssertProperty("resourceGroupName");
         Assert.Equal(resourceGroupName, rgProperty.GetString());
 
         // Verify other common properties exist
-        Assert.True(cluster.TryGetProperty("subscriptionId", out _));
-        Assert.True(cluster.TryGetProperty("location", out _));
+        cluster.AssertProperty("subscriptionId");
+        cluster.AssertProperty("location");
 
         // Enriched cluster checks
-        Assert.True(cluster.TryGetProperty("id", out _));
-        Assert.True(cluster.TryGetProperty("enableRbac", out _));
-        Assert.True(cluster.TryGetProperty("skuName", out _));
-        Assert.True(cluster.TryGetProperty("skuTier", out _));
-        Assert.True(cluster.TryGetProperty("nodeResourceGroup", out _));
-        Assert.True(cluster.TryGetProperty("maxAgentPools", out _));
-        Assert.True(cluster.TryGetProperty("supportPlan", out _));
+        cluster.AssertProperty("id");
+        cluster.AssertProperty("enableRbac");
+        cluster.AssertProperty("skuName");
+        cluster.AssertProperty("skuTier");
+        cluster.AssertProperty("nodeResourceGroup");
+        cluster.AssertProperty("maxAgentPools");
+        cluster.AssertProperty("supportPlan");
 
         // Profiles present or null
-        Assert.True(cluster.TryGetProperty("networkProfile", out _));
-        Assert.True(cluster.TryGetProperty("windowsProfile", out _));
-        Assert.True(cluster.TryGetProperty("servicePrincipalProfile", out _));
-        Assert.True(cluster.TryGetProperty("addonProfiles", out _));
-        Assert.True(cluster.TryGetProperty("identityProfile", out _));
+        cluster.AssertProperty("networkProfile");
+        cluster.AssertProperty("windowsProfile");
+        cluster.AssertProperty("servicePrincipalProfile");
+        cluster.AssertProperty("addonProfiles");
+        cluster.AssertProperty("identityProfile");
 
         // Get-specific should return agentPoolProfiles (we populate on Get)
-        Assert.True(cluster.TryGetProperty("agentPoolProfiles", out var pools));
+        var pools = cluster.AssertProperty("agentPoolProfiles");
         Assert.Equal(JsonValueKind.Array, pools.ValueKind);
     }
 
