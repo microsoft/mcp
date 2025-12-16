@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -246,6 +247,7 @@ public sealed class SearchService(
             var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+            clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
@@ -330,6 +332,7 @@ public sealed class SearchService(
             var credential = await GetCredential(cancellationToken);
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+            clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var endpoint = new Uri($"https://{serviceName}.search.windows.net");
