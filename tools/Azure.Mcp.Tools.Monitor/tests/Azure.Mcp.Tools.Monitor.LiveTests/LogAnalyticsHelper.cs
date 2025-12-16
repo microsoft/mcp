@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Ingestion;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,8 @@ public class LogAnalyticsHelper(
     string workspaceName,
     string subscription,
     IMonitorService monitorService,
+    ITenantService tenantService,
+    IHttpClientFactory httpClientFactory,
     string? tenantId = null,
     string logType = "TestLogs_CL",
     ILogger? logger = null)
@@ -32,6 +36,8 @@ public class LogAnalyticsHelper(
     private readonly string _logType = logType;
     private readonly string? _tenantId = tenantId;
     private readonly IMonitorService _monitorService = monitorService ?? throw new ArgumentNullException(nameof(monitorService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger _logger = logger ?? NullLogger.Instance;
     private readonly SemaphoreSlim _clientInitLock = new(1, 1);
     private string? _workspaceId;
@@ -45,7 +51,7 @@ public class LogAnalyticsHelper(
         }
 
         // Get workspace info using the monitor service
-        var workspaces = await _monitorService.ListWorkspaces(_subscription, _tenantId);
+        var workspaces = await _monitorService.ListWorkspaces(_subscription, _tenantId, retryPolicy: null, cancellationToken).ConfigureAwait(false);
         var workspace = workspaces.FirstOrDefault(w => w.Name.Equals(_workspaceName, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Could not find workspace {_workspaceName}");
 
@@ -53,7 +59,7 @@ public class LogAnalyticsHelper(
         return _workspaceId;
     }
 
-    private async Task<LogsIngestionClient> GetLogsIngestionClientAsync(string customerId)
+    private async Task<LogsIngestionClient> GetLogsIngestionClientAsync(string customerId, CancellationToken cancellationToken)
     {
         if (_logsIngestionClient != null)
         {
@@ -65,7 +71,7 @@ public class LogAnalyticsHelper(
             throw new ArgumentNullException(nameof(customerId), "Customer ID cannot be null or empty");
         }
 
-        await _clientInitLock.WaitAsync();
+        await _clientInitLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             // Double-check after acquiring lock
@@ -84,8 +90,9 @@ public class LogAnalyticsHelper(
                     MaxDelay = TimeSpan.FromSeconds(10)
                 }
             };
-            var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-            TokenCredential credential = await tokenProvider.GetTokenCredentialAsync(_tenantId, default);
+            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(MonitorService.HttpClientName));
+
+            TokenCredential credential = await _tenantService.GetTokenCredentialAsync(_tenantId, cancellationToken).ConfigureAwait(false);
             _logsIngestionClient = new LogsIngestionClient(endpoint, credential, options);
             return _logsIngestionClient;
         }
@@ -159,7 +166,7 @@ public class LogAnalyticsHelper(
         LogRecord[] logs,
         CancellationToken cancellationToken = default)
     {
-        var client = await GetLogsIngestionClientAsync(customerId).ConfigureAwait(false);
+        var client = await GetLogsIngestionClientAsync(customerId, cancellationToken).ConfigureAwait(false);
 
         try
         {
