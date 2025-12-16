@@ -39,15 +39,15 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         })
     ];
 
-    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
-     {
-         new(new UriRegexSanitizerBody
-         {
-             Regex = "resource[Gg]roups/([^?\\/]+)",
-             Value = SanitizedValue,
-             GroupForReplace = "1"
-         })
-      };
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = SanitizedValue,
+            GroupForReplace = "1"
+        })
+    ];
 
     [Fact]
     public async Task Should_list_search_services_by_subscription_id()
