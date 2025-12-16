@@ -1,12 +1,3 @@
----
-title: KQL Database item definition
-description: Learn how to structure a KQL Database definition when using the Microsoft Fabric REST API.
-author: yaelschuster
-ms.title: Microsoft Fabric KQL Database item definition
-ms.author: yaschust
-ms.service: fabric
-ms.date: 11/12/2024
----
 # KQL Database definition
 
 This article provides a breakdown of the structure for KQL Database definition items.

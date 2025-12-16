@@ -1,12 +1,3 @@
----
-title: Eventhouse item definition
-description: Learn how to structure an Eventhouse definition when using the Microsoft Fabric REST API.
-author: yaelschuster
-ms.title: Microsoft Fabric Eventhouse item definition
-ms.author: yaschust
-ms.service: fabric
-ms.date: 11/12/2024
----
 # Eventhouse definition
 
 This article provides a breakdown of the structure for Eventhouse definition items.

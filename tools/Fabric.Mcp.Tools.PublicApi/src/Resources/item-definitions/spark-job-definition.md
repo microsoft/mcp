@@ -1,13 +1,3 @@
----
-title: Spark job item definition
-description: Learn how to structure a Spark job definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric spark job definition item definition
-author: billmath
-ms.author: billmath
-ms.service: fabric
-ms.date: 05/17/2024
----
-
 # Spark Job definition
 
 This article provides a breakdown of the structure for Spark job definition items. For detailed information, see: [How to create and update a Spark Job Definition with Microsoft Fabric Rest API](https://learn.microsoft.com/fabric/data-engineering/spark-job-definition-api).

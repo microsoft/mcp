@@ -1,0 +1,272 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SnowflakeDatabase data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "SnowflakeDatabases": {
+      "description": "A list of Snowflake Databases.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of Snowflake Databases.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SnowflakeDatabase"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "SnowflakeDatabase": {
+      "description": "A Snowflake Database item.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+        "properties": {
+          "description": "The Snowflake Database properties.",
+          "$ref": "#/definitions/SnowflakeDatabaseProperties"
+        }
+      }
+    },
+    "SnowflakeDatabaseProperties": {
+      "description": "The Snowflake Database properties.",
+      "type": "object",
+      "properties": {
+        "snowflakeAccountURL": {
+          "description": "The Snowflake account URL.",
+          "type": "string"
+        },
+        "snowflakeDatabaseName": {
+          "description": "The Snowflake database name.",
+          "type": "string"
+        },
+        "connectionId": {
+          "description": "The connection ID for the Snowflake Database.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "onelakeTablesPath": {
+          "description": "OneLake path to the Snowflake Database tables directory.",
+          "type": "string"
+        },
+        "snowflakeVolumePath": {
+          "description": "OneLake path to the Snowflake Database files directory.",
+          "type": "string"
+        },
+        "defaultSchema": {
+          "description": "The default schema name for the Snowflake Database.",
+          "type": "string"
+        },
+        "sqlEndpointProperties": {
+          "description": "An object containing the properties of the SQL endpoint.",
+          "$ref": "#/definitions/SqlEndpointProperties"
+        }
+      }
+    },
+    "SqlEndpointProperties": {
+      "required": [
+        "id",
+        "connectionString",
+        "provisioningStatus"
+      ],
+      "description": "An object containing the properties of the SQL endpoint.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "SQL endpoint ID.",
+          "type": "string"
+        },
+        "connectionString": {
+          "description": "SQL endpoint connection string.",
+          "type": "string"
+        },
+        "provisioningStatus": {
+          "description": "SQL endpoint provisioning status. Additional statuses may be added over time.",
+          "type": "string",
+          "enum": [
+            "NotStarted",
+            "InProgress",
+            "Success",
+            "Failed"
+          ],
+          "x-ms-enum": {
+            "name": "ProvisioningStatus",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "NotStarted",
+                "description": "The SQL endpoint provisioning is not started yet"
+              },
+              {
+                "value": "InProgress",
+                "description": "The SQL endpoint provisioning is currently in progress."
+              },
+              {
+                "value": "Success",
+                "description": "The SQL endpoint has been successfully provisioned."
+              },
+              {
+                "value": "Failed",
+                "description": "The SQL endpoint provisioning has failed."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "CreateSnowflakeDatabaseRequest": {
+      "description": "Request payload for creating a Snowflake Database.",
+      "type": "object",
+      "required": [
+        "displayName"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The display name of the Snowflake Database.",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the Snowflake Database.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The type of the item. Additional types may be added over time.",
+          "type": "string",
+          "enum": [
+            "SnowflakeDatabase"
+          ],
+          "x-ms-enum": {
+            "name": "SnowflakeDatabaseItemType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "SnowflakeDatabase",
+                "description": "The Snowflake Database item type."
+              }
+            ]
+          }
+        },
+        "creationPayload": {
+          "description": "The creation payload for the Snowflake Database.",
+          "$ref": "#/definitions/SnowflakeDatabaseCreationPayload"
+        },
+        "definition": {
+          "description": "The definition for the Snowflake Database.",
+          "$ref": "#/definitions/SnowflakeDatabaseDefinition"
+        }
+      }
+    },
+    "SnowflakeDatabaseCreationPayload": {
+      "description": "The creation payload for the Snowflake Database.",
+      "type": "object",
+      "properties": {
+        "snowflakeDatabaseName": {
+          "description": "The Snowflake database name.",
+          "type": "string"
+        },
+        "connectionId": {
+          "description": "The connection ID for the Snowflake Database.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "UpdateSnowflakeDatabaseRequest": {
+      "description": "Request payload for updating a Snowflake Database.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The display name of the Snowflake Database.",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the Snowflake Database.",
+          "type": "string"
+        }
+      }
+    },
+    "UpdateSnowflakeDatabaseDefinitionRequest": {
+      "description": "Update Snowflake Database public definition request payload.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/SnowflakeDatabaseDefinition"
+        }
+      }
+    },
+    "SnowflakeDatabaseDefinitionResponse": {
+      "description": "Snowflake Database public definition response.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/SnowflakeDatabaseDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "SnowflakeDatabaseDefinition": {
+      "description": "Snowflake Database public definition object.",
+      "type": "object",
+      "required": [
+        "parts"
+      ],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SnowflakeDatabaseDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "SnowflakeDatabaseDefinitionPart": {
+      "description": "Snowflake Database definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The Snowflake Database part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The Snowflake Database part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    }
+  }
+}

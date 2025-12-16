@@ -1,13 +1,3 @@
----
-title: Ontology item definition 
-description: Learn how to create an ontology item definition when using the Microsoft Fabric REST API. 
-author: Akhil-Kokkula 
-ms.author: kokkulaakhil 
-ms.title: Ontology item definition 
-ms.service: fabric 
-ms.date: 09/22/2025 
----
-
 # Ontology definition
 
 This article provides a breakdown of the structure for ontology definition items.
