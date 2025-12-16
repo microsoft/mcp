@@ -6,6 +6,8 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using ModelContextProtocol.Protocol;
 using Npgsql;
@@ -13,7 +15,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
-public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class PostgresCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
@@ -26,6 +28,11 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
+
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
 
         // Only initialize test data once for all tests
         if (_testDataInitialized)
@@ -96,7 +103,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Insert employee data
         string insertEmployees = @"
             INSERT INTO employees (first_name, last_name, email, department, salary, hire_date, is_active)
-            VALUES 
+            VALUES
                 ('John', 'Doe', 'john.doe@example.com', 'Engineering', 75000.00, '2023-01-15', true),
                 ('Jane', 'Smith', 'jane.smith@example.com', 'Marketing', 65000.00, '2023-02-20', true),
                 ('Bob', 'Johnson', 'bob.johnson@example.com', 'Sales', 70000.00, '2023-03-10', true),
@@ -126,7 +133,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Insert department data
         string insertDepartments = @"
             INSERT INTO departments (dept_name, location, budget)
-            VALUES 
+            VALUES
                 ('Engineering', 'Seattle', 1000000.00),
                 ('Marketing', 'New York', 500000.00),
                 ('Sales', 'San Francisco', 750000.00),
@@ -304,9 +311,9 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "database", TestDatabaseName },
                 { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername },
-                { "query", @"SELECT e.first_name, e.last_name, d.location 
-                             FROM employees e 
-                             JOIN departments d ON e.department = d.dept_name 
+                { "query", @"SELECT e.first_name, e.last_name, d.location
+                             FROM employees e
+                             JOIN departments d ON e.department = d.dept_name
                              WHERE d.location = 'Seattle';" }
             });
 
