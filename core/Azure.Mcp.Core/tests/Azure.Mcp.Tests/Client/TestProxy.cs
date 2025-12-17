@@ -180,6 +180,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         {
             throw new InvalidOperationException($"Test proxy restore failed with exit code {process.ExitCode}. StdOut: {stdout}. StdErr: {stderr}");
         }
+    }
 
     /// <summary>
     /// Multiple test assemblies are likely to be running in the same process due to MCP repo's usage of dotnet test

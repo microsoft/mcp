@@ -120,7 +120,7 @@ public sealed class RecordingPathResolver
     /// <summary>
     /// Attempts to find a nearest assets.json walking upwards.
     /// </summary>
-    public string? GetAssetsJson(Type testType)
+    public string GetAssetsJson(Type testType)
     {
         var projectDir = GetProjectDirectory(testType);
 
@@ -133,6 +133,6 @@ public sealed class RecordingPathResolver
             return assetsFile;
         }
 
-        return null;
+        throw new FileNotFoundException($"Unable to locate assets.json for test type {testType.FullName} starting from {projectDir}.");
     }
 }

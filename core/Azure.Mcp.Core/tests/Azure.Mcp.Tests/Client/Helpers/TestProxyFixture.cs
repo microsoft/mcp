@@ -35,7 +35,7 @@ namespace Azure.Mcp.Tests.Client.Helpers
             return ValueTask.CompletedTask;
         }
 
-        public async Task StartProxyAsync(string? assetsJsonPath = null)
+        public async Task StartProxyAsync(string assetsJsonPath)
         {
             var root = DetermineRepositoryRoot();
             var proxy = new TestProxy();
