@@ -215,7 +215,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // we will use the same proxy instance throughout the test class instances, so we only need to start it if not already started.
         if (TestMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
         {
-            await fixture.StartProxyAsync();
+            var assetsPath = PathResolver.GetAssetsJson(GetType());
+            await fixture.StartProxyAsync(assetsPath);
             Proxy = fixture.Proxy;
 
             // onetime on starting the proxy, we have initialized the livetest settings so lets add some additional sanitizers by default
