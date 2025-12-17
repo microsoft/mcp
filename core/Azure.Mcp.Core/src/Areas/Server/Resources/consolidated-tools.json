@@ -2198,24 +2198,24 @@
       ]
     },
     {
-      "name": "manage_azure_storage_sync_services",
-      "description": "Manage Azure File Sync services including creating, deleting, getting, listing, and updating Storage Sync Services. A Storage Sync Service is the top-level resource for Azure File Sync deployments.",
+      "name": "get_azure_storage_sync_services",
+      "description": "Get and list Azure File Sync Storage Sync Services. A Storage Sync Service is the top-level resource for Azure File Sync deployments.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
           "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
         },
         "secret": {
           "value": false,
@@ -2227,32 +2227,29 @@
         }
       },
       "mappedToolList": [
-        "storagesync_service_create",
-        "storagesync_service_delete",
         "storagesync_service_get",
-        "storagesync_service_list",
-        "storagesync_service_update"
+        "storagesync_service_list"
       ]
     },
     {
-      "name": "manage_azure_storage_sync_groups",
-      "description": "Manage Azure File Sync groups including creating, deleting, getting, and listing Sync Groups. A Sync Group defines the synchronization topology for a set of cloud and server endpoints.",
+      "name": "get_azure_storage_sync_groups",
+      "description": "Get and list Azure File Sync Sync Groups. A Sync Group defines the synchronization topology for a set of cloud and server endpoints.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
           "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
         },
         "secret": {
           "value": false,
@@ -2264,31 +2261,29 @@
         }
       },
       "mappedToolList": [
-        "storagesync_syncgroup_create",
-        "storagesync_syncgroup_delete",
         "storagesync_syncgroup_get",
         "storagesync_syncgroup_list"
       ]
     },
     {
-      "name": "manage_azure_storage_sync_cloud_endpoints",
-      "description": "Manage Azure File Sync cloud endpoints including creating, deleting, getting, listing, and triggering change detection for Cloud Endpoints. A Cloud Endpoint represents an Azure file share being synchronized.",
+      "name": "get_azure_storage_sync_cloud_endpoints",
+      "description": "Get and list Azure File Sync Cloud Endpoints. A Cloud Endpoint represents an Azure file share being synchronized.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
           "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
         },
         "secret": {
           "value": false,
@@ -2300,32 +2295,29 @@
         }
       },
       "mappedToolList": [
-        "storagesync_cloudendpoint_create",
-        "storagesync_cloudendpoint_delete",
         "storagesync_cloudendpoint_get",
-        "storagesync_cloudendpoint_list",
-        "storagesync_cloudendpoint_changedetection"
+        "storagesync_cloudendpoint_list"
       ]
     },
     {
-      "name": "manage_azure_storage_sync_registered_servers",
-      "description": "Manage Azure File Sync registered servers including getting, listing, registering, unregistering, and updating Registered Servers. A Registered Server represents a server that has been registered with a Storage Sync Service.",
+      "name": "get_azure_storage_sync_registered_servers",
+      "description": "Get and list Azure File Sync Registered Servers. A Registered Server represents a server that has been registered with a Storage Sync Service.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
           "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
         },
         "secret": {
           "value": false,
@@ -2338,18 +2330,50 @@
       },
       "mappedToolList": [
         "storagesync_registeredserver_get",
-        "storagesync_registeredserver_list",
-        "storagesync_registeredserver_unregister",
-        "storagesync_registeredserver_update"
+        "storagesync_registeredserver_list"
       ]
     },
     {
-      "name": "manage_azure_storage_sync_server_endpoints",
-      "description": "Manage Azure File Sync server endpoints including creating, deleting, getting, listing, and updating Server Endpoints. A Server Endpoint represents a specific folder on a registered server that is being synchronized.",
+      "name": "get_azure_storage_sync_server_endpoints",
+      "description": "Get and list Azure File Sync Server Endpoints. A Server Endpoint represents a specific folder on a registered server that is being synchronized.",
       "toolMetadata": {
         "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
           "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_serverendpoint_get",
+        "storagesync_serverendpoint_list"
+      ]
+    },
+    {
+      "name": "create_azure_storage_sync_services",
+      "description": "Create new Azure File Sync Storage Sync Services. A Storage Sync Service is the top-level resource for Azure File Sync deployments.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
           "value": false,
@@ -2373,11 +2397,403 @@
         }
       },
       "mappedToolList": [
-        "storagesync_serverendpoint_create",
-        "storagesync_serverendpoint_delete",
-        "storagesync_serverendpoint_get",
-        "storagesync_serverendpoint_list",
+        "storagesync_service_create"
+      ]
+    },
+    {
+      "name": "create_azure_storage_sync_groups",
+      "description": "Create new Azure File Sync Sync Groups. A Sync Group defines the synchronization topology for a set of cloud and server endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_syncgroup_create"
+      ]
+    },
+    {
+      "name": "create_azure_storage_sync_cloud_endpoints",
+      "description": "Create new Azure File Sync Cloud Endpoints. A Cloud Endpoint represents an Azure file share being synchronized.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_create"
+      ]
+    },
+    {
+      "name": "create_azure_storage_sync_server_endpoints",
+      "description": "Create new Azure File Sync Server Endpoints. A Server Endpoint represents a specific folder on a registered server that is being synchronized.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_serverendpoint_create"
+      ]
+    },
+    {
+      "name": "update_azure_storage_sync_services",
+      "description": "Update Azure File Sync Storage Sync Services configurations and settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_service_update"
+      ]
+    },
+    {
+      "name": "update_azure_storage_sync_registered_servers",
+      "description": "Update Azure File Sync Registered Server configurations and settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_registeredserver_update"
+      ]
+    },
+    {
+      "name": "update_azure_storage_sync_server_endpoints",
+      "description": "Update Azure File Sync Server Endpoint configurations and settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
         "storagesync_serverendpoint_update"
+      ]
+    },
+    {
+      "name": "delete_azure_storage_sync_services",
+      "description": "Delete Azure File Sync Storage Sync Services. Warning: This permanently removes the Storage Sync Service and all its associated sync groups and endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_service_delete"
+      ]
+    },
+    {
+      "name": "delete_azure_storage_sync_groups",
+      "description": "Delete Azure File Sync Sync Groups. Warning: This permanently removes the Sync Group and all its associated endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_syncgroup_delete"
+      ]
+    },
+    {
+      "name": "delete_azure_storage_sync_cloud_endpoints",
+      "description": "Delete Azure File Sync Cloud Endpoints. Warning: This stops synchronization for the associated Azure file share.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_delete"
+      ]
+    },
+    {
+      "name": "delete_azure_storage_sync_registered_servers",
+      "description": "Unregister Azure File Sync Registered Servers from a Storage Sync Service. Warning: This removes the server registration and stops synchronization for all associated server endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_registeredserver_unregister"
+      ]
+    },
+    {
+      "name": "delete_azure_storage_sync_server_endpoints",
+      "description": "Delete Azure File Sync Server Endpoints. Warning: This stops synchronization for the specified server folder.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_serverendpoint_delete"
+      ]
+    },
+    {
+      "name": "trigger_azure_storage_sync_cloud_endpoint_change_detection",
+      "description": "Trigger change detection on Azure File Sync Cloud Endpoints to force detection of changes in the Azure file share.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_changedetection"
       ]
     }
   ]
