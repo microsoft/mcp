@@ -90,6 +90,7 @@ jobs:
   - task: PowerShell@2
     displayName: Increment version
     inputs:
+      pwsh: true
       targetType: filePath
       filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
       arguments: >
