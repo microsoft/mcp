@@ -75,7 +75,17 @@
                     "description": "The encoding type.",
                     "enum": [
                         "UTF8"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "Encoding",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "UTF8",
+                                "description": "The encoding type is UTF8."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -110,7 +120,17 @@
                     "description": "The encoding type.",
                     "enum": [
                         "UTF8"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "Encoding",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "UTF8",
+                                "description": "The encoding type is UTF8."
+                            }
+                        ]
+                    }
                 },
                 "fieldDelimiter": {
                     "type": "string",
@@ -122,7 +142,21 @@
                     "enum": [
                         "WithHeaders",
                         "WithoutHeaders"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "Format",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "WithHeaders",
+                                "description": "The format includes headers."
+                            },
+                            {
+                                "value": "WithoutHeaders",
+                                "description": "The format does not include headers."
+                            }
+                        ]
+                    }
                 }
             }
         },

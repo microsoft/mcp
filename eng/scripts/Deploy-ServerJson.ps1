@@ -61,7 +61,7 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 $publishTarget = $buildInfo.publishTarget
-$matchingServer = $buildInfo.servers | Where-Object { $_.name -eq $ServerName }
+$matchingServer = @($buildInfo.servers | Where-Object { $_.name -eq $ServerName })
 
 if ($matchingServer.Count -eq 0) {
     LogError "No server found with name '$ServerName' in build info."

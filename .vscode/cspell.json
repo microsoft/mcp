@@ -35,7 +35,8 @@
         "**/obj/**",
         "**/tools/**/tests/test-resources-post.ps1",
         "!**/.devcontainer/**",
-        "**/Fabric.Mcp.Tools.PublicApi/src/Resources/**"
+        "**/Fabric.Mcp.Tools.PublicApi/src/Resources/**",
+        "**/Fabric.Mcp.Tools.OneLake/src/Resources/**"
     ],
     "dictionaryDefinitions": [
         {

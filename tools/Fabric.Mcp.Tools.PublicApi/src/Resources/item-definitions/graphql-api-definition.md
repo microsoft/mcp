@@ -1,13 +1,3 @@
----
-title: API for GraphQL definition
-description: Learn how to structure an GraphQLApi item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric GraphQLApi item definition
-author: vadeveka
-ms.author: vadeveka
-ms.service: fabric
-ms.date: 1/22/2025
----
-
 # API for GraphQL definition
 
 This article provides a breakdown of the definition structure for GraphQLApi items.
