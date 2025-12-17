@@ -136,7 +136,8 @@ namespace Azure.Mcp.Core.LiveTests.RecordingFramework
 
         public RecordedCommandTestsBaseTest()
         {
-            Fixture = new TestProxyFixture(Resolver);
+            Fixture = new TestProxyFixture();
+            Fixture.ConfigurePathResolver(Resolver);
         }
 
         [Fact]
