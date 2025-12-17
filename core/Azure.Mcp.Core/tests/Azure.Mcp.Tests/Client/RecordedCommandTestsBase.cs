@@ -16,8 +16,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
-    private static readonly SemaphoreSlim s_startProxyLock = new(1);
-
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
     protected string RecordingId { get; private set; } = string.Empty;
@@ -139,18 +137,10 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // load settings first to determine test mode
         await LoadSettingsAsync();
 
-        await s_startProxyLock.WaitAsync();
-        try
+        if (fixture.Proxy == null)
         {
-            if (fixture.Proxy == null)
-            {
-                // start the proxy if needed
-                await StartProxyAsync(fixture);
-            }
-        }
-        finally
-        {
-            s_startProxyLock.Release();
+            // start the proxy if needed
+            await StartProxyAsync(fixture);
         }
 
         // start MCP client with proxy URL available
