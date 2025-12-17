@@ -118,6 +118,22 @@ public sealed class RecordingPathResolver
     }
 
     /// <summary>
+    /// Generates a clear message for missing assets.json file to assist users in creating one when they hit the error.
+    /// </summary>
+    private string GetMissingAssetsExceptionContent(string testClass, string projectDir)
+    {
+        string projectDirName = new DirectoryInfo(projectDir).Name;
+
+        string emptyAssets = $@"{{
+    ""AssetsRepo"": ""Azure/azure-sdk-assets"",
+    ""TagPrefix"": ""{projectDirName}"",
+    ""Tag"": """"
+}}";
+
+        return $"Unable to locate assets.json for test type {testClass}. Create a file named \"assets.json\" within {projectDir} directory with content of \n{emptyAssets}";
+    }
+
+    /// <summary>
     /// Attempts to find a nearest assets.json walking upwards.
     /// </summary>
     public string GetAssetsJson(Type testType)
@@ -132,7 +148,7 @@ public sealed class RecordingPathResolver
         {
             return assetsFile;
         }
-
-        throw new FileNotFoundException($"Unable to locate assets.json for test type {testType.FullName} starting from {projectDir}.");
+        string exceptionContent = GetMissingAssetsExceptionContent(testType.FullName ?? "UnknownTestClass", projectDir);
+        throw new FileNotFoundException(exceptionContent);
     }
 }

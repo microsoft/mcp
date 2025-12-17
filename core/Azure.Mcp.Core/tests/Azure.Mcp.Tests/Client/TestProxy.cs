@@ -339,7 +339,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return;
         }
 
-        var proxyExe = GetExecutableFromAssetsDirectory() ?? await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
