@@ -46,6 +46,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure API
+- **REPOSITORY**: [Azure/azure-api-mcp](https://github.com/Azure/azure-api-mcp)
+- **DESCRIPTION**: A secure MCP server that provides controlled access to Azure CLI commands for LLM agents. Features multi-layer security validation, flexible authentication (workload identity, managed identity, service principal), and read-only mode support.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
+- **INSTALL**: [Azure/azure-api-mcp](https://github.com/Azure/azure-api-mcp)
+
 ### ✨ Microsoft Foundry
 - **DOCUMENTATION**: [Get started with Foundry MCP Server](https://learn.microsoft.com/azure/ai-foundry/mcp/get-started?view=foundry&tabs=user)
 - **DESCRIPTION**: A Model Context Protocol server for Microsoft Foundry, providing a unified set of tools for models, knowledge, evaluation, and more.
