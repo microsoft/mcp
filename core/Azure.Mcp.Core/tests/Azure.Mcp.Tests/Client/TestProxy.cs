@@ -83,8 +83,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             {
                 throw new InvalidOperationException("Unable to locate freshly downloaded test-proxy executable.");
             }
-
-            await RestoreAssetsAsync(_cachedExecutable, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
         }
         finally
         {
@@ -95,7 +93,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedExecutable;
     }
 
-    private async Task EnsureProxyRecordings(string repositoryRoot, string assetsJsonPath)
+    private async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath)
     {
         await s_downloadLock.WaitAsync().ConfigureAwait(false);
         FileStream? lockStream = null;
@@ -104,7 +102,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             var proxyDir = GetProxyDirectory();
             lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
 
-            await RestoreAssetsAsync(_cachedExecutable, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
+            await RestoreAssetsAsync(proxyExe, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
         }
         finally
         {
@@ -358,7 +356,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
-        await EnsureProxyRecordings(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
