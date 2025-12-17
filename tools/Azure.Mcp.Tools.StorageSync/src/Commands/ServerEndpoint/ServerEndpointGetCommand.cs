@@ -26,7 +26,7 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific server endpoint.";
+    public override string Description => "Get details about a specific server endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.";
 
     public override string Title => CommandTitle;
 
@@ -46,7 +46,7 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsOptional());
     }
 
     protected override ServerEndpointGetOptions BindOptions(ParseResult parseResult)
@@ -70,32 +70,54 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
 
         try
         {
-            _logger.LogInformation("Getting server endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.ServerEndpointName);
-
-            var endpoint = await _service.GetServerEndpointAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.SyncGroupName!,
-                options.ServerEndpointName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-
-            if (endpoint == null)
+            // If server endpoint name is provided, get specific endpoint
+            if (!string.IsNullOrEmpty(options.ServerEndpointName))
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = "Server endpoint not found";
-                return context.Response;
-            }
+                _logger.LogInformation("Getting server endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.ServerEndpointName);
 
-            var results = new ServerEndpointGetCommandResult(endpoint);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);
+                var endpoint = await _service.GetServerEndpointAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.SyncGroupName!,
+                    options.ServerEndpointName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (endpoint == null)
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = "Server endpoint not found";
+                    return context.Response;
+                }
+
+                var singleResult = new ServerEndpointGetCommandResult([endpoint]);
+                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);
+            }
+            else
+            {
+                // List all server endpoints
+                _logger.LogInformation("Listing server endpoints. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName);
+
+                var endpoints = await _service.ListServerEndpointsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.SyncGroupName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var results = new ServerEndpointGetCommandResult(endpoints ?? []);
+                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting server endpoint");
+            _logger.LogError(ex, "Error getting server endpoint(s)");
             HandleException(context, ex);
         }
 
@@ -103,5 +125,5 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
     }
 
     [JsonSerializable(typeof(ServerEndpointGetCommandResult))]
-    internal record ServerEndpointGetCommandResult(ServerEndpointDataSchema Result);
+    internal record ServerEndpointGetCommandResult(List<ServerEndpointDataSchema> Results);
 }

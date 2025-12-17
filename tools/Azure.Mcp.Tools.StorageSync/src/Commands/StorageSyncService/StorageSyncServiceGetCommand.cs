@@ -26,7 +26,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific Azure Storage Sync service.";
+    public override string Description => "Get details about a specific Azure Storage Sync service or list all services. If --name is provided, returns a specific service; otherwise, lists all services in the subscription or resource group.";
 
     public override string Title => CommandTitle;
 
@@ -43,8 +43,8 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsOptional());
     }
 
     protected override StorageSyncServiceGetOptions BindOptions(ParseResult parseResult)
@@ -66,30 +66,57 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
 
         try
         {
-            _logger.LogInformation("Getting storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
-                options.Subscription, options.ResourceGroup, options.Name);
-
-            var service = await _service.GetStorageSyncServiceAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-
-            if (service == null)
+            // If name is provided, get specific service
+            if (!string.IsNullOrEmpty(options.Name))
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = "Storage sync service not found";
-                return context.Response;
-            }
+                if (string.IsNullOrEmpty(options.ResourceGroup))
+                {
+                    context.Response.Status = HttpStatusCode.BadRequest;
+                    context.Response.Message = "Resource group is required when getting a specific storage sync service by name";
+                    return context.Response;
+                }
 
-            var results = new StorageSyncServiceGetCommandResult(service);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                _logger.LogInformation("Getting storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
+                    options.Subscription, options.ResourceGroup, options.Name);
+
+                var service = await _service.GetStorageSyncServiceAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.Name!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (service == null)
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = "Storage sync service not found";
+                    return context.Response;
+                }
+
+                var singleResult = new StorageSyncServiceGetCommandResult([service]);
+                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+            }
+            else
+            {
+                // List all services
+                _logger.LogInformation("Listing storage sync services. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
+                    options.Subscription, options.ResourceGroup);
+
+                var services = await _service.ListStorageSyncServicesAsync(
+                    options.Subscription!,
+                    options.ResourceGroup,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var results = new StorageSyncServiceGetCommandResult(services ?? []);
+                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting storage sync service");
+            _logger.LogError(ex, "Error getting storage sync service(s)");
             HandleException(context, ex);
         }
 
@@ -97,5 +124,5 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
     }
 
     [JsonSerializable(typeof(StorageSyncServiceGetCommandResult))]
-    internal record StorageSyncServiceGetCommandResult(StorageSyncServiceDataSchema Result);
+    internal record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
 }

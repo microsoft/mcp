@@ -26,7 +26,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific sync group.";
+    public override string Description => "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.";
 
     public override string Title => CommandTitle;
 
@@ -45,7 +45,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsOptional());
     }
 
     protected override SyncGroupGetOptions BindOptions(ParseResult parseResult)
@@ -68,31 +68,52 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
 
         try
         {
-            _logger.LogInformation("Getting sync group. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName);
-
-            var syncGroup = await _service.GetSyncGroupAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.SyncGroupName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-
-            if (syncGroup == null)
+            // If sync group name is provided, get specific sync group
+            if (!string.IsNullOrEmpty(options.SyncGroupName))
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = "Sync group not found";
-                return context.Response;
-            }
+                _logger.LogInformation("Getting sync group. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName);
 
-            var results = new SyncGroupGetCommandResult(syncGroup);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                var syncGroup = await _service.GetSyncGroupAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.SyncGroupName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (syncGroup == null)
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = "Sync group not found";
+                    return context.Response;
+                }
+
+                var singleResult = new SyncGroupGetCommandResult([syncGroup]);
+                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+            }
+            else
+            {
+                // List all sync groups
+                _logger.LogInformation("Listing sync groups. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName);
+
+                var syncGroups = await _service.ListSyncGroupsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var results = new SyncGroupGetCommandResult(syncGroups ?? []);
+                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting sync group");
+            _logger.LogError(ex, "Error getting sync group(s)");
             HandleException(context, ex);
         }
 
@@ -100,5 +121,5 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
     }
 
     [JsonSerializable(typeof(SyncGroupGetCommandResult))]
-    internal record SyncGroupGetCommandResult(SyncGroupDataSchema Result);
+    internal record SyncGroupGetCommandResult(List<SyncGroupDataSchema> Results);
 }

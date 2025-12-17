@@ -2227,8 +2227,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_service_get",
-        "storagesync_service_list"
+        "storagesync_service_get"
       ]
     },
     {
@@ -2261,8 +2260,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_syncgroup_get",
-        "storagesync_syncgroup_list"
+        "storagesync_syncgroup_get"
       ]
     },
     {
@@ -2295,8 +2293,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_cloudendpoint_get",
-        "storagesync_cloudendpoint_list"
+        "storagesync_cloudendpoint_get"
       ]
     },
     {
@@ -2329,8 +2326,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_registeredserver_get",
-        "storagesync_registeredserver_list"
+        "storagesync_registeredserver_get"
       ]
     },
     {
@@ -2363,8 +2359,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_serverendpoint_get",
-        "storagesync_serverendpoint_list"
+        "storagesync_serverendpoint_get"
       ]
     },
     {

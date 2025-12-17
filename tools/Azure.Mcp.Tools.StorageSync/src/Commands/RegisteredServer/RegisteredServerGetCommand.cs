@@ -26,7 +26,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific registered server.";
+    public override string Description => "Get details about a specific registered server or list all registered servers. If --server-id is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.";
 
     public override string Title => CommandTitle;
 
@@ -45,7 +45,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsOptional());
     }
 
     protected override RegisteredServerGetOptions BindOptions(ParseResult parseResult)
@@ -68,31 +68,52 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
 
         try
         {
-            _logger.LogInformation("Getting registered server. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, ServerId: {ServerId}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.RegisteredServerId);
-
-            var server = await _service.GetRegisteredServerAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.RegisteredServerId!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-
-            if (server == null)
+            // If server ID is provided, get specific server
+            if (!string.IsNullOrEmpty(options.RegisteredServerId))
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = "Registered server not found";
-                return context.Response;
-            }
+                _logger.LogInformation("Getting registered server. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, ServerId: {ServerId}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.RegisteredServerId);
 
-            var results = new RegisteredServerGetCommandResult(server);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+                var server = await _service.GetRegisteredServerAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.RegisteredServerId!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (server == null)
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = "Registered server not found";
+                    return context.Response;
+                }
+
+                var singleResult = new RegisteredServerGetCommandResult([server]);
+                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+            }
+            else
+            {
+                // List all registered servers
+                _logger.LogInformation("Listing registered servers. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName);
+
+                var servers = await _service.ListRegisteredServersAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var results = new RegisteredServerGetCommandResult(servers ?? []);
+                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting registered server");
+            _logger.LogError(ex, "Error getting registered server(s)");
             HandleException(context, ex);
         }
 
@@ -100,5 +121,5 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
     }
 
     [JsonSerializable(typeof(RegisteredServerGetCommandResult))]
-    internal record RegisteredServerGetCommandResult(RegisteredServerDataSchema Result);
+    internal record RegisteredServerGetCommandResult(List<RegisteredServerDataSchema> Results);
 }

@@ -26,7 +26,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific cloud endpoint.";
+    public override string Description => "Get details about a specific cloud endpoint or list all cloud endpoints. If --cloud-endpoint-name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the sync group.";
 
     public override string Title => CommandTitle;
 
@@ -46,7 +46,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Name.AsOptional());
     }
 
     protected override CloudEndpointGetOptions BindOptions(ParseResult parseResult)
@@ -70,32 +70,54 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
 
         try
         {
-            _logger.LogInformation("Getting cloud endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.CloudEndpointName);
-
-            var endpoint = await _service.GetCloudEndpointAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.SyncGroupName!,
-                options.CloudEndpointName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-
-            if (endpoint == null)
+            // If cloud endpoint name is provided, get specific endpoint
+            if (!string.IsNullOrEmpty(options.CloudEndpointName))
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = "Cloud endpoint not found";
-                return context.Response;
-            }
+                _logger.LogInformation("Getting cloud endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.CloudEndpointName);
 
-            var results = new CloudEndpointGetCommandResult(endpoint);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
+                var endpoint = await _service.GetCloudEndpointAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.SyncGroupName!,
+                    options.CloudEndpointName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (endpoint == null)
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = "Cloud endpoint not found";
+                    return context.Response;
+                }
+
+                var singleResult = new CloudEndpointGetCommandResult([endpoint]);
+                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
+            }
+            else
+            {
+                // List all cloud endpoints
+                _logger.LogInformation("Listing cloud endpoints. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}",
+                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName);
+
+                var endpoints = await _service.ListCloudEndpointsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.StorageSyncServiceName!,
+                    options.SyncGroupName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var results = new CloudEndpointGetCommandResult(endpoints ?? []);
+                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting cloud endpoint");
+            _logger.LogError(ex, "Error getting cloud endpoint(s)");
             HandleException(context, ex);
         }
 
@@ -103,5 +125,5 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
     }
 
     [JsonSerializable(typeof(CloudEndpointGetCommandResult))]
-    internal record CloudEndpointGetCommandResult(CloudEndpointDataSchema Result);
+    internal record CloudEndpointGetCommandResult(List<CloudEndpointDataSchema> Results);
 }

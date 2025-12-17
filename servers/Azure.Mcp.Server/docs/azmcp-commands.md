@@ -1901,14 +1901,11 @@ azmcp storagesync service delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name>
 
-# Get detailed properties of a specific Storage Sync Service
+# Get a specific Storage Sync Service or list all services. If --name is provided, returns a specific service; otherwise, lists all services.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service get --subscription <subscription> \
-                              --resource-group <resource-group> \
+                              [--resource-group <resource-group>] \
                               [--name <service-name>]
-
-# List all Storage Sync Services in a subscription
-azmcp storagesync service list --subscription <subscription> \
-                               [--resource-group <resource-group>]
 
 # Update an existing Storage Sync Service configuration
 azmcp storagesync service update --subscription <subscription> \
@@ -1934,18 +1931,12 @@ azmcp storagesync syncgroup delete --subscription <subscription> \
                                    --service <service-name> \
                                    --name <syncgroup-name>
 
-# Get detailed properties of a specific Sync Group
+# Get a specific Sync Group or list all sync groups. If --name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync Service.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync syncgroup get --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --service <service-name> \
                                 [--name <syncgroup-name>]
-
-# List all Sync Groups in a Storage Sync Service
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storagesync syncgroup list --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --service <service-name>
 ```
 
 #### Cloud Endpoint
@@ -1969,20 +1960,13 @@ azmcp storagesync cloudendpoint delete --subscription <subscription> \
                                        --syncgroup <syncgroup-name> \
                                        --name <endpoint-name>
 
-# Get detailed properties of a specific Cloud Endpoint
+# Get a specific Cloud Endpoint or list all cloud endpoints. If --name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the Sync Group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint get --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --service <service-name> \
                                     --syncgroup <syncgroup-name> \
                                     [--name <endpoint-name>]
-
-# List all Cloud Endpoints in a Sync Group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storagesync cloudendpoint list --subscription <subscription> \
-                                     --resource-group <resource-group> \
-                                     --service <service-name> \
-                                     --syncgroup <syncgroup-name>
 
 # Trigger change detection on a Cloud Endpoint
 azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
@@ -1996,18 +1980,12 @@ azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
 #### Registered Server
 
 ```bash
-# Get detailed properties of a specific Registered Server
+# Get a specific Registered Server or list all registered servers. If --server is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver get --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --service <service-name> \
                                        [--server <server-name>]
-
-# List all Registered Servers in a Storage Sync Service
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storagesync registeredserver list --subscription <subscription> \
-                                        --resource-group <resource-group> \
-                                        --service <service-name>
 
 # Register a new server with a Storage Sync Service
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2054,20 +2032,13 @@ azmcp storagesync serverendpoint delete --subscription <subscription> \
                                         --syncgroup <syncgroup-name> \
                                         --name <endpoint-name>
 
-# Get detailed properties of a specific Server Endpoint
+# Get a specific Server Endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint get --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --service <service-name> \
                                      --syncgroup <syncgroup-name> \
                                      [--name <endpoint-name>]
-
-# List all Server Endpoints in a Sync Group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storagesync serverendpoint list --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --service <service-name> \
-                                      --syncgroup <syncgroup-name>
 
 # Update a Server Endpoint configuration
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
