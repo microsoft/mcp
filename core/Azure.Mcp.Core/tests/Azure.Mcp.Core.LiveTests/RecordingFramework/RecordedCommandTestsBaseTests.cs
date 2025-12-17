@@ -46,7 +46,7 @@ namespace Azure.Mcp.Core.LiveTests.RecordingFramework
 
         /// <summary>
         /// Recursively delete a git directory. Calling Directory.Delete(path, true), to recursiverly delete a directory
-        /// that was populated from sparse-checkout, will fail. This is because the git files under .git\objects\pack 
+        /// that was populated from sparse-checkout, will fail. This is because the git files under .git\objects\pack
         /// have file attributes on them that will cause an UnauthorizedAccessException when trying to delete them. In order
         /// to delete it, the file attributes need to be set to Normal.
         /// </summary>

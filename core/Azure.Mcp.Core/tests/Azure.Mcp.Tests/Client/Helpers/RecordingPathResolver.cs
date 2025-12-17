@@ -120,7 +120,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     /// <summary>
     /// Generates a clear message for missing assets.json file to assist users in creating one when they hit the error.
     /// </summary>
-    private string GetMissingAssetsExceptionContent(string testClass, string projectDir)
+    private string BuildMissingAssetsErrorMessage(string testClass, string projectDir)
     {
         string projectDirName = new DirectoryInfo(projectDir).Name;
 
@@ -130,7 +130,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     ""Tag"": """"
 }}";
 
-        return $"Unable to locate assets.json for test type {testClass}. Create a file named \"assets.json\" within {projectDir} directory with content of \n{emptyAssets}";
+        return $"Unable to locate assets.json for test type {testClass}. Create a file named \"assets.json\" within {projectDir} directory with content of {Environment.NewLine}{emptyAssets}";
     }
 
     /// <summary>
@@ -148,7 +148,6 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
         {
             return assetsFile;
         }
-        string exceptionContent = GetMissingAssetsExceptionContent(testType.FullName ?? "UnknownTestClass", projectDir);
-        throw new FileNotFoundException(exceptionContent);
+        throw new FileNotFoundException(BuildMissingAssetsErrorMessage(testType.FullName ?? "UnknownTestClass", projectDir));
     }
 }

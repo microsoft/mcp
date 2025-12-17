@@ -7,24 +7,14 @@ namespace Azure.Mcp.Tests.Client.Helpers
     /// xUnit fixture that runs once per test class (or collection if used via [CollectionDefinition]).
     /// Provides optional access to a shared TestProxy via Proxy property if tests need it later.
     /// </summary>
-    public class TestProxyFixture : IAsyncLifetime
+    public class TestProxyFixture(IRecordingPathResolver? pathResolver = null) : IAsyncLifetime
     {
-        public TestProxyFixture()
-        {
-            PathResolver = new RecordingPathResolver();
-        }
-
-        public TestProxyFixture(IRecordingPathResolver pathResolver)
-        {
-            PathResolver = pathResolver ?? throw new ArgumentNullException(nameof(pathResolver));
-        }
+        public IRecordingPathResolver PathResolver { get; } = pathResolver ?? new RecordingPathResolver();
 
         /// <summary>
         /// Proxy instance created lazily. RecordedCommandTestsBase will start it after determining TestMode from LiveTestSettings.
         /// </summary>
         public TestProxy? Proxy { get; private set; }
-
-        public IRecordingPathResolver PathResolver { get; private set; }
 
         public ValueTask InitializeAsync()
         {
