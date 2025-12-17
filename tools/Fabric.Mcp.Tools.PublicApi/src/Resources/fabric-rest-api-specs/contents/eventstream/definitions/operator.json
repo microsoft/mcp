@@ -29,7 +29,8 @@
                         "Aggregate",
                         "GroupBy",
                         "Union",
-                        "Expand"
+                        "Expand",
+                        "SQL"
                     ],
                     "x-ms-enum": {
                         "name": "OperatorType",
@@ -62,6 +63,10 @@
                             {
                                 "value": "Expand",
                                 "description": "The operator expands the input data."
+                            },
+                            {
+                                "value": "SQL",
+                                "description": "The operator executes a SQL query on the input data."
                             }
                         ]
                     }
@@ -216,6 +221,25 @@
             ],
             "x-ms-discriminator-value": "Union"
         },
+        "SqlOperator": {
+            "type": "object",
+            "description": "SQL operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "SQL operator properties.",
+                    "$ref": "#/definitions/SqlOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "SQL"
+        },
         "AggregateOperatorProperties": {
             "type": "object",
             "description": "Aggregate operator properties.",
@@ -310,7 +334,21 @@
                     "enum": [
                         "Inner",
                         "LeftOuter"
-                    ]
+                    ],
+                    "x-ms-enum": {
+                        "name": "JoinType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Inner",
+                                "description": "Inner join."
+                            },
+                            {
+                                "value": "LeftOuter",
+                                "description": "Left outer join."
+                            }
+                        ]
+                    }
                 },
                 "joinOn": {
                     "type": "array",
@@ -344,6 +382,19 @@
             "type": "object",
             "description": "Union operator properties.",
             "properties": {}
+        },
+        "SqlOperatorProperties": {
+            "type": "object",
+            "description": "SQL operator properties.",
+            "required": [
+                "query"
+            ],
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The Azure Stream Analytics & Eventstream Query to execute. Language reference documentation can be found [here](https://learn.microsoft.com/en-us/stream-analytics-query/stream-analytics-query-language-reference)."
+                }
+            }
         }
     }
 }

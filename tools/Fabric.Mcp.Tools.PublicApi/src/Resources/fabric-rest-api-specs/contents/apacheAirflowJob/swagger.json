@@ -136,7 +136,7 @@
     "/workspaces/{workspaceId}/ApacheAirflowJobs/{ApacheAirflowJobId}": {
       "get": {
         "summary": "Returns properties of the specified Apache Airflow job.",
-        "description": "## Permissions\n\n The caller must have *read* permissions for the apache airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -244,7 +244,7 @@
       },
       "delete": {
         "summary": "Deletes the specified Apache Airflow job.",
-        "description": "## Permissions\n\n The caller must have *write* permissions for the apache airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -442,6 +442,283 @@
         "x-ms-examples": {
           "Update an Apache Airflow job public definition example": {
             "$ref": "./examples/UpdateApacheAirflowJobDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/ApacheAirflowJobs/{ApacheAirflowJobId}/files": {
+      "get": {
+        "summary": "Returns a list of Apache Airflow job files from the specified Apache Airflow job.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes \n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Root path query parameter must start with `dags/` or `plugins/`.\n- Listing files is not recursive; only the specified folder is returned.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_ListApacheAirflowJobFiles",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "ApacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "rootPath",
+            "description": "The folder path to list. If not provided, the root directory is used.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ApacheAirflowJobFiles"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested path was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Apache Airflow job files example": {
+            "$ref": "./examples/ListApacheAirflowJobFiles.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/ApacheAirflowJobs/{ApacheAirflowJobId}/files/{filePath}": {
+      "get": {
+        "summary": "Returns the specified Apache Airflow job file.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Text files are returned using UTF-8 encoding; binary files are returned as-is.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_GetApacheAirflowJobFile",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "ApacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "filePath",
+            "description": "The file path relative to the Apache Airflow job root. It must begin with either 'dags/' or 'plugins/' (for example, `dags/example_dag.py`).",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. Contains the file content in binary. Text files are UTF-8 encoded.",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested file was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get an Apache Airflow job file example": {
+            "$ref": "./examples/GetApacheAirflowJobFile.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Creates or updates an Apache Airflow job file.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Supported file types include binary files (sent as-is) and UTF-8 encoded text files such as Python, YAML, XML, JSON, and SQL.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_CreateOrUpdateApacheAirflowJobFile",
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "ApacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "filePath",
+            "description": "The file path relative to the Apache Airflow job root. It must begin with either 'dags/' or 'plugins/' (for example, `dags/example_dag.py`).",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          },
+          {
+            "in": "body",
+            "name": "fileContents",
+            "description": "The file content. Text files must be UTF-8 encoded.",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* Forbidden - The caller doesn't have permissions to call the API.\n\n* InternalServerError - An unexpected error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create or update an Apache Airflow job plain text file example": {
+            "$ref": "./examples/CreateOrUpdateApacheAirflowJobFilePlainText.json"
+          },
+          "Create or update an Apache Airflow job binary file example": {
+            "$ref": "./examples/CreateOrUpdateApacheAirflowJobFileBinary.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified Apache Airflow job file.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_DeleteApacheAirflowJobFile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "ApacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "filePath",
+            "description": "The file path relative to the Apache Airflow job root. It must begin with either 'dags/' or 'plugins/' (for example, `dags/example_dag.py`).",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested file was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete an Apache Airflow job file example": {
+            "$ref": "./examples/DeleteApacheAirflowJobFile.json"
           }
         }
       }

@@ -4,15 +4,35 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
-public class QuotaCommandTests : CommandTestsBase
+public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public QuotaCommandTests(ITestOutputHelper output) : base(output)
-    {
-    }
+    /// <summary>
+    /// Disable the default sanitizer that redacts all JSON properties named "name". We need this
+    /// to stick around so that we can verify that the expected resource names are present in the responses.
+    /// Names are not unique and can be shared publicly, so there is no security risk in leaving them in the recordings.
+    /// AZSDK3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers => [
+        .. base.BodyKeySanitizers,
+        // the default sanitizers take care of everything for the most part, but roleDefinitionId
+        // is one value that ISN'T cleaned out by the default sanitizers. No reason to share these ids in recordings.
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..roleDefinitionId")
+        {
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+    ];
 
     [Fact]
     public async Task Should_check_azure_quota()
