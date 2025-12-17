@@ -56,7 +56,8 @@
                             "onelake"
                         ],
                         "markdownEnumDescriptions": [
-                            "Fabric public APIs — Container registry management."
+                            "Fabric public APIs — Fabric public APIs specifications and examples.",
+                            "OneLake — Manage and interact with OneLake data lake storage."
                         ]
                     },
                     "uniqueItems": true,
