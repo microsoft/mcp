@@ -223,20 +223,13 @@ public class MarketplaceService(ITenantService tenantService)
     )
     {
         // Use Azure Core pipeline approach consistently
-        var clientOptions = AddDefaultPolicies(new MarketplaceClientOptions());
+        using var httpClient = TenantService.GetClient();
+        var clientOptions = ConfigureRetryPolicy(
+            AddDefaultPolicies(new MarketplaceClientOptions()),
+            retryPolicy);
+        clientOptions.Transport = new HttpClientTransport(httpClient);
 
-        // Configure retry policy if provided
-        if (retryPolicy != null)
-        {
-            clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
-            clientOptions.Retry.Mode = retryPolicy.Mode;
-            clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
-
-        // Create pipeline
-        var pipeline = HttpPipelineBuilder.Build(clientOptions);
+        using var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
         string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, cancellationToken)).Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));

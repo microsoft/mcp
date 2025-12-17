@@ -2,47 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Helpers;
-using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-public class ProductListCommandTests : CommandTestsBase
+public sealed class ProductListCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private const string ProductsKey = "products";
     private const string Language = "en";
-    private readonly MarketplaceService _marketplaceService;
-    private readonly ServiceProvider _httpClientProvider;
-
-    public ProductListCommandTests(ITestOutputHelper output) : base(output)
-    {
-        var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create();
-        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
-        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
-        _marketplaceService = new MarketplaceService(tenantService);
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _httpClientProvider.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
 
     [Fact]
     public async Task Should_list_marketplace_products()
