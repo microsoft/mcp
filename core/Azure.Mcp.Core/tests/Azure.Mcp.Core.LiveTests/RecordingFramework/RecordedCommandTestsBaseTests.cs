@@ -15,6 +15,7 @@ using Xunit;
 using Xunit.v3;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
+
 internal sealed class TemporaryAssetsPathResolver : IRecordingPathResolver, IDisposable
 {
     private readonly RecordingPathResolver _inner = new();
