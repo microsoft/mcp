@@ -1,0 +1,22 @@
+{
+  "value": {
+    "id": "/workspaces/00000000-0000-0000-0000-000000000000/snowflakeDatabases/mySnowflakeDb",
+    "name": "mySnowflakeDb",
+    "type": "Microsoft.Fabric/workspaces/snowflakeDatabases",
+    "properties": {
+      "provisioningState": "Creating",
+      "displayName": "My Snowflake Database",
+      "description": "Example Snowflake database integrated with Microsoft Fabric",
+      "connectionStatus": "Connecting",
+      "connectionDetails": {
+        "snowflakeAccount": "myaccount.snowflakecomputing.com",
+        "snowflakeWarehouse": "COMPUTE_WH",
+        "database": "MYDATABASE"
+      }
+    }
+  },
+  "status": 202,
+  "location": "https://api.fabric.microsoft.com/v1/workspaces/00000000-0000-0000-0000-000000000000/operations/12345678-1234-1234-1234-123456789012?api-version=2023-12-01",
+  "azureAsyncOperation": "https://api.fabric.microsoft.com/v1/workspaces/00000000-0000-0000-0000-000000000000/operations/12345678-1234-1234-1234-123456789012?api-version=2023-12-01",
+  "retryAfter": 30
+}

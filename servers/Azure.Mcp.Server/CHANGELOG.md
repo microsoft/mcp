@@ -13,6 +13,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **CloudEndpoint** commands (5): Create, Delete, Get, List, TriggerChangeDetection
   - **ServerEndpoint** commands (5): Create, Delete, Get, List, Update
 
+- Added support logging capability with `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
 ### Breaking Changes

@@ -1,0 +1,445 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SnowflakeDatabase REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/snowflakeDatabases": {
+      "get": {
+        "summary": "Returns a list of SnowflakeDatabase items from the specified Fabric workspace.",
+        "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListSnowflakeDatabases",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SnowflakeDatabases"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Snowflake Databases in workspace example": {
+            "$ref": "./examples/ListSnowflakeDatabasesInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a Snowflake Database item in the specified Fabric workspace.",
+        "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateSnowflakeDatabase",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createSnowflakeDatabaseRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateSnowflakeDatabaseRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SnowflakeDatabase"
+            }
+          },
+          "202": {
+            "description": "Request accepted, Snowflake Database provisioning in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a Snowflake Database with creation payload example": {
+            "$ref": "./examples/CreateSnowflakeDatabaseWithPayload.json"
+          },
+          "Create a Snowflake Database without creation payload example": {
+            "$ref": "./examples/CreateSnowflakeDatabaseWithoutPayload.json"
+          },
+          "Create a Snowflake Database with definition example": {
+            "$ref": "./examples/CreateSnowflakeDatabaseWithDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/snowflakeDatabases/{snowflakeDatabaseId}": {
+      "get": {
+        "summary": "Returns properties of the specified Snowflake Database item.",
+        "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the snowflake database. \n\n## Required Delegated Scopes \n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetSnowflakeDatabase",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "snowflakeDatabaseId",
+            "description": "The Snowflake Database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SnowflakeDatabase"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Item not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get Snowflake Database example": {
+            "$ref": "./examples/GetSnowflakeDatabase.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified Snowflake Database item.",
+        "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *write* permissions for the snowflake database. \n\n## Required Delegated Scopes \n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteSnowflakeDatabase",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "snowflakeDatabaseId",
+            "description": "The Snowflake Database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted the Snowflake Database."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Item not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete Snowflake Database example": {
+            "$ref": "./examples/DeleteSnowflakeDatabase.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update properties of the Snowflake Database item.",
+        "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read and write* permissions for the snowflake database. \n\n## Required Delegated Scopes \n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateSnowflakeDatabase",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "snowflakeDatabaseId",
+            "description": "The Snowflake Database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateSnowflakeDatabaseRequest",
+            "description": "Update item payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateSnowflakeDatabaseRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SnowflakeDatabase"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Item not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update Snowflake Database example": {
+            "$ref": "./examples/UpdateSnowflakeDatabase.json"
+          }
+        }
+      }
+     },
+    "/workspaces/{workspaceId}/snowflakeDatabases/{snowflakeDatabaseId}/getDefinition": {
+        "post": {
+          "summary": "Returns the specified Snowflake Database public definition.",
+          "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the snowflake database. \n\n## Required Delegated Scopes \n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "tags": [
+            "Items"
+          ],
+          "operationId": "Items_GetSnowflakeDatabaseDefinition",
+          "produces": [
+            "application/json"
+          ],
+          "x-ms-fabric-sdk-long-running-operation": true,
+          "parameters": [
+            {
+              "in": "path",
+              "name": "workspaceId",
+              "description": "The workspace ID.",
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            },
+            {
+              "in": "path",
+              "name": "snowflakeDatabaseId",
+              "description": "The Snowflake Database ID.",
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Request completed successfully.",
+              "schema": {
+                "$ref": "./definitions.json#/definitions/SnowflakeDatabaseDefinitionResponse"
+              }
+            },
+            "202": {
+              "description": "Request accepted. Retrieving the definition is in progress.",
+              "headers": {
+                "Location": {
+                  "description": "The URL of the operation status, which can be used to track the operation state.",
+                  "type": "string"
+                },
+                "x-ms-operation-id": {
+                  "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "Retry-After": {
+                  "type": "integer",
+                  "description": "The number of seconds to wait before retrying the request."
+                }
+              }
+            },
+            "default": {
+              "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+              "schema": {
+                "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+              }
+            }
+          },
+          "x-ms-examples": {
+            "Get Snowflake Database definition example": {
+              "$ref": "./examples/GetSnowflakeDatabaseDefinition.json"
+            }
+          }
+        }
+      },
+    "/workspaces/{workspaceId}/snowflakeDatabases/{snowflakeDatabaseId}/updateDefinition": {
+        "post": {
+          "summary": "Overrides the definition for the specified Snowflake Database.",
+          "description": "> [!NOTE]\n> SnowflakeDatabase item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the snowflake database. \n\n## Required Delegated Scopes \n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "tags": [
+            "Items"
+          ],
+          "operationId": "Items_UpdateSnowflakeDatabaseDefinition",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "x-ms-fabric-sdk-long-running-operation": true,
+          "parameters": [
+            {
+              "in": "path",
+              "name": "workspaceId",
+              "description": "The workspace ID.",
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            },
+            {
+              "in": "path",
+              "name": "snowflakeDatabaseId",
+              "description": "The Snowflake Database ID.",
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            },
+            {
+              "in": "body",
+              "name": "updateSnowflakeDatabaseDefinitionRequest",
+              "description": "Update Snowflake Database definition request payload.",
+              "schema": {
+                "$ref": "./definitions.json#/definitions/UpdateSnowflakeDatabaseDefinitionRequest"
+              },
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Request completed successfully."
+            },
+            "202": {
+              "description": "Request accepted. Update definition is in progress.",
+              "headers": {
+                "Location": {
+                  "description": "The URL of the operation status, which can be used to track the operation state.",
+                  "type": "string"
+                },
+                "x-ms-operation-id": {
+                  "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "Retry-After": {
+                  "type": "integer",
+                  "description": "The number of seconds to wait before retrying the request."
+                }
+              }
+            },
+            "default": {
+              "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+              "schema": {
+                "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+              }
+            }
+          },
+          "x-ms-examples": {
+            "Update Snowflake Database definition example": {
+              "$ref": "./examples/UpdateSnowflakeDatabaseDefinition.json"
+            }
+          }
+        }
+      }
+    }
+  }

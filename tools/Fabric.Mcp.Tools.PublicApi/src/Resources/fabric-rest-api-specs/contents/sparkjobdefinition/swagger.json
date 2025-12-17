@@ -63,7 +63,7 @@
       },
       "post": {
         "summary": "Creates a spark job definition in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create spark job definition with a public definition, refer to [Spark job definition](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) article. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a spark job definition the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for `SparkJobDefinitionV2` format. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a spark job definition the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -102,7 +102,7 @@
             }
           },
           "202": {
-            "description": "Request accepted, spark job definition provisioning in progress.",
+            "description": "Request accepted, spark job definition provisioning in progress. For details on how to retrieve the long-running operation result, see [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result).",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",
@@ -132,6 +132,9 @@
           },
           "Create a spark job definition with public definition example": {
             "$ref": "./examples/CreateSparkJobDefinition.json"
+          },
+          "Create a spark job definition with public definition and inline files example": {
+            "$ref": "./examples/CreateSparkJobDefinitionWithInlineFiles.json"
           }
         }
       }
@@ -323,8 +326,23 @@
           {
             "in": "query",
             "name": "format",
-            "description": "The format of the spark job definition public definition.",
             "type": "string",
+            "description": "The format of the request. Can be either `SparkJobDefinitionV1` or `SparkJobDefinitionV2`. Additional Format types may be added over time.",
+            "enum": ["SparkJobDefinitionV1", "SparkJobDefinitionV2"],
+            "x-ms-enum": {
+                "name": "SparkJobDefinitionFormat",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "SparkJobDefinitionV1",
+                        "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for more details."
+                    },
+                    {
+                        "value": "SparkJobDefinitionV2",
+                        "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for more details."
+                    }
+                ]
+            },
             "required": false
           }
         ],
@@ -336,7 +354,7 @@
             }
           },
           "202": {
-            "description": "Request accepted. Retrieving the definition is in progress.",
+            "description": "Request accepted. Retrieving the definition is in progress. For details on how to retrieve the long-running operation result, see [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result). For details on what the response contains, see [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article. Note that the `format` field will not be included in the response payload.",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",
@@ -363,6 +381,9 @@
         "x-ms-examples": {
           "Get a spark job definition public definition example": {
             "$ref": "./examples/GetSparkJobDefinitionDefinition.json"
+          },
+          "Get a spark job definition public definition example with SparkJobDefinitionV2 format": {
+            "$ref": "./examples/GetSparkJobDefinitionDefinitionV2.json"
           }
         }
       }
@@ -370,7 +391,7 @@
     "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified spark job definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the spark job definition's definition, does not affect its sensitivity label. \n\n## Permissions\n\nThe caller must have *read and write* permissions for the spark job definition.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To update spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for `SparkJobDefinitionV2` format. \n\n \nUpdating the spark job definition's definition does not affect its sensitivity label. \n\n## Permissions\n\nThe caller must have *read and write* permissions for the spark job definition.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -418,7 +439,7 @@
             "description": "Request completed successfully."
           },
           "202": {
-            "description": "Request accepted. Update definition is in progress.",
+            "description": "Request accepted. Update definition is in progress. For details on how to retrieve the long-running operation result, see [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result).",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",
@@ -443,16 +464,19 @@
           }
         },
         "x-ms-examples": {
-          "Update a spark job definition public definition example": {
+          "Update a spark job definition with public definition example": {
             "$ref": "./examples/UpdateSparkJobDefinitionDefinition.json"
+          },
+          "Update a spark job definition with public definition and inline files example": {
+            "$ref": "./examples/UpdateSparkJobDefinitionWithInlineFiles.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/jobs/instances?jobType=sparkjob": {
+    "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/jobs/sparkjob/instances": {
       "post": {
         "summary": "Run on-demand [Spark job definition](/fabric/data-engineering/run-spark-job-definition) job instance.",
-        "description": "## Required Delegated Scopes\n\nSparkJobDefinition.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n## Required Delegated Scopes\n\nSparkJobDefinition.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -475,13 +499,6 @@
             "description": "The Spark job definition item ID.",
             "type": "string",
             "format": "uuid",
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "jobType",
-            "description": "The supported job type for Spark job definition is `sparkjob`.",
-            "type": "string",
             "required": true
           },
           {
@@ -531,7 +548,7 @@
           "LivySessions"
         ],
         "summary": "Returns a list of livy sessions from the specified item identifier.",
-        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the spark job definition. \n\n## Required Delegated Scopes \n\n SparkJobDefinition.Read.All or SparkJobDefinition.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\n SparkJobDefinition.Read.All or SparkJobDefinition.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "LivySessions_ListLivySessions",
         "x-ms-pageable": {
           "nextLinkName": "continuationUri"
@@ -584,104 +601,6 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/livySessions?preview=true": {
-      "get": {
-        "tags": [
-          "LivySessions"
-        ],
-        "summary": "Returns a list of livy sessions from the specified item identifier (preview).",
-        "description": "[!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the spark job definition. \n\n## Required Delegated Scopes \n\n SparkJobDefinition.Read.All or SparkJobDefinition.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "LivySessions_List_Livy_Sessions_(preview)",
-        "x-ms-pageable": {
-          "nextLinkName": "continuationUri"
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceId",
-            "description": "The workspace identifier.",
-            "format": "uuid",
-            "type": "string",
-            "required": true
-          },
-          {
-            "in": "path",
-            "name": "sparkJobDefinitionId",
-            "description": "The sparkJobDefinition ID.",
-            "type": "string",
-            "format": "uuid",
-            "required": true
-          },
-          {
-              "in": "query",
-              "name": "preview",
-              "description": "This required parameter must be set to `true` to access this API, which is currently in preview.",
-              "type": "boolean",
-              "required": true
-          },
-          {
-              "in": "query",
-              "name": "submittedDateTime",
-              "description": "Submitted date time filter. Filter the sessions based on the submitted date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
-              "type": "string",
-              "format": "date-time",
-              "required": false
-          },
-          {
-              "in": "query",
-              "name": "endDateTime",
-              "description": "Ended date time filter. Filter the sessions based on the ended date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
-              "type": "string",
-              "format": "date-time",
-              "required": false
-          },
-          {
-              "in": "query",
-              "name": "submitter.Id",
-              "description": "The GUID value of the user who submitted the session.",
-              "type": "string",
-              "format": "uuid",
-              "required": false
-          },
-          {
-              "in": "query",
-              "name": "state",
-              "description": "The state of the session. Possible values are: `NotStarted`, `InProgress`, `Cancelled`, `Failed`, `Succeeded`, `Unknown`. This value maps to the `state` field in the response.",
-              "type": "string",
-              "required": false
-          },
-          {
-            "in": "query",
-            "name": "continuationToken",
-            "description": "Token to retrieve the next page of results, if available.",
-            "type": "string",
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK -- Returns a list of all livy sessions associated to an itemId.",
-            "schema": {
-              "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
-            }
-          },
-          "default": {
-            "description": "Common error codes:\n\n* SparkCoreItemNotFound - SparkJobDefinition identifier does not exist\n\n* SparkCoreUnexpectedException - Unhandled exception ocurred.",
-            "schema": {
-              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-            }
-          }
-        },
-        "x-ms-examples": {
-          "List all livy sessions (Preview) example": {
-            "$ref": "./examples/ListSessionsInItemId_preview.json"
-          }
-        }
-      }
-    },
     "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/livySessions/{livyId}": {
       "get": {
         "tags": [
@@ -689,7 +608,7 @@
         ],
         "operationId": "LivySessions_GetLivySession",
         "summary": "Returns properties of the specified livy session.",
-        "description": "## Permissions\n\n The caller must have *read* permissions for the spark job definition. \n\n## Required Delegated Scopes \n\n SparkJobDefinition.Read.All or SparkJobDefinition.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\n SparkJobDefinition.Read.All or SparkJobDefinition.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "produces": [
           "application/json"
         ],
