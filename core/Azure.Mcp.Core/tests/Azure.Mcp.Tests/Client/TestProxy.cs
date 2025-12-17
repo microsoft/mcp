@@ -95,6 +95,24 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedExecutable;
     }
 
+    private async Task EnsureProxyRecordings(string repositoryRoot, string assetsJsonPath)
+    {
+        await s_downloadLock.WaitAsync().ConfigureAwait(false);
+        FileStream? lockStream = null;
+        try
+        {
+            var proxyDir = GetProxyDirectory();
+            lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
+
+            await RestoreAssetsAsync(_cachedExecutable, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
+        }
+        finally
+        {
+            lockStream?.Dispose();
+            s_downloadLock.Release();
+        }
+    }
+
     private async Task DownloadProxyAsync(string proxyDirectory, string version)
     {
         var assetName = GetAssetNameForPlatform();
@@ -340,6 +358,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        await EnsureProxyRecordings(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
