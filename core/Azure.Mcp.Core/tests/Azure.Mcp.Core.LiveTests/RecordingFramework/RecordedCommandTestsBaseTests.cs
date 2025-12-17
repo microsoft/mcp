@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
@@ -13,13 +16,129 @@ using Xunit.v3;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
+internal sealed class TemporaryAssetsPathResolver : IRecordingPathResolver, IDisposable
+{
+    private readonly RecordingPathResolver _inner = new();
+    private readonly string _repositoryRoot;
+    private readonly string _tempDirectory;
+    private readonly string _assetsPath;
+    private bool _disposed;
+
+    public TemporaryAssetsPathResolver()
+    {
+        _repositoryRoot = Path.Combine(Path.GetTempPath(), "mcp-recordings-harness-tests");
+
+        if (Directory.Exists(_repositoryRoot))
+        {
+            DeleteGitDirectory(_repositoryRoot);
+        }
+        Directory.CreateDirectory(_repositoryRoot);
+
+        // write an empty file named .git to simulate a repository root
+        var gitMarkerPath = Path.Combine(_repositoryRoot, ".git");
+        using (File.Create(gitMarkerPath))
+        { }
+
+        _tempDirectory = Path.Combine(_repositoryRoot, "tools", "fake-tool");
+        Directory.CreateDirectory(_tempDirectory);
+        _assetsPath = Path.Combine(_tempDirectory, "assets.json");
+    }
+
+    /// <summary>
+    /// Recursively delete a git directory. Calling Directory.Delete(path, true), to recursiverly delete a directory
+    /// that was populated from sparse-checkout, will fail. This is because the git files under .git\objects\pack
+    /// have file attributes on them that will cause an UnauthorizedAccessException when trying to delete them. In order
+    /// to delete it, the file attributes need to be set to Normal.
+    /// </summary>
+    /// <param name="directory">The git directory to delete</param>
+    public static void DeleteGitDirectory(string directory)
+    {
+        File.SetAttributes(directory, FileAttributes.Normal);
+
+        string[] files = Directory.GetFiles(directory);
+        string[] dirs = Directory.GetDirectories(directory);
+
+        foreach (string file in files)
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+            File.Delete(file);
+        }
+
+        foreach (string dir in dirs)
+        {
+            DeleteGitDirectory(dir);
+        }
+
+        Directory.Delete(directory, false);
+    }
+
+    public string RepositoryRoot => _repositoryRoot;
+
+    public string GetSessionDirectory(Type testType, string? variantSuffix = null)
+    {
+        return _inner.GetSessionDirectory(testType, variantSuffix);
+    }
+
+    public string GetAssetsJson(Type testType)
+    {
+        var tagPrefix = testType.Assembly.GetName().Name ?? testType.Name;
+        var json = $@"
+    {{
+        ""AssetsRepo"": ""Azure/azure-sdk-assets"",
+        ""AssetsRepoPrefixPath"": """",
+        ""TagPrefix"": ""{tagPrefix}"",
+        ""Tag"": """"
+    }}
+    ";
+        File.WriteAllText(_assetsPath, json, Encoding.UTF8);
+        return _assetsPath;
+    }
+
+    /// <summary>
+    /// Cleanup temp assets file. Not strictly necessary but keeps things tidy.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        _disposed = true;
+
+        try
+        {
+            if (File.Exists(_assetsPath))
+            {
+                File.Delete(_assetsPath);
+            }
+            if (Directory.Exists(_repositoryRoot))
+            {
+                DeleteGitDirectory(_repositoryRoot);
+            }
+        }
+        catch
+        {
+            // ignore cleanup failures
+        }
+    }
+}
+
+
+
 public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 {
     private string RecordingFileLocation = string.Empty;
     private string TestDisplayName = string.Empty;
-    private TestProxyFixture Fixture = new TestProxyFixture();
+    private readonly TemporaryAssetsPathResolver Resolver = new();
+    private readonly TestProxyFixture Fixture;
     private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
     private RecordedCommandTestHarness? DefaultHarness;
+
+    public RecordedCommandTestsBaseTest()
+    {
+        Fixture = new TestProxyFixture();
+        Fixture.ConfigurePathResolver(Resolver);
+    }
 
     [Fact]
     public async Task ProxyRecordProducesRecording()
@@ -32,9 +151,11 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         DefaultHarness!.RegisterVariable("sampleKey", "sampleValue");
         await DefaultHarness!.DisposeAsync();
 
-        Assert.True(File.Exists(RecordingFileLocation));
+        var recordingPath = Path.Combine(Fixture.PathResolver.RepositoryRoot, ".assets", "437w6mqk5i", RecordingFileLocation);
 
-        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(RecordingFileLocation, TestContext.Current.CancellationToken));
+        Assert.True(File.Exists(recordingPath));
+
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(recordingPath, TestContext.Current.CancellationToken));
         Assert.True(document.RootElement.TryGetProperty("Variables", out var variablesElement));
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
     }
@@ -154,7 +275,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
             DesiredMode = TestMode.Record
         };
 
-        RecordingFileLocation = harness.GetRecordingAbsolutePath(TestDisplayName);
+        RecordingFileLocation = harness.GetSessionFilePath(TestDisplayName);
 
         if (File.Exists(RecordingFileLocation))
         {
@@ -175,5 +296,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 
         // automatically collect the proxy fixture so that writers of tests don't need to remember to do so and the proxy process doesn't run forever
         await Fixture.DisposeAsync();
+        Resolver.Dispose();
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using System;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers
@@ -7,23 +7,9 @@ namespace Azure.Mcp.Tests.Client.Helpers
     /// xUnit fixture that runs once per test class (or collection if used via [CollectionDefinition]).
     /// Provides optional access to a shared TestProxy via Proxy property if tests need it later.
     /// </summary>
-    public sealed class TestProxyFixture : IAsyncLifetime
+    public class TestProxyFixture : IAsyncLifetime
     {
-        public static string DetermineRepositoryRoot()
-        {
-            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
-            while (!string.IsNullOrEmpty(path))
-            {
-                // we look for both directory and file because depending on user git config the .git may be a file instead of a directory
-                if (Directory.Exists(Path.Combine(path, ".git")) || File.Exists(Path.Combine(path, ".git")))
-                    return path;
-                var parent = Path.GetDirectoryName(path);
-                if (string.IsNullOrEmpty(parent) || parent == path)
-                    break;
-                path = parent;
-            }
-            return Environment.CurrentDirectory;
-        }
+        public IRecordingPathResolver PathResolver { get; private set; } = new RecordingPathResolver();
 
         /// <summary>
         /// Proxy instance created lazily. RecordedCommandTestsBase will start it after determining TestMode from LiveTestSettings.
@@ -35,11 +21,12 @@ namespace Azure.Mcp.Tests.Client.Helpers
             return ValueTask.CompletedTask;
         }
 
-        public async Task StartProxyAsync()
+        public async Task StartProxyAsync(string assetsJsonPath)
         {
-            var root = DetermineRepositoryRoot();
-            Proxy = new TestProxy();
-            await Proxy.Start(root);
+            var root = PathResolver.RepositoryRoot;
+            var proxy = new TestProxy();
+            await proxy.Start(root, assetsJsonPath);
+            Proxy = proxy;
         }
 
         public ValueTask DisposeAsync()
@@ -49,6 +36,17 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 Proxy.Dispose();
             }
             return ValueTask.CompletedTask;
+        }
+
+        /// <summary>
+        /// XUnit class fixtures are created via parameterless constructor, so this method allows configuring a custom path resolver after construction.
+        /// This is necessary if we want to atomically resolve paths in a different way than the default RecordingPathResolver. Unfortunately due to limitations
+        /// with xunit classfixture instantiation we cannot pass parameters to the constructor, EVEN IF they are nullable and have a default.
+        /// </summary>
+        /// <param name="pathResolver"></param>
+        public void ConfigurePathResolver(IRecordingPathResolver pathResolver)
+        {
+            PathResolver = pathResolver;
         }
 
         public Uri? GetProxyUri()
