@@ -52,7 +52,8 @@
                     "items": {
                         "type": "string",
                         "enum": [
-                            "publicapis"
+                            "publicapis",
+                            "onelake"
                         ],
                         "markdownEnumDescriptions": [
                             "Fabric public APIs — Container registry management."
@@ -66,7 +67,7 @@
                     "type": "string",
                     "enum": ["single", "namespace", "all"],
                     "default": "all",
-                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` collapses all tools down into logical Fabric service namespace grouping, while `all` (default) exposes every MCP tool directly to the MCP client. We recommend all as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool into one single tool that routes internally, `namespace` collapses all tools down into logical Fabric service namespace grouping, while `all` (default) exposes every MCP tool directly to the MCP client. We recommend all as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
 
                 },
                 "fabricMcp.readOnly": {
