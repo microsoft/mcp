@@ -159,7 +159,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
-            OutgoingAuthStrategy = outgoingAuthStrategy
+            OutgoingAuthStrategy = outgoingAuthStrategy,
             SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name)
         };
         return options;
