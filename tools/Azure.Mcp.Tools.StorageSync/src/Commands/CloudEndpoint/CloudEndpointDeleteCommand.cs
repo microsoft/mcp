@@ -20,7 +20,7 @@ public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteComman
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointDeleteCommand> _logger = logger;
 
-    public override string Id => "p2s8t0r4-7q9u-9s3t-4r8u-1t4s7u0v4w5x";
+    public override string Id => "f5e76906-cc2a-41a4-b4f9-498221aaaf2e";
 
     public override string Name => "delete";
 

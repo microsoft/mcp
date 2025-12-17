@@ -22,7 +22,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceGetCommand> _logger = logger;
 
-    public override string Id => "a7d3e5c9-2b4f-4d8e-9c3f-6e9d2f5g8h9i";
+    public override string Id => "77734a55-8290-4c16-8b37-cf37277f018f";
 
     public override string Name => "get";
 

@@ -20,7 +20,7 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupDeleteCommand> _logger = logger;
 
-    public override string Id => "l8o4p6n0-3m5q-5o9p-0n4q-7p0o3q6r0s1t";
+    public override string Id => "c8f91bd7-ea1d-4af4-9703-fe83c43b34b5";
 
     public override string Name => "delete";
 

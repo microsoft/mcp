@@ -22,7 +22,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerGetCommand> _logger = logger;
 
-    public override string Id => "f2i8j0h4-7g9k-9i3j-4h8k-1j4i7k0l4m5n";
+    public override string Id => "fe3b07c3-9a11-465e-bfb6-6461b85b2e52";
 
     public override string Name => "get";
 

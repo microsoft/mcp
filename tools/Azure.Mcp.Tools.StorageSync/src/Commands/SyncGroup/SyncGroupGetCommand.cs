@@ -22,7 +22,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupGetCommand> _logger = logger;
 
-    public override string Id => "j6m2n4l8-1k3o-3m7n-8l2o-5n8m1o4p8q9r";
+    public override string Id => "95ce2336-19e6-40fb-a3ea-e2a76772036b";
 
     public override string Name => "get";
 

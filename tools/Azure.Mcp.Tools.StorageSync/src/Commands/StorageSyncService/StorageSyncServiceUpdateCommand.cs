@@ -21,7 +21,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceUpdateCommand> _logger = logger;
 
-    public override string Id => "b8e4f6d0-3c5g-5e9f-0d4g-7f0e3g6h0i1j";
+    public override string Id => "15db4769-1941-4b1e-9514-867b0f68eb2c";
 
     public override string Name => "update";
 

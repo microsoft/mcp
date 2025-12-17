@@ -20,7 +20,7 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointTriggerChangeDetectionCommand> _logger = logger;
 
-    public override string Id => "q3t9u1s5-8r0v-0t4u-5s9v-2u5t8v1w5x6y";
+    public override string Id => "96f096a2-d36f-4361-aa74-4e393e7f48a5";
 
     public override string Name => "triggerchangedetection";
 

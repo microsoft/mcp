@@ -21,7 +21,7 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUpdateCommand> _logger = logger;
 
-    public override string Id => "h4k0l2j6-9i1m-1k5l-6j0m-3l6k9m2n6o7p";
+    public override string Id => "c443ed00-f17f-46a8-a5d3-df128aa1606b";
 
     public override string Name => "update";
 

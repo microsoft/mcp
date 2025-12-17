@@ -20,7 +20,7 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceDeleteCommand> _logger = logger;
 
-    public override string Id => "c9f5g7e1-4d6h-6f0g-1e5h-8g1f4h7i1j2k";
+    public override string Id => "a7dcf4e2-fd1d-4d0a-acd3-f56ea5eceef6";
 
     public override string Name => "delete";
 

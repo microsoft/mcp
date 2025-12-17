@@ -21,7 +21,7 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointCreateCommand> _logger = logger;
 
-    public override string Id => "o1r7s9q3-6p8t-8r2s-3q7t-0s3r6t9u3v4w";
+    public override string Id => "df0d4ae3-519a-44f1-ad30-d25a0985e9c2";
 
     public override string Name => "create";
 

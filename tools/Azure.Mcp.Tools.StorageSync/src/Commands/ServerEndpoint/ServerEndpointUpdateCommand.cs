@@ -21,7 +21,7 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointUpdateCommand> _logger = logger;
 
-    public override string Id => "u7x3y5w9-2v4z-4x8y-9w3z-6y9x2z5a9b0c";
+    public override string Id => "7b35bb46-0a34-4e44-9d7c-148e9992b445";
 
     public override string Name => "update";
 

@@ -20,7 +20,7 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUnregisterCommand> _logger = logger;
 
-    public override string Id => "i5l1m3k7-0j2n-2l6m-7k1n-4m7l0n3o7p8q";
+    public override string Id => "346661e1-64be-463a-96c6-3626966f55fa";
 
     public override string Name => "unregister";
 

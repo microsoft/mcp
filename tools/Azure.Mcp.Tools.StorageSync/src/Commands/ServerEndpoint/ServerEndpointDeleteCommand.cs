@@ -20,7 +20,7 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointDeleteCommand> _logger = logger;
 
-    public override string Id => "v8y4z6x0-3w5a-5y9z-0x4a-7z0y3a6b0c1d";
+    public override string Id => "ef6c2aa9-bb64-4f94-b18b-018e04b504c9";
 
     public override string Name => "delete";
 

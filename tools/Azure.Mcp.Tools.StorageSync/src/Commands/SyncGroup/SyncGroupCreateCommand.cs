@@ -21,7 +21,7 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupCreateCommand> _logger = logger;
 
-    public override string Id => "k7n3o5m9-2l4p-4n8o-9m3p-6o9n2p5q9r0s";
+    public override string Id => "3572833c-4fc2-4bb9-9eed-52ae8b8899b8";
 
     public override string Name => "create";
 

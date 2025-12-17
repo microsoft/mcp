@@ -22,7 +22,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointGetCommand> _logger = logger;
 
-    public override string Id => "n0q6r8p2-5o7s-7q1r-2p6s-9r2q5s8t2u3v";
+    public override string Id => "25dd8bb3-5ba3-4c0d-993d-54917f63d52e";
 
     public override string Name => "get";
 
