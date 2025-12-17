@@ -119,8 +119,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         return value;
     }
 
-    // used to resolve a recording "path" given an invoking test
-    protected static readonly RecordingPathResolver PathResolver = new();
+    protected TestProxyFixture Fixture => fixture;
+
+    protected IRecordingPathResolver PathResolver => fixture.PathResolver;
 
     protected virtual bool IsAsync => false;
 
@@ -417,7 +418,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         return name;
     }
 
-    private string GetSessionFilePath(string displayName)
+    public string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
         var dir = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
