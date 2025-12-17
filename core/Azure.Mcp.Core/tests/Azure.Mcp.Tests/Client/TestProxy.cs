@@ -325,27 +325,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return proxyDirectory;
     }
 
-    private string? GetExecutableFromAssetsDirectory()
-    {
-        var proxyDir = GetProxyDirectory();
-        var toolDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy");
-
-        if (!Directory.Exists(toolDir))
-            return null;
-
-        var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "test-proxy.exe" : "test-proxy";
-        foreach (var file in Directory.EnumerateFiles(toolDir, exeName, SearchOption.AllDirectories))
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                EnsureExecutable(file);
-            }
-            return file;
-        }
-
-        return null;
-    }
-
     public async Task Start(string repositoryRoot, string assetsJsonPath)
     {
         if (_process != null)
