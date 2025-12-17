@@ -48,8 +48,13 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
-    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string? assetsJsonPath)
+    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
     {
+        if (_cachedExecutable != null)
+        {
+            return _cachedExecutable;
+        }
+
         await s_downloadLock.WaitAsync().ConfigureAwait(false);
         FileStream? lockStream = null;
         try
@@ -57,38 +62,37 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             var proxyDir = GetProxyDirectory();
             lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
 
-            string? proxyExe = GetExecutableFromAssetsDirectory();
-
-            if (string.IsNullOrWhiteSpace(proxyExe))
+            if (_cachedExecutable != null)
             {
-                var version = GetTargetVersion();
-                if (!CheckProxyVersion(proxyDir, version))
-                {
-                    await DownloadProxyAsync(proxyDir, version).ConfigureAwait(false);
-                }
-
-                proxyExe = FindExecutableInDirectory(proxyDir);
+                return _cachedExecutable;
             }
 
-            if (string.IsNullOrWhiteSpace(proxyExe))
+            var version = GetTargetVersion();
+
+            if (CheckProxyVersion(proxyDir, version))
             {
-                throw new InvalidOperationException("Unable to locate test-proxy executable.");
+                _cachedExecutable = FindExecutableInDirectory(proxyDir);
+                return _cachedExecutable;
             }
 
-            _cachedExecutable = proxyExe;
+            await DownloadProxyAsync(proxyDir, version);
 
-            if (!string.IsNullOrWhiteSpace(assetsJsonPath))
+            _cachedExecutable = FindExecutableInDirectory(proxyDir);
+
+            if (string.IsNullOrWhiteSpace(_cachedExecutable))
             {
-                await RestoreAssetsAsync(proxyExe, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
+                throw new InvalidOperationException("Unable to locate freshly downloaded test-proxy executable.");
             }
 
-            return proxyExe;
+            await RestoreAssetsAsync(_cachedExecutable, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
         }
         finally
         {
             lockStream?.Dispose();
             s_downloadLock.Release();
         }
+
+        return _cachedExecutable;
     }
 
     private async Task DownloadProxyAsync(string proxyDirectory, string version)
@@ -146,11 +150,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
     private static async Task RestoreAssetsAsync(string proxyExe, string assetsJsonPath, string repositoryRoot)
     {
-        if (string.IsNullOrWhiteSpace(assetsJsonPath))
-        {
-            return;
-        }
-
         var resolvedAssetsPath = Path.IsPathRooted(assetsJsonPath)
             ? assetsJsonPath
             : Path.GetFullPath(assetsJsonPath, repositoryRoot);
@@ -160,7 +159,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             throw new FileNotFoundException($"Assets file not found: {resolvedAssetsPath}");
         }
 
-        var psi = new ProcessStartInfo(proxyExe, $"restore -a \"{resolvedAssetsPath}\"")
+        var psi = new ProcessStartInfo(proxyExe, $"restore -a \"{resolvedAssetsPath}\" --storage-location=\"{repositoryRoot}\"")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -181,7 +180,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         {
             throw new InvalidOperationException($"Test proxy restore failed with exit code {process.ExitCode}. StdOut: {stdout}. StdErr: {stderr}");
         }
-    }
 
     /// <summary>
     /// Multiple test assemblies are likely to be running in the same process due to MCP repo's usage of dotnet test
@@ -333,14 +331,14 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return null;
     }
 
-    public async Task Start(string repositoryRoot, string? assetsJsonPath = null)
+    public async Task Start(string repositoryRoot, string assetsJsonPath)
     {
         if (_process != null)
         {
             return;
         }
 
-        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        var proxyExe = GetExecutableFromAssetsDirectory() ?? await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
