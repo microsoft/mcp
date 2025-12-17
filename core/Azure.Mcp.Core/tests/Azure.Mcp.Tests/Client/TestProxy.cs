@@ -56,11 +56,10 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         await s_downloadLock.WaitAsync().ConfigureAwait(false);
-        FileStream? lockStream = null;
         try
         {
             var proxyDir = GetProxyDirectory();
-            lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
+            using var lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
 
             if (_cachedExecutable != null)
             {
@@ -86,7 +85,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         finally
         {
-            lockStream?.Dispose();
             s_downloadLock.Release();
         }
 
