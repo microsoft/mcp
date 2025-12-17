@@ -229,17 +229,17 @@ public class MarketplaceService(ITenantService tenantService)
             retryPolicy);
         clientOptions.Transport = new HttpClientTransport(httpClient);
 
-        using var pipeline = HttpPipelineBuilder.Build(clientOptions);
+        var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
         string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, cancellationToken)).Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
-        var request = pipeline.CreateRequest();
+        using var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
         request.Uri.Reset(new Uri(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await pipeline.SendRequestAsync(request, cancellationToken);
+        using var response = await pipeline.SendRequestAsync(request, cancellationToken);
 
         if (!response.IsError)
         {

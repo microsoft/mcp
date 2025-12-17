@@ -5,9 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
