@@ -8,6 +8,9 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
@@ -35,7 +38,7 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
@@ -49,6 +52,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
 
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AutoexportJobNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AutoexportPrefixOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AdminStatusOption);
     }
 
     protected override AutoexportJobCreateOptions BindOptions(ParseResult parseResult)
@@ -56,6 +62,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
+        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AutoexportJobNameOption.Name);
+        options.AutoexportPrefix = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AutoexportPrefixOption.Name);
+        options.AdminStatus = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AdminStatusOption.Name);
         return options;
     }
 
@@ -75,6 +84,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
+                options.JobName,
+                options.AutoexportPrefix,
+                options.AdminStatus,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -83,7 +95,7 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating autoexport archive job for AMLFS filesystem {FileSystem}. Options: {@Options}",
+            _logger.LogError(ex, "Error creating autoexport job for AMLFS filesystem {FileSystem}. Options: {@Options}",
                 options.FileSystemName, options);
             HandleException(context, ex);
         }

@@ -8,6 +8,9 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -87,7 +90,7 @@ public sealed class AutoimportJobDeleteCommand(ILogger<AutoimportJobDeleteComman
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting autoimport archive job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
+            _logger.LogError(ex, "Error deleting autoimport job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
                 options.JobName, options.FileSystemName, options);
             HandleException(context, ex);
         }

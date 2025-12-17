@@ -8,6 +8,9 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -83,7 +86,7 @@ public sealed class AutoimportJobListCommand(ILogger<AutoimportJobListCommand> l
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing autoimport archive jobs for AMLFS filesystem {FileSystemName}. Options: {@Options}", options.FileSystemName, options);
+            _logger.LogError(ex, "Error listing autoimport jobs for AMLFS filesystem {FileSystemName}. Options: {@Options}", options.FileSystemName, options);
             HandleException(context, ex);
         }
 

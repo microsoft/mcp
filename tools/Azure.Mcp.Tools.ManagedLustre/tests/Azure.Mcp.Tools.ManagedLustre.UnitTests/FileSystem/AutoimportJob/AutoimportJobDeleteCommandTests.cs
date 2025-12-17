@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -78,10 +79,10 @@ public class AutoimportJobDeleteCommandTests
         Assert.NotNull(response.Results);
 
         await _managedLustreService.Received(1).DeleteAutoimportJobAsync(
-            _subscription,
-            _resourceGroup,
-            _fileSystemName,
-            _jobName,
+            Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Is(_jobName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -194,10 +195,10 @@ public class AutoimportJobDeleteCommandTests
         // Assert - verify command executed successfully with expected parameters
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _managedLustreService.Received(1).DeleteAutoimportJobAsync(
-            _subscription,
-            _resourceGroup,
-            _fileSystemName,
-            _jobName,
+            Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Is(_jobName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

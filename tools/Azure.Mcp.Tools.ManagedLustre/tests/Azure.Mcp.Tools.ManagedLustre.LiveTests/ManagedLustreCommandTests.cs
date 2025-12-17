@@ -66,7 +66,10 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Equal(JsonValueKind.Array, fileSystems.ValueKind);
         var found = false;
 
-        var resourceBaseName = SanitizeAndRecordBaseName(Settings.ResourceBaseName, "resourceBaseName");
+        var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
+        var amlfsName = amlfsId.Split('/').Last();
+        var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+
         foreach (var fs in fileSystems.EnumerateArray())
         {
             if (fs.ValueKind != JsonValueKind.Object)
@@ -74,14 +77,14 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase))
             {
                 found = true;
                 break;
             }
         }
 
-        Assert.True(found, $"Expected at least one filesystem in resource group with name '{resourceBaseName}'.");
+        Assert.True(found, $"Expected at least one filesystem in resource group with name '{sanitizedAmlfsName}'.");
     }
 
     [Fact]
@@ -155,21 +158,20 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
-    public async Task Should_create_azure_managed_lustre_no_blob_no_cmk()
+    public async Task Should_create_azure_managed_lustre_with_storage_and_cmk()
     {
         var fsName = RegisterOrRetrieveVariable("amlfsName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
         var subnetId = SanitizeAndRecordSubnetId(Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_SUBNET_ID", ""), "amlfsSubnetId");
         var location = RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", ""));
 
-        // Calculate CMK required variables
-
-        var keyUri = SanitizeAndRecordKeyVaultUri(Settings.DeploymentOutputs.GetValueOrDefault("KEY_URI_WITH_VERSION", ""), "keyUriWithVersion");
-        var keyVaultResourceId = SanitizeAndRecordKeyVaultResource(Settings.DeploymentOutputs.GetValueOrDefault("KEY_VAULT_RESOURCE_ID", ""), "keyVaultResourceId");
-        var userAssignedIdentityId = SanitizeAndRecordUserAssignedIdentityId(Settings.DeploymentOutputs.GetValueOrDefault("USER_ASSIGNED_IDENTITY_RESOURCE_ID", ""), "userAssignedIdentityId");
-
         // Calculate HSM required variables
         var hsmDataContainerId = SanitizeAndRecordContainerId(Settings.DeploymentOutputs.GetValueOrDefault("HSM_CONTAINER_ID", ""), "hsmContainerId");
         var hsmLogContainerId = SanitizeAndRecordContainerId(Settings.DeploymentOutputs.GetValueOrDefault("HSM_LOGS_CONTAINER_ID", ""), "hsmLogsContainerId");
+
+        // Calculate CMK required variables
+        var keyUri = SanitizeAndRecordKeyVaultUri(Settings.DeploymentOutputs.GetValueOrDefault("KEY_URI_WITH_VERSION", ""), "keyUriWithVersion");
+        var keyVaultResourceId = SanitizeAndRecordKeyVaultResource(Settings.DeploymentOutputs.GetValueOrDefault("KEY_VAULT_RESOURCE_ID", ""), "keyVaultResourceId");
+        var userAssignedIdentityId = SanitizeAndRecordUserAssignedIdentityId(Settings.DeploymentOutputs.GetValueOrDefault("USER_ASSIGNED_IDENTITY_RESOURCE_ID", ""), "userAssignedIdentityId");
 
         var result = await CallToolAsync(
             "managedlustre_fs_create",
@@ -190,11 +192,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 { "source-vault", keyVaultResourceId },
                 { "user-assigned-identity-id", userAssignedIdentityId },
                 { "maintenance-day", "Monday" },
-                { "maintenance-time", "01:00" },
-                { "root-squash-mode", "All" },
-                { "no-squash-nid-list", "10.0.0.4"},
-                { "squash-uid", 1000 },
-                { "squash-gid", 1000 }
+                { "maintenance-time", "01:00" }
             });
 
         var fileSystem = result.AssertProperty("fileSystem");
@@ -210,12 +208,256 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var capacity = fileSystem.AssertProperty("storageCapacityTiB");
         Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
         Assert.Equal(4, capacity.GetInt32());
+
+        // Wait for filesystem to be available before creating jobs
+        var maxWaitTime = TimeSpan.FromMinutes(30);
+        var pollInterval = TimeSpan.FromSeconds(30);
+        var startTime = DateTime.UtcNow;
+        var isAvailable = false;
+
+        while (DateTime.UtcNow - startTime < maxWaitTime)
+        {
+            var listResult = await CallToolAsync(
+                "managedlustre_fs_list",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId }
+                });
+
+            var fileSystems = listResult.AssertProperty("fileSystems");
+            foreach (var fs in fileSystems.EnumerateArray())
+            {
+                if (fs.TryGetProperty("name", out var nameProp) &&
+                    nameProp.ValueKind == JsonValueKind.String &&
+                    string.Equals(nameProp.GetString(), (TestMode == TestMode.Playback) ? "Sanitized" : fsName, StringComparison.OrdinalIgnoreCase))
+                {
+                    var provisioningSucceeded = fs.TryGetProperty("provisioningState", out var stateProp) &&
+                        stateProp.ValueKind == JsonValueKind.String &&
+                        string.Equals(stateProp.GetString(), "Succeeded", StringComparison.OrdinalIgnoreCase);
+
+                    if (provisioningSucceeded)
+                    {
+                        isAvailable = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isAvailable)
+            {
+                break;
+            }
+
+            await Task.Delay(pollInterval, TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(isAvailable, $"Filesystem '{fsName}' did not reach 'Succeeded' provisioning state within {maxWaitTime.TotalMinutes} minutes.");
+
+        // Wait for filesystem to stabilize before creating jobs
+        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+
+        // Test autoimport job lifecycle
+        var autoimportCreateResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoimportJobName = autoimportCreateResult.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, autoimportJobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(autoimportJobName.GetString()));
+        var autoimportJobNameStr = autoimportJobName.GetString()!;
+
+        // List autoimport jobs
+        var autoimportListResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoimportJobs = autoimportListResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, autoimportJobs.ValueKind);
+        var foundAutoimport = false;
+        foreach (var job in autoimportJobs.EnumerateArray())
+        {
+            var jobText = job.GetRawText();
+            Output.WriteLine($"Checking job: {jobText}");
+            if (jobText.Contains(autoimportJobNameStr))
+            {
+                Output.WriteLine($"Found job containing: '{autoimportJobNameStr}'");
+                foundAutoimport = true;
+                break;
+            }
+        }
+        Assert.True(foundAutoimport, $"Expected to find autoimport job '{autoimportJobNameStr}' in the list.");
+
+        // Get autoimport job
+        var autoimportGetResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoimportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoimportJob = autoimportGetResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, autoimportJob.ValueKind);
+        var autoimportJobText = autoimportJob.GetRawText();
+        Assert.Contains(autoimportJobNameStr, autoimportJobText);
+
+        // Wait 15 seconds to cancel auto import job
+        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+
+        // Cancel autoimport job
+        var autoimportCancelResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoimportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoimportCancelJobName = autoimportCancelResult.AssertProperty("jobName");
+        Assert.Contains(autoimportJobNameStr, autoimportCancelJobName.GetRawText());
+        var autoimportCancelStatus = autoimportCancelResult.AssertProperty("status");
+        Assert.Equal("Cancelled", autoimportCancelStatus.GetString());
+
+        // Delete autoimport job
+        var autoimportDeleteResult = await CallToolAsync(
+            "managedlustre_fs_autoimport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoimportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoimportDeleteJobName = autoimportDeleteResult.AssertProperty("jobName");
+        Assert.Contains(autoimportJobNameStr, autoimportDeleteJobName.GetRawText());
+        var autoimportDeleteStatus = autoimportDeleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", autoimportDeleteStatus.GetString());
+
+        // Wait for filesystem to stabilize after deleting import job and before creating export job
+        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+
+        // Test autoexport job lifecycle
+        var autoexportCreateResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoexportJobName = autoexportCreateResult.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, autoexportJobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(autoexportJobName.GetString()));
+        var autoexportJobNameStr = autoexportJobName.GetString()!;
+
+        // List autoexport jobs
+        var autoexportListResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoexportJobs = autoexportListResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, autoexportJobs.ValueKind);
+        var foundAutoexport = false;
+        foreach (var job in autoexportJobs.EnumerateArray())
+        {
+            var jobText = job.GetRawText();
+            if (jobText.Contains(autoexportJobNameStr))
+            {
+                foundAutoexport = true;
+                break;
+            }
+        }
+        Assert.True(foundAutoexport, $"Expected to find autoexport job '{autoexportJobNameStr}' in the list.");
+
+        // Get autoexport job
+        var autoexportGetResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoexportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoexportJob = autoexportGetResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, autoexportJob.ValueKind);
+        var autoexportJobText = autoexportJob.GetRawText();
+        Assert.Contains(autoexportJobNameStr, autoexportJobText);
+
+        // Wait 15 seconds to cancel auto export job.
+        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        // Cancel autoexport job
+        var autoexportCancelResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoexportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoexportCancelJobName = autoexportCancelResult.AssertProperty("jobName");
+        Assert.Contains(autoexportJobNameStr, autoexportCancelJobName.GetRawText());
+        var autoexportCancelStatus = autoexportCancelResult.AssertProperty("status");
+        Assert.Equal("Cancelled", autoexportCancelStatus.GetString());
+
+        // Delete autoexport job
+        var autoexportDeleteResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "filesystem-name", fsName },
+                { "job-name", autoexportJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var autoexportDeleteJobName = autoexportDeleteResult.AssertProperty("jobName");
+        Assert.Contains(autoexportJobNameStr, autoexportDeleteJobName.GetRawText());
+        var autoexportDeleteStatus = autoexportDeleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", autoexportDeleteStatus.GetString());
     }
 
     [Fact]
     public async Task Should_update_maintenance_and_verify_with_list()
     {
-        var resourceBaseName = SanitizeAndRecordBaseName(Settings.ResourceBaseName, "resourceBaseName");
+        var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
+        var amlfsName = amlfsId.Split('/').Last();
+        var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
             "managedlustre_fs_update",
@@ -223,7 +465,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
-                { "name", resourceBaseName },
+                { "name", sanitizedAmlfsName },
                 { "maintenance-day", "Wednesday" },
                 { "maintenance-time", "11:00" }
             });
@@ -250,7 +492,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase))
             {
                 // Check maintenance fields
                 if (fs.TryGetProperty("maintenanceDay", out var dayProp) && dayProp.ValueKind == JsonValueKind.String &&
@@ -264,7 +506,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             }
         }
 
-        Assert.True(found, $"Expected filesystem '{resourceBaseName}' to have maintenance Wednesday at 11:00.");
+        Assert.True(found, $"Expected filesystem '{sanitizedAmlfsName}' to have maintenance Wednesday at 11:00.");
     }
 
     [Fact]
@@ -308,7 +550,10 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_update_root_squash_and_verify_with_list()
     {
-        var resourceBaseName = SanitizeAndRecordBaseName(Settings.ResourceBaseName, "resourceBaseName");
+        var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
+        var amlfsName = amlfsId.Split('/').Last();
+        var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
             "managedlustre_fs_update",
@@ -316,7 +561,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
-                { "name", resourceBaseName },
+                { "name", sanitizedAmlfsName },
                 { "root-squash-mode", "All" },
                 { "squash-uid", 2000 },
                 { "squash-gid", 2000 },
@@ -353,7 +598,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         {
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase))
             {
                 // Assert required root squash fields (must be present)
                 var listMode = fs.AssertProperty("rootSquashMode");
@@ -376,7 +621,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             }
         }
 
-        Assert.True(found, $"Expected filesystem '{resourceBaseName}' to be present after root squash update.");
+        Assert.True(found, $"Expected filesystem '{sanitizedAmlfsName}' to be present after root squash update.");
     }
 
     private string SanitizeAndRecordBaseName(string baseName, string name) => SanitizeAndRecord(baseName, name, val => "Sanitized");
@@ -438,21 +683,4 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
     [GeneratedRegex("/subscriptions/(.*?)/resourceGroups")]
     private static partial Regex SubscriptionSanitizationRegex();
-    [Fact]
-    public async Task Should_create_autoexport_job()
-    {
-        var result = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "filesystem-name", Settings.ResourceBaseName },
-                { "tenant", Settings.TenantId }
-            });
-
-        var jobName = result.AssertProperty("jobName");
-        Assert.Equal(JsonValueKind.String, jobName.ValueKind);
-        Assert.False(string.IsNullOrWhiteSpace(jobName.GetString()));
-    }
 }

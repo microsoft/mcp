@@ -7,6 +7,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support logging capability with `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
+- Added Azure Managed Lustre HSM (Hierarchical Storage Management) autoimport and autoexport job management commands:
+  - `managedlustre_fs_autoimport-job_create` - Create autoimport jobs to sync data from Azure Blob Storage to Lustre filesystem
+  - `managedlustre_fs_autoimport-job_get` - Get details of specific autoimport jobs
+  - `managedlustre_fs_autoimport-job_list` - List all autoimport jobs for a filesystem
+  - `managedlustre_fs_autoimport-job_cancel` - Cancel running autoo,port jobs
+  - `managedlustre_fs_autoimport-job_delete` - Delete autoimport job records
+  - `managedlustre_fs_autoexport-job_create` - Create autoexport jobs to sync data from Lustre filesystem to Azure Blob Storage  
+  - `managedlustre_fs_autoexport-job_get` - Get details of specific autoexport jobs
+  - `managedlustre_fs_autoexport-job_list` - List all autoexport jobs for a filesystem
+  - `managedlustre_fs_autoexport-job_cancel` - Cancel running autoexport jobs
+  - `managedlustre_fs_autoexport-job_delete` - Delete autoexport job records
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
 ### Breaking Changes

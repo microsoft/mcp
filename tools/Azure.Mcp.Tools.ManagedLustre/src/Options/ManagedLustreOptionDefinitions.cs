@@ -234,8 +234,24 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data /logs /archive",
+        Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data --autoimport-prefixes /logs",
         Arity = ArgumentArity.OneOrMore
+    };
+
+    public static readonly Option<string> AutoexportPrefixOption = new(
+        "--autoexport-prefix"
+    )
+    {
+        Required = false,
+        Description = "Blob path/prefix that gets auto exported from the cluster namespace. Default: '/'. Note: Only 1 prefix is supported for autoexport jobs. Example: --autoexport-prefix /data"
+    };
+
+    public static readonly Option<string> AutoexportJobNameOption = new(
+        "--job-name"
+    )
+    {
+        Required = false,
+        Description = "The name of the autoexport job. If not specified, a timestamped name will be generated."
     };
 
     public static readonly Option<string> AdminStatusOption = new(

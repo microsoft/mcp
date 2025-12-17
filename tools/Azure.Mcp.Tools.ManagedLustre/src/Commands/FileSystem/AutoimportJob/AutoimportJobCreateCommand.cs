@@ -8,7 +8,9 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
-using System.Linq;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -43,7 +45,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
@@ -91,7 +93,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
             }
 
             var svc = context.GetService<IManagedLustreService>();
-            
+
             // Log the prefixes for debugging
             if (options.AutoimportPrefixes != null && options.AutoimportPrefixes.Length > 0)
             {
@@ -101,7 +103,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
             {
                 _logger.LogInformation("No autoimport prefixes received, will use default");
             }
-            
+
             var job = await svc.CreateAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
@@ -120,7 +122,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating autoimport archive job for AMLFS filesystem {FileSystem}. Options: {@Options}",
+            _logger.LogError(ex, "Error creating autoimport job for AMLFS filesystem {FileSystem}. Options: {@Options}",
                 options.FileSystemName, options);
             HandleException(context, ex);
         }
