@@ -5,7 +5,17 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.0-beta.4] (2025-12-16)
+## 0.0.0-beta.5 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 0.0.0-beta.4 (2025-12-16)
 
 ### Features Added
 
@@ -20,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updated API specifications for multiple items.
 
 
-## [0.0.0-beta.3]  (2025-12-04)
+## 0.0.0-beta.3 (2025-12-04)
 
 ### Features Added
 
