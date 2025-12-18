@@ -51,7 +51,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: A secure MCP server that provides controlled access to Azure CLI commands for LLM agents. Features multi-layer security validation, flexible authentication (workload identity, managed identity, service principal), and read-only mode support.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
-- **INSTALL**: [Azure/azure-api-mcp](https://github.com/Azure/azure-api-mcp)
+- **INSTALL**: [Installation Instructions](https://github.com/Azure/azure-api-mcp)
 
 ### ✨ Microsoft Foundry
 - **DOCUMENTATION**: [Get started with Foundry MCP Server](https://learn.microsoft.com/azure/ai-foundry/mcp/get-started?view=foundry&tabs=user)
