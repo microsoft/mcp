@@ -1,5 +1,11 @@
 # Release History
 
+## 2.0.8 (2025-12-11) (pre-release)
+
+### Fixed
+
+- Fixed an issue where the AI Best Practices tool would get called instead of the Best Practices tool. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
+
 ## 2.0.7 (2025-11-25) (pre-release)
 
 ### Changed
