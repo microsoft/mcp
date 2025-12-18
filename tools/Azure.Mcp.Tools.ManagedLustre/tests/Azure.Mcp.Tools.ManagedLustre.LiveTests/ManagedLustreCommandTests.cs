@@ -211,7 +211,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Wait for filesystem to be available before creating jobs
         var maxWaitTime = TimeSpan.FromMinutes(30);
-        var pollInterval = TimeSpan.FromSeconds(30);
+        var pollInterval = TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(30);
         var startTime = DateTime.UtcNow;
         var isAvailable = false;
 
@@ -254,7 +254,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.True(isAvailable, $"Filesystem '{fsName}' did not reach 'Succeeded' provisioning state within {maxWaitTime.TotalMinutes} minutes.");
 
         // Wait for filesystem to stabilize before creating jobs
-        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
 
         // Test autoimport job lifecycle
         var autoimportCreateResult = await CallToolAsync(
@@ -318,7 +318,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Contains(autoimportJobNameStr, autoimportJobText);
 
         // Wait 15 seconds to cancel auto import job
-        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
 
         // Cancel autoimport job
         var autoimportCancelResult = await CallToolAsync(
@@ -355,7 +355,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Equal("Deleted", autoimportDeleteStatus.GetString());
 
         // Wait for filesystem to stabilize after deleting import job and before creating export job
-        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
 
         // Test autoexport job lifecycle
         var autoexportCreateResult = await CallToolAsync(
@@ -417,7 +417,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Contains(autoexportJobNameStr, autoexportJobText);
 
         // Wait 15 seconds to cancel auto export job.
-        await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
         // Cancel autoexport job
         var autoexportCancelResult = await CallToolAsync(
             "managedlustre_fs_autoexport-job_cancel",
