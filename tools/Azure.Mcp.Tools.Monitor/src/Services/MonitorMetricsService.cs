@@ -46,7 +46,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
-        
+
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
         // Parse time range
