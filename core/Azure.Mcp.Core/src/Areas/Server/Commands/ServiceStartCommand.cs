@@ -259,6 +259,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">Command result to update on failure.</param>
     private static void ValidateMode(string? mode, CommandResult commandResult)
     {
+        
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
             mode == ModeTypes.All ||
