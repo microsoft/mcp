@@ -101,6 +101,7 @@ public interface ITenantService
     /// </exception>
     Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
+        Uri? authorityHost,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -1096,7 +1096,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         var client = new PersistentAgentsClient(
             projectEndpoint,
-            await tokenProvider.GetTokenCredentialAsync(default, default));
+            await tokenProvider.GetTokenCredentialAsync(default, default, default));
 
         var bingConnectionId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.CognitiveServices/accounts/{Settings.ResourceBaseName}/projects/{Settings.ResourceBaseName}-ai-projects/connections/{Settings.ResourceBaseName}-bing-connection";
 
@@ -1118,7 +1118,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         var client = new PersistentAgentsClient(
             projectEndpoint,
-            await tokenProvider.GetTokenCredentialAsync(default, default));
+            await tokenProvider.GetTokenCredentialAsync(default, default, default));
 
         PersistentAgentThread thread = await client.Threads.CreateThreadAsync([
             new(MessageRole.User, userMessage)]);

@@ -23,7 +23,7 @@ public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvid
     }
 
     /// <inheritdoc/>
-    public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)
+    public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, Uri? authorityHost, CancellationToken cancellationToken)
     {
         if (_httpContextAccessor.HttpContext is not HttpContext httpContext)
         {

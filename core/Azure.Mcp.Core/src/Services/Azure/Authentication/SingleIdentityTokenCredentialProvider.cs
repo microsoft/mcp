@@ -22,6 +22,7 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
         _loggerFactory = loggerFactory;
         _credential = new CustomChainedCredential(
             null,
+            null,
             _loggerFactory.CreateLogger<CustomChainedCredential>()
         );
     }
@@ -45,6 +46,7 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
                 {
                     tenantCredential = new CustomChainedCredential(
                         tenantId,
+                        authorityHost,
                         _loggerFactory.CreateLogger<CustomChainedCredential>()
                     );
                     _tenantSpecificCredentials[tenantId] = tenantCredential;

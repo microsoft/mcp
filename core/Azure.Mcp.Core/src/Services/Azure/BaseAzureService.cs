@@ -140,17 +140,17 @@ public abstract class BaseAzureService
     protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
-        return await GetCredential(null, cancellationToken);
+        return await GetCredential(null, null, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
+    protected async Task<TokenCredential> GetCredential(string? tenant, Uri? authorityHost, CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
-            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
+            return await TenantService!.GetTokenCredentialAsync(tenantId, authorityHost, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -208,6 +208,7 @@ public abstract class BaseAzureService
     /// <param name="armClientOptions">Optional ARM client options.</param>
     protected async Task<ArmClient> CreateArmClientAsync(
         string? tenantIdOrName = null,
+        Uri? authorityHost = null,
         RetryPolicyOptions? retryPolicy = null,
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default)
@@ -216,7 +217,7 @@ public abstract class BaseAzureService
 
         try
         {
-            TokenCredential credential = await GetCredential(tenantId, cancellationToken);
+            TokenCredential credential = await GetCredential(tenantId, authorityHost, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
             options.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);

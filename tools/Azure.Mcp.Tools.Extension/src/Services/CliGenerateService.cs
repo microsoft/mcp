@@ -19,7 +19,7 @@ internal class CliGenerateService(IHttpClientService httpClientService, IAzureTo
         // AzCli copilot 1P app scope
         const string apiScope = "a5ede409-60d3-4a6c-93e6-eb2e7271e8e3/.default";
 
-        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, null, cancellationToken);
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), cancellationToken);
 
         // AzCli copilot API endpoint

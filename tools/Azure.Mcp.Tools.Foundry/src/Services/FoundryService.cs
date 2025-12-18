@@ -222,7 +222,7 @@ public class FoundryService(
         try
         {
             // Create ArmClient for deployments
-            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01", null, retryPolicy);
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01", null, null, retryPolicy);
 
             // Retrieve the Cognitive Services account
             var cognitiveServicesAccount = await GetGenericResourceAsync(

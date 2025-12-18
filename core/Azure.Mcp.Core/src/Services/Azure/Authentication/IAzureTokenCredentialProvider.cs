@@ -35,6 +35,7 @@ public interface IAzureTokenCredentialProvider
     /// cause <see cref="InvalidOperationException"/> to be thrown. See the exceptions section for
     /// details.
     /// </param>
+    /// <param name="authorityHost">An optional authority host to use for the token request.</param>
     /// <param name="cancellation">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with a value of <see cref="TokenCredential"/>.

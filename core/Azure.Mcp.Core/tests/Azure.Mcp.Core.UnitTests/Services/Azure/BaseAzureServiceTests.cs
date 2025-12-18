@@ -26,6 +26,7 @@ public class BaseAzureServiceTests
         _tenantService.GetTenantId(TenantName, Arg.Any<CancellationToken>()).Returns(TenantId);
         _tenantService.GetTokenCredentialAsync(
             Arg.Any<string?>(),
+            Arg.Any<Uri?>(),
             Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
         _tenantService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));

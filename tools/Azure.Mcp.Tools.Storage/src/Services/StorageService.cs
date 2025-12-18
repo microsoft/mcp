@@ -107,7 +107,7 @@ public class StorageService(
         try
         {
             // Create ArmClient for deployments
-            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, retryPolicy);
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, null, retryPolicy);
 
             // Prepare data
             ResourceIdentifier accountId = new ResourceIdentifier($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
