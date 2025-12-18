@@ -4,12 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class NodepoolCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_nodepools_for_cluster()
@@ -26,8 +26,8 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
         Assert.True(clusters.GetArrayLength() > 0, "Expected at least one AKS cluster for testing nodepool get command");
 
         var firstCluster = clusters.EnumerateArray().First();
-        var clusterName = firstCluster.GetProperty("name").GetString()!;
-        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
+        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
+        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
 
         // List node pools for that cluster
         var nodepoolResult = await CallToolAsync(
