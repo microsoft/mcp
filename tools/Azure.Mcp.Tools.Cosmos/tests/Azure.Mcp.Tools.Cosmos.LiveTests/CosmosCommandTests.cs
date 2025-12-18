@@ -12,6 +12,16 @@ namespace Azure.Mcp.Tools.Cosmos.LiveTests;
 
 public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    protected override RecordingOptions? RecordingOptions => new()
+    {
+        HandleRedirects = false
+    };
+
+    /// <summary>
+    /// 3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers => [ ..base.DisabledDefaultSanitizers, "3493"];
+
     public override CustomDefaultMatcher? TestMatcher => new()
     {
         IgnoredHeaders = "x-ms-activity-id,x-ms-cosmos-correlated-activityid"
