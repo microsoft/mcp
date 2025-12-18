@@ -172,13 +172,14 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var keyUri = SanitizeAndRecordKeyVaultUri(Settings.DeploymentOutputs.GetValueOrDefault("KEY_URI_WITH_VERSION", ""), "keyUriWithVersion");
         var keyVaultResourceId = SanitizeAndRecordKeyVaultResource(Settings.DeploymentOutputs.GetValueOrDefault("KEY_VAULT_RESOURCE_ID", ""), "keyVaultResourceId");
         var userAssignedIdentityId = SanitizeAndRecordUserAssignedIdentityId(Settings.DeploymentOutputs.GetValueOrDefault("USER_ASSIGNED_IDENTITY_RESOURCE_ID", ""), "userAssignedIdentityId");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
             "managedlustre_fs_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "location", location },
                 { "name", fsName },
                 { "sku", "AMLFS-Durable-Premium-500" },
@@ -262,7 +263,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
             });
@@ -278,7 +279,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
                 // Intentionally omitting job-name to list all jobs
@@ -306,7 +307,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoimportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -326,7 +327,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoimportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -343,7 +344,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoimportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -363,7 +364,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
             });
@@ -379,7 +380,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
                 // Intentionally omitting job-name to list all jobs
@@ -405,7 +406,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoexportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -424,7 +425,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoexportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -441,7 +442,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
                 { "job-name", autoexportJobNameStr },
                 { "tenant", Settings.TenantId }
@@ -459,6 +460,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
         var amlfsName = amlfsId.Split('/').Last();
         var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
@@ -466,7 +468,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "name", sanitizedAmlfsName },
                 { "maintenance-day", "Wednesday" },
                 { "maintenance-time", "11:00" }
@@ -555,6 +557,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
         var amlfsName = amlfsId.Split('/').Last();
         var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
@@ -562,7 +565,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
+                { "resource-group", resourceGroupName },
                 { "name", sanitizedAmlfsName },
                 { "root-squash-mode", "All" },
                 { "squash-uid", 2000 },

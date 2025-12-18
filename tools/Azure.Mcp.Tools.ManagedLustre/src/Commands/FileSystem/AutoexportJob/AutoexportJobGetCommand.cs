@@ -78,7 +78,7 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
         try
         {
             var svc = context.GetService<IManagedLustreService>();
-            
+
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
