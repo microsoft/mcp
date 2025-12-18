@@ -97,7 +97,7 @@ public class LoadTestingService(
         var rgResource = client.GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroup));
         if (testResourceName == null)
         {
-            testResourceName = $"estRun_{DateTime.UtcNow:dd-MM-yyyy_HH:mm:ss tt}";
+            testResourceName = $"TestRun_{DateTime.UtcNow:dd-MM-yyyy_HH:mm:ss tt}";
         }
         var location = (await rgResource.GetAsync(cancellationToken)).Value.Data.Location;
         var response = await rgResource.GetLoadTestingResources().CreateOrUpdateAsync(
