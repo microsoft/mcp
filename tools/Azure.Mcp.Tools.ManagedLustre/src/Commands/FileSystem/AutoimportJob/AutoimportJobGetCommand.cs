@@ -27,12 +27,13 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
 
     public override string Description =>
         """
-        Gets the details of an auto import job for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of an ongoing or completed autoimport operation that syncs data from the linked blob storage container to the Lustre filesystem.
+        Gets the details of auto import jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of autoimport operations that sync data from the linked blob storage container to the Lustre filesystem. If job-name is provided, returns details of a specific job; otherwise returns all jobs for the filesystem.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
-        - job-name: The name of the autoimport job
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
+        Optional options:
+        - job-name: The name of a specific autoimport job (if omitted, all jobs are returned)
         """;
 
     public override string Title => CommandTitle;
@@ -53,7 +54,7 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
 
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption.AsOptional());
     }
 
     protected override AutoimportJobGetOptions BindOptions(ParseResult parseResult)
@@ -67,26 +68,44 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var svc = context.GetService<IManagedLustreService>();
-            var result = await svc.GetAutoimportJobAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
-                options.JobName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+            
+            if (!string.IsNullOrWhiteSpace(options.JobName))
+            {
+                // Get specific job
+                var result = await svc.GetAutoimportJobAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.JobName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new AutoimportJobGetResult(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new AutoimportJobGetResult(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
+            }
+            else
+            {
+                // List all jobs
+                var results = await svc.ListAutoimportJobsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new AutoimportJobListResult(results ?? []), ManagedLustreJsonContext.Default.AutoimportJobListResult);
+            }
         }
         catch (Exception ex)
         {
@@ -98,4 +117,5 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
     }
 
     public record AutoimportJobGetResult(Models.AutoimportJob Job);
+    public record AutoimportJobListResult(List<Models.AutoimportJob> Jobs);
 }

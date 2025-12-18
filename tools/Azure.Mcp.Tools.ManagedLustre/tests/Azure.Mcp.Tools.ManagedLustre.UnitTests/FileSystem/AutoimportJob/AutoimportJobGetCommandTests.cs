@@ -99,7 +99,7 @@ public class AutoimportJobGetCommandTests
     [InlineData("--resource-group rg1 --filesystem-name fs1 --job-name job1", false)] // missing subscription
     [InlineData("--subscription sub123 --filesystem-name fs1 --job-name job1", false)] // missing resource-group
     [InlineData("--subscription sub123 --resource-group rg1 --job-name job1", false)] // missing filesystem-name
-    [InlineData("--subscription sub123 --resource-group rg1 --filesystem-name fs1", false)] // missing job-name
+    [InlineData("--subscription sub123 --resource-group rg1 --filesystem-name fs1", true)] // valid without job-name (list all)
     public async Task ExecuteAsync_ValidationErrors_Return400(string argLine, bool shouldSucceed)
     {
         // Arrange
@@ -216,5 +216,50 @@ public class AutoimportJobGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListsAllJobs_WhenJobNameNotProvided()
+    {
+        // Arrange
+        var expectedJobs = new List<Models.AutoimportJob>
+        {
+            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job1", ProvisioningState = "Succeeded" },
+            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job2", ProvisioningState = "Running" }
+        };
+
+        _managedLustreService.ListAutoimportJobsAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedJobs);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", _subscription,
+            "--resource-group", _resourceGroup,
+            "--filesystem-name", _fileSystemName
+            // Intentionally omitting --job-name
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        await _managedLustreService.Received(1).ListAutoimportJobsAsync(
+            Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+
+        // Should NOT have called GetAutoimportJobAsync
+        await _managedLustreService.DidNotReceive().GetAutoimportJobAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

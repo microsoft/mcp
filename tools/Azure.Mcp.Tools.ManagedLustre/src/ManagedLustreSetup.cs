@@ -30,12 +30,10 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<AutoexportJobCreateCommand>();
         services.AddSingleton<AutoexportJobCancelCommand>();
         services.AddSingleton<AutoexportJobGetCommand>();
-        services.AddSingleton<AutoexportJobListCommand>();
         services.AddSingleton<AutoexportJobDeleteCommand>();
         services.AddSingleton<AutoimportJobCreateCommand>();
         services.AddSingleton<AutoimportJobCancelCommand>();
         services.AddSingleton<AutoimportJobGetCommand>();
-        services.AddSingleton<AutoimportJobListCommand>();
         services.AddSingleton<AutoimportJobDeleteCommand>();
     }
 
@@ -83,9 +81,6 @@ public class ManagedLustreSetup : IAreaSetup
         var autoexportJobGet = serviceProvider.GetRequiredService<AutoexportJobGetCommand>();
         autoexportJob.AddCommand(autoexportJobGet.Name, autoexportJobGet);
 
-        var autoexportJobList = serviceProvider.GetRequiredService<AutoexportJobListCommand>();
-        autoexportJob.AddCommand(autoexportJobList.Name, autoexportJobList);
-
         var autoexportJobDelete = serviceProvider.GetRequiredService<AutoexportJobDeleteCommand>();
         autoexportJob.AddCommand(autoexportJobDelete.Name, autoexportJobDelete);
 
@@ -100,9 +95,6 @@ public class ManagedLustreSetup : IAreaSetup
 
         var autoimportJobGet = serviceProvider.GetRequiredService<AutoimportJobGetCommand>();
         autoimportJob.AddCommand(autoimportJobGet.Name, autoimportJobGet);
-
-        var autoimportJobList = serviceProvider.GetRequiredService<AutoimportJobListCommand>();
-        autoimportJob.AddCommand(autoimportJobList.Name, autoimportJobList);
 
         var autoimportJobDelete = serviceProvider.GetRequiredService<AutoimportJobDeleteCommand>();
         autoimportJob.AddCommand(autoimportJobDelete.Name, autoimportJobDelete);

@@ -27,12 +27,13 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
 
     public override string Description =>
         """
-        Gets the details of an auto export job for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of an ongoing or completed autoexport operation that syncs data from the Lustre filesystem to the linked blob storage container.
+        Gets the details of auto export jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of autoexport operations that sync data from the Lustre filesystem to the linked blob storage container. If job-name is provided, returns details of a specific job; otherwise returns all jobs for the filesystem.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
-        - job-name: The name of the autoexport job
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
+        Optional options:
+        - job-name: The name of a specific autoexport job (if omitted, all jobs are returned)
         """;
 
     public override string Title => CommandTitle;
@@ -53,7 +54,7 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
 
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption.AsOptional());
     }
 
     protected override AutoexportJobGetOptions BindOptions(ParseResult parseResult)
@@ -67,26 +68,44 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var svc = context.GetService<IManagedLustreService>();
-            var result = await svc.GetAutoexportJobAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
-                options.JobName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+            
+            if (!string.IsNullOrWhiteSpace(options.JobName))
+            {
+                // Get specific job
+                var result = await svc.GetAutoexportJobAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.JobName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new AutoexportJobGetResult(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new AutoexportJobGetResult(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
+            }
+            else
+            {
+                // List all jobs
+                var results = await svc.ListAutoexportJobsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new AutoexportJobListResult(results ?? []), ManagedLustreJsonContext.Default.AutoexportJobListResult);
+            }
         }
         catch (Exception ex)
         {
@@ -98,4 +117,5 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
     }
 
     public record AutoexportJobGetResult(Models.AutoexportJob Job);
+    public record AutoexportJobListResult(List<Models.AutoexportJob> Jobs);
 }

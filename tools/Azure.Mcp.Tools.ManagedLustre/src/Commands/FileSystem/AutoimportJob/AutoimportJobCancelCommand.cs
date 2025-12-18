@@ -67,15 +67,15 @@ public sealed class AutoimportJobCancelCommand(ILogger<AutoimportJobCancelComman
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var svc = context.GetService<IManagedLustreService>();
             await svc.CancelAutoimportJobAsync(
                 options.Subscription!,

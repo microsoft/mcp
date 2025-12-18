@@ -272,15 +272,16 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.False(string.IsNullOrWhiteSpace(autoimportJobName.GetString()));
         var autoimportJobNameStr = autoimportJobName.GetString()!;
 
-        // List autoimport jobs
+        // List autoimport jobs (get without job-name returns all jobs)
         var autoimportListResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_list",
+            "managedlustre_fs_autoimport-job_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
+                // Intentionally omitting job-name to list all jobs
             });
 
         var autoimportJobs = autoimportListResult.AssertProperty("jobs");
@@ -372,15 +373,16 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.False(string.IsNullOrWhiteSpace(autoexportJobName.GetString()));
         var autoexportJobNameStr = autoexportJobName.GetString()!;
 
-        // List autoexport jobs
+        // List autoexport jobs (get without job-name returns all jobs)
         var autoexportListResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_list",
+            "managedlustre_fs_autoexport-job_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName) },
                 { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
+                // Intentionally omitting job-name to list all jobs
             });
 
         var autoexportJobs = autoexportListResult.AssertProperty("jobs");
