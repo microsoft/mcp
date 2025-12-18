@@ -4,12 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_get_nodepool_for_cluster()
@@ -26,8 +26,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.True(clusters.GetArrayLength() > 0, "Expected at least one AKS cluster for testing nodepool get command");
 
         var firstCluster = clusters.EnumerateArray().First();
-        var clusterName = firstCluster.GetProperty("name").GetString()!;
-        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
+        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
+        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
 
         // Find a node pool to query
         var nodepoolList = await CallToolAsync(
@@ -43,7 +43,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.True(nodePools.GetArrayLength() > 0, "Expected at least one node pool in the cluster");
 
         var firstPool = nodePools.EnumerateArray().First();
-        var nodepoolName = firstPool.GetProperty("name").GetString()!;
+        var nodepoolName = RegisterOrRetrieveVariable("firstNodepoolName", firstPool.GetProperty("name").GetString()!);
 
         // Get details for that node pool
         var nodepoolGet = await CallToolAsync(
@@ -62,7 +62,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
-        Assert.Equal(nodepoolName, nodePool.GetProperty("name").GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
 
         if (nodePool.TryGetProperty("mode", out var modeProperty))
         {
@@ -74,12 +74,12 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
             Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
         }
 
-        Assert.True(nodePool.TryGetProperty("orchestratorVersion", out _));
-        Assert.True(nodePool.TryGetProperty("currentOrchestratorVersion", out _));
-        Assert.True(nodePool.TryGetProperty("enableAutoScaling", out _));
-        Assert.True(nodePool.TryGetProperty("maxPods", out _));
-        Assert.True(nodePool.TryGetProperty("osSKU", out _));
-        Assert.True(nodePool.TryGetProperty("nodeImageVersion", out _));
+        nodePool.AssertProperty("orchestratorVersion");
+        nodePool.AssertProperty("currentOrchestratorVersion");
+        nodePool.AssertProperty("enableAutoScaling");
+        nodePool.AssertProperty("maxPods");
+        nodePool.AssertProperty("osSKU");
+        nodePool.AssertProperty("nodeImageVersion");
 
         // Enriched node pool fields (presence/type checks)
         if (nodePool.TryGetProperty("tags", out var tags))
