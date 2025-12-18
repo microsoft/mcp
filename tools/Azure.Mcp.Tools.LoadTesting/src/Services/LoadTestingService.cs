@@ -244,11 +244,14 @@ public class LoadTestingService(
             RequestDataLevel = debugMode == true ? RequestDataLevel.ERRORS : RequestDataLevel.NONE,
         };
 
+        using var requestContent = RequestContent.Create(JsonSerializer.Serialize(requestBody, LoadTestJsonContext.Default.TestRunRequest));
+
         var loadTestRunResponse = await loadTestClient.BeginTestRunAsync(
             0,
             testRunId,
-            RequestContent.Create(JsonSerializer.Serialize(requestBody, LoadTestJsonContext.Default.TestRunRequest)),
+            requestContent,
             oldTestRunId: oldTestRunId);
+
         if (loadTestRunResponse == null)
         {
             throw new Exception($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
