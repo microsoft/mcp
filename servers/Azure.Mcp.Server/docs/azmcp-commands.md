@@ -1891,12 +1891,14 @@ azmcp storage blob upload --subscription <subscription> \
 
 ```bash
 # Create a new Storage Sync Service for cloud file share synchronization
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
                                  --location <location>
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name>
@@ -1908,6 +1910,7 @@ azmcp storagesync service get --subscription <subscription> \
                               [--name <service-name>]
 
 # Update an existing Storage Sync Service configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync service update --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
@@ -1988,7 +1991,6 @@ azmcp storagesync registeredserver get --subscription <subscription> \
                                        [--server <server-name>]
 
 # Register a new server with a Storage Sync Service
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver register --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --service <service-name> \
