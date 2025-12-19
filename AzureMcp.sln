@@ -281,11 +281,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Workbooks",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Core.UnitTests", "core\Azure.Mcp.Core\tests\Azure.Mcp.Core.UnitTests\Azure.Mcp.Core.UnitTests.csproj", "{AE9E8273-2844-41A7-AE84-36E2F8B1B3DE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Fabric.Mcp.Core", "Microsoft.Fabric.Mcp.Core", "{4BBEE4C4-18FC-AB55-A8B3-4C6BF70DF9AD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fabric.Mcp.Core", "Fabric.Mcp.Core", "{4BBEE4C4-18FC-AB55-A8B3-4C6BF70DF9AD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{44C29C35-3F02-ECB8-1C42-1E60EABFA6B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Fabric.Mcp.Core", "core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj", "{B7418A46-E05D-4605-9BAE-8308BEF25641}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Core", "core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj", "{B7418A46-E05D-4605-9BAE-8308BEF25641}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Template.Mcp.Core", "Template.Mcp.Core", "{1D0F574F-F118-FD2E-5A10-1304F36167C2}"
 EndProject
