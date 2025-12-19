@@ -36,7 +36,6 @@ public class TelemetryServiceTests
         _mockOptions.Value.Returns(_testConfiguration);
 
         _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
-        _mockServiceOptions.Value.Returns(new ServiceStartOptions());
 
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));

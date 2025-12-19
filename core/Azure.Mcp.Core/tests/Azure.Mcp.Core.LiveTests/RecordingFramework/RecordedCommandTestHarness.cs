@@ -19,6 +19,17 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
 
     public IReadOnlyDictionary<string, string> Variables => TestVariables;
 
+    public string GetRecordingAbsolutePath(string displayName)
+    {
+        var sanitized = RecordingPathResolver.Sanitize(displayName);
+        var relativeDirectory = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null)
+            .Replace('/', Path.DirectorySeparatorChar);
+        var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
+        var absoluteDirectory = Path.Combine(PathResolver.RepositoryRoot, relativeDirectory);
+        Directory.CreateDirectory(absoluteDirectory);
+        return Path.Combine(absoluteDirectory, fileName);
+    }
+
     protected override ValueTask LoadSettingsAsync()
     {
         Settings = new LiveTestSettings

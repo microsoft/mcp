@@ -10,23 +10,10 @@ namespace Azure.Mcp.Tests.Client.Helpers
 {
     public class LiveTestSettingsFixture : IAsyncLifetime
     {
-        private static readonly JsonSerializerOptions s_jsonSerializerOptions = new()
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-        };
-
         public LiveTestSettings Settings { get; private set; } = new();
 
         public virtual async ValueTask InitializeAsync()
         {
-            // If the TestMode is Playback, skip loading other settings. Skipping will match behaviors in CI when resources aren't deployed,
-            // as content is recorded.
-            if (Settings.TestMode == Tests.Helpers.TestMode.Playback)
-            {
-                return;
-            }
-
             var testSettingsFileName = ".testsettings.json";
             var directory = Path.GetDirectoryName(typeof(LiveTestSettingsFixture).Assembly.Location);
 
@@ -37,7 +24,13 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 {
                     var content = await File.ReadAllTextAsync(testSettingsFilePath);
 
-                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content, s_jsonSerializerOptions)
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                    };
+
+                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content, options)
                         ?? throw new Exception("Unable to deserialize live test settings");
 
                     foreach (var (key, value) in Settings.EnvironmentVariables)

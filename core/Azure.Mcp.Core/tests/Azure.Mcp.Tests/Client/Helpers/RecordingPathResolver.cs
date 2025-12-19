@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tests.Client.Helpers;
 /// <summary>
 /// Provides path resolution for session records and related assets.
 /// </summary>
-public sealed class RecordingPathResolver : IRecordingPathResolver
+public sealed class RecordingPathResolver
 {
     private static readonly char[] _invalidChars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 
@@ -118,25 +118,9 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     }
 
     /// <summary>
-    /// Generates a clear message for missing assets.json file to assist users in creating one when they hit the error.
-    /// </summary>
-    private string BuildMissingAssetsErrorMessage(string testClass, string projectDir)
-    {
-        string projectDirName = new DirectoryInfo(projectDir).Name;
-
-        string emptyAssets = $@"{{
-    ""AssetsRepo"": ""Azure/azure-sdk-assets"",
-    ""TagPrefix"": ""{projectDirName}"",
-    ""Tag"": """"
-}}";
-
-        return $"Unable to locate assets.json for test type {testClass}. Create a file named \"assets.json\" within {projectDir} directory with content of {Environment.NewLine}{emptyAssets}";
-    }
-
-    /// <summary>
     /// Attempts to find a nearest assets.json walking upwards.
     /// </summary>
-    public string GetAssetsJson(Type testType)
+    public string? GetAssetsJson(Type testType)
     {
         var projectDir = GetProjectDirectory(testType);
 
@@ -148,6 +132,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
         {
             return assetsFile;
         }
-        throw new FileNotFoundException(BuildMissingAssetsErrorMessage(testType.FullName ?? "UnknownTestClass", projectDir));
+
+        return null;
     }
 }

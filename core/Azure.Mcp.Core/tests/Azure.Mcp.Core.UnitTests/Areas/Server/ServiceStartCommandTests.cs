@@ -279,62 +279,6 @@ public class ServiceStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
-        Assert.Null(options.SupportLoggingFolder);
-    }
-
-    [Theory]
-    [InlineData("/tmp/logs")]
-    [InlineData("C:\\logs")]
-    [InlineData(null)]
-    public void DangerouslyWriteSupportLogsToDirOption_ParsesCorrectly(string? expectedFolder)
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(expectedFolder);
-
-        // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
-
-        // Assert
-        Assert.Equal(expectedFolder, actualValue);
-    }
-
-    [Fact]
-    public void BindOptions_WithSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
-    {
-        // Arrange
-        var logFolder = "/tmp/mcp-support-logs";
-        var parseResult = CreateParseResultWithSupportLogging(logFolder);
-
-        // Act
-        var options = GetBoundOptions(parseResult);
-
-        // Assert
-        Assert.Equal(logFolder, options.SupportLoggingFolder);
-    }
-
-    [Fact]
-    public void BindOptions_WithoutSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(null);
-
-        // Act
-        var options = GetBoundOptions(parseResult);
-
-        // Assert
-        Assert.Null(options.SupportLoggingFolder);
-    }
-
-    [Fact]
-    public void AllOptionsRegistered_IncludesSupportLoggingToFolder()
-    {
-        // Arrange & Act
-        var command = _command.GetCommand();
-
-        // Assert
-        var hasSupportLoggingFolderOption = command.Options.Any(o =>
-            o.Name == ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name);
-        Assert.True(hasSupportLoggingFolderOption, "DangerouslyWriteSupportLogsToDir option should be registered");
     }
 
     [Fact]
@@ -395,67 +339,6 @@ public class ServiceStartCommandTests
         // Assert
         Assert.False(result.IsValid);
         Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
-    }
-
-    [Fact]
-    public void Validate_WithSupportLoggingFolderWhitespace_ReturnsInvalidResult()
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging("   ");
-        var commandResult = parseResult.CommandResult;
-
-        // Act
-        var result = _command.Validate(commandResult, null);
-
-        // Assert
-        Assert.False(result.IsValid);
-        Assert.Contains("The --dangerously-write-support-logs-to-dir option requires a valid folder path", string.Join('\n', result.Errors));
-    }
-
-    [Fact]
-    public void Validate_WithValidSupportLoggingFolder_ReturnsValidResult()
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging("/tmp/mcp-support-logs");
-        var commandResult = parseResult.CommandResult;
-
-        // Act
-        var result = _command.Validate(commandResult, null);
-
-        // Assert
-        Assert.True(result.IsValid);
-        Assert.Empty(result.Errors);
-    }
-
-    [Fact]
-    public void Validate_WithoutSupportLoggingFolder_ReturnsValidResult()
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging(null);
-        var commandResult = parseResult.CommandResult;
-
-        // Act
-        var result = _command.Validate(commandResult, null);
-
-        // Assert
-        Assert.True(result.IsValid);
-        Assert.Empty(result.Errors);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithSupportLoggingFolderWhitespace_ReturnsValidationError()
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithSupportLogging("   ");
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        var context = new CommandContext(serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("The --dangerously-write-support-logs-to-dir option requires a valid folder path", response.Message);
     }
 
     [Fact]
@@ -835,22 +718,6 @@ public class ServiceStartCommandTests
     private ParseResult CreateParseResultWithMinimalOptions()
     {
         return _command.GetCommand().Parse([]);
-    }
-
-    private ParseResult CreateParseResultWithSupportLogging(string? folderPath)
-    {
-        var args = new List<string>
-        {
-            "--transport", "stdio"
-        };
-
-        if (folderPath is not null)
-        {
-            args.Add("--dangerously-write-support-logs-to-dir");
-            args.Add(folderPath);
-        }
-
-        return _command.GetCommand().Parse([.. args]);
     }
 
     private ParseResult CreateParseResultWithToolsAndMode(string[] tools, string mode)
