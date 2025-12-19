@@ -63,7 +63,7 @@
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="9.10.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Quality" Version="9.10.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.10.0-preview.1.25513.3" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.1.1-preview.1.25612.2" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
