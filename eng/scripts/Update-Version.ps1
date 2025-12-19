@@ -43,12 +43,10 @@ $projectText = $projectText -replace "<Version>$([Regex]::Escape($currentVersion
 $projectText | Set-Content $projectFile -Force -NoNewLine
 
 if ($autoVersion) {
-  Write-Host "> Update-ChangeLog.ps1 -Version '$Version' -ChangelogPath '$changeLogPath' -Unreleased `$True"
   & "$RepoRoot/eng/common/scripts/Update-ChangeLog.ps1" -Version $Version `
   -ChangelogPath $changeLogPath -Unreleased $True
 }
 else {
-  Write-Host "> Update-ChangeLog.ps1 -Version '$Version' -ChangelogPath '$changeLogPath' -Unreleased `$False -ReplaceLatestEntryTitle `$$ReplaceLatestEntryTitle -ReleaseDate '$ReleaseDate'"
   & "$RepoRoot/eng/common/scripts/Update-ChangeLog.ps1" -Version $Version `
   -ChangelogPath $changeLogPath -Unreleased $False `
   -ReplaceLatestEntryTitle $ReplaceLatestEntryTitle -ReleaseDate $ReleaseDate

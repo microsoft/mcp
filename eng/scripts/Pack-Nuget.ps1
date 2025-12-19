@@ -23,6 +23,7 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $tempFolder = "$RepoRoot/.work/temp"
+$nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
 
 # When running locally, ignore missing artifacts instead of failing
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
@@ -463,6 +464,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
     New-Item -ItemType Directory -Force -Path "$tempFolder/.mcp" | Out-Null
 
+    Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
     Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force

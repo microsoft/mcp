@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "description": "$(PackageDescription)",
+  "name": "com.microsoft/$(ServerName)",
+  "version": "$(PackageVersion)",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "identifier": "$(PackageId)",
+      "version": "$(PackageVersion)",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "server"
+        },
+        {
+          "type": "positional",
+          "value": "start"
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "$(RepositoryUrl)",
+    "source": "github"
+  }
+}
