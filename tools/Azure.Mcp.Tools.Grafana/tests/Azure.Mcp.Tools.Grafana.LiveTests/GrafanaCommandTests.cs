@@ -4,11 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.LiveTests;
 
-public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class GrafanaCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_grafana_workspaces_by_subscription_id()
@@ -28,6 +29,7 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     [Fact]
     public async Task Should_include_test_grafana_workspace_in_list()
     {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var result = await CallToolAsync(
             "grafana_list",
             new()
@@ -41,15 +43,15 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.True(testWorkspace.ValueKind != JsonValueKind.Undefined, $"Expected to find test Grafana workspace starting with '{Settings.ResourceBaseName}' in the subscription");
 
         // Verify workspace properties
-        Assert.NotNull(testWorkspace.GetProperty("name").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("subscriptionId").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("location").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("resourceGroupName").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("endpoint").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("zoneRedundancy").GetString());
-        Assert.NotNull(testWorkspace.GetProperty("publicNetworkAccess").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("name").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("subscriptionId").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("location").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("resourceGroupName").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("endpoint").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("zoneRedundancy").GetString());
+        Assert.NotNull(testWorkspace.AssertProperty("publicNetworkAccess").GetString());
 
-        Assert.Equal(Settings.ResourceGroupName, testWorkspace.GetProperty("resourceGroupName").GetString());
-        Assert.Equal(Settings.SubscriptionId, testWorkspace.GetProperty("subscriptionId").GetString());
+        Assert.Equal(resourceGroupName, testWorkspace.AssertProperty("resourceGroupName").GetString());
+        Assert.Equal(Settings.SubscriptionId, testWorkspace.AssertProperty("subscriptionId").GetString());
     }
 }
