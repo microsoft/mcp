@@ -1,13 +1,3 @@
----
-title: Lakehouse definition
-description: Learn how to create a Lakehouse item definition when using the Microsoft Fabric REST API.
-ms.title: Lakehouse item definition
-author: anirudha-patro
-ms.author: anpatro
-ms.service: fabric
-ms.date: 11/02/2024
----
-
 # Lakehouse definition
   
 This article provides a breakdown of the definition structure for Lakehouse items using `LakehouseDefinitionV1` format. For detailed information, see: [How to create a lakehouse with Microsoft Fabric Rest API](https://learn.microsoft.com/fabric/data-engineering/lakehouse-api)
