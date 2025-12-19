@@ -160,7 +160,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_create_azure_managed_lustre_with_storage_and_cmk()
     {
-        var fsName = RegisterOrRetrieveVariable("amlfsName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
+        var fsName = RegisterOrRetrieveVariable("amlfsHsmName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
         var subnetId = SanitizeAndRecordSubnetId(Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_SUBNET_ID", ""), "amlfsSubnetId");
         var location = RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", ""));
 
