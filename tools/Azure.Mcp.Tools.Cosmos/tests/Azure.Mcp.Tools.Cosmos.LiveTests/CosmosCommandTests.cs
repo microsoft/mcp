@@ -20,7 +20,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     /// <summary>
     /// 3493 = $..name
     /// </summary>
-    public override List<string> DisabledDefaultSanitizers => [ ..base.DisabledDefaultSanitizers, "3493"];
+    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "3493"];
 
     public override CustomDefaultMatcher? TestMatcher => new()
     {
