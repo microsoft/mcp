@@ -12,10 +12,10 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
-using Azure.Search.Documents.Agents;
-using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
+using Azure.Search.Documents.KnowledgeBases;
+using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
 
 namespace Azure.Mcp.Tools.Search.Services;
@@ -207,14 +207,14 @@ public sealed class SearchService(
 
             if (string.IsNullOrEmpty(knowledgeBaseName))
             {
-                await foreach (var knowledgeBase in searchClient.GetKnowledgeAgentsAsync(cancellationToken: cancellationToken))
+                await foreach (var knowledgeBase in searchClient.GetKnowledgeBasesAsync(cancellationToken: cancellationToken))
                 {
                     bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
                 }
             }
             else
             {
-                var result = await searchClient.GetKnowledgeAgentAsync(knowledgeBaseName, cancellationToken: cancellationToken);
+                var result = await searchClient.GetKnowledgeBaseAsync(knowledgeBaseName, cancellationToken: cancellationToken);
                 if (result?.Value != null)
                 {
                     if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
@@ -250,12 +250,20 @@ public sealed class SearchService(
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
+            var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
 
-            var request = new KnowledgeAgentRetrievalRequest(
-                messages != null ?
-                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
-                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
+            var request = new KnowledgeBaseRetrievalRequest();
+            if (messages != null)
+            {
+                foreach ((string role, string message) in messages)
+                {
+                    request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
+                }
+            }
+            else
+            {
+                request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
+            }
 
             var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
 
