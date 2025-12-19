@@ -17,7 +17,7 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
-         new(new UriRegexSanitizerBody
+         new UriRegexSanitizer(new UriRegexSanitizerBody
          {
              Regex = "resource[Gg]roups/([^?\\/]+)",
              Value = "Sanitized",
