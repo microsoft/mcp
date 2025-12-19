@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -250,8 +249,6 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    [RequiresDynamicCode()]
-    [RequiresUnreferencedCode()]
     public static void InitializeConfigurationAndOptions(this IServiceCollection services)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
@@ -267,6 +264,13 @@ public static class ServiceCollectionExtensions
             .BindConfiguration(string.Empty)
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
+                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
+                // over any other settings.
+                var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
+                var transport = serviceStartOptions.Value.Transport;
+                var isStdioTransport = string.IsNullOrEmpty(transport)
+                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
+
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.
                 var entryAssembly = Assembly.GetEntryAssembly();
@@ -276,22 +280,6 @@ public static class ServiceCollectionExtensions
                 }
 
                 options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
-
-                // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
-                // to telemetry endpoints. Support logging captures debug-level information that may contain
-                // sensitive data, so we disable all telemetry as a safety measure.
-                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.SupportLoggingFolder))
-                {
-                    options.IsTelemetryEnabled = false;
-                    return;
-                }
-
-                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
-                // over any other settings.
-                var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
-                var transport = serviceStartOptions.Value.Transport;
-                var isStdioTransport = string.IsNullOrEmpty(transport)
-                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
