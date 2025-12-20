@@ -4,18 +4,37 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.LiveTests;
 
-public class LoadTestingCommandTests : CommandTestsBase
+public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private const string TestResourceName = "TestResourceName";
     private const string TestRunId = "TestRunId";
-    public LoadTestingCommandTests(ITestOutputHelper output)
-        : base(output)
-    {
-    }
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers => [
+        .. base.UriRegexSanitizers,
+         new UriRegexSanitizer(new UriRegexSanitizerBody
+         {
+             Regex = "resource[Gg]roups/([^?\\/]+)",
+             Value = "Sanitized",
+             GroupForReplace = "1"
+         }),
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName") {
+             Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..value[*].properties.dataPlaneURI") {
+             Value = "sanitized.eastus.cnt-prod.loadtesting.azure.com"
+        })
+    ];
 
     [Fact]
     public async Task Should_list_loadtests()
