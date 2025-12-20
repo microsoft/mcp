@@ -246,24 +246,19 @@ public sealed class SearchService(
         {
             var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
 
+            var knowledgeBase = await searchClient.GetKnowledgeBaseAsync(baseName, cancellationToken: cancellationToken);
+            if (knowledgeBase?.Value == null)
+            {
+                throw new InvalidOperationException($"Knowledge base '{baseName}' not found in service '{serviceName}'.");
+            }
+
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
-
-            var request = new KnowledgeBaseRetrievalRequest();
-            if (messages != null)
-            {
-                foreach ((string role, string message) in messages)
-                {
-                    request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
-                }
-            }
-            else
-            {
-                request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
-            }
+            var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
+            var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
 
             var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
 
@@ -274,6 +269,37 @@ public sealed class SearchService(
         {
             throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
         }
+    }
+
+    internal static KnowledgeBaseRetrievalRequest BuildKnowledgeBaseRetrievalRequest(
+        bool useMinimalReasoning,
+        string? query,
+        IEnumerable<(string role, string message)>? messages)
+    {
+        var request = new KnowledgeBaseRetrievalRequest();
+
+        if (useMinimalReasoning)
+        {
+            var intent = messages != null
+                ? string.Join("\n", messages.Select(m => m.message))
+                : query ?? string.Empty;
+
+            request.Intents.Add(new KnowledgeRetrievalSemanticIntent(intent));
+            return request;
+        }
+
+        if (messages != null)
+        {
+            foreach ((string role, string message) in messages)
+            {
+                request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
+            }
+
+            return request;
+        }
+
+        request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
+        return request;
     }
 
     internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
