@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -85,6 +86,17 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
+            // Try to get IHttpClientFactory for test proxy support (optional)
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+            
             var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
@@ -93,6 +105,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.EventSchema,
                 options.Tenant,
                 options.RetryPolicy,
+                httpClientFactory,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

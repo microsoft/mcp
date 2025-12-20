@@ -93,6 +93,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? eventSchema = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         var operationId = Guid.NewGuid().ToString();
@@ -125,7 +126,23 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Parse and validate event data directly to EventGridEventSchema
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
+            // Create publisher client with optional HTTP client factory for test proxy support
+            EventGridPublisherClient publisherClient;
+            if (httpClientFactory != null)
+            {
+                // Use factory-created HttpClient for recorded tests
+                var httpClient = httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
+                var clientOptions = new Azure.Messaging.EventGrid.EventGridPublisherClientOptions
+                {
+                    Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+                };
+                publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
+            }
+            else
+            {
+                // Standard client for production use
+                publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
+            }
 
             // Serialize each event individually to JSON using source-generated context
             var eventsData = eventGridEventSchemas.Select(eventSchema =>

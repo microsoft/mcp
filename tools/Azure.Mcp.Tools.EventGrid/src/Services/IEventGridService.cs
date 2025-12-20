@@ -29,5 +29,6 @@ public interface IEventGridService
         string? eventSchema = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default);
 }
