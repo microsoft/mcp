@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Support for new versions of Azure AI Search knowledge bases and those set to 'minimal' reasoning effort"
