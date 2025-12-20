@@ -87,7 +87,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
 
-        if (TestMode != TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             return;
         }
