@@ -132,7 +132,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventId = RegisterOrRetrieveVariable("Should_publish_events_id", Guid.NewGuid().ToString());
         var eventTime = RegisterOrRetrieveVariable("Should_publish_events_time", DateTimeOffset.UtcNow.ToString("O"));
         var timestamp = RegisterOrRetrieveVariable("Should_publish_events_timestamp", DateTime.UtcNow.ToString("O"));
-        
+
         var eventData = JsonSerializer.Serialize(new
         {
             id = eventId,
@@ -168,11 +168,11 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventId1 = RegisterOrRetrieveVariable("multiple_event_id1", Guid.NewGuid().ToString());
         var eventTime1 = RegisterOrRetrieveVariable("multiple_event_time1", DateTimeOffset.UtcNow.ToString("O"));
         var timestamp1 = RegisterOrRetrieveVariable("timestamp1", DateTime.UtcNow.ToString("O"));
-        
+
         var eventId2 = RegisterOrRetrieveVariable("multiple_event_id2", Guid.NewGuid().ToString());
         var eventTime2 = RegisterOrRetrieveVariable("multiple_event_time2", DateTimeOffset.UtcNow.ToString("O"));
         var timestamp2 = RegisterOrRetrieveVariable("timestamp2", DateTime.UtcNow.ToString("O"));
-        
+
         var eventData = JsonSerializer.Serialize(new[]
         {
             new
@@ -220,7 +220,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventId = RegisterOrRetrieveVariable("cloudEvent_id", Guid.NewGuid().ToString());
         var eventTime = RegisterOrRetrieveVariable("cloudEvent_time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         var dataTimestamp = RegisterOrRetrieveVariable("cloudEvent_data_timestamp", DateTime.UtcNow.ToString("O"));
-        
+
         var eventData = JsonSerializer.Serialize(new
         {
             specversion = "1.0",
@@ -263,7 +263,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventTime = RegisterOrRetrieveVariable("custom_event_time", DateTimeOffset.UtcNow.ToString("O"));
         var orderTime = RegisterOrRetrieveVariable("custom_order_time", DateTime.UtcNow.Ticks.ToString());
         var occurredTime = RegisterOrRetrieveVariable("custom_occurred_time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-        
+
         var eventData = JsonSerializer.Serialize(new
         {
             id = eventId,
@@ -315,7 +315,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventgridTime = RegisterOrRetrieveVariable("mixed_eventgrid_time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         var cloudEventsId = RegisterOrRetrieveVariable("mixed_cloudevents_id", Guid.NewGuid().ToString());
         var cloudEventsTime = RegisterOrRetrieveVariable("mixed_cloudevents_time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-        
+
         var eventData = JsonSerializer.Serialize(new object[]
         {
             new // EventGrid-style fields
@@ -364,7 +364,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventId = RegisterOrRetrieveVariable("explicit_event_id", Guid.NewGuid().ToString());
         var eventTime = RegisterOrRetrieveVariable("explicit_event_time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         var dataTimestamp = RegisterOrRetrieveVariable("explicit_data_timestamp", DateTime.UtcNow.ToString("O"));
-        
+
         var eventData = JsonSerializer.Serialize(new
         {
             id = "live-explicit-eventgrid-" + eventId,
@@ -406,7 +406,7 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var eventId = RegisterOrRetrieveVariable("default_event_id", Guid.NewGuid().ToString());
         var eventTime = RegisterOrRetrieveVariable("default_event_time", DateTimeOffset.UtcNow.ToString("O"));
         var dataTimestamp = RegisterOrRetrieveVariable("default_data_timestamp", DateTime.UtcNow.ToString("O"));
-        
+
         var eventData = JsonSerializer.Serialize(new
         {
             id = eventId,

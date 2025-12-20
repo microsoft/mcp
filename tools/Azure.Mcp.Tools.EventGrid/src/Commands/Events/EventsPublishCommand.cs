@@ -96,7 +96,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
             {
                 // IHttpClientFactory not registered - this is fine for production scenarios
             }
-            
+
             var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
