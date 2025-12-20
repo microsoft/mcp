@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
@@ -54,7 +55,29 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
             Regex = "resource[Gg]roups/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
+        }),
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "webtests/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
         })
+    };
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    ];
+
+    public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher()
+    {
+        CompareBodies = false
     };
 
     public override async ValueTask InitializeAsync()
@@ -575,7 +598,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
 
         // Verify required properties exist
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("location", out var location));
         Assert.Equal(JsonValueKind.String, location.ValueKind);
@@ -634,7 +657,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
 
         // Verify the created web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
         Assert.True(enabled.GetBoolean());
@@ -668,7 +691,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
 
         // Verify the updated web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         // Verify that the updates were applied
         Assert.True(webTest.TryGetProperty("webTestName", out var updatedName));
