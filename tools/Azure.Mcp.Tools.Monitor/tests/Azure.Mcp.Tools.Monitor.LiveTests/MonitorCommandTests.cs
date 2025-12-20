@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -11,15 +9,13 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
@@ -39,7 +35,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
         : base(output, fixture)
     {
-        _memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
         var cacheService = new SingleUserCliCacheService(_memoryCache);
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
@@ -51,12 +47,28 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory);
     }
 
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
+    {
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    };
+
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
+
+        if (TestMode != TestMode.Playback)
+        {
+            return;
+        }
+
         _logHelper = new LogAnalyticsHelper(
             Settings.ResourceBaseName,
             Settings.SubscriptionId,

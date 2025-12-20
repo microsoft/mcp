@@ -51,7 +51,7 @@ public class LogAnalyticsHelper(
         }
 
         // Get workspace info using the monitor service
-        var workspaces = await _monitorService.ListWorkspaces(_subscription, _tenantId, retryPolicy: null, cancellationToken).ConfigureAwait(false);
+        var workspaces = await _monitorService.ListWorkspaces(_subscription, _tenantId, retryPolicy: null).ConfigureAwait(false);
         var workspace = workspaces.FirstOrDefault(w => w.Name.Equals(_workspaceName, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Could not find workspace {_workspaceName}");
 
