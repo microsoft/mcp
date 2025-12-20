@@ -5,17 +5,14 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests.Email;
 
 [Trait("Command", "EmailSendCommand")]
-public class EmailSendCommandLiveTests : CommandTestsBase
+public class EmailSendCommandLiveTests (ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public EmailSendCommandLiveTests(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public async Task Should_SendEmail_WithValidParameters()
     {
