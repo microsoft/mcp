@@ -130,6 +130,30 @@ public class SearchServiceTests
     }
 
     [Fact]
+    public void BuildKnowledgeBaseRetrievalRequest_UsesEmptyIntentForMinimalReasoning_WhenMessagesEmpty()
+    {
+        var messages = new List<(string role, string message)>();
+
+        var request = SearchService.BuildKnowledgeBaseRetrievalRequest(true, null, messages);
+
+        var intent = Assert.IsType<KnowledgeRetrievalSemanticIntent>(request.Intents.Single());
+        Assert.Equal(string.Empty, intent.Search);
+        Assert.Empty(request.Messages);
+    }
+
+    [Fact]
+    public void BuildKnowledgeBaseRetrievalRequest_UsesQueryIntentForMinimalReasoning_WhenMessagesEmptyAndQueryProvided()
+    {
+        var messages = new List<(string role, string message)>();
+
+        var request = SearchService.BuildKnowledgeBaseRetrievalRequest(true, "Explain search", messages);
+
+        var intent = Assert.IsType<KnowledgeRetrievalSemanticIntent>(request.Intents.Single());
+        Assert.Equal("Explain search", intent.Search);
+        Assert.Empty(request.Messages);
+    }
+
+    [Fact]
     public void BuildKnowledgeBaseRetrievalRequest_UsesMessagesForStandardReasoning_WhenMessagesProvided()
     {
         var messages = new List<(string role, string message)>
@@ -167,6 +191,34 @@ public class SearchServiceTests
         Assert.Equal("user", message.Role);
         var content = Assert.IsType<KnowledgeBaseMessageTextContent>(message.Content.Single());
         Assert.Equal("Explain indexing", content.Text);
+    }
+
+    [Fact]
+    public void BuildKnowledgeBaseRetrievalRequest_UsesEmptyQueryMessageForStandardReasoning_WhenMessagesEmpty()
+    {
+        var messages = new List<(string role, string message)>();
+
+        var request = SearchService.BuildKnowledgeBaseRetrievalRequest(false, null, messages);
+
+        Assert.Empty(request.Intents);
+        var message = Assert.Single(request.Messages);
+        Assert.Equal("user", message.Role);
+        var content = Assert.IsType<KnowledgeBaseMessageTextContent>(message.Content.Single());
+        Assert.Equal(string.Empty, content.Text);
+    }
+
+    [Fact]
+    public void BuildKnowledgeBaseRetrievalRequest_UsesQueryMessageForStandardReasoning_WhenMessagesEmptyAndQueryProvided()
+    {
+        var messages = new List<(string role, string message)>();
+
+        var request = SearchService.BuildKnowledgeBaseRetrievalRequest(false, "Explain search", messages);
+
+        Assert.Empty(request.Intents);
+        var message = Assert.Single(request.Messages);
+        Assert.Equal("user", message.Role);
+        var content = Assert.IsType<KnowledgeBaseMessageTextContent>(message.Content.Single());
+        Assert.Equal("Explain search", content.Text);
     }
 
     private static async Task<string> InvokeProcessRetrieveResponse(string json)

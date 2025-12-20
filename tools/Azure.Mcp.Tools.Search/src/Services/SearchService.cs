@@ -280,7 +280,7 @@ public sealed class SearchService(
 
         if (useMinimalReasoning)
         {
-            var intent = messages != null
+            var intent = messages != null && messages.Any()
                 ? string.Join("\n", messages.Select(m => m.message))
                 : query ?? string.Empty;
 
@@ -288,7 +288,7 @@ public sealed class SearchService(
             return request;
         }
 
-        if (messages != null)
+        if (messages != null && messages.Any())
         {
             foreach ((string role, string message) in messages)
             {
