@@ -101,7 +101,8 @@ public class FoundryService(
                         Encoding.UTF8,
                         "application/json");
 
-                    var httpResponse = await _httpClientService.DefaultClient.PostAsync(url, content, cancellationToken);
+                    using var httpClient = _httpClientService.CreateClient();
+                    var httpResponse = await httpClient.PostAsync(url, content, cancellationToken);
                     httpResponse.EnsureSuccessStatusCode();
 
                     var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);

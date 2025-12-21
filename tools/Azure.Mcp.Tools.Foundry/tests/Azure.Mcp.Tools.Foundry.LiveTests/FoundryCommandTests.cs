@@ -6,13 +6,14 @@ using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-public class FoundryCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_foundry_models()
