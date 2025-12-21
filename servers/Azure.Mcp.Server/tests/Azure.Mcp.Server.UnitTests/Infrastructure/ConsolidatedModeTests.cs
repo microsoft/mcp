@@ -7,7 +7,7 @@ namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 
 public class ConsolidatedModeTests
 {
-    [Fact(Skip ="TODO:Fix this test")]
+    [Fact]
     public async Task ConsolidatedMode_Should_List_Tools_Successfully()
     {
         // Arrange

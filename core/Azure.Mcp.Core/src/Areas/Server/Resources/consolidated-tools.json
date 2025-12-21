@@ -2367,8 +2367,8 @@
       "description": "Create new Azure File Sync Storage Sync Services. A Storage Sync Service is the top-level resource for Azure File Sync deployments.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
           "value": false,
@@ -2400,8 +2400,8 @@
       "description": "Create new Azure File Sync Sync Groups. A Sync Group defines the synchronization topology for a set of cloud and server endpoints.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
           "value": false,
@@ -2433,8 +2433,8 @@
       "description": "Create new Azure File Sync Cloud Endpoints. A Cloud Endpoint represents an Azure file share being synchronized.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
           "value": false,
@@ -2466,8 +2466,8 @@
       "description": "Create new Azure File Sync Server Endpoints. A Server Endpoint represents a specific folder on a registered server that is being synchronized.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
           "value": false,
@@ -2499,12 +2499,12 @@
       "description": "Update Azure File Sync Storage Sync Services configurations and settings.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2532,12 +2532,12 @@
       "description": "Update Azure File Sync Registered Server configurations and settings.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2565,12 +2565,12 @@
       "description": "Update Azure File Sync Server Endpoint configurations and settings.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2602,8 +2602,8 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2635,8 +2635,8 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2668,8 +2668,8 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2701,8 +2701,8 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2734,8 +2734,8 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2788,7 +2788,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_cloudendpoint_changedetection"
+        "storagesync_cloudendpoint_triggerChangeDetection"
       ]
     }
   ]
