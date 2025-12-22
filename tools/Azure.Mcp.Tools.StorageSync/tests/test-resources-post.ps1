@@ -28,25 +28,32 @@ try {
 
     Write-Host "Storage Sync Service found: $($storageSyncService.Id)" -ForegroundColor Green
 
-    # Check if running as administrator
-    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    # Storage Sync Agent registration is only supported on Windows
+    $registeredServer = $null
+    if ($IsWindows -or ($PSVersionTable.PSVersion.Major -lt 6)) {
+        # Check if running as administrator (Windows only)
+        $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-    if (-not $isAdmin) {
-        $errorMessage = @"
+        if (-not $isAdmin) {
+            $errorMessage = @"
 ERROR: Register server failed due to insufficient privileges. Run this command instead:
 
 Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\..\..\..; ./eng/scripts/Deploy-TestResources.ps1 -Paths StorageSync"
 "@
-        Write-Error $errorMessage -ErrorAction Stop
+            Write-Error $errorMessage -ErrorAction Stop
+        }
+
+        # Import Storage Sync module and reset server
+        Import-Module "C:\Program Files\Azure\StorageSyncAgent\StorageSync.Management.ServerCmdlets.dll"
+        Reset-StorageSyncServer -Force -ErrorAction SilentlyContinue
+
+        # Register a RegisteredServer (Note: This requires the Storage Sync Agent to be installed on a server)
+        $registeredServer = $storageSyncService | Register-AzStorageSyncServer
+        Write-Host "Attempted to register server with Storage Sync Service (requires Storage Sync Agent installed)" -ForegroundColor Gray
     }
-
-    # Import Storage Sync module and reset server
-    Import-Module "C:\Program Files\Azure\StorageSyncAgent\StorageSync.Management.ServerCmdlets.dll"
-    Reset-StorageSyncServer -Force -ErrorAction SilentlyContinue
-
-    # Register a RegisteredServer (Note: This requires the Storage Sync Agent to be installed on a server)
-    $registeredServer = $storageSyncService | Register-AzStorageSyncServer
-    Write-Host "Attempted to register server with Storage Sync Service (requires Storage Sync Agent installed)" -ForegroundColor Gray
+    else {
+        Write-Host "Skipping server registration (Windows-only feature, running on $($PSVersionTable.Platform))" -ForegroundColor Yellow
+    }
 
     # Get Sync Group
     $syncGroupName = "$BaseName-sg"
@@ -73,34 +80,39 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
     }
 
     # Get Registered Server if it exists
-    $registeredServerId = $registeredServer.ServerId
-    $registeredServer = Get-AzStorageSyncServer -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -ServerId $registeredServerId -ErrorAction SilentlyContinue
-
     if ($registeredServer) {
-        Write-Host "Registered Server found: $registeredServerId" -ForegroundColor Green
-        Write-Host "  - Server Id: $($registeredServer.ServerId)" -ForegroundColor Gray
-        Write-Host "  - Friendly Name: $($registeredServer.FriendlyName)" -ForegroundColor Gray
+        $registeredServerId = $registeredServer.ServerId
+        $registeredServer = Get-AzStorageSyncServer -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -ServerId $registeredServerId -ErrorAction SilentlyContinue
+
+        if ($registeredServer) {
+            Write-Host "Registered Server found: $registeredServerId" -ForegroundColor Green
+            Write-Host "  - Server Id: $($registeredServer.ServerId)" -ForegroundColor Gray
+            Write-Host "  - Friendly Name: $($registeredServer.FriendlyName)" -ForegroundColor Gray
+        }
+        else {
+            Write-Host "Registered Server '$registeredServerId' not yet available (requires Storage Sync Agent)" -ForegroundColor Yellow
+        }
+
+        # create a new server endpoint if needed
+        $serverEndpointName = "$BaseName-sep"
+        $serverLocalPath = "D:\$serverEndpointName"
+
+        New-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ServerResourceId $registeredServer.ResourceId -ServerLocalPath $serverLocalPath -ErrorAction SilentlyContinue | Out-Null
+
+        # Get Server Endpoint if it exists
+        $serverEndpoint = Get-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ErrorAction SilentlyContinue
+
+        if ($serverEndpoint) {
+            Write-Host "Server Endpoint found: $serverEndpointName" -ForegroundColor Green
+            Write-Host "  - Server Local Path: $($serverEndpoint.ServerLocalPath)" -ForegroundColor Gray
+            Write-Host "  - Cloud Tiering: $($serverEndpoint.CloudTiering)" -ForegroundColor Gray
+        }
+        else {
+            Write-Host "Server Endpoint '$serverEndpointName' not yet available (requires active registered server)" -ForegroundColor Yellow
+        }
     }
     else {
-        Write-Host "Registered Server '$registeredServerId' not yet available (requires Storage Sync Agent)" -ForegroundColor Yellow
-    }
-
-    # create a new server endpoint if needed
-    $serverEndpointName = "$BaseName-sep"
-    $serverLocalPath = "D:\$serverEndpointName"
-
-    New-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ServerResourceId $registeredServer.ResourceId -ServerLocalPath $serverLocalPath -ErrorAction SilentlyContinue | Out-Null
-
-    # Get Server Endpoint if it exists
-    $serverEndpoint = Get-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ErrorAction SilentlyContinue
-
-    if ($serverEndpoint) {
-        Write-Host "Server Endpoint found: $serverEndpointName" -ForegroundColor Green
-        Write-Host "  - Server Local Path: $($serverEndpoint.ServerLocalPath)" -ForegroundColor Gray
-        Write-Host "  - Cloud Tiering: $($serverEndpoint.CloudTiering)" -ForegroundColor Gray
-    }
-    else {
-        Write-Host "Server Endpoint '$serverEndpointName' not yet available (requires active registered server)" -ForegroundColor Yellow
+        Write-Host "Skipping server endpoint creation (no registered server available)" -ForegroundColor Yellow
     }
 
     Write-Host "Storage Sync Service setup completed successfully" -ForegroundColor Green
