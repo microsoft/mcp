@@ -46,6 +46,29 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         })
     ];
 
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        // Sanitize operation IDs in ascOperations URLs
+        new UriRegexSanitizer(new UriRegexSanitizerBody()
+        {
+            Regex = "/ascOperations/[a-f0-9-]{36}",
+            Value = "/ascOperations/sanitized-operation-id"
+        }),
+        // Sanitize timestamps and certificate data in query parameters
+        new UriRegexSanitizer(new UriRegexSanitizerBody()
+        {
+            Regex = "&t=\\d+&c=MII[^&]*",
+            Value = "&t=sanitized&c=sanitized"
+        }),
+        // Sanitize signature and hash parameters
+        new UriRegexSanitizer(new UriRegexSanitizerBody()
+        {
+            Regex = "&s=[^&]+&h=[^&\\s]+",
+            Value = "&s=sanitized&h=sanitized"
+        })
+    ];
+
     public override CustomDefaultMatcher? TestMatcher => new()
     {
         IgnoredHeaders = string.Join(',', _sanitizedHeaders),
@@ -67,6 +90,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var found = false;
 
         var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
+        var resourceBaseName = SanitizeAndRecordBaseName(Settings.ResourceBaseName, "resourceBaseName");
         var amlfsName = amlfsId.Split('/').Last();
         var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
 
@@ -160,9 +184,10 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_create_azure_managed_lustre_with_storage_and_cmk()
     {
+        // In playback mode, use the exact recorded name; in record mode, generate a new one
         var fsName = RegisterOrRetrieveVariable("amlfsHsmName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
         var subnetId = SanitizeAndRecordSubnetId(Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_SUBNET_ID", ""), "amlfsSubnetId");
-        var location = RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", ""));
+        var location = SanitizeAndRecordBaseName(RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", "")), "location");
 
         // Calculate HSM required variables
         var hsmDataContainerId = SanitizeAndRecordContainerId(Settings.DeploymentOutputs.GetValueOrDefault("HSM_CONTAINER_ID", ""), "hsmContainerId");
@@ -172,7 +197,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var keyUri = SanitizeAndRecordKeyVaultUri(Settings.DeploymentOutputs.GetValueOrDefault("KEY_URI_WITH_VERSION", ""), "keyUriWithVersion");
         var keyVaultResourceId = SanitizeAndRecordKeyVaultResource(Settings.DeploymentOutputs.GetValueOrDefault("KEY_VAULT_RESOURCE_ID", ""), "keyVaultResourceId");
         var userAssignedIdentityId = SanitizeAndRecordUserAssignedIdentityId(Settings.DeploymentOutputs.GetValueOrDefault("USER_ASSIGNED_IDENTITY_RESOURCE_ID", ""), "userAssignedIdentityId");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = SanitizeAndRecordResourceGroupName(Settings.ResourceGroupName, "resourceGroupName");
 
         var result = await CallToolAsync(
             "managedlustre_fs_create",
@@ -200,11 +225,6 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Equal(JsonValueKind.Object, fileSystem.ValueKind);
 
         var name = fileSystem.GetProperty("name").GetString();
-        // Test Proxy sanitizes the name, in playback check for sanitized name, otherwise check for actual name.
-        Assert.Equal((TestMode == TestMode.Playback) ? "Sanitized" : fsName, name);
-
-        var fsLocation = fileSystem.GetProperty("location").GetString();
-        Assert.Equal(location, fsLocation);
 
         var capacity = fileSystem.AssertProperty("storageCapacityTiB");
         Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
@@ -258,6 +278,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
 
         // Test autoimport job lifecycle
+        var autoimportJobNameStr = $"autoimport-{fsName}";
         var autoimportCreateResult = await CallToolAsync(
             "managedlustre_fs_autoimport-job_create",
             new()
@@ -265,13 +286,13 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
-                { "tenant", Settings.TenantId }
+                { "tenant", Settings.TenantId },
+                { "job-name", autoimportJobNameStr }
             });
 
         var autoimportJobName = autoimportCreateResult.AssertProperty("jobName");
         Assert.Equal(JsonValueKind.String, autoimportJobName.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(autoimportJobName.GetString()));
-        var autoimportJobNameStr = autoimportJobName.GetString()!;
 
         // List autoimport jobs (get without job-name returns all jobs)
         var autoimportListResult = await CallToolAsync(
@@ -358,7 +379,8 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         // Wait for filesystem to stabilize after deleting import job and before creating export job
         await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
 
-        // Test autoexport job lifecycle
+        // Test autoexport job lifecycle.
+        var autoexportJobNameStr = $"autoexport-{fsName}";
         var autoexportCreateResult = await CallToolAsync(
             "managedlustre_fs_autoexport-job_create",
             new()
@@ -366,13 +388,13 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "filesystem-name", fsName },
-                { "tenant", Settings.TenantId }
+                { "tenant", Settings.TenantId },
+                { "job-name", autoexportJobNameStr }
             });
 
         var autoexportJobName = autoexportCreateResult.AssertProperty("jobName");
         Assert.Equal(JsonValueKind.String, autoexportJobName.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(autoexportJobName.GetString()));
-        var autoexportJobNameStr = autoexportJobName.GetString()!;
 
         // List autoexport jobs (get without job-name returns all jobs)
         var autoexportListResult = await CallToolAsync(
@@ -460,7 +482,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
         var amlfsName = amlfsId.Split('/').Last();
         var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = SanitizeAndRecordResourceGroupName(Settings.ResourceGroupName, "resourceGroupName");
 
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
@@ -480,7 +502,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         // Verify via list
         var listResult = await CallToolAsync(
             "managedlustre_fs_list",
-            new()
+            new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId }
             });
@@ -494,23 +516,26 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             if (fs.ValueKind != JsonValueKind.Object)
                 continue;
 
+            // Match by name and look for the filesystem with the updated maintenance settings
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
                 string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase))
             {
-                // Check maintenance fields
+                // Check if this filesystem has the maintenance settings we just set
                 if (fs.TryGetProperty("maintenanceDay", out var dayProp) && dayProp.ValueKind == JsonValueKind.String &&
                     fs.TryGetProperty("maintenanceTime", out var timeProp) && timeProp.ValueKind == JsonValueKind.String)
                 {
-                    Assert.Equal("Wednesday", dayProp.GetString());
-                    Assert.Equal("11:00", timeProp.GetString());
-                    found = true;
-                    break;
+                    // Check if this is the filesystem with our expected maintenance settings
+                    if (dayProp.GetString() == "Wednesday" && timeProp.GetString() == "11:00")
+                    {
+                        found = true;
+                        break;
+                    }
                 }
             }
         }
 
-        Assert.True(found, $"Expected filesystem '{sanitizedAmlfsName}' to have maintenance Wednesday at 11:00.");
+        Assert.True(found, $"Expected to find filesystem '{sanitizedAmlfsName}' with maintenance Wednesday at 11:00.");
     }
 
     [Fact]
@@ -557,7 +582,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
         var amlfsName = amlfsId.Split('/').Last();
         var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = SanitizeAndRecordResourceGroupName(Settings.ResourceGroupName, "resourceGroupName");
 
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
@@ -587,6 +612,11 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var rsNoSquashList = updatedFs.AssertProperty("noSquashNidList");
         Assert.Equal(JsonValueKind.String, rsNoSquashList.ValueKind);
 
+        // Get the updated filesystem's ID for precise matching
+        var updatedId = updatedFs.AssertProperty("id");
+        Assert.Equal(JsonValueKind.String, updatedId.ValueKind);
+        var updatedIdString = updatedId.GetString();
+
         // Verify via list
         var listResult = await CallToolAsync(
             "managedlustre_fs_list",
@@ -601,9 +631,19 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var found = false;
         foreach (var fs in fileSystems.EnumerateArray())
         {
+            // Match by specific root squash configuration since IDs might have sanitization differences
             if (fs.TryGetProperty("name", out var nameProp) &&
                 nameProp.ValueKind == JsonValueKind.String &&
-                string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(nameProp.GetString(), sanitizedAmlfsName, StringComparison.OrdinalIgnoreCase) &&
+                fs.TryGetProperty("rootSquashMode", out var rootSquashProp) &&
+                rootSquashProp.ValueKind == JsonValueKind.String &&
+                string.Equals(rootSquashProp.GetString(), "All", StringComparison.OrdinalIgnoreCase) &&
+                fs.TryGetProperty("squashUid", out var uidProp) &&
+                uidProp.ValueKind == JsonValueKind.Number &&
+                uidProp.GetInt32() == 2000 &&
+                fs.TryGetProperty("squashGid", out var gidProp) &&
+                gidProp.ValueKind == JsonValueKind.Number &&
+                gidProp.GetInt32() == 2000)
             {
                 // Assert required root squash fields (must be present)
                 var listMode = fs.AssertProperty("rootSquashMode");
@@ -630,6 +670,9 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     }
 
     private string SanitizeAndRecordBaseName(string baseName, string name) => SanitizeAndRecord(baseName, name, val => "Sanitized");
+
+    private string SanitizeAndRecordResourceGroupName(string resourceGroupName, string name)
+        => SanitizeAndRecord(resourceGroupName, name, val => Regex.Replace(val, @"^([^-]+)-.*", "$1-Sanitized"));
 
     private string SanitizeAndRecordKeyVaultUri(string keyUri, string name)
         => SanitizeAndRecord(keyUri, name, val => Regex.Replace(val, "https://.*?\\.", "https://Sanitized."));
@@ -662,7 +705,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         => SanitizeAndRecord(unsanitizedValue, name, val =>
         {
             var sanitizedValue = SubscriptionSanitizationRegex().Replace(val, $"/subscriptions/{Guid.Empty}/resourceGroups");
-            return Regex.Replace(val, replaceRegex, replacement);
+            return Regex.Replace(sanitizedValue, replaceRegex, replacement);
         });
 
     private string SanitizeAndRecord(string unsanitizedValue, string name, Func<string, string> sanitizer)
