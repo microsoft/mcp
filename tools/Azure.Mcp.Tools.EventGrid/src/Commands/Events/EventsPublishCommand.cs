@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -85,6 +86,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
+
             var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
