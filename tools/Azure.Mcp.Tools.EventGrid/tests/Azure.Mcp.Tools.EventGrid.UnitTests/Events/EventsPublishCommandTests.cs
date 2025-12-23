@@ -91,7 +91,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -151,7 +150,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -188,7 +186,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new System.Text.Json.JsonException("Invalid JSON format"));
 
@@ -225,7 +222,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
 
@@ -267,8 +263,7 @@ public class EventsPublishCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<IHttpClientFactory>(),
-                Arg.Any<CancellationToken>())
+                    Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedResult));
         }
 
@@ -320,7 +315,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -372,7 +366,6 @@ public class EventsPublishCommandTests
             Arg.Is("CloudEvents"), // Verify CloudEvents schema is passed
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -423,7 +416,6 @@ public class EventsPublishCommandTests
             Arg.Is("Custom"), // Verify Custom schema is passed
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -491,7 +483,6 @@ public class EventsPublishCommandTests
             Arg.Is(schema), // Verify the schema parameter is passed correctly
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -533,7 +524,6 @@ public class EventsPublishCommandTests
             Arg.Is<string?>(schema => schema == null), // Should be null when not specified
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -568,7 +558,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Azure.RequestFailedException(403, "Access denied to Event Grid topic"));
 
@@ -604,7 +593,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
 
@@ -640,7 +628,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Azure.RequestFailedException(400, "Invalid event data or schema format"));
 
@@ -702,7 +689,6 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -747,7 +733,6 @@ public class EventsPublishCommandTests
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -795,7 +780,6 @@ public class EventsPublishCommandTests
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -841,7 +825,6 @@ public class EventsPublishCommandTests
             Arg.Is("Custom"),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -894,7 +877,6 @@ public class EventsPublishCommandTests
             Arg.Is(schema),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -951,7 +933,6 @@ public class EventsPublishCommandTests
             Arg.Is("Custom"),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<IHttpClientFactory>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
@@ -967,3 +948,4 @@ public class EventsPublishCommandTests
         Assert.Equal(2, result!.Result.PublishedEventCount);
     }
 }
+
