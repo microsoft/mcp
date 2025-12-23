@@ -58,10 +58,21 @@ public class ThreadListCommand : GlobalCommand<ThreadListOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             ThreadListResult result = await service.ListThreads(
                 options.Endpoint!,
                 options.Tenant,
+                httpClientFactory: httpClientFactory,
                 cancellationToken: cancellationToken
             );
 
