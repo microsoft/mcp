@@ -13,8 +13,9 @@ namespace Azure.Mcp.Tools.EventGrid.LiveTests;
 public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     : RecordedCommandTestsBase(output, fixture)
 {
-    public override List<UriRegexSanitizer> UriRegexSanitizers => new()
-    {
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
         new UriRegexSanitizer(new UriRegexSanitizerBody
         {
             Regex = @"resource[gG]roups\/([^?\/]+)",
@@ -27,10 +28,11 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Regex = @"https:\/\/([^.]+)\.([^.]+)-1\.eventgrid\.azure\.net",
             Value = "https://Sanitized.Sanitized-1.eventgrid.azure.net"
         })
-    };
+    ];
 
-    public override List<BodyKeySanitizer> BodyKeySanitizers => new()
-    {
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
         // Sanitize topic names in endpoint URLs
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..endpoint")
         {
@@ -51,17 +53,18 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         {
             Value = "Sanitized"
         })
-    };
+    ];
 
-    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
-    {
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        .. base.BodyRegexSanitizers,
         // Sanitize resource group names with usernames in resource IDs
         new BodyRegexSanitizer(new BodyRegexSanitizerBody
         {
             Regex = @"SSS3PT_[^-/\""]+",
             Value = "Sanitized"
         })
-    };
+    ];
 
     [Fact]
     public async Task Should_list_eventgrid_topics_by_subscription()
