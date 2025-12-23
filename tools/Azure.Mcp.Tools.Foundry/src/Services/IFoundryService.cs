@@ -26,6 +26,7 @@ public interface IFoundryService
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -49,6 +50,7 @@ public interface IFoundryService
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default);
 
     Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
@@ -56,6 +58,7 @@ public interface IFoundryService
         string indexName,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default);
 
     Task<CompletionResult> CreateCompletionAsync(
@@ -101,6 +104,7 @@ public interface IFoundryService
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -110,6 +114,7 @@ public interface IFoundryService
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -122,6 +127,7 @@ public interface IFoundryService
         string? tenantId = null,
         List<string>? evaluatorNames = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -134,6 +140,7 @@ public interface IFoundryService
         string? toolDefinitions,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -182,6 +189,7 @@ public interface IFoundryService
         string systemInstruction,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -189,6 +197,7 @@ public interface IFoundryService
         string projectEndpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -197,6 +206,7 @@ public interface IFoundryService
         string userMessage,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 
@@ -205,6 +215,7 @@ public interface IFoundryService
         string threadId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     );
 

@@ -60,11 +60,22 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             var agents = await service.ListAgents(
                 options.Endpoint!,
                 options.Tenant,
                 options.RetryPolicy,
+                httpClientFactory,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = agents?.Count > 0 ?

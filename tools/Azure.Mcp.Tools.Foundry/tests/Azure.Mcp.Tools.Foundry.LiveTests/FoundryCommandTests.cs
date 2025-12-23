@@ -2,11 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -15,6 +19,61 @@ namespace Azure.Mcp.Tools.Foundry.LiveTests;
 public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     : RecordedCommandTestsBase(output, fixture)
 {
+    /// <summary>
+    /// AZSDK3493 = $..name - Disable because tests need to read resource names from responses
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    // Disable default additions since we're specifying exact sanitizers needed
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "Sanitized",  // Use capital S to match test expectations
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",  // Use capital S to match test expectations
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.TenantId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        // Sanitize timestamp-based deployment names used in tests (e.g., test-deploy-1734984321)
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"test-deploy-\d+",
+            Value = "test-deploy-Sanitized",
+        }),
+        // Sanitize timestamp-based agent names used in tests (e.g., test-agent-1734984321)
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"test-agent-\d+",
+            Value = "test-agent-Sanitized",
+        }),
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        // Sanitize x-ms-operation-identifier header which contains tenant ID
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier"))
+    ];
+
     [Fact]
     public async Task Should_list_foundry_models()
     {
@@ -134,9 +193,9 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_openai_completion()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var deploymentName = RegisterOrRetrieveVariable("OPENAIDEPLOYMENTNAME", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
         var result = await CallToolAsync(
             "foundry_openai_create-completion",
@@ -179,9 +238,9 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_openai_embeddings()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var deploymentName = RegisterOrRetrieveVariable("EMBEDDINGDEPLOYMENTNAME", Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
 
@@ -270,9 +329,9 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_openai_embeddings_with_optional_parameters()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var deploymentName = RegisterOrRetrieveVariable("EMBEDDINGDEPLOYMENTNAME", Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
         var inputText = "Test embeddings with optional parameters.";
         var dimensions = 512; // Test with reduced dimensions if supported
@@ -324,8 +383,8 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_list_openai_models()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
@@ -605,9 +664,9 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_openai_chat_completions()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var deploymentName = RegisterOrRetrieveVariable("OPENAIDEPLOYMENTNAME", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
         var messages = JsonSerializer.Serialize(new[]
         {
@@ -690,9 +749,9 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_openai_chat_completions_with_conversation_history()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var resourceName = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var deploymentName = RegisterOrRetrieveVariable("OPENAIDEPLOYMENTNAME", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini"));
+        var resourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
         var messages = JsonSerializer.Serialize(new[]
         {
@@ -975,8 +1034,8 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     public async Task Should_get_foundry_resource_using_static_resources()
     {
         // Use the static OpenAI account that's defined in test-resources.bicep
-        var staticOpenAIAccount = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "azmcp-test");
-        var staticResourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var staticOpenAIAccount = RegisterOrRetrieveVariable("OPENAIACCOUNT", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "Sanitized"));
+        var staticResourceGroup = RegisterOrRetrieveVariable("OPENAIACCOUNTRESOURCEGROUP", Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources"));
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
@@ -1095,7 +1154,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
 
-        var client = new PersistentAgentsClient(
+        var client = CreatePersistentAgentsClient(
             projectEndpoint,
             await tokenProvider.GetTokenCredentialAsync(default, default));
 
@@ -1117,12 +1176,29 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
 
-        var client = new PersistentAgentsClient(
+        var client = CreatePersistentAgentsClient(
             projectEndpoint,
             await tokenProvider.GetTokenCredentialAsync(default, default));
 
         PersistentAgentThread thread = await client.Threads.CreateThreadAsync([
             new(MessageRole.User, userMessage)]);
         return thread.Id;
+    }
+
+    private PersistentAgentsClient CreatePersistentAgentsClient(string projectEndpoint, Azure.Core.TokenCredential credential)
+    {
+        var serviceProvider = TestHttpClientFactoryProvider.Create(Fixture);
+        var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        
+        if (httpClientFactory != null)
+        {
+            var httpClient = httpClientFactory.CreateClient(nameof(PersistentAgentsClient));
+            var clientOptions = new PersistentAgentsAdministrationClientOptions
+            {
+                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            };
+            return new PersistentAgentsClient(projectEndpoint, credential, clientOptions);
+        }
+        return new PersistentAgentsClient(projectEndpoint, credential);
     }
 }

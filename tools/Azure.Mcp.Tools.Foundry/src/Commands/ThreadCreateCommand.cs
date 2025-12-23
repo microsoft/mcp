@@ -60,11 +60,22 @@ public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             ThreadCreateResult result = await service.CreateThread(
                 options.Endpoint!,
                 options.UserMessage!,
                 options.Tenant,
+                httpClientFactory: httpClientFactory,
                 cancellationToken: cancellationToken
             );
 

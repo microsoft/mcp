@@ -62,6 +62,16 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             var response = await service.ConnectAgent(
                 options.AgentId!,
@@ -69,6 +79,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
                 options.Endpoint!,
                 options.Tenant,
                 options.RetryPolicy,
+                httpClientFactory,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
