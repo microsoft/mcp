@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
 
-public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private string _subscriptionId = default!;
 
