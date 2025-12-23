@@ -154,9 +154,9 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @rebecca-makar @microsoft/azure-mcp
 # ServiceLabel: %tools-ManagedLustre
-# ServiceOwners:                       @wolfgang-desalvador
+# ServiceOwners:                       @wolfgang-desalvador @rebecca-makar
 
 # PRLabel: %tools-MySQL
 /tools/Azure.Mcp.Tools.MySql/          @ramnov @mattkohnms @microsoft/azure-mcp
