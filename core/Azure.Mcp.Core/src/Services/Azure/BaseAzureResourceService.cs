@@ -212,7 +212,7 @@ public abstract class BaseAzureResourceService(
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, authorityHost, retryPolicy, options).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, retryPolicy, options, authorityHost: authorityHost).ConfigureAwait(false);
     }
 
     /// <summary>
