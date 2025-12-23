@@ -29,7 +29,7 @@ resources:
   - repository: azure-sdk-build-tools
     type: git
     name: internal/azure-sdk-build-tools
-    ref: refs/tags/azure-sdk-build-tools_20251112.1
+    ref: refs/heads/users/pahallis/loose-pdb-files
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
