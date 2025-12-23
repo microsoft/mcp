@@ -12,10 +12,11 @@ using Microsoft.Azure.Cosmos;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
+public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientFactory httpClientFactory, ICacheService cacheService)
     : BaseAzureService(tenantService), ICosmosService, IDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CosmosBaseUri = "https://{0}.documents.azure.com:443/";
     private const string CacheGroup = "cosmos";
@@ -64,6 +65,8 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             clientOptions.MaxRetryAttemptsOnRateLimitedRequests = retryPolicy.MaxRetries;
             clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
         }
+
+        clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
 
         CosmosClient cosmosClient;
         switch (authMethod)
