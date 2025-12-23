@@ -11,11 +11,12 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
+public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IEventGridService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<EventGridTopicInfo>> GetTopicsAsync(
         string subscription,
@@ -93,7 +94,6 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? eventSchema = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         var operationId = Guid.NewGuid().ToString();
@@ -126,23 +126,13 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Parse and validate event data directly to EventGridEventSchema
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            // Create publisher client with optional HTTP client factory for test proxy support
-            EventGridPublisherClient publisherClient;
-            if (httpClientFactory != null)
+            // Create publisher client with HTTP client factory for test proxy support
+            var httpClient = _httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
+            var clientOptions = new Azure.Messaging.EventGrid.EventGridPublisherClientOptions
             {
-                // Use factory-created HttpClient for recorded tests
-                var httpClient = httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
-                var clientOptions = new Azure.Messaging.EventGrid.EventGridPublisherClientOptions
-                {
-                    Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
-                };
-                publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
-            }
-            else
-            {
-                // Standard client for production use
-                publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
-            }
+                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            };
+            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
             // Serialize each event individually to JSON using source-generated context
             var eventsData = eventGridEventSchemas.Select(eventSchema =>

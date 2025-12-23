@@ -86,16 +86,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
-            // Try to get IHttpClientFactory for test proxy support (optional)
-            IHttpClientFactory? httpClientFactory = null;
-            try
-            {
-                httpClientFactory = context.GetService<IHttpClientFactory>();
-            }
-            catch (InvalidOperationException)
-            {
-                // IHttpClientFactory not registered - this is fine for production scenarios
-            }
 
             var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
@@ -105,7 +95,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.EventSchema,
                 options.Tenant,
                 options.RetryPolicy,
-                httpClientFactory,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
