@@ -24,7 +24,7 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
 
     public override string Name => "delete";
 
-    public override string Description => "Delete a sync group and all its associated endpoints.";
+    public override string Description => "Remove a sync group from a Storage Sync service. Deleting a sync group also removes all associated cloud endpoints and server endpoints within that group.";
 
     public override string Title => CommandTitle;
 

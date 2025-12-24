@@ -25,7 +25,7 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
 
     public override string Name => "create";
 
-    public override string Description => "Create a new server endpoint in a sync group.";
+    public override string Description => "Add a server endpoint to a sync group by specifying a local server path to sync. Server endpoints represent the on-premises side of the sync relationship and include cloud tiering configuration.";
 
     public override string Title => CommandTitle;
 

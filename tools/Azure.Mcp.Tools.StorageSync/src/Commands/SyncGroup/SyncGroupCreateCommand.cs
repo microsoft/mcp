@@ -25,7 +25,7 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
 
     public override string Name => "create";
 
-    public override string Description => "Create a new sync group in a Storage Sync service.";
+    public override string Description => "Create a sync group within an existing Storage Sync service. Sync groups define a sync topology and contain cloud endpoints (Azure File Shares) and server endpoints (local server paths) that sync together.";
 
     public override string Title => CommandTitle;
 

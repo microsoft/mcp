@@ -26,7 +26,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific cloud endpoint or list all cloud endpoints. If --cloud-endpoint-name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the sync group.";
+    public override string Description => "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.";
 
     public override string Title => CommandTitle;
 

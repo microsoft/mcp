@@ -26,7 +26,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific registered server or list all registered servers. If --server-id is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.";
+    public override string Description => "List all registered servers in a Storage Sync service or retrieve details about a specific registered server. Returns server properties including server ID, registration status, agent version, OS version, and last heartbeat. Use --server-id for a specific server.";
 
     public override string Title => CommandTitle;
 

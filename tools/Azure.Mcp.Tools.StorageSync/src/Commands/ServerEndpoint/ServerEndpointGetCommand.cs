@@ -26,7 +26,7 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific server endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.";
+    public override string Description => "List all server endpoints in a sync group or retrieve details about a specific server endpoint. Returns server endpoint properties including local path, cloud tiering status, sync health, and provisioning state. Use --name for a specific endpoint.";
 
     public override string Title => CommandTitle;
 

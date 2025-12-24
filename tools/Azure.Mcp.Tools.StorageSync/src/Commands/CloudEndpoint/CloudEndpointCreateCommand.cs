@@ -25,7 +25,7 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
 
     public override string Name => "create";
 
-    public override string Description => "Create a new cloud endpoint in a sync group.";
+    public override string Description => "Add a cloud endpoint to a sync group by connecting an Azure File Share. Cloud endpoints represent the Azure storage side of the sync relationship.";
 
     public override string Title => CommandTitle;
 

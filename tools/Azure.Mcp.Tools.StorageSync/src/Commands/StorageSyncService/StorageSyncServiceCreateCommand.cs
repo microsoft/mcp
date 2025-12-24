@@ -26,7 +26,7 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
 
     public override string Name => "create";
 
-    public override string Description => "Create a new Azure Storage Sync service in the specified resource group.";
+    public override string Description => "Create a new Azure Storage Sync service resource in a resource group. This is the top-level service container that manages sync groups, registered servers, and synchronization workflows.";
 
     public override string Title => CommandTitle;
 

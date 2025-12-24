@@ -26,7 +26,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
 
     public override string Name => "get";
 
-    public override string Description => "Get details about a specific Azure Storage Sync service or list all services. If --name is provided, returns a specific service; otherwise, lists all services in the subscription or resource group.";
+    public override string Description => "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.";
 
     public override string Title => CommandTitle;
 
