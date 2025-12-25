@@ -227,41 +227,44 @@ await CreateItemsBatchAsync(items);
 Queue requests and process them at a controlled rate:
 
 ```csharp
-using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Channels;
 
-public class RequestQueue
+public class RequestQueue(int maxConcurrentRequests = 5)
 {
-    private readonly ConcurrentQueue<Func<Task>> _queue = new();
-    private readonly SemaphoreSlim _semaphore;
-    private readonly int _maxConcurrentRequests;
-    
-    public RequestQueue(int maxConcurrentRequests = 5)
+    private readonly int _maxConcurrentRequests = maxConcurrentRequests;
+    private readonly SemaphoreSlim _semaphore = new(maxConcurrentRequests);
+    private readonly Channel<Func<Task>> _channel = Channel.CreateUnbounded<Func<Task>>();
+
+    public RequestQueue : this(maxConcurrentRequests)
     {
-        _maxConcurrentRequests = maxConcurrentRequests;
-        _semaphore = new SemaphoreSlim(maxConcurrentRequests);
+        // Start a single background consumer that processes queued requests.
+        _ = Task.Run(ProcessQueueAsync);
     }
-    
+
     public async Task EnqueueAsync(Func<Task> request)
     {
-        _queue.Enqueue(request);
-        await ProcessQueueAsync();
+        // Enqueue the request; processing is handled by the background loop.
+        await _channel.Writer.WriteAsync(request);
     }
-    
+
     private async Task ProcessQueueAsync()
     {
-        await _semaphore.WaitAsync();
-        
-        try
+        await foreach (var request in _channel.Reader.ReadAllAsync())
         {
-            if (_queue.TryDequeue(out var request))
+            await _semaphore.WaitAsync();
+
+            _ = Task.Run(async () =>
             {
-                await request();
-            }
-        }
-        finally
-        {
-            _semaphore.Release();
+                try
+                {
+                    await request();
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            });
         }
     }
 }
