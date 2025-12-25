@@ -1,11 +1,6 @@
 ---
 title: Microsoft Fabric Admin APIs - Usage Guidelines
 description: Learn when and how to use Fabric Admin APIs, understand permission requirements, and follow best practices for building applications that respect user roles and permissions.
-author: fabricteam
-ms.author: fabricteam
-ms.service: fabric
-ms.topic: concept-article
-ms.date: 12/24/2024
 #customer intent: As a Microsoft Fabric developer I want to understand when to use Admin APIs and how to request explicit permission from users.
 ---
 

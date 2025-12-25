@@ -1,10 +1,6 @@
 ---
 title: Handle API Throttling in Fabric REST APIs
 description: Learn how to handle throttling and rate limiting when building applications that interact with Microsoft Fabric REST APIs, including retry strategies and best practices.
-author: fabricteam
-ms.author: fabricteam
-ms.service: fabric
-ms.topic: concept-article
 ms.date: 12/24/2024
 #customer intent: As a Microsoft Fabric developer I want to learn how to handle API throttling and implement proper retry logic in my applications.
 ---
