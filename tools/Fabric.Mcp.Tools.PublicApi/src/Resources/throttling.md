@@ -389,7 +389,5 @@ public async Task<T> ExecuteWithRetryAsync<T>(
 ## Additional Resources
 
 - [Microsoft Fabric REST API Documentation](https://learn.microsoft.com/rest/api/fabric/)
-- [Long Running Operations](long-running-operation.md)
-- [Pagination](pagination.md)
 - [Azure Architecture: Retry Pattern](https://learn.microsoft.com/azure/architecture/patterns/retry)
 - [Azure Architecture: Circuit Breaker Pattern](https://learn.microsoft.com/azure/architecture/patterns/circuit-breaker)

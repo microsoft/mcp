@@ -406,6 +406,5 @@ describe('Workspace Operations', () => {
 
 - [Microsoft Fabric REST API Documentation](https://learn.microsoft.com/rest/api/fabric/)
 - [Fabric Administrator Roles](https://learn.microsoft.com/fabric/admin/roles)
-- [API Throttling Best Practices](throttling.md)
 - [Authentication and Authorization](https://learn.microsoft.com/fabric/security/security-overview)
 - [Principle of Least Privilege](https://learn.microsoft.com/azure/active-directory/develop/secure-least-privileged-access)
