@@ -1,11 +1,6 @@
 ---
 title: Long running operations
 description: This article describes the long running operations (LRO) for Microsoft Fabric REST APIs, including how to handle responses and poll for results.
-author: billmath
-ms.author: billmath
-ms.topic: how-to
-ms.service: fabric
-ms.date: 03/14/2025
 #customer intent: As a Microsoft Fabric user I want to learn about Long running operations for Fabric REST API's.
 ---
 

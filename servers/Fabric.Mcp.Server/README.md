@@ -197,6 +197,8 @@ Use one of the following options to configure your `mcp.json`:
 
 ### 📝 Best Practices & Examples
 
+* "Show me best practices for handling API throttling in Fabric"
+* "How should I implement retry logic for Fabric API rate limits?"
 * "List recommended retry/backoff behavior for Fabric APIs when rate-limited"
 * "Show me best practices for authenticating with Fabric APIs"
 * "Get example request/response payloads for creating a Notebook"
