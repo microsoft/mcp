@@ -158,153 +158,7 @@ async function makeRequestWithRetry(
 }
 ```
 
-### 2. Implement Circuit Breaker Pattern
-
-For high-volume applications, implement a circuit breaker to prevent cascading failures:
-
-```csharp
-public class CircuitBreaker
-{
-    private int _failureCount = 0;
-    private DateTime _lastFailureTime = DateTime.MinValue;
-    private readonly int _failureThreshold = 5;
-    private readonly TimeSpan _resetTimeout = TimeSpan.FromMinutes(1);
-    
-    public enum CircuitState { Closed, Open, HalfOpen }
-    
-    public CircuitState State { get; private set; } = CircuitState.Closed;
-    
-    public bool CanExecute()
-    {
-        if (State == CircuitState.Open)
-        {
-            if (DateTime.UtcNow - _lastFailureTime > _resetTimeout)
-            {
-                State = CircuitState.HalfOpen;
-                return true;
-            }
-            return false;
-        }
-        return true;
-    }
-    
-    public void RecordSuccess()
-    {
-        _failureCount = 0;
-        State = CircuitState.Closed;
-    }
-    
-    public void RecordFailure()
-    {
-        _failureCount++;
-        _lastFailureTime = DateTime.UtcNow;
-        
-        if (_failureCount >= _failureThreshold)
-        {
-            State = CircuitState.Open;
-        }
-    }
-}
-```
-
-### 3. Use Batch Operations When Available
-
-Reduce the number of API calls by using batch operations where supported:
-
-```csharp
-// Instead of multiple individual requests
-// for (int i = 0; i < items.Count; i++)
-// {
-//     await CreateItemAsync(items[i]);
-// }
-
-// Use batch operation if available
-await CreateItemsBatchAsync(items);
-```
-
-### 4. Implement Request Queuing
-
-Queue requests and process them at a controlled rate:
-
-```csharp
-using System.Threading;
-using System.Threading.Channels;
-
-public class RequestQueue(int maxConcurrentRequests = 5)
-{
-    private readonly int _maxConcurrentRequests = maxConcurrentRequests;
-    private readonly SemaphoreSlim _semaphore = new(maxConcurrentRequests);
-    private readonly Channel<Func<Task>> _channel = Channel.CreateUnbounded<Func<Task>>();
-
-    public RequestQueue : this(maxConcurrentRequests)
-    {
-        // Start a single background consumer that processes queued requests.
-        _ = Task.Run(ProcessQueueAsync);
-    }
-
-    public async Task EnqueueAsync(Func<Task> request)
-    {
-        // Enqueue the request; processing is handled by the background loop.
-        await _channel.Writer.WriteAsync(request);
-    }
-
-    private async Task ProcessQueueAsync()
-    {
-        await foreach (var request in _channel.Reader.ReadAllAsync())
-        {
-            await _semaphore.WaitAsync();
-
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await request();
-                }
-                finally
-                {
-                    _semaphore.Release();
-                }
-            });
-        }
-    }
-}
-```
-
-### 5. Cache Responses When Appropriate
-
-Implement caching to reduce redundant API calls:
-
-```csharp
-using System.Runtime.Caching;
-
-public class ApiCache
-{
-    private static readonly MemoryCache _cache = MemoryCache.Default;
-    
-    public async Task<T> GetOrFetchAsync<T>(
-        string cacheKey, 
-        Func<Task<T>> fetchFunc, 
-        TimeSpan cacheDuration)
-    {
-        if (_cache.Get(cacheKey) is T cachedValue)
-        {
-            return cachedValue;
-        }
-        
-        var value = await fetchFunc();
-        
-        var policy = new CacheItemPolicy
-        {
-            AbsoluteExpiration = DateTimeOffset.UtcNow.Add(cacheDuration)
-        };
-        
-        _cache.Set(cacheKey, value, policy);
-        return value;
-    }
-}
-```
-
-### 6. Monitor and Log Throttling Events
+### 2. Monitor and Log Throttling Events
 
 Track throttling occurrences to identify patterns and optimize your application:
 
@@ -353,7 +207,7 @@ public async Task<T> ExecuteWithRetryAsync<T>(
         {
             return await operation();
         }
-        catch (HttpRequestException ex) when (ex.Message.Contains("429"))
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
             if (retryCount >= maxRetries)
             {
@@ -361,7 +215,7 @@ public async Task<T> ExecuteWithRetryAsync<T>(
             }
             
             // Calculate delay
-            int delaySeconds = useExponentialBackoff 
+            int delaySeconds = useExponentialBackoff
                 ? (int)Math.Pow(2, retryCount) * 5  // 5, 10, 20, 40 seconds
                 : 30;  // Fixed 30 seconds
             
