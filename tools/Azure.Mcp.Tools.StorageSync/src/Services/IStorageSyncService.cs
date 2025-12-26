@@ -55,7 +55,9 @@ public interface IStorageSyncService
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
-        Dictionary<string, object>? properties = null,
+        string? incomingTrafficPolicy = null,
+        Dictionary<string, object>? tags = null,
+        string? identityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

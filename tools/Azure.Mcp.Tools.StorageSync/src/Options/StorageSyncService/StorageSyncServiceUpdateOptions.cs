@@ -21,5 +21,10 @@ public class StorageSyncServiceUpdateOptions : BaseStorageSyncOptions
     /// <summary>
     /// Gets or sets tags for the resource.
     /// </summary>
-    public Dictionary<string, string>? Tags { get; set; }
+    public Dictionary<string, object>? Tags { get; set; }
+
+    /// <summary>
+    /// Gets or sets the managed service identity type.
+    /// </summary>
+    public string? IdentityType { get; set; }
 }

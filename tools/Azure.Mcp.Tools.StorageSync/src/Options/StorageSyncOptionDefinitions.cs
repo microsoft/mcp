@@ -14,10 +14,11 @@ public static class StorageSyncOptionDefinitions
     /// </summary>
     public static class StorageSyncService
     {
-        public const string NameName = "name";
-        public const string LocationName = "location";
-        public const string IncomingTrafficPolicyName = "incoming-traffic-policy";
-        public const string TagsName = "tags";
+        private const string NameName = "name";
+        private const string LocationName = "location";
+        private const string IncomingTrafficPolicyName = "incoming-traffic-policy";
+        private const string TagsName = "tags";
+        private const string IdentityTypeName = "identity-type";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-n")
         {
@@ -40,6 +41,11 @@ public static class StorageSyncOptionDefinitions
         {
             Description = "Tags to assign to the service (space-separated key=value pairs)"
         };
+
+        public static readonly Option<string> IdentityType = new($"--{IdentityTypeName}")
+        {
+            Description = "Managed service identity type (None, SystemAssigned, UserAssigned, SystemAssigned,UserAssigned)"
+        };
     }
 
     /// <summary>
@@ -47,7 +53,7 @@ public static class StorageSyncOptionDefinitions
     /// </summary>
     public static class SyncGroup
     {
-        public const string NameName = "sync-group-name";
+        private const string NameName = "sync-group-name";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-sg")
         {
@@ -61,11 +67,11 @@ public static class StorageSyncOptionDefinitions
     /// </summary>
     public static class CloudEndpoint
     {
-        public const string NameName = "cloud-endpoint-name";
-        public const string StorageAccountResourceIdName = "storage-account-resource-id";
-        public const string AzureFileShareNameName = "azure-file-share-name";
-        public const string DirectoryPathName = "directory-path";
-        public const string RecursiveName = "recursive";
+        private const string NameName = "cloud-endpoint-name";
+        private const string StorageAccountResourceIdName = "storage-account-resource-id";
+        private const string AzureFileShareNameName = "azure-file-share-name";
+        private const string DirectoryPathName = "directory-path";
+        private const string RecursiveName = "recursive";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-ce")
         {
@@ -101,12 +107,12 @@ public static class StorageSyncOptionDefinitions
     /// </summary>
     public static class ServerEndpoint
     {
-        public const string NameName = "server-endpoint-name";
-        public const string ServerResourceIdName = "server-resource-id";
-        public const string ServerLocalPathName = "server-local-path";
-        public const string CloudTieringName = "cloud-tiering";
-        public const string VolumeFreeSpacePercentName = "volume-free-space-percent";
-        public const string TierFilesOlderThanDaysName = "tier-files-older-than-days";
+        private const string NameName = "server-endpoint-name";
+        private const string ServerResourceIdName = "server-resource-id";
+        private const string ServerLocalPathName = "server-local-path";
+        private const string CloudTieringName = "cloud-tiering";
+        private const string VolumeFreeSpacePercentName = "volume-free-space-percent";
+        private const string TierFilesOlderThanDaysName = "tier-files-older-than-days";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-se")
         {
@@ -147,8 +153,8 @@ public static class StorageSyncOptionDefinitions
     /// </summary>
     public static class RegisteredServer
     {
-        public const string Id = "server-id";
-        public const string Name = "server-name";
+        private const string Id = "server-id";
+        private const string Name = "server-name";
 
         public static readonly Option<string> ServerId = new($"--{Id}")
         {

@@ -44,6 +44,9 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Tags.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.AsOptional());
     }
 
     protected override StorageSyncServiceUpdateOptions BindOptions(ParseResult parseResult)
@@ -51,6 +54,25 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
+        options.IncomingTrafficPolicy = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.Name);
+        
+        // Parse tags from string format "key1=value1 key2=value2"
+        var tagsString = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Tags.Name);
+        if (!string.IsNullOrEmpty(tagsString))
+        {
+            options.Tags = new Dictionary<string, object>();
+            var tagPairs = tagsString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var pair in tagPairs)
+            {
+                var parts = pair.Split('=', 2);
+                if (parts.Length == 2)
+                {
+                    options.Tags[parts[0]] = parts[1];
+                }
+            }
+        }
+        
+        options.IdentityType = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.Name);
         return options;
     }
 
@@ -72,7 +94,9 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,
-                null,
+                options.IncomingTrafficPolicy,
+                options.Tags,
+                options.IdentityType,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

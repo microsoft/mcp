@@ -183,7 +183,9 @@ public sealed class StorageSyncService(
         string subscription,
         string resourceGroup,
         string storageSyncServiceName,
-        Dictionary<string, object>? properties = null,
+        string? incomingTrafficPolicy = null,
+        Dictionary<string, object>? tags = null,
+        string? identityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -203,15 +205,28 @@ public sealed class StorageSyncService(
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
             var patch = new Azure.ResourceManager.StorageSync.Models.StorageSyncServicePatch();
-            if (properties != null)
+
+            // Update incoming traffic policy
+            if (!string.IsNullOrEmpty(incomingTrafficPolicy))
             {
-                if (properties.TryGetValue("tags", out var tagsObj) && tagsObj is Dictionary<string, string> tags)
+                patch.IncomingTrafficPolicy = incomingTrafficPolicy;
+            }
+            
+            // Update tags
+            if (tags != null)
+            {
+                foreach (var tag in tags)
                 {
-                    foreach (var tag in tags)
-                    {
-                        patch.Tags[tag.Key] = tag.Value;
-                    }
+                    patch.Tags[tag.Key] = tag.Value?.ToString() ?? string.Empty;
                 }
+            }
+
+            // Update identity
+            if (!string.IsNullOrEmpty(identityType))
+            {
+                var identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                    new Azure.ResourceManager.Models.ManagedServiceIdentityType(identityType));
+                patch.Identity = identity;
             }
 
             var operation = await serviceResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);

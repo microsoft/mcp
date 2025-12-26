@@ -9,7 +9,7 @@ param baseName string = resourceGroup().name
 param location string = resourceGroup().location
 
 @description('The storage account name for cloud endpoint.')
-param storageAccountName string = 'samcpstoragesync'
+param storageAccountName string = 'sa${uniqueString(resourceGroup().id, baseName)}'
 
 // Storage Sync Service
 resource storageSyncService 'Microsoft.StorageSync/storageSyncServices@2022-06-01' = {

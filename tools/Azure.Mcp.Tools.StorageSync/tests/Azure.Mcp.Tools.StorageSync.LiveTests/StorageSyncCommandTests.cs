@@ -135,20 +135,61 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task Should_create_storage_sync_service()
+    public async Task Should_Crud_storage_sync_service()
     {
-        var result = await CallToolAsync(
-            "storagesync_service_create",
-            new()
-            {
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_create",
+                new()
+                {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", $"{Settings.ResourceBaseName}-test" },
                 { "location", "eastus" }
-            });
+                });
 
-        var service = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+            var service = result.AssertProperty("result");
+            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+        }
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-test" }
+                });
+            var service = result.AssertProperty("results");
+            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+        }
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_update",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-test" },
+                    { "incomingTrafficPolicy", $"AllowVirtualNetworksOnly" },
+                    { "tags", "{\"Environment\":\"Test\"}" },
+                    { "identityType", $"SystemAssigned" }
+                });
+            var service = result.AssertProperty("result");
+            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+        }
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-test" }
+                });
+            var deleteResult = result.AssertProperty("message");
+            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+        }
     }
 
     [Fact]
