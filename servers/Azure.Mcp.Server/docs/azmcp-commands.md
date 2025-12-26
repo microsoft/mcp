@@ -1990,13 +1990,6 @@ azmcp storagesync registeredserver get --subscription <subscription> \
                                        --service <service-name> \
                                        [--server <server-name>]
 
-# Register a new server with a Storage Sync Service
-azmcp storagesync registeredserver register --subscription <subscription> \
-                                            --resource-group <resource-group> \
-                                            --service <service-name> \
-                                            --server <server-name> \
-                                            --server-id <unique-server-id>
-
 # Unregister a server from a Storage Sync Service
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver unregister --subscription <subscription> \

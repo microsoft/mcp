@@ -14,8 +14,12 @@ $ErrorActionPreference = "Stop"
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 $storageSyncServiceName = $BaseName
+$syncGroupName = $DeploymentOutputs.syncGroupName
+$cloudEndpointName = $DeploymentOutputs.cloudEndpointName
 
 Write-Host "Setting up Storage Sync Service for testing: $storageSyncServiceName" -ForegroundColor Yellow
+Write-Host "Sync Group Name: $syncGroupName" -ForegroundColor Gray
+Write-Host "Cloud Endpoint Name: $cloudEndpointName" -ForegroundColor Gray
 
 try {
     # Check if Storage Sync Service exists
@@ -55,8 +59,7 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
         Write-Host "Skipping server registration (Windows-only feature, running on $($PSVersionTable.Platform))" -ForegroundColor Yellow
     }
 
-    # Get Sync Group
-    $syncGroupName = "$BaseName-sg"
+    # Get Sync Group from deployment outputs
     $syncGroup = Get-AzStorageSyncGroup -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -ErrorAction SilentlyContinue
 
     if ($syncGroup) {
@@ -67,7 +70,6 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
     }
 
     # Get Cloud Endpoint if it exists
-    $cloudEndpointName = "$BaseName-ce"
     $cloudEndpoint = Get-AzStorageSyncCloudEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $cloudEndpointName -ErrorAction SilentlyContinue
 
     if ($cloudEndpoint) {

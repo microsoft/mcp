@@ -22,7 +22,7 @@ resource storageSyncService 'Microsoft.StorageSync/storageSyncServices@2022-06-0
 
 // Sync Group
 resource syncGroup 'Microsoft.StorageSync/storageSyncServices/syncGroups@2022-06-01' = {
-  name: '${baseName}-sg-${uniqueString(resourceGroup().id)}'
+  name: '${baseName}-sg'
   parent: storageSyncService
   properties: {
   }
@@ -60,7 +60,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 
 // File Share
 resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-01-01' = {
-  name: '${storageAccount.name}/default/${baseName}-share-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  name: '${storageAccount.name}/default/${baseName}-share'
   properties: {
     accessTier: 'TransactionOptimized'
     shareQuota: 100
@@ -73,7 +73,7 @@ resource cloudEndpoint 'Microsoft.StorageSync/storageSyncServices/syncGroups/clo
   parent: syncGroup
   properties: {
     storageAccountResourceId: storageAccount.id
-    azureFileShareName: '${baseName}-share-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+    azureFileShareName: '${baseName}-share'
     storageAccountTenantId: subscription().tenantId
   }
   dependsOn: [
@@ -88,6 +88,6 @@ output syncGroupName string = syncGroup.name
 output syncGroupId string = syncGroup.id
 output storageAccountName string = storageAccount.name
 output storageAccountId string = storageAccount.id
-output fileShareName string = '${baseName}-share-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+output fileShareName string = '${baseName}-share'
 output cloudEndpointName string = cloudEndpoint.name
 output cloudEndpointId string = cloudEndpoint.id

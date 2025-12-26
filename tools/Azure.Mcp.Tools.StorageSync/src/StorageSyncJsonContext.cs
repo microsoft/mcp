@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 using Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 using Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
+using Azure.Mcp.Tools.StorageSync.Models;
 
 namespace Azure.Mcp.Tools.StorageSync;
 
@@ -33,6 +34,14 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(ServerEndpointCreateCommand.ServerEndpointCreateCommandResult))]
 [JsonSerializable(typeof(ServerEndpointUpdateCommand.ServerEndpointUpdateCommandResult))]
 [JsonSerializable(typeof(ServerEndpointDeleteCommand.ServerEndpointDeleteCommandResult))]
+[JsonSerializable(typeof(ServerEndpointSyncStatusSchema))]
+[JsonSerializable(typeof(ServerEndpointCloudTieringSchema))]
+[JsonSerializable(typeof(ServerEndpointOfflineDataTransferSchema))]
+[JsonSerializable(typeof(ServerEndpointSyncPoliciesSchema))]
+[JsonSerializable(typeof(ServerEndpointRecallStatusSchema))]
+[JsonSerializable(typeof(ServerEndpointRecallErrorSchema))]
+[JsonSerializable(typeof(StorageSyncServiceIdentitySchema))]
+[JsonSerializable(typeof(StorageSyncServicePropertiesSchema))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class StorageSyncJsonContext : JsonSerializerContext
 {

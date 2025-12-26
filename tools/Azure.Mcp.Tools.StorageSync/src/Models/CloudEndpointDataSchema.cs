@@ -19,12 +19,14 @@ public sealed record CloudEndpointDataSchema(
     [property: JsonPropertyName("partnershipId")] string? PartnershipId = null,
     [property: JsonPropertyName("provisioningState")] string? ProvisioningState = null,
     [property: JsonPropertyName("lastOperationName")] string? LastOperationName = null,
-    [property: JsonPropertyName("lastSyncTime")] DateTimeOffset? LastSyncTime = null)
+    [property: JsonPropertyName("lastWorkflowId")] string? LastWorkflowId = null,
+    [property: JsonPropertyName("friendlyName")] string? FriendlyName = null,
+    [property: JsonPropertyName("changeEnumerationStatus")] string? ChangeEnumerationStatus = null)
 {
     /// <summary>
     /// Default constructor for deserialization.
     /// </summary>
-    public CloudEndpointDataSchema() : this(null, null, null, null, null, null, null, null, null, null) { }
+    public CloudEndpointDataSchema() : this(null, null, null, null, null, null, null, null, null, null, null, null) { }
 
     /// <summary>
     /// Creates a CloudEndpointDataSchema from a CloudEndpointResource.
@@ -38,8 +40,13 @@ public sealed record CloudEndpointDataSchema(
             data.ResourceType.ToString(),
             data.StorageAccountResourceId?.ToString(),
             data.AzureFileShareName,
-            null,
-            data.PartnershipId?.ToString()
+            data.StorageAccountTenantId.HasValue ? data.StorageAccountTenantId.ToString() : default,
+            data.PartnershipId?.ToString(),
+            data.ProvisioningState,
+            data.LastOperationName,
+            data.LastWorkflowId,
+            data.FriendlyName,
+            data.ChangeEnumerationStatus?.ToString()
         );
     }
 }
