@@ -48,6 +48,10 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.ServerResourceId.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.ServerLocalPath.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.AsOptional());
     }
 
     protected override ServerEndpointCreateOptions BindOptions(ParseResult parseResult)
@@ -59,6 +63,10 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
         options.ServerEndpointName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.Name.Name);
         options.ServerResourceId = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.ServerResourceId.Name);
         options.ServerLocalPath = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.ServerLocalPath.Name);
+        options.CloudTiering = parseResult.GetValueOrDefault<bool?>(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.Name);
+        options.VolumeFreeSpacePercent = parseResult.GetValueOrDefault<int?>(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.Name);
+        options.TierFilesOlderThanDays = parseResult.GetValueOrDefault<int?>(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.Name);
+        options.LocalCacheMode = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.Name);
         return options;
     }
 
@@ -84,9 +92,10 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
                 options.ServerEndpointName!,
                 options.ServerResourceId!,
                 options.ServerLocalPath!,
-                false,
-                null,
-                null,
+                options.CloudTiering,
+                options.VolumeFreeSpacePercent,
+                options.TierFilesOlderThanDays,
+                options.LocalCacheMode,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

@@ -113,6 +113,7 @@ public static class StorageSyncOptionDefinitions
         private const string CloudTieringName = "cloud-tiering";
         private const string VolumeFreeSpacePercentName = "volume-free-space-percent";
         private const string TierFilesOlderThanDaysName = "tier-files-older-than-days";
+        private const string LocalCacheModeName = "local-cache-mode";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-se")
         {
@@ -132,7 +133,7 @@ public static class StorageSyncOptionDefinitions
             Required = true
         };
 
-        public static readonly Option<bool> CloudTiering = new($"--{CloudTieringName}", "-ct")
+        public static readonly Option<bool?> CloudTiering = new($"--{CloudTieringName}", "-ct")
         {
             Description = "Enable cloud tiering on this endpoint"
         };
@@ -145,6 +146,11 @@ public static class StorageSyncOptionDefinitions
         public static readonly Option<int> TierFilesOlderThanDays = new($"--{TierFilesOlderThanDaysName}")
         {
             Description = "Archive files not accessed for this many days"
+        };
+
+        public static readonly Option<string> LocalCacheMode = new($"--{LocalCacheModeName}")
+        {
+            Description = "Local cache mode: DownloadNewAndModifiedFiles, UpdateLocallyCachedFiles"
         };
     }
 

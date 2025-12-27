@@ -69,8 +69,11 @@ public sealed record ServerEndpointSyncStatusSchema(
     [property: JsonPropertyName("totalPersistentFilesNotSyncingCount")] long? TotalPersistentFilesNotSyncingCount = null,
     [property: JsonPropertyName("lastUpdatedOn")] DateTimeOffset? LastUpdatedOn = null)
 {
-    public static ServerEndpointSyncStatusSchema FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointSyncStatus sdkStatus)
+    public static ServerEndpointSyncStatusSchema? FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointSyncStatus? sdkStatus)
     {
+        if (sdkStatus == null)
+            return null;
+
         return new ServerEndpointSyncStatusSchema(
             null,
             sdkStatus.DownloadHealth?.ToString(),
@@ -153,13 +156,16 @@ public sealed record ServerEndpointRecallStatusSchema(
     [property: JsonPropertyName("totalRecallErrorsCount")] long? TotalRecallErrorsCount = null,
     [property: JsonPropertyName("recallErrors")] IReadOnlyList<ServerEndpointRecallErrorSchema>? RecallErrors = null)
 {
-    public static ServerEndpointRecallStatusSchema FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointRecallStatus sdkStatus)
+    public static ServerEndpointRecallStatusSchema? FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointRecallStatus? sdkStatus)
     {
+        if (sdkStatus == null)
+            return null;
+
         return new ServerEndpointRecallStatusSchema(
             null,
             sdkStatus.LastUpdatedOn,
             sdkStatus.TotalRecallErrorsCount,
-            sdkStatus.RecallErrors?.Select(ServerEndpointRecallErrorSchema.FromSdkObject).ToList()
+            sdkStatus.RecallErrors?.Select(ServerEndpointRecallErrorSchema.FromSdkObject).OfType<ServerEndpointRecallErrorSchema>().ToList() ?? []
         );
     }
 };
@@ -171,8 +177,11 @@ public sealed record ServerEndpointRecallErrorSchema(
     [property: JsonPropertyName("errorCode")] long? ErrorCode = null,
     [property: JsonPropertyName("count")] long? Count = null)
 {
-    public static ServerEndpointRecallErrorSchema FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointRecallError sdkError)
+    public static ServerEndpointRecallErrorSchema? FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointRecallError? sdkError)
     {
+        if (sdkError == null)
+            return null;
+
         return new ServerEndpointRecallErrorSchema(
             sdkError.ErrorCode,
             sdkError.Count

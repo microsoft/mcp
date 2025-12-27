@@ -101,7 +101,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
     }
 
-    [Fact]
+    [Fact(Skip = "QFE is in progress for protocol mismatch , causing deserialization issue")]
     public async Task Should_get_registered_servers()
     {
         var result = await CallToolAsync(
@@ -193,108 +193,259 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task Should_update_storage_sync_service()
+    public async Task Should_Crud_sync_group()
     {
-        var result = await CallToolAsync(
-            "storagesync_service_update",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "tags", "{\"Environment\":\"Test\"}" }
-            });
+        // Create storage sync service
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
+                    { "location", "eastus" }
+                });
 
-        var service = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+            var service = result.AssertProperty("result");
+            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+        }
+
+        // Create sync group
+        {
+            var result = await CallToolAsync(
+                "storagesync_syncgroup_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                });
+
+            var syncGroup = result.AssertProperty("result");
+            Assert.NotEqual(JsonValueKind.Null, syncGroup.ValueKind);
+        }
+
+        // Get sync group
+        {
+            var result = await CallToolAsync(
+                "storagesync_syncgroup_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                });
+
+            var syncGroup = result.AssertProperty("results");
+            Assert.NotEqual(JsonValueKind.Null, syncGroup.ValueKind);
+        }
+
+        // Delete sync group
+        {
+            var result = await CallToolAsync(
+                "storagesync_syncgroup_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                });
+
+            var deleteResult = result.AssertProperty("message");
+            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+        }
+
+        // Delete storage sync service
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" }
+                });
+
+            var deleteResult = result.AssertProperty("message");
+            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+        }
     }
 
     [Fact]
-    public async Task Should_delete_storage_sync_service()
+    public async Task Should_Crud_endpoint()
     {
-        var result = await CallToolAsync(
-            "storagesync_service_delete",
-            new()
+        var storageAccountName = Settings.DeploymentOutputs["STORAGEACCOUNTNAME"];
+        var fileShareName = Settings.DeploymentOutputs["FILESHARENAME"];
+
+        // Get server endpoints to save details before deletion
+        List<(string name, string serverResourceId, string serverLocalPath)>? serverEndpointDetails = null;
+        {
+            var result = await CallToolAsync(
+                "storagesync_serverendpoint_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+                });
+
+            var serverEndpoints = result.AssertProperty("results");
+            if (serverEndpoints.ValueKind == JsonValueKind.Array)
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", $"{Settings.ResourceBaseName}-test" }
-            });
+                serverEndpointDetails = serverEndpoints.EnumerateArray()
+                    .Select(se => (
+                        name: se.GetProperty("name").GetString()!,
+                        serverResourceId: se.GetProperty("serverResourceId").GetString()!,
+                        serverLocalPath: se.GetProperty("serverLocalPath").GetString()!
+                    ))
+                    .ToList();
+            }
+        }
 
-        var deleteResult = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_create_sync_group()
-    {
-        var result = await CallToolAsync(
-            "storagesync_syncgroup_create",
-            new()
+        // Delete all server endpoints first (required before deleting cloud endpoint)
+        if (serverEndpointDetails != null)
+        {
+            foreach (var endpoint in serverEndpointDetails)
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg-test" }
-            });
+                var result = await CallToolAsync(
+                    "storagesync_serverendpoint_delete",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "name", Settings.ResourceBaseName },
+                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                        { "server-endpoint-name", endpoint.name }
+                    });
 
-        var syncGroup = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, syncGroup.ValueKind);
-    }
+                var deleteResult = result.AssertProperty("message");
+                Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+            }
+        }
 
-    [Fact]
-    public async Task Should_delete_sync_group()
-    {
-        var result = await CallToolAsync(
-            "storagesync_syncgroup_delete",
-            new()
+        // Delete existing cloud endpoint
+        {
+            var result = await CallToolAsync(
+                "storagesync_cloudendpoint_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                });
+
+            var deleteResult = result.AssertProperty("message");
+            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+        }
+
+        // Recreate cloud endpoint
+        {
+            var result = await CallToolAsync(
+                "storagesync_cloudendpoint_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" },
+                    { "storage-account-resource-id", $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}" },
+                    { "azure-file-share-name", fileShareName }
+                });
+
+            var cloudEndpoint = result.AssertProperty("result");
+            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
+        }
+
+        // Get cloud endpoint to verify it was recreated
+        {
+            var result = await CallToolAsync(
+                "storagesync_cloudendpoint_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                });
+
+            var cloudEndpoint = result.AssertProperty("results");
+            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
+        }
+
+        // Recreate server endpoints to restore topology, or create a test endpoint if none existed
+        if (serverEndpointDetails != null && serverEndpointDetails.Count > 0)
+        {
+            // Recreate existing endpoints
+            foreach (var endpoint in serverEndpointDetails)
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg-test" }
-            });
+                var result = await CallToolAsync(
+                    "storagesync_serverendpoint_create",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "name", Settings.ResourceBaseName },
+                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                        { "server-endpoint-name", endpoint.name },
+                        { "server-resource-id", endpoint.serverResourceId },
+                        { "server-local-path", endpoint.serverLocalPath }
+                    });
 
-        var deleteResult = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-    }
+                var serverEndpoint = result.AssertProperty("result");
+                Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
+            }
+        }
+        else
+        {
+            // No existing endpoints - create a test endpoint to validate creation
+            // First, get registered servers to retrieve a valid server ID
+            var serversResult = await CallToolAsync(
+                "storagesync_registeredserver_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName }
+                });
 
-    [Fact]
-    public async Task Should_create_cloud_endpoint()
-    {
-        var result = await CallToolAsync(
-            "storagesync_cloudendpoint_create",
-            new()
+            var servers = serversResult.AssertProperty("results");
+            Assert.Equal(JsonValueKind.Array, servers.ValueKind);
+
+            if (servers.GetArrayLength() > 0)
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce-test" },
-                { "storage-account-resource-id", $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{Settings.ResourceBaseName}sa" },
-                { "azure-file-share-name", "testshare" }
-            });
+                var firstServer = servers[0];
+                var serverId = firstServer.GetProperty("id").GetString();
 
-        var cloudEndpoint = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
-    }
+                var result = await CallToolAsync(
+                    "storagesync_serverendpoint_create",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "name", Settings.ResourceBaseName },
+                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                        { "server-endpoint-name", $"{Settings.ResourceBaseName}-se-test" },
+                        { "server-resource-id", serverId! },
+                        { "server-local-path", $"D:\\{$"{Settings.ResourceBaseName}-se-test"}" }
+                    });
 
-    [Fact]
-    public async Task Should_delete_cloud_endpoint()
-    {
-        var result = await CallToolAsync(
-            "storagesync_cloudendpoint_delete",
-            new()
+                var serverEndpoint = result.AssertProperty("result");
+                Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
+            }
+            else
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce-test" }
-            });
-
-        var deleteResult = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+                Output.WriteLine("Skipping server endpoint creation: No registered servers available");
+            }
+        }
     }
 
     [Fact]
@@ -311,56 +462,32 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
             });
 
-        var triggerResult = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, triggerResult.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_create_server_endpoint()
-    {
-        // First, get the registered servers to retrieve a valid server ID
-        var serversResult = await CallToolAsync(
-            "storagesync_registeredserver_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName }
-            });
-
-        var servers = serversResult.AssertProperty("results");
-        Assert.Equal(JsonValueKind.Array, servers.ValueKind);
-
-        // Skip test if no registered servers exist
-        if (servers.GetArrayLength() == 0)
-        {
-            Output.WriteLine("Skipping test: No registered servers available");
-            return;
-        }
-
-        var firstServer = servers[0];
-        var serverId = firstServer.GetProperty("id").GetString();
-
-        var result = await CallToolAsync(
-            "storagesync_serverendpoint_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "server-endpoint-name", $"{Settings.ResourceBaseName}-se-test" },
-                { "server-resource-id", serverId },
-                { "server-local-path", "D:\\\\SyncFolder" }
-            });
-
-        var serverEndpoint = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
+        var message = result.AssertProperty("message");
+        Assert.NotEqual(JsonValueKind.Null, message.ValueKind);
     }
 
     [Fact]
     public async Task Should_update_server_endpoint()
     {
+        // Get existing server endpoints
+        var getResult = await CallToolAsync(
+            "storagesync_serverendpoint_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+            });
+
+        var serverEndpoints = getResult.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, serverEndpoints.ValueKind);
+        Assert.True(serverEndpoints.GetArrayLength() > 0, "No server endpoints exist to update. Run Should_Crud_endpoint test first to create endpoints.");
+
+        // Use the first existing server endpoint
+        var serverEndpointName = serverEndpoints[0].GetProperty("name").GetString()!;
+
+        // Update the server endpoint
         var result = await CallToolAsync(
             "storagesync_serverendpoint_update",
             new()
@@ -369,34 +496,16 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
                 { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "server-endpoint-name", $"{Settings.ResourceBaseName}-se" },
-                { "cloud-tiering", "on" },
-                { "volume-free-space-percent", "20" }
+                { "server-endpoint-name", serverEndpointName },
+                { "cloud-tiering", true },
+                { "volume-free-space-percent", 20 }
             });
 
-        var serverEndpoint = result.AssertProperty("results");
+        var serverEndpoint = result.AssertProperty("result");
         Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
     }
 
-    [Fact]
-    public async Task Should_delete_server_endpoint()
-    {
-        var result = await CallToolAsync(
-            "storagesync_serverendpoint_delete",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "server-endpoint-name", $"{Settings.ResourceBaseName}-se-test" }
-            });
-
-        var deleteResult = result.AssertProperty("results");
-        Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-    }
-
-    [Fact]
+    [Fact(Skip = "QFE is in progress for protocol mismatch , causing deserialization issue")]
     public async Task Should_update_registered_server()
     {
         // First, get the registered servers to retrieve a valid server ID
@@ -438,7 +547,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.NotEqual(JsonValueKind.Null, server.ValueKind);
     }
 
-    [Fact]
+    [Fact(Skip = "QFE is in progress for protocol mismatch , causing deserialization issue")]
     public async Task Should_unregister_registered_server()
     {
         // First, get the registered servers to retrieve a valid server ID

@@ -32,4 +32,24 @@ public class ServerEndpointCreateOptions : BaseStorageSyncOptions
     /// Gets or sets the server local path.
     /// </summary>
     public string? ServerLocalPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether cloud tiering is enabled.
+    /// </summary>
+    public bool? CloudTiering { get; set; }
+
+    /// <summary>
+    /// Gets or sets the percentage of free space to maintain on the volume (1-99).
+    /// </summary>
+    public int? VolumeFreeSpacePercent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of days after which files should be tiered if not accessed.
+    /// </summary>
+    public int? TierFilesOlderThanDays { get; set; }
+
+    /// <summary>
+    /// Gets or sets the local cache mode (DownloadNewAndModifiedFiles or UpdateLocallyCachedFiles).
+    /// </summary>
+    public string? LocalCacheMode { get; set; }
 }

@@ -49,10 +49,12 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
 
         # Import Storage Sync module and reset server
         Import-Module "C:\Program Files\Azure\StorageSyncAgent\StorageSync.Management.ServerCmdlets.dll"
-        Reset-StorageSyncServer -Force -ErrorAction SilentlyContinue
+        Write-Host "Register Server is resetting existing server configuration" -ForegroundColor Gray
+        Reset-StorageSyncServer -Force -Verbose -ErrorAction SilentlyContinue
 
         # Register a RegisteredServer (Note: This requires the Storage Sync Agent to be installed on a server)
-        $registeredServer = $storageSyncService | Register-AzStorageSyncServer
+        Write-Host "Attempting to register server with Storage Sync Service (requires Storage Sync Agent installed)" -ForegroundColor Gray
+        $registeredServer = $storageSyncService | Register-AzStorageSyncServer -Verbose
         Write-Host "Attempted to register server with Storage Sync Service (requires Storage Sync Agent installed)" -ForegroundColor Gray
     }
     else {

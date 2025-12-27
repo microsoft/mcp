@@ -46,6 +46,10 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.AsOptional());
     }
 
     protected override ServerEndpointUpdateOptions BindOptions(ParseResult parseResult)
@@ -55,6 +59,10 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
         options.StorageSyncServiceName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
         options.SyncGroupName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.SyncGroup.Name.Name);
         options.ServerEndpointName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.Name.Name);
+        options.CloudTiering = parseResult.GetValueOrDefault<bool?>(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.Name);
+        options.VolumeFreeSpacePercent = parseResult.GetValueOrDefault<int>(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.Name);
+        options.TierFilesOlderThanDays = parseResult.GetValueOrDefault<int>(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.Name);
+        options.LocalCacheMode = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.Name);
         return options;
     }
 
@@ -69,8 +77,8 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
 
         try
         {
-            _logger.LogInformation("Updating server endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.ServerEndpointName);
+            _logger.LogInformation("Updating server endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}, CloudTiering: {CloudTiering}",
+                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.ServerEndpointName, options.CloudTiering);
 
             var endpoint = await _service.UpdateServerEndpointAsync(
                 options.Subscription!,
@@ -78,9 +86,10 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
                 options.StorageSyncServiceName!,
                 options.SyncGroupName!,
                 options.ServerEndpointName!,
-                null,
-                null,
-                null,
+                options.CloudTiering,
+                options.VolumeFreeSpacePercent,
+                options.TierFilesOlderThanDays,
+                options.LocalCacheMode,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

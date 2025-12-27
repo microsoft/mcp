@@ -209,9 +209,9 @@ public sealed class StorageSyncService(
             // Update incoming traffic policy
             if (!string.IsNullOrEmpty(incomingTrafficPolicy))
             {
-                patch.IncomingTrafficPolicy = incomingTrafficPolicy;
+                patch.IncomingTrafficPolicy = new IncomingTrafficPolicy(incomingTrafficPolicy);
             }
-            
+
             // Update tags
             if (tags != null)
             {
@@ -543,14 +543,30 @@ public sealed class StorageSyncService(
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+
+            // Get subscription data to access tenant ID
+            var subscriptionData = await subscriptionResource.GetAsync(cancellationToken);
+
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
+            // Get the tenant ID - use provided tenant or get from subscription
+            Guid? storageAccountTenantId = null;
+            if (tenant != null && Guid.TryParse(tenant, out var parsedTenantId))
+            {
+                storageAccountTenantId = parsedTenantId;
+            }
+            else if (subscriptionData.Value.Data.TenantId.HasValue)
+            {
+                storageAccountTenantId = subscriptionData.Value.Data.TenantId.Value;
+            }
+
             var content = new Azure.ResourceManager.StorageSync.Models.CloudEndpointCreateOrUpdateContent
             {
                 StorageAccountResourceId = new Azure.Core.ResourceIdentifier(storageAccountResourceId),
-                AzureFileShareName = azureFileShareName
+                AzureFileShareName = azureFileShareName,
+                StorageAccountTenantId = storageAccountTenantId
             };
             var operation = await syncGroupResource.Value.GetCloudEndpoints().CreateOrUpdateAsync(
                 WaitUntil.Completed, cloudEndpointName, content, cancellationToken);
@@ -751,9 +767,10 @@ public sealed class StorageSyncService(
         string serverEndpointName,
         string serverResourceId,
         string serverLocalPath,
-        bool enableCloudTiering = false,
+        bool? enableCloudTiering = null,
         int? volumeFreeSpacePercent = null,
         int? tierFilesOlderThanDays = null,
+        string? localCacheMode = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -780,11 +797,25 @@ public sealed class StorageSyncService(
             var content = new Azure.ResourceManager.StorageSync.Models.StorageSyncServerEndpointCreateOrUpdateContent
             {
                 ServerResourceId = new Azure.Core.ResourceIdentifier(serverResourceId),
-                ServerLocalPath = serverLocalPath,
-                CloudTiering = enableCloudTiering ? Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.On : Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.Off,
-                VolumeFreeSpacePercent = volumeFreeSpacePercent,
-                TierFilesOlderThanDays = tierFilesOlderThanDays
+                ServerLocalPath = serverLocalPath
             };
+
+            if (enableCloudTiering.HasValue)
+            {
+                content.CloudTiering = enableCloudTiering.Value ? Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.On : Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.Off;
+            }
+            if (volumeFreeSpacePercent.HasValue)
+            {
+                content.VolumeFreeSpacePercent = volumeFreeSpacePercent;
+            }
+            if (tierFilesOlderThanDays.HasValue)
+            {
+                content.TierFilesOlderThanDays = tierFilesOlderThanDays;
+            }
+            if (!string.IsNullOrEmpty(localCacheMode))
+            {
+                content.LocalCacheMode = new LocalCacheMode(localCacheMode);
+            }
 
             var operation = await syncGroupResource.Value.GetStorageSyncServerEndpoints().CreateOrUpdateAsync(
                 WaitUntil.Completed, serverEndpointName, content, cancellationToken);
@@ -808,6 +839,7 @@ public sealed class StorageSyncService(
         bool? cloudTiering = null,
         int? volumeFreeSpacePercent = null,
         int? tierFilesOlderThanDays = null,
+        string? localCacheMode = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -842,6 +874,10 @@ public sealed class StorageSyncService(
             if (tierFilesOlderThanDays.HasValue)
             {
                 patch.TierFilesOlderThanDays = tierFilesOlderThanDays;
+            }
+            if (!string.IsNullOrEmpty(localCacheMode))
+            {
+                patch.LocalCacheMode = new LocalCacheMode(localCacheMode);
             }
 
             var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);

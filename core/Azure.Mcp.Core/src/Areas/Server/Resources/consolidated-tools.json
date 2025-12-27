@@ -2788,7 +2788,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_cloudendpoint_triggerChangeDetection"
+        "storagesync_cloudendpoint_triggerchangedetection"
       ]
     }
   ]

@@ -116,7 +116,7 @@ public class StorageSyncSetup : IAreaSetup
         cloudEndpointGroup.AddCommand("get", serviceProvider.GetRequiredService<CloudEndpointGetCommand>());
         cloudEndpointGroup.AddCommand("create", serviceProvider.GetRequiredService<CloudEndpointCreateCommand>());
         cloudEndpointGroup.AddCommand("delete", serviceProvider.GetRequiredService<CloudEndpointDeleteCommand>());
-        cloudEndpointGroup.AddCommand("triggerChangeDetection", serviceProvider.GetRequiredService<CloudEndpointTriggerChangeDetectionCommand>());
+        cloudEndpointGroup.AddCommand("triggerchangedetection", serviceProvider.GetRequiredService<CloudEndpointTriggerChangeDetectionCommand>());
 
         // ServerEndpoint subgroup
         var serverEndpointGroup = new CommandGroup("serverendpoint",

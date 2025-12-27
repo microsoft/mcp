@@ -237,9 +237,10 @@ public interface IStorageSyncService
         string serverEndpointName,
         string serverResourceId,
         string serverLocalPath,
-        bool enableCloudTiering = false,
+        bool? enableCloudTiering = null,
         int? volumeFreeSpacePercent = null,
         int? tierFilesOlderThanDays = null,
+        string? localCacheMode = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -256,6 +257,7 @@ public interface IStorageSyncService
         bool? enableCloudTiering = null,
         int? volumeFreeSpacePercent = null,
         int? tierFilesOlderThanDays = null,
+        string? localCacheMode = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
