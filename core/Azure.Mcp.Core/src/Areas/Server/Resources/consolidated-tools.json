@@ -2196,6 +2196,39 @@
       "mappedToolList": [
         "speech_tts_synthesize"
       ]
+    },
+    {
+      "name": "create_azure_app_resource",
+      "description": "Create Azure application platform services, such as Azure Functions.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "functionapp_create"
+      ]
     }
   ]
 }

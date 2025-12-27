@@ -20,6 +20,8 @@ public class FunctionAppSetup : IAreaSetup
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
 
         services.AddSingleton<FunctionAppGetCommand>();
+
+        services.AddSingleton<FunctionAppCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -28,6 +30,9 @@ public class FunctionAppSetup : IAreaSetup
 
         var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
         functionApp.AddCommand(getCommand.Name, getCommand);
+
+        var createCommand = serviceProvider.GetRequiredService<FunctionAppCreateCommand>();
+        functionApp.AddCommand(createCommand.Name, createCommand);
 
         return functionApp;
     }
