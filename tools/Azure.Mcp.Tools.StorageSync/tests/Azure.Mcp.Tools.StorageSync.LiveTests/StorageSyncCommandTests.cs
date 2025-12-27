@@ -278,8 +278,36 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task Should_Crud_endpoint()
     {
-        var storageAccountName = Settings.DeploymentOutputs["STORAGEACCOUNTNAME"];
-        var fileShareName = Settings.DeploymentOutputs["FILESHARENAME"];
+        // Get existing cloud endpoint to retrieve storage account and file share details
+        string storageAccountResourceId;
+        string fileShareName;
+        {
+            var result = await CallToolAsync(
+                "storagesync_cloudendpoint_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                });
+
+            var cloudEndpoint = result.AssertProperty("results");
+            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
+            
+            if (cloudEndpoint.ValueKind == JsonValueKind.Array)
+            {
+                var firstEndpoint = cloudEndpoint.EnumerateArray().First();
+                storageAccountResourceId = firstEndpoint.GetProperty("storageAccountResourceId").GetString()!;
+                fileShareName = firstEndpoint.GetProperty("azureFileShareName").GetString()!;
+            }
+            else
+            {
+                storageAccountResourceId = cloudEndpoint.GetProperty("storageAccountResourceId").GetString()!;
+                fileShareName = cloudEndpoint.GetProperty("azureFileShareName").GetString()!;
+            }
+        }
 
         // Get server endpoints to save details before deletion
         List<(string name, string serverResourceId, string serverLocalPath)>? serverEndpointDetails = null;
@@ -356,7 +384,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "name", Settings.ResourceBaseName },
                     { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
                     { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" },
-                    { "storage-account-resource-id", $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}" },
+                    { "storage-account-resource-id", storageAccountResourceId },
                     { "azure-file-share-name", fileShareName }
                 });
 

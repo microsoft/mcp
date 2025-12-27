@@ -55,7 +55,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
         options.IncomingTrafficPolicy = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.Name);
-        
+
         // Parse tags from string format "key1=value1 key2=value2"
         var tagsString = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Tags.Name);
         if (!string.IsNullOrEmpty(tagsString))
@@ -71,7 +71,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 }
             }
         }
-        
+
         options.IdentityType = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.Name);
         return options;
     }
