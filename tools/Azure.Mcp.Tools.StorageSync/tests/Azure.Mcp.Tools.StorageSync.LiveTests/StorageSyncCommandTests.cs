@@ -301,7 +301,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
 
             var cloudEndpoint = result.AssertProperty("results");
             Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
-            
+
             if (cloudEndpoint.ValueKind == JsonValueKind.Array)
             {
                 var firstEndpoint = cloudEndpoint.EnumerateArray().First();
