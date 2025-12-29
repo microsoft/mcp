@@ -20,6 +20,12 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "serverEndpoints\\/([^?\\/]+)",
+            Value = "Sanitized-sep",
+            GroupForReplace = "1"
         })
     }.ToList();
 
