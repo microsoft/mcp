@@ -114,6 +114,6 @@ jobs:
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop
-            Registry: https://dev.azure.com/1es-mcp/1es-mcp/_artifacts/feed/1es-mcp-registry
+            Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
+            CustomEndpoint: 'Azure SDK MCP Server Connection'
             Tag: latest
-            CustomEndpoint: 'azure-sdk-internal-Azure SDK Artifacts'
