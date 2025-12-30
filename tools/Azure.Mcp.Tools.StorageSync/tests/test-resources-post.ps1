@@ -98,7 +98,7 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
         }
 
         # create a new server endpoint if needed
-        $serverEndpointName = "$BaseName-sep"
+        $serverEndpointName = "$BaseName"
         $serverLocalPath = "D:\$serverEndpointName"
 
         New-AzStorageSyncServerEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $serverEndpointName -ServerResourceId $registeredServer.ResourceId -ServerLocalPath $serverLocalPath -ErrorAction SilentlyContinue | Out-Null
