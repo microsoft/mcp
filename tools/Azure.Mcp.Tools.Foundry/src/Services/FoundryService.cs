@@ -101,7 +101,8 @@ public class FoundryService(
                         Encoding.UTF8,
                         "application/json");
 
-                    var httpResponse = await _httpClientService.DefaultClient.PostAsync(url, content, cancellationToken);
+                    using var httpClient = _httpClientService.CreateClient();
+                    var httpResponse = await httpClient.PostAsync(url, content, cancellationToken);
                     httpResponse.EnsureSuccessStatusCode();
 
                     var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
@@ -172,6 +173,7 @@ public class FoundryService(
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
@@ -179,7 +181,10 @@ public class FoundryService(
         try
         {
             var credential = await GetCredential(tenantId, cancellationToken);
-            var deploymentsClient = new AIProjectClient(new Uri(endpoint), credential).GetDeploymentsClient();
+            
+            // Create AIProjectClient with optional HTTP client factory for test proxy support
+            var projectClient = CreateAIProjectClient(new Uri(endpoint), credential, httpClientFactory);
+            var deploymentsClient = projectClient.GetDeploymentsClient();
 
             var deployments = new List<Deployment>();
             await foreach (var deployment in deploymentsClient.GetDeploymentsAsync(cancellationToken: cancellationToken))
@@ -292,6 +297,7 @@ public class FoundryService(
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
@@ -299,7 +305,8 @@ public class FoundryService(
         try
         {
             var credential = await GetCredential(tenantId, cancellationToken);
-            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+            var projectClient = CreateAIProjectClient(new Uri(endpoint), credential, httpClientFactory);
+            var indexesClient = projectClient.GetIndexesClient();
 
             var indexes = new List<KnowledgeIndexInformation>();
             await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
@@ -339,6 +346,7 @@ public class FoundryService(
         string indexName,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -348,7 +356,8 @@ public class FoundryService(
         try
         {
             var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+            var projectClient = CreateAIProjectClient(new Uri(endpoint), credential, httpClientFactory);
+            var indexesClient = projectClient.GetIndexesClient();
 
             // Find the index by name using async enumerable
             var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
@@ -799,6 +808,7 @@ public class FoundryService(
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
@@ -806,7 +816,8 @@ public class FoundryService(
         try
         {
             var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
+            var projectClient = CreateAIProjectClient(new Uri(endpoint), credential, httpClientFactory);
+            var agentsClient = projectClient.GetPersistentAgentsClient();
 
             var agents = new List<PersistentAgent>();
             await foreach (var agent in agentsClient.Administration.GetAgentsAsync(cancellationToken: cancellationToken))
@@ -832,6 +843,7 @@ public class FoundryService(
         string systemInstruction,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -840,7 +852,7 @@ public class FoundryService(
             (nameof(agentName), agentName),
             (nameof(systemInstruction), systemInstruction));
         var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = CreateAIProjectClient(new Uri(projectEndpoint), credential, httpClientFactory);
 
         // Validate if the model deployment exists
         var deploymentsClient = projectClient.GetDeploymentsClient();
@@ -877,6 +889,7 @@ public class FoundryService(
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -887,9 +900,10 @@ public class FoundryService(
                 (nameof(endpoint), endpoint));
 
             var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
+            var projectClient = CreateAIProjectClient(new Uri(endpoint), credential, httpClientFactory);
+            var agentsClient = projectClient.GetPersistentAgentsClient();
 
-            var thread = await CreateThreadCore(endpoint, query, credential, cancellationToken: cancellationToken);
+            var thread = await CreateThreadCore(endpoint, query, credential, httpClientFactory, cancellationToken: cancellationToken);
             var threadId = thread.Id;
 
             var run = await agentsClient.Runs.CreateRunAsync(threadId, agentId, cancellationToken: cancellationToken);
@@ -970,6 +984,7 @@ public class FoundryService(
         string? tenant = null,
         List<string>? evaluatorNames = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -979,7 +994,7 @@ public class FoundryService(
                 (nameof(query), query),
                 (nameof(endpoint), endpoint));
 
-            var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy, cancellationToken: cancellationToken);
+            var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy, httpClientFactory, cancellationToken: cancellationToken);
 
             var credential = await GetCredential(tenant, cancellationToken: cancellationToken);
 
@@ -1044,6 +1059,7 @@ public class FoundryService(
         string? toolDefinitions,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1092,13 +1108,14 @@ public class FoundryService(
         string projectEndpoint,
         string? tenantId,
         RetryPolicyOptions? retryPolicy,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = CreateAIProjectClient(new Uri(projectEndpoint), credential, httpClientFactory);
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
@@ -1129,6 +1146,7 @@ public class FoundryService(
         string userMessage,
         string? tenantId,
         RetryPolicyOptions? retryPolicy,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1139,7 +1157,7 @@ public class FoundryService(
 
         try
         {
-            var thread = await CreateThreadCore(projectEndpoint, userMessage, credential, cancellationToken: cancellationToken);
+            var thread = await CreateThreadCore(projectEndpoint, userMessage, credential, httpClientFactory, cancellationToken: cancellationToken);
             return new ThreadCreateResult()
             {
                 ThreadId = thread.Id,
@@ -1157,6 +1175,7 @@ public class FoundryService(
         string threadId,
         string? tenantId,
         RetryPolicyOptions? retryPolicy,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -1165,7 +1184,7 @@ public class FoundryService(
             (nameof(threadId), threadId));
 
         var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = CreateAIProjectClient(new Uri(projectEndpoint), credential, httpClientFactory);
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         try
@@ -1193,9 +1212,10 @@ public class FoundryService(
         string projectEndpoint,
         string userMessage,
         TokenCredential credential,
+        IHttpClientFactory? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = CreateAIProjectClient(new Uri(projectEndpoint), credential, httpClientFactory);
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
@@ -1734,5 +1754,24 @@ public class FoundryService(
             MessageId = step.Id,
             RawRepresentation = step,
         };
+    }
+
+    /// <summary>
+    /// Helper method to create AIProjectClient with optional HTTP client factory for test proxy support.
+    /// Follows the EventGrid pattern for Azure SDK client creation with HttpClientTransport.
+    /// </summary>
+    private static AIProjectClient CreateAIProjectClient(Uri endpoint, TokenCredential credential, IHttpClientFactory? httpClientFactory)
+    {
+        if (httpClientFactory != null)
+        {
+            var httpClient = httpClientFactory.CreateClient(nameof(AIProjectClient));
+            var clientOptions = new AIProjectClientOptions
+            {
+                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            };
+            return new AIProjectClient(endpoint, credential, clientOptions);
+        }
+        
+        return new AIProjectClient(endpoint, credential);
     }
 }
