@@ -14,8 +14,22 @@ $ErrorActionPreference = "Stop"
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 $storageSyncServiceName = $BaseName
-$syncGroupName = $DeploymentOutputs.syncGroupName
-$cloudEndpointName = $DeploymentOutputs.cloudEndpointName
+# Try both camelCase and UPPERCASE keys for backwards compatibility
+$syncGroupName = if ($DeploymentOutputs.ContainsKey('syncGroupName')) { 
+    $DeploymentOutputs['syncGroupName'] 
+} elseif ($DeploymentOutputs.ContainsKey('SYNCGROUPNAME')) { 
+    $DeploymentOutputs['SYNCGROUPNAME'] 
+} else { 
+    $BaseName 
+}
+
+$cloudEndpointName = if ($DeploymentOutputs.ContainsKey('cloudEndpointName')) { 
+    $DeploymentOutputs['cloudEndpointName'] 
+} elseif ($DeploymentOutputs.ContainsKey('CLOUDENDPOINTNAME')) { 
+    $DeploymentOutputs['CLOUDENDPOINTNAME'] 
+} else { 
+    $BaseName 
+}
 
 Write-Host "Setting up Storage Sync Service for testing: $storageSyncServiceName" -ForegroundColor Yellow
 Write-Host "Sync Group Name: $syncGroupName" -ForegroundColor Gray
@@ -62,6 +76,11 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
     }
 
     # Get Sync Group from deployment outputs
+    if ([string]::IsNullOrWhiteSpace($syncGroupName)) {
+        Write-Warning "Sync Group name is not available from deployment outputs, using BaseName as fallback"
+        $syncGroupName = $BaseName
+    }
+
     $syncGroup = Get-AzStorageSyncGroup -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -ErrorAction SilentlyContinue
 
     if ($syncGroup) {
@@ -72,6 +91,11 @@ Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit -Command cd $PSScriptRoot\
     }
 
     # Get Cloud Endpoint if it exists
+    if ([string]::IsNullOrWhiteSpace($cloudEndpointName)) {
+        Write-Warning "Cloud Endpoint name is not available from deployment outputs, using BaseName as fallback"
+        $cloudEndpointName = $BaseName
+    }
+
     $cloudEndpoint = Get-AzStorageSyncCloudEndpoint -ResourceGroupName $ResourceGroupName -StorageSyncServiceName $storageSyncServiceName -SyncGroupName $syncGroupName -Name $cloudEndpointName -ErrorAction SilentlyContinue
 
     if ($cloudEndpoint) {
