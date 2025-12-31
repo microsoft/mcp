@@ -22,7 +22,7 @@ resource storageSyncService 'Microsoft.StorageSync/storageSyncServices@2022-06-0
 
 // Sync Group
 resource syncGroup 'Microsoft.StorageSync/storageSyncServices/syncGroups@2022-06-01' = {
-  name: '${baseName}-sg'
+  name: '${baseName}'
   parent: storageSyncService
   properties: {
   }
@@ -69,7 +69,7 @@ resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-0
 
 // Cloud Endpoint
 resource cloudEndpoint 'Microsoft.StorageSync/storageSyncServices/syncGroups/cloudEndpoints@2022-06-01' = {
-  name: '${baseName}-ce'
+  name: '${baseName}'
   parent: syncGroup
   properties: {
     storageAccountResourceId: storageAccount.id
