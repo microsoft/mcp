@@ -47,6 +47,11 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
           Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
           GroupForReplace = "host",
+        }),
+        // Sanitizes storageAccountTenantId in request bodies
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = Settings.TenantId,
+          Value = "00000000-0000-0000-0000-000000000000",
         })
     ];
 
