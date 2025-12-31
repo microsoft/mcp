@@ -20,12 +20,6 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
-        }),
-        new UriRegexSanitizer(new UriRegexSanitizerBody
-        {
-            Regex = "serverEndpoints\\/([^?\\/]+)",
-            Value = "Sanitized-sep",
-            GroupForReplace = "1"
         })
     }.ToList();
 
@@ -82,7 +76,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+                { "sync-group-name", Settings.ResourceBaseName }
             });
 
         var syncGroup = result.AssertProperty("results");
@@ -99,8 +93,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName }
             });
 
         var cloudEndpoint = result.AssertProperty("results");
@@ -133,7 +127,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+                { "sync-group-name", Settings.ResourceBaseName }
             });
 
         var serverEndpoints = result.AssertProperty("results");
@@ -209,7 +203,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
+                    { "name", $"{Settings.ResourceBaseName}-test-service" },
                     { "location", "eastus" }
                 });
 
@@ -225,8 +219,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                    { "name", $"{Settings.ResourceBaseName}-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
                 });
 
             var syncGroup = result.AssertProperty("result");
@@ -241,8 +235,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                    { "name", $"{Settings.ResourceBaseName}-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
                 });
 
             var syncGroup = result.AssertProperty("results");
@@ -257,8 +251,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg-crud-test" }
+                    { "name", $"{Settings.ResourceBaseName}-test-service" },
+                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
                 });
 
             var deleteResult = result.AssertProperty("message");
@@ -273,7 +267,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-sg-test-service" }
+                    { "name", $"{Settings.ResourceBaseName}-test-service" }
                 });
 
             var deleteResult = result.AssertProperty("message");
@@ -295,8 +289,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                    { "sync-group-name", Settings.ResourceBaseName },
+                    { "cloud-endpoint-name", Settings.ResourceBaseName }
                 });
 
             var cloudEndpoint = result.AssertProperty("results");
@@ -325,7 +319,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+                    { "sync-group-name", Settings.ResourceBaseName }
                 });
 
             var serverEndpoints = result.AssertProperty("results");
@@ -353,7 +347,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "subscription", Settings.SubscriptionId },
                         { "resource-group", Settings.ResourceGroupName },
                         { "name", Settings.ResourceBaseName },
-                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                        { "sync-group-name", Settings.ResourceBaseName },
                         { "server-endpoint-name", endpoint.name }
                     });
 
@@ -371,8 +365,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                    { "sync-group-name", Settings.ResourceBaseName },
+                    { "cloud-endpoint-name", Settings.ResourceBaseName }
                 });
 
             var deleteResult = result.AssertProperty("message");
@@ -388,8 +382,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" },
+                    { "sync-group-name", Settings.ResourceBaseName },
+                    { "cloud-endpoint-name", Settings.ResourceBaseName },
                     { "storage-account-resource-id", storageAccountResourceId },
                     { "azure-file-share-name", fileShareName }
                 });
@@ -407,8 +401,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                    { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                    { "sync-group-name", Settings.ResourceBaseName },
+                    { "cloud-endpoint-name", Settings.ResourceBaseName }
                 });
 
             var cloudEndpoint = result.AssertProperty("results");
@@ -428,7 +422,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "subscription", Settings.SubscriptionId },
                         { "resource-group", Settings.ResourceGroupName },
                         { "name", Settings.ResourceBaseName },
-                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                        { "sync-group-name", Settings.ResourceBaseName },
                         { "server-endpoint-name", endpoint.name },
                         { "server-resource-id", endpoint.serverResourceId },
                         { "server-local-path", endpoint.serverLocalPath }
@@ -466,10 +460,10 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "subscription", Settings.SubscriptionId },
                         { "resource-group", Settings.ResourceGroupName },
                         { "name", Settings.ResourceBaseName },
-                        { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                        { "server-endpoint-name", $"{Settings.ResourceBaseName}-se-test" },
+                        { "sync-group-name", Settings.ResourceBaseName },
+                        { "server-endpoint-name", $"{Settings.ResourceBaseName}-test" },
                         { "server-resource-id", serverId! },
-                        { "server-local-path", $"D:\\{$"{Settings.ResourceBaseName}-se-test"}" }
+                        { "server-local-path", $"D:\\{$"{Settings.ResourceBaseName}-test"}" }
                     });
 
                 var serverEndpoint = result.AssertProperty("result");
@@ -492,8 +486,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
-                { "cloud-endpoint-name", $"{Settings.ResourceBaseName}-ce" }
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName }
             });
 
         var message = result.AssertProperty("message");
@@ -511,7 +505,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" }
+                { "sync-group-name", Settings.ResourceBaseName }
             });
 
         var serverEndpoints = getResult.AssertProperty("results");
@@ -529,7 +523,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
-                { "sync-group-name", $"{Settings.ResourceBaseName}-sg" },
+                { "sync-group-name", Settings.ResourceBaseName },
                 { "server-endpoint-name", serverEndpointName },
                 { "cloud-tiering", true },
                 { "volume-free-space-percent", 20 }
