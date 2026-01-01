@@ -6,6 +6,7 @@ using System.ClientModel.Primitives;
 using System.Text;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
@@ -17,6 +18,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
+
+    protected virtual RecordingOptions? RecordingOptions { get; private set; } = null;
 
     protected string RecordingId { get; private set; } = string.Empty;
 
@@ -152,6 +155,18 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         // apply custom matcher if test has attribute
         await ApplyAttributeMatcherSettings();
+
+        SetRecordingOptions(RecordingOptions);
+    }
+
+    public void SetRecordingOptions(RecordingOptions? options)
+    {
+        if (Proxy == null || TestMode != TestMode.Live || options == null)
+        {
+            return;
+        }
+
+        Proxy.AdminClient.SetRecordingOptions(options, RecordingId);
     }
 
     private async Task ApplyAttributeMatcherSettings()
@@ -221,10 +236,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             Proxy = fixture.Proxy;
 
             // onetime on starting the proxy, we have initialized the livetest settings so lets add some additional sanitizers by default
-            if (EnableDefaultSanitizerAdditions)
-            {
-                PopulateDefaultSanitizers();
-            }
+            PopulateDefaultSanitizers();
 
             // onetime registration of default sanitizers
             // and deregistering default sanitizers that we don't want
