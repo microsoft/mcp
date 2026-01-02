@@ -13,7 +13,8 @@ public interface IStorageService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<StorageAccountResult> CreateStorageAccount(
         string account,
@@ -25,7 +26,8 @@ public interface IStorageService
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<List<BlobInfo>> GetBlobDetails(
         string account,
@@ -34,7 +36,8 @@ public interface IStorageService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<List<ContainerInfo>> GetContainerDetails(
         string account,
@@ -42,7 +45,8 @@ public interface IStorageService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<ContainerInfo> CreateContainer(
         string account,
@@ -50,7 +54,8 @@ public interface IStorageService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<BlobUploadResult> UploadBlob(
         string account,
@@ -60,5 +65,6 @@ public interface IStorageService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 }

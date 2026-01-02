@@ -93,7 +93,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             // Set results
             context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);

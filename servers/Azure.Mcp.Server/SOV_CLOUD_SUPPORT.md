@@ -21,13 +21,13 @@ This document tracks the implementation status of sovereign cloud support across
 | Confidential Ledger | [ ] |
 | Cosmos | [ ] |
 | Deploy | [ ] |
-| Event Grid | [ ] |
-| Event Hubs | [ ] |
+| Event Grid | [ x ] |
+| Event Hubs | [ x ] |
 | Extension | [ ] |
 | Foundry | [ ] |
 | Function App | [ ] |
 | Grafana | [ ] |
-| Key Vault | [ ] |
+| Key Vault | [ x ] |
 | Kusto | [ ] |
 | Load Testing | [ ] |
 | Managed Lustre | [ ] |
@@ -43,6 +43,6 @@ This document tracks the implementation status of sovereign cloud support across
 | SignalR | [ ] |
 | Speech | [ ] |
 | SQL | [ ] |
-| Storage | [ ] |
+| Storage | [ x ] |
 | Virtual Desktop | [ ] |
 | Workbooks | [ ] |

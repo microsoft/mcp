@@ -22,11 +22,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
@@ -51,11 +52,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
@@ -75,12 +77,13 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
 
         var type = new KeyType(keyType);
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
@@ -98,11 +101,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
         var secrets = new List<string>();
 
@@ -128,11 +132,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
         try
@@ -151,11 +156,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
         try
@@ -174,11 +180,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
         var certificates = new List<string>();
 
@@ -203,11 +210,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
@@ -226,11 +234,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
@@ -251,11 +260,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
@@ -337,10 +347,11 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string subscription,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
-        var credential = await GetCredential(tenantId, cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken, authorityHost);
         var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
         try
         {

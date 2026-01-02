@@ -65,7 +65,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }

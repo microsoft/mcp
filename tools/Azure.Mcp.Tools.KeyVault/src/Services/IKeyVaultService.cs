@@ -27,7 +27,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Creates a new key in an Azure Key Vault.
@@ -46,7 +47,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Creates a new secret in an Azure Key Vault.
@@ -65,7 +67,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Gets a certificate from an Azure Key Vault.
@@ -82,7 +85,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Gets a key from an Azure Key Vault.
@@ -99,7 +103,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Gets a secret from a Key Vault.
@@ -116,7 +121,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// List all certificates in a Key Vault.
@@ -131,7 +137,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// List all keys in a Key Vault.
@@ -147,7 +154,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// List all secrets in a Key Vault.
@@ -162,7 +170,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Imports an existing certificate (PFX or PEM) into an Azure Key Vault.
@@ -183,7 +192,8 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     /// <summary>
     /// Retrieves account settings for a Key Vault.
@@ -198,5 +208,6 @@ public interface IKeyVaultService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 }

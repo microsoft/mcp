@@ -84,7 +84,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(
                 new(success, $"Namespace '{options.Namespace}' deleted successfully"),

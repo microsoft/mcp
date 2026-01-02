@@ -113,7 +113,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                             options.Location,
                             options.Tenant,
                             options.RetryPolicy,
-                            cancellationToken);
+                            cancellationToken,
+                            authorityHost: options.AuthorityHost);
                         if (found?.Count > 0)
                         {
                             aggregate.AddRange(found);
@@ -136,7 +137,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.Location,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    authorityHost: options.AuthorityHost);
 
                 context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }

@@ -49,6 +49,7 @@ public class BaseAzureServiceTests
         };
 
         var client = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
+        
         var client2 = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
 
         Assert.NotEqual(client, client2);

@@ -69,7 +69,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(
                 new(

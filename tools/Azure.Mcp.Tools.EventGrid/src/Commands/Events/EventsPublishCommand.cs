@@ -93,7 +93,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.EventSchema,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(
                 new(result),

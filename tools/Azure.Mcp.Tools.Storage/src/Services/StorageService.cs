@@ -32,7 +32,8 @@ public class StorageService(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -96,7 +97,8 @@ public class StorageService(
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
@@ -107,7 +109,7 @@ public class StorageService(
         try
         {
             // Create ArmClient for deployments
-            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, null, retryPolicy);
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", tenant, authorityHost, retryPolicy);
 
             // Prepare data
             ResourceIdentifier accountId = new ResourceIdentifier($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
@@ -175,14 +177,15 @@ public class StorageService(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(container), container),
             (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken, authorityHost);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         var blobInfos = new List<BlobInfo>();
@@ -265,11 +268,12 @@ public class StorageService(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken, authorityHost);
         var containers = new List<ContainerInfo>();
 
         if (string.IsNullOrEmpty(container))
@@ -338,14 +342,15 @@ public class StorageService(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(container), container),
             (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken, authorityHost);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         try
@@ -378,12 +383,13 @@ public class StorageService(
         string account,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         var uri = $"https://{account}.blob.core.windows.net";
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
-        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken), options);
+        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken, authorityHost), options);
     }
 
     private static string ParseStorageSkuName(string sku)
@@ -428,7 +434,8 @@ public class StorageService(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
@@ -442,7 +449,7 @@ public class StorageService(
             throw new FileNotFoundException($"Local file not found: {localFilePath}");
         }
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken, authorityHost);
         var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
         var blobClient = blobContainerClient.GetBlobClient(blob);
 

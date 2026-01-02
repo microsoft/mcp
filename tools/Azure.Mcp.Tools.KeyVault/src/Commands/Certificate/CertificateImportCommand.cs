@@ -76,7 +76,8 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(
                 new(
