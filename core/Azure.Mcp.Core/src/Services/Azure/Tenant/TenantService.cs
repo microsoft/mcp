@@ -103,9 +103,9 @@ public class TenantService : BaseAzureService, ITenantService
     }
 
     /// <inheritdoc/>
-    public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)
+    public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, Uri? authorityHost, CancellationToken cancellationToken)
     {
-        return await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
+        return await _credentialProvider.GetTokenCredentialAsync(tenantId, authorityHost, cancellationToken);
     }
 
     /// <inheritdoc/>

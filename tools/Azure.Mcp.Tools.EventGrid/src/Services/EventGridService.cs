@@ -22,9 +22,10 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken, authorityHost);
         var topics = new List<EventGridTopicInfo>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -57,13 +58,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? location = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken, authorityHost);
 
             // If specific topic is requested, get subscriptions for that topic only
             if (!string.IsNullOrEmpty(topicName))
@@ -93,7 +95,8 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? eventSchema = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         var operationId = Guid.NewGuid().ToString();
         _logger.LogInformation("Starting event publication. OperationId: {OperationId}, Topic: {TopicName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -101,7 +104,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken, authorityHost);
 
             // Find the topic to get its endpoint and access key
             var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
@@ -120,7 +123,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             }
 
             // Get credential using standardized method from base class for Azure AD authentication
-            var credential = await GetCredential(tenant, cancellationToken);
+            var credential = await GetCredential(tenant, cancellationToken, authorityHost);
 
             // Parse and validate event data directly to EventGridEventSchema
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");

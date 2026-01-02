@@ -69,7 +69,8 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(new(keys ?? []), KeyVaultJsonContext.Default.KeyListCommandResult);
         }

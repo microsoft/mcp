@@ -70,7 +70,8 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken
+                cancellationToken,
+                authorityHost: options.AuthorityHost
             );
 
             context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);

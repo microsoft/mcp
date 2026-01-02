@@ -143,14 +143,14 @@ public abstract class BaseAzureService
         return await GetCredential(null, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken, Uri? authorityHost = default)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
-            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
+            return await TenantService!.GetTokenCredentialAsync(tenantId, authorityHost, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -206,17 +206,20 @@ public abstract class BaseAzureService
     /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
     /// <param name="retryPolicy">Optional retry policy configuration.</param>
     /// <param name="armClientOptions">Optional ARM client options.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="authorityHost">Optional authority host URI.</param>
     protected async Task<ArmClient> CreateArmClientAsync(
         string? tenantIdOrName = null,
         RetryPolicyOptions? retryPolicy = null,
         ArmClientOptions? armClientOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null)
     {
         var tenantId = await ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
         try
         {
-            TokenCredential credential = await GetCredential(tenantId, cancellationToken);
+            TokenCredential credential = await GetCredential(tenantId, cancellationToken, authorityHost);
             ArmClientOptions options = armClientOptions ?? new();
             options.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);

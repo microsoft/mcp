@@ -87,7 +87,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    authorityHost: options.AuthorityHost);
 
                 var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
                 context.Response.Results = ResponseResult.Create(new(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
@@ -100,7 +101,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    authorityHost: options.AuthorityHost);
 
                 context.Response.Results = ResponseResult.Create(new(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }

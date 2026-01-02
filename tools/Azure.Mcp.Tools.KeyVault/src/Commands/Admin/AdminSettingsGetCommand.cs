@@ -58,7 +58,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         try
         {
             var service = context.GetService<IKeyVaultService>();
-            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, authorityHost: options.AuthorityHost);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);

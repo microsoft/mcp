@@ -92,7 +92,7 @@ public class LogAnalyticsHelper(
             };
             options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(MonitorService.HttpClientName));
 
-            TokenCredential credential = await _tenantService.GetTokenCredentialAsync(_tenantId, cancellationToken).ConfigureAwait(false);
+            TokenCredential credential = await _tenantService.GetTokenCredentialAsync(_tenantId, default, cancellationToken).ConfigureAwait(false);
             _logsIngestionClient = new LogsIngestionClient(endpoint, credential, options);
             return _logsIngestionClient;
         }

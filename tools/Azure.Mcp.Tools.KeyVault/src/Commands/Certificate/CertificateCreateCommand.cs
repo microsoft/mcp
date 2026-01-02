@@ -69,7 +69,8 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             // Wait for the certificate operation to complete
             var completedOperation = await operation.WaitForCompletionAsync(cancellationToken);

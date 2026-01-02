@@ -13,6 +13,7 @@ public static partial class OptionDefinitions
         public const string SubscriptionName = "subscription";
         public const string ResourceGroupName = "resource-group";
         public const string AuthMethodName = "auth-method";
+        public const string AuthorityHostName = "audience";
 
         public static readonly Option<string> Tenant = new(
             $"--{TenantName}"
@@ -45,6 +46,14 @@ public static partial class OptionDefinitions
         {
             Description = "The name of the Azure resource group. This is a logical container for Azure resources.",
             Required = false
+        };
+
+        public static readonly Option<Uri> AuthorityHost = new(
+            $"--{AuthorityHostName}"
+        )
+        {
+            Description = "The authority host (audience) for authentication. This is the URL of the identity provider.", // double check this description for accuracy.
+            Required = false,
         };
     }
 

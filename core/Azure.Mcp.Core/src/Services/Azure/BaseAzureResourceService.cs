@@ -205,13 +205,14 @@ public abstract class BaseAzureResourceService(
     /// <param name="resourceTypeForApiVersion">The resource type token used by the SDK to set a specific API version, e.g. "Microsoft.CognitiveServices/accounts/deployments".</param>
     /// <param name="apiVersion">The API version to set for the specified resource type.</param>
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
+    /// <param name="authorityHost">Optional authority host to use when creating the client.</param>
     /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
-    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, Uri? authorityHost = null, RetryPolicyOptions? retryPolicy = null)
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, retryPolicy, options).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, retryPolicy, options, authorityHost: authorityHost).ConfigureAwait(false);
     }
 
     /// <summary>

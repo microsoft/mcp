@@ -21,6 +21,7 @@ public abstract class GlobalCommand<
 
         // Add global options
         command.Options.Add(OptionDefinitions.Common.Tenant);
+        command.Options.Add(OptionDefinitions.Common.AuthorityHost);
         command.Options.Add(OptionDefinitions.Common.AuthMethod);
         command.Options.Add(OptionDefinitions.RetryPolicy.Delay);
         command.Options.Add(OptionDefinitions.RetryPolicy.MaxDelay);
@@ -72,7 +73,8 @@ public abstract class GlobalCommand<
         var options = new TOptions
         {
             Tenant = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Tenant.Name),
-            AuthMethod = parseResult.GetValueOrDefault<AuthMethod>(OptionDefinitions.Common.AuthMethod.Name)
+            AuthMethod = parseResult.GetValueOrDefault<AuthMethod>(OptionDefinitions.Common.AuthMethod.Name),
+            AuthorityHost = parseResult.GetValueOrDefault<Uri>(OptionDefinitions.Common.AuthorityHost.Name)
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults

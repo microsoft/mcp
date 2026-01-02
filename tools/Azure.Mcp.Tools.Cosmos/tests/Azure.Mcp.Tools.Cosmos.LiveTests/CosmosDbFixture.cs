@@ -24,7 +24,7 @@ public class CosmosDbFixture : IAsyncLifetime
 
         _client = new CosmosClient(
             accountEndpoint: $"https://{settingsFixture.Settings.ResourceBaseName}.documents.azure.com:443/",
-            tokenCredential: await tokenProvider.GetTokenCredentialAsync(default, default)
+            tokenCredential: await tokenProvider.GetTokenCredentialAsync(default, default, default)
         );
         Container container = _client.GetContainer("ToDoList", "Items");
         ToDoItem entry = new ToDoItem();

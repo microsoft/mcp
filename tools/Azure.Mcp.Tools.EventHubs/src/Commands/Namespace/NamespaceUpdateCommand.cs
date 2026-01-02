@@ -164,7 +164,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 tags,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken,
+                authorityHost: options.AuthorityHost);
 
             context.Response.Results = ResponseResult.Create(
                 new NamespaceUpdateCommandResult(updatedNamespace),

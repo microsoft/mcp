@@ -26,13 +26,13 @@ public sealed class PlaybackAwareTokenCredentialProvider : IAzureTokenCredential
         _liveProvider = new Lazy<IAzureTokenCredentialProvider>(() => new SingleIdentityTokenCredentialProvider(_loggerFactory));
     }
 
-    public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellation)
+    public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, Uri? authorityHost, CancellationToken cancellation)
     {
         if (_testModeAccessor() == TestMode.Playback)
         {
             return Task.FromResult<TokenCredential>(_playbackCredential);
         }
 
-        return _liveProvider.Value.GetTokenCredentialAsync(tenantId, cancellation);
+        return _liveProvider.Value.GetTokenCredentialAsync(tenantId, authorityHost, cancellation);
     }
 }

@@ -13,7 +13,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<Namespace> GetNamespaceAsync(
         string namespaceName,
@@ -21,7 +22,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<Namespace> CreateOrUpdateNamespaceAsync(
         string namespaceName,
@@ -38,7 +40,8 @@ public interface IEventHubsService
         Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<bool> DeleteNamespaceAsync(
         string namespaceName,
@@ -46,7 +49,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<List<EventHub>> GetEventHubsAsync(
         string namespaceName,
@@ -54,7 +58,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<EventHub?> GetEventHubAsync(
         string eventHubName,
@@ -63,7 +68,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<EventHub> CreateOrUpdateEventHubAsync(
         string eventHubName,
@@ -74,7 +80,8 @@ public interface IEventHubsService
         long? messageRetentionInHours = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<bool> DeleteEventHubAsync(
         string eventHubName,
@@ -83,7 +90,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<ConsumerGroup> CreateOrUpdateConsumerGroupAsync(
         string consumerGroupName,
@@ -94,7 +102,8 @@ public interface IEventHubsService
         string? userMetadata = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<bool> DeleteConsumerGroupAsync(
         string consumerGroupName,
@@ -104,7 +113,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<List<ConsumerGroup>> GetConsumerGroupsAsync(
         string eventHubName,
@@ -113,7 +123,8 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 
     Task<ConsumerGroup?> GetConsumerGroupAsync(
         string consumerGroupName,
@@ -123,5 +134,6 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Uri? authorityHost = null);
 }
