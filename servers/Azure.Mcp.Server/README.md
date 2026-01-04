@@ -383,6 +383,10 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * List Microsoft Foundry agent threads
 * Get messages of a Microsoft Foundry thread
 
+### 📊 Azure Advisor
+
+* "List my Advisor recommendations"
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -537,6 +541,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
+- 📊 **Azure Advisor** - Advisor recommendations
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
