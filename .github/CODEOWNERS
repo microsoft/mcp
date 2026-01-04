@@ -59,6 +59,12 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-Advisor
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Advisor
+# ServiceOwners:                       @ankiga-MSFT
+
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp
 

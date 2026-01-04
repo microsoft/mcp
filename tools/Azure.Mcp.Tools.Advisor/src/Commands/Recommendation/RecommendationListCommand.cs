@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -22,13 +21,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
 
     public override string Description =>
         """
-        List Azure advisor recommendations in your subscription.
-        Returns an array of recommendation objects with details including the affected Resource ID and Resource Name along with the associated recommendation
-        Lists Azure advisor recommendations with their category, affected azure resource and the recommendation issue text.
-        Use when you need to: view advisor recommendations.
-        Requires: subscription ID, resource group name (optional).
-        Returns: JSON array of recommendations with details including affected Resource ID, Recommendation Category, and Recommendation Text.
-        Equivalent to 'az advisor recommendation list'.
+        List Azure advisor recommendations in a subscription.
         """;
 
     public override string Title => CommandTitle;

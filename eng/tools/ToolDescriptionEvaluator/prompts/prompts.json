@@ -838,5 +838,10 @@
     "Help me design an Azure cloud service that will serve as an ATM for users",
     "I want to design a cloud app for ordering groceries",
     "How can I design a cloud service in Azure that will store and present videos for users?"
+  ],
+  "advisor_recommendations_list": [
+    "List all recommendations in my subscription",
+    "Show me Advisor recommendations in the subscription <subscription>",
+    "List all Advisor recommendations in the subscription <subscription>"
   ]
 }
