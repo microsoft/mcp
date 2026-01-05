@@ -117,7 +117,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns("autoimport-job");
+            .Returns("blob_autoimport");
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
@@ -165,7 +165,7 @@ public class AutoimportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns("autoimport-job");
+            .Returns("blob_autoimport");
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,

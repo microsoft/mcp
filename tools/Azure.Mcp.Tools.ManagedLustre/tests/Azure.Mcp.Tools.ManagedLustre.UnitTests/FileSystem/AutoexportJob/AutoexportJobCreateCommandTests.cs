@@ -266,7 +266,7 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns("autoexport-job");
+            .Returns("blob_autoexport");
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
@@ -308,7 +308,7 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns("autoexport-job");
+            .Returns("blob_autoexport");
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,

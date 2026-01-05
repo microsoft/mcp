@@ -1434,8 +1434,8 @@
       "mappedToolList": [
         "managedlustre_fs_list",
         "managedlustre_fs_sku_get",
-        "managedlustre_fs_autoexport-job_get",
-        "managedlustre_fs_autoimport-job_get",
+        "managedlustre_fs_blob_autoexport_get",
+        "managedlustre_fs_blob_autoimport_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1476,8 +1476,8 @@
         "storage_account_create",
         "storage_blob_container_create",
         "managedlustre_fs_create",
-        "managedlustre_fs_autoexport-job_create",
-        "managedlustre_fs_autoimport-job_create"
+        "managedlustre_fs_blob_autoexport_create",
+        "managedlustre_fs_blob_autoimport_create"
       ]
     },
     {
@@ -1543,10 +1543,10 @@
         }
       },
       "mappedToolList": [
-        "managedlustre_fs_autoexport-job_cancel",
-        "managedlustre_fs_autoexport-job_delete",
-        "managedlustre_fs_autoimport-job_cancel",
-        "managedlustre_fs_autoimport-job_delete"
+        "managedlustre_fs_blob_autoexport_cancel",
+        "managedlustre_fs_blob_autoexport_delete",
+        "managedlustre_fs_blob_autoimport_cancel",
+        "managedlustre_fs_blob_autoimport_delete"
       ]
     },
     {

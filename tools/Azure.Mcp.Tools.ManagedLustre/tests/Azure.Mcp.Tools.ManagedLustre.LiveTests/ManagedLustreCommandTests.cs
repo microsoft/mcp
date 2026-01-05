@@ -280,7 +280,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         // Test autoimport job lifecycle
         var autoimportJobNameStr = $"autoimport-{fsName}";
         var autoimportCreateResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_create",
+            "managedlustre_fs_blob_autoimport_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -296,7 +296,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // List autoimport jobs (get without job-name returns all jobs)
         var autoimportListResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_get",
+            "managedlustre_fs_blob_autoimport_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -324,7 +324,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Get autoimport job
         var autoimportGetResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_get",
+            "managedlustre_fs_blob_autoimport_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -344,7 +344,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Cancel autoimport job
         var autoimportCancelResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_cancel",
+            "managedlustre_fs_blob_autoimport_cancel",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -361,7 +361,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Delete autoimport job
         var autoimportDeleteResult = await CallToolAsync(
-            "managedlustre_fs_autoimport-job_delete",
+            "managedlustre_fs_blob_autoimport_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -382,7 +382,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         // Test autoexport job lifecycle.
         var autoexportJobNameStr = $"autoexport-{fsName}";
         var autoexportCreateResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_create",
+            "managedlustre_fs_blob_autoexport_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -398,7 +398,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // List autoexport jobs (get without job-name returns all jobs)
         var autoexportListResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_get",
+            "managedlustre_fs_blob_autoexport_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -424,7 +424,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Get autoexport job
         var autoexportGetResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_get",
+            "managedlustre_fs_blob_autoexport_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -443,7 +443,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
         // Cancel autoexport job
         var autoexportCancelResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_cancel",
+            "managedlustre_fs_blob_autoexport_cancel",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -460,7 +460,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Delete autoexport job
         var autoexportDeleteResult = await CallToolAsync(
-            "managedlustre_fs_autoexport-job_delete",
+            "managedlustre_fs_blob_autoexport_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

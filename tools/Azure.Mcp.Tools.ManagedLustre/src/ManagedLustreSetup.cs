@@ -69,7 +69,7 @@ public class ManagedLustreSetup : IAreaSetup
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
 
-        var autoexportJob = new CommandGroup("autoexport-job", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
+        var autoexportJob = new CommandGroup("blob_autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
         fileSystem.AddSubGroup(autoexportJob);
 
         var autoexportJobCreate = serviceProvider.GetRequiredService<AutoexportJobCreateCommand>();
@@ -84,7 +84,7 @@ public class ManagedLustreSetup : IAreaSetup
         var autoexportJobDelete = serviceProvider.GetRequiredService<AutoexportJobDeleteCommand>();
         autoexportJob.AddCommand(autoexportJobDelete.Name, autoexportJobDelete);
 
-        var autoimportJob = new CommandGroup("autoimport-job", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
+        var autoimportJob = new CommandGroup("blob_autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
         fileSystem.AddSubGroup(autoimportJob);
 
         var autoimportJobCreate = serviceProvider.GetRequiredService<AutoimportJobCreateCommand>();
