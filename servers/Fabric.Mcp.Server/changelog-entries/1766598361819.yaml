@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Admin APIs usage guidelines to help LLMs understand when to use admin APIs, request explicit user permission, and implement graceful fallbacks to standard APIs"

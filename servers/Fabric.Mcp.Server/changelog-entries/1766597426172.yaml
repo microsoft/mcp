@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added comprehensive API throttling best practices guide with production-ready retry patterns, exponential backoff, circuit breakers, and code examples in C#, Python, and TypeScript"
