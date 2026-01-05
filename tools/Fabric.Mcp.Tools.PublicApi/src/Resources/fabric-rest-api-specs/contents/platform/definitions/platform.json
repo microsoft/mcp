@@ -2432,6 +2432,13 @@
       "properties": {
         "diagnostics": {
           "$ref": "#/definitions/OneLakeDiagnosticSettings"
+        },
+        "immutabilityPolicies": {
+          "description": "Immutability settings of the workspace.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ImmutabilityPolicy"
+          }
         }
       }
     },
@@ -2491,6 +2498,55 @@
           "$ref": "../../common/definitions.json#/definitions/ItemReference",
           "readOnly": false
         }
+      }
+    },
+    "ImmutabilityPolicyRequest": {
+      "description": "Immutability policy request object.",
+      "type": "object",
+      "required": [ "scope", "retentionDays" ],
+      "properties": {
+        "scope": {
+          "description": "Scope of the current immutability setting.",
+          "$ref": "#/definitions/ImmutabilityScope"
+        },
+        "retentionDays": {
+          "description": "Retention Days for the action.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ImmutabilityPolicy": {
+      "description": "Immutability policy object.",
+      "type": "object",
+      "required": [ "scope", "retentionDays" ],
+      "properties": {
+        "scope": {
+          "description": "Scope of the immutability policy.",
+          "$ref": "#/definitions/ImmutabilityScope"
+        },
+        "retentionDays": {
+          "description": "Value of the retention days configured.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ImmutabilityScope": {
+      "description": "The scope of immutability policy. Additional Immutability Scope types may be added over time. ",
+      "type": "string",
+      "enum": [
+        "DiagnosticLogs"
+      ],
+      "x-ms-enum": { 
+        "name": "ImmutabilityScope",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "DiagnosticLogs",
+            "description": "Immutability policy for diagnostic logs."
+          }
+        ]
       }
     }
   }

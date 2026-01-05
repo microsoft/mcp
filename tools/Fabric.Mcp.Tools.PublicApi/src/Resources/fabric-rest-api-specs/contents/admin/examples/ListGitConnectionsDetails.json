@@ -26,6 +26,17 @@
                             "branchName": "Test Branch",
                             "directoryName": "/"
                         }
+                    },
+                    {
+                        "workspaceId": "e2c1a8b2-1234-4e56-9876-abcdef123456",
+                        "gitProviderDetails": {
+                            "ownerName": "Enterprise Org",
+                            "customDomainName": "my-enterprise.ghe.com",
+                            "gitProviderType": "GitHub",
+                            "repositoryName": "Enterprise Repo",
+                            "branchName": "main",
+                            "directoryName": "/Enterprise/Dir"
+                        }
                     }
                 ],
                 "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces/discoverGitConnections?continuationToken=eyJMYXN0U2VlbkNvbm5lY3Rpb25JZCI6NX0=",

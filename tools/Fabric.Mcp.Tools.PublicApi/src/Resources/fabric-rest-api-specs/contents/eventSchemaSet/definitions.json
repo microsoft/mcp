@@ -1,0 +1,155 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "EventSchemaSet data types",
+        "version": "v1"
+    },
+    "paths": {},
+  "definitions": {
+    "EventSchemaSet": {
+      "description": "A EventSchemaSet object.",
+      "type": "object",
+      "required": [ "type" ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+        "properties": {
+          "description": "The EventSchemaSet properties.",
+          "$ref": "#/definitions/EventSchemaSetProperties"
+        }
+      }
+    },
+    "EventSchemaSetProperties": {
+      "description": "The EventSchemaSet properties.",
+      "type": "object",
+      "required": [ "oneLakeRootPath" ],
+      "properties": {
+        "oneLakeRootPath": {
+          "description": "OneLake path to the EventSchemaSet root directory.",
+          "type": "string"
+        }
+      }
+    },
+    "EventSchemaSets": {
+      "description": "A list of eventschemasets.",
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of eventschemasets.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EventSchemaSet"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreateEventSchemaSetRequest": {
+      "description": "Create EventSchemaSet request payload.",
+      "required": [ "displayName" ],
+      "properties": {
+        "displayName": {
+          "description": "The EventSchemaSet display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The EventSchemaSet description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The EventSchemaSet public definition.",
+          "$ref": "#/definitions/EventSchemaSetPublicDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateEventSchemaSetDefinitionRequest": {
+      "description": "Update EventSchemaSet public definition request payload.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/EventSchemaSetPublicDefinition"
+        }
+      }
+    },
+    "EventSchemaSetDefinitionResponse": {
+      "description": "EventSchemaSet public definition response.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/EventSchemaSetPublicDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "EventSchemaSetDefinitionFormat": {
+      "description": "The format of the item definition. ",
+      "type": "string"
+    },
+      "EventSchemaSetPublicDefinition": {
+        "description": "EventSchemaSet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/event-schema-set) for more details on how to craft a EventSchemaSet public definition.",
+        "type": "object",
+        "required": [ "parts" ],
+        "properties": {
+          "format": {
+            "description": "The format of the item definition. ",
+            "readOnly": false
+          },
+          "parts": {
+            "description": "A list of definition parts.",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/EventSchemaSetPublicDefinitionPart"
+            },
+            "readOnly": false
+          }
+        }
+      },
+      "EventSchemaSetPublicDefinitionPart": {
+        "description": "EventSchemaSet definition part object.",
+        "type": "object",
+        "properties": {
+          "path": {
+            "description": "The EventSchemaSet public definition part path.",
+            "type": "string",
+            "readOnly": false
+          },
+          "payload": {
+            "description": "The EventSchemaSet public definition part payload.",
+            "type": "string",
+            "readOnly": false
+          },
+          "payloadType": {
+            "description": "The payload type.",
+            "$ref": "../common/definitions.json#/definitions/PayloadType",
+            "readOnly": false
+          }
+        }
+      },
+      "UpdateEventSchemaSetRequest": {
+        "description": "Update EventSchemaSet request.",
+        "properties": {
+          "displayName": {
+            "description": "The EventSchemaSet display name.",
+            "type": "string",
+            "readOnly": false
+          },
+          "description": {
+            "description": "The EventSchemaSet description. Maximum length is 256 characters.",
+            "type": "string",
+            "readOnly": false
+          }
+        }
+      }
+    }
+  }

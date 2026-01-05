@@ -757,6 +757,82 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/executeQuery": {
+      "post": {
+        "summary": "Executes a query against a dataflow and returns the result.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nExecutes a specified query against a dataflow and streams the results in Apache Arrow format. Supports using custom mashup documents for advanced scenarios.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *execute* permissions for the dataflow.\n\n## Required Delegated Scopes\n\nDataflow.Execute.All or Item.Execute.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "QueryExecution"
+        ],
+        "operationId": "QueryExecution_ExecuteQuery",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "executeQueryRequest",
+            "description": "Execute query request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ExecuteQueryRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Query result was succesfully written. Results are streamed in Apache Arrow format. Refer to the [Arrow documentation](https://arrow.apache.org/docs/python/ipc.html#reading-from-stream-and-file-format-for-pandas) on how to read the stream in Python and other languages. \n\nErrors encountered during query execution or during streaming will be in an additional column at the end named 'PQ Arrow Metadata'. \n\nMedia Type: \"application/vnd.apache.arrow.stream\"",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "202": {
+            "description": "Request accepted, query execution in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* DataflowExecuteQueryError - Query execution failed. Some possible reasons include: the specified query name is invalid or empty, the custom mashup document is invalid, or the specified query name was not found in the dataflow (or in the custom mashup document if provided).",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
     }
   },
   "responses": {},

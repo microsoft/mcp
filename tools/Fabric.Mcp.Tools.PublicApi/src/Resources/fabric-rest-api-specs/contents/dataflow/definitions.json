@@ -205,6 +205,22 @@
         }
       }
     },
+    "ExecuteQueryRequest": {
+      "description": "Request payload for executing a query against a dataflow.",
+      "type": "object",
+      "required": [ "queryName" ],
+      "properties": {
+        "queryName": {
+          "description": "The name of the query to execute from the dataflow (or from the custom mashup document if provided).",
+          "type": "string",
+          "example": "MyTable"
+        },
+        "customMashupDocument": {
+          "description": "Optional custom mashup document to override the dataflow's default mashup.",
+          "type": "string"
+        }
+      }
+    },    
     "DataflowParameters": {
       "description": "A list of Dataflow parameters.",
       "type": "object",

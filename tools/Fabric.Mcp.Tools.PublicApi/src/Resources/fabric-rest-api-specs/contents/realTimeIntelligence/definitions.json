@@ -1,0 +1,125 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Real time intelligence copilot API data types"
+  },
+  "paths": {},
+  "definitions": {
+      "NlToKqlRequest": {
+        "description": "Request for converting natural language to KQL.",
+        "type": "object",
+        "required": ["itemIdForBilling", "clusterUrl", "naturalLanguage", "databaseName"],
+        "properties": {
+            "itemIdForBilling": {
+                "description": "The ID of the item for the request. This can be a KQLQueryset, KQLDashboard, or Eventhouse item. This item is used for billing the request.",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": false
+            },
+            "clusterUrl": {
+                "description": "The cluster URL for the request",
+                "type": "string",
+                "readOnly": false
+            },
+            "naturalLanguage": {
+                "description": "The natural language to generate the KQL query from.",
+                "type": "string",
+                "readOnly": false
+            },
+            "databaseName": {
+                "description": "The name of the database for the request.",
+                "type": "string",
+                "readOnly": false
+            },
+            "userShots": {
+                "description": "The user shots for the request. This consists of user provided pairs of natural language and KQL queries in order to help in generating the current requested KQL query.",
+                "type": "array",
+                "items": {
+                      "$ref": "#/definitions/UserShot"
+                },
+                "readOnly": false
+            },
+            "chatMessages": {
+                "description": "The chat messages for the request. The chat messages provide additional context for generating the KQL query if necessary.",
+                "type": "array",
+                "items": {
+                      "$ref": "#/definitions/ChatMessage"
+                },
+                "readOnly": false
+            }
+        }
+    },
+    "UserShot": {
+        "description": "User provided pair of natural language and KQL query to be used to fulfill the NLToKQL request.",
+        "type": "object",
+        "required": ["naturalLanguage", "kqlQuery"],
+        "properties": {
+            "naturalLanguage": {
+                "description": "The natural language.",
+                "type": "string",
+                "readOnly": false
+            },
+            "kqlQuery": {
+                "description": "The KQL query.",
+                "type": "string",
+                "readOnly": false
+            }
+        }
+    },
+    "ChatMessage": {
+        "description": "Chat message for NLToKQL request.",
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+            "role": {
+                "description": "The role of the message.",
+                "$ref": "#/definitions/Role",
+                "readOnly": false
+            },
+            "content": {
+                "description": "The content of the message .",
+                "type": "string",
+                "readOnly": false
+            }
+        }
+    },
+    "Role": {
+        "type": "string",
+        "description": "The chat message role type. Additional Role types may be added over time.",
+        "enum": ["System", "User", "Assistant"],
+        "x-ms-enum": {
+            "name": "Role",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "System",
+                    "description": "System role."
+                },
+                {
+                    "value": "User",
+                    "description": "User role."
+                },
+                {
+                    "value": "Assistant",
+                    "description": "Assistant role."
+                }
+            ]
+        }
+    },
+    "NlToKqlResponse": {
+        "description": "Response for the NLToKQL request.",
+        "type": "object",
+        "properties": {
+            "kqlQuery": {
+                "description": "the generated KQL query.",
+                "type": "string"
+            },
+            "error": {
+                "description": "Error message if the KQL query generation failed.",
+                "type": "string"
+            }
+        }
+    }
+  }
+}

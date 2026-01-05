@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+        "immutabilityPolicyRequest": {
+            "scope": "DiagnosticLogs",
+            "retentionDays": 3
+        }
+    },
+    "responses": {
+        "400": {
+            "body": {
+                "requestId": "e7d4be9d-423c-4b26-b4e4-35de77c89e26",
+                "errorCode": "BadRequest",
+                "moreDetails": [
+                    {
+                        "errorCode": "RetentionDaysReductionNotAllowed ",
+                        "message": "",
+                        "relatedResource": {
+                            "resourceId": "4a0afce7-520f-4542-b7ff-6f6252c7008b",
+                            "resourceType": "Workspace"
+                        }
+                    }
+                ],
+                "message": "The request could not be processed due to missing or invalid information",
+                "relatedResource": {
+                    "resourceId": "4a0afce7-520f-4542-b7ff-6f6252c7008b",
+                    "resourceType": "Workspace"
+                }
+            }
+        }
+    }
+}
