@@ -36,7 +36,7 @@ The following options are available for all commands:
 +
 are valid.
 
-When you run the [Azure MCP Server container image](mcr.microsoft.com/azure-sdk/azure-mcp) (for example in Azure Container Apps),
+When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
 the image already contains an entrypoint that starts the MCP server process.
 The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
 - Do **not** override the container command / entrypoint with `azmcp ...` when
