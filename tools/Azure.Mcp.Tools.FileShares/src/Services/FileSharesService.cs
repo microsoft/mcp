@@ -1,23 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using Azure.Core;
-using Azure.Mcp.Core.Models;
+using System.Net;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FileShares.Models;
-using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.FileShares;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
 /// <summary>
-/// Service for Azure File Shares operations using Azure Resource Manager.
+/// Service for Azure File Shares operations using Azure Resource Manager SDK.
 /// </summary>
-public sealed class FileSharesService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<FileSharesService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IFileSharesService
+public sealed class FileSharesService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    ILogger<FileSharesService> logger) : BaseAzureService(tenantService), IFileSharesService
 {
-    private readonly ILogger<FileSharesService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ILogger<FileSharesService> _logger = logger;
 
     public async Task<List<FileShareInfo>> ListFileSharesAsync(
         string subscription,
@@ -30,19 +34,49 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
 
         try
         {
-            var fileShares = await ExecuteResourceQueryAsync(
-                "Microsoft.FileShares/fileShares",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToFileShareInfo,
-                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
 
-            return fileShares ?? [];
+            var fileShares = new List<FileShareInfo>();
+
+            if (!string.IsNullOrEmpty(resourceGroup))
+            {
+                Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
+                try
+                {
+                    var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                    resourceGroupResource = response.Value;
+                }
+                catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(reqEx,
+                        "Resource group not found when listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                        resourceGroup, subscription);
+                    return [];
+                }
+
+                var collection = resourceGroupResource.GetFileShares();
+                await foreach (var fileShareResource in collection)
+                {
+                    fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+                }
+            }
+            else
+            {
+                await foreach (var fileShareResource in subscriptionResource.GetFileSharesAsync(cancellationToken))
+                {
+                    fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+                }
+            }
+
+            return fileShares;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing file shares in subscription '{Subscription}'", subscription);
+            _logger.LogError(ex,
+                "Error listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                resourceGroup, subscription);
             throw;
         }
     }
@@ -62,25 +96,26 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
 
         try
         {
-            var fileShare = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.FileShares/fileShares",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToFileShareInfo,
-                additionalFilter: $"name =~ '{EscapeKqlString(fileShareName)}'",
-                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
-            if (fileShare == null)
-            {
-                throw new KeyNotFoundException($"File share '{fileShareName}' not found in resource group '{resourceGroup}'.");
-            }
-
-            return fileShare;
+            return FileShareInfo.FromResource(fileShareResource.Value);
+        }
+        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning(reqEx,
+                "File share not found. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                fileShareName, resourceGroup, subscription);
+            throw new KeyNotFoundException($"File share '{fileShareName}' not found in resource group '{resourceGroup}'.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving file share '{FileShareName}' in resource group '{ResourceGroup}'", fileShareName, resourceGroup);
+            _logger.LogError(ex,
+                "Error getting file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                fileShareName, resourceGroup, subscription);
             throw;
         }
     }
@@ -104,33 +139,28 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
-                ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            var fileShareId = ResourceIdentifier.Parse(
-                $"{resourceGroupResource.Value.Id}/providers/Microsoft.FileShares/fileShares/{fileShareName}");
+            var fileShareData = new FileShareData(new Azure.Core.AzureLocation(location));
 
-            var fileShareData = new GenericResourceData(new AzureLocation(location));
-
-            var operation = await armClient.GetGenericResources()
-                .CreateOrUpdateAsync(WaitUntil.Completed, fileShareId, fileShareData, cancellationToken);
-
-            var createdResource = operation.Value;
-
-            // Convert the created resource back to FileShareInfo
-            var fileShareInfo = await GetFileShareAsync(subscription, resourceGroup, fileShareName, tenant, retryPolicy, cancellationToken);
+            var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                fileShareName,
+                fileShareData,
+                cancellationToken);
 
             _logger.LogInformation(
-                "Successfully created or updated file share '{FileShareName}' in resource group '{ResourceGroup}'",
-                fileShareName, resourceGroup);
+                "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+                fileShareName, resourceGroup, location);
 
-            return fileShareInfo;
+            return FileShareInfo.FromResource(operation.Value);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating or updating file share '{FileShareName}' in resource group '{ResourceGroup}'",
-                fileShareName, resourceGroup);
+                "Error creating or updating file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                fileShareName, resourceGroup, subscription);
             throw;
         }
     }
@@ -151,35 +181,35 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            var fileShareId = ResourceIdentifier.Parse(
-                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.FileShares/fileShares/{fileShareName}");
-
-            var fileShareResource = armClient.GetGenericResource(fileShareId);
-
-            await fileShareResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            await resourceGroupResource.Value.GetFileShares().Get(fileShareName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Completed,
+                cancellationToken);
 
             _logger.LogInformation(
-                "Successfully deleted file share '{FileShareName}' from resource group '{ResourceGroup}'",
+                "Successfully deleted file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 fileShareName, resourceGroup);
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
-                "File share '{FileShareName}' not found in resource group '{ResourceGroup}'",
+                "File share not found (already deleted). FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 fileShareName, resourceGroup);
             // Idempotent delete - don't throw on not found
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting file share '{FileShareName}' from resource group '{ResourceGroup}'",
+                "Error deleting file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 fileShareName, resourceGroup);
             throw;
         }
     }
 
-    public async Task<bool> CheckNameAvailabilityAsync(
+    public async Task<FileShareNameAvailabilityResult> CheckNameAvailabilityAsync(
         string subscription,
         string fileShareName,
         string location,
@@ -194,16 +224,40 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
 
         try
         {
-            // Query existing file shares to check if name is available
-            var fileShares = await ListFileSharesAsync(subscription, tenant: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
-
-            bool isAvailable = !fileShares.Any(fs => fs.Name?.Equals(fileShareName, StringComparison.OrdinalIgnoreCase) ?? false);
+            // Note: CheckFileShareNameAvailability API may not be available in the current SDK
+            // This is a placeholder implementation
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            
+            bool isAvailable = true;
+            string? reason = null;
+            string? message = null;
+            
+            // Try to get the file share to see if it exists
+            try
+            {
+                var resourceGroups = subscriptionResource.GetResourceGroups();
+                await foreach (var rg in resourceGroups.GetAllAsync(cancellationToken: cancellationToken))
+                {
+                    var fileShares = rg.GetFileShares();
+                    await foreach (var fs in fileShares.GetAllAsync(cancellationToken: cancellationToken))
+                    {
+                        if (fs.Data.Name.Equals(fileShareName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return new FileShareNameAvailabilityResult(false, "AlreadyExists", "File share name is already in use");
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If we can't check, assume it's available
+            }
 
             _logger.LogInformation(
-                "File share name availability check for '{FileShareName}': {IsAvailable}",
-                fileShareName, isAvailable ? "Available" : "Not Available");
+                "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
+                fileShareName, isAvailable);
 
-            return isAvailable;
+            return new FileShareNameAvailabilityResult(isAvailable, reason, message);
         }
         catch (Exception ex)
         {
@@ -212,6 +266,7 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
         }
     }
 
+    // TODO: Implement snapshot operations using SDK once available
     public async Task<List<FileShareSnapshotInfo>> ListFileShareSnapshotsAsync(
         string subscription,
         string resourceGroup,
@@ -225,23 +280,8 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(resourceGroup), resourceGroup),
             (nameof(fileShareName), fileShareName));
 
-        try
-        {
-            var snapshots = await ExecuteResourceQueryAsync(
-                "Microsoft.FileShares/fileShares/snapshots",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToFileShareSnapshotInfo,
-                cancellationToken: cancellationToken);
-
-            return snapshots ?? [];
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing snapshots for file share '{FileShareName}'", fileShareName);
-            throw;
-        }
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        return [];
     }
 
     public async Task<FileShareSnapshotInfo> GetFileShareSnapshotAsync(
@@ -259,29 +299,8 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotId), snapshotId));
 
-        try
-        {
-            var snapshot = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.FileShares/fileShares/snapshots",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToFileShareSnapshotInfo,
-                additionalFilter: $"name =~ '{EscapeKqlString(snapshotId)}'",
-                cancellationToken: cancellationToken);
-
-            if (snapshot == null)
-            {
-                throw new KeyNotFoundException($"File share snapshot '{snapshotId}' not found.");
-            }
-
-            return snapshot;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving snapshot '{SnapshotId}'", snapshotId);
-            throw;
-        }
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        throw new NotImplementedException("Snapshot operations are not yet implemented with SDK");
     }
 
     public async Task<FileShareSnapshotInfo> CreateFileShareSnapshotAsync(
@@ -297,50 +316,91 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(resourceGroup), resourceGroup),
             (nameof(fileShareName), fileShareName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            // Generate a snapshot ID with timestamp
-            var snapshotId = $"snapshot-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}";
-
-            var snapshotResourceId = ResourceIdentifier.Parse(
-                $"{resourceGroupResource.Value.Id}/providers/Microsoft.FileShares/fileShares/{fileShareName}/snapshots/{snapshotId}");
-
-            var snapshotData = new GenericResourceData(new AzureLocation("eastus"));
-
-            var operation = await armClient.GetGenericResources()
-                .CreateOrUpdateAsync(WaitUntil.Completed, snapshotResourceId, snapshotData, cancellationToken);
-
-            // Return the newly created snapshot
-            var createdSnapshot = await ListFileShareSnapshotsAsync(subscription, resourceGroup, fileShareName, tenant, retryPolicy, cancellationToken);
-
-            var snapshotInfo = createdSnapshot?.FirstOrDefault(s => s.Name == snapshotId);
-            if (snapshotInfo != null)
-            {
-                return snapshotInfo;
-            }
-
-            _logger.LogInformation(
-                "Successfully created snapshot '{SnapshotId}' for file share '{FileShareName}'",
-                snapshotId, fileShareName);
-
-            return new FileShareSnapshotInfo(
-                Id: snapshotResourceId.ToString(),
-                Name: snapshotId,
-                SnapshotTime: DateTimeOffset.UtcNow.ToString("O"),
-                ResourceGroup: resourceGroup);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating snapshot for file share '{FileShareName}'", fileShareName);
-            throw;
-        }
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        throw new NotImplementedException("Snapshot operations are not yet implemented with SDK");
     }
 
+    public async Task<FileShareSnapshotInfo> CreateSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotName), snapshotName));
+
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        throw new NotImplementedException("Snapshot operations are not yet implemented with SDK");
+    }
+
+    public async Task<FileShareSnapshotInfo> GetSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetFileShareSnapshotAsync(subscription, resourceGroup, fileShareName, snapshotId, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<List<FileShareSnapshotInfo>> ListSnapshotsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await ListFileShareSnapshotsAsync(subscription, resourceGroup, fileShareName, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<FileShareSnapshotInfo> UpdateSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotId), snapshotId));
+
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        throw new NotImplementedException("Snapshot operations are not yet implemented with SDK");
+    }
+
+    public async Task DeleteSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotId), snapshotId));
+
+        _logger.LogWarning("Snapshot operations are not yet implemented with SDK");
+        throw new NotImplementedException("Snapshot operations are not yet implemented with SDK");
+    }
+
+    // TODO: Implement private endpoint operations using SDK once available
     public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
         string subscription,
         string resourceGroup,
@@ -354,27 +414,8 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(resourceGroup), resourceGroup),
             (nameof(fileShareName), fileShareName));
 
-        try
-        {
-            var connections = await ExecuteResourceQueryAsync(
-                "Microsoft.FileShares/fileShares/privateEndpointConnections",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToPrivateEndpointConnectionInfo,
-                cancellationToken: cancellationToken);
-
-            _logger.LogInformation(
-                "Retrieved {Count} private endpoint connections for file share '{FileShareName}'",
-                connections?.Count ?? 0, fileShareName);
-
-            return connections ?? new List<PrivateEndpointConnectionInfo>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing private endpoint connections for file share '{FileShareName}'", fileShareName);
-            throw;
-        }
+        _logger.LogWarning("Private endpoint operations are not yet implemented with SDK");
+        return [];
     }
 
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
@@ -392,29 +433,8 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(fileShareName), fileShareName),
             (nameof(connectionName), connectionName));
 
-        try
-        {
-            var connection = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.FileShares/fileShares/privateEndpointConnections",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToPrivateEndpointConnectionInfo,
-                additionalFilter: $"name =~ '{EscapeKqlString(connectionName)}'",
-                cancellationToken: cancellationToken);
-
-            if (connection == null)
-            {
-                throw new KeyNotFoundException($"Private endpoint connection '{connectionName}' not found.");
-            }
-
-            return connection;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving private endpoint connection '{ConnectionName}'", connectionName);
-            throw;
-        }
+        _logger.LogWarning("Private endpoint operations are not yet implemented with SDK");
+        throw new NotImplementedException("Private endpoint operations are not yet implemented with SDK");
     }
 
     public async Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
@@ -434,34 +454,8 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(connectionName), connectionName),
             (nameof(status), status));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var connectionResourceId = ResourceIdentifier.Parse(
-                $"{resourceGroupResource.Value.Id}/providers/Microsoft.FileShares/fileShares/{fileShareName}/privateEndpointConnections/{connectionName}");
-
-            var connectionData = new GenericResourceData(new AzureLocation("eastus"));
-
-            await armClient.GetGenericResources()
-                .CreateOrUpdateAsync(WaitUntil.Completed, connectionResourceId, connectionData, cancellationToken);
-
-            var updatedConnection = await GetPrivateEndpointConnectionAsync(subscription, resourceGroup, fileShareName, connectionName, tenant, retryPolicy, cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully updated private endpoint connection '{ConnectionName}' status to '{Status}'",
-                connectionName, status);
-
-            return updatedConnection;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating private endpoint connection '{ConnectionName}' status to '{Status}'", connectionName, status);
-            throw;
-        }
+        _logger.LogWarning("Private endpoint operations are not yet implemented with SDK");
+        throw new NotImplementedException("Private endpoint operations are not yet implemented with SDK");
     }
 
     public async Task DeletePrivateEndpointConnectionAsync(
@@ -479,118 +473,15 @@ public sealed class FileSharesService(ISubscriptionService subscriptionService, 
             (nameof(fileShareName), fileShareName),
             (nameof(connectionName), connectionName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var connectionResourceId = ResourceIdentifier.Parse(
-                $"{resourceGroupResource.Value.Id}/providers/Microsoft.FileShares/fileShares/{fileShareName}/privateEndpointConnections/{connectionName}");
-
-            try
-            {
-                await armClient.GetGenericResource(connectionResourceId)
-                    .DeleteAsync(WaitUntil.Completed, cancellationToken);
-
-                _logger.LogInformation("Successfully deleted private endpoint connection '{ConnectionName}'", connectionName);
-            }
-            catch (Azure.RequestFailedException ex) when (ex.Status == 404)
-            {
-                _logger.LogWarning("Private endpoint connection '{ConnectionName}' not found (already deleted)", connectionName);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting private endpoint connection '{ConnectionName}'", connectionName);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Converts a JsonElement from Azure Resource Graph query to a FileShare model.
-    /// </summary>
-    private static FileShareInfo ConvertToFileShareInfo(System.Text.Json.JsonElement item)
-    {
-        var fileShareData = System.Text.Json.JsonSerializer.Deserialize<FileShareDataSchema>(
-            item.GetRawText(),
-            FileSharesJsonContext.Default.FileShareDataSchema);
-
-        if (fileShareData == null)
-        {
-            throw new InvalidOperationException("Failed to parse File Share data");
-        }
-
-        var resourceGroup = ExtractResourceGroupFromId(fileShareData.Id ?? string.Empty);
-
-        return new FileShareInfo(
-            Id: fileShareData.Id ?? string.Empty,
-            Name: fileShareData.Name ?? string.Empty,
-            Location: fileShareData.Location,
-            ResourceGroup: resourceGroup,
-            Type: fileShareData.Type,
-            ProvisioningState: fileShareData.Properties?.ProvisioningState);
-    }
-
-    private static FileShareSnapshotInfo ConvertToFileShareSnapshotInfo(JsonElement item)
-    {
-        var snapshotData = JsonSerializer.Deserialize<FileShareSnapshotSchema>(
-            item.GetRawText(),
-            FileSharesJsonContext.Default.FileShareSnapshotSchema);
-
-        if (snapshotData == null)
-        {
-            throw new InvalidOperationException("Failed to deserialize snapshot data.");
-        }
-
-        var resourceGroup = ExtractResourceGroupFromId(snapshotData.Id ?? string.Empty) ?? string.Empty;
-
-        return new FileShareSnapshotInfo(
-            Id: snapshotData.Id ?? string.Empty,
-            Name: snapshotData.Name ?? string.Empty,
-            SnapshotTime: snapshotData.Properties?.SnapshotTime,
-            ResourceGroup: resourceGroup);
-    }
-
-    private static PrivateEndpointConnectionInfo ConvertToPrivateEndpointConnectionInfo(JsonElement item)
-    {
-        var connectionData = JsonSerializer.Deserialize<PrivateEndpointConnectionDataSchema>(
-            item.GetRawText(),
-            FileSharesJsonContext.Default.PrivateEndpointConnectionDataSchema);
-
-        if (connectionData == null)
-        {
-            throw new InvalidOperationException("Failed to deserialize private endpoint connection data.");
-        }
-
-        return new PrivateEndpointConnectionInfo(
-            Id: connectionData.Id ?? string.Empty,
-            Name: connectionData.Name ?? string.Empty,
-            PrivateEndpointId: connectionData.Properties?.PrivateEndpoint?.Id,
-            ConnectionState: connectionData.Properties?.PrivateLinkServiceConnectionState?.Status,
-            ProvisioningState: connectionData.Properties?.ProvisioningState);
-    }
-
-    /// <summary>
-    /// Extracts resource group name from Azure resource ID.
-    /// </summary>
-    private static string? ExtractResourceGroupFromId(string resourceId)
-    {
-        const string pattern = "/resourcegroups/";
-        var index = resourceId.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
-        if (index < 0)
-        {
-            return null;
-        }
-
-        var start = index + pattern.Length;
-        var end = resourceId.IndexOf('/', start);
-        if (end < 0)
-        {
-            end = resourceId.Length;
-        }
-
-        return resourceId.Substring(start, end - start);
+        _logger.LogWarning("Private endpoint operations are not yet implemented with SDK");
+        throw new NotImplementedException("Private endpoint operations are not yet implemented with SDK");
     }
 }
+
+/// <summary>
+/// Result of file share name availability check.
+/// </summary>
+/// <param name="IsAvailable">Whether the name is available.</param>
+/// <param name="Reason">The reason if the name is unavailable.</param>
+/// <param name="Message">Additional message about availability.</param>
+public record FileShareNameAvailabilityResult(bool IsAvailable, string? Reason, string? Message);

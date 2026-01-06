@@ -58,7 +58,7 @@ public interface IFileSharesService
     /// <summary>
     /// Check if a file share name is available.
     /// </summary>
-    Task<bool> CheckNameAvailabilityAsync(
+    Task<FileShareNameAvailabilityResult> CheckNameAvailabilityAsync(
         string subscription,
         string fileShareName,
         string location,
@@ -96,6 +96,65 @@ public interface IFileSharesService
         string subscription,
         string resourceGroup,
         string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create a snapshot of a file share.
+    /// </summary>
+    Task<FileShareSnapshotInfo> CreateSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get details of a file share snapshot.
+    /// </summary>
+    Task<FileShareSnapshotInfo> GetSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List snapshots of a file share.
+    /// </summary>
+    Task<List<FileShareSnapshotInfo>> ListSnapshotsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update a file share snapshot.
+    /// </summary>
+    Task<FileShareSnapshotInfo> UpdateSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a file share snapshot.
+    /// </summary>
+    Task DeleteSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

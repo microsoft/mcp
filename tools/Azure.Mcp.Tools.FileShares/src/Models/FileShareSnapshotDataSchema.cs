@@ -1,62 +1,58 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Azure.ResourceManager.FileShares;
 
 namespace Azure.Mcp.Tools.FileShares.Models;
 
 /// <summary>
-/// Represents Azure File Share Snapshot data.
+/// Data transfer object for File Share Snapshot information.
 /// </summary>
-public class FileShareSnapshotDataSchema
+public sealed record FileShareSnapshotDataSchema(
+    [property: JsonPropertyName("id")] string? Id = null,
+    [property: JsonPropertyName("name")] string? Name = null,
+    [property: JsonPropertyName("type")] string? Type = null,
+    [property: JsonPropertyName("systemData")] SystemDataSchema? SystemData = null,
+    [property: JsonPropertyName("properties")] FileShareSnapshotDataPropertiesSchema? Properties = null)
 {
     /// <summary>
-    /// Gets or sets the resource identifier.
+    /// Default constructor for deserialization.
     /// </summary>
-    public string? Id { get; set; }
+    public FileShareSnapshotDataSchema() : this(null, null, null, null, null) { }
 
     /// <summary>
-    /// Gets or sets the snapshot name.
+    /// Creates a FileShareSnapshotDataSchema from a FileShareSnapshotResource.
     /// </summary>
-    public string? Name { get; set; }
+    public static FileShareSnapshotDataSchema FromResource(FileShareSnapshotResource resource)
+    {
+        var data = resource.Data;
+        var props = data.Properties;
 
-    /// <summary>
-    /// Gets or sets the resource type.
-    /// </summary>
-    public string? Type { get; set; }
-
-    /// <summary>
-    /// Gets or sets the system data.
-    /// </summary>
-    [JsonPropertyName("systemData")]
-    public SystemDataSchema? SystemData { get; set; }
-
-    /// <summary>
-    /// Gets or sets the snapshot properties.
-    /// </summary>
-    public FileShareSnapshotDataPropertiesSchema? Properties { get; set; }
+        return new FileShareSnapshotDataSchema(
+            data.Id.ToString(),
+            data.Name,
+            data.ResourceType.ToString(),
+            data.SystemData != null ? SystemDataSchema.FromSystemData(data.SystemData) : null,
+            props != null ? new FileShareSnapshotDataPropertiesSchema(
+                props.SnapshotTime,
+                props.InitiatorId,
+                props.Metadata != null ? new Dictionary<string, string>(props.Metadata) : null
+            ) : null
+        );
+    }
 }
 
 /// <summary>
 /// Represents File Share Snapshot properties for the data model.
 /// </summary>
-public class FileShareSnapshotDataPropertiesSchema
+public sealed record FileShareSnapshotDataPropertiesSchema(
+    [property: JsonPropertyName("snapshotTime")] string? SnapshotTime = null,
+    [property: JsonPropertyName("initiatorId")] string? InitiatorId = null,
+    [property: JsonPropertyName("metadata")] Dictionary<string, string>? Metadata = null)
 {
     /// <summary>
-    /// Gets or sets the snapshot time in UTC.
+    /// Default constructor for deserialization.
     /// </summary>
-    [JsonPropertyName("snapshotTime")]
-    public string? SnapshotTime { get; set; }
-
-    /// <summary>
-    /// Gets or sets the initiator ID (user-defined value).
-    /// </summary>
-    [JsonPropertyName("initiatorId")]
-    public string? InitiatorId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the metadata associated with the snapshot.
-    /// </summary>
-    public Dictionary<string, string>? Metadata { get; set; }
+    public FileShareSnapshotDataPropertiesSchema() : this(null, null, null) { }
 }

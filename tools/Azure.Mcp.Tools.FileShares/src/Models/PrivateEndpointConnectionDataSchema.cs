@@ -1,109 +1,83 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Azure.ResourceManager.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Models;
 
 /// <summary>
-/// Represents an Azure private endpoint connection schema.
+/// Data transfer object for private endpoint connection information.
 /// </summary>
-public sealed class PrivateEndpointConnectionDataSchema
+public sealed record PrivateEndpointConnectionDataSchema(
+    [property: JsonPropertyName("id")] string? Id = null,
+    [property: JsonPropertyName("name")] string? Name = null,
+    [property: JsonPropertyName("type")] string? Type = null,
+    [property: JsonPropertyName("systemData")] SystemDataSchema? SystemData = null,
+    [property: JsonPropertyName("properties")] PrivateEndpointConnectionPropertiesSchema? Properties = null)
 {
     /// <summary>
-    /// Gets or sets the resource ID.
+    /// Default constructor for deserialization.
     /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
+    public PrivateEndpointConnectionDataSchema() : this(null, null, null, null, null) { }
 
     /// <summary>
-    /// Gets or sets the resource name.
+    /// Creates a PrivateEndpointConnectionDataSchema from a FileSharePrivateEndpointConnection.
     /// </summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
+    public static PrivateEndpointConnectionDataSchema FromModel(FileSharePrivateEndpointConnection connection)
+    {
+        var props = connection.Properties;
 
-    /// <summary>
-    /// Gets or sets the resource type.
-    /// </summary>
-    [JsonPropertyName("type")]
-    public string? Type { get; set; }
-
-    /// <summary>
-    /// Gets or sets the system data.
-    /// </summary>
-    [JsonPropertyName("systemData")]
-    public SystemDataSchema? SystemData { get; set; }
-
-    /// <summary>
-    /// Gets or sets the private endpoint connection properties.
-    /// </summary>
-    [JsonPropertyName("properties")]
-    public PrivateEndpointConnectionPropertiesSchema? Properties { get; set; }
+        return new PrivateEndpointConnectionDataSchema(
+            connection.Id?.ToString(),
+            connection.Name,
+            connection.ResourceType.ToString(),
+            connection.SystemData != null ? SystemDataSchema.FromSystemData(connection.SystemData) : null,
+            props != null ? new PrivateEndpointConnectionPropertiesSchema(
+                null,
+                props.GroupIds?.ToList(),
+                props.PrivateLinkServiceConnectionState != null ? new PrivateLinkServiceConnectionStateSchema(
+                    props.PrivateLinkServiceConnectionState.Status?.ToString(),
+                    props.PrivateLinkServiceConnectionState.Description,
+                    props.PrivateLinkServiceConnectionState.ActionsRequired
+                ) : null,
+                props.ProvisioningState?.ToString()
+            ) : null
+        );
+    }
 }
 
 /// <summary>
 /// Properties of a private endpoint connection schema.
 /// </summary>
-public sealed class PrivateEndpointConnectionPropertiesSchema
+public sealed record PrivateEndpointConnectionPropertiesSchema(
+    [property: JsonPropertyName("privateEndpoint")] PrivateEndpointSchema? PrivateEndpoint = null,
+    [property: JsonPropertyName("groupIds")] List<string>? GroupIds = null,
+    [property: JsonPropertyName("privateLinkServiceConnectionState")] PrivateLinkServiceConnectionStateSchema? PrivateLinkServiceConnectionState = null,
+    [property: JsonPropertyName("provisioningState")] string? ProvisioningState = null)
 {
     /// <summary>
-    /// Gets or sets the private endpoint resource.
+    /// Default constructor for deserialization.
     /// </summary>
-    [JsonPropertyName("privateEndpoint")]
-    public PrivateEndpointSchema? PrivateEndpoint { get; set; }
-
-    /// <summary>
-    /// Gets or sets the group IDs for the private endpoint resource.
-    /// </summary>
-    [JsonPropertyName("groupIds")]
-    public List<string>? GroupIds { get; set; }
-
-    /// <summary>
-    /// Gets or sets the private link service connection state.
-    /// </summary>
-    [JsonPropertyName("privateLinkServiceConnectionState")]
-    public PrivateLinkServiceConnectionStateSchema? PrivateLinkServiceConnectionState { get; set; }
-
-    /// <summary>
-    /// Gets or sets the provisioning state.
-    /// </summary>
-    [JsonPropertyName("provisioningState")]
-    public string? ProvisioningState { get; set; }
+    public PrivateEndpointConnectionPropertiesSchema() : this(null, null, null, null) { }
 }
 
 /// <summary>
 /// Represents a private endpoint resource schema.
 /// </summary>
-public sealed class PrivateEndpointSchema
-{
-    /// <summary>
-    /// Gets or sets the ARM identifier for the private endpoint.
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-}
+public sealed record PrivateEndpointSchema(
+    [property: JsonPropertyName("id")] string? Id = null);
 
 /// <summary>
 /// State of the connection between service consumer and provider schema.
 /// </summary>
-public sealed class PrivateLinkServiceConnectionStateSchema
+public sealed record PrivateLinkServiceConnectionStateSchema(
+    [property: JsonPropertyName("status")] string? Status = null,
+    [property: JsonPropertyName("description")] string? Description = null,
+    [property: JsonPropertyName("actionsRequired")] string? ActionsRequired = null)
 {
     /// <summary>
-    /// Gets or sets the connection status (Pending, Approved, Rejected).
+    /// Default constructor for deserialization.
     /// </summary>
-    [JsonPropertyName("status")]
-    public string? Status { get; set; }
-
-    /// <summary>
-    /// Gets or sets the reason for approval/rejection of the connection.
-    /// </summary>
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
-
-    /// <summary>
-    /// Gets or sets a message indicating if changes require updates on the consumer.
-    /// </summary>
-    [JsonPropertyName("actionsRequired")]
-    public string? ActionsRequired { get; set; }
+    public PrivateLinkServiceConnectionStateSchema() : this(null, null, null) { }
 }

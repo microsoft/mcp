@@ -566,7 +566,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
-- 📂 **Azure File Shares** - Azure File Shares management and snapshots
+- � **Azure FileShares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -587,7 +587,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 💾 **Azure Storage** - Blob storage
-- 🔄 **Azure Storage Sync** - Azure File Sync management operations
+-  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure

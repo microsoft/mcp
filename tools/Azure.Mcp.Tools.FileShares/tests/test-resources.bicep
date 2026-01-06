@@ -5,11 +5,8 @@ targetScope = 'resourceGroup'
 @description('The base resource name.')
 param baseName string = resourceGroup().name
 
-@description('The client OID to grant access to test resources.')
-param testApplicationOid string = deployer().objectId
-
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'eastus'
+param location string = resourceGroup().location
 
 @description('Virtual network name for private endpoints.')
 param vnetName string = '${baseName}-vnet'
@@ -59,7 +56,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
 
 // FileShare 1 - Primary file share with VNet association
 resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
-  name: '${baseName}-fileshare-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  name: '${baseName}-fileshare-01'
   location: location
   properties: {
     protocol: 'NFS'
@@ -77,7 +74,7 @@ resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
 
 // FileShare 2 - Secondary file share with VNet association
 resource fileShare2 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
-  name: '${baseName}-fileshare-02-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  name: '${baseName}-fileshare-02'
   location: location
   properties: {
     protocol: 'NFS'
@@ -100,7 +97,7 @@ resource fileShare2 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
 // FileShare Snapshot 1 - Snapshot of primary file share
 resource fileShareSnapshot1 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
   parent: fileShare1
-  name: 'snapshot-${substring(uniqueString(resourceGroup().id), 0, 8)}'
+  name: '${baseName}-snapshot-01'
   properties: {
     metadata: {
       environment: 'test'
@@ -112,7 +109,7 @@ resource fileShareSnapshot1 'Microsoft.FileShares/fileShares/fileShareSnapshots@
 // FileShare Snapshot 2 - Snapshot of secondary file share
 resource fileShareSnapshot2 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
   parent: fileShare2
-  name: 'snapshot-${substring(uniqueString(resourceGroup().id), 0, 8)}'
+  name: '${baseName}-snapshot-02'
   properties: {
     metadata: {
       environment: 'test'
@@ -175,6 +172,3 @@ output subnetId string = '${virtualNetwork.id}/subnets/${subnetName}'
 // Private Endpoint outputs
 output privateEndpointName string = fileSharePrivateEndpoint.name
 output privateEndpointId string = fileSharePrivateEndpoint.id
-
-// Test application OID
-output testApplicationOid string = testApplicationOid

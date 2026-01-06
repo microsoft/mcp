@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Commands.Informational;
 using Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
+using Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -21,15 +22,16 @@ public class FileSharesSetup : IAreaSetup
     {
         services.AddSingleton<IFileSharesService, FileSharesService>();
 
-        services.AddSingleton<FileShareListCommand>();
         services.AddSingleton<FileShareGetCommand>();
-        services.AddSingleton<FileShareCreateOrUpdateCommand>();
+        services.AddSingleton<FileShareCreateCommand>();
+        services.AddSingleton<FileShareUpdateCommand>();
         services.AddSingleton<FileShareDeleteCommand>();
         services.AddSingleton<FileShareCheckNameAvailabilityCommand>();
 
-        services.AddSingleton<FileShareSnapshotListCommand>();
-        services.AddSingleton<FileShareSnapshotGetCommand>();
-        services.AddSingleton<FileShareSnapshotCreateCommand>();
+        services.AddSingleton<SnapshotGetCommand>();
+        services.AddSingleton<SnapshotCreateCommand>();
+        services.AddSingleton<SnapshotUpdateCommand>();
+        services.AddSingleton<SnapshotDeleteCommand>();
 
         services.AddSingleton<FileShareGetLimitsCommand>();
         services.AddSingleton<FileShareGetProvisioningRecommendationCommand>();
@@ -48,14 +50,14 @@ public class FileSharesSetup : IAreaSetup
         var fileShare = new CommandGroup("fileshare", "File share operations - Commands for managing file shares.");
         fileShares.AddSubGroup(fileShare);
 
-        var fileShareList = serviceProvider.GetRequiredService<FileShareListCommand>();
-        fileShare.AddCommand(fileShareList.Name, fileShareList);
-
         var fileShareGet = serviceProvider.GetRequiredService<FileShareGetCommand>();
         fileShare.AddCommand(fileShareGet.Name, fileShareGet);
 
-        var fileShareCreate = serviceProvider.GetRequiredService<FileShareCreateOrUpdateCommand>();
+        var fileShareCreate = serviceProvider.GetRequiredService<FileShareCreateCommand>();
         fileShare.AddCommand(fileShareCreate.Name, fileShareCreate);
+
+        var fileShareUpdate = serviceProvider.GetRequiredService<FileShareUpdateCommand>();
+        fileShare.AddCommand(fileShareUpdate.Name, fileShareUpdate);
 
         var fileShareDelete = serviceProvider.GetRequiredService<FileShareDeleteCommand>();
         fileShare.AddCommand(fileShareDelete.Name, fileShareDelete);
@@ -66,14 +68,17 @@ public class FileSharesSetup : IAreaSetup
         var snapshot = new CommandGroup("snapshot", "File share snapshot operations - Commands for managing file share snapshots.");
         fileShare.AddSubGroup(snapshot);
 
-        var snapshotList = serviceProvider.GetRequiredService<FileShareSnapshotListCommand>();
-        snapshot.AddCommand(snapshotList.Name, snapshotList);
-
-        var snapshotGet = serviceProvider.GetRequiredService<FileShareSnapshotGetCommand>();
+        var snapshotGet = serviceProvider.GetRequiredService<SnapshotGetCommand>();
         snapshot.AddCommand(snapshotGet.Name, snapshotGet);
 
-        var snapshotCreate = serviceProvider.GetRequiredService<FileShareSnapshotCreateCommand>();
+        var snapshotCreate = serviceProvider.GetRequiredService<SnapshotCreateCommand>();
         snapshot.AddCommand(snapshotCreate.Name, snapshotCreate);
+
+        var snapshotUpdate = serviceProvider.GetRequiredService<SnapshotUpdateCommand>();
+        snapshot.AddCommand(snapshotUpdate.Name, snapshotUpdate);
+
+        var snapshotDelete = serviceProvider.GetRequiredService<SnapshotDeleteCommand>();
+        snapshot.AddCommand(snapshotDelete.Name, snapshotDelete);
 
         // Register private endpoint connection commands
         var pecGroup = new CommandGroup("privateendpointconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
