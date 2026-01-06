@@ -4,11 +4,13 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFixture) : RecordedCommandTestsBase(output, testProxyFixture)
 {
     [Fact]
     public async Task Should_list_groups_by_subscription()
@@ -36,4 +38,14 @@ public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
         Assert.Equal(JsonValueKind.Array, subscriptionsArray.ValueKind);
         Assert.NotEmpty(subscriptionsArray.EnumerateArray());
     }
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/\"]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+    ];
 }
