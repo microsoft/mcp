@@ -179,7 +179,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
         // should clear out kid hostnames of actual vault names appearing anywhere in any section
         // of the body
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
-          Regex = "(?=http://|https://)(?<host[^/?\.]+)",
+          Regex = "(?=http://|https://)(?<host>[^/?\.]+)",
           GroupForReplace = "host",
         })
     };
