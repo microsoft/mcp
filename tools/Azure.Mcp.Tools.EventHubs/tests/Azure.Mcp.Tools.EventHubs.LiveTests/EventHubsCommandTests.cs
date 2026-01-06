@@ -14,8 +14,7 @@ namespace Azure.Mcp.Tools.EventHubs.LiveTests;
 public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
     : RecordedCommandTestsBase(output, fixture)
 {
-    public override bool EnableDefaultSanitizerAdditions => false;
-
+    // Disable AZSDK2003 sanitizer to prevent it from over-sanitizing resource names in recordings.
     public override List<string> DisabledDefaultSanitizers =>
     [
         ..base.DisabledDefaultSanitizers,
@@ -85,8 +84,8 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.Equal(Settings.ResourceBaseName, nsName);
 
             var nsId = testNamespace.GetProperty("id").GetString();
-            Assert.Contains("/subscriptions/", nsId);  // Flexible - subscription ID sanitized in playback
-            Assert.Contains("/resourceGroups/", nsId);  // Flexible - resource group sanitized in playback
+            Assert.Contains("/subscriptions/", nsId);  // Matching on subscription presence as Subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", nsId);  // Matching on RG presence as Resource group sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", nsId);
             Assert.Contains(Settings.ResourceBaseName, nsId);
 
@@ -117,8 +116,8 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.Equal(Settings.ResourceBaseName, name);
 
         var id = namespaceData.GetProperty("id").GetString();
-        Assert.Contains("/subscriptions/", id);  // Flexible - subscription ID sanitized in playback
-        Assert.Contains("/resourceGroups/", id);  // Flexible - resource group sanitized in playback
+        Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as Subscription ID sanitized in playback
+        Assert.Contains("/resourceGroups/", id);  // Matching on RG presence as Resource group sanitized in playback
         Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
         Assert.Contains(Settings.ResourceBaseName, id);
 
@@ -205,7 +204,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
 
         var namespaceName = namespaceData.GetProperty("name").GetString();
-        Assert.False(string.IsNullOrEmpty(namespaceName));  // Flexible - name may be sanitized in playback
+        Assert.False(string.IsNullOrEmpty(namespaceName));  // Matching on value presence as value is sanitized in playback
 
         var namespaceLocation = namespaceData.GetProperty("location").GetString();
         Assert.Contains("eastus", namespaceLocation, StringComparison.OrdinalIgnoreCase);
@@ -302,8 +301,8 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.False(string.IsNullOrEmpty(name.GetString()));
 
             var id = firstEventHub.AssertProperty("id");
-            Assert.Contains("/subscriptions/", id.GetString());  // Flexible - subscription ID sanitized in playback
-            Assert.Contains("/resourceGroups/", id.GetString());  // Flexible - resource group sanitized in playback
+            Assert.Contains("/subscriptions/", id.GetString());  // Matching on subscription presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", id.GetString());  // Matching on RG presence as Resource group sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id.GetString());
             Assert.Contains(Settings.ResourceBaseName, id.GetString());
             Assert.Contains("/eventhubs/", id.GetString());
@@ -424,11 +423,11 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.False(string.IsNullOrEmpty(name));
 
             var id = eventHub.GetProperty("id").GetString();
-            Assert.Contains("/subscriptions/", id);  // Flexible - subscription ID sanitized in playback
-            Assert.Contains("/resourceGroups/", id);  // Flexible - resource group sanitized in playback
+            Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", id);  // Matching on RG presence as RG name is sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
             Assert.Contains(Settings.ResourceBaseName, id);
-            Assert.Contains("/eventhubs/", id);  // Flexible - event hub name might be sanitized
+            Assert.Contains("/eventhubs/", id);  // Matching on EH name presence as event hub name is sanitized
 
             var partitionCount = eventHub.GetProperty("partitionCount").GetInt32();
             Assert.Equal(4, partitionCount);
@@ -532,18 +531,18 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.NotEqual(default, firstConsumerGroup);
 
             var cgName = firstConsumerGroup.GetProperty("name").GetString();
-            Assert.False(string.IsNullOrEmpty(cgName));  // Flexible - name may be sanitized in playback
+            Assert.False(string.IsNullOrEmpty(cgName));  // Matching on name presence as name is sanitized in playback
 
             var cgId = firstConsumerGroup.GetProperty("id").GetString();
-            Assert.Contains("/subscriptions/", cgId);  // Flexible - subscription ID sanitized in playback
-            Assert.Contains("/resourceGroups/", cgId);  // Flexible - resource group sanitized in playback
+            Assert.Contains("/subscriptions/", cgId);  // Matching on subscription ID presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", cgId);  // Matching on RG name presence as resource group is sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", cgId);
             Assert.Contains(Settings.ResourceBaseName, cgId);
-            Assert.Contains("/eventhubs/", cgId);  // Flexible - eventhub name may be sanitized in playback
-            Assert.Contains("/consumergroups/", cgId);  // Flexible - consumer group name may be sanitized in playback
+            Assert.Contains("/eventhubs/", cgId);  // Matching on EH name presence as eventhub name is sanitized in playback
+            Assert.Contains("/consumergroups/", cgId);  // Matching on CG name presence as consumer group name is sanitized in playback
 
             var resourceGroup = firstConsumerGroup.GetProperty("resourceGroup").GetString();
-            // Flexible - resource group name may be sanitized in playback
+            // Matching on RG name presence as resource group name is sanitized in playback
             Assert.False(string.IsNullOrEmpty(resourceGroup));
         }
         finally
@@ -627,7 +626,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.Equal(JsonValueKind.Object, consumerGroup.ValueKind);
 
             var name = consumerGroup.GetProperty("name").GetString();
-            Assert.False(string.IsNullOrEmpty(name));  // Flexible - name may be sanitized in playback
+            Assert.False(string.IsNullOrEmpty(name));  // Matching on CG name presence as CG name is sanitized in playback
 
             var userMetadata = consumerGroup.GetProperty("userMetadata").GetString();
             Assert.Equal("Test consumer group for live tests", userMetadata);
@@ -730,15 +729,15 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             var consumerGroup = consumerGroupArray[0];
 
             var name = consumerGroup.GetProperty("name").GetString();
-            Assert.False(string.IsNullOrEmpty(name));  // Flexible - name may be sanitized in playback
+            Assert.False(string.IsNullOrEmpty(name));  // Matching on CG name presence as CG name is sanitized in playback
 
             var id = consumerGroup.GetProperty("id").GetString();
-            Assert.Contains("/subscriptions/", id);  // Flexible - subscription ID sanitized in playback
-            Assert.Contains("/resourceGroups/", id);  // Flexible - resource group sanitized in playback
+            Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as subscription ID is sanitized in playback
+            Assert.Contains("/resourceGroups/", id);  // Matching on RG name presence as resource group is sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
             Assert.Contains(Settings.ResourceBaseName, id);
-            Assert.Contains("/eventhubs/", id);  // Flexible - eventhub name may be sanitized in playback
-            Assert.Contains("/consumergroups/", id);  // Flexible - consumer group name may be sanitized in playback
+            Assert.Contains("/eventhubs/", id);  // Matching on EH name presence as eventhub name is sanitized in playback
+            Assert.Contains("/consumergroups/", id);  // Matching on CG name presence as consumer group name is sanitized in playback
 
             var userMetadata = consumerGroup.GetProperty("userMetadata").GetString();
             Assert.Equal("Test consumer group for get operation", userMetadata);
@@ -836,7 +835,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             Assert.False(string.IsNullOrEmpty(consumerGroupName.GetString()));
 
             var eventHubName = result.AssertProperty("eventHubName");
-            Assert.False(string.IsNullOrEmpty(eventHubName.GetString()));  // Flexible - name may be sanitized in playback
+            Assert.False(string.IsNullOrEmpty(eventHubName.GetString()));  // Matching on EH name presence as as EH name is sanitized in playback
         }
         finally
         {
