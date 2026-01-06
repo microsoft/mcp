@@ -11,6 +11,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Removed `Azure.Monitor.Query` package dependency as that is now deprecated. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+
 ### Bugs Fixed
 
 - Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
@@ -18,6 +20,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces.[[#1409](https://github.com/microsoft/mcp/pull/1409)]
 
 #### Dependency updates
 
