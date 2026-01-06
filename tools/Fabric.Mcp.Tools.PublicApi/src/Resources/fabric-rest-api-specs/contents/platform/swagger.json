@@ -1886,6 +1886,9 @@
           },
           "Connect a workspace to GitHub example": {
             "$ref": "./examples/gitIntegration/ConnectToGitHub.json"
+          },
+          "Connect a workspace to GitHub example - GitHub Enterprise With Data Residency (ghe.com)": {
+            "$ref": "./examples/gitIntegration/ConnectToGitHubEnterpriseWithDataResidency.json"
           }
         }
       }
@@ -3175,6 +3178,12 @@
           },
           "Get OneLake Setting for workspace without diagnostic setting example": {
             "$ref": "./examples/platform/GetOneLakeDiagnosticSettingWithoutDiagnosticSetting.json"
+          },
+          "Get OneLake Settings with immutability policy example": {
+            "$ref": "./examples/platform/GetOneLakeSettingsWithImmutabilityPolicy.json"
+          },
+          "Get OneLake Settings without immutability policy example": {
+            "$ref": "./examples/platform/GetOneLakeSettingsWithoutImmutabilityPolicy.json"
           }
         }
       }
@@ -3254,6 +3263,61 @@
           },
           "Remove OneLake Diagnostic Setting Destination for Workspace example": {
             "$ref": "./examples/platform/ModifyOneLakeDiagnosticSettingRemove.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy": {
+      "post": {
+        "summary": "Create or update OneLake immutability settings.",
+        "description": "Set immutability policy for data stored in OneLake. Currently, this feature supports configuring a retention period specifically for diagnostic logs within a workspace, ensuring they remain unaltered once written.\n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nOneLake.ReadWrite.All\n\n## Limitations\n\nCan be applied only if:\n- The current workspace is storing diagnostic logs from other workspaces.\n- There is already a retention period applied to the diagnostics logs in the workspace\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeSettings"
+        ],
+        "operationId": "OneLakeSettings_ModifyImmutabilityPolicy",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "immutabilityPolicyRequest",
+            "description": "The immutability policy request object.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/ImmutabilityPolicyRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UserNotAuthorized - User must be an admin of the workspace to enable diagnostics settings.\n\n* WorkspaceNotFound - Workspace not found.\n\n* RetentionDaysReductionNotAllowed - Retention days cannot be reduced than what is already set.\n\n* WorkspaceNotSupported - Workspace is not supported for setting diagnostic immutability policy.\n\n* InternalServerError - Other Internal Errors.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Enable immutability for diagnostic logs example": {
+            "$ref": "./examples/platform/ModifyOneLakeImmutabilityPolicyEnable.json"
+          },
+          "Reduce retention days example (error case)": {
+            "$ref": "./examples/platform/ModifyOneLakeImmutabilityPolicyError.json"
           }
         }
       }

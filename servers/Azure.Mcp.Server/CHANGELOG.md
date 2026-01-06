@@ -2,9 +2,16 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.8 (Unreleased)
+## 2.0.0-beta.9 (Unreleased)
 
 ### Features Added
+
+- Added Azure Storage Sync (StorageSync) module with 18 commands for managing cloud synchronization of file shares:
+  - **StorageSyncService** commands (4): Create, Delete, Get, Update
+  - **RegisteredServer** commands (3): Get, Unregister, Update
+  - **SyncGroup** commands (3): Create, Delete, Get
+  - **CloudEndpoint** commands (4): Create, Delete, Get, TriggerChangeDetection
+  - **ServerEndpoint** commands (4): Create, Delete, Get, Update
 
 - Added support logging capability with `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
 - Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
@@ -18,13 +25,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
-- Move Azure AI Best Practices tool into Best Practice namespace [[#1323](https://github.com/microsoft/mcp/pull/1323)]
 
 #### Dependency updates
 
 - Updated `Azure.Bicep.Types` from `0.6.1` to `0.6.27`. [[#1331](https://github.com/microsoft/mcp/pull/1331)]
 
 - Updated `Microsoft.Azure.Mcp.AzTypes.Internal.Compact` from `0.2.802` to `0.2.804`. [[#1348](https://github.com/microsoft/mcp/pull/1348)]
+
+## 2.0.0-beta.8 (2025-12-11)
+
+### Bugs Fixed
+
+- Fixed an issue where the AI Best Practices tool would get called instead of the Best Practices tool. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
 
 ## 2.0.0-beta.7 (2025-11-25)
 
