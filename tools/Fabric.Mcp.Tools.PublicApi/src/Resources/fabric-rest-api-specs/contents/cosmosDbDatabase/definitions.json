@@ -1,0 +1,126 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "CosmosDBDatabase data types"
+    },
+    "paths": {},
+    "definitions": {
+		"CosmosDBDatabase": {
+            "description": "A Cosmos DB database object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "CosmosDBDatabases": {
+            "description": "A list of Cosmos DB databases.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Cosmos DB databases.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CosmosDBDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+		"CreateCosmosDBDatabaseRequest": {
+            "description": "Create Cosmos DB database request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Cosmos DB database display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Cosmos DB database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The Cosmos DB database definition.",
+                    "$ref": "#/definitions/CosmosDBDatabaseDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateCosmosDBDatabaseRequest": {
+            "description": "Update Cosmos DB database request.",
+            "properties": {
+                "description": {
+                    "description": "The Cosmos DB database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateCosmosDBDatabaseDefinitionRequest": {
+            "description": "Update Cosmos DB database public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/CosmosDBDatabaseDefinition"
+                }
+            }
+        },
+        "CosmosDBDatabaseDefinitionResponse": {
+            "description": "The Cosmos DB database public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/CosmosDBDatabaseDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "CosmosDBDatabaseDefinition" : {
+            "description": "The Cosmos DB database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/cosmosdb-database-definition) for more details on how to craft a Cosmos DB database public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CosmosDBDatabaseDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "CosmosDBDatabaseDefinitionPart": {
+            "description": "Cosmos DB database definition part object.",
+            "type": "object",
+            "required": ["path", "payload", "payloadType"],
+            "properties": {
+                "path": {
+                    "description": "The Cosmos DB database public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The Cosmos DB database public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        }
+	}
+}

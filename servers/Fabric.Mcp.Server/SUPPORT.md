@@ -160,6 +160,7 @@ dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
 
 # Run tests (if available)
 dotnet test tools/Fabric.Mcp.Tools.PublicApi/tests/
+dotnet test tools/Fabric.Mcp.Tools.OneLake/tests/
 ```
 
 **Development and debugging:**

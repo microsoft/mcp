@@ -1,13 +1,3 @@
----
-title: Report definition
-description: Learn how to structure a report item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric report item definition
-author: billmath
-ms.author: billmath
-ms.service: fabric
-ms.date: 05/17/2024
----
-
 # Report definition
 
 This article provides a breakdown of the definition structure for report items.

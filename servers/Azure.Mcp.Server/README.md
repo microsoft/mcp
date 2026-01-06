@@ -548,7 +548,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
@@ -587,6 +587,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 💾 **Azure Storage** - Blob storage
+- 🔄 **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
@@ -604,6 +605,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 ## Feedback and Support
 
 - Check the [Troubleshooting guide](https://aka.ms/azmcp/troubleshooting) to diagnose and resolve common issues with the Azure MCP Server.
+- For advanced troubleshooting, you can enable [support logging](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#support-logging) using the `--dangerously-write-support-logs-to-dir` option.
 - We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
     - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we’d love to hear from you!
 
