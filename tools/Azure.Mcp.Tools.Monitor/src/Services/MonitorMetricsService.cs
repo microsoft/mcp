@@ -39,7 +39,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Using new Monitor Metrics Query API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
@@ -223,7 +222,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Using new Monitor Metrics Definition API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
@@ -296,7 +294,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Using new Monitor Metrics Namespace API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
