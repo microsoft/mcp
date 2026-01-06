@@ -472,6 +472,20 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### 📂 Azure File Shares
+
+* "List all my file shares in my storage account"
+* "Get details about a specific file share"
+* "Create a new file share in my storage account"
+* "Delete a file share"
+* "Check if a file share name is available"
+* "List all snapshots for a file share"
+* "Get details about a file share snapshot"
+* "Create a snapshot of a file share"
+* "Get file share limits and quotas"
+* "Get provisioning recommendations for file shares"
+* "Get file share usage data and metrics"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -552,6 +566,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
+- 📂 **Azure File Shares** - Azure File Shares management and snapshots
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration

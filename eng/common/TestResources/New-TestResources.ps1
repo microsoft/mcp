@@ -179,7 +179,7 @@ try {
         }
         Write-Verbose "Overriding test resources search directory to '$root'"
     }
-    
+
     $templateFiles = @()
 
     "$ResourceType-resources.json", "$ResourceType-resources.bicep" | ForEach-Object {
@@ -203,7 +203,7 @@ try {
 
     # returns empty string if $ServiceDirectory is not set
     $serviceName = GetServiceLeafDirectoryName $ServiceDirectory
-    
+
     # in ci, random names are used
     # in non-ci, without BaseName, ResourceGroupName or ServiceDirectory, all invocations will
     # generate the same resource group name and base name for a given user
@@ -310,7 +310,7 @@ try {
         }
     }
 
-    # This needs to happen after we set the TenantId but before we use the ResourceGroupName	
+    # This needs to happen after we set the TenantId but before we use the ResourceGroupName
     if ($wellKnownTMETenants.Contains($TenantId)) {
         # Add a prefix to the resource group name to avoid flagging the usages of local auth
         # See details at https://eng.ms/docs/products/onecert-certificates-key-vault-and-dsms/key-vault-dsms/certandsecretmngmt/credfreefaqs#how-can-i-disable-s360-reporting-when-testing-customer-facing-3p-features-that-depend-on-use-of-unsafe-local-auth
@@ -627,6 +627,83 @@ try {
         }
         Log $msg
 
+        # Test the deployment template before actual deployment to diagnose issues early
+        Log "Validating deployment template '$($templateFile.jsonFilePath)'"
+        $templateValidation = $null
+        try {
+            $templateValidation = Test-AzResourceGroupDeployment `
+                    -ResourceGroupName $resourceGroup.ResourceGroupName `
+                    -TemplateFile $templateFile.jsonFilePath `
+                    -TemplateParameterObject $templateFileParameters `
+                    -Verbose -ErrorAction Stop
+        } catch {
+            Write-Host "Template validation encountered an error:"
+            Write-Host "  [Exception] $($_.Exception.Message)"
+            Write-Host "  [Type] $($_.Exception.GetType().FullName)"
+            if ($_.ErrorDetails) {
+                Write-Host "  [Error Details] $($_.ErrorDetails.Message)"
+            }
+            Write-Host ""
+            Write-Host "Deployment validation failed. Review the errors above and fix the template before retrying."
+            # exit 1
+        }
+
+        if ($templateValidation) {
+            Write-Host "========== TEMPLATE VALIDATION ERRORS =========="
+            Write-Host "Template validation returned errors:"
+            Write-Host ""
+
+            $errorCount = 0
+            foreach ($error in $templateValidation) {
+                $errorCount++
+                Write-Host "--- Error #$errorCount ---"
+                Write-Host "  [Message] $($error.Message)"
+                Write-Host "  [Code] $($error.Code)"
+                Write-Host "  [Target] $($error.Target)"
+
+                if ($error.Details) {
+                    Write-Host "  [Details]"
+                    $detailCount = 0
+                    foreach ($detail in $error.Details) {
+                        $detailCount++
+                        Write-Host "    Detail #${detailCount}:"
+                        Write-Host "      Message: $($detail.Message)"
+                        if ($detail.Code) {
+                            Write-Host "      Code: $($detail.Code)"
+                        }
+                        if ($detail.Target) {
+                            Write-Host "      Target: $($detail.Target)"
+                        }
+
+                        # Drill deeper into nested details
+                        if ($detail.Details -and $detail.Details.Count -gt 0) {
+                            Write-Host "      Inner Details:"
+                            foreach ($innerDetail in $detail.Details) {
+                                Write-Host "        - $($innerDetail.Message)"
+                                if ($innerDetail.Code) {
+                                    Write-Host "          Code: $($innerDetail.Code)"
+                                }
+                                if ($innerDetail.Target) {
+                                    Write-Host "          Target: $($innerDetail.Target)"
+                                }
+                            }
+                        }
+                    }
+                }
+                Write-Host ""
+            }
+            Write-Host "==========================================="
+            Write-Host "Deployment validation failed. Review the errors above and fix the template before retrying."
+            Write-Host "Template file: $($templateFile.jsonFilePath)"
+            Write-Host "Resource group: $($resourceGroup.ResourceGroupName)"
+            Write-Host ""
+            Write-Host "Full validation object (for debugging):"
+            Write-Host ($templateValidation | ConvertTo-Json -Depth 10)
+            Write-Host ""
+            # exit 1
+        }
+        Log "Template validation succeeded. Proceeding with deployment."
+
         $deployment = Retry {
             New-AzResourceGroupDeployment `
                     -Name $BaseName `
@@ -634,13 +711,14 @@ try {
                     -TemplateFile $templateFile.jsonFilePath `
                     -TemplateParameterObject $templateFileParameters `
                     -Force:$Force
+                    -Verbose
         }
         if ($deployment.ProvisioningState -ne 'Succeeded') {
             Write-Host "Deployment '$($deployment.DeploymentName)' has state '$($deployment.ProvisioningState)' with CorrelationId '$($deployment.CorrelationId)'. Exiting..."
             Write-Host @'
 #####################################################
 # For help debugging live test provisioning issues, #
-# see http://aka.ms/azsdk/engsys/live-test-help     #
+# see http://aka.ms/azsdk/engsys/live-test-help  Thanks!   #
 #####################################################
 '@
             exit 1

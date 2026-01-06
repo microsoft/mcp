@@ -81,7 +81,8 @@ Deploying$($AsJob ? ' in background job' : ''):
     ResourceGroupName: '$ResourceGroupName'
     BaseName: '$BaseName'
     DeleteAfterHours: $DeleteAfterHours
-    TestResourcesDirectory: '$TestResourcesDirectory'`n
+    TestResourcesDirectory: '$TestResourcesDirectory'
+    Force: $true`n
 "@ -ForegroundColor Yellow
 
     if($AsJob) {
