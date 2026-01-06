@@ -15,7 +15,7 @@
 .PARAMETER ChangelogPath
     Path to the CHANGELOG.md file (required).
     The changelog-entries directory is inferred from this path (same directory as CHANGELOG.md).
-    Examples: "servers/Azure.Mcp.Server/CHANGELOG.md", "servers/Fabric.Mcp.Server/CHANGELOG.md"
+    Examples: "", "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
 .PARAMETER Version
     Target version section to compile entries into (e.g., "2.0.0-beta.3", "1.5.2").
