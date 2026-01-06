@@ -18,6 +18,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported.
+
 ### Bugs Fixed
 
 - Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]

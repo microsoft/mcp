@@ -1,5 +1,11 @@
 # Release History
 
+## 2.0.9 (Unreleased) (pre-release)
+
+### Breaking Changes
+
+- Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported.
+
 ## 2.0.8 (2025-12-11) (pre-release)
 
 ### Fixed
