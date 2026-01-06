@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Xml;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
@@ -38,6 +39,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        Console.WriteLine("Using new Monitor Metrics Query API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
@@ -78,26 +80,26 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             Metricnamespace = metricNamespace
         };
 
-        // Set timespan
+        // Set timespan with proper ISO 8601 format
         if (startTimeOffset.HasValue && endTimeOffset.HasValue)
         {
-            options.Timespan = $"{startTimeOffset.Value:O}/{endTimeOffset.Value:O}";
+            options.Timespan = $"{ToIsoString(startTimeOffset.Value)}/{ToIsoString(endTimeOffset.Value)}";
         }
         else if (startTimeOffset.HasValue)
         {
-            options.Timespan = $"{startTimeOffset.Value:O}/{DateTimeOffset.UtcNow:O}";
+            options.Timespan = $"{ToIsoString(startTimeOffset.Value)}/{ToIsoString(DateTimeOffset.UtcNow)}";
         }
         else if (endTimeOffset.HasValue)
         {
             var defaultStart = endTimeOffset.Value - TimeSpan.FromDays(1);
-            options.Timespan = $"{defaultStart:O}/{endTimeOffset.Value:O}";
+            options.Timespan = $"{ToIsoString(defaultStart)}/{ToIsoString(endTimeOffset.Value)}";
         }
         else
         {
             // Default to last 24 hours if no time range specified
             var defaultEnd = DateTimeOffset.UtcNow;
             var defaultStart = defaultEnd - TimeSpan.FromDays(1);
-            options.Timespan = $"{defaultStart:O}/{defaultEnd:O}";
+            options.Timespan = $"{defaultStart.ToString("o", CultureInfo.InvariantCulture)}/{defaultEnd.ToString("o", CultureInfo.InvariantCulture)}";
         }
 
         if (!string.IsNullOrEmpty(interval))
@@ -221,6 +223,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        Console.WriteLine("Using new Monitor Metrics Definition API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
@@ -293,6 +296,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        Console.WriteLine("Using new Monitor Metrics Namespace API.");
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
@@ -327,5 +331,19 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         }
 
         return results;
+    }
+
+
+    private string ToIsoString(DateTimeOffset dto)
+    {
+        if (dto.Offset == TimeSpan.Zero)
+        {
+            const string utcFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+            return dto.ToString(utcFormat, CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            return dto.ToString("O", CultureInfo.InvariantCulture);
+        }
     }
 }
