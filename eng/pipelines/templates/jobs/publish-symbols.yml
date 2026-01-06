@@ -1,5 +1,11 @@
+parameters:
+  - name: DependsOn
+    type: object
+    default: []
+
 jobs:
 - job: PublishSymbols
+  dependsOn: ${{ parameters.DependsOn }}
   displayName: "Publish symbols"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   timeoutInMinutes: 120
@@ -7,13 +13,23 @@ jobs:
   steps:
   - checkout: azure-sdk-build-tools
 
-  - download: current
-    displayName: Download binaries_signed
-    artifact: binaries_signed
+  # - download: current
+  #   displayName: Download binaries_signed
+  #   artifact: binaries_signed
     
+  - task: DownloadPipelineArtifact@2
+    displayName: Download binaries_signed artifact
+    inputs:
+      buildType: specific
+      project: $(System.TeamProjectId)
+      definition: $(Build.DefinitionId)
+      buildVersionToDownload: specific
+      buildId: 5724729
+      artifactName: binaries_signed
+      targetPath: $(Pipeline.Workspace)/binaries_signed
+
   - task: AzurePowershell@5
     displayName: 'Reserve symbols api request name'
-    condition: and(succeeded(), eq(variables['SymbolPackagesExist'], 'true'))
     inputs:
       pwsh: true
       azureSubscription: 'Azure SDK Symbols Publishing'
@@ -26,7 +42,6 @@ jobs:
 
   - task: PublishSymbols@2
     displayName: 'Publish symbols to Azure DevOps'
-    condition: and(succeeded(), eq(variables['SymbolPackagesExist'], 'true'))
     inputs:
       SymbolsFolder: $(Pipeline.Workspace)/binaries_signed
       SearchPattern: '**/*.pdb'
@@ -35,7 +50,6 @@ jobs:
 
   - task: AzurePowershell@5
     displayName: 'Request SymWeb and MSDL api publishing'
-    condition: and(succeeded(), eq(variables['SymbolPackagesExist'], 'true'))
     inputs:
       pwsh: true
       azureSubscription: 'Azure SDK Symbols Publishing'
@@ -45,4 +59,6 @@ jobs:
       ScriptArguments: >
         -ProjectName 'azure-sdk'
         -RequestName '$(SymbolsRequestName)'
+        -Internal
         -Wait
+      # -Internal == Only publish to symweb
