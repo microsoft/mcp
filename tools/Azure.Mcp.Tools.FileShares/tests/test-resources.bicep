@@ -40,7 +40,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
           addressPrefix: subnetAddressSpace
           serviceEndpoints: [
             {
-              service: 'Microsoft.FileShares'
+              service: 'Microsoft.Storage'
             }
           ]
           privateLinkServiceNetworkPolicies: 'Disabled'
@@ -57,14 +57,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
 // FileShare 1 - Primary file share with VNet association
 resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
   name: '${baseName}-fileshare-01'
-  location: location
+  location: 'eastus'
   properties: {
     protocol: 'NFS'
     mediaTier: 'SSD'
     redundancy: 'Local'
     provisionedStorageGiB: 32
-    provisionedIOPerSec: 9
-    provisionedThroughputMiBPerSec: 5
+    provisionedIOPerSec: 3000
+    provisionedThroughputMiBPerSec: 125
   }
   tags: {
     environment: 'test'
@@ -75,46 +75,18 @@ resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
 // FileShare 2 - Secondary file share with VNet association
 resource fileShare2 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
   name: '${baseName}-fileshare-02'
-  location: location
+  location: 'eastus'
   properties: {
     protocol: 'NFS'
-    mediaTier: 'Standard'
+    mediaTier: 'SSD'
     redundancy: 'Local'
     provisionedStorageGiB: 32
-    provisionedIOPerSec: 5
-    provisionedThroughputMiBPerSec: 3
+    provisionedIOPerSec: 3000
+    provisionedThroughputMiBPerSec: 125
   }
   tags: {
     environment: 'test'
     purpose: 'mcp-testing'
-  }
-}
-
-// ============================================================================
-// 3. FileShare Snapshots
-// ============================================================================
-
-// FileShare Snapshot 1 - Snapshot of primary file share
-resource fileShareSnapshot1 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
-  parent: fileShare1
-  name: '${baseName}-snapshot-01'
-  properties: {
-    metadata: {
-      environment: 'test'
-      purpose: 'mcp-testing'
-    }
-  }
-}
-
-// FileShare Snapshot 2 - Snapshot of secondary file share
-resource fileShareSnapshot2 'Microsoft.FileShares/fileShares/fileShareSnapshots@2025-06-01-preview' = {
-  parent: fileShare2
-  name: '${baseName}-snapshot-02'
-  properties: {
-    metadata: {
-      environment: 'test'
-      purpose: 'mcp-testing'
-    }
   }
 }
 
@@ -135,8 +107,9 @@ resource fileSharePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-06-01
         properties: {
           privateLinkServiceId: fileShare1.id
           groupIds: [
-            'file'
+            'FileShare'
           ]
+          requestMessage: 'Approved Private Endpoint'
         }
       }
     ]
@@ -157,12 +130,6 @@ output fileShare1Id string = fileShare1.id
 output fileShare2Name string = fileShare2.name
 output fileShare2Id string = fileShare2.id
 
-// FileShare Snapshot outputs
-output fileShareSnapshot1Name string = fileShareSnapshot1.name
-output fileShareSnapshot1Id string = fileShareSnapshot1.id
-output fileShareSnapshot2Name string = fileShareSnapshot2.name
-output fileShareSnapshot2Id string = fileShareSnapshot2.id
-
 // Network outputs
 output virtualNetworkName string = virtualNetwork.name
 output virtualNetworkId string = virtualNetwork.id
@@ -172,3 +139,4 @@ output subnetId string = '${virtualNetwork.id}/subnets/${subnetName}'
 // Private Endpoint outputs
 output privateEndpointName string = fileSharePrivateEndpoint.name
 output privateEndpointId string = fileSharePrivateEndpoint.id
+

@@ -710,7 +710,7 @@ try {
                     -ResourceGroupName $resourceGroup.ResourceGroupName `
                     -TemplateFile $templateFile.jsonFilePath `
                     -TemplateParameterObject $templateFileParameters `
-                    -Force:$Force
+                    -Force:$Force `
                     -Verbose
         }
         if ($deployment.ProvisioningState -ne 'Succeeded') {
