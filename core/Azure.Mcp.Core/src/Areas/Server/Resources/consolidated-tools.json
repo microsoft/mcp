@@ -1821,7 +1821,7 @@
         "fileshares_fileshare_create",
         "fileshares_fileshare_update",
         "fileshares_fileshare_delete",
-        "fileshares_fileshare_checkname"
+        "fileshares_fileshare_check-name-availability"
       ]
     },
     {
