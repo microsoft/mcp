@@ -5,7 +5,7 @@ parameters:
     type: string
   - name: Tag
     type: string
-  - name: CustomEndpoint
+  - name: ServiceConnection
     type: string
     default: ''
   - name: Access
@@ -19,7 +19,7 @@ steps:
     parameters:
       npmrcPath: ${{parameters.PathToArtifacts}}/.npmrc
       registryUrl: ${{parameters.Registry}}
-      ServiceConnection: ${{parameters.CustomEndpoint}}
+      ServiceConnection: ${{parameters.ServiceConnection}}
 
   - pwsh: |
       $tgzFiles = Get-ChildItem -Path . -Filter *.tgz -Recurse
