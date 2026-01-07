@@ -15,7 +15,6 @@ using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
-
 namespace Azure.Mcp.Tools.Monitor.Services;
 
 public class MonitorMetricsService(IResourceResolverService resourceResolverService, ITenantService tenantService)
@@ -98,7 +97,8 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             // Default to last 24 hours if no time range specified
             var defaultEnd = DateTimeOffset.UtcNow;
             var defaultStart = defaultEnd - TimeSpan.FromDays(1);
-            options.Timespan = $"{defaultStart.ToString("o", CultureInfo.InvariantCulture)}/{defaultEnd.ToString("o", CultureInfo.InvariantCulture)}";
+
+            options.Timespan = $"{ToIsoString(defaultStart)}/{ToIsoString(defaultEnd)}";
         }
 
         if (!string.IsNullOrEmpty(interval))
@@ -329,7 +329,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
         return results;
     }
-
 
     private string ToIsoString(DateTimeOffset dto)
     {
