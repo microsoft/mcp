@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Add hardcoded minimum TLS version of 1.2 to Storage account creation tool"
