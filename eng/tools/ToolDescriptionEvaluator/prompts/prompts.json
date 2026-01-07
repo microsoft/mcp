@@ -1,12 +1,11 @@
 {
-<<<<<<< HEAD
   "azureaibestpractices_get": [
     "Get best practices for building AI applications in Azure",
     "Show me the best practices for Microsoft Foundry agents code generation",
     "Get guidance for building agents with Microsoft Foundry",
     "Create an AI app that helps me to manage travel queries.",
     "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
-=======
+  ],
   "foundry_agents_connect": [
     "Query an agent in my Microsoft Foundry resource"
   ],
@@ -72,7 +71,6 @@
   ],
   "foundry_threads_list": [
     "List my Microsoft Foundry threads"
->>>>>>> c6db961a3403055d25fc4a8d7e7637e7a848bf9f
   ],
   "search_knowledge_base_get": [
     "List all knowledge bases in the Azure AI Search service <service-name>",
