@@ -488,6 +488,7 @@ public class StorageService(
         CancellationToken cancellationToken = default)
     {
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
         var defaultUri = $"https://{account}.table.core.windows.net";
         return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
     }
