@@ -126,7 +126,8 @@ public class StorageService(
                     AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                     EnableHttpsTrafficOnly = true,
                     AllowBlobPublicAccess = false,
-                    IsHnsEnabled = enableHierarchicalNamespace ?? false
+                    IsHnsEnabled = enableHierarchicalNamespace ?? false,
+                    MinimumTlsVersion = "TLS1_2"
                 }
             };
 
