@@ -1817,16 +1817,16 @@
         }
       },
       "mappedToolList": [
-        "fileshares_fileshare_list",
         "fileshares_fileshare_get",
         "fileshares_fileshare_create",
+        "fileshares_fileshare_update",
         "fileshares_fileshare_delete",
         "fileshares_fileshare_checkname"
       ]
     },
     {
       "name": "manage_azure_file_share_snapshots",
-      "description": "Manage Azure File Share snapshots including listing, getting details, and creating snapshots for point-in-time recovery.",
+      "description": "Manage Azure File Share snapshots including listing, getting details, creating, updating, and deleting snapshots for point-in-time recovery.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1854,9 +1854,10 @@
         }
       },
       "mappedToolList": [
-        "fileshares_snapshot_list",
         "fileshares_snapshot_get",
-        "fileshares_snapshot_create"
+        "fileshares_snapshot_create",
+        "fileshares_snapshot_update",
+        "fileshares_snapshot_delete"
       ]
     },
     {
@@ -1924,7 +1925,6 @@
         }
       },
       "mappedToolList": [
-        "fileshares_privateendpointconnection_list",
         "fileshares_privateendpointconnection_get",
         "fileshares_privateendpointconnection_update",
         "fileshares_privateendpointconnection_delete"
