@@ -42,6 +42,6 @@ public class SnapshotDeleteCommandTests
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Delete Snapshot", _command.Title);
+        Assert.Equal("Delete File Share Snapshot", _command.Title);
     }
 }

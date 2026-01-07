@@ -42,6 +42,6 @@ public class FileShareDeleteCommandTests
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Delete FileShare", _command.Title);
+        Assert.Equal("Delete File Share", _command.Title);
     }
 }

@@ -42,6 +42,6 @@ public class FileShareCheckNameAvailabilityCommandTests
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Check FileShare Name Availability", _command.Title);
+        Assert.Equal("Check File Share Name Availability", _command.Title);
     }
 }
