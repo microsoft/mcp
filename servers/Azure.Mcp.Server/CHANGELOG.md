@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.9 (Unreleased)
+## 2.0.0-beta.9 (2026-01-06)
 
 ### Features Added
 
@@ -26,16 +26,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
+- Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
 ### Other Changes
 
-- Switched to the new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Switched to a new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Replace hard-coded strings for `Azure.Mcp.Server` with ones from `IConfiguration`. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 
-#### Dependency updates
+#### Dependency Updates
 
 - Updated `Azure.Bicep.Types` from `0.6.1` to `0.6.27`. [[#1331](https://github.com/microsoft/mcp/pull/1331)]
-
 - Updated `Microsoft.Azure.Mcp.AzTypes.Internal.Compact` from `0.2.802` to `0.2.804`. [[#1348](https://github.com/microsoft/mcp/pull/1348)]
 
 ## 2.0.0-beta.8 (2025-12-11)
