@@ -1,0 +1,4 @@
+pr: 743
+changes:
+  - section: "Features Added"
+    description: "Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`."

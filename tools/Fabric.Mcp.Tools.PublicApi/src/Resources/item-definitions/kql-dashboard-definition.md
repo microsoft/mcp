@@ -1,13 +1,3 @@
----
-title: KQL Dashboard item definition
-description: Learn how to structure a Real-Time Dashboard (KQL Dashboard) definition when using the Microsoft Fabric REST API.
-author: ronitamir185
-ms.title: Microsoft Fabric KQL Dashboard item definition
-ms.author: rotamir
-ms.service: fabric
-ms.date: 09/19/2024
----
-
 # KQL Dashboard definition
 
 This article provides a breakdown of the structure for Real-Time Dashboard (KQL Dashboard) definition items.

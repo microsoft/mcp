@@ -5,7 +5,46 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.0-beta.3]  (2025-12-04)
+## 0.0.0-beta.6 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 0.0.0-beta.5 (2026-01-05)
+
+### Features Added
+
+- Added comprehensive API throttling best practices guide with production-ready retry patterns, exponential backoff, circuit breakers, and code examples in C#, Python, and TypeScript
+- Added Admin APIs usage guidelines to help LLMs understand when to use admin APIs, request explicit user permission, and implement graceful fallbacks to standard APIs
+- Update Fabric REST API specifications and examples.
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 0.0.0-beta.4 (2025-12-16)
+
+### Features Added
+
+- **OneLake Toolset**: Added comprehensive support for OneLake operations including:
+    - File operations: Read, write, delete, and list files in OneLake.
+    - Directory operations: Create and delete directories.
+    - Item management: Create items and list OneLake items.
+    - Workspace integration: List OneLake workspaces.
+    - Multi-environment support and extensive documentation. [[#1113](https://github.com/microsoft/mcp/pull/1113)]
+- **Public APIs Toolset**: Updated Fabric public APIs with latest information:
+    - Added API specifications for **Cosmos DB Database**, **Operations Agent**, **Graph Model**, and **Snowflake Database**.
+    - Updated API specifications for multiple items.
+
+
+## 0.0.0-beta.3 (2025-12-04)
 
 ### Features Added
 

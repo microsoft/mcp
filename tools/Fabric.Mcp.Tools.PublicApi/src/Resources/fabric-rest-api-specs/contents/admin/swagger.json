@@ -1150,7 +1150,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1206,7 +1206,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* EntityConflict - Update domain failed because domain display name already exists.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred.\n\n* EntityConflict - Update domain failed because domain display name already exists.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1245,7 +1245,7 @@
             "description": "Request completed successfully."
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1294,7 +1294,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1350,7 +1350,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* EntityConflict - Update domain failed because domain display name already exists.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* EntityConflict - Update domain failed because domain display name already exists.\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1448,7 +1448,7 @@
             "description": "Request completed successfully."
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }

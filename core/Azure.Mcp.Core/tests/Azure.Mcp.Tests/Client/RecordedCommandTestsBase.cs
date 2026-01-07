@@ -119,8 +119,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         return value;
     }
 
-    // used to resolve a recording "path" given an invoking test
-    protected static readonly RecordingPathResolver PathResolver = new();
+    protected TestProxyFixture Fixture => fixture;
+
+    protected IRecordingPathResolver PathResolver => fixture.PathResolver;
 
     protected virtual bool IsAsync => false;
 
@@ -215,7 +216,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // we will use the same proxy instance throughout the test class instances, so we only need to start it if not already started.
         if (TestMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
         {
-            await fixture.StartProxyAsync();
+            var assetsPath = PathResolver.GetAssetsJson(GetType());
+            await fixture.StartProxyAsync(assetsPath);
             Proxy = fixture.Proxy;
 
             // onetime on starting the proxy, we have initialized the livetest settings so lets add some additional sanitizers by default
@@ -242,10 +244,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private void PopulateDefaultSanitizers()
     {
+        // Registering a few common sanitizers for values that we know will be universally present and cleaned up
         if (EnableDefaultSanitizerAdditions)
         {
-            // Sanitize out the resource basename by default!
-            // This implies that tests shouldn't use this baseresourcename as part of their validation logic, as sanitization will replace it with "Sanitized" and cause confusion.
             GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
             {
                 Regex = Settings.ResourceBaseName,
@@ -417,7 +418,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         return name;
     }
 
-    private string GetSessionFilePath(string displayName)
+    public string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
         var dir = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null);

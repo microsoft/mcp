@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -382,7 +383,8 @@ public class StorageService(
     {
         var uri = $"https://{account}.blob.core.windows.net";
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-        return new BlobServiceClient(new Uri(uri), await GetCredential(cancellationToken), options);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken), options);
     }
 
     private static string ParseStorageSkuName(string sku)

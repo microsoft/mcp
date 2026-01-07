@@ -1,5 +1,32 @@
 # Release History
 
+## 2.0.9 (2026-01-06) (pre-release)
+
+### Added
+
+- Added 18 Azure Storage Sync tools for managing cloud synchronization of file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+  - **StorageSyncService** tools (4): Create, Delete, Get, Update
+  - **RegisteredServer** tools (3): Get, Unregister, Update
+  - **SyncGroup** tools (3): Create, Delete, Get
+  - **CloudEndpoint** tools (4): Create, Delete, Get, TriggerChangeDetection
+  - **ServerEndpoint** tools (4): Create, Delete, Get, Update
+- Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
+
+### Fixed
+
+- Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
+
+### Other Changed
+
+- Switched to a new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
+- Replace hard-coded strings for `Azure.Mcp.Server` with ones from `IConfiguration`. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+
+## 2.0.8 (2025-12-11) (pre-release)
+
+### Fixed
+
+- Fixed an issue where the AI Best Practices tool would get called instead of the Best Practices tool. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
+
 ## 2.0.7 (2025-11-25) (pre-release)
 
 ### Changed

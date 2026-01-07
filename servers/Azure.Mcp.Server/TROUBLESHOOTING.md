@@ -21,6 +21,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
+      - [Support Logging](#support-logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
       - [Collecting logs with VS Code](#collecting-logs-with-vs-code)
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
@@ -815,8 +816,8 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 ## Remote MCP Server (preview)
 
 Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
-- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/README.md) 
-- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
 
 ### HTTPS redirection issues
 
@@ -912,6 +913,45 @@ az role assignment create \
 The Azure MCP Server is instrumented using the .NET [EventSource](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) to emit detailed information. Logging follows the pattern of marking operation start, completion, and exceptions. These logs are invaluable for diagnosing Azure MCP Server issues.
 
 Server logs can be obtained by capturing events for provider "Microsoft-Extensions-Logging".
+
+#### Support Logging
+
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-write-support-logs-to-dir` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
+
+> [!WARNING]
+> Support logging may include sensitive information. Use with extreme caution and only when requested by support.
+
+> [!NOTE]
+> When support logging is enabled, all telemetry is automatically disabled to prevent sensitive debug information from being sent to telemetry endpoints.
+
+**Example configuration in mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server (Support Mode)": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@latest",
+        "server",
+        "start",
+        "--dangerously-write-support-logs-to-dir",
+        "/path/to/logs"
+      ]
+    }
+  }
+}
+```
+
+**Command-line usage:**
+
+```bash
+azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+```
+
+The log files will be created with timestamp-based names (e.g., `azmcp_20251202_143052.log`) and will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
 
 #### Collecting logs with dotnet-trace
 
