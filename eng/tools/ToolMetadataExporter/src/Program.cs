@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ToolMetadataExporter.Models;
 using ToolMetadataExporter.Services;
 
 namespace ToolMetadataExporter;
@@ -27,18 +28,16 @@ public class Program
 
         var host = builder.Build();
 
-        var analyzer = host.Services.GetRequiredService<ToolAnalyzer>();
+        var commandLineOptions = builder.Configuration.Get<CommandLineOptions>();
 
-        await host.StartAsync();
-
-        var isDryRunValue = builder.Configuration["IsDryRun"];
-        var isDryRun = false;
-        if (bool.TryParse(isDryRunValue, out var parsed))
+        if (commandLineOptions == null)
         {
-            isDryRun = parsed;
+            throw new InvalidOperationException("Expected to be able to get command line options from IConfiguration.");
         }
 
-        await analyzer.RunAsync(DateTimeOffset.UtcNow, isDryRun);
+        var analyzer = host.Services.GetRequiredService<ToolAnalyzer>();
+
+        await analyzer.RunAsync(DateTimeOffset.UtcNow, commandLineOptions.IsDryRun);
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
