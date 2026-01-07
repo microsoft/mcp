@@ -115,5 +115,5 @@ jobs:
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop
             Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
-            CustomEndpoint: 'Azure SDK MCP Server Connection'
+            ServiceConnection: 'Azure SDK MCP Server Connection'
             Tag: latest
