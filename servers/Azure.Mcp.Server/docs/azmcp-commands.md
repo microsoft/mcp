@@ -1050,7 +1050,7 @@ azmcp fileshares fileshare create --subscription <subscription> \
                                   [--tags <json-tags>]
 
 # Update an existing File Share
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare update --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --name <file-share-name> \
@@ -1063,7 +1063,7 @@ azmcp fileshares fileshare update --subscription <subscription> \
                                   [--tags <json-tags>]
 
 # Delete a File Share
-# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare delete --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --name <file-share-name>
@@ -1082,13 +1082,13 @@ azmcp fileshares fileshare snapshot get --subscription <subscription> \
                                         --snapshot-name <snapshot-name>
 
 # Create a File Share snapshot
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare snapshot create --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --file-share-name <file-share-name>
 
 # Update a File Share snapshot
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare snapshot update --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --file-share-name <file-share-name> \
@@ -1112,7 +1112,7 @@ azmcp fileshares privateendpointconnection get --subscription <subscription> \
                                                --connection-name <connection-name>
 
 # Update a private endpoint connection
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares privateendpointconnection update --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --file-share-name <file-share-name> \
@@ -1121,7 +1121,7 @@ azmcp fileshares privateendpointconnection update --subscription <subscription> 
                                                   [--description <description>]
 
 # Delete a private endpoint connection
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares privateendpointconnection delete --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --file-share-name <file-share-name> \
