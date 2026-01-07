@@ -14,7 +14,7 @@
 
 ### Fixed
 
-- Fixed a serialization issue in the Foundry Agent File Search tool.[[#1205](https://github.com/microsoft/mcp/pull/1205)]
+- Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
 ### Other Changed
 
