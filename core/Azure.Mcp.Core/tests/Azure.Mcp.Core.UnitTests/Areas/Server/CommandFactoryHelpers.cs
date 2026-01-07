@@ -56,7 +56,7 @@ internal class CommandFactoryHelpers
             // Core areas
             new SubscriptionSetup(),
             new GroupSetup(),
-            
+
             // Tool areas
             new AcrSetup(),
             new AksSetup(),
@@ -120,7 +120,7 @@ internal class CommandFactoryHelpers
             // Core areas
             new SubscriptionSetup(),
             new GroupSetup(),
-            
+
             // Tool areas
             new AcrSetup(),
             new AksSetup(),
@@ -180,6 +180,6 @@ internal class CommandFactoryHelpers
         {
         }
 
-        public Task InitializeAsync() => Task.CompletedTask;
+        public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

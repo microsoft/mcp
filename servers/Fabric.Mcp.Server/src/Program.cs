@@ -30,7 +30,7 @@ internal class Program
         try
         {
             ServiceStartCommand.ConfigureServices = ConfigureServices;
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServiceStartCommand.InitializeServicesAsync = (serviceProvider, cancellationToken) => InitializeServicesAsync(serviceProvider, cancellationToken);
 
             ServiceCollection services = new();
             ConfigureServices(services);
@@ -43,7 +43,7 @@ internal class Program
             });
 
             var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
+            await InitializeServicesAsync(serviceProvider, CancellationToken.None);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
@@ -165,12 +165,12 @@ internal class Program
         }
     }
 
-    internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
+    internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         // Perform any initialization before starting the service.
         // If the initialization operation fails, do not continue because we do not want
         // invalid telemetry published.
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
-        await telemetryService.InitializeAsync();
+        await telemetryService.InitializeAsync(cancellationToken);
     }
 }

@@ -21,11 +21,11 @@ namespace Azure.Mcp.Tests.Client.Helpers
             return ValueTask.CompletedTask;
         }
 
-        public async Task StartProxyAsync(string assetsJsonPath)
+        public async Task StartProxyAsync(string assetsJsonPath, CancellationToken cancellationToken = default)
         {
             var root = PathResolver.RepositoryRoot;
             var proxy = new TestProxy();
-            await proxy.Start(root, assetsJsonPath);
+            await proxy.Start(root, assetsJsonPath, cancellationToken);
             Proxy = proxy;
         }
 

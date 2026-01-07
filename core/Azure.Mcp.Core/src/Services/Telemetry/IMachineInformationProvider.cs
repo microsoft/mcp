@@ -9,10 +9,12 @@ internal interface IMachineInformationProvider
     /// Gets existing or creates the device id.  In case the cached id cannot be retrieved, or the
     /// newly generated id cannot be cached, a value of null is returned.
     /// </summary>
-    Task<string?> GetOrCreateDeviceId();
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets a hash of the machine's MAC address.
     /// </summary>
-    Task<string> GetMacAddressHash();
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    Task<string> GetMacAddressHash(CancellationToken cancellationToken);
 }

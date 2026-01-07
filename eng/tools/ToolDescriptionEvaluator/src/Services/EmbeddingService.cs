@@ -13,7 +13,7 @@ public class EmbeddingService(HttpClient httpClient, string endpoint, string api
     private readonly string _endpoint = endpoint;
     private readonly string _apiKey = apiKey;
 
-    public async Task<float[]> CreateEmbeddingsAsync(string input)
+    public async Task<float[]> CreateEmbeddingsAsync(string input, CancellationToken cancellationToken = default)
     {
         var requestBody = new EmbeddingRequest
         {
@@ -30,10 +30,10 @@ public class EmbeddingService(HttpClient httpClient, string endpoint, string api
 
         request.Headers.Add("api-key", _apiKey);
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         var embeddingResponse = JsonSerializer.Deserialize(responseContent, SourceGenerationContext.Default.EmbeddingResponse);
 
         if (embeddingResponse?.Error != null)

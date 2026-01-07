@@ -28,6 +28,7 @@ public interface ITelemetryService : IDisposable
     /// <summary>
     /// Performs any initialization operations before telemetry service is ready.
     /// </summary>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A task that completes when initialization is complete.</returns>
-    Task InitializeAsync();
+    Task InitializeAsync(CancellationToken cancellationToken);
 }

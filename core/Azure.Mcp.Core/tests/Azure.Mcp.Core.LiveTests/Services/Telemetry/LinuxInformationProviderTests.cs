@@ -24,14 +24,14 @@ public class LinuxInformationProviderTests
         var provider = new LinuxMachineInformationProvider(_logger);
 
         // Act
-        var deviceId = await provider.GetOrCreateDeviceId();
+        var deviceId = await provider.GetOrCreateDeviceId(CancellationToken.None);
 
         // Assert
         Assert.NotNull(deviceId);
         Assert.NotEmpty(deviceId);
 
         // Verify it's persisted by calling again
-        var deviceId2 = await provider.GetOrCreateDeviceId();
+        var deviceId2 = await provider.GetOrCreateDeviceId(CancellationToken.None);
         Assert.Equal(deviceId, deviceId2);
     }
 }

@@ -63,7 +63,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
-    public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+    public static Func<IServiceProvider, CancellationToken, Task> InitializeServicesAsync { get; set; } = (_, __) => Task.CompletedTask;
 
     public override string Id => "9953ff62-e3d7-4bdf-9b70-d569e54e3df1";
 
@@ -190,7 +190,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
             using var host = CreateHost(options);
 
-            await InitializeServicesAsync(host.Services);
+            await InitializeServicesAsync(host.Services, cancellationToken);
 
             await host.StartAsync(cancellationToken);
 
@@ -820,8 +820,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// to avoid duplicate spans and telemetry loops.
     /// This telemetry configuration is intended for self-hosted scenarios where
     /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
-    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
-    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors
+    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is
     /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
     /// </remarks>
     private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)

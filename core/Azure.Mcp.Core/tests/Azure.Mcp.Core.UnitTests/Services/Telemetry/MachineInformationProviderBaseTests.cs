@@ -25,7 +25,7 @@ public class MachineInformationProviderBaseTests
     public async Task GetMacAddressHash_WhenMacAddressExists_ReturnsHashedValue()
     {
         // Act
-        var result = await _provider.GetMacAddressHash();
+        var result = await _provider.GetMacAddressHash(CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -42,7 +42,7 @@ public class MachineInformationProviderBaseTests
         // For now, we'll test the happy path and error handling
 
         // Act
-        var result = await _provider.GetMacAddressHash();
+        var result = await _provider.GetMacAddressHash(CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -165,7 +165,7 @@ public class MachineInformationProviderBaseTests
         {
         }
 
-        public override Task<string?> GetOrCreateDeviceId()
+        public override Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken)
         {
             return Task.FromResult<string?>("test-device-id");
         }
@@ -177,7 +177,7 @@ public class MachineInformationProviderBaseTests
         }
 
         // Expose protected method
-        public new Task<string> GetMacAddressHash() => base.GetMacAddressHash();
+        public new Task<string> GetMacAddressHash(CancellationToken cancellationToken) => base.GetMacAddressHash(cancellationToken);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class MachineInformationProviderBaseTests
         var exceptionProvider = new ExceptionThrowingProvider(_logger);
 
         // Act
-        var result = await exceptionProvider.GetMacAddressHash();
+        var result = await exceptionProvider.GetMacAddressHash(CancellationToken.None);
 
         // Assert
         Assert.Equal("N/A", result);
@@ -218,7 +218,7 @@ public class MachineInformationProviderBaseTests
 internal class TestMachineInformationProvider(ILogger<MachineInformationProviderBase> logger)
     : MachineInformationProviderBase(logger)
 {
-    public override Task<string?> GetOrCreateDeviceId()
+    public override Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken = default)
     {
         // Default implementation for testing - can be overridden in specific tests
         return Task.FromResult<string?>("test-device-id");

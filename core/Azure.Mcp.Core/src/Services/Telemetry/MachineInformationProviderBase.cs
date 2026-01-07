@@ -27,12 +27,12 @@ internal abstract class MachineInformationProviderBase(ILogger<MachineInformatio
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public abstract Task<string?> GetOrCreateDeviceId();
+    public abstract Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public virtual Task<string> GetMacAddressHash()
+    public virtual Task<string> GetMacAddressHash(CancellationToken cancellationToken)
     {
         return Task.Run(() =>
         {

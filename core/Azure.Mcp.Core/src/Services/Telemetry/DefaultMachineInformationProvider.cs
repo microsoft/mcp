@@ -15,5 +15,5 @@ internal class DefaultMachineInformationProvider(ILogger<MachineInformationProvi
     /// Returns null.
     /// </summary>
     /// <returns></returns>
-    public override Task<string?> GetOrCreateDeviceId() => Task.FromResult<string?>(null);
+    public override Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken) => Task.FromResult<string?>(null);
 }

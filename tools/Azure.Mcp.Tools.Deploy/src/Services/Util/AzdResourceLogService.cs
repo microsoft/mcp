@@ -21,8 +21,8 @@ public static class AzdResourceLogService
         try
         {
             var azdAppLogRetriever = new AzdAppLogRetriever(credential, subscriptionId, azdEnvName);
-            await azdAppLogRetriever.InitializeAsync();
-            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync();
+            await azdAppLogRetriever.InitializeAsync(CancellationToken.None);
+            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync(CancellationToken.None);
 
             var services = GetServicesFromAzureYaml(workspaceFolder);
 
@@ -33,7 +33,7 @@ public static class AzdResourceLogService
                     if (service.Host != null)
                     {
                         var resourceType = ResourceTypeExtensions.GetResourceTypeFromHost(service.Host);
-                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit);
+                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit, CancellationToken.None);
                         appLogs.Add(logs);
                     }
                 }
