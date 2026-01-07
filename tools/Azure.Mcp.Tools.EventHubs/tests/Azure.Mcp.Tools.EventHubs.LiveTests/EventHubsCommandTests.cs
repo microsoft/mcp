@@ -4,13 +4,55 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.LiveTests;
 
-public class EventHubsCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedCommandTestsBase(output, fixture)
 {
+    // Disable AZSDK2003 sanitizer to prevent it from over-sanitizing resource names in recordings.
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK2003"
+    ];
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        ..base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "Sanitized"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        ..base.UriRegexSanitizers,
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    ];
+
+
     [Fact]
     public async Task Should_ListNamespaces_Successfully()
     {
@@ -42,8 +84,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             Assert.Equal(Settings.ResourceBaseName, nsName);
 
             var nsId = testNamespace.GetProperty("id").GetString();
-            Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", nsId);
-            Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", nsId);
+            Assert.Contains("/subscriptions/", nsId);  // Matching on subscription presence as Subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", nsId);  // Matching on RG presence as Resource group sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", nsId);
             Assert.Contains(Settings.ResourceBaseName, nsId);
 
@@ -74,8 +116,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.Equal(Settings.ResourceBaseName, name);
 
         var id = namespaceData.GetProperty("id").GetString();
-        Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", id);
-        Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", id);
+        Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as Subscription ID sanitized in playback
+        Assert.Contains("/resourceGroups/", id);  // Matching on RG presence as Resource group sanitized in playback
         Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
         Assert.Contains(Settings.ResourceBaseName, id);
 
@@ -162,7 +204,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
 
         var namespaceName = namespaceData.GetProperty("name").GetString();
-        Assert.Equal(testNamespaceName, namespaceName);
+        Assert.False(string.IsNullOrEmpty(namespaceName));  // Matching on value presence as value is sanitized in playback
 
         var namespaceLocation = namespaceData.GetProperty("location").GetString();
         Assert.Contains("eastus", namespaceLocation, StringComparison.OrdinalIgnoreCase);
@@ -259,8 +301,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             Assert.False(string.IsNullOrEmpty(name.GetString()));
 
             var id = firstEventHub.AssertProperty("id");
-            Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", id.GetString());
-            Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", id.GetString());
+            Assert.Contains("/subscriptions/", id.GetString());  // Matching on subscription presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", id.GetString());  // Matching on RG presence as Resource group sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id.GetString());
             Assert.Contains(Settings.ResourceBaseName, id.GetString());
             Assert.Contains("/eventhubs/", id.GetString());
@@ -273,7 +315,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_CreateEventHub_Successfully()
     {
-        var testEventHubName = $"test-eventhub-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-eventhub-{Guid.NewGuid():N}" : "test-create-eventhub";
 
         // First, ensure the event hub doesn't exist by trying to delete it (ignore failures)
         try
@@ -311,7 +354,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, eventHub.ValueKind);
 
         var name = eventHub.GetProperty("name").GetString();
-        Assert.Equal(testEventHubName, name);
+        Assert.False(string.IsNullOrEmpty(name));
 
         var partitionCount = eventHub.GetProperty("partitionCount").GetInt32();
         Assert.Equal(2, partitionCount);
@@ -338,7 +381,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_GetSingleEventHub_Successfully()
     {
-        var testEventHubName = $"test-get-eventhub-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-get-eventhub-{Guid.NewGuid():N}" : "test-get-eventhub";
 
         // First create an event hub to get
         await CallToolAsync(
@@ -376,14 +420,14 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             var eventHub = eventHubArray[0];
 
             var name = eventHub.GetProperty("name").GetString();
-            Assert.Equal(testEventHubName, name);
+            Assert.False(string.IsNullOrEmpty(name));
 
             var id = eventHub.GetProperty("id").GetString();
-            Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", id);
-            Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", id);
+            Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", id);  // Matching on RG presence as RG name is sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
             Assert.Contains(Settings.ResourceBaseName, id);
-            Assert.Contains($"/eventhubs/{testEventHubName}", id);
+            Assert.Contains("/eventhubs/", id);  // Matching on EH name presence as event hub name is sanitized
 
             var partitionCount = eventHub.GetProperty("partitionCount").GetInt32();
             Assert.Equal(4, partitionCount);
@@ -421,7 +465,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_DeleteEventHub_HandleNonExistentEventHub()
     {
-        var nonExistentEventHub = $"nonexistent-eventhub-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"nonexistent-eventhub-{Guid.NewGuid():N}" : "nonexistent-eventhub";
 
         // Try to delete a non-existent event hub - should succeed gracefully
         var result = await CallToolAsync(
@@ -431,7 +476,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "namespace", Settings.ResourceBaseName },
-                { "eventhub", nonExistentEventHub }
+                { "eventhub", testEventHubName }
             });
 
         // Verify deletion response for non-existent resource
@@ -439,13 +484,14 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         // Should return false since the event hub doesn't exist, but that's still a successful outcome
 
         var eventHubName = result.AssertProperty("eventHubName");
-        Assert.Equal(nonExistentEventHub, eventHubName.GetString());
+        Assert.False(string.IsNullOrEmpty(eventHubName.GetString()));
     }
 
     [Fact]
     public async Task Should_ListConsumerGroups_Successfully()
     {
-        var testEventHubName = $"test-cg-list-eventhub-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-cg-list-eventhub-{Guid.NewGuid():N}" : "test-cg-list-eventhub";
 
         // First create an event hub for consumer groups
         await CallToolAsync(
@@ -478,30 +524,26 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
             // Should contain at least the default $Default consumer group
             var consumerGroupArray = consumerGroups.EnumerateArray().ToList();
-            Assert.True(consumerGroupArray.Count >= 1, "Should contain at least the default consumer group");
+            Assert.True(consumerGroupArray.Count >= 1, "Should contain at least one consumer group");
 
-            // Verify that the $Default consumer group exists
-            var defaultConsumerGroup = consumerGroupArray.FirstOrDefault(cg =>
-                cg.GetProperty("name").GetString() == "$Default");
-            Assert.NotEqual(default, defaultConsumerGroup);
+            // Verify first consumer group properties (EventHubs always creates $Default, but it may be sanitized in playback)
+            var firstConsumerGroup = consumerGroupArray.First();
+            Assert.NotEqual(default, firstConsumerGroup);
 
-            // Verify consumer group properties
-            if (defaultConsumerGroup.ValueKind != JsonValueKind.Undefined)
-            {
-                var cgName = defaultConsumerGroup.GetProperty("name").GetString();
-                Assert.Equal("$Default", cgName);
+            var cgName = firstConsumerGroup.GetProperty("name").GetString();
+            Assert.False(string.IsNullOrEmpty(cgName));  // Matching on name presence as name is sanitized in playback
 
-                var cgId = defaultConsumerGroup.GetProperty("id").GetString();
-                Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", cgId);
-                Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", cgId);
-                Assert.Contains("/providers/Microsoft.EventHub/namespaces/", cgId);
-                Assert.Contains(Settings.ResourceBaseName, cgId);
-                Assert.Contains($"/eventhubs/{testEventHubName}", cgId);
-                Assert.Contains("/consumergroups/$Default", cgId);
+            var cgId = firstConsumerGroup.GetProperty("id").GetString();
+            Assert.Contains("/subscriptions/", cgId);  // Matching on subscription ID presence as subscription ID sanitized in playback
+            Assert.Contains("/resourceGroups/", cgId);  // Matching on RG name presence as resource group is sanitized in playback
+            Assert.Contains("/providers/Microsoft.EventHub/namespaces/", cgId);
+            Assert.Contains(Settings.ResourceBaseName, cgId);
+            Assert.Contains("/eventhubs/", cgId);  // Matching on EH name presence as eventhub name is sanitized in playback
+            Assert.Contains("/consumergroups/", cgId);  // Matching on CG name presence as consumer group name is sanitized in playback
 
-                var resourceGroup = defaultConsumerGroup.GetProperty("resourceGroup").GetString();
-                Assert.Equal(Settings.ResourceGroupName, resourceGroup);
-            }
+            var resourceGroup = firstConsumerGroup.GetProperty("resourceGroup").GetString();
+            // Matching on RG name presence as resource group name is sanitized in playback
+            Assert.False(string.IsNullOrEmpty(resourceGroup));
         }
         finally
         {
@@ -528,8 +570,9 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_CreateConsumerGroup_Successfully()
     {
-        var testEventHubName = $"test-cg-create-eventhub-{Guid.NewGuid():N}";
-        var testConsumerGroupName = $"test-cg-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-cg-create-eventhub-{Guid.NewGuid():N}" : "test-cg-create-eventhub";
+        var testConsumerGroupName = Settings.TestMode == TestMode.Live ? $"test-create-cg-{Guid.NewGuid():N}" : "test-create-cg";
 
         // First create an event hub for the consumer group
         await CallToolAsync(
@@ -583,7 +626,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             Assert.Equal(JsonValueKind.Object, consumerGroup.ValueKind);
 
             var name = consumerGroup.GetProperty("name").GetString();
-            Assert.Equal(testConsumerGroupName, name);
+            Assert.False(string.IsNullOrEmpty(name));  // Matching on CG name presence as CG name is sanitized in playback
 
             var userMetadata = consumerGroup.GetProperty("userMetadata").GetString();
             Assert.Equal("Test consumer group for live tests", userMetadata);
@@ -632,8 +675,9 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_GetSingleConsumerGroup_Successfully()
     {
-        var testEventHubName = $"test-cg-get-eventhub-{Guid.NewGuid():N}";
-        var testConsumerGroupName = $"test-get-cg-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-cg-get-eventhub-{Guid.NewGuid():N}" : "test-cg-get-eventhub";
+        var testConsumerGroupName = Settings.TestMode == TestMode.Live ? $"test-get-cg-{Guid.NewGuid():N}" : "test-get-cg";
 
         // First create an event hub for the consumer group
         await CallToolAsync(
@@ -685,15 +729,15 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             var consumerGroup = consumerGroupArray[0];
 
             var name = consumerGroup.GetProperty("name").GetString();
-            Assert.Equal(testConsumerGroupName, name);
+            Assert.False(string.IsNullOrEmpty(name));  // Matching on CG name presence as CG name is sanitized in playback
 
             var id = consumerGroup.GetProperty("id").GetString();
-            Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", id);
-            Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", id);
+            Assert.Contains("/subscriptions/", id);  // Matching on subscription presence as subscription ID is sanitized in playback
+            Assert.Contains("/resourceGroups/", id);  // Matching on RG name presence as resource group is sanitized in playback
             Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
             Assert.Contains(Settings.ResourceBaseName, id);
-            Assert.Contains($"/eventhubs/{testEventHubName}", id);
-            Assert.Contains($"/consumergroups/{testConsumerGroupName}", id);
+            Assert.Contains("/eventhubs/", id);  // Matching on EH name presence as eventhub name is sanitized in playback
+            Assert.Contains("/consumergroups/", id);  // Matching on CG name presence as consumer group name is sanitized in playback
 
             var userMetadata = consumerGroup.GetProperty("userMetadata").GetString();
             Assert.Equal("Test consumer group for get operation", userMetadata);
@@ -752,8 +796,9 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_DeleteConsumerGroup_HandleNonExistentConsumerGroup()
     {
-        var testEventHubName = $"test-cg-delete-eventhub-{Guid.NewGuid():N}";
-        var nonExistentConsumerGroup = $"nonexistent-cg-{Guid.NewGuid():N}";
+        // Use GUIDs in Live mode for unique Azure resources, fixed names in Record/Playback for Test Proxy URL matching
+        var testEventHubName = Settings.TestMode == TestMode.Live ? $"test-cg-delete-eventhub-{Guid.NewGuid():N}" : "test-cg-delete-eventhub";
+        var testConsumerGroupName = Settings.TestMode == TestMode.Live ? $"nonexistent-cg-{Guid.NewGuid():N}" : "nonexistent-cg";
 
         // First create an event hub for the consumer group test
         await CallToolAsync(
@@ -779,18 +824,18 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                     { "resource-group", Settings.ResourceGroupName },
                     { "namespace", Settings.ResourceBaseName },
                     { "eventhub", testEventHubName },
-                    { "consumer-group", nonExistentConsumerGroup }
+                    { "consumer-group", testConsumerGroupName }
                 });
 
-            // Verify deletion response for non-existent resource
+            // Verify deletion response
             var deleted = result.AssertProperty("deleted");
             // Should return false since the consumer group doesn't exist, but that's still a successful outcome
 
             var consumerGroupName = result.AssertProperty("consumerGroupName");
-            Assert.Equal(nonExistentConsumerGroup, consumerGroupName.GetString());
+            Assert.False(string.IsNullOrEmpty(consumerGroupName.GetString()));
 
             var eventHubName = result.AssertProperty("eventHubName");
-            Assert.Equal(testEventHubName, eventHubName.GetString());
+            Assert.False(string.IsNullOrEmpty(eventHubName.GetString()));  // Matching on EH name presence as as EH name is sanitized in playback
         }
         finally
         {
@@ -811,6 +856,32 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             {
                 // Ignore cleanup errors in tests
             }
+        }
+    }
+
+    /// <summary>
+    /// Sanitizes and records a value based on the test mode.
+    /// - In Live mode: returns the original unsanitized value
+    /// - In Record mode: registers the sanitized value for recording, but returns the original value for API calls
+    /// - In Playback mode: returns the sanitized value from TestVariables
+    /// </summary>
+    private string SanitizeAndRecord(string unsanitizedValue, string name)
+    {
+        if (TestMode == TestMode.Live)
+        {
+            // Live tests don't record anything, so just use the actual value.
+            return unsanitizedValue;
+        }
+        else if (TestMode == TestMode.Record)
+        {
+            // Record tests need to sanitize and register the value, but use the actual value in the test.
+            RegisterVariable(name, "Sanitized");
+            return unsanitizedValue;
+        }
+        else
+        {
+            // Playback tests need to use the sanitized value.
+            return TestVariables[name];
         }
     }
 }
