@@ -246,22 +246,18 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 });
 
             var fileSystems = listResult.AssertProperty("fileSystems");
-            foreach (var fs in fileSystems.EnumerateArray())
-            {
-                if (fs.TryGetProperty("name", out var nameProp) &&
-                    nameProp.ValueKind == JsonValueKind.String &&
-                    string.Equals(nameProp.GetString(), (TestMode == TestMode.Playback) ? "Sanitized" : fsName, StringComparison.OrdinalIgnoreCase))
-                {
-                    var provisioningSucceeded = fs.TryGetProperty("provisioningState", out var stateProp) &&
-                        stateProp.ValueKind == JsonValueKind.String &&
-                        string.Equals(stateProp.GetString(), "Succeeded", StringComparison.OrdinalIgnoreCase);
+            var targetFileSystem = fileSystems.EnumerateArray()
+                .Where(fs => fs.TryGetProperty("name", out var nameProp) &&
+                            nameProp.ValueKind == JsonValueKind.String &&
+                            string.Equals(nameProp.GetString(), (TestMode == TestMode.Playback) ? "Sanitized" : fsName, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault(fs => fs.TryGetProperty("provisioningState", out var stateProp) &&
+                                     stateProp.ValueKind == JsonValueKind.String &&
+                                     string.Equals(stateProp.GetString(), "Succeeded", StringComparison.OrdinalIgnoreCase));
 
-                    if (provisioningSucceeded)
-                    {
-                        isAvailable = true;
-                        break;
-                    }
-                }
+            if (!targetFileSystem.Equals(default(JsonElement)))
+            {
+                isAvailable = true;
+                break;
             }
 
             if (isAvailable)
@@ -309,9 +305,9 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var autoimportJobs = autoimportListResult.AssertProperty("jobs");
         Assert.Equal(JsonValueKind.Array, autoimportJobs.ValueKind);
         var foundAutoimport = false;
-        foreach (var job in autoimportJobs.EnumerateArray())
+        var jobTexts = autoimportJobs.EnumerateArray().Select(job => job.GetRawText());
+        foreach (var jobText in jobTexts)
         {
-            var jobText = job.GetRawText();
             Output.WriteLine($"Checking job: {jobText}");
             if (jobText.Contains(autoimportJobNameStr))
             {
@@ -411,9 +407,9 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var autoexportJobs = autoexportListResult.AssertProperty("jobs");
         Assert.Equal(JsonValueKind.Array, autoexportJobs.ValueKind);
         var foundAutoexport = false;
-        foreach (var job in autoexportJobs.EnumerateArray())
+        var autoexportJobTexts = autoexportJobs.EnumerateArray().Select(job => job.GetRawText());
+        foreach (var jobText in autoexportJobTexts)
         {
-            var jobText = job.GetRawText();
             if (jobText.Contains(autoexportJobNameStr))
             {
                 foundAutoexport = true;
@@ -615,7 +611,6 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         // Get the updated filesystem's ID for precise matching
         var updatedId = updatedFs.AssertProperty("id");
         Assert.Equal(JsonValueKind.String, updatedId.ValueKind);
-        var updatedIdString = updatedId.GetString();
 
         // Verify via list
         var listResult = await CallToolAsync(

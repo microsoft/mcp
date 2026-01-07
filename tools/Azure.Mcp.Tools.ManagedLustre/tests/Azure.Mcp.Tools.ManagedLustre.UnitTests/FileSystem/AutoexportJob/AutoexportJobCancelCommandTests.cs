@@ -57,10 +57,10 @@ public class AutoexportJobCancelCommandTests
     {
         // Arrange
         _managedLustreService.CancelAutoexportJobAsync(
-            Arg.Is(_jobName),
-            Arg.Is(_fileSystemName),
-            Arg.Is(_resourceGroup),
             Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Is(_jobName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())

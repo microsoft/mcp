@@ -773,7 +773,6 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             }
 
             // Delete the auto export job
-            await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
             await fs.Value.GetAutoExportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
                 WaitUntil.Completed,
                 cancellationToken);
@@ -1077,7 +1076,6 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             }
 
             // Delete the auto import job
-            await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
             await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
                 WaitUntil.Completed,
                 cancellationToken);

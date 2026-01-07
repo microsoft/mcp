@@ -1658,7 +1658,7 @@ azmcp managedlustre fs blob autoimport create --subscription <subscription> \
                                              --filesystem-name <filesystem-name> \
                                              [--job-name <job-name>] \
                                              [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
-                                             [--autoimport-prefixes <prefix1> --autoimport-prefixes<prefix2> ...] \
+                                             [--autoimport-prefixes <prefix1> --autoimport-prefixes <prefix2> ...] \
                                              [--admin-status <Enable|Disable>] \
                                              [--enable-deletions <true|false>] \
                                              [--maximum-errors <number>]
