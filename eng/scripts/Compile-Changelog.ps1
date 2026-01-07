@@ -242,7 +242,7 @@ function Build-SubsectionMapping {
                 if (-not $subsectionMapping.ContainsKey($titleCased)) {
                     $subsectionMapping[$titleCased] = @{
                         Existing = $key
-                        New = $null
+                        New      = $null
                     }
                 }
             }
@@ -255,10 +255,11 @@ function Build-SubsectionMapping {
                 $titleCased = ConvertTo-TitleCase $key
                 if ($subsectionMapping.ContainsKey($titleCased)) {
                     $subsectionMapping[$titleCased].New = $key
-                } else {
+                }
+                else {
                     $subsectionMapping[$titleCased] = @{
                         Existing = $null
-                        New = $key
+                        New      = $key
                     }
                 }
             }
@@ -369,7 +370,8 @@ foreach ($file in $yamlFiles) {
             $matchedSection = $validSections | Where-Object { $_ -ieq $change['section'] }
             if ($matchedSection) {
                 $normalizedSection = $matchedSection
-            } else {
+            }
+            else {
                 Write-Error "  Invalid section '$($change['section'])' in change #$($changeCount + 1) of $($file.Name). Must be one of: $($validSections -join ', ')"
                 continue
             }
@@ -398,11 +400,11 @@ foreach ($file in $yamlFiles) {
             
             # Add to entries collection with normalized section name
             $entries += [PSCustomObject]@{
-                Section = $normalizedSection
-                Subsection = $subsection
+                Section     = $normalizedSection
+                Subsection  = $subsection
                 Description = $change['description']
-                PR = $entry['pr']
-                Filename = $file.Name
+                PR          = $entry['pr']
+                Filename    = $file.Name
             }
             $changeCount++
         }
@@ -475,7 +477,8 @@ if ($Version) {
     $targetVersionHeader = $versionMatch.Value
     Write-Host "✓ Found version section: $targetVersionHeader" -ForegroundColor Green
     Write-Host ""
-} else {
+}
+else {
     # No version specified - look for Unreleased section at the top
     Write-Host "No version specified - looking for Unreleased section..." -ForegroundColor Cyan
     
@@ -492,7 +495,8 @@ if ($Version) {
             $targetVersionHeader = $firstSectionFull
             Write-Host "✓ Found Unreleased section: $targetVersionHeader" -ForegroundColor Green
             Write-Host ""
-        } else {
+        }
+        else {
             # First section is not Unreleased - create new Unreleased section
             Write-Host "No Unreleased section found at the top of CHANGELOG.md" -ForegroundColor Yellow
             Write-Host "Creating new Unreleased section with next version number..." -ForegroundColor Yellow
@@ -501,7 +505,8 @@ if ($Version) {
             # Handle both bracketed and non-bracketed version formats
             $currentVersion = if ($firstSectionMatch.Groups[1].Success) { 
                 $firstSectionMatch.Groups[1].Value.Trim() 
-            } else { 
+            }
+            else { 
                 $firstSectionMatch.Groups[2].Value.Trim() 
             }
             Write-Host "Current version: $currentVersion" -ForegroundColor Gray
@@ -516,12 +521,14 @@ if ($Version) {
                 $targetVersionHeader = "## $nextVersion (Unreleased)"
                 Write-Host "Next version: $nextVersion" -ForegroundColor Green
                 Write-Host ""
-            } else {
+            }
+            else {
                 Write-Error "Unable to parse version number '$currentVersion' to determine next version. Please specify -Version parameter or ensure CHANGELOG.md has a valid version format."
                 exit 1
             }
         }
-    } else {
+    }
+    else {
         Write-Error "No version sections found in CHANGELOG.md. Please add a version section manually or specify -Version parameter."
         exit 1
     }
@@ -569,7 +576,8 @@ $mergedContent += $targetVersionHeader
 if (-not $match.Success) {
     # New section - just use the new entries
     $mergedContent += $newEntriesMarkdown
-} else {
+}
+else {
     # Existing section - merge with existing content
     $versionHeader = $match.Groups[1].Value
     $existingContent = $match.Groups[2].Value
@@ -602,7 +610,8 @@ if (-not $match.Success) {
                 $existingKey = $existingSections[$currentSection].Keys | Where-Object { $_ -ieq $currentSubsection -and $_ -ne "" }
                 if ($existingKey) {
                     $currentSubsection = $existingKey
-                } elseif (-not $existingSections[$currentSection].ContainsKey($currentSubsection)) {
+                }
+                elseif (-not $existingSections[$currentSection].ContainsKey($currentSubsection)) {
                     $existingSections[$currentSection][$currentSubsection] = @()
                 }
             }
@@ -613,7 +622,8 @@ if (-not $match.Success) {
             if ($currentSection) {
                 if ($currentSubsection) {
                     $existingSections[$currentSection][$currentSubsection] += $line
-                } else {
+                }
+                else {
                     $existingSections[$currentSection][""] += $line
                 }
             }
@@ -730,11 +740,13 @@ if (-not $match.Success) {
         # Insert the new section right before the first ## section
         $insertPosition = $firstSectionMatch.Index
         $updatedChangelog = $changelogContent.Insert($insertPosition, "$newVersionSection")
-    } else {
+    }
+    else {
         # If no ## section found, append to the end of the file
         $updatedChangelog = $changelogContent + "`n$newVersionSection"
     }
-} else {
+}
+else {
     # Replace existing section with merged content
     $versionHeader = $match.Groups[1].Value
     $existingContent = $match.Groups[2].Value
@@ -746,7 +758,8 @@ if (-not $match.Success) {
     if (-not $newContent.EndsWith("`n`n")) {
         if ($newContent.EndsWith("`n")) {
             $newContent += "`n"
-        } else {
+        }
+        else {
             $newContent += "`n`n"
         }
     }
