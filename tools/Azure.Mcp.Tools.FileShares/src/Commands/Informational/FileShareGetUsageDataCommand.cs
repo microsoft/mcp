@@ -20,7 +20,15 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
     public override string Name => "usage";
     public override string Description => "Get file share usage data for a subscription and location";
     public override string Title => "Get File Share Usage Data";
-    public override ToolMetadata Metadata => new();
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
+    };
 
     /// <inheritdoc />
     protected override void RegisterOptions(Command command)

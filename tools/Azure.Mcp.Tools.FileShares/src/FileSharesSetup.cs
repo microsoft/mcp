@@ -92,15 +92,18 @@ public class FileSharesSetup : IAreaSetup
         var pecDelete = serviceProvider.GetRequiredService<PrivateEndpointConnectionDeleteCommand>();
         pecGroup.AddCommand(pecDelete.Name, pecDelete);
 
-        // Register informational commands
+        // Register informational commands in a subgroup
+        var infoGroup = new CommandGroup("info", "Informational operations - Commands for retrieving file share limits, usage data, and provisioning recommendations.");
+        fileShare.AddSubGroup(infoGroup);
+
         var limits = serviceProvider.GetRequiredService<FileShareGetLimitsCommand>();
-        fileShares.AddCommand(limits.Name, limits);
+        infoGroup.AddCommand(limits.Name, limits);
 
         var recommendation = serviceProvider.GetRequiredService<FileShareGetProvisioningRecommendationCommand>();
-        fileShares.AddCommand(recommendation.Name, recommendation);
+        infoGroup.AddCommand(recommendation.Name, recommendation);
 
         var usage = serviceProvider.GetRequiredService<FileShareGetUsageDataCommand>();
-        fileShares.AddCommand(usage.Name, usage);
+        infoGroup.AddCommand(usage.Name, usage);
 
         return fileShares;
     }

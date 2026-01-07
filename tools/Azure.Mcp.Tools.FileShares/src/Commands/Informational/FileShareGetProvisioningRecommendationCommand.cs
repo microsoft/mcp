@@ -20,7 +20,15 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
     public override string Name => "rec";
     public override string Description => "Get provisioning parameter recommendations for a file share based on desired storage size";
     public override string Title => "Get File Share Provisioning Recommendation";
-    public override ToolMetadata Metadata => new();
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
+    };
 
     /// <inheritdoc />
     protected override void RegisterOptions(Command command)

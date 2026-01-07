@@ -29,7 +29,7 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,

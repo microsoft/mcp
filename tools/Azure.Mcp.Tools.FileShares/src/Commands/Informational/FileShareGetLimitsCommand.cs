@@ -20,7 +20,15 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
     public override string Name => "limits";
     public override string Description => "Get file share limits for a subscription and location";
     public override string Title => "Get File Share Limits";
-    public override ToolMetadata Metadata => new();
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
+    };
 
     /// <inheritdoc />
     protected override void RegisterOptions(Command command)

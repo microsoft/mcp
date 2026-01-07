@@ -30,8 +30,8 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
-        Idempotent = true,
+        Destructive = true,
+        Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,

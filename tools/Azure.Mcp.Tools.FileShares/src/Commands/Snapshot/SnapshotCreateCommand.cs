@@ -30,7 +30,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,

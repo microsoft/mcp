@@ -1788,24 +1788,24 @@
       ]
     },
     {
-      "name": "manage_azure_file_shares",
-      "description": "Manage Azure File Shares including listing, getting details, creating, updating, deleting file shares, and checking name availability.",
+      "name": "get_azure_file_shares",
+      "description": "Get and list Azure File Shares. Retrieve details of specific file shares or list all file shares in a subscription or resource group.",
       "toolMetadata": {
         "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
           "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
         },
         "secret": {
           "value": false,
@@ -1818,15 +1818,12 @@
       },
       "mappedToolList": [
         "fileshares_fileshare_get",
-        "fileshares_fileshare_create",
-        "fileshares_fileshare_update",
-        "fileshares_fileshare_delete",
         "fileshares_fileshare_check-name-availability"
       ]
     },
     {
-      "name": "manage_azure_file_share_snapshots",
-      "description": "Manage Azure File Share snapshots including listing, getting details, creating, updating, and deleting snapshots for point-in-time recovery.",
+      "name": "manage_azure_file_shares",
+      "description": "Manage Azure File Shares including creating, updating, and deleting file shares.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1854,10 +1851,77 @@
         }
       },
       "mappedToolList": [
-        "fileshares_snapshot_get",
-        "fileshares_snapshot_create",
-        "fileshares_snapshot_update",
-        "fileshares_snapshot_delete"
+        "fileshares_fileshare_create",
+        "fileshares_fileshare_update",
+        "fileshares_fileshare_delete"
+      ]
+    },
+    {
+      "name": "get_azure_file_share_snapshots",
+      "description": "Get and list Azure File Share snapshots. Retrieve details of specific snapshots or list all snapshots for point-in-time recovery.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "fileshares_fileshare_snapshot_get"
+      ]
+    },
+    {
+      "name": "manage_azure_file_share_snapshots",
+      "description": "Manage Azure File Share snapshots including creating, updating, and deleting snapshots for point-in-time recovery.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "fileshares_fileshare_snapshot_create",
+        "fileshares_fileshare_snapshot_update",
+        "fileshares_fileshare_snapshot_delete"
       ]
     },
     {
@@ -1890,14 +1954,47 @@
         }
       },
       "mappedToolList": [
-        "fileshares_getlimits",
-        "fileshares_getprovisioningrecommendation",
-        "fileshares_getusagedata"
+        "fileshares_fileshare_info_limits",
+        "fileshares_fileshare_info_rec",
+        "fileshares_fileshare_info_usage"
+      ]
+    },
+    {
+      "name": "get_azure_file_shares_private_endpoint_connections",
+      "description": "Get and list private endpoint connections for Azure File Shares.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "fileshares_privateendpointconnection_get"
       ]
     },
     {
       "name": "manage_azure_file_shares_private_endpoint_connections",
-      "description": "Manage private endpoint connections for Azure File Shares including listing, getting details, updating approval status, and deleting connections.",
+      "description": "Manage private endpoint connections for Azure File Shares including updating approval status and deleting connections.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1925,7 +2022,6 @@
         }
       },
       "mappedToolList": [
-        "fileshares_privateendpointconnection_get",
         "fileshares_privateendpointconnection_update",
         "fileshares_privateendpointconnection_delete"
       ]

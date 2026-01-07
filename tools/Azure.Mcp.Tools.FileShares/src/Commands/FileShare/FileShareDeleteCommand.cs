@@ -25,7 +25,15 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
     public override string Name => "delete";
     public override string Description => "Delete a file share";
     public override string Title => "Delete File Share";
-    public override ToolMetadata Metadata => new();
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {

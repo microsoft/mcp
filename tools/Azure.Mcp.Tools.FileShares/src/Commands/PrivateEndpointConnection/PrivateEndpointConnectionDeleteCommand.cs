@@ -29,7 +29,7 @@ public sealed class PrivateEndpointConnectionDeleteCommand(ILogger<PrivateEndpoi
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
