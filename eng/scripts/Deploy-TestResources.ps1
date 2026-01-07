@@ -5,6 +5,7 @@ param(
     [string]$ResourceGroupName,
     [string]$BaseName,
     [int]$DeleteAfterHours = 12,
+    [string]$Location,
     [switch]$Unique,
     [switch]$Parallel
 )
@@ -70,6 +71,7 @@ function Deploy-TestResources
         [string]$BaseName,
         [int]$DeleteAfterHours,
         [string]$TestResourcesDirectory,
+        [string]$Location,
         [switch]$AsJob
     )
 
@@ -87,7 +89,7 @@ Deploying$($AsJob ? ' in background job' : ''):
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours, $Location)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
@@ -95,9 +97,10 @@ Deploying$($AsJob ? ' in background job' : ''):
                 -BaseName $BaseName `
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
+                -Location $Location `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours, $Location
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
@@ -105,6 +108,7 @@ Deploying$($AsJob ? ' in background job' : ''):
             -BaseName $BaseName `
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
+            -Location $Location `
             -Force
     }
 }
@@ -129,6 +133,7 @@ $jobInputs = $testablePaths | ForEach-Object {
         BaseName = $BaseName ? $BaseName : "mcp$($suffix)"
         DeleteAfterHours = $DeleteAfterHours
         TestResourcesDirectory = Resolve-Path -Path "$RepoRoot/$_/tests"
+        Location = $Location
     }
 }
 

@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
@@ -43,6 +44,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsRequired());
+        command.Options.Add(FileSharesOptionDefinitions.Snapshot.Metadata.AsOptional());
     }
 
     protected override SnapshotCreateOptions BindOptions(ParseResult parseResult)
@@ -51,6 +53,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
         options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
+        options.Metadata = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.Metadata.Name);
         return options;
     }
 
@@ -68,11 +71,26 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
             _logger.LogInformation("Creating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName, options.SnapshotName);
 
+            // Parse metadata if provided
+            Dictionary<string, string>? metadata = null;
+            if (!string.IsNullOrEmpty(options.Metadata))
+            {
+                try
+                {
+                    metadata = JsonSerializer.Deserialize(options.Metadata, FileSharesJsonContext.Default.DictionaryStringString);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid metadata JSON format: {ex.Message}", nameof(options.Metadata));
+                }
+            }
+
             var snapshot = await _fileSharesService.CreateSnapshotAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
                 options.SnapshotName!,
+                metadata,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

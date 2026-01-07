@@ -1,27 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Commands.Informational;
+using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.FileShares.UnitTests.Informational;
+namespace Azure.Mcp.Tools.FileShares.UnitTests.FileShare;
 
 /// <summary>
-/// Unit tests for FileShareGetUsageDataCommand.
+/// Unit tests for FileShareUpdateCommand.
 /// </summary>
-public class FileShareGetUsageDataCommandTests
+public class FileShareUpdateCommandTests
 {
     private readonly IFileSharesService _service;
-    private readonly ILogger<FileShareGetUsageDataCommand> _logger;
-    private readonly FileShareGetUsageDataCommand _command;
+    private readonly ILogger<FileShareUpdateCommand> _logger;
+    private readonly FileShareUpdateCommand _command;
 
-    public FileShareGetUsageDataCommandTests()
+    public FileShareUpdateCommandTests()
     {
         _service = Substitute.For<IFileSharesService>();
-        _logger = Substitute.For<ILogger<FileShareGetUsageDataCommand>>();
+        _logger = Substitute.For<ILogger<FileShareUpdateCommand>>();
         _command = new(_logger, _service);
     }
 
@@ -30,18 +30,18 @@ public class FileShareGetUsageDataCommandTests
     {
         var command = _command.GetCommand();
         Assert.NotNull(command);
-        Assert.Equal("usage", command.Name);
+        Assert.Equal("update", command.Name);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("usage", _command.Name);
+        Assert.Equal("update", _command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Get File Share Usage Data", _command.Title);
+        Assert.Equal("Update File Share", _command.Title);
     }
 }

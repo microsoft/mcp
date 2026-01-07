@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
@@ -68,11 +69,43 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
             _logger.LogInformation("Creating file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName);
 
+            // Parse tags if provided
+            Dictionary<string, string>? tags = null;
+            if (!string.IsNullOrEmpty(options.Tags))
+            {
+                try
+                {
+                    tags = JsonSerializer.Deserialize(options.Tags, FileSharesJsonContext.Default.DictionaryStringString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse tags JSON: {Tags}", options.Tags);
+                }
+            }
+
+            // Parse allowed subnets if provided
+            string[]? allowedSubnets = null;
+            if (!string.IsNullOrEmpty(options.AllowedSubnets))
+            {
+                allowedSubnets = options.AllowedSubnets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            }
+
             var fileShare = await _fileSharesService.CreateOrUpdateFileShareAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
                 options.Location!,
+                options.MountName,
+                options.MediaTier,
+                options.Redundancy,
+                options.Protocol,
+                options.ProvisionedStorageInGiB,
+                options.ProvisionedIOPerSec,
+                options.ProvisionedThroughputMiBPerSec,
+                options.PublicNetworkAccess,
+                options.NfsRootSquash,
+                allowedSubnets,
+                tags,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

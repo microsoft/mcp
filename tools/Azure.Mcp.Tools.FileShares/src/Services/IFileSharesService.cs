@@ -40,6 +40,17 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string location,
+        string? mountName = null,
+        string? mediaTier = null,
+        string? redundancy = null,
+        string? protocol = null,
+        int? provisionedStorageInGiB = null,
+        int? provisionedIOPerSec = null,
+        int? provisionedThroughputMiBPerSec = null,
+        string? publicNetworkAccess = null,
+        string? nfsRootSquash = null,
+        string[]? allowedSubnets = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -67,40 +78,6 @@ public interface IFileSharesService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// List snapshots of a file share.
-    /// </summary>
-    Task<List<FileShareSnapshotInfo>> ListFileShareSnapshotsAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get details of a file share snapshot.
-    /// </summary>
-    Task<FileShareSnapshotInfo> GetFileShareSnapshotAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string snapshotId,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Create a snapshot of a file share.
-    /// </summary>
-    Task<FileShareSnapshotInfo> CreateFileShareSnapshotAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Create a snapshot of a file share.
     /// </summary>
     Task<FileShareSnapshotInfo> CreateSnapshotAsync(
@@ -108,6 +85,7 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string snapshotName,
+        Dictionary<string, string>? metadata = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -204,6 +182,34 @@ public interface IFileSharesService
         string fileShareName,
         string connectionName,
         string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get file share limits for a subscription and location.
+    /// </summary>
+    Task<FileShareLimitsResult> GetLimitsAsync(
+        string subscription,
+        string location,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get file share usage data for a subscription and location.
+    /// </summary>
+    Task<FileShareUsageDataResult> GetUsageDataAsync(
+        string subscription,
+        string location,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get provisioning recommendations for a file share based on desired storage size.
+    /// </summary>
+    Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
+        string subscription,
+        string location,
+        int provisionedStorageGiB,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
