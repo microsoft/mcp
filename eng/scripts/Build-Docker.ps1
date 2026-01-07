@@ -93,7 +93,7 @@ foreach($os in $operatingSystems) {
     }
 }
 
-# The COPY command needs to be within the scope of the "working directory". Usually where the ./Dockerfile is.  We need a relative path. 
+# The COPY command needs to be within the scope of the "working directory". Usually where the ./Dockerfile is. We need a relative path. 
 $relativeDirectory = $(Resolve-Path $buildDirectory -Relative).Replace('\', '/')
 
 if (!(Test-Path $buildDirectory)) {
