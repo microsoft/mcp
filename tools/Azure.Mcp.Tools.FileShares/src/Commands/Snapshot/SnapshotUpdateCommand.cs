@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Models;
@@ -11,9 +14,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -43,6 +43,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsRequired());
+        command.Options.Add(FileSharesOptionDefinitions.Snapshot.Metadata.AsOptional());
     }
 
     protected override SnapshotUpdateOptions BindOptions(ParseResult parseResult)
@@ -51,6 +52,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
         options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
+        options.Metadata = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.Metadata.Name);
         return options;
     }
 

@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Models;
@@ -11,10 +15,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -44,6 +44,17 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.FileShare.Location.AsRequired());
+        command.Options.Add(FileSharesOptionDefinitions.MountName.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.MediaTier.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.Redundancy.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.Protocol.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedStorageGiB.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedIOPerSec.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
     }
 
     protected override FileShareCreateOrUpdateOptions BindOptions(ParseResult parseResult)
@@ -52,6 +63,17 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
         options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Location.Name);
+        options.MountName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MountName.Name);
+        options.MediaTier = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MediaTier.Name);
+        options.Redundancy = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Redundancy.Name);
+        options.Protocol = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Protocol.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
+        options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
+        options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
         return options;
     }
 

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
@@ -13,8 +15,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -43,7 +43,13 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Location.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedStorageGiB.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedIOPerSec.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
     }
 
     protected override FileShareCreateOrUpdateOptions BindOptions(ParseResult parseResult)
@@ -51,7 +57,13 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Location.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
+        options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
+        options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
         return options;
     }
 
@@ -68,6 +80,15 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         {
             _logger.LogInformation("Updating file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName);
+
+            // Get existing file share to retrieve location (required for update)
+            var existingShare = await _fileSharesService.GetFileShareAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.FileShareName!,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
 
             // Parse tags if provided
             Dictionary<string, string>? tags = null;
@@ -94,7 +115,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
-                options.Location!,
+                existingShare.Location!, // Use existing location
                 options.MountName,
                 options.MediaTier,
                 options.Redundancy,

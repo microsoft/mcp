@@ -202,6 +202,7 @@ public sealed class FileSharesService(
                 }
             }
 
+
             var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
                 WaitUntil.Completed,
                 fileShareName,
@@ -597,7 +598,7 @@ public sealed class FileSharesService(
             var subscriptionResource = armClient.GetSubscriptionResource(
                 Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            
+
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
             var privateEndpointConnections = fileShareResource.Value.Data.Properties.PrivateEndpointConnections;
 
@@ -712,7 +713,7 @@ public sealed class FileSharesService(
             "Updates must be done through the private endpoint resource itself. " +
             "Connection: {ConnectionName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
             connectionName, fileShareName, resourceGroup);
-        
+
         throw new NotSupportedException(
             $"Updating private endpoint connections through file share resources is not supported. " +
             $"To update the connection '{connectionName}', use Azure Private Endpoint management APIs or the Azure portal.");
@@ -741,7 +742,7 @@ public sealed class FileSharesService(
             "Deletion must be done through the private endpoint resource itself. " +
             "Connection: {ConnectionName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
             connectionName, fileShareName, resourceGroup);
-        
+
         throw new NotSupportedException(
             $"Deleting private endpoint connections through file share resources is not supported. " +
             $"To delete the connection '{connectionName}', delete the private endpoint resource itself using Azure Private Endpoint management APIs or the Azure portal.");

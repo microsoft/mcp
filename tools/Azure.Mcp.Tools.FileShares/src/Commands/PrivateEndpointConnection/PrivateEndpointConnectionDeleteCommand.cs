@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Options;
@@ -10,9 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 

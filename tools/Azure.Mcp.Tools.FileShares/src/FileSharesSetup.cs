@@ -37,7 +37,6 @@ public class FileSharesSetup : IAreaSetup
         services.AddSingleton<FileShareGetProvisioningRecommendationCommand>();
         services.AddSingleton<FileShareGetUsageDataCommand>();
 
-        services.AddSingleton<PrivateEndpointConnectionListCommand>();
         services.AddSingleton<PrivateEndpointConnectionGetCommand>();
         services.AddSingleton<PrivateEndpointConnectionUpdateCommand>();
         services.AddSingleton<PrivateEndpointConnectionDeleteCommand>();
@@ -83,9 +82,6 @@ public class FileSharesSetup : IAreaSetup
         // Register private endpoint connection commands
         var pecGroup = new CommandGroup("privateendpointconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
         fileShares.AddSubGroup(pecGroup);
-
-        var pecList = serviceProvider.GetRequiredService<PrivateEndpointConnectionListCommand>();
-        pecGroup.AddCommand(pecList.Name, pecList);
 
         var pecGet = serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>();
         pecGroup.AddCommand(pecGet.Name, pecGet);

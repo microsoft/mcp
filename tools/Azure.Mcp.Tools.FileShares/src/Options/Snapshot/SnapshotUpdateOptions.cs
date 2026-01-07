@@ -9,4 +9,5 @@ public class SnapshotUpdateOptions : BaseFileSharesOptions
 {
     public string? FileShareName { get; set; }
     public string? SnapshotName { get; set; }
+    public string? Metadata { get; set; }
 }
