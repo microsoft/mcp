@@ -16,10 +16,11 @@
 
 - Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
-### Other Changed
+### Changed
 
 - Switched to a new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
 - Replace hard-coded strings for `Azure.Mcp.Server` with ones from `IConfiguration`. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+- Add hardcoded minimum TLS version of 1.2 to Storage account creation tool. [[#1445](https://github.com/microsoft/mcp/pull/1445)]
 
 ## 2.0.8 (2025-12-11) (pre-release)
 
