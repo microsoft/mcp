@@ -474,17 +474,23 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ### 📂 Azure File Shares
 
-* "List all my file shares in my storage account"
-* "Get details about a specific file share"
-* "Create a new file share in my storage account"
-* "Delete a file share"
+* "Get details about a specific file share in my resource group"
+* "Create a new Azure managed file share with NFS protocol"
+* "Create a file share with 64 GiB storage, 3000 IOPS, and 125 MiB/s throughput"
+* "Update the provisioned storage size of my file share"
+* "Update network access settings for my file share"
+* "Delete a file share from my resource group"
 * "Check if a file share name is available"
-* "List all snapshots for a file share"
 * "Get details about a file share snapshot"
-* "Create a snapshot of a file share"
-* "Get file share limits and quotas"
-* "Get provisioning recommendations for file shares"
-* "Get file share usage data and metrics"
+* "Create a snapshot of my file share"
+* "Update tags on a file share snapshot"
+* "Delete a file share snapshot"
+* "Get a private endpoint connection for my file share"
+* "Update private endpoint connection status to Approved"
+* "Delete a private endpoint connection"
+* "Get file share limits and quotas for a region"
+* "Get provisioning recommendations for my file share workload"
+* "Get usage data and metrics for my file share"
 
 ### 🔑 Azure Key Vault
 

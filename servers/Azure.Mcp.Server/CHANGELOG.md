@@ -6,10 +6,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added Azure FileShares module with 16 commands for managing Azure managed file shares:
+- Added Azure FileShares module with 15 commands for managing Azure managed file shares:
   - **FileShare** commands (5): CheckNameAvailability, Create, Delete, Get, Update
   - **FileShare Snapshot** commands (4): Create, Delete, Get, Update
-  - **PrivateEndpointConnection** commands (4): Delete, Get, List, Update
+  - **PrivateEndpointConnection** commands (3): Delete, Get, Update
   - **Informational** commands (3): GetLimits, GetProvisioningRecommendation, GetUsageData
 
 - Added Azure Storage Sync (StorageSync) module with 18 commands for managing cloud synchronization of file shares:
