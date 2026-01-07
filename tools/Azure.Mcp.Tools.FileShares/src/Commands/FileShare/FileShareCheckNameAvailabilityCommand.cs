@@ -23,7 +23,7 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
     public override string Id => "azmcp-fileshares-fileshare-checknameavailability";
     public override string Name => "check-name-availability";
     public override string Description => "Check if a file share name is available";
-    public override string Title => "Check FileShare Name Availability";
+    public override string Title => "Check File Share Name Availability";
 
     public override ToolMetadata Metadata => new()
     {

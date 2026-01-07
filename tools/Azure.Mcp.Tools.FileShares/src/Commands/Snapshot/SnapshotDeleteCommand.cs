@@ -24,7 +24,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
     public override string Id => "a9e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
     public override string Name => "delete";
     public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
-    public override string Title => "Delete Snapshot";
+    public override string Title => "Delete File Share Snapshot";
 
     public override ToolMetadata Metadata => new()
     {

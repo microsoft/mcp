@@ -24,7 +24,7 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
     public override string Id => "azmcp-fileshares-fileshare-delete";
     public override string Name => "delete";
     public override string Description => "Delete a file share";
-    public override string Title => "Delete FileShare";
+    public override string Title => "Delete File Share";
     public override ToolMetadata Metadata => new();
 
     protected override void RegisterOptions(Command command)
