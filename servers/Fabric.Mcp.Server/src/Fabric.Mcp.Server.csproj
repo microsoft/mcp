@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.0-beta.5</Version>
+    <Version>0.0.0-beta.6</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
@@ -67,7 +67,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Fabric.*\src\*.csproj" />
   </ItemGroup>
 
