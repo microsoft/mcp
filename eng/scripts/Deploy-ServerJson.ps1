@@ -19,6 +19,8 @@
     Name of the Azure Key Vault containing the credentials for MCP registry login.
 .PARAMETER KeyVaultKeyName
     Name of the Key Vault key to use for MCP registry login.
+.PARAMETER BuildOnly
+    If specified, only builds the MCP publisher tool without deploying the server.json.
 .EXAMPLE
     Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -ReleaseType "production" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
     Updates the server.json for the Azure.Mcp.Server to the production MCP registry using credentials from the specified Key Vault.
@@ -31,7 +33,8 @@ param(
     [string] $ServerName,
     [string] $BuildInfoPath,
     [string] $KeyVaultName,
-    [string] $KeyVaultKeyName
+    [string] $KeyVaultKeyName,
+    [switch] $BuildOnly
 )
 
 $ErrorActionPreference = "Stop" 
