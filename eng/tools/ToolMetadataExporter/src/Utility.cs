@@ -9,11 +9,11 @@ namespace ToolMetadataExporter;
 
 internal class Utility
 {
-    internal static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string workDirectory, bool isCiMode = false)
+    internal static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
         try
         {
-            var output = await ExecuteAzmcpAsync("tools list", isCiMode);
+            var output = await ExecuteAzmcpAsync(serverFile, "tools list", isCiMode);
             var jsonOutput = GetJsonFromOutput(output);
 
             if (jsonOutput == null)
@@ -50,9 +50,9 @@ internal class Utility
         }
     }
 
-    internal static async Task<string> GetServerName()
+    internal static async Task<string> GetServerName(string serverFile)
     {
-        var output = await ExecuteAzmcpAsync("--help", checkErrorCode: false);
+        var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
 
         string[] array = Regex.Split(output, "\n\r");
         for (int i = 0; i < array.Length; i++)
@@ -67,21 +67,18 @@ internal class Utility
         throw new InvalidOperationException("Could not find server name");
     }
 
-    internal static async Task<string> GetVersionAsync()
+    internal static async Task<string> GetVersionAsync(string serverFile)
     {
-        var output = await ExecuteAzmcpAsync("--version", checkErrorCode: false);
+        var output = await ExecuteAzmcpAsync(serverFile, "--version", checkErrorCode: false);
         return output.Trim();
     }
 
-    internal static async Task<string> ExecuteAzmcpAsync(string arguments, bool isCiMode = false, bool checkErrorCode = true)
+    internal static string FindAzmcpAsync(string repositoryRoot, bool isCiMode = false)
     {
-        // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
-        var exeDir = AppContext.BaseDirectory;
-        var repoRoot = FindRepoRoot(exeDir);
         var searchRoots = new List<string>
             {
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
+                Path.Combine(repositoryRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
+                Path.Combine(repositoryRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
             };
 
         var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
@@ -107,19 +104,26 @@ internal class Utility
             }
         }
 
-        if (cliArtifact == null)
+        if (cliArtifact != null)
         {
-            if (isCiMode)
-            {
-                return string.Empty; // Graceful fallback in CI
-            }
-
-            throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
+            return cliArtifact.FullName;
         }
 
-        var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
-        var fileName = isDll ? "dotnet" : cliArtifact.FullName;
-        var argumentsToUse = isDll ? $"{cliArtifact.FullName} " : arguments;
+        if (isCiMode)
+        {
+            return string.Empty; // Graceful fallback in CI
+        }
+
+        throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
+    }
+
+    internal static async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
+        bool isCiMode = false, bool checkErrorCode = true)
+    {
+        var fileInfo = new FileInfo(serverFile);
+        var isDll = string.Equals(fileInfo.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
+        var fileName = isDll ? "dotnet" : fileInfo.FullName;
+        var argumentsToUse = isDll ? $"{fileInfo.FullName} " : arguments;
 
         var process = new Process
         {
