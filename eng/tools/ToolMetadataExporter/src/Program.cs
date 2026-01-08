@@ -27,17 +27,9 @@ public class Program
         ConfigureAzureServices(builder.Services);
 
         var host = builder.Build();
-
-        var commandLineOptions = builder.Configuration.Get<CommandLineOptions>();
-
-        if (commandLineOptions == null)
-        {
-            throw new InvalidOperationException("Expected to be able to get command line options from IConfiguration.");
-        }
-
         var analyzer = host.Services.GetRequiredService<ToolAnalyzer>();
 
-        await analyzer.RunAsync(DateTimeOffset.UtcNow, commandLineOptions.IsDryRun);
+        await analyzer.RunAsync(DateTimeOffset.UtcNow);
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -51,14 +43,42 @@ public class Program
             .AddSingleton<AzmcpProgram>()
             .AddSingleton<ToolAnalyzer>();
 
-        services.Configure<AppConfiguration>(configuration.GetSection("AppConfig"))
-            .PostConfigure<AppConfiguration>(existing =>
+        services.AddOptions<CommandLineOptions>()
+            .Bind(configuration);
+
+        services.AddOptions<AppConfiguration>()
+            .Bind<AppConfiguration>(configuration)
+            .Configure<IOptions<CommandLineOptions>>((existing, commandLineOptions) =>
             {
-                if (existing.WorkDirectory == null)
+                // Command-line IsDryRun overrides appsettings.json file value.
+                if (commandLineOptions.Value.IsDryRun.HasValue)
                 {
-                    string exeDir = AppContext.BaseDirectory;
+                    existing.IsDryRun = commandLineOptions.Value.IsDryRun.Value;
+                }
+
+                var exeDir = AppContext.BaseDirectory;
+
+                // If a path to azmcp.exe is not provided. Assume that this is running within the context of
+                // the repository and try to find it.
+                existing.IsAzmcpExeSpecified = !string.IsNullOrEmpty(commandLineOptions.Value.AzmcpExe);
+                if (existing.IsAzmcpExeSpecified)
+                {
+                    existing.AzmcpExe = commandLineOptions.Value.AzmcpExe!;
+
+                    if (existing.WorkDirectory == null)
+                    {
+                        existing.WorkDirectory = exeDir;
+                    }
+                }
+                else
+                {
                     var repoRoot = Utility.FindRepoRoot(exeDir);
-                    existing.WorkDirectory = Path.Combine(repoRoot, ".work");
+                    if (existing.WorkDirectory == null)
+                    {
+                        existing.WorkDirectory = Path.Combine(repoRoot, ".work");
+                    }
+
+                    existing.AzmcpExe = Path.Combine(repoRoot, "eng", "tools", "Azmcp", "azmcp.exe");
                 }
             });
     }
