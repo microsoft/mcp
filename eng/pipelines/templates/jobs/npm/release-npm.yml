@@ -109,11 +109,11 @@ jobs:
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop
-            Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
+            Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
+            ServiceConnection: 'Azure SDK MCP Server Connection'
             Tag: latest
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop
-            Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
-            ServiceConnection: 'Azure SDK MCP Server Connection'
+            Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
