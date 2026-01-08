@@ -55,6 +55,8 @@ function Get-PurgeableGroupResources {
         AzsdkName         = $r.name
         Name              = $r.name
         Id                = $r.id
+        Location          = $r.location
+        ResourceGroup     = $ResourceGroupName
       }
     }
   }
@@ -129,11 +131,19 @@ function Get-PurgeableResources {
 
     $deletedCognitiveServices = @()
     foreach ($r in $content.value) {
+      # Extract resource group from the deletedAccounts id path
+      # Format: /subscriptions/{sub}/providers/Microsoft.CognitiveServices/locations/{loc}/resourceGroups/{rg}/deletedAccounts/{name}
+      $resourceGroup = $null
+      if ($r.id -match '/resourceGroups/([^/]+)/') {
+        $resourceGroup = $Matches[1]
+      }
       $deletedCognitiveServices += [pscustomobject] @{
         AzsdkResourceType = "Cognitive Services ($($r.kind))"
         AzsdkName         = $r.name
         Name              = $r.name
         Id                = $r.id
+        Location          = $r.properties.location
+        ResourceGroup     = $resourceGroup
       }
     }
 
@@ -211,8 +221,22 @@ filter Remove-PurgeableResources {
       { $_.StartsWith('Cognitive Services') }
       {
         Log "Attempting to purge $($r.AzsdkResourceType) '$($r.AzsdkName)'"
+        
+        # Construct the correct purge path for deleted Cognitive Services accounts
+        # The purge API requires: /subscriptions/{sub}/providers/Microsoft.CognitiveServices/locations/{loc}/resourceGroups/{rg}/deletedAccounts/{name}
+        $purgePath = if ($r.Id -match '/deletedAccounts/') {
+          # Already a deletedAccounts path from Get-PurgeableResources
+          $r.Id
+        } elseif ($r.Location -and $r.ResourceGroup) {
+          # Convert active account path to deletedAccounts purge path
+          "/subscriptions/$subscriptionId/providers/Microsoft.CognitiveServices/locations/$($r.Location)/resourceGroups/$($r.ResourceGroup)/deletedAccounts/$($r.Name)"
+        } else {
+          # Fallback to original ID (may fail but logged for debugging)
+          $r.Id
+        }
+        
         # Use `GetNewClosure()` on the `-Action` ScriptBlock to make sure variables are captured.
-        Invoke-AzRestMethod -Method DELETE -Path "$($r.id)?api-version=2024-10-01" -ErrorAction Ignore -AsJob `
+        Invoke-AzRestMethod -Method DELETE -Path "$($purgePath)?api-version=2024-10-01" -ErrorAction Ignore -AsJob `
         | Wait-PurgeableResourceJob -Resource $r -Timeout $Timeout -PassThru:$PassThru -Action {
           param ( $response )
 
