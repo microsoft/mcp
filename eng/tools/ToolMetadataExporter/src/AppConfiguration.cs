@@ -16,4 +16,10 @@ public class AppConfiguration
     public string? QueriesFolder { get; set; } = "Resources/queries";
 
     public string? WorkDirectory { get; set; }
+
+    public bool IsDryRun { get; set; }
+
+    public string? AzmcpExe { get; set; }
+
+    public bool IsAzmcpExeSpecified { get; set; }
 }
