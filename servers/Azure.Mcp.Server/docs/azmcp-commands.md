@@ -1610,7 +1610,72 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
-                               --location <location>
+                                            --location <location>
+
+# Create an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--autoexport-prefix <prefix>] \
+                                             [--admin-status <Enable|Disable>]
+
+# Cancel an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport cancel --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             --job-name <job-name>
+
+# Get details of autoexport jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport get --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --filesystem-name <filesystem-name> \
+                                          [--job-name <job-name>]
+
+# Delete an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             --job-name <job-name>
+
+# Get details of autoimport jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport get --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --filesystem-name <filesystem-name> \
+                                           [--job-name <job-name>]
+
+# Create an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                             [--autoimport-prefixes <prefix1> --autoimport-prefixes <prefix2> ...] \
+                                             [--admin-status <Enable|Disable>] \
+                                             [--enable-deletions <true|false>] \
+                                             [--maximum-errors <number>]
+
+# Cancel an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport cancel --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --filesystem-name <filesystem-name> \
+                                              --job-name <job-name>
+
+# Delete an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --filesystem-name <filesystem-name> \
+                                              --job-name <job-name>
 ```
 
 ### Azure Native ISV Operations
