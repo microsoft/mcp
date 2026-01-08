@@ -18,6 +18,7 @@ public class ToolAnalyzer
     private readonly IAzureMcpDatastore _azureMcpDatastore;
     private readonly ILogger<ToolAnalyzer> _logger;
     private readonly string _workingDirectory;
+    private readonly bool _isDryRun;
 
     public ToolAnalyzer(AzmcpProgram program, IAzureMcpDatastore azureMcpDatastore,
         IOptions<AppConfiguration> configuration, ILogger<ToolAnalyzer> logger)
@@ -28,14 +29,15 @@ public class ToolAnalyzer
 
         _workingDirectory = configuration.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));
         ;
+        _isDryRun = configuration.Value.IsDryRun;
     }
 
-    public async Task RunAsync(DateTimeOffset analysisTime, bool isDryRun, CancellationToken cancellationToken = default)
+    public async Task RunAsync(DateTimeOffset analysisTime, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", isDryRun);
+        _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", _isDryRun);
 
         var serverName = await _azmcpExe.GetServerNameAsync();
-        var serverVersion = await _azmcpExe.GetVersionAsync();
+        var serverVersion = await _azmcpExe.GetServerVersionAsync();
         var currentTools = await _azmcpExe.LoadToolsDynamicallyAsync();
 
         if (currentTools == null)
@@ -165,7 +167,7 @@ public class ToolAnalyzer
             }
         }
 
-        if (!isDryRun)
+        if (!_isDryRun)
         {
             _logger.LogInformation("Updating datastore.");
             await _azureMcpDatastore.AddToolEventsAsync(changes, cancellationToken);
