@@ -56,6 +56,7 @@ public class McpToolEvent
             new ColumnMapping { ColumnName = ToolAreaColumn , ColumnType = "string" },
             new ColumnMapping { ColumnName = ToolIdColumn, ColumnType = "string"},
             new ColumnMapping { ColumnName = ToolNameColumn, ColumnType = "string" },
+            new ColumnMapping { ColumnName = ServerNameColumn, ColumnType = "string" },
         ];
     }
 }
