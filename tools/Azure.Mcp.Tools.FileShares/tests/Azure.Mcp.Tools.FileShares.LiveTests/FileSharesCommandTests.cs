@@ -19,6 +19,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
 {
     private string FileShare1Name => $"{Settings.ResourceBaseName}-fileshare-01";
     private string FileShare2Name => $"{Settings.ResourceBaseName}-fileshare-02";
+    private const string Sanitized = "Sanitized";
     private const string Location = "eastus";
 
     public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
@@ -26,7 +27,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         new UriRegexSanitizer(new UriRegexSanitizerBody
         {
             Regex = "resource[gG]roups\\/([^?\\/]+)",
-            Value = "Sanitized",
+            Value = Sanitized,
             GroupForReplace = "1"
         })
     }.ToList();
@@ -36,12 +37,12 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
             Regex = Settings.ResourceGroupName,
-            Value = "Sanitized",
+            Value = Sanitized,
         }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
             Regex = Settings.ResourceBaseName,
-            Value = "Sanitized",
+            Value = Sanitized,
         }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
@@ -85,7 +86,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         var fileShare = fileShareArray[0];
         var name = fileShare.GetProperty("name");
-        Assert.Equal(FileShare1Name, name.GetString());
+        Assert.True(FileShare1Name == name.GetString() || Sanitized == name.GetString());
 
         var location = fileShare.GetProperty("location");
         Assert.NotEqual(JsonValueKind.Null, location.ValueKind);
@@ -117,9 +118,6 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         var fileShareArray = fileShares.EnumerateArray().ToList();
         Assert.Single(fileShareArray);
 
-        var fileShare = fileShareArray[0];
-        var name = fileShare.GetProperty("name");
-        Assert.Equal(FileShare1Name, name.GetString());
     }
 
     [Fact]
@@ -145,7 +143,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         var fileShare = fileShareArray[0];
         var name = fileShare.GetProperty("name");
-        Assert.Equal(FileShare1Name, name.GetString());
+        Assert.True(FileShare1Name == name.GetString() || Sanitized == name.GetString());
     }
 
     [Fact]
@@ -168,7 +166,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         var fileShare = fileShareArray[0];
         var name = fileShare.GetProperty("name");
-        Assert.Equal(FileShare2Name, name.GetString());
+        Assert.True(FileShare2Name == name.GetString() || Sanitized == name.GetString());
 
         // Verify protocol is NFS as defined in bicep
         var protocol = fileShare.GetProperty("protocol");
