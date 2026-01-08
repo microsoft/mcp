@@ -137,60 +137,12 @@ public interface IFileSharesService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// List private endpoint connections for a file share.
-    /// </summary>
-    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get details of a private endpoint connection.
-    /// </summary>
-    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Update the approval state of a private endpoint connection.
-    /// </summary>
-    Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string status,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Delete a private endpoint connection.
-    /// </summary>
-    Task DeletePrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Get file share limits for a subscription and location.
     /// </summary>
     Task<FileShareLimitsResult> GetLimitsAsync(
         string subscription,
         string location,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -200,6 +152,7 @@ public interface IFileSharesService
     Task<FileShareUsageDataResult> GetUsageDataAsync(
         string subscription,
         string location,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -210,6 +163,7 @@ public interface IFileSharesService
         string subscription,
         string location,
         int provisionedStorageGiB,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

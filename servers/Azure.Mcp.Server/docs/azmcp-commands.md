@@ -1104,31 +1104,6 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 ```
 
 ```bash
-# Get a private endpoint connection
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp fileshares privateendpointconnection get --subscription <subscription> \
-                                               --resource-group <resource-group> \
-                                               --file-share-name <file-share-name> \
-                                               --connection-name <connection-name>
-
-# Update a private endpoint connection
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp fileshares privateendpointconnection update --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --file-share-name <file-share-name> \
-                                                  --connection-name <connection-name> \
-                                                  --status <Approved|Rejected> \
-                                                  [--description <description>]
-
-# Delete a private endpoint connection
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp fileshares privateendpointconnection delete --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --file-share-name <file-share-name> \
-                                                  --connection-name <connection-name>
-```
-
-```bash
 # Get File Shares limits and quotas for a region
 azmcp fileshares getlimits --subscription <subscription> \
                            --location <azure-region>

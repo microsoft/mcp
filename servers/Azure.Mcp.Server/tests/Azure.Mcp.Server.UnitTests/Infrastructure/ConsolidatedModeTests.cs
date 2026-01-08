@@ -20,7 +20,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated",
+            Arguments = "server start --mode consolidated --debug",
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,

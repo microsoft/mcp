@@ -25,7 +25,6 @@ namespace Azure.Mcp.Tools.FileShares;
 [JsonSerializable(typeof(FileShareDataSchema))]
 [JsonSerializable(typeof(FileShareSnapshotDataSchema))]
 [JsonSerializable(typeof(PrivateEndpointConnectionDataSchema))]
-[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(FileShareLimitsResult))]
 [JsonSerializable(typeof(FileShareLimits))]
 [JsonSerializable(typeof(FileShareProvisioningConstants))]
@@ -34,10 +33,6 @@ namespace Azure.Mcp.Tools.FileShares;
 [JsonSerializable(typeof(FileShareProvisioningRecommendationResult))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(JsonElement))]
-[JsonSerializable(typeof(Commands.PrivateEndpointConnection.PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult))]
-[JsonSerializable(typeof(Commands.PrivateEndpointConnection.PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionListResult))]
-[JsonSerializable(typeof(Commands.PrivateEndpointConnection.PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult))]
-[JsonSerializable(typeof(Commands.PrivateEndpointConnection.PrivateEndpointConnectionDeleteCommand.PrivateEndpointConnectionDeleteCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class FileSharesJsonContext : JsonSerializerContext
 {

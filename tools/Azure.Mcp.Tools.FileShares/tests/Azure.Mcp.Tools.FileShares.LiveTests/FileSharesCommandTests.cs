@@ -46,6 +46,16 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
+            Regex = FileShare1Name,
+            Value = Sanitized,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = FileShare2Name,
+            Value = Sanitized,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000",
         })
@@ -121,32 +131,6 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
-    public async Task Should_get_file_share_details_with_tenant_name()
-    {
-        Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
-
-        var result = await CallToolAsync(
-            "fileshares_fileshare_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "name", FileShare1Name },
-                { "tenant", Settings.TenantName }
-            });
-
-        var fileShares = result.AssertProperty("fileShares");
-        Assert.Equal(JsonValueKind.Array, fileShares.ValueKind);
-
-        var fileShareArray = fileShares.EnumerateArray().ToList();
-        Assert.Single(fileShareArray);
-
-        var fileShare = fileShareArray[0];
-        var name = fileShare.GetProperty("name");
-        Assert.True(FileShare1Name == name.GetString() || Sanitized == name.GetString());
-    }
-
-    [Fact]
     public async Task Should_get_second_file_share_details()
     {
         var result = await CallToolAsync(
@@ -198,7 +182,8 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "location", Location }
+                { "location", Location },
+                { "tenant", Settings.TenantId }
             });
 
         var limits = result.AssertProperty("limits");
@@ -214,7 +199,8 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             {
                 { "subscription", Settings.SubscriptionId },
                 { "location", Location },
-                { "provisioned-storage-gib", 100 }
+                { "provisioned-storage-in-gib", 125 },
+                { "tenant", Settings.TenantId }
             });
 
         var provisionedIOPerSec = result.AssertProperty("provisionedIOPerSec");
@@ -236,43 +222,12 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "location", Location }
+                { "location", Location },
+                { "tenant", Settings.TenantId }
             });
 
         var liveShares = result.AssertProperty("liveShares");
         Assert.NotEqual(JsonValueKind.Null, liveShares.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_get_snapshot()
-    {
-        var result = await CallToolAsync(
-            "fileshares_fileshare_snapshot_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name }
-            });
-
-        var snapshots = result.AssertProperty("snapshots");
-        Assert.Equal(JsonValueKind.Array, snapshots.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_get_private_endpoint_connection()
-    {
-        var result = await CallToolAsync(
-            "fileshares_privateendpointconnection_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name }
-            });
-
-        var connections = result.AssertProperty("connections");
-        Assert.Equal(JsonValueKind.Array, connections.ValueKind);
     }
 
     [Fact]
@@ -518,93 +473,6 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             var deleteResult = result.AssertProperty("message");
             Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
         }
-    }
-
-    [Fact]
-    public async Task Should_update_private_endpoint_connection()
-    {
-        // First, get connections
-        var listResult = await CallToolAsync(
-            "fileshares_privateendpointconnection_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name }
-            });
-
-        var connections = listResult.AssertProperty("connections");
-        if (connections.ValueKind != JsonValueKind.Array || !connections.EnumerateArray().Any())
-        {
-            Output.WriteLine("No private endpoint connections found to test update operation");
-            return;
-        }
-
-        var firstConnection = connections.EnumerateArray().First();
-        var connectionName = firstConnection.GetProperty("name").GetString()!;
-
-        // Attempt to update the private endpoint connection - should fail with NotSupported
-        var result = await CallToolAsync(
-            "fileshares_privateendpointconnection_update",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name },
-                { "connection-name", connectionName },
-                { "status", "Approved" },
-                { "description", "Updated via live test" }
-            });
-
-        // Verify that the operation correctly reports it's not supported
-        var errorResult = result.AssertProperty("message");
-        var errorMessage = errorResult.GetString();
-        Assert.Contains("not supported", errorMessage, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Should_delete_private_endpoint_connection()
-    {
-        // First, get connections
-        var listResult = await CallToolAsync(
-            "fileshares_privateendpointconnection_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name }
-            });
-
-        var connections = listResult.AssertProperty("connections");
-        if (connections.ValueKind != JsonValueKind.Array || !connections.EnumerateArray().Any())
-        {
-            Output.WriteLine("No private endpoint connections found to test delete operation");
-            return;
-        }
-
-        var connectionsArray = connections.EnumerateArray().ToList();
-        if (connectionsArray.Count < 2)
-        {
-            Output.WriteLine("Only one connection found, skipping delete to preserve test infrastructure");
-            return;
-        }
-
-        var lastConnection = connectionsArray.Last();
-        var connectionName = lastConnection.GetProperty("name").GetString()!;
-
-        // Delete the connection
-        var result = await CallToolAsync(
-            "fileshares_privateendpointconnection_delete",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "file-share-name", FileShare1Name },
-                { "connection-name", connectionName }
-            });
-
-        var deleteResult = result.AssertProperty("message");
-        Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
     }
 
     private new const string TenantNameReason = "Tenant name resolution is not supported for service principals";

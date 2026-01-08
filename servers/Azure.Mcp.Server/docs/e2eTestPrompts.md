@@ -298,14 +298,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
 | fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
 | fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
-| fileshares_fileshare_privateendpointconnection_delete | Delete the private endpoint connection <connection_name> from file share <file_share_name> in account <account_name> |
-| fileshares_fileshare_privateendpointconnection_delete | Remove private endpoint connection <connection_name> from file share <file_share_name> |
-| fileshares_fileshare_privateendpointconnection_get | List all private endpoint connections for file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_privateendpointconnection_get | Show me the private endpoint connections for file share <file_share_name> |
-| fileshares_fileshare_privateendpointconnection_get | Get private endpoint connection <connection_name> for file share <file_share_name> in account <account_name> |
-| fileshares_fileshare_privateendpointconnection_update | Update private endpoint connection <connection_name> for file share <file_share_name> in account <account_name> |
-| fileshares_fileshare_privateendpointconnection_update | Approve private endpoint connection <connection_name> for file share <file_share_name> |
-| fileshares_fileshare_privateendpointconnection_update | Reject private endpoint connection <connection_name> for file share <file_share_name> |
 | fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in storage account <account_name> |
 | fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |

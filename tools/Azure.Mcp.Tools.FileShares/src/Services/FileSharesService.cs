@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.ResourceManager.FileShares;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
@@ -22,6 +23,7 @@ public sealed class FileSharesService(
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<FileSharesService> _logger = logger;
+    public const string HttpClientName = "AzureMcpFileSharesService";
 
     public async Task<List<FileShareInfo>> ListFileSharesAsync(
         string subscription,
@@ -36,13 +38,13 @@ public sealed class FileSharesService(
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+                SubscriptionResource.CreateResourceIdentifier(subscription));
 
             var fileShares = new List<FileShareInfo>();
 
             if (!string.IsNullOrEmpty(resourceGroup))
             {
-                Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
+                ResourceGroupResource resourceGroupResource;
                 try
                 {
                     var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -282,40 +284,26 @@ public sealed class FileSharesService(
 
         try
         {
-            // Note: CheckFileShareNameAvailability API may not be available in the current SDK
-            // This is a placeholder implementation
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
 
-            bool isAvailable = true;
-            string? reason = null;
-            string? message = null;
+            var content = new Azure.ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
+            {
+                Name = fileShareName,
+                Type = "Microsoft.FileShares/fileShares"
+            };
+            var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(azureLocation, content, cancellationToken);
 
-            // Try to get the file share to see if it exists
-            try
-            {
-                var resourceGroups = subscriptionResource.GetResourceGroups();
-                await foreach (var rg in resourceGroups.GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    var fileShares = rg.GetFileShares();
-                    await foreach (var fs in fileShares.GetAllAsync(cancellationToken: cancellationToken))
-                    {
-                        if (fs.Data.Name.Equals(fileShareName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            return new FileShareNameAvailabilityResult(false, "AlreadyExists", "File share name is already in use");
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // If we can't check, assume it's available
-            }
+            var result = response.Value;
 
             _logger.LogInformation(
                 "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
-                fileShareName, isAvailable);
+                fileShareName, result.IsNameAvailable);
 
-            return new FileShareNameAvailabilityResult(isAvailable, reason, message);
+            return new FileShareNameAvailabilityResult(
+                result.IsNameAvailable ?? false,
+                result.Reason?.ToString(),
+                result.Message);
         }
         catch (Exception ex)
         {
@@ -501,15 +489,30 @@ public sealed class FileSharesService(
 
         try
         {
-            // Snapshots are typically immutable - they represent a point-in-time copy
-            // Update operations on snapshots are not supported
-            _logger.LogWarning(
-                "Snapshot update operation is not supported. Snapshots are immutable. Snapshot: {SnapshotId}, FileShare: {FileShare}",
-                snapshotId, fileShareName);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            // Return the current snapshot info instead
-            return await GetSnapshotAsync(
-                subscription, resourceGroup, fileShareName, snapshotId, tenant, retryPolicy, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+            // Get the existing snapshot
+            var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
+
+            // Update the snapshot using CreateOrUpdateAsync
+            var snapshotData = existingSnapshot.Value.Data;
+            var operation = await snapshotCollection.CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                snapshotId,
+                snapshotData,
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                snapshotId, fileShareName, resourceGroup);
+
+            return FileShareSnapshotInfo.FromResource(operation.Value);
         }
         catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
@@ -544,21 +547,21 @@ public sealed class FileSharesService(
 
         try
         {
-            // Note: The current Azure.ResourceManager.FileShares SDK has limited snapshot management capabilities.
-            // Snapshot deletion may need to be done through Azure Storage SDK or REST API.
-            // For now, we'll attempt to find and delete using the available APIs.
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            _logger.LogWarning(
-                "Snapshot deletion is not fully implemented in the current SDK. Snapshot: {SnapshotId}, FileShare: {FileShare}",
-                snapshotId, fileShareName);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
-            // Verify the snapshot exists
-            await GetSnapshotAsync(
-                subscription, resourceGroup, fileShareName, snapshotId, tenant, retryPolicy, cancellationToken);
+            // Get the snapshot and delete it
+            var snapshotResource = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
+            await snapshotResource.Value.DeleteFileShareSnapshotAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
-                "Snapshot exists but deletion requires Azure Storage SDK or REST API. Snapshot: {SnapshotId}, FileShare: {FileShare}",
-                snapshotId, fileShareName);
+                "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                snapshotId, fileShareName, resourceGroup);
         }
         catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
@@ -576,181 +579,10 @@ public sealed class FileSharesService(
         }
     }
 
-
-
-
-    public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(fileShareName), fileShareName));
-
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-            var privateEndpointConnections = fileShareResource.Value.Data.Properties.PrivateEndpointConnections;
-
-            var connections = new List<PrivateEndpointConnectionInfo>();
-            if (privateEndpointConnections != null)
-            {
-                foreach (var connection in privateEndpointConnections)
-                {
-                    connections.Add(PrivateEndpointConnectionInfo.FromModel(connection));
-                }
-            }
-
-            _logger.LogInformation(
-                "Listed {Count} private endpoint connections for file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                connections.Count, fileShareName, resourceGroup);
-
-            return connections;
-        }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning(reqEx,
-                "File share not found when listing private endpoint connections. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-            return [];
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error listing private endpoint connections. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-            throw;
-        }
-    }
-
-    public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(fileShareName), fileShareName),
-            (nameof(connectionName), connectionName));
-
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-            var privateEndpointConnections = fileShareResource.Value.Data.Properties.PrivateEndpointConnections;
-
-            var connection = privateEndpointConnections?.FirstOrDefault(c =>
-                c.Name?.Equals(connectionName, StringComparison.OrdinalIgnoreCase) == true);
-
-            if (connection == null)
-            {
-                throw new KeyNotFoundException($"Private endpoint connection '{connectionName}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
-            }
-
-            return PrivateEndpointConnectionInfo.FromModel(connection);
-        }
-        catch (KeyNotFoundException)
-        {
-            throw;
-        }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning(reqEx,
-                "File share not found when getting private endpoint connection. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-            throw new KeyNotFoundException($"File share '{fileShareName}' not found in resource group '{resourceGroup}'.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                connectionName, fileShareName, resourceGroup);
-            throw;
-        }
-    }
-
-    public async Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string status,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(fileShareName), fileShareName),
-            (nameof(connectionName), connectionName),
-            (nameof(status), status));
-
-        // Note: Private endpoint connection updates must be done through the private endpoint resource,
-        // not directly on the file share. The Azure.ResourceManager.FileShares SDK does not provide
-        // methods to update private endpoint connections from the file share side.
-        _logger.LogError(
-            "Private endpoint connection updates are not supported through file share resources. " +
-            "Updates must be done through the private endpoint resource itself. " +
-            "Connection: {ConnectionName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-            connectionName, fileShareName, resourceGroup);
-
-        throw new NotSupportedException(
-            $"Updating private endpoint connections through file share resources is not supported. " +
-            $"To update the connection '{connectionName}', use Azure Private Endpoint management APIs or the Azure portal.");
-    }
-
-    public async Task DeletePrivateEndpointConnectionAsync(
-        string subscription,
-        string resourceGroup,
-        string fileShareName,
-        string connectionName,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(fileShareName), fileShareName),
-            (nameof(connectionName), connectionName));
-
-        // Note: Private endpoint connection deletion must be done through the private endpoint resource,
-        // not directly on the file share. The Azure.ResourceManager.FileShares SDK does not provide
-        // methods to delete private endpoint connections from the file share side.
-        _logger.LogError(
-            "Private endpoint connection deletion is not supported through file share resources. " +
-            "Deletion must be done through the private endpoint resource itself. " +
-            "Connection: {ConnectionName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-            connectionName, fileShareName, resourceGroup);
-
-        throw new NotSupportedException(
-            $"Deleting private endpoint connections through file share resources is not supported. " +
-            $"To delete the connection '{connectionName}', delete the private endpoint resource itself using Azure Private Endpoint management APIs or the Azure portal.");
-    }
-
     public async Task<FileShareLimitsResult> GetLimitsAsync(
         string subscription,
         string location,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -758,42 +590,56 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        _logger.LogWarning(
-            "GetLimits operation returns default values. API not available in SDK. Subscription: {Subscription}, Location: {Location}",
-            subscription, location);
-
-        // Return default limits based on Azure File Shares documentation
-        // TODO: Implement using Azure Management SDK when the API becomes available
-        await Task.CompletedTask; // Satisfy async requirement
-
-        return new FileShareLimitsResult
+        try
         {
-            Limits = new FileShareLimits
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
+
+            var response = await subscriptionResource.GetLimitsAsync(azureLocation, cancellationToken);
+
+            var output = response.Value.Properties;
+
+            _logger.LogInformation(
+                "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
+                output.Limits.MaxFileShares, subscription, location);
+
+            return new FileShareLimitsResult
             {
-                MaxFileShares = 10000,
-                MaxFileShareSnapshots = 200,
-                MaxFileShareSubnets = 100,
-                MaxFileSharePrivateEndpointConnections = 100,
-                MinProvisionedStorageGiB = 100,
-                MaxProvisionedStorageGiB = 102400,
-                MinProvisionedIOPerSec = 3000,
-                MaxProvisionedIOPerSec = 100000,
-                MinProvisionedThroughputMiBPerSec = 125,
-                MaxProvisionedThroughputMiBPerSec = 10240
-            },
-            ProvisioningConstants = new FileShareProvisioningConstants
-            {
-                BaseIOPerSec = 3000,
-                ScalarIOPerSec = 3.0,
-                BaseThroughputMiBPerSec = 125,
-                ScalarThroughputMiBPerSec = 0.04
-            }
-        };
+                Limits = new FileShareLimits
+                {
+                    MaxFileShares = output.Limits.MaxFileShares,
+                    MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
+                    MaxFileShareSubnets = output.Limits.MaxFileShareSubnets,
+                    MaxFileSharePrivateEndpointConnections = output.Limits.MaxFileSharePrivateEndpointConnections,
+                    MinProvisionedStorageGiB = output.Limits.MinProvisionedStorageGiB,
+                    MaxProvisionedStorageGiB = output.Limits.MaxProvisionedStorageGiB,
+                    MinProvisionedIOPerSec = output.Limits.MinProvisionedIOPerSec,
+                    MaxProvisionedIOPerSec = output.Limits.MaxProvisionedIOPerSec,
+                    MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
+                    MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
+                },
+                ProvisioningConstants = new FileShareProvisioningConstants
+                {
+                    BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
+                    ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
+                    BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
+                    ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting limits. Subscription: {Subscription}, Location: {Location}",
+                subscription, location);
+            throw;
+        }
     }
 
     public async Task<FileShareUsageDataResult> GetUsageDataAsync(
         string subscription,
         string location,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -803,20 +649,22 @@ public sealed class FileSharesService(
 
         try
         {
-            // Count file shares in the subscription for the specified location
-            var fileShares = await ListFileSharesAsync(subscription, null, null, retryPolicy, cancellationToken);
-            var fileSharesInLocation = fileShares.Where(fs =>
-                fs.Location?.Equals(location, StringComparison.OrdinalIgnoreCase) == true).ToList();
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
+
+            var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
+
+            var output = response.Value.Properties;
 
             _logger.LogInformation(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
-                fileSharesInLocation.Count, subscription, location);
+                output.LiveSharesFileShareCount, subscription, location);
 
             return new FileShareUsageDataResult
             {
                 LiveShares = new LiveSharesUsageData
                 {
-                    FileShareCount = fileSharesInLocation.Count
+                    FileShareCount = output.LiveSharesFileShareCount ?? 0
                 }
             };
         }
@@ -833,6 +681,7 @@ public sealed class FileSharesService(
         string subscription,
         string location,
         int provisionedStorageGiB,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -843,30 +692,23 @@ public sealed class FileSharesService(
 
         try
         {
-            // Get limits to use provisioning constants
-            var limits = await GetLimitsAsync(subscription, location, retryPolicy, cancellationToken);
-            var constants = limits.ProvisioningConstants;
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
 
-            // Calculate provisioned IO and throughput based on storage
-            // Formula: BaseValue + (storageGiB * ScalarValue)
-            var provisionedIOPerSec = (int)(constants.BaseIOPerSec + (provisionedStorageGiB * constants.ScalarIOPerSec));
-            var provisionedThroughputMiBPerSec = (int)(constants.BaseThroughputMiBPerSec + (provisionedStorageGiB * constants.ScalarThroughputMiBPerSec));
+            var content = new Azure.ResourceManager.FileShares.Models.FileShareProvisioningRecommendationContent(provisionedStorageGiB);
+            var response = await subscriptionResource.GetProvisioningRecommendationAsync(azureLocation, content, cancellationToken);
 
-            // Clamp values to limits
-            provisionedIOPerSec = Math.Max(limits.Limits.MinProvisionedIOPerSec,
-                Math.Min(provisionedIOPerSec, limits.Limits.MaxProvisionedIOPerSec));
-            provisionedThroughputMiBPerSec = Math.Max(limits.Limits.MinProvisionedThroughputMiBPerSec,
-                Math.Min(provisionedThroughputMiBPerSec, limits.Limits.MaxProvisionedThroughputMiBPerSec));
+            var output = response.Value.Properties;
 
             _logger.LogInformation(
-                "Calculated provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
-                provisionedStorageGiB, provisionedIOPerSec, provisionedThroughputMiBPerSec, location);
+                "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
+                provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
 
-            return new FileShareProvisioningRecommendationResult
+            return new Models.FileShareProvisioningRecommendationResult
             {
-                ProvisionedIOPerSec = provisionedIOPerSec,
-                ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec,
-                AvailableRedundancyOptions = new List<string> { "LRS", "ZRS", "GRS", "GZRS" }
+                ProvisionedIOPerSec = output.ProvisionedIOPerSec,
+                ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
+                AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
             };
         }
         catch (Exception ex)

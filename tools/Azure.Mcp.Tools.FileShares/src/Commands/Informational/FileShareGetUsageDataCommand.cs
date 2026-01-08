@@ -61,6 +61,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
             var result = await _service.GetUsageDataAsync(
                 options.Subscription!,
                 options.Location!,
+                options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 

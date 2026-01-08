@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Commands.Informational;
-using Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,10 +35,6 @@ public class FileSharesSetup : IAreaSetup
         services.AddSingleton<FileShareGetLimitsCommand>();
         services.AddSingleton<FileShareGetProvisioningRecommendationCommand>();
         services.AddSingleton<FileShareGetUsageDataCommand>();
-
-        services.AddSingleton<PrivateEndpointConnectionGetCommand>();
-        services.AddSingleton<PrivateEndpointConnectionUpdateCommand>();
-        services.AddSingleton<PrivateEndpointConnectionDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -79,31 +74,15 @@ public class FileSharesSetup : IAreaSetup
         var snapshotDelete = serviceProvider.GetRequiredService<SnapshotDeleteCommand>();
         snapshot.AddCommand(snapshotDelete.Name, snapshotDelete);
 
-        // Register private endpoint connection commands
-        var pecGroup = new CommandGroup("privateendpointconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
-        fileShares.AddSubGroup(pecGroup);
-
-        var pecGet = serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>();
-        pecGroup.AddCommand(pecGet.Name, pecGet);
-
-        var pecUpdate = serviceProvider.GetRequiredService<PrivateEndpointConnectionUpdateCommand>();
-        pecGroup.AddCommand(pecUpdate.Name, pecUpdate);
-
-        var pecDelete = serviceProvider.GetRequiredService<PrivateEndpointConnectionDeleteCommand>();
-        pecGroup.AddCommand(pecDelete.Name, pecDelete);
-
-        // Register informational commands in a subgroup
-        var infoGroup = new CommandGroup("info", "Informational operations - Commands for retrieving file share limits, usage data, and provisioning recommendations.");
-        fileShare.AddSubGroup(infoGroup);
-
+        // Register informational commands directly under fileshares
         var limits = serviceProvider.GetRequiredService<FileShareGetLimitsCommand>();
-        infoGroup.AddCommand(limits.Name, limits);
+        fileShares.AddCommand(limits.Name, limits);
 
         var recommendation = serviceProvider.GetRequiredService<FileShareGetProvisioningRecommendationCommand>();
-        infoGroup.AddCommand(recommendation.Name, recommendation);
+        fileShares.AddCommand(recommendation.Name, recommendation);
 
         var usage = serviceProvider.GetRequiredService<FileShareGetUsageDataCommand>();
-        infoGroup.AddCommand(usage.Name, usage);
+        fileShares.AddCommand(usage.Name, usage);
 
         return fileShares;
     }

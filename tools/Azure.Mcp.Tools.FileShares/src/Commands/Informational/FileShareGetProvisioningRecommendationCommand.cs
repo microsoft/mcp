@@ -64,6 +64,7 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
                 options.Subscription!,
                 options.Location!,
                 options.ProvisionedStorageGiB!.Value,
+                options.Tenant!,
                 options.RetryPolicy,
                 cancellationToken);
 

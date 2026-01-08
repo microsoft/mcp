@@ -61,6 +61,7 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
             var result = await _service.GetLimitsAsync(
                 options.Subscription!,
                 options.Location!,
+                options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
