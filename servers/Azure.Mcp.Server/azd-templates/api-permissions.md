@@ -22,7 +22,7 @@ A table of known API permissions of downstream APIs that can be called by Azure 
 | speech | Azure Cognitive Services | `https://cognitiveservices.azure.com/user_impersonation` | 7d312290-28c8-473c-a0ed-8e53749b6d6d | 5f1e8914-a52b-429f-9324-91b92b81adaf |
 
 
-* Azure Resource Manager (ARM) is used by most of the tools that needs to interact with Azure resources.
+* Azure Resource Manager (ARM) is used by most of the tools that need to interact with Azure resources.
 
 # APIs without exposed API permissions
 
