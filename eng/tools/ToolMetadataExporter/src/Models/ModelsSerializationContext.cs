@@ -6,6 +6,8 @@ using ToolMetadataExporter.Models.Kusto;
 
 namespace ToolMetadataExporter.Models;
 
+[JsonSerializable(typeof(ServerInfo))]
+[JsonSerializable(typeof(ServerInfoResult))]
 [JsonSerializable(typeof(McpToolEvent))]
 [JsonSerializable(typeof(McpToolEventType))]
 [JsonSerializable(typeof(List<McpToolEvent>))]
