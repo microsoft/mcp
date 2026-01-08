@@ -8,7 +8,7 @@ parameters:
 
 jobs:
 - deployment: PublishNpm
-  displayName: "Publish to npmjs.com"
+  displayName: "Publish to npmjs.com and 1ES MCP registry"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   templateContext:
