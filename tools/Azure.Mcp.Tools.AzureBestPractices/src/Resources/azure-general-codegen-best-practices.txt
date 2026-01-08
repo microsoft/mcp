@@ -79,13 +79,14 @@ Authentication & Authorization
 - Monitor data access patterns
 
 Generation steps:
-1. Analyze service requirements, Retrieve Azure Policy assignments and corresponding policy definitions for the target scope using the 'policy_assignment_list' and 'policy_definition_get' tools with the appropriate `subscription` parameter and optional `scope` parameters. Review the policy assignments and corresponding definitions and ensure that any generated script/IaC files comply with these policies.
-2. Plan security measures
-3. Design error handling
-4. Optimize performance
-5. Implement solution
-6. Add documentation
-7. Validate the generated code using your tools
+1. Analyze service requirements
+2. If the user specifices the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
+3. Plan security measures
+4. Design error handling
+5. Optimize performance
+6. Implement solution
+7. Add documentation
+8. Validate the generated code using your tools
 
 Avoid:
 - Hardcoded credentials

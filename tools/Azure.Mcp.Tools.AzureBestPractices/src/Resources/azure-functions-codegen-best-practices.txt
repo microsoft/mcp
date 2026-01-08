@@ -4,7 +4,7 @@ Azure Functions code generation best practices:
     - Only if the project runtime is .NET, PowerShell or Java create a function.json file with the required bindings and triggers.
     - Use this extension bundles version `[4.*, 5.0.0)` in the host.json file.
     - Use Azure Functions Core Tools for creating Function Apps
-    - Retrieve Azure Policy assignments and corresponding policy definitions for the target scope using the 'policy_assignment_list' and 'policy_definition_get' tools with the appropriate `subscription` parameter and optional `scope` parameters. Review the policy assignments and corresponding definitions and ensure that any generated code complies with these policies.
+    - If the user specifices the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
     - Blob triggers should use eventgrid source
     - Generate local.settings.json during setup to manage configuration settings locally
     - Ensure the Function App is configured to use Functions Host v4
