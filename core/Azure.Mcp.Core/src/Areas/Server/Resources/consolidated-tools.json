@@ -1434,6 +1434,8 @@
       "mappedToolList": [
         "managedlustre_fs_list",
         "managedlustre_fs_sku_get",
+        "managedlustre_fs_blob_autoexport_get",
+        "managedlustre_fs_blob_autoimport_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1474,7 +1476,9 @@
       "mappedToolList": [
         "storage_account_create",
         "storage_blob_container_create",
-        "managedlustre_fs_create"
+        "managedlustre_fs_create",
+        "managedlustre_fs_blob_autoexport_create",
+        "managedlustre_fs_blob_autoimport_create"
       ]
     },
     {
@@ -1508,6 +1512,42 @@
       },
       "mappedToolList": [
         "managedlustre_fs_update"
+      ]
+    },
+    {
+      "name": "manage_azure_managed_lustre_sync_jobs",
+      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport and autoexport jobs that sync data between Lustre filesystems and Azure Blob Storage.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "managedlustre_fs_blob_autoexport_cancel",
+        "managedlustre_fs_blob_autoexport_delete",
+        "managedlustre_fs_blob_autoimport_cancel",
+        "managedlustre_fs_blob_autoimport_delete"
       ]
     },
     {
