@@ -22,7 +22,7 @@
 .PARAMETER BuildOnly
     If specified, only builds the MCP publisher tool without deploying the server.json.
 .EXAMPLE
-    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -ReleaseType "production" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
+    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
     Updates the server.json for the Azure.Mcp.Server to the production MCP registry using credentials from the specified Key Vault.
 #>
 [CmdletBinding(DefaultParameterSetName='default')]
