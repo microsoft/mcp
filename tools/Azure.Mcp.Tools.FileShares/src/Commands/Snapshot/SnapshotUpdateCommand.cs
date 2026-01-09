@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -70,11 +71,26 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
             _logger.LogInformation("Updating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName, options.SnapshotName);
 
-            var snapshot = await _fileSharesService.UpdateSnapshotAsync(
+            // Parse metadata if provided
+            Dictionary<string, string>? metadata = null;
+            if (!string.IsNullOrEmpty(options.Metadata))
+            {
+                try
+                {
+                    metadata = JsonSerializer.Deserialize(options.Metadata, FileSharesJsonContext.Default.DictionaryStringString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse metadata JSON: {Metadata}", options.Metadata);
+                }
+            }
+
+            var snapshot = await _fileSharesService.PatchSnapshotAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
                 options.SnapshotName!,
+                metadata,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

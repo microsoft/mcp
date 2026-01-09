@@ -135,11 +135,12 @@ public interface IFileSharesService
     /// <summary>
     /// Update a file share snapshot.
     /// </summary>
-    Task<FileShareSnapshotInfo> UpdateSnapshotAsync(
+    Task<FileShareSnapshotInfo> PatchSnapshotAsync(
         string subscription,
         string resourceGroup,
         string fileShareName,
         string snapshotId,
+        Dictionary<string, string>? metadata = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

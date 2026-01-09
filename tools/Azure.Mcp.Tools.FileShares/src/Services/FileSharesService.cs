@@ -562,11 +562,12 @@ public sealed class FileSharesService(
         }
     }
 
-    public async Task<FileShareSnapshotInfo> UpdateSnapshotAsync(
+    public async Task<FileShareSnapshotInfo> PatchSnapshotAsync(
         string subscription,
         string resourceGroup,
         string fileShareName,
         string snapshotId,
+        Dictionary<string, string>? metadata = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -590,12 +591,21 @@ public sealed class FileSharesService(
             // Get the existing snapshot
             var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
 
-            // Update the snapshot using CreateOrUpdateAsync
-            var snapshotData = existingSnapshot.Value.Data;
-            var operation = await snapshotCollection.CreateOrUpdateAsync(
+            // Create a patch object with only the properties to update
+            var patch = new Azure.ResourceManager.FileShares.Models.FileShareSnapshotPatch();
+
+            if (metadata is { Count: > 0 })
+            {
+                foreach (var kvp in metadata)
+                {
+                    patch.FileShareSnapshotUpdateMetadata.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            // Use UpdateAsync to patch the snapshot
+            var operation = await existingSnapshot.Value.UpdateAsync(
                 WaitUntil.Completed,
-                snapshotId,
-                snapshotData,
+                patch,
                 cancellationToken);
 
             _logger.LogInformation(
