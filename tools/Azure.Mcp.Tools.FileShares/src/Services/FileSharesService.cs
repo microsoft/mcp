@@ -103,7 +103,6 @@ public sealed class FileSharesService(
                 Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-
             return FileShareInfo.FromResource(fileShareResource.Value);
         }
         catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
@@ -221,6 +220,97 @@ public sealed class FileSharesService(
         {
             _logger.LogError(ex,
                 "Error creating or updating file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                fileShareName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    public async Task<FileShareInfo> PatchFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        int? provisionedStorageInGiB = null,
+        int? provisionedIOPerSec = null,
+        int? provisionedThroughputMiBPerSec = null,
+        string? publicNetworkAccess = null,
+        string? nfsRootSquash = null,
+        string[]? allowedSubnets = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+            // Create a patch object with only the properties to update
+            var patch = new Azure.ResourceManager.FileShares.Models.FileSharePatch();
+
+            // Set properties that are explicitly provided
+            if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
+                !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
+            {
+                patch.Properties = new Azure.ResourceManager.FileShares.Models.FileSharePatchProperties();
+
+                if (provisionedStorageInGiB.HasValue)
+                {
+                    patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+                }
+
+                if (provisionedIOPerSec.HasValue)
+                {
+                    patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+                }
+
+                if (provisionedThroughputMiBPerSec.HasValue)
+                {
+                    patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
+            {
+                patch.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
+            }
+
+            if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
+            {
+                patch.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+            }
+
+            if (tags is { Count: > 0 })
+            {
+                foreach (var tag in tags)
+                {
+                    patch.Tags.Add(tag.Key, tag.Value);
+                }
+            }
+
+            // Get the file share resource to update
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            // Use UpdateAsync to patch the file share
+            var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                fileShareName, resourceGroup);
+
+            return FileShareInfo.FromResource(operation.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error patching file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 fileShareName, resourceGroup, subscription);
             throw;
         }

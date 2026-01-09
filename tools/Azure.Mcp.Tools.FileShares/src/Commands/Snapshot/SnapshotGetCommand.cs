@@ -22,7 +22,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
 {
     private const string CommandTitle = "Get File Share Snapshot";
 
-    public override string Id => "a7e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d";
     public override string Name => "get";
     public override string Description => "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.";
     public override string Title => CommandTitle;

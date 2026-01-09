@@ -22,7 +22,7 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
     private const string CommandTitle = "Get File Share";
 
 
-    public override string Id => "a2e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f";
     public override string Name => "get";
     public override string Description => "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.";
     public override string Title => CommandTitle;

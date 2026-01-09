@@ -56,6 +56,25 @@ public interface IFileSharesService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Patch (update) an existing file share by only modifying specified properties.
+    /// Fetches the existing file share and updates only the provided properties.
+    /// </summary>
+    Task<FileShareInfo> PatchFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        int? provisionedStorageInGiB = null,
+        int? provisionedIOPerSec = null,
+        int? provisionedThroughputMiBPerSec = null,
+        string? publicNetworkAccess = null,
+        string? nfsRootSquash = null,
+        string[]? allowedSubnets = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Delete a file share.
     /// </summary>
     Task DeleteFileShareAsync(

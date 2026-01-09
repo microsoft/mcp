@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
@@ -16,7 +19,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
     private readonly ILogger<FileShareGetUsageDataCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
-    public override string Id => "69-93d14ba8-5e75-4190-93dd-f47e932b849b";
+    public override string Id => "93d14ba8-5e75-4190-93dd-f47e932b849b";
     public override string Name => "usage";
     public override string Description => "Get file share usage data for a subscription and location";
     public override string Title => "Get File Share Usage Data";

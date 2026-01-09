@@ -23,7 +23,6 @@ namespace Azure.Mcp.Tools.FileShares;
 [JsonSerializable(typeof(SnapshotDeleteCommand.SnapshotDeleteCommandResult))]
 [JsonSerializable(typeof(SnapshotUpdateCommand.SnapshotUpdateCommandResult))]
 [JsonSerializable(typeof(FileShareDataSchema))]
-[JsonSerializable(typeof(FileShareSnapshotDataSchema))]
 [JsonSerializable(typeof(PrivateEndpointConnectionDataSchema))]
 [JsonSerializable(typeof(FileShareLimitsResult))]
 [JsonSerializable(typeof(FileShareLimits))]

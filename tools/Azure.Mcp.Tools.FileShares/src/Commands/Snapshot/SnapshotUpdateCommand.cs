@@ -22,7 +22,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
 {
     private const string CommandTitle = "Update File Share Snapshot";
 
-    public override string Id => "aae0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e";
     public override string Name => "update";
     public override string Description => "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.";
     public override string Title => CommandTitle;

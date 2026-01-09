@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<FileShareDeleteOptions>(logger, fileSharesService)
 {
-    public override string Id => "azmcp-fileshares-fileshare-delete";
+    public override string Id => "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
     public override string Name => "delete";
     public override string Description => "Delete a file share";
     public override string Title => "Delete File Share";

@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<SnapshotDeleteOptions>(logger, fileSharesService)
 {
-    public override string Id => "a9e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f";
     public override string Name => "delete";
     public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
     public override string Title => "Delete File Share Snapshot";

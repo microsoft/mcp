@@ -23,7 +23,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
 {
     private const string CommandTitle = "Update File Share";
 
-    public override string Id => "b4f1f1f2-f3f4-f5f6-f7f8-f9f0fafbfcfd";
+    public override string Id => "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a";
     public override string Name => "update";
     public override string Description => "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.";
     public override string Title => CommandTitle;
@@ -57,9 +57,9 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
         options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
         options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
         options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
@@ -80,15 +80,6 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         {
             _logger.LogInformation("Updating file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName);
-
-            // Get existing file share to retrieve location (required for update)
-            var existingShare = await _fileSharesService.GetFileShareAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
 
             // Parse tags if provided
             Dictionary<string, string>? tags = null;
@@ -111,15 +102,10 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 allowedSubnets = options.AllowedSubnets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
 
-            var fileShare = await _fileSharesService.CreateOrUpdateFileShareAsync(
+            var fileShare = await _fileSharesService.PatchFileShareAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
-                existingShare.Location!, // Use existing location
-                options.MountName,
-                options.MediaTier,
-                options.Redundancy,
-                options.Protocol,
                 options.ProvisionedStorageInGiB,
                 options.ProvisionedIOPerSec,
                 options.ProvisionedThroughputMiBPerSec,

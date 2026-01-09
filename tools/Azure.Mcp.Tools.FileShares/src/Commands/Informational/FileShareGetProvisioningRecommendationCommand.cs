@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
@@ -16,7 +19,7 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
     private readonly ILogger<FileShareGetProvisioningRecommendationCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
-    public override string Id => "42-3c5e1fb2-3a8d-4f8e-8b0a-1c2d3e4f5g6h";
+    public override string Id => "3c5e1fb2-3a8d-4f8e-8b0a-1c2d3e4f5a6b";
     public override string Name => "rec";
     public override string Description => "Get provisioning parameter recommendations for a file share based on desired storage size";
     public override string Title => "Get File Share Provisioning Recommendation";

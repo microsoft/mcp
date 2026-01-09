@@ -23,7 +23,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
 {
     private const string CommandTitle = "Create File Share Snapshot";
 
-    public override string Id => "a8e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c";
     public override string Name => "create";
     public override string Description => "Create a snapshot of an Azure managed file share. Snapshots are read-only point-in-time copies used for backup and recovery.";
     public override string Title => CommandTitle;

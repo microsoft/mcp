@@ -23,7 +23,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
 {
     private const string CommandTitle = "Create File Share";
 
-    public override string Id => "a3e0e0e1-e2e3-e4e5-e6e7-e8e9eaebecea";
+    public override string Id => "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e";
     public override string Name => "create";
     public override string Description => "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.";
     public override string Title => CommandTitle;
