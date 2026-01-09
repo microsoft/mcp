@@ -1115,7 +1115,6 @@ azmcp fileshares fileshare delete --subscription <subscription> \
                                   --name <file-share-name>
 
 # Check File Share name availability
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare checkname --subscription <subscription> \
                                      --name <file-share-name>
 ```
@@ -1152,19 +1151,16 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 
 ```bash
 # Get File Shares limits and quotas for a region
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares getlimits --subscription <subscription> \
                            --location <azure-region>
 
 # Get provisioning recommendations for File Shares
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares getprovisioningrecommendation --subscription <subscription> \
                                                --resource-group <resource-group> \
                                                --file-share-name <file-share-name> \
                                                --workload-profile <workload-type>
 
 # Get usage data and metrics for File Shares
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares getusagedata --subscription <subscription> \
                               --resource-group <resource-group> \
                               --file-share-name <file-share-name>
