@@ -29,6 +29,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **ServerEndpoint** tools (4): Create, Delete, Get, Update
 - Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
 
+- Removed `Azure.Monitor.Query` package dependency as that is now deprecated. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+
 ### Bugs Fixed
 
 - Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
@@ -38,6 +40,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Switched to a new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
 - Replace hard-coded strings for `Azure.Mcp.Server` with ones from `IConfiguration`. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
 - Add hardcoded minimum TLS version of 1.2 to Storage account creation tool. [[#1445](https://github.com/microsoft/mcp/pull/1445)]
+- Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
 
 #### Dependency Updates
 
