@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -35,6 +36,10 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<AutoimportJobCancelCommand>();
         services.AddSingleton<AutoimportJobGetCommand>();
         services.AddSingleton<AutoimportJobDeleteCommand>();
+        services.AddSingleton<ImportJobCreateCommand>();
+        services.AddSingleton<ImportJobCancelCommand>();
+        services.AddSingleton<ImportJobGetCommand>();
+        services.AddSingleton<ImportJobDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -98,6 +103,21 @@ public class ManagedLustreSetup : IAreaSetup
 
         var autoimportJobDelete = serviceProvider.GetRequiredService<AutoimportJobDeleteCommand>();
         autoimportJob.AddCommand(autoimportJobDelete.Name, autoimportJobDelete);
+
+        var blobImport = new CommandGroup("blob_import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
+        fileSystem.AddSubGroup(blobImport);
+
+        var importJobCreate = serviceProvider.GetRequiredService<ImportJobCreateCommand>();
+        blobImport.AddCommand(importJobCreate.Name, importJobCreate);
+
+        var importJobCancel = serviceProvider.GetRequiredService<ImportJobCancelCommand>();
+        blobImport.AddCommand(importJobCancel.Name, importJobCancel);
+
+        var importJobGet = serviceProvider.GetRequiredService<ImportJobGetCommand>();
+        blobImport.AddCommand(importJobGet.Name, importJobGet);
+
+        var importJobDelete = serviceProvider.GetRequiredService<ImportJobDeleteCommand>();
+        blobImport.AddCommand(importJobDelete.Name, importJobDelete);
 
         return managedLustre;
     }
