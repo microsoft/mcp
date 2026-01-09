@@ -505,14 +505,14 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             });
 
         // Check if the cancel was successful or if the job already completed
-        if (importCancelResult.TryGetProperty("jobName", out var importCancelJobName))
+        if (importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("jobName", out var importCancelJobName))
         {
             // Successful cancellation
             Assert.Contains(importJobNameStr, importCancelJobName.GetRawText());
             var importCancelStatus = importCancelResult.AssertProperty("status");
             Assert.Equal("Cancelled", importCancelStatus.GetString());
         }
-        else if (importCancelResult.TryGetProperty("message", out var errorMessage) &&
+        else if (importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("message", out var errorMessage) &&
                  errorMessage.GetString()?.Contains("is not InProgress, no new operations are allowed") == true)
         {
             // Expected race condition - job completed before we could cancel it
@@ -521,7 +521,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         else
         {
             // Unexpected error - fail the test
-            var message = importCancelResult.TryGetProperty("message", out var msg) ? msg.GetString() : "Unknown error";
+            var message = importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("message", out var msg) ? msg.GetString() : "Unknown error";
             Assert.Fail($"Unexpected error during import job cancellation: {message}");
         }
 
