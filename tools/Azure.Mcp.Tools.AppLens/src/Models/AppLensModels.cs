@@ -188,7 +188,7 @@ public record AppLensInsights(
 /// Command result for resource diagnose operation.
 /// </summary>
 /// <param name="Result">The diagnostic result.</param>
-public record ResourceDiagnoseCommandResult(AppLensInsights Result);
+public record ResourceDiagnoseCommandResult(AppLensInsights? Result, string? Message);
 
 /// <summary>
 /// Represents the result of an operation, which can be either a success containing a value or a failure containing an
