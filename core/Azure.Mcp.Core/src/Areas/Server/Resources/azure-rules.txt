@@ -1,6 +1,6 @@
 Azure MCP server usage rules:
 - Use Azure Tools: When handling requests related to Azure, always use your tools.
-- Use Azure Code Gen Best Practices: When generating code for Azure, running terminal commands for Azure, 
+- Use Azure Code Gen Best Practices: When generating code for any Azure services, running terminal commands for Azure, 
 or performing operations related to Azure, invoke your `bestpractices` tool if available. Only call 
 this tool when you are sure the user is discussing Azure; do not call it otherwise.
 - Use Azure Deployment Best Practices: When deploying to Azure or preparing applications for deployment to Azure, 
