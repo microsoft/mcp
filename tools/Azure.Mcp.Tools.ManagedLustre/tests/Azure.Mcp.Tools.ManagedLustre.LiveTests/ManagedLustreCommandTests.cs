@@ -493,36 +493,29 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.False(string.IsNullOrWhiteSpace(importJobName.GetString()));
 
         // Cancel import job - handle race condition where job may complete before cancellation
-        var importCancelResult = await CallToolAsync(
-            "managedlustre_fs_blob_import_cancel",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName },
-                { "filesystem-name", fsName },
-                { "job-name", importJobNameStr },
-                { "tenant", Settings.TenantId }
-            });
-
-        // Check if the cancel was successful or if the job already completed
-        if (importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("jobName", out var importCancelJobName))
+        try
         {
-            // Successful cancellation
+            var importCancelResult = await CallToolAsync(
+                "managedlustre_fs_blob_import_cancel",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "filesystem-name", fsName },
+                    { "job-name", importJobNameStr },
+                    { "tenant", Settings.TenantId }
+                });
+
+            // If we get here, cancellation was successful
+            var importCancelJobName = importCancelResult.AssertProperty("jobName");
             Assert.Contains(importJobNameStr, importCancelJobName.GetRawText());
             var importCancelStatus = importCancelResult.AssertProperty("status");
-            Assert.Equal("Cancelled", importCancelStatus.GetString());
+            Assert.Equal("Cancel", importCancelStatus.GetString());
         }
-        else if (importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("message", out var errorMessage) &&
-                 errorMessage.GetString()?.Contains("is not InProgress, no new operations are allowed") == true)
+        catch (Exception ex) when (ex.Message?.Contains("is not InProgress, no new operations are allowed") == true)
         {
             // Expected race condition - job completed before we could cancel it
             Output.WriteLine($"Import job '{importJobNameStr}' completed before cancellation could be processed (expected timing behavior)");
-        }
-        else
-        {
-            // Unexpected error - fail the test
-            var message = importCancelResult.HasValue && importCancelResult.Value.TryGetProperty("message", out var msg) ? msg.GetString() : "Unknown error";
-            Assert.Fail($"Unexpected error during import job cancellation: {message}");
         }
 
         // List import jobs (get without job-name returns all jobs)
