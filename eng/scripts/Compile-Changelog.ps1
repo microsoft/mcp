@@ -484,7 +484,8 @@ else {
     
     # Find the first ## header after any initial # headers
     # This regex handles both formats: "## 2.0.0 (Unreleased)" and "## [0.0.1] - 2025-09-16"
-    $firstSectionPattern = '(?m)^##\s+(?:\[(.+?)\]|(\S+))(?:\s+-\s+|\s+\()'
+    # Note: We capture through the closing parenthesis to include the full "(Unreleased)" or "(date)" text
+    $firstSectionPattern = '(?m)^##\s+(?:\[(.+?)\]|(\S+))(?:\s+-\s+\S+|\s+\([^)]+\))'
     $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
     
     if ($firstSectionMatch.Success) {
@@ -539,9 +540,14 @@ Write-Host ""
 
 # Generate markdown content from grouped entries (needed for new sections)
 $newEntriesMarkdown = @()
+$isFirstNewSection = $true
 foreach ($section in $RecommendedSectionHeaders) {
     if ($groupedEntries.ContainsKey($section)) {
-        $newEntriesMarkdown += ""
+        # Add empty line before section (but not before the very first section)
+        if (-not $isFirstNewSection) {
+            $newEntriesMarkdown += ""
+        }
+        $isFirstNewSection = $false
         $newEntriesMarkdown += "### $section"
         $newEntriesMarkdown += ""
         
@@ -572,6 +578,7 @@ $match = [regex]::Match($changelogContent, $versionSectionPattern)
 # Build the merged content for preview
 $mergedContent = @()
 $mergedContent += $targetVersionHeader
+$mergedContent += ""  # Empty line after version header
 
 if (-not $match.Success) {
     # New section - just use the new entries

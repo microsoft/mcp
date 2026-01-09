@@ -2,15 +2,20 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.10 (Unreleased)
+## 2.0.0-beta.10 (2026-01-08)
 
 ### Features Added
 
-### Breaking Changes
-
-### Bugs Fixed
-
-### Other Changes
+- Added Azure Managed Lustre HSM (Hierarchical Storage Management) autoimport and autoexport job management tools:
+  - `managedlustre_fs_blob_autoimport_create` - Create autoimport jobs to sync data from Azure Blob Storage to Lustre filesystem
+  - `managedlustre_fs_blob_autoimport_get` - Get details of specific autoimport job(s)
+  - `managedlustre_fs_blob_autoimport_cancel` - Cancel running autoimport jobs
+  - `managedlustre_fs_blob_autoimport_delete` - Delete autoimport job records
+  - `managedlustre_fs_blob_autoexport_create` - Create autoexport jobs to sync data from Lustre filesystem to Azure Blob Storage
+  - `managedlustre_fs_blob_autoexport_get` - Get details of specific autoexport job(s)
+  - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
+  - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
+- Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
 
 ## 2.0.0-beta.9 (2026-01-06)
 
@@ -23,15 +28,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **CloudEndpoint** tools (4): Create, Delete, Get, TriggerChangeDetection
   - **ServerEndpoint** tools (4): Create, Delete, Get, Update
 - Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
-- Added Azure Managed Lustre HSM (Hierarchical Storage Management) autoimport and autoexport job management commands:
-  - `managedlustre_fs_blob_autoimport_create` - Create autoimport jobs to sync data from Azure Blob Storage to Lustre filesystem
-  - `managedlustre_fs_blob_autoimport_get` - Get details of specific autoimport job(s)
-  - `managedlustre_fs_blob_autoimport_cancel` - Cancel running autoimport jobs
-  - `managedlustre_fs_blob_autoimport_delete` - Delete autoimport job records
-  - `managedlustre_fs_blob_autoexport_create` - Create autoexport jobs to sync data from Lustre filesystem to Azure Blob Storage
-  - `managedlustre_fs_blob_autoexport_get` - Get details of specific autoexport job(s)
-  - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
-  - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
 
 ### Bugs Fixed
 
