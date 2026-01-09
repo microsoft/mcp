@@ -26,6 +26,8 @@ A table of known API permissions of downstream APIs that can be called by Azure 
 
 # APIs without exposed API permissions
 
+These APIs don't expose their API permissions so they won't be callable from the self-hosted Azure MCP server.
+
 | Namespace | Name | Scope | API Id |
 |-----------|------|-------|--------|
 | applicationinsights | Application Insights Profiler Data Plane | `api://dataplane.diagnosticservices.azure.com/.default` | 3603eff4-9141-41d5-ba8f-02fb3a439cd6 |
