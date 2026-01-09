@@ -39,34 +39,35 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         // Step 1: Get the resource ID
         var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType, cancellationToken);
 
-        if (findResult is DidNotFindResourceResult notFound)
+        if (findResult is Failure<FoundResourceData> notFoundResult)
         {
-            throw new InvalidOperationException(notFound.Message);
+            throw new InvalidOperationException(notFoundResult.Message);
         }
 
-        var foundResource = (FoundResourceResult)findResult;
+        var successfulResult = (Success<FoundResourceData>)findResult;
+        var resourceData = successfulResult.Data;
 
         // Step 2: Get AppLens session
-        var session = await GetAppLensSessionAsync(foundResource.ResourceId, tenantId, cancellationToken);
+        var getSessionResult = await GetAppLensSessionAsync(resourceData.ResourceId, tenantId, cancellationToken);
 
-        if (session is FailedAppLensSessionResult failed)
+        if (getSessionResult is Failure<AppLensSession> failed)
         {
             throw new InvalidOperationException(failed.Message);
         }
 
-        var successfulSession = (SuccessfulAppLensSessionResult)session;
+        var successResult = (Success<AppLensSession>)getSessionResult;
 
         // Step 3: Ask AppLens the diagnostic question
-        var insights = await CollectInsightsAsync(successfulSession.Session, question, cancellationToken);
+        var insights = await CollectInsightsAsync(successResult.Data, question, cancellationToken);
 
         return new DiagnosticResult(
             insights.Insights,
             insights.Solutions,
-            foundResource.ResourceId,
-            foundResource.ResourceTypeAndKind);
+            resourceData.ResourceId,
+            resourceData.ResourceTypeAndKind);
     }
 
-    private Task<FindResourceIdResult> FindResourceIdAsync(
+    private Task<Result<FoundResourceData>> FindResourceIdAsync(
         string resource,
         string? subscription,
         string? resourceGroup,
@@ -77,15 +78,15 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
         if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(resourceGroup))
         {
-            return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
+            return Task.FromResult<Result<FoundResourceData>>(Result<FoundResourceData>.Failure($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
         }
 
         var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
 
-        return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
+        return Task.FromResult<Result<FoundResourceData>>(Result<FoundResourceData>.Success(new FoundResourceData(resourceId, resourceType ?? "Unknown", null)));
     }
 
-    private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
+    private async Task<Result<AppLensSession>> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -109,21 +110,21 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
+                    return Result<AppLensSession>.Failure("The specified resource could not be found or does not support diagnostics.");
                 }
-                return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
+                return Result<AppLensSession>.Failure($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             AppLensSession? appLensSession;
             appLensSession = ParseGetTokenResponse(content);
 
-            return new SuccessfulAppLensSessionResult(
+            return Result<AppLensSession>.Success(
                 appLensSession with { ResourceId = resourceId });
         }
         catch (Exception ex)
         {
-            return new FailedAppLensSessionResult($"Failed to create AppLens session: {ex.Message}");
+            return Result<AppLensSession>.Failure($"Failed to create AppLens session: {ex.Message}");
         }
     }
 
