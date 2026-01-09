@@ -13,23 +13,6 @@ namespace Azure.Mcp.Tools.AppLens.Models;
 public record AppLensSession(string SessionId, string ResourceId, string Token, int ExpiresIn);
 
 /// <summary>
-/// Represents the result of trying to obtain an AppLens session.
-/// </summary>
-public abstract record GetAppLensSessionResult;
-
-/// <summary>
-/// Represents the successful creation of an AppLens session.
-/// </summary>
-/// <param name="Session">The new AppLens session.</param>
-public sealed record SuccessfulAppLensSessionResult(AppLensSession Session) : GetAppLensSessionResult;
-
-/// <summary>
-/// Represents a failure while trying to create an AppLens session.
-/// </summary>
-/// <param name="Message">A message about the failure suitable for display to the user.</param>
-public sealed record FailedAppLensSessionResult(string Message) : GetAppLensSessionResult;
-
-/// <summary>
 /// Result of Azure Resource Graph query for resource lookup.
 /// </summary>
 /// <param name="Id">Resource ID.</param>
@@ -46,24 +29,14 @@ public record AppLensArgQueryResult(
     string ResourceKind,
     string ResourceName);
 
-/// <summary>
-/// Abstract base for resource finding results.
-/// </summary>
-public abstract record FindResourceIdResult;
 
 /// <summary>
-/// Successful resource finding result.
+/// Contains the results of successfully finding a resource based on its name.
 /// </summary>
 /// <param name="ResourceId">The resource ID.</param>
 /// <param name="ResourceTypeAndKind">The resource type and kind.</param>
 /// <param name="Message">Optional message.</param>
-public sealed record FoundResourceResult(string ResourceId, string ResourceTypeAndKind, string? Message) : FindResourceIdResult;
-
-/// <summary>
-/// Failed resource finding result.
-/// </summary>
-/// <param name="Message">Error message.</param>
-public sealed record DidNotFindResourceResult(string Message) : FindResourceIdResult;
+public sealed record FoundResourceData(string ResourceId, string ResourceTypeAndKind, string? Message);
 
 /// <summary>
 /// Options controlling the behavior of the AppLens service.
@@ -216,3 +189,31 @@ public record DiagnosticResult(
 /// </summary>
 /// <param name="Result">The diagnostic result.</param>
 public record ResourceDiagnoseCommandResult(DiagnosticResult Result);
+
+/// <summary>
+/// Represents the result of an operation, which can be either a success containing a value or a failure containing an
+/// error message.
+/// </summary>
+/// <remarks>Use the static methods <see cref="Success{T}(T)"/> and <see cref="Failure{T}(string)"/> to create
+/// instances representing successful or failed outcomes. This type is commonly used to encapsulate the outcome of
+/// operations that may fail, providing a way to handle errors without exceptions.</remarks>
+/// <typeparam name="T">The type of the value returned in the case of a successful result.</typeparam>
+public abstract record Result<T>()
+{
+    public static Success<T> Success(T data) => new(data);
+    public static Failure<T> Failure(string message) => new(message);
+}
+
+/// <summary>
+/// Represents a successful result that contains a value of the specified type.
+/// </summary>
+/// <typeparam name="T">The type of the value returned in the successful result.</typeparam>
+/// <param name="Data">The value associated with the successful result.</param>
+public sealed record Success<T>(T Data) : Result<T>;
+
+/// <summary>
+/// Represents a failed result with a message explaining the problem.
+/// </summary>
+/// <typeparam name="T">The type of the value returned in a successful result.</typeparam>
+/// <param name="Message">A message containing more details on the failure.</param>
+public sealed record Failure<T>(string Message) : Result<T>;
