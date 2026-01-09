@@ -2097,7 +2097,9 @@ azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
                                                 --service <service-name> \
                                                 --syncgroup <syncgroup-name> \
                                                 --name <endpoint-name> \
-                                                [--directory-path <path>]
+                                                --directory-path <path> \
+                                                [--change-detection-mode <mode>] \
+                                                [--paths <path1> <path2> ...]
 ```
 
 #### Registered Server

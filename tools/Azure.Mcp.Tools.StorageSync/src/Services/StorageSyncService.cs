@@ -626,9 +626,9 @@ public sealed class StorageSyncService(
         string storageSyncServiceName,
         string syncGroupName,
         string cloudEndpointName,
-        string? directoryPath = null,
-        string[]? filePaths = null,
-        bool recursive = false,
+        string directoryPath,
+        string? changeDetectionMode = null,
+        IList<string>? paths = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -638,7 +638,8 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(cloudEndpointName), cloudEndpointName)
+            (nameof(cloudEndpointName), cloudEndpointName),
+            (nameof(directoryPath), directoryPath)
         );
 
         try
@@ -653,13 +654,22 @@ public sealed class StorageSyncService(
 
             var content = new Azure.ResourceManager.StorageSync.Models.TriggerChangeDetectionContent
             {
-                DirectoryPath = directoryPath,
-                ChangeDetectionMode = recursive ? Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode.Recursive : Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode.Default
+                DirectoryPath = directoryPath
             };
 
-            if (filePaths != null)
+            // Set change detection mode if provided
+            if (!string.IsNullOrEmpty(changeDetectionMode))
             {
-                foreach (var path in filePaths)
+                if (Enum.TryParse<Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode>(changeDetectionMode, true, out var mode))
+                {
+                    content.ChangeDetectionMode = mode;
+                }
+            }
+
+            // Add paths if provided
+            if (paths != null)
+            {
+                foreach (var path in paths)
                 {
                     content.Paths.Add(path);
                 }

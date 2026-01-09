@@ -492,7 +492,10 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
                 { "sync-group-name", Settings.ResourceBaseName },
-                { "cloud-endpoint-name", Settings.ResourceBaseName }
+                { "cloud-endpoint-name", Settings.ResourceBaseName },
+                { "directory-path", "/" },
+                { "change-detection-mode", "Default" },
+                { "paths", new string[] { "/testfile.txt" } }
             });
 
         var message = result.AssertProperty("message");
