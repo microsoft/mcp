@@ -1272,7 +1272,7 @@
     {
       "name": "create_foundry_agent_resources",
       "description": "Create Microsoft Foundry agent or thread.",
-       "toolMetadata": {
+      "toolMetadata": {
         "destructive": {
           "value": false,
           "description": "This tool performs only additive updates without deleting or modifying existing resources."
@@ -1404,7 +1404,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1440,7 +1440,8 @@
         "storage_blob_container_get",
         "storage_blob_get",
         "managedlustre_fs_subnetsize_ask",
-        "managedlustre_fs_subnetsize_validate"
+        "managedlustre_fs_subnetsize_validate",
+        "storage_table_list"
       ]
     },
     {

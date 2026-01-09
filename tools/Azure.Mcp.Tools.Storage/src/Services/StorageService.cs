@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Models;
@@ -463,7 +464,7 @@ public class StorageService(
 
     private static StorageAccountInfo ConvertToAccountInfoModel(JsonElement item)
     {
-        Models.StorageAccountData? storageAccount = Models.StorageAccountData.FromJson(item);
+        StorageAccountData? storageAccount = StorageAccountData.FromJson(item);
         if (storageAccount == null)
             throw new InvalidOperationException("Failed to parse storage account data");
 
@@ -478,5 +479,51 @@ public class StorageService(
             CreatedOn: storageAccount.Properties?.CreatedOn,
             AllowBlobPublicAccess: storageAccount.Properties?.AllowBlobPublicAccess,
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
+    }
+
+    protected async Task<TableServiceClient> CreateTableServiceClient(
+        string? account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var defaultUri = $"https://{account}.table.core.windows.net";
+        return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
+    }
+
+    public async Task<List<string>> ListTables(
+        string account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+
+        var tables = new List<string>();
+
+        try
+        {
+            // First attempt with requested auth method
+            var tableServiceClient = await CreateTableServiceClient(
+                account,
+                subscription,
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            await foreach (var table in tableServiceClient.QueryAsync(cancellationToken: cancellationToken))
+            {
+                tables.Add(table.Name);
+            }
+            return tables;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error listing tables: {ex.Message}", ex);
+        }
     }
 }

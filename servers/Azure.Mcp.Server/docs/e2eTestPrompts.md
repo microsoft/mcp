@@ -634,6 +634,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
+| storage_table_list | List all tables in the storage account <account> |
+| storage_table_list | Show me the tables in the storage account <account> |
 
 ## Azure Storage Sync
 
