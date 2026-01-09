@@ -4,8 +4,8 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
@@ -46,25 +46,25 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 
         // Add marketplace-specific options
         var options = command.Options;
-        options.Add(OptionDefinitions.Marketplace.Language);
-        options.Add(OptionDefinitions.Marketplace.Search);
-        options.Add(OptionDefinitions.Marketplace.Filter);
-        options.Add(OptionDefinitions.Marketplace.OrderBy);
-        options.Add(OptionDefinitions.Marketplace.Select);
-        options.Add(OptionDefinitions.Marketplace.NextCursor);
-        options.Add(OptionDefinitions.Marketplace.Expand);
+        options.Add(MarketplaceOptionDefinitions.Language);
+        options.Add(MarketplaceOptionDefinitions.Search);
+        options.Add(MarketplaceOptionDefinitions.Filter);
+        options.Add(MarketplaceOptionDefinitions.OrderBy);
+        options.Add(MarketplaceOptionDefinitions.Select);
+        options.Add(MarketplaceOptionDefinitions.NextCursor);
+        options.Add(MarketplaceOptionDefinitions.Expand);
     }
 
     protected override ProductListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
-        options.Search = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Search.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Filter.Name);
-        options.OrderBy = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.OrderBy.Name);
-        options.Select = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Select.Name);
-        options.NextCursor = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.NextCursor.Name);
-        options.Expand = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Expand.Name);
+        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
+        options.Search = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Search.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Filter.Name);
+        options.OrderBy = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.OrderBy.Name);
+        options.Select = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Select.Name);
+        options.NextCursor = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.NextCursor.Name);
+        options.Expand = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Expand.Name);
         return options;
     }
 
