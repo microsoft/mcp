@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.10 (2026-01-08)
+## 2.0.0-beta.10 (2026-01-09)
 
 ### Features Added
 

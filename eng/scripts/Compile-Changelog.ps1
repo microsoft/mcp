@@ -484,7 +484,6 @@ else {
     
     # Find the first ## header after any initial # headers
     # This regex handles both formats: "## 2.0.0 (Unreleased)" and "## [0.0.1] - 2025-09-16"
-    # Note: We capture through the closing parenthesis to include the full "(Unreleased)" or "(date)" text
     $firstSectionPattern = '(?m)^##\s+(?:\[(.+?)\]|(\S+))(?:\s+-\s+\S+|\s+\([^)]+\))'
     $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
     

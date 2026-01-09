@@ -1,7 +1,7 @@
 # Release History
 
 
-## 2.0.0-beta.10 (2026-01-08) (pre-release)
+## 2.0.0-beta.10 (2026-01-09) (pre-release)
 
 ### Added
 
