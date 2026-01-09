@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services.Models;
+using Azure.Mcp.Tools.Storage.Table.Commands;
 
 namespace Azure.Mcp.Tools.Storage.Commands;
 
@@ -24,6 +25,7 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(StorageAccountData))]
 [JsonSerializable(typeof(StorageAccountCreateOrUpdateContent))]
 [JsonSerializable(typeof(JsonElement))]
+[JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class StorageJsonContext : JsonSerializerContext
 {
