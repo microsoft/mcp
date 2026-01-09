@@ -178,7 +178,7 @@ public class ChatMessageResponseBody
 /// <param name="Solutions">List of proposed solutions.</param>
 /// <param name="ResourceId">The resource ID that was diagnosed.</param>
 /// <param name="ResourceType">The type of resource that was diagnosed.</param>
-public record DiagnosticResult(
+public record AppLensInsights(
     List<string> Insights,
     List<string> Solutions,
     string ResourceId,
@@ -188,7 +188,7 @@ public record DiagnosticResult(
 /// Command result for resource diagnose operation.
 /// </summary>
 /// <param name="Result">The diagnostic result.</param>
-public record ResourceDiagnoseCommandResult(DiagnosticResult Result);
+public record ResourceDiagnoseCommandResult(AppLensInsights Result);
 
 /// <summary>
 /// Represents the result of an operation, which can be either a success containing a value or a failure containing an

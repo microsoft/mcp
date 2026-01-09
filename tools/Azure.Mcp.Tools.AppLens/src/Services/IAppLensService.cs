@@ -19,7 +19,7 @@ public interface IAppLensService
     /// <param name="resourceGroup">The resource group of the Azure resource to diagnose.</param>
     /// <param name="resourceType">The resource type of the Azure resource to diagnose.</param>
     /// <returns>A diagnostic result containing insights and solutions.</returns>
-    Task<DiagnosticResult> DiagnoseResourceAsync(
+    Task<AppLensInsights> DiagnoseResourceAsync(
         string question,
         string resource,
         string subscription,

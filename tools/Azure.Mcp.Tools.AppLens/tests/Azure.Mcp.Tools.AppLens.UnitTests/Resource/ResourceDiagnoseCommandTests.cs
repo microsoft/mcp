@@ -39,7 +39,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenValidParametersProvided()
     {
         // Arrange
-        var expectedResult = new DiagnosticResult(
+        var expectedResult = new AppLensInsights(
             new List<string> { "Insight 1", "Insight 2" },
             new List<string> { "Solution 1", "Solution 2" },
             "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
@@ -262,7 +262,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_HandlesEmptyDiagnosticResult()
     {
         // Arrange
-        var expectedResult = new DiagnosticResult(
+        var expectedResult = new AppLensInsights(
             new List<string>(),
             new List<string>(),
             "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
@@ -342,7 +342,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_LogsInformationOnSuccess()
     {
         // Arrange
-        var expectedResult = new DiagnosticResult(
+        var expectedResult = new AppLensInsights(
             new List<string> { "Insight 1" },
             new List<string> { "Solution 1" },
             "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",

@@ -26,7 +26,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
     /// <inheritdoc />
-    public async Task<DiagnosticResult> DiagnoseResourceAsync(
+    public async Task<AppLensInsights> DiagnoseResourceAsync(
         string question,
         string resource,
         string subscription,
@@ -60,7 +60,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         // Step 3: Ask AppLens the diagnostic question
         var insights = await CollectInsightsAsync(successResult.Data, question, cancellationToken);
 
-        return new DiagnosticResult(
+        return new AppLensInsights(
             insights.Insights,
             insights.Solutions,
             resourceData.ResourceId,
@@ -263,7 +263,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
     /// <param name="session">The AppLens session.</param>
     /// <param name="question">The diagnostic question.</param>
     /// <returns>A task containing diagnostic insights and solutions.</returns>
-    private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question, CancellationToken cancellationToken)
+    private async Task<AppLensInsights> CollectInsightsAsync(AppLensSession session, string question, CancellationToken cancellationToken)
     {
         var insights = new List<string>();
         var solutions = new List<string>();
@@ -281,7 +281,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
             }
         }
 
-        return new DiagnosticResult(insights, solutions, session.ResourceId, "Resource");
+        return new AppLensInsights(insights, solutions, session.ResourceId, "Resource");
     }
 
     private static AppLensSession ParseGetTokenResponse(string rawResponse)
