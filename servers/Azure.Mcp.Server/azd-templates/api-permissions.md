@@ -21,7 +21,8 @@ A table of known API permissions of downstream APIs that can be called by Azure 
 | search | Azure AI Search | `https://search.azure.com/user_impersonation` | 880da380-985e-4198-81b9-e05b1cc53158 | a4165a31-5d9e-4120-bd1e-9d88c66fd3b8 |
 | speech | Azure Cognitive Services | `https://cognitiveservices.azure.com/user_impersonation` | 7d312290-28c8-473c-a0ed-8e53749b6d6d | 5f1e8914-a52b-429f-9324-91b92b81adaf |
 
-* Azure Resource Manager (ARM) is used by most of the tools that need to interact with Azure resources.
+> [!NOTE]
+> <sup>*</sup> Azure Resource Manager (ARM) is used by most of the tools that need to interact with Azure resources.
 
 # APIs without exposed API permissions
 
