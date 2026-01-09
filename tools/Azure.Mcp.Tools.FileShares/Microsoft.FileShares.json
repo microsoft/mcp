@@ -1,0 +1,1768 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Microsoft.FileShares",
+    "version": "2025-06-01-preview",
+    "description": "Azure File Shares Resource Provider API.",
+    "x-typespec-generated": [
+      {
+        "emitter": "@azure-tools/typespec-autorest"
+      }
+    ]
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "management.azure.com",
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "security": [
+    {
+      "azure_auth": [
+        "user_impersonation"
+      ]
+    }
+  ],
+  "securityDefinitions": {
+    "azure_auth": {
+      "type": "oauth2",
+      "description": "Azure Active Directory OAuth2 Flow.",
+      "flow": "implicit",
+      "authorizationUrl": "https://login.microsoftonline.com/common/oauth2/authorize",
+      "scopes": {
+        "user_impersonation": "impersonate your user account"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "FileShares"
+    },
+    {
+      "name": "FileShareSnapshots"
+    },
+    {
+      "name": "Operations"
+    },
+    {
+      "name": "InformationalOperations"
+    }
+  ],
+  "paths": {
+    "/providers/Microsoft.FileShares/operations": {
+      "get": {
+        "operationId": "Operations_List",
+        "tags": [
+          "Operations"
+        ],
+        "description": "List the operations for the provider",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/OperationListResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Operations_List_MaximumSet": {
+            "$ref": "./examples/Operations_List_MaximumSet_Gen.json"
+          },
+          "Operations_List_MinimumSet": {
+            "$ref": "./examples/Operations_List_MinimumSet_Gen.json"
+          }
+        },
+        "x-ms-pageable": {
+          "nextLinkName": "nextLink"
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/providers/Microsoft.FileShares/fileShares": {
+      "get": {
+        "operationId": "FileShares_ListBySubscription",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "List FileShare resources by subscription ID",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShareListResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_ListBySubscription_MaximumSet": {
+            "$ref": "./examples/FileShares_ListBySubscription_MaximumSet_Gen.json"
+          },
+          "FileShares_ListBySubscription_MinimumSet": {
+            "$ref": "./examples/FileShares_ListBySubscription_MinimumSet_Gen.json"
+          }
+        },
+        "x-ms-pageable": {
+          "nextLinkName": "nextLink"
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/providers/Microsoft.FileShares/locations/{location}/checkNameAvailability": {
+      "post": {
+        "operationId": "FileShares_CheckNameAvailability",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "Implements local CheckNameAvailability operations",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/LocationParameter"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The CheckAvailability request",
+            "required": true,
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/CheckNameAvailabilityRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/CheckNameAvailabilityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_CheckNameAvailability_MaximumSet": {
+            "$ref": "./examples/FileShares_CheckNameAvailability_MaximumSet_Gen.json"
+          },
+          "FileShares_CheckNameAvailability_MinimumSet": {
+            "$ref": "./examples/FileShares_CheckNameAvailability_MinimumSet_Gen.json"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/providers/Microsoft.FileShares/locations/{location}/getLimits": {
+      "post": {
+        "operationId": "FileShare_GetLimits",
+        "tags": [
+          "InformationalOperations"
+        ],
+        "description": "Get file shares limits.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/LocationParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "schema": {
+              "$ref": "#/definitions/FileShareLimitsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShare_GetLimits_MaximumSet": {
+            "$ref": "./examples/FileShare_GetLimits_MaximumSet_Gen.json"
+          },
+          "FileShare_GetLimits_MinimumSet": {
+            "$ref": "./examples/FileShare_GetLimits_MinimumSet_Gen.json"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/providers/Microsoft.FileShares/locations/{location}/getProvisioningRecommendation": {
+      "post": {
+        "operationId": "FileShare_GetProvisioningRecommendation",
+        "tags": [
+          "InformationalOperations"
+        ],
+        "description": "Get file shares provisioning parameters recommendation.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/LocationParameter"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The request body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileShareProvisioningRecommendationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "schema": {
+              "$ref": "#/definitions/FileShareProvisioningRecommendationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShare_GetProvisioningRecommendation_MaximumSet": {
+            "$ref": "./examples/FileShare_GetProvisioningRecommendation_MaximumSet_Gen.json"
+          },
+          "FileShare_GetProvisioningRecommendation_MinimumSet": {
+            "$ref": "./examples/FileShare_GetProvisioningRecommendation_MinimumSet_Gen.json"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/providers/Microsoft.FileShares/locations/{location}/getUsageData": {
+      "post": {
+        "operationId": "FileShare_GetUsageData",
+        "tags": [
+          "InformationalOperations"
+        ],
+        "description": "Get file shares usage data.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/LocationParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "schema": {
+              "$ref": "#/definitions/FileShareUsageDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShare_GetUsageData_MaximumSet": {
+            "$ref": "./examples/FileShare_GetUsageData_MaximumSet_Gen.json"
+          },
+          "FileShare_GetUsageData_MinimumSet": {
+            "$ref": "./examples/FileShare_GetUsageData_MinimumSet_Gen.json"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.FileShares/fileShares": {
+      "get": {
+        "operationId": "FileShares_ListByParent",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "List FileShare resources by resource group",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShareListResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_ListByParent_MaximumSet": {
+            "$ref": "./examples/FileShares_ListByParent_MaximumSet_Gen.json"
+          },
+          "FileShares_ListByParent_MinimumSet": {
+            "$ref": "./examples/FileShares_ListByParent_MinimumSet_Gen.json"
+          }
+        },
+        "x-ms-pageable": {
+          "nextLinkName": "nextLink"
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.FileShares/fileShares/{resourceName}": {
+      "get": {
+        "operationId": "FileShares_Get",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "Get a FileShare",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShare"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_Get_MaximumSet": {
+            "$ref": "./examples/FileShares_Get_MaximumSet_Gen.json"
+          }
+        }
+      },
+      "put": {
+        "operationId": "FileShares_CreateOrUpdate",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "Create or update a file share.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "resource",
+            "in": "body",
+            "description": "Resource create parameters.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileShare"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource 'FileShare' update operation succeeded",
+            "schema": {
+              "$ref": "#/definitions/FileShare"
+            }
+          },
+          "201": {
+            "description": "Resource 'FileShare' create operation succeeded",
+            "schema": {
+              "$ref": "#/definitions/FileShare"
+            },
+            "headers": {
+              "Azure-AsyncOperation": {
+                "type": "string",
+                "description": "A link to the status monitor"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_CreateOrUpdate_MaximumSet": {
+            "$ref": "./examples/FileShares_CreateOrUpdate_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "azure-async-operation"
+        },
+        "x-ms-long-running-operation": true
+      },
+      "patch": {
+        "operationId": "FileShares_Update",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "Update a FileShare",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "properties",
+            "in": "body",
+            "description": "The resource properties to be updated.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileShareUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShare"
+            }
+          },
+          "202": {
+            "description": "Resource update request accepted.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The Location header contains the URL where the status of the long running operation can be checked."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_Update_MaximumSet": {
+            "$ref": "./examples/FileShares_Update_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "location"
+        },
+        "x-ms-long-running-operation": true
+      },
+      "delete": {
+        "operationId": "FileShares_Delete",
+        "tags": [
+          "FileShares"
+        ],
+        "description": "Delete a FileShare",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Resource deletion accepted.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The Location header contains the URL where the status of the long running operation can be checked."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "204": {
+            "description": "Resource does not exist."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShares_Delete_MaximumSet": {
+            "$ref": "./examples/FileShares_Delete_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "location"
+        },
+        "x-ms-long-running-operation": true
+      }
+    },
+    "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.FileShares/fileShares/{resourceName}/fileShareSnapshots": {
+      "get": {
+        "operationId": "FileShareSnapshot_List",
+        "tags": [
+          "FileShareSnapshots"
+        ],
+        "description": "List FileShareSnapshot by FileShare.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShareSnapshotListResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShareSnapshot_List_MaximumSet": {
+            "$ref": "./examples/FileShareSnapshot_List_MaximumSet_Gen.json"
+          },
+          "FileShareSnapshot_List_MinimumSet": {
+            "$ref": "./examples/FileShareSnapshot_List_MinimumSet_Gen.json"
+          }
+        },
+        "x-ms-pageable": {
+          "nextLinkName": "nextLink"
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.FileShares/fileShares/{resourceName}/fileShareSnapshots/{name}": {
+      "get": {
+        "operationId": "FileShareSnapshot_Get",
+        "tags": [
+          "FileShareSnapshots"
+        ],
+        "description": "Get a FileShareSnapshot",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name of the FileShareSnapshot",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShareSnapshot"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShareSnapshot_Get_MaximumSet": {
+            "$ref": "./examples/FileShareSnapshot_Get_MaximumSet_Gen.json"
+          }
+        }
+      },
+      "put": {
+        "operationId": "FileShareSnapshot_CreateOrUpdate",
+        "tags": [
+          "FileShareSnapshots"
+        ],
+        "description": "Create a FileShareSnapshot.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name of the FileShareSnapshot",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "resource",
+            "in": "body",
+            "description": "Resource create parameters.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileShareSnapshot"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Resource operation accepted.",
+            "headers": {
+              "Azure-AsyncOperation": {
+                "type": "string",
+                "description": "A link to the status monitor"
+              },
+              "Location": {
+                "type": "string",
+                "description": "The Location header contains the URL where the status of the long running operation can be checked."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShareSnapshot_CreateOrUpdate_MaximumSet": {
+            "$ref": "./examples/FileShareSnapshot_CreateOrUpdate_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "location"
+        },
+        "x-ms-long-running-operation": true
+      },
+      "patch": {
+        "operationId": "FileShareSnapshot_Update",
+        "tags": [
+          "FileShareSnapshots"
+        ],
+        "description": "Update a FileShareSnapshot.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name of the FileShareSnapshot",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "properties",
+            "in": "body",
+            "description": "The resource properties to be updated.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileShareSnapshotUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azure operation completed successfully.",
+            "schema": {
+              "$ref": "#/definitions/FileShareSnapshot"
+            }
+          },
+          "202": {
+            "description": "Resource operation accepted.",
+            "headers": {
+              "Azure-AsyncOperation": {
+                "type": "string",
+                "description": "A link to the status monitor"
+              },
+              "Location": {
+                "type": "string",
+                "description": "The Location header contains the URL where the status of the long running operation can be checked."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShareSnapshot_Update_MaximumSet": {
+            "$ref": "./examples/FileShareSnapshot_Update_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "location"
+        },
+        "x-ms-long-running-operation": true
+      },
+      "delete": {
+        "operationId": "FileShareSnapshot_Delete",
+        "tags": [
+          "FileShareSnapshots"
+        ],
+        "description": "Delete a FileShareSnapshot.",
+        "parameters": [
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ApiVersionParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/SubscriptionIdParameter"
+          },
+          {
+            "$ref": "../../../../../../common-types/resource-management/v6/types.json#/parameters/ResourceGroupNameParameter"
+          },
+          {
+            "name": "resourceName",
+            "in": "path",
+            "description": "The resource name of the file share, as seen by the administrator through Azure Resource Manager.",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name of the FileShareSnapshot",
+            "required": true,
+            "type": "string",
+            "pattern": "^([a-z]|[0-9])([a-z]|[0-9]|(-(?!-))){1,61}([a-z]|[0-9])$"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Resource deletion accepted.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The Location header contains the URL where the status of the long running operation can be checked."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The Retry-After header can indicate how long the client should wait before polling the operation status."
+              }
+            }
+          },
+          "204": {
+            "description": "Resource does not exist."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "FileShareSnapshot_Delete_MaximumSet": {
+            "$ref": "./examples/FileShareSnapshot_Delete_MaximumSet_Gen.json"
+          }
+        },
+        "x-ms-long-running-operation-options": {
+          "final-state-via": "location"
+        },
+        "x-ms-long-running-operation": true
+      }
+    }
+  },
+  "definitions": {
+    "FileShare": {
+      "type": "object",
+      "description": "File share resource",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareProperties",
+          "description": "The resource-specific properties for this resource."
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/TrackedResource"
+        }
+      ]
+    },
+    "FileShareLimits": {
+      "type": "object",
+      "description": "File share-related limits in the specified subscription/location.",
+      "properties": {
+        "maxFileShares": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of file shares that can be created."
+        },
+        "maxFileShareSnapshots": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of snapshots allowed per file share."
+        },
+        "maxFileShareSubnets": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of subnets that can be associated with a file share."
+        },
+        "maxFileSharePrivateEndpointConnections": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of private endpoint connections allowed for a file share."
+        },
+        "minProvisionedStorageGiB": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The minimum provisioned storage in GiB for a file share."
+        },
+        "maxProvisionedStorageGiB": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum provisioned storage in GiB for a file share."
+        },
+        "minProvisionedIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The minimum provisioned IOPS (Input/Output Operations Per Second) for a file share."
+        },
+        "maxProvisionedIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum provisioned IOPS (Input/Output Operations Per Second) for a file share."
+        },
+        "minProvisionedThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The minimum provisioned throughput in MiB/s for a file share."
+        },
+        "maxProvisionedThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum provisioned throughput in MiB/s for a file share."
+        }
+      },
+      "required": [
+        "maxFileShares",
+        "maxFileShareSnapshots",
+        "maxFileShareSubnets",
+        "maxFileSharePrivateEndpointConnections",
+        "minProvisionedStorageGiB",
+        "maxProvisionedStorageGiB",
+        "minProvisionedIOPerSec",
+        "maxProvisionedIOPerSec",
+        "minProvisionedThroughputMiBPerSec",
+        "maxProvisionedThroughputMiBPerSec"
+      ]
+    },
+    "FileShareLimitsOutput": {
+      "type": "object",
+      "description": "File share limits API result.",
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/FileShareLimits",
+          "description": "The limits for the file share."
+        },
+        "provisioningConstants": {
+          "$ref": "#/definitions/FileShareProvisioningConstants",
+          "description": "The provisioning constants for the file share."
+        }
+      },
+      "required": [
+        "limits",
+        "provisioningConstants"
+      ]
+    },
+    "FileShareLimitsResponse": {
+      "type": "object",
+      "description": "Response structure for file share limits API.",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareLimitsOutput",
+          "description": "The properties of the file share limits."
+        }
+      },
+      "required": [
+        "properties"
+      ]
+    },
+    "FileShareListResult": {
+      "type": "object",
+      "description": "The response of a FileShare list operation.",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "The FileShare items on this page",
+          "items": {
+            "$ref": "#/definitions/FileShare"
+          }
+        },
+        "nextLink": {
+          "type": "string",
+          "format": "uri",
+          "description": "The link to the next page of items"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "FileShareProperties": {
+      "type": "object",
+      "description": "File share properties",
+      "properties": {
+        "mountName": {
+          "type": "string",
+          "description": "The name of the file share as seen by the end user when mounting the share, such as in a URI or UNC format in their operating system.",
+          "x-ms-mutability": [
+            "read",
+            "create"
+          ]
+        },
+        "hostName": {
+          "type": "string",
+          "description": "The host name of the file share.",
+          "readOnly": true
+        },
+        "mediaTier": {
+          "$ref": "#/definitions/MediaTier",
+          "description": "The storage media tier of the file share.",
+          "x-ms-mutability": [
+            "read",
+            "create"
+          ]
+        },
+        "redundancy": {
+          "$ref": "#/definitions/Redundancy",
+          "description": "The chosen redundancy level of the file share.",
+          "x-ms-mutability": [
+            "read",
+            "create"
+          ]
+        },
+        "protocol": {
+          "$ref": "#/definitions/Protocol",
+          "description": "The file sharing protocol for this file share.",
+          "x-ms-mutability": [
+            "read",
+            "create"
+          ]
+        },
+        "provisionedStorageGiB": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned storage size of the share in GiB (1 GiB is 1024^3 bytes or 1073741824 bytes). A component of the file share's bill is the provisioned storage, regardless of the amount of used storage.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisionedStorageNextAllowedDowngrade": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A date/time value that specifies when the provisioned storage for the file share is permitted to be reduced.",
+          "readOnly": true
+        },
+        "provisionedIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned IO / sec of the share.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisionedIOPerSecNextAllowedDowngrade": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A date/time value that specifies when the provisioned IOPS for the file share is permitted to be reduced.",
+          "readOnly": true
+        },
+        "provisionedThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned throughput / sec of the share.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisionedThroughputNextAllowedDowngrade": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A date/time value that specifies when the provisioned throughput for the file share is permitted to be reduced.",
+          "readOnly": true
+        },
+        "includedBurstIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Burst IOPS are extra buffer IOPS enabling you to consume more than your provisioned IOPS for a short period of time, depending on the burst credits available for your share.",
+          "minimum": 3000,
+          "readOnly": true
+        },
+        "maxBurstIOPerSecCredits": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Max burst IOPS credits shows the maximum number of burst credits the share can have at the current IOPS provisioning level.",
+          "minimum": 0,
+          "readOnly": true
+        },
+        "nfsProtocolProperties": {
+          "$ref": "#/definitions/NfsProtocolProperties",
+          "description": "Protocol settings specific NFS.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "publicAccessProperties": {
+          "$ref": "#/definitions/PublicAccessProperties",
+          "description": "The set of properties for control public access.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisioningState": {
+          "$ref": "#/definitions/FileShareProvisioningState",
+          "description": "The status of the last operation.",
+          "readOnly": true
+        },
+        "publicNetworkAccess": {
+          "$ref": "#/definitions/PublicNetworkAccess",
+          "description": "Gets or sets allow or disallow public network access to azure managed file share",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "privateEndpointConnections": {
+          "type": "array",
+          "description": "The list of associated private endpoint connections.",
+          "items": {
+            "$ref": "../../../../../../common-types/resource-management/v6/privatelinks.json#/definitions/PrivateEndpointConnection"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "FileShareProvisioningConstants": {
+      "type": "object",
+      "description": "Constants used for calculating recommended values of file share provisioning properties.",
+      "properties": {
+        "baseIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Base IO per second."
+        },
+        "scalarIOPerSec": {
+          "type": "number",
+          "format": "double",
+          "description": "Scalar IO per second."
+        },
+        "baseThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Base throughput in MiB per second."
+        },
+        "scalarThroughputMiBPerSec": {
+          "type": "number",
+          "format": "double",
+          "description": "Scalar throughput in MiB per second."
+        }
+      },
+      "required": [
+        "baseIOPerSec",
+        "scalarIOPerSec",
+        "baseThroughputMiBPerSec",
+        "scalarThroughputMiBPerSec"
+      ]
+    },
+    "FileShareProvisioningRecommendationInput": {
+      "type": "object",
+      "description": "File share provisioning parameters recommendation API input structure.",
+      "properties": {
+        "provisionedStorageGiB": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The desired provisioned storage size of the share in GiB. Will be use to calculate the values of remaining provisioning parameters."
+        }
+      },
+      "required": [
+        "provisionedStorageGiB"
+      ]
+    },
+    "FileShareProvisioningRecommendationOutput": {
+      "type": "object",
+      "description": "File share provisioning parameters recommendation API result.",
+      "properties": {
+        "provisionedIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The recommended value of provisioned IO / sec of the share."
+        },
+        "provisionedThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The recommended value of provisioned throughput / sec of the share."
+        },
+        "availableRedundancyOptions": {
+          "type": "array",
+          "description": "Redundancy options for the share.",
+          "items": {
+            "$ref": "#/definitions/Redundancy"
+          }
+        }
+      },
+      "required": [
+        "provisionedIOPerSec",
+        "provisionedThroughputMiBPerSec",
+        "availableRedundancyOptions"
+      ]
+    },
+    "FileShareProvisioningRecommendationRequest": {
+      "type": "object",
+      "description": "Request structure for file share provisioning parameters recommendation API.",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareProvisioningRecommendationInput",
+          "description": "The properties of the file share provisioning recommendation input."
+        }
+      },
+      "required": [
+        "properties"
+      ]
+    },
+    "FileShareProvisioningRecommendationResponse": {
+      "type": "object",
+      "description": "Response structure for file share provisioning parameters recommendation API.",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareProvisioningRecommendationOutput",
+          "description": "The properties of the file share provisioning recommendation output."
+        }
+      },
+      "required": [
+        "properties"
+      ]
+    },
+    "FileShareProvisioningState": {
+      "type": "string",
+      "description": "The status of file share's ProvisioningState.",
+      "enum": [
+        "Succeeded",
+        "Failed",
+        "Canceled",
+        "Provisioning",
+        "Updating",
+        "Deleting",
+        "Accepted",
+        "Created",
+        "TransientFailure",
+        "Creating",
+        "Patching",
+        "Posting"
+      ],
+      "x-ms-enum": {
+        "name": "FileShareProvisioningState",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "Succeeded",
+            "value": "Succeeded",
+            "description": "Resource has been created."
+          },
+          {
+            "name": "Failed",
+            "value": "Failed",
+            "description": "Resource creation failed."
+          },
+          {
+            "name": "Canceled",
+            "value": "Canceled",
+            "description": "Resource creation was canceled."
+          },
+          {
+            "name": "Provisioning",
+            "value": "Provisioning",
+            "description": "The operation is provisioning."
+          },
+          {
+            "name": "Updating",
+            "value": "Updating",
+            "description": "The operation is updating."
+          },
+          {
+            "name": "Deleting",
+            "value": "Deleting",
+            "description": "The operation is deleting."
+          },
+          {
+            "name": "Accepted",
+            "value": "Accepted",
+            "description": "The operation is accepted."
+          },
+          {
+            "name": "Created",
+            "value": "Created",
+            "description": "The resource has been created."
+          },
+          {
+            "name": "TransientFailure",
+            "value": "TransientFailure",
+            "description": "The operation is in a transient failure state."
+          },
+          {
+            "name": "Creating",
+            "value": "Creating",
+            "description": "The resource is being created."
+          },
+          {
+            "name": "Patching",
+            "value": "Patching",
+            "description": "The resource is being patched."
+          },
+          {
+            "name": "Posting",
+            "value": "Posting",
+            "description": "The resource is being posted."
+          }
+        ]
+      },
+      "readOnly": true
+    },
+    "FileShareSnapshot": {
+      "type": "object",
+      "description": "FileShareSnapshot resource",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareSnapshotProperties",
+          "description": "The resource-specific properties for this resource."
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../../../../../common-types/resource-management/v6/types.json#/definitions/ProxyResource"
+        }
+      ]
+    },
+    "FileShareSnapshotListResult": {
+      "type": "object",
+      "description": "The response of a FileShareSnapshot list operation.",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "The FileShareSnapshot items on this page",
+          "items": {
+            "$ref": "#/definitions/FileShareSnapshot"
+          }
+        },
+        "nextLink": {
+          "type": "string",
+          "format": "uri",
+          "description": "The link to the next page of items"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "FileShareSnapshotProperties": {
+      "type": "object",
+      "description": "FileShareSnapshot properties",
+      "properties": {
+        "snapshotTime": {
+          "type": "string",
+          "description": "The FileShareSnapshot time in UTC in string representation",
+          "readOnly": true
+        },
+        "initiatorId": {
+          "type": "string",
+          "description": "The initiator of the FileShareSnapshot. This is a user-defined value.",
+          "readOnly": true
+        },
+        "metadata": {
+          "type": "object",
+          "description": "The metadata",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FileShareSnapshotUpdate": {
+      "type": "object",
+      "description": "The type used for update operations of the FileShareSnapshot.",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareSnapshotUpdateProperties",
+          "description": "The resource-specific properties for this resource."
+        }
+      }
+    },
+    "FileShareSnapshotUpdateProperties": {
+      "type": "object",
+      "description": "The updatable properties of the FileShareSnapshot.",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "description": "The metadata",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FileShareUpdate": {
+      "type": "object",
+      "description": "The type used for update operations of the FileShare.",
+      "properties": {
+        "tags": {
+          "type": "object",
+          "description": "Resource tags.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "properties": {
+          "$ref": "#/definitions/FileShareUpdateProperties",
+          "description": "The resource-specific properties for this resource."
+        }
+      }
+    },
+    "FileShareUpdateProperties": {
+      "type": "object",
+      "description": "The updatable properties of the FileShare.",
+      "properties": {
+        "provisionedStorageGiB": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned storage size of the share in GiB (1 GiB is 1024^3 bytes or 1073741824 bytes). A component of the file share's bill is the provisioned storage, regardless of the amount of used storage.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisionedIOPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned IO / sec of the share.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "provisionedThroughputMiBPerSec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The provisioned throughput / sec of the share.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "nfsProtocolProperties": {
+          "$ref": "#/definitions/NfsProtocolProperties",
+          "description": "Protocol settings specific NFS.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "publicAccessProperties": {
+          "$ref": "#/definitions/PublicAccessProperties",
+          "description": "The set of properties for control public access.",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        },
+        "publicNetworkAccess": {
+          "$ref": "#/definitions/PublicNetworkAccess",
+          "description": "Gets or sets allow or disallow public network access to azure managed file share",
+          "x-ms-mutability": [
+            "read",
+            "update",
+            "create"
+          ]
+        }
+      }
+    },
+    "FileShareUsageDataOutput": {
+      "type": "object",
+      "description": "File shares usage result.",
+      "properties": {
+        "liveShares": {
+          "$ref": "#/definitions/LiveSharesUsageData",
+          "description": "File share usage data for active file shares."
+        }
+      },
+      "required": [
+        "liveShares"
+      ]
+    },
+    "FileShareUsageDataResponse": {
+      "type": "object",
+      "description": "Response structure for file shares usage in the specified subscription/location.",
+      "properties": {
+        "properties": {
+          "$ref": "#/definitions/FileShareUsageDataOutput",
+          "description": "The properties of the file share usage data."
+        }
+      },
+      "required": [
+        "properties"
+      ]
+    },
+    "LiveSharesUsageData": {
+      "type": "object",
+      "description": "Usage data for live shares.",
+      "properties": {
+        "fileShareCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The number of active file shares."
+        }
+      },
+      "required": [
+        "fileShareCount"
+      ]
+    },
+    "MediaTier": {
+      "type": "string",
+      "description": "Media Tier enum.",
+      "enum": [
+        "SSD"
+      ],
+      "x-ms-enum": {
+        "name": "MediaTier",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "SSD",
+            "value": "SSD",
+            "description": "SSD media tier."
+          }
+        ]
+      }
+    },
+    "NfsProtocolProperties": {
+      "type": "object",
+      "description": "Properties specific to the NFS protocol.",
+      "properties": {
+        "rootSquash": {
+          "$ref": "#/definitions/ShareRootSquash",
+          "description": "Root squash defines how root users on clients are mapped to the NFS share."
+        }
+      }
+    },
+    "Protocol": {
+      "type": "string",
+      "description": "Protocol enum.",
+      "enum": [
+        "NFS"
+      ],
+      "x-ms-enum": {
+        "name": "Protocol",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "NFS",
+            "value": "NFS",
+            "description": "NFS protocol."
+          }
+        ]
+      }
+    },
+    "PublicAccessProperties": {
+      "type": "object",
+      "description": "The set of properties for control public access.",
+      "properties": {
+        "allowedSubnets": {
+          "type": "array",
+          "description": "The allowed set of subnets when access is restricted.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PublicNetworkAccess": {
+      "type": "string",
+      "description": "State of the public network access.",
+      "enum": [
+        "Enabled",
+        "Disabled"
+      ],
+      "x-ms-enum": {
+        "name": "PublicNetworkAccess",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "Enabled",
+            "value": "Enabled",
+            "description": "The public network access is enabled"
+          },
+          {
+            "name": "Disabled",
+            "value": "Disabled",
+            "description": "The public network access is disabled"
+          }
+        ]
+      }
+    },
+    "Redundancy": {
+      "type": "string",
+      "description": "Redundancy enum.",
+      "enum": [
+        "Local",
+        "Zone"
+      ],
+      "x-ms-enum": {
+        "name": "Redundancy",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "Local",
+            "value": "Local",
+            "description": "Local redundancy."
+          },
+          {
+            "name": "Zone",
+            "value": "Zone",
+            "description": "Zone redundancy."
+          }
+        ]
+      }
+    },
+    "ShareRootSquash": {
+      "type": "string",
+      "description": "Share root squash enum.",
+      "enum": [
+        "NoRootSquash",
+        "RootSquash",
+        "AllSquash"
+      ],
+      "x-ms-enum": {
+        "name": "ShareRootSquash",
+        "modelAsString": true,
+        "values": [
+          {
+            "name": "NoRootSquash",
+            "value": "NoRootSquash",
+            "description": "No root squash."
+          },
+          {
+            "name": "RootSquash",
+            "value": "RootSquash",
+            "description": "Root squash."
+          },
+          {
+            "name": "AllSquash",
+            "value": "AllSquash",
+            "description": "All squash."
+          }
+        ]
+      }
+    }
+  },
+  "parameters": {}
+}
