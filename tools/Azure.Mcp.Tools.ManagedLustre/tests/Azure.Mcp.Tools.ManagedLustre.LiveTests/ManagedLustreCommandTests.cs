@@ -584,7 +584,6 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         var importDeleteJobName = importDeleteResult.AssertProperty("jobName");
         Assert.Contains(importJobNameStr, importDeleteJobName.GetRawText());
-        var importDeleteStatus = importDeleteResult.AssertProperty("status");
     }
 
     [Fact]
