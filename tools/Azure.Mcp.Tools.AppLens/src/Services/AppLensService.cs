@@ -26,7 +26,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
     /// <inheritdoc />
-    public async Task<AppLensInsights> DiagnoseResourceAsync(
+    public async Task<Result<AppLensInsights>> DiagnoseResourceAsync(
         string question,
         string resource,
         string subscription,
@@ -41,7 +41,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
         if (findResult is Failure<FoundResourceData> notFoundResult)
         {
-            throw new InvalidOperationException(notFoundResult.Message);
+            return Result<AppLensInsights>.Failure(notFoundResult.Message);
         }
 
         var successfulResult = (Success<FoundResourceData>)findResult;
@@ -52,7 +52,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
         if (getSessionResult is Failure<AppLensSession> failed)
         {
-            throw new InvalidOperationException(failed.Message);
+            return Result<AppLensInsights>.Failure(failed.Message);
         }
 
         var successResult = (Success<AppLensSession>)getSessionResult;
@@ -60,11 +60,11 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         // Step 3: Ask AppLens the diagnostic question
         var insights = await CollectInsightsAsync(successResult.Data, question, cancellationToken);
 
-        return new AppLensInsights(
+        return Result<AppLensInsights>.Success(new AppLensInsights(
             insights.Insights,
             insights.Solutions,
             resourceData.ResourceId,
-            resourceData.ResourceTypeAndKind);
+            resourceData.ResourceTypeAndKind));
     }
 
     private Task<Result<FoundResourceData>> FindResourceIdAsync(
