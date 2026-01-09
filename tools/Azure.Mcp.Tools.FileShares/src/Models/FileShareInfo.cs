@@ -37,7 +37,7 @@ public sealed record FileShareInfo(
     public static FileShareInfo FromResource(FileShareResource resource)
     {
         var data = resource.Data;
-        var resourceGroup = ExtractResourceGroupFromId(data.Id.ToString());
+        var resourceGroup = Azure.Core.ResourceIdentifier.Parse(data.Id.ToString()).ResourceGroupName;
         var props = data.Properties;
 
         return new FileShareInfo(
@@ -57,27 +57,5 @@ public sealed record FileShareInfo(
             ProvisionedThroughputMiBPerSec: props?.ProvisionedThroughputMiBPerSec,
             PublicNetworkAccess: props?.PublicNetworkAccess?.ToString()
         );
-    }
-
-    /// <summary>
-    /// Extracts resource group name from Azure resource ID.
-    /// </summary>
-    private static string? ExtractResourceGroupFromId(string resourceId)
-    {
-        const string pattern = "/resourcegroups/";
-        var index = resourceId.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
-        if (index < 0)
-        {
-            return null;
-        }
-
-        var start = index + pattern.Length;
-        var end = resourceId.IndexOf('/', start);
-        if (end < 0)
-        {
-            end = resourceId.Length;
-        }
-
-        return resourceId.Substring(start, end - start);
     }
 }
