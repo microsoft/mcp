@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated Azure.Identity, Azure.Identity.Broker, and Azure.Core to versions 1.17.1, 1.3.1, and 1.50.0, respectively"
+    subsection: "Dependency Updates"
