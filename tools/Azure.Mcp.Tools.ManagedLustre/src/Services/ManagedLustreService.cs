@@ -267,7 +267,6 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
     }
 
-
     public async Task<LustreFileSystem> CreateFileSystemAsync(
         string subscription,
         string resourceGroup,
@@ -1091,6 +1090,310 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         catch (Exception ex)
         {
             throw new Exception($"Failed to delete auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> CreateImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? conflictResolutionMode = null,
+        string[]? importPrefixes = null,
+        long? maximumErrors = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Generate job name from timestamp if not provided
+            var actualJobName = jobName ?? $"import-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Create import job data with filesystem location
+            var importJobData = new StorageCacheImportJobData(fs.Value.Data.Location);
+
+            // Set optional properties
+            // Set conflict resolution mode (default to "Fail" if not provided)
+            var actualConflictResolutionMode = conflictResolutionMode ?? "Fail";
+            importJobData.ConflictResolutionMode = actualConflictResolutionMode switch
+            {
+                "Fail" => ConflictResolutionMode.Fail,
+                "Skip" => ConflictResolutionMode.Skip,
+                "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
+                "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
+                _ => throw new ArgumentException($"Invalid conflict resolution mode: {actualConflictResolutionMode}. Valid values: {string.Join(", ", new[] { "Fail", "Skip", "OverwriteIfDirty", "OverwriteAlways" })}", nameof(conflictResolutionMode))
+            };
+
+            // Set import prefixes if provided
+            if (importPrefixes != null && importPrefixes.Length > 0)
+            {
+                foreach (var prefix in importPrefixes)
+                {
+                    importJobData.ImportPrefixes.Add(prefix);
+                }
+            }
+
+            // Set maximum errors if provided
+            if (maximumErrors.HasValue)
+            {
+                importJobData.MaximumErrors = (int)maximumErrors.Value;
+            }
+
+            var createOperation = await fs.Value.GetStorageCacheImportJobs().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                actualJobName,
+                importJobData,
+                cancellationToken);
+
+            return createOperation.Value.Data.Name;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create import job for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task DeleteImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Delete the import job
+            await fs.Value.GetStorageCacheImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Completed,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            // Job doesn't exist, which means deletion goal is already achieved
+            // Return successfully rather than throwing an error
+            return;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to delete import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<Models.ImportJob>> ListImportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+                ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Get all import jobs
+            var jobs = new List<Models.ImportJob>();
+            await foreach (var job in fs.Value.GetStorageCacheImportJobs().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                jobs.Add(new Models.ImportJob
+                {
+                    Name = job.Data.Name,
+                    Id = job.Data.Id.ToString(),
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
+                    ConflictResolutionMode = job.Data.ConflictResolutionMode?.ToString(),
+                    ImportPrefixes = job.Data.ImportPrefixes?.ToArray(),
+                    MaximumErrors = (int?)job.Data.MaximumErrors,
+                    TotalBlobsImported = job.Data.TotalBlobsImported,
+                    TotalErrors = job.Data.TotalErrors,
+                    TotalConflicts = job.Data.TotalConflicts,
+                    TotalBlobsWalked = job.Data.TotalBlobsWalked,
+                    BlobsWalkedPerSecond = job.Data.BlobsWalkedPerSecond,
+                    ImportedFiles = job.Data.ImportedFiles,
+                    ImportedDirectories = job.Data.ImportedDirectories,
+                    ImportedSymlinks = job.Data.ImportedSymlinks,
+                    PreexistingFiles = job.Data.PreexistingFiles,
+                    PreexistingDirectories = job.Data.PreexistingDirectories,
+                    PreexistingSymlinks = job.Data.PreexistingSymlinks,
+                    BlobsImportedPerSecond = job.Data.BlobsImportedPerSecond
+                });
+            }
+
+            return jobs;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list import jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<Models.ImportJob> GetImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+                ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Get the import job
+            var job = await fs.Value.GetStorageCacheImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            return new Models.ImportJob
+            {
+                Name = job.Value.Data.Name,
+                Id = job.Value.Data.Id.ToString(),
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
+                ConflictResolutionMode = job.Value.Data.ConflictResolutionMode?.ToString(),
+                ImportPrefixes = job.Value.Data.ImportPrefixes?.ToArray(),
+                MaximumErrors = (int?)job.Value.Data.MaximumErrors,
+                TotalBlobsImported = job.Value.Data.TotalBlobsImported,
+                TotalErrors = job.Value.Data.TotalErrors,
+                TotalConflicts = job.Value.Data.TotalConflicts,
+                TotalBlobsWalked = job.Value.Data.TotalBlobsWalked,
+                BlobsWalkedPerSecond = job.Value.Data.BlobsWalkedPerSecond,
+                ImportedFiles = job.Value.Data.ImportedFiles,
+                ImportedDirectories = job.Value.Data.ImportedDirectories,
+                ImportedSymlinks = job.Value.Data.ImportedSymlinks,
+                PreexistingFiles = job.Value.Data.PreexistingFiles,
+                PreexistingDirectories = job.Value.Data.PreexistingDirectories,
+                PreexistingSymlinks = job.Value.Data.PreexistingSymlinks,
+                BlobsImportedPerSecond = job.Value.Data.BlobsImportedPerSecond
+            };
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to get import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<Models.ImportJob> CancelImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Get the import job
+            var job = await fs.Value.GetStorageCacheImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            // Create patch data to cancel the import job
+            var patchData = new StorageCacheImportJobPatch();
+            patchData.AdminStatus = ImportJobAdminStatus.Cancel;
+
+            await job.Value.UpdateAsync(
+                WaitUntil.Completed,
+                patchData,
+                cancellationToken);
+
+            // Get the updated job to return the actual status
+            var updatedJob = await job.Value.GetAsync(cancellationToken: cancellationToken);
+            return new Models.ImportJob
+            {
+                Name = updatedJob.Value.Data.Name,
+                AdminStatus = updatedJob.Value.Data.AdminStatus?.ToString()
+            };
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to cancel import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to cancel import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
 }
