@@ -1,9 +1,0 @@
-{
-  "servers": {
-    "azure-mcp-local": {
-      "type": "stdio",
-      "command": "./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
-      "args": ["server", "start"]
-    }
-  }
-}
