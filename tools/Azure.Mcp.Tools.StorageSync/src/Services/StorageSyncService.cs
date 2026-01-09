@@ -660,10 +660,7 @@ public sealed class StorageSyncService(
             // Set change detection mode if provided
             if (!string.IsNullOrEmpty(changeDetectionMode))
             {
-                if (Enum.TryParse<Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode>(changeDetectionMode, true, out var mode))
-                {
-                    content.ChangeDetectionMode = mode;
-                }
+                content.ChangeDetectionMode = new Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode(changeDetectionMode);
             }
 
             // Add paths if provided
