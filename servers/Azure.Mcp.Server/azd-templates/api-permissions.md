@@ -24,7 +24,7 @@ A table of known API permissions of downstream APIs that can be called by Azure 
 > [!NOTE]
 > <sup>*</sup> Azure Resource Manager (ARM) is used by most of the tools that need to interact with Azure resources.
 
-You can add the desirable API Permissions to your app registration using Azure CLI. Learn more at [az ad app permission add](https://learn.microsoft.com/en-us/cli/azure/ad/app/permission?view=azure-cli-latest#az-ad-app-permission-add)
+You can add the desirable API Permissions to your app registration using Azure CLI. Learn more at [az ad app permission add](https://learn.microsoft.com/cli/azure/ad/app/permission?view=azure-cli-latest#az-ad-app-permission-add)
 
 # APIs without exposed API permissions
 
