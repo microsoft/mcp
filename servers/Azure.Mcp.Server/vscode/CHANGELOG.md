@@ -1,5 +1,21 @@
 # Release History
 
+
+## 2.0.0-beta.10 (2026-01-09) (pre-release)
+
+### Added
+
+- Added Azure Managed Lustre HSM (Hierarchical Storage Management) autoimport and autoexport job management tools:
+  - `managedlustre_fs_blob_autoimport_create` - Create autoimport jobs to sync data from Azure Blob Storage to Lustre filesystem
+  - `managedlustre_fs_blob_autoimport_get` - Get details of specific autoimport job(s)
+  - `managedlustre_fs_blob_autoimport_cancel` - Cancel running autoimport jobs
+  - `managedlustre_fs_blob_autoimport_delete` - Delete autoimport job records
+  - `managedlustre_fs_blob_autoexport_create` - Create autoexport jobs to sync data from Lustre filesystem to Azure Blob Storage
+  - `managedlustre_fs_blob_autoexport_get` - Get details of specific autoexport job(s)
+  - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
+  - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
+- Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
+
 ## 2.0.9 (2026-01-06) (pre-release)
 
 ### Added
@@ -16,10 +32,11 @@
 
 - Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
-### Other Changed
+### Changed
 
 - Switched to a new `Azure.Monitor.Query.Logs` package to query logs from Azure Monitor. [[#1309](https://github.com/microsoft/mcp/pull/1309)]
 - Replace hard-coded strings for `Azure.Mcp.Server` with ones from `IConfiguration`. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+- Add hardcoded minimum TLS version of 1.2 to Storage account creation tool. [[#1445](https://github.com/microsoft/mcp/pull/1445)]
 
 ## 2.0.8 (2025-12-11) (pre-release)
 

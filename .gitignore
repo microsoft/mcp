@@ -23,3 +23,7 @@ generated/
 /docs/commandline
 .DS_Store
 .vscode/mcp.json
+
+eng/tools/ToolDescriptionEvaluator/prompts.json
+eng/tools/ToolDescriptionEvaluator/results.md
+eng/tools/ToolDescriptionEvaluator/tools.json
