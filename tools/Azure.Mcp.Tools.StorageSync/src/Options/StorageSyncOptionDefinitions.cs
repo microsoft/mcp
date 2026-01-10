@@ -94,12 +94,12 @@ public static class StorageSyncOptionDefinitions
 
         public static readonly Option<string> DirectoryPath = new($"--{DirectoryPathName}")
         {
-            Description = "Relative path to a directory Azure File share for which change detection is to be performed"
+            Description = "Relative path to a directory on the Azure File share for which change detection is to be performed"
         };
 
         public static readonly Option<string> ChangeDetectionMode = new($"--{ChangeDetectionModeName}")
         {
-            Description = "Change detection mode (Default, Recursive). Applies to the directory specified in directory-path"
+            Description = "Change detection mode: 'Default' (directory only) or 'Recursive' (directory and subdirectories). Applies to the directory specified in directory-path"
         };
 
         public static readonly Option<string[]> Paths = new($"--{PathsName}")

@@ -22,7 +22,7 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
 
     public override string Id => "96f096a2-d36f-4361-aa74-4e393e7f48a5";
 
-    public override string Name => "triggerchangedetection";
+    public override string Name => "changedetection";
 
     public override string Description => "Trigger change detection on a cloud endpoint to sync file changes.";
 

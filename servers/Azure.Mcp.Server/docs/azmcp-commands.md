@@ -2092,6 +2092,7 @@ azmcp storagesync cloudendpoint get --subscription <subscription> \
                                     [--name <endpoint-name>]
 
 # Trigger change detection on a Cloud Endpoint
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
                                                 --resource-group <resource-group> \
                                                 --service <service-name> \

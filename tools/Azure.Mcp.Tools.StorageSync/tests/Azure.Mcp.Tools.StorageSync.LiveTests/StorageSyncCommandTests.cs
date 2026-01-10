@@ -485,7 +485,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     public async Task Should_trigger_cloud_endpoint_change_detection()
     {
         var result = await CallToolAsync(
-            "storagesync_cloudendpoint_triggerchangedetection",
+            "storagesync_cloudendpoint_changedetection",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
