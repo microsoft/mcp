@@ -653,7 +653,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storagesync_syncgroup_create | Create a new sync group named <syncgroup-name> in service <service-name> |
 | storagesync_syncgroup_delete | Delete the sync group <syncgroup-name> from service <service-name> |
 | storagesync_syncgroup_get | Get the details of sync group <syncgroup-name> in service <service-name> |
-| storagesync_cloudendpoint_changedetection | Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> |
+| storagesync_cloudendpoint_changedetection | Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> for directory path <path> |
 | storagesync_cloudendpoint_create | Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name> |
 | storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> |
 | storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> |

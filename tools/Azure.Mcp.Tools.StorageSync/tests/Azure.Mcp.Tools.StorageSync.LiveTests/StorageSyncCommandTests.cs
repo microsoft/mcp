@@ -485,14 +485,17 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     public async Task Should_trigger_cloud_endpoint_change_detection()
     {
         var result = await CallToolAsync(
-            "storagesync_cloudendpoint_triggerchangedetection",
+            "storagesync_cloudendpoint_changedetection",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", Settings.ResourceBaseName },
                 { "sync-group-name", Settings.ResourceBaseName },
-                { "cloud-endpoint-name", Settings.ResourceBaseName }
+                { "cloud-endpoint-name", Settings.ResourceBaseName },
+                { "directory-path", "/" },
+                { "change-detection-mode", "Recursive" },
+                { "paths", new string[] { } }
             });
 
         var message = result.AssertProperty("message");
