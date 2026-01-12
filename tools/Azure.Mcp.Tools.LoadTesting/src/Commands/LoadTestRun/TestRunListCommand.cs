@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
@@ -39,13 +39,13 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(LoadTestingOptionDefinitions.Test);
     }
 
     protected override TestRunListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
         return options;
     }
 
