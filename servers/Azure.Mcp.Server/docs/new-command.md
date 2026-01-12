@@ -2121,7 +2121,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-      <TargetFramework>net9.0</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <IsPackable>false</IsPackable>
@@ -2562,7 +2562,7 @@ Every new command needs to be added to the consolidated mode. Here is the instru
 - Add the new commands to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tool descriptions where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
 - Use the following command to find out the correct tool name for your new tool
     ```
-    cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+    cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
     ./azmcp[.exe] tools list --name --namespace <tool_area>
     ```
 
