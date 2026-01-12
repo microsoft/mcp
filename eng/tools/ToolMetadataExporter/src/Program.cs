@@ -40,6 +40,7 @@ public class Program
         });
 
         services.AddSingleton<IAzureMcpDatastore, AzureMcpKustoDatastore>()
+            .AddSingleton<Utility>()
             .AddSingleton<AzmcpProgram>()
             .AddSingleton<ToolAnalyzer>();
 
@@ -47,7 +48,7 @@ public class Program
             .Bind(configuration);
 
         services.AddOptions<AppConfiguration>()
-            .Bind<AppConfiguration>(configuration)
+            .Bind<AppConfiguration>(configuration.GetSection("AppConfig"))
             .Configure<IOptions<CommandLineOptions>>((existing, commandLineOptions) =>
             {
                 // Command-line IsDryRun overrides appsettings.json file value.
