@@ -472,6 +472,26 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### 📂 Azure File Shares
+
+* "Get details about a specific file share in my resource group"
+* "Create a new Azure managed file share with NFS protocol"
+* "Create a file share with 64 GiB storage, 3000 IOPS, and 125 MiB/s throughput"
+* "Update the provisioned storage size of my file share"
+* "Update network access settings for my file share"
+* "Delete a file share from my resource group"
+* "Check if a file share name is available"
+* "Get details about a file share snapshot"
+* "Create a snapshot of my file share"
+* "Update tags on a file share snapshot"
+* "Delete a file share snapshot"
+* "Get a private endpoint connection for my file share"
+* "Update private endpoint connection status to Approved"
+* "Delete a private endpoint connection"
+* "Get file share limits and quotas for a region"
+* "Get provisioning recommendations for my file share workload"
+* "Get usage data and metrics for my file share"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -552,6 +572,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
+- � **Azure FileShares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -572,7 +593,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 💾 **Azure Storage** - Blob storage
-- 🔄 **Azure Storage Sync** - Azure File Sync management operations
+-  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure

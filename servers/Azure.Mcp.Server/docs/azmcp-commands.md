@@ -1068,6 +1068,105 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--tags <json-tags>]
 ```
 
+### Azure File Shares Operations
+
+```bash
+# Get a specific File Share or list all File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --name <file-share-name>
+
+# Create a new File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name> \
+                                  --location <azure-region> \
+                                  [--mount-name <mount-name>] \
+                                  [--media-tier <SSD|HDD>] \
+                                  [--redundancy <Local|Zone>] \
+                                  [--protocol <NFS>] \
+                                  [--provisioned-storage-in-gib <size>] \
+                                  [--provisioned-io-per-sec <iops>] \
+                                  [--provisioned-throughput-mib-per-sec <throughput>] \
+                                  [--public-network-access <Enabled|Disabled>] \
+                                  [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--allowed-subnets <comma-separated-subnet-ids>] \
+                                  [--tags <json-tags>]
+
+# Update an existing File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare update --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name> \
+                                  [--provisioned-storage-in-gib <size>] \
+                                  [--provisioned-io-per-sec <iops>] \
+                                  [--provisioned-throughput-mib-per-sec <throughput>] \
+                                  [--public-network-access <Enabled|Disabled>] \
+                                  [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--allowed-subnets <comma-separated-subnet-ids>] \
+                                  [--tags <json-tags>]
+
+# Delete a File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name>
+
+# Check File Share name availability
+azmcp fileshares fileshare checkname --subscription <subscription> \
+                                     --name <file-share-name>
+```
+
+```bash
+# Get a specific File Share snapshot
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot get --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --file-share-name <file-share-name> \
+                                        --snapshot-name <snapshot-name>
+
+# Create a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot create --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name>
+
+# Update a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name> \
+                                           --snapshot-name <snapshot-name> \
+                                           [--tags <json-tags>]
+
+# Delete a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot delete --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name> \
+                                           --snapshot-name <snapshot-name>
+```
+
+```bash
+# Get File Shares limits and quotas for a region
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares limits --subscription <subscription> \
+                        --location <azure-region>
+
+# Get provisioning recommendations for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares rec --subscription <subscription> \
+                     --location <azure-region> \
+                     --provisioned-storage-in-gib <size>
+
+# Get usage data and metrics for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares usage --subscription <subscription> \
+                       --location <azure-region>
+```
+
 ### Azure Function App Operations
 
 ```bash
