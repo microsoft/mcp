@@ -20,10 +20,10 @@ public class AzmcpProgram
     private readonly ILogger<AzmcpProgram> _logger;
     private readonly Task<ServerInfo?> _serverInfoTask;
     private readonly Task<string> _serverNameTask;
-    private readonly Task<ListToolsResult?> _listToolsTask;
+    private readonly Lazy<Task<ListToolsResult?>> _listToolsTask;
     private readonly Task<string> _serverVersionTask;
 
-    public AzmcpProgram(IOptions<AppConfiguration> options, Utility utility, ILogger<AzmcpProgram> logger)
+    public AzmcpProgram(Utility utility, IOptions<AppConfiguration> options, ILogger<AzmcpProgram> logger)
     {
         _toolDirectory = options.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));
 
@@ -35,7 +35,7 @@ public class AzmcpProgram
         _serverInfoTask = GetServerInfoInternalAsync();
         _serverNameTask = GetServerNameInternalAsync();
         _serverVersionTask = GetServerVersionInternalAsync();
-        _listToolsTask = GetServerToolsInternalAsync();
+        _listToolsTask = new Lazy<Task<ListToolsResult?>>(() =>GetServerToolsInternalAsync());
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public class AzmcpProgram
     /// Gets the list of tools from the MCP server.
     /// </summary>
     /// <returns></returns>
-    public virtual Task<ListToolsResult?> LoadToolsDynamicallyAsync() => _listToolsTask;
+    public virtual Task<ListToolsResult?> LoadToolsDynamicallyAsync() => _listToolsTask.Value;
 
     /// <summary>
     /// Gets the server name of the MCP server in lower-case
@@ -115,14 +115,21 @@ public class AzmcpProgram
     {
         var output = await _utility.ExecuteAzmcpAsync(_azureMcp, "server info", checkErrorCode: false);
 
-        var result = JsonSerializer.Deserialize<ServerInfoResult>(output, ModelsSerializationContext.Default.ServerInfoResult);
-
-        if (result == null || result.Results == null)
+        try
         {
-            _logger.LogInformation("The MCP server did not return valid JSON output for the 'server info' command. Output: {Output}", output);
-        }
+            var result = JsonSerializer.Deserialize(output, ModelsSerializationContext.Default.ServerInfoResult);
+            if (result == null || result.Results == null)
+            {
+                _logger.LogInformation("The MCP server returned an invalid JSON response. Output: {Output}", output);
+            }
 
-        return result?.Results;
+            return result?.Results;
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogInformation(ex, "The MCP server did not return valid JSON output for the 'server info' command. Output: {Output}", output);
+            return null;
+        }
     }
 
     /// <summary>
@@ -132,11 +139,11 @@ public class AzmcpProgram
     private async Task<string> InvokeServerVersionCommandAsync()
     {
         // Invoking --version returns an error code of 1.
-        var versionOutput = await _utility.ExecuteAzmcpAsync(_azureMcp, "--version", checkErrorCode: false);
+        var versionOutput = (await _utility.ExecuteAzmcpAsync(_azureMcp, "--version", checkErrorCode: false)).Trim();
 
         // The version output may contain a git hash after a '+' character.
         // Example: "1.0.0+4c6c98bca777f54350e426c01177a2b91ad12fd4"
-        int hashSeparator = versionOutput.Trim().IndexOf('+');
+        int hashSeparator = versionOutput.IndexOf('+');
         if (hashSeparator != -1)
         {
             versionOutput = versionOutput.Substring(0, hashSeparator);
