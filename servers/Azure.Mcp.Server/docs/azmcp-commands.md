@@ -1151,19 +1151,20 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 
 ```bash
 # Get File Shares limits and quotas for a region
-azmcp fileshares getlimits --subscription <subscription> \
-                           --location <azure-region>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares limits --subscription <subscription> \
+                        --location <azure-region>
 
 # Get provisioning recommendations for File Shares
-azmcp fileshares getprovisioningrecommendation --subscription <subscription> \
-                                               --resource-group <resource-group> \
-                                               --file-share-name <file-share-name> \
-                                               --workload-profile <workload-type>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares rec --subscription <subscription> \
+                     --location <azure-region> \
+                     --provisioned-storage-in-gib <size>
 
 # Get usage data and metrics for File Shares
-azmcp fileshares getusagedata --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --file-share-name <file-share-name>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares usage --subscription <subscription> \
+                       --location <azure-region>
 ```
 
 ### Azure Function App Operations

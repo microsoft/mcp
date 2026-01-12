@@ -2,7 +2,7 @@
   "profiles": {
     "debug-remotemcp": {
       "commandName": "Project",
-      "commandLineArgs": "fileshares fileshare update --subscription 4d042dc6-fe17-4698-a23f-ec6a8d1e98f4 --tenant 70a036f6-8e4d-4615-bad6-149c02e7720d --resource-group fileshares-rg --name mcp7395a3c9-fileshare-sample --provisioned-storage-in-gib 64 --provisioned-io-per-sec 4000 --provisioned-throughput-mib-per-sec 150 ",
+      "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:1031",

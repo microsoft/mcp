@@ -16,15 +16,14 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
   - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
 - Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
-
-## 2.0.0-beta.9 (2026-01-06)
-
-### Features Added
-
 - Added Azure FileShares module with 12 commands for managing Azure managed file shares:
   - **FileShare** commands (5): CheckNameAvailability, Create, Delete, Get, Update
   - **FileShare Snapshot** commands (4): Create, Delete, Get, Update
   - **Informational** commands (3): GetLimits, GetProvisioningRecommendation, GetUsageData
+
+## 2.0.0-beta.9 (2026-01-06)
+
+### Features Added
 
 - Added Azure Storage Sync (StorageSync) module with 18 commands for managing cloud synchronization of file shares:
   - **StorageSyncService** commands (4): Create, Delete, Get, Update
