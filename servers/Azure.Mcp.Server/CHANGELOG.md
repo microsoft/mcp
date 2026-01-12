@@ -29,8 +29,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **ServerEndpoint** tools (4): Create, Delete, Get, Update
 - Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
 
-- Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported.
-
 ### Bugs Fixed
 
 - Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
