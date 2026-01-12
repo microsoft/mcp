@@ -9,7 +9,7 @@ namespace ToolMetadataExporter;
 
 public class Utility
 {
-    internal async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
+    internal virtual async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
         try
         {
@@ -117,7 +117,16 @@ public class Utility
         throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
     }
 
-    internal async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
+    /// <summary>
+    /// Invokes the azmcp executable with the specified arguments and returns the standard output.
+    /// </summary>
+    /// <param name="serverFile">Assembly to invoke.</param>
+    /// <param name="arguments">Arguments to program.</param>
+    /// <param name="isCiMode">True if it is in CI mode.</param>
+    /// <param name="checkErrorCode">True to check error code and throw an InvalidOperationException if code is not 0.</param>
+    /// <returns>Standard output as a string.</returns>
+    /// <exception cref="InvalidOperationException">If <paramref name="checkErrorCode"/> is true and exit code is not 0.</exception>
+    internal virtual async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
         bool isCiMode = false, bool checkErrorCode = true)
     {
         var fileInfo = new FileInfo(serverFile);
