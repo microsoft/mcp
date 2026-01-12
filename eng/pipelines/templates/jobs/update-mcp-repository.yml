@@ -48,5 +48,5 @@ jobs:
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -KeyVaultName 'azuresdkengkeyvault'
         -KeyVaultKeyName 'mcp-registry'
-      env:
-        AZURE_TOKEN_CREDENTIALS: 'AzureCLICredential'  # Have DefaultAzureCredential use the AzureCLI credential
+    env:
+      AZURE_TOKEN_CREDENTIALS: 'AzureCLICredential'  # Have DefaultAzureCredential use the AzureCLI credential
