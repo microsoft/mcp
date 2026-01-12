@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed various exceptions being thrown by the AppLens tool. [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+
 ### Other Changes
 
 ## 2.0.0-beta.10 (2026-01-09)
