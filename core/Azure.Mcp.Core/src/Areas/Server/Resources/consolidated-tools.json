@@ -2863,7 +2863,7 @@
         }
       },
       "mappedToolList": [
-        "storagesync_cloudendpoint_triggerchangedetection"
+        "storagesync_cloudendpoint_changedetection"
       ]
     }
   ]

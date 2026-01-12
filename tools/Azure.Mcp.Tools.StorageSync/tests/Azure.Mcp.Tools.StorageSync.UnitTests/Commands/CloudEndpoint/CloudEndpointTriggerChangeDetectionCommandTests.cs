@@ -27,13 +27,13 @@ public class CloudEndpointTriggerChangeDetectionCommandTests
     {
         var command = _command.GetCommand();
         Assert.NotNull(command);
-        Assert.Equal("triggerchangedetection", command.Name);
+        Assert.Equal("changedetection", command.Name);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("triggerchangedetection", _command.Name);
+        Assert.Equal("changedetection", _command.Name);
     }
 }
 

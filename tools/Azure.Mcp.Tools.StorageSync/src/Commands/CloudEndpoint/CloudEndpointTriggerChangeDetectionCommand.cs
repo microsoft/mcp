@@ -22,7 +22,7 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
 
     public override string Id => "96f096a2-d36f-4361-aa74-4e393e7f48a5";
 
-    public override string Name => "triggerchangedetection";
+    public override string Name => "changedetection";
 
     public override string Description => "Trigger change detection on a cloud endpoint to sync file changes.";
 
@@ -45,6 +45,9 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Name.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.DirectoryPath.AsRequired());
+        command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.ChangeDetectionMode.AsOptional());
+        command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Paths.AsOptional());
     }
 
     protected override CloudEndpointTriggerChangeDetectionOptions BindOptions(ParseResult parseResult)
@@ -54,6 +57,9 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
         options.StorageSyncServiceName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
         options.SyncGroupName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.SyncGroup.Name.Name);
         options.CloudEndpointName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.CloudEndpoint.Name.Name);
+        options.DirectoryPath = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.CloudEndpoint.DirectoryPath.Name);
+        options.ChangeDetectionMode = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.CloudEndpoint.ChangeDetectionMode.Name);
+        options.Paths = parseResult.GetValueOrDefault<string[]>(StorageSyncOptionDefinitions.CloudEndpoint.Paths.Name)?.ToList();
         return options;
     }
 
@@ -68,8 +74,8 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
 
         try
         {
-            _logger.LogInformation("Triggering change detection. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.CloudEndpointName);
+            _logger.LogInformation("Triggering change detection. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}, DirectoryPath: {DirectoryPath}, ChangeDetectionMode: {ChangeDetectionMode}",
+                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.CloudEndpointName, options.DirectoryPath, options.ChangeDetectionMode);
 
             await _service.TriggerChangeDetectionAsync(
                 options.Subscription!,
@@ -77,9 +83,9 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
                 options.StorageSyncServiceName!,
                 options.SyncGroupName!,
                 options.CloudEndpointName!,
-                null,
-                null,
-                false,
+                options.DirectoryPath!,
+                options.ChangeDetectionMode,
+                options.Paths,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
