@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
-using Azure.Mcp.Tools.Policy.Commands.Definition;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,9 +19,7 @@ public sealed class PolicySetup : IAreaSetup
     {
         services.AddSingleton<IPolicyService, PolicyService>();
 
-        services.AddSingleton<PolicyAssignmentGetCommand>();
         services.AddSingleton<PolicyAssignmentListCommand>();
-        services.AddSingleton<PolicyDefinitionGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -38,20 +35,8 @@ public sealed class PolicySetup : IAreaSetup
         policy.AddSubGroup(assignment);
 
         // Register assignment commands
-        var getCommand = serviceProvider.GetRequiredService<PolicyAssignmentGetCommand>();
-        assignment.AddCommand(getCommand.Name, getCommand);
-
         var listCommand = serviceProvider.GetRequiredService<PolicyAssignmentListCommand>();
         assignment.AddCommand(listCommand.Name, listCommand);
-
-        // Create Definition subgroup
-        var definition = new CommandGroup("definition",
-            "Policy definition operations - Commands for getting and managing Azure Policy definitions.");
-        policy.AddSubGroup(definition);
-
-        // Register definition commands
-        var definitionGetCommand = serviceProvider.GetRequiredService<PolicyDefinitionGetCommand>();
-        definition.AddCommand(definitionGetCommand.Name, definitionGetCommand);
 
         return policy;
     }
