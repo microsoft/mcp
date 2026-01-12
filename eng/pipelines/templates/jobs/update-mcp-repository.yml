@@ -9,7 +9,7 @@ parameters:
 
 jobs:
 - job: BuildAndUpdateMcpRepository
-  displayName: Build MCP Publisher and Update Repository
+  displayName: Publish server.json to MCP Repository
   ${{ if parameters.DependsOn }}:
     dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
@@ -36,6 +36,7 @@ jobs:
         -NuGetFeedIndexUrl '${{ parameters.NuGetFeedIndexUrl }}'
 
   - task: AzureCLI@2
+    displayName: 'Build go tool and publish server.json'
     inputs:
       azureSubscription: 'Azure SDK Engineering System'
       scriptType: 'pscore'
