@@ -7,9 +7,9 @@ using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
 
-internal class Utility
+public class Utility
 {
-    internal static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
+    internal async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
         try
         {
@@ -50,7 +50,7 @@ internal class Utility
         }
     }
 
-    internal static async Task<string> GetServerName(string serverFile)
+    internal async Task<string> GetServerName(string serverFile)
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
 
@@ -67,13 +67,13 @@ internal class Utility
         throw new InvalidOperationException("Could not find server name");
     }
 
-    internal static async Task<string> GetVersionAsync(string serverFile)
+    internal async Task<string> GetVersionAsync(string serverFile)
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--version", checkErrorCode: false);
         return output.Trim();
     }
 
-    internal static string FindAzmcpAsync(string repositoryRoot, bool isCiMode = false)
+    internal string FindAzmcpAsync(string repositoryRoot, bool isCiMode = false)
     {
         var searchRoots = new List<string>
             {
@@ -117,7 +117,7 @@ internal class Utility
         throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
     }
 
-    internal static async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
+    internal async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
         bool isCiMode = false, bool checkErrorCode = true)
     {
         var fileInfo = new FileInfo(serverFile);
