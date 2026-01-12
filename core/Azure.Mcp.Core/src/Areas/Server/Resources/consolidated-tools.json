@@ -1012,8 +1012,8 @@
       "mappedToolList": [
         "azureterraformbestpractices_get",
         "bicepschema_get",
-        "get_bestpractices_ai_app",
-        "get_bestpractices_get",
+        "get_azure_bestpractices_ai_app",
+        "get_azure_bestpractices_get",
         "foundry_agents_get-sdk-sample"
       ]
     },
