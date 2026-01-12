@@ -26,18 +26,26 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
   - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
 - Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
+- Added Azure FileShares module with 12 commands for managing Azure managed file shares:
+  - **FileShare** commands (5): CheckNameAvailability, Create, Delete, Get, Update
+  - **FileShare Snapshot** commands (4): Create, Delete, Get, Update
+  - **Informational** commands (3): GetLimits, GetProvisioningRecommendation, GetUsageData
 
 ## 2.0.0-beta.9 (2026-01-06)
 
 ### Features Added
 
-- Added 18 Azure Storage Sync tools for managing cloud synchronization of file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
-  - **StorageSyncService** tools (4): Create, Delete, Get, Update
-  - **RegisteredServer** tools (3): Get, Unregister, Update
-  - **SyncGroup** tools (3): Create, Delete, Get
-  - **CloudEndpoint** tools (4): Create, Delete, Get, TriggerChangeDetection
-  - **ServerEndpoint** tools (4): Create, Delete, Get, Update
-- Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
+- Added Azure Storage Sync (StorageSync) module with 18 commands for managing cloud synchronization of file shares:
+  - **StorageSyncService** commands (4): Create, Delete, Get, Update
+  - **RegisteredServer** commands (3): Get, Unregister, Update
+  - **SyncGroup** commands (3): Create, Delete, Get
+  - **CloudEndpoint** commands (4): Create, Delete, Get, TriggerChangeDetection
+  - **ServerEndpoint** commands (4): Create, Delete, Get, Update
+
+- Added support logging capability with `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
+- Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
+
+### Breaking Changes
 
 - Removed `Azure.Monitor.Query` package dependency as that is now deprecated. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
 
