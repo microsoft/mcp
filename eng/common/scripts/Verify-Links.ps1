@@ -95,10 +95,10 @@ $ProgressPreference = "SilentlyContinue"; # Disable invoke-webrequest progress d
 
 function ProcessLink([System.Uri]$linkUri) {
   # To help improve performance and rate limiting issues with github links we try to resolve them based on a local clone if one exists.
-  # Match github.com blob/tree URLs
-  $githubPattern = '^https://github\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?:blob|tree)/(?<branch>[^/]+)/(?<path>.*)$'
-  # Match raw.githubusercontent.com URLs
-  $rawPattern = '^https://raw\.githubusercontent\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?<branch>[^/]+)/(?<path>.*)$'
+  # Match github.com blob/tree URLs (path excludes fragments and query params to prevent ReDoS)
+  $githubPattern = '^https://github\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?:blob|tree)/(?<branch>[^/]+)/(?<path>[^#?]*)$'
+  # Match raw.githubusercontent.com URLs (path excludes fragments and query params to prevent ReDoS)
+  $rawPattern = '^https://raw\.githubusercontent\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?<branch>[^/]+)/(?<path>[^#?]*)$'
   
   $matchedPattern = $false
   $org = $null
@@ -124,6 +124,9 @@ function ProcessLink([System.Uri]$linkUri) {
   if ($matchedPattern -and ($localGithubClonedRoot -or $localBuildRepoName)) {
     $repoFullName = "$org/$repo"
     
+    # Legacy branch pattern for Azure org backward compatibility
+    $legacyAzureBranchPattern = '^(main|.*_[^/]+|.*/v[^/]+)$'
+    
     # Check if this link points to the current repo
     if ($localBuildRepoName -eq $repoFullName) {
       # Check if the link points to the target branch (if specified)
@@ -134,7 +137,7 @@ function ProcessLink([System.Uri]$linkUri) {
         # Link points to current repo and target branch - check local filesystem
         $shouldCheckLocalFile = $true
       }
-      elseif (!$localBuildTargetBranch -and $org -eq "Azure" -and $branch -match '^(main|.*_[^/]+|.*/v[^/]+)$') {
+      elseif (!$localBuildTargetBranch -and $org -eq "Azure" -and $branch -match $legacyAzureBranchPattern) {
         # Legacy behavior: check local files for Azure org with specific branch patterns
         $shouldCheckLocalFile = $true
       }
@@ -148,7 +151,13 @@ function ProcessLink([System.Uri]$linkUri) {
         }
         else {
           # File does not exist locally - this PR would break the link
-          LogError "Link points to file that does not exist in local repo: $linkUri (local path: $localPath)"
+          # Log relative path to avoid exposing full filesystem structure
+          $relativePath = if ($localBuildRepoPath) { 
+            $path 
+          } else { 
+            $localPath 
+          }
+          LogError "Link points to file that does not exist in local repo: $linkUri (path: $relativePath)"
           return $false
         }
       }
