@@ -6,45 +6,108 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
-public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public sealed class MonitorCommandTests : RecordedCommandTestsBase
 {
     private LogAnalyticsHelper? _logHelper;
     private const string TestLogType = "TestLogs_CL";
-    private IMonitorService? _monitorService;
+    private readonly ServiceProvider _httpClientProvider;
+    private readonly MemoryCache _memoryCache;
+    private readonly ITenantService _tenantService;
+    private readonly IMonitorService _monitorService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
 
+    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+        : base(output, fixture)
+    {
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
+        var cacheService = new SingleUserCliCacheService(_memoryCache);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+        _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
+        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory);
+        var subscriptionService = new SubscriptionService(cacheService, _tenantService);
+        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
+        var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
+        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory);
+    }
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
+    {
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "webtests/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    };
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    ];
+
+    public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher()
+    {
+        CompareBodies = false
+    };
+
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        _monitorService = GetMonitorService();
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
-        _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
+
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
+
+        _logHelper = new LogAnalyticsHelper(
+            Settings.ResourceBaseName,
+            Settings.SubscriptionId,
+            _monitorService,
+            _tenantService,
+            _httpClientFactory,
+            Settings.TenantId,
+            TestLogType,
+            NullLogger.Instance);
     }
 
-    private static IMonitorService GetMonitorService()
+    public override async ValueTask DisposeAsync()
     {
-        var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
-        var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
-        var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
-        var httpClientOptions = new HttpClientOptions();
-        var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
-        return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
+        await base.DisposeAsync();
+        _httpClientProvider.Dispose();
+        _memoryCache.Dispose();
     }
 
     // [Fact]
@@ -535,7 +598,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
         // Verify required properties exist
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("location", out var location));
         Assert.Equal(JsonValueKind.String, location.ValueKind);
@@ -594,7 +657,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
         // Verify the created web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
         Assert.True(enabled.GetBoolean());
@@ -628,7 +691,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
         // Verify the updated web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(webTestName, resourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
 
         // Verify that the updates were applied
         Assert.True(webTest.TryGetProperty("webTestName", out var updatedName));

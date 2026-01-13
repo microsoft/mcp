@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Server;
 
@@ -23,6 +24,7 @@ public sealed class ServerSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ServiceStartCommand>();
+        services.AddSingleton<ServiceInfoCommand>();
     }
 
     /// <summary>
@@ -38,6 +40,9 @@ public sealed class ServerSetup : IAreaSetup
         // Register MCP Server commands
         var startCommand = serviceProvider.GetRequiredService<ServiceStartCommand>();
         mcpServer.AddCommand(startCommand.Name, startCommand);
+
+        var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
+        mcpServer.AddCommand(infoCommand.Name, infoCommand);
 
         return mcpServer;
     }

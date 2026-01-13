@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Option;
@@ -9,6 +8,9 @@ using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -22,8 +24,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
 
     public override string Description =>
         $"""
-        Create embeddings using Azure OpenAI in AI Foundry. Generate vector embeddings from text using Azure OpenAI 
-        deployments in your AI Foundry resource for semantic search, similarity comparisons, clustering, or machine 
+        Create embeddings using Azure OpenAI in Microsoft Foundry. Generate vector embeddings from text using Azure OpenAI 
+        deployments in your Microsoft Foundry resource for semantic search, similarity comparisons, clustering, or machine 
         learning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to 
         numerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.
         """;
@@ -65,7 +67,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -88,7 +90,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
                 options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiEmbeddingsCreateCommandResult>(
                 new OpenAiEmbeddingsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!, options.InputText!),

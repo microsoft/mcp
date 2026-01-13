@@ -3,11 +3,11 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -41,7 +41,7 @@ public class BicepSchemaGetCommandTests
     {
         var args = _commandDefinition.Parse("--resource-type Microsoft.Sql/servers/databases/schemas");
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -59,7 +59,7 @@ public class BicepSchemaGetCommandTests
 
         var args = _commandDefinition.Parse("--resource-type Microsoft.Unknown/virtualRandom");
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 

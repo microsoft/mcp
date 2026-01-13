@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -43,7 +43,11 @@ public class KnowledgeBaseGetCommandTests
             new("base2", "Second base", ["source2", "source3"])
         };
 
-        _searchService.ListKnowledgeBases(Arg.Is("service123"), Arg.Is((string?)null), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is("service123"),
+            Arg.Is((string?)null),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedBases);
 
         var command = new KnowledgeBaseGetCommand(_logger);
@@ -51,7 +55,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -73,7 +77,11 @@ public class KnowledgeBaseGetCommandTests
     {
         var expectedBase = new KnowledgeBaseInfo("base1", "First base", ["source1"]);
 
-        _searchService.ListKnowledgeBases(Arg.Is("service123"), Arg.Is("base1"), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is("service123"),
+            Arg.Is("base1"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedBase]);
 
         var command = new KnowledgeBaseGetCommand(_logger);
@@ -81,7 +89,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123 --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -96,14 +104,19 @@ public class KnowledgeBaseGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBases()
     {
-        _searchService.ListKnowledgeBases(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
+        _searchService.ListKnowledgeBases(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
 
         var command = new KnowledgeBaseGetCommand(_logger);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response?.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -118,7 +131,11 @@ public class KnowledgeBaseGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.ListKnowledgeBases(Arg.Is(serviceName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is(serviceName),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new KnowledgeBaseGetCommand(_logger);
@@ -126,7 +143,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

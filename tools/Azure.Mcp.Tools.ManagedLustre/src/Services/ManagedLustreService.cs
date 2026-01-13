@@ -22,7 +22,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
 
-    public async Task<List<LustreFileSystem>> ListFileSystemsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<LustreFileSystem>> ListFileSystemsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -32,7 +37,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         {
             if (!string.IsNullOrWhiteSpace(resourceGroup))
             {
-                var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+                var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
                 foreach (var fs in rg.GetAmlFileSystems())
                 {
                     results.Add(Map(fs));
@@ -41,8 +46,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             }
             else
             {
-                var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
-                await foreach (var fs in sub.GetAmlFileSystemsAsync())
+                var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+                await foreach (var fs in sub.GetAmlFileSystemsAsync(cancellationToken))
                 {
                     results.Add(Map(fs));
                 }
@@ -194,10 +199,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null
-        )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var fileSystemSizeContent = new RequiredAmlFileSystemSubnetsSizeContent
         {
             SkuName = sku,
@@ -206,7 +211,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         try
         {
-            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent);
+            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent, cancellationToken);
             var numberOfRequiredIPs = sdkResult.Value.FilesystemSubnetSize ?? throw new Exception($"Failed to retrieve the number of IPs");
             return numberOfRequiredIPs;
         }
@@ -220,18 +225,18 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string subscription,
         string? tenant = null,
         string? location = null,
-        RetryPolicyOptions? retryPolicy = null
-        )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
 
         try
         {
             var results = new List<ManagedLustreSkuInfo>();
 
-            await foreach (var sku in sub.GetStorageCacheSkusAsync())
+            await foreach (var sku in sub.GetStorageCacheSkusAsync(cancellationToken))
             {
 
                 if (sku is null ||
@@ -286,8 +291,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string? sourceVaultId = null,
         string? userAssignedIdentityId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null
-    )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription),
         (nameof(resourceGroup), resourceGroup),
@@ -297,9 +302,9 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         (nameof(subnetId), subnetId)
         );
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Subscription '{subscription}' not found");
 
         var data = new AmlFileSystemData(new AzureLocation(location))
@@ -314,7 +319,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         {
             bool? supportsZones = null;
 
-            await foreach (var loc in sub.GetLocationsAsync())
+            await foreach (var loc in sub.GetLocationsAsync(cancellationToken: cancellationToken))
             {
                 if (loc.Name.Equals(location, StringComparison.OrdinalIgnoreCase) ||
                     loc.DisplayName.Equals(location, StringComparison.OrdinalIgnoreCase))
@@ -372,7 +377,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             var collection = rg.GetAmlFileSystems();
-            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data);
+            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken);
             var fileSystemResource = createOperationResult.Value;
             return Map(fileSystemResource);
         }
@@ -397,16 +402,17 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         long? squashUid = null,
         long? squashGid = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(name), name));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
         {
-            var fs = await rg.GetAmlFileSystemAsync(name);
+            var fs = await rg.GetAmlFileSystemAsync(name, cancellationToken);
 
             var patch = new AmlFileSystemPatch();
 
@@ -428,7 +434,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 patch.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
             }
 
-            var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch);
+            var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
             return Map(updateOperation.Value);
         }
         catch (RequestFailedException rfe)
@@ -448,11 +454,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string subnetId,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(sku), sku), (nameof(subnetId), subnetId), (nameof(location), location));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent
         {
             FilesystemSubnet = subnetId,
@@ -463,7 +470,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         try
         {
-            var response = await sub.CheckAmlFSSubnetsAsync(content);
+            var response = await sub.CheckAmlFSSubnetsAsync(content, cancellationToken);
             var status = response.Status;
             var sizeIsValid = (HttpStatusCode)status == HttpStatusCode.OK;
             if (!sizeIsValid)
@@ -488,4 +495,603 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         }
     }
+
+    public async Task<string> CreateAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? autoexportPrefix = null,
+        string? adminStatus = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Generate job name from timestamp if not provided
+            jobName ??= $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Validate admin status if provided
+            if (!string.IsNullOrEmpty(adminStatus))
+            {
+                var validStatuses = new[] { "Enable", "Disable" };
+                if (!validStatuses.Contains(adminStatus, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"Invalid admin status '{adminStatus}'. Valid values are: {string.Join(", ", validStatuses)}", nameof(adminStatus));
+                }
+            }
+
+            // Create auto export job data with filesystem location
+            var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
+
+            // Set admin status if provided (default is Enable per SDK docs)
+            if (!string.IsNullOrEmpty(adminStatus))
+            {
+                autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus, ignoreCase: true);
+            }
+
+            // Set autoexport prefix if provided (SDK allows only 1 prefix)
+            if (!string.IsNullOrEmpty(autoexportPrefix))
+            {
+                autoExportJobData.AutoExportPrefixes.Add(autoexportPrefix);
+            }
+
+            // Create the auto export job
+            var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                jobName,
+                autoExportJobData,
+                cancellationToken);
+
+            return createOperation.Value.Data.Name;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task CancelAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Get the auto export job
+            var job = await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            // Create patch data to update admin status to Disable
+            var patchData = new AutoExportJobPatch();
+            patchData.AdminStatus = AutoExportJobAdminStatus.Disable;
+
+            await job.Value.UpdateAsync(
+                WaitUntil.Completed,
+                patchData,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Auto export job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to cancel auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+    }
+
+    public async Task<Models.AutoexportJob> GetAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get the auto export job
+            var job = await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            return new Models.AutoexportJob
+            {
+                Name = job.Value.Data.Name,
+                Id = job.Value.Data.Id.ToString(),
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
+                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
+                AutoExportPrefixes = job.Value.Data.AutoExportPrefixes?.ToArray(),
+                State = job.Value.Data.State?.ToString(),
+                StatusCode = job.Value.Data.StatusCode,
+                StatusMessage = job.Value.Data.StatusMessage,
+                TotalFilesExported = job.Value.Data.TotalFilesExported,
+                TotalMiBExported = job.Value.Data.TotalMiBExported,
+                TotalFilesFailed = job.Value.Data.TotalFilesFailed,
+                ExportIterationCount = job.Value.Data.ExportIterationCount,
+                LastSuccessfulIterationCompletionTimeUTC = job.Value.Data.LastSuccessfulIterationCompletionTimeUTC,
+                CurrentIterationFilesDiscovered = job.Value.Data.CurrentIterationFilesDiscovered,
+                CurrentIterationMiBDiscovered = job.Value.Data.CurrentIterationMiBDiscovered,
+                CurrentIterationFilesExported = job.Value.Data.CurrentIterationFilesExported,
+                CurrentIterationMiBExported = job.Value.Data.CurrentIterationMiBExported,
+                CurrentIterationFilesFailed = job.Value.Data.CurrentIterationFilesFailed,
+                LastStartedTimeUTC = job.Value.Data.LastStartedTimeUTC,
+                LastCompletionTimeUTC = job.Value.Data.LastCompletionTimeUTC
+            };
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Autoexport job '{jobName}' not found for filesystem '{filesystemName}' in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to get auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<Models.AutoexportJob>> ListAutoexportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get all auto export jobs
+            var jobs = new List<Models.AutoexportJob>();
+            await foreach (var job in fs.Value.GetAutoExportJobs().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                jobs.Add(new Models.AutoexportJob
+                {
+                    Name = job.Data.Name,
+                    Id = job.Data.Id.ToString(),
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
+                    AdminStatus = job.Data.AdminStatus?.ToString(),
+                    AutoExportPrefixes = job.Data.AutoExportPrefixes?.ToArray(),
+                    State = job.Data.State?.ToString(),
+                    StatusCode = job.Data.StatusCode,
+                    StatusMessage = job.Data.StatusMessage,
+                    TotalFilesExported = job.Data.TotalFilesExported,
+                    TotalMiBExported = job.Data.TotalMiBExported,
+                    TotalFilesFailed = job.Data.TotalFilesFailed,
+                    ExportIterationCount = job.Data.ExportIterationCount,
+                    LastSuccessfulIterationCompletionTimeUTC = job.Data.LastSuccessfulIterationCompletionTimeUTC,
+                    CurrentIterationFilesDiscovered = job.Data.CurrentIterationFilesDiscovered,
+                    CurrentIterationMiBDiscovered = job.Data.CurrentIterationMiBDiscovered,
+                    CurrentIterationFilesExported = job.Data.CurrentIterationFilesExported,
+                    CurrentIterationMiBExported = job.Data.CurrentIterationMiBExported,
+                    CurrentIterationFilesFailed = job.Data.CurrentIterationFilesFailed,
+                    LastStartedTimeUTC = job.Data.LastStartedTimeUTC,
+                    LastCompletionTimeUTC = job.Data.LastCompletionTimeUTC
+                });
+            }
+
+            return jobs;
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task DeleteAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Delete the auto export job
+            await fs.Value.GetAutoExportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Completed,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Auto export job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to delete auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> CreateAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? conflictResolutionMode = null,
+        string[]? autoimportPrefixes = null,
+        string? adminStatus = null,
+        bool? enableDeletions = null,
+        long? maximumErrors = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Generate job name from timestamp if not provided
+            var actualJobName = jobName ?? $"autoimport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Create auto import job data with filesystem location
+            var autoImportJobData = new AutoImportJobData(fs.Value.Data.Location);
+
+            // Set optional properties
+            if (!string.IsNullOrWhiteSpace(conflictResolutionMode))
+            {
+                autoImportJobData.ConflictResolutionMode = conflictResolutionMode switch
+                {
+                    "Fail" => ConflictResolutionMode.Fail,
+                    "Skip" => ConflictResolutionMode.Skip,
+                    "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
+                    "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
+                    _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
+                };
+            }
+
+            if (autoimportPrefixes != null && autoimportPrefixes.Length > 0)
+            {
+                if (autoimportPrefixes.Length > 100)
+                {
+                    throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
+                }
+                foreach (var prefix in autoimportPrefixes!)
+                {
+                    autoImportJobData.AutoImportPrefixes.Add(prefix);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(adminStatus))
+            {
+                autoImportJobData.AdminStatus = adminStatus switch
+                {
+                    "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
+                    "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
+                    _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
+                };
+            }
+
+            if (enableDeletions.HasValue)
+            {
+                autoImportJobData.EnableDeletions = enableDeletions.Value;
+            }
+
+            if (maximumErrors.HasValue)
+            {
+                autoImportJobData.MaximumErrors = maximumErrors.Value;
+            }
+
+            // Create the auto import job
+            var createOperation = await fs.Value.GetAutoImportJobs().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                actualJobName,
+                autoImportJobData,
+                cancellationToken);
+
+            return createOperation.Value.Data.Name;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task CancelAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Get the auto import job
+            var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            // Create patch data to update admin status to Disable
+            var patchData = new AutoImportJobPatch();
+            patchData.AdminStatus = AutoImportJobUpdatePropertiesAdminStatus.Disable;
+
+            await job.Value.UpdateAsync(
+                WaitUntil.Completed,
+                patchData,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Auto import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+    }
+
+    public async Task<Models.AutoimportJob> GetAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get the auto import job
+            var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            return new Models.AutoimportJob
+            {
+                Name = job.Value.Data.Name,
+                Id = job.Value.Data.Id.ToString(),
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
+                ConflictResolutionMode = job.Value.Data.ConflictResolutionMode?.ToString(),
+                AutoImportPrefixes = job.Value.Data.AutoImportPrefixes?.ToArray(),
+                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
+                EnableDeletions = job.Value.Data.EnableDeletions,
+                MaximumErrors = (int?)job.Value.Data.MaximumErrors,
+                TotalBlobsImported = job.Value.Data.TotalBlobsImported,
+                TotalConflicts = job.Value.Data.TotalConflicts,
+                TotalErrors = job.Value.Data.TotalErrors
+            };
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Autoimport job '{jobName}' not found for filesystem '{filesystemName}' in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<Models.AutoimportJob>> ListAutoimportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get all auto import jobs
+            var jobs = new List<Models.AutoimportJob>();
+            await foreach (var job in fs.Value.GetAutoImportJobs().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                jobs.Add(new Models.AutoimportJob
+                {
+                    Name = job.Data.Name,
+                    Id = job.Data.Id.ToString(),
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
+                    ConflictResolutionMode = job.Data.ConflictResolutionMode?.ToString(),
+                    AutoImportPrefixes = job.Data.AutoImportPrefixes?.ToArray(),
+                    AdminStatus = job.Data.AdminStatus?.ToString(),
+                    EnableDeletions = job.Data.EnableDeletions,
+                    MaximumErrors = (int?)job.Data.MaximumErrors,
+                    TotalBlobsImported = job.Data.TotalBlobsImported,
+                    TotalConflicts = job.Data.TotalConflicts,
+                    TotalErrors = job.Data.TotalErrors
+                });
+            }
+
+            return jobs;
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to list auto import jobs for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list auto import jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task DeleteAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Delete the auto import job
+            await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Completed,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Auto import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to delete auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
 }
+

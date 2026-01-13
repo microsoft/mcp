@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "ontologyId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+  },
+    "responses": {
+        "200": {
+          "body": {
+            "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+            "displayName": "Ontology 1",
+            "description": "An ontology description.",
+            "type": "Ontology",
+            "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+          }
+        }
+    }
+}

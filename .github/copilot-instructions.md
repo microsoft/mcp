@@ -28,3 +28,19 @@
 
   Copilot submitted PRs are not trustworthy by default. Users with `write` access to the repo need to validate the contents of this PR before leaving a comment with the text `/azp run mcp - pullrequest - live`. This will trigger the necessary livetest workflows to complete required validation.
   ```
+
+## Transitioning Live Tests to Recorded Tests
+
+- Always convert `tool` services to inject `IHttpClientFactory` into its clients and use `IHttpClientFactory.CreateClient` method to instantiate the `HttpClient` for usage in the tool classes' methods.
+  - If `IHttpClientFactory` is already injected into the client, ensure that `IHttpClientFactory.CreateClient` is used to instantiate the `HttpClient`. If this is done, then no further action is needed.
+- Always re-parent test classes parented by `CommandTestsBase` to `RecordedCommandTestsBase`. This will require minor fixture adjustments.
+- Always generate a new `assets.json` file alongside the livetest csproj file if one does not exist. This file should contain the following content:
+  ```jsonc
+  {
+    "AssetsRepo": "Azure/azure-sdk-assets",
+    "AssetsRepoPrefixPath": "",
+    "TagPrefix": "<LiveTestCsProjFileNameWithoutExtension>", // e.g., "Azure.Mcp.Tools.KeyVault.LiveTests"
+    "Tag": ""
+  }
+  ```
+- Copilot should utilize the [recorded test documentation](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) in `docs/recorded-tests.md` for more details on how to convert and validate recorded tests.

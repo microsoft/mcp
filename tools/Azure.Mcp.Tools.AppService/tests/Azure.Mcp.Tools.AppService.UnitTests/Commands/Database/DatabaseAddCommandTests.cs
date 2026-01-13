@@ -1,24 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
-using System.Linq;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 
-[Trait("Area", "AppService")]
 [Trait("Command", "DatabaseAdd")]
 public class DatabaseAddCommandTests
 {
@@ -75,7 +71,8 @@ public class DatabaseAddCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedConnection);
 
         // Test the service directly
@@ -88,7 +85,8 @@ public class DatabaseAddCommandTests
             connectionString ?? string.Empty,
             subscription,
             tenant,
-            new RetryPolicyOptions());
+            new RetryPolicyOptions(),
+            TestContext.Current.CancellationToken);
 
         // Verify the service returns expected data
         Assert.NotNull(connectionInfo);
@@ -106,7 +104,8 @@ public class DatabaseAddCommandTests
             Arg.Any<string>(),
             Arg.Is<string>(x => x == subscription),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -123,7 +122,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -138,7 +137,8 @@ public class DatabaseAddCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -182,7 +182,7 @@ public class DatabaseAddCommandTests
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
         var parseResult = command.GetCommand().Parse(argList);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Test actual command execution and proper error handling
         Assert.NotNull(response);
@@ -227,18 +227,18 @@ public class DatabaseAddCommandTests
         var databaseServer = "test-server.database.windows.net";
         var databaseName = "test-db";
 
-        _appServiceService
-            .When(x => x.AddDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>()))
-            .Do(x => throw new InvalidOperationException("Service error"));
+        _appServiceService.AddDatabaseAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Service error"));
 
         var command = new DatabaseAddCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -252,7 +252,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

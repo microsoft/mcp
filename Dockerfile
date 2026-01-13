@@ -9,21 +9,29 @@ RUN if [ -z "$PUBLISH_DIR" ]; then \
     echo "ERROR: PUBLISH_DIR build argument is required" && exit 1; \
     fi
 
-RUN apk add --no-cache libc6-compat
+# Add build argument for executable name
+ARG EXECUTABLE_NAME
 
-# Copy the contents of the publish directory to '/azuremcpserver' and set it as the working directory
-RUN mkdir -p /azuremcpserver
-COPY ${PUBLISH_DIR} /azuremcpserver/
-WORKDIR /azuremcpserver
+# Error out if EXECUTABLE_NAME is not set
+RUN if [ -z "$EXECUTABLE_NAME" ]; then \
+    echo "ERROR: EXECUTABLE_NAME build argument is required" && exit 1; \
+    fi
+
+# Copy the contents of the publish directory to '/mcp-server' and set it as the working directory
+RUN mkdir -p /mcp-server
+COPY ${PUBLISH_DIR} /mcp-server/
+WORKDIR /mcp-server
 
 # List the contents of the current directory
 RUN ls -la
 
-# Ensure the main binary exists and is executable
-RUN if [ ! -f "azmcp" ]; then \
-    echo "ERROR: azmcp executable does not exist" && exit 1; \
-    fi \
-    && chmod +x azmcp \
-    && test -x azmcp
+# Ensure the server binary exists
+RUN if [ ! -f $EXECUTABLE_NAME ]; then \
+    echo "ERROR: $EXECUTABLE_NAME executable does not exist" && exit 1; \
+    fi
 
-ENTRYPOINT ["./azmcp", "server", "start"]
+# Copy the server binary to a known location and make it executable
+COPY ${PUBLISH_DIR}/${EXECUTABLE_NAME} server-binary
+RUN chmod +x server-binary && test -x server-binary
+
+ENTRYPOINT ["./server-binary", "server", "start"]

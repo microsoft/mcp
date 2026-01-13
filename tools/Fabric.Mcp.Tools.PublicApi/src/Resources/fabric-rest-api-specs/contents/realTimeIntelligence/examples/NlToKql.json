@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "beta": true,
+        "nlToKqlRequest": {
+            "clusterUrl": "https://trd-2cucrmayps3jqfwk92.z9.kusto.fabric.microsoft.com",
+            "itemIdForBilling": "5b218778-e7a5-4d73-8187-f10824047715",
+            "naturalLanguage": "Generate a query for counting records in the Products table",
+            "databaseName": "b74e4636-0f20-4368-8cc1-a5a1003252af"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "kqlQuery": "Products | count"
+            }
+        }
+    }
+}

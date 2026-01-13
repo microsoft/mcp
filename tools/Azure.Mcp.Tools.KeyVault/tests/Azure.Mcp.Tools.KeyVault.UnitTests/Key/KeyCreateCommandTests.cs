@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -64,13 +64,15 @@ public class KeyCreateCommandTests
     public async Task ExecuteAsync_CreatesKey_WithValidInput()
     {
         // Arrange
-        _keyVaultService.CreateKey(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownKeyName),
-            Arg.Is(_knownKeyType.ToString()),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateKey(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownKeyName),
+                Arg.Is(_knownKeyType.ToString()),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
 
         var args = _commandDefinition.Parse([
@@ -81,7 +83,7 @@ public class KeyCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -107,7 +109,7 @@ public class KeyCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -121,13 +123,15 @@ public class KeyCreateCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.CreateKey(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownKeyName),
-            Arg.Is(_knownKeyType.ToString()),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .CreateKey(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownKeyName),
+                Arg.Is(_knownKeyType.ToString()),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -138,7 +142,7 @@ public class KeyCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

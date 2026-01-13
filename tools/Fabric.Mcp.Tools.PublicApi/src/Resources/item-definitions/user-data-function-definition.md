@@ -1,12 +1,3 @@
----
-title: User Data Function definition
-description: Learn how to create a User Data Function item definition when using the Microsoft Fabric REST API.
-ms.title: User Data Function item definition
-author: yareyes
-ms.author: yareyes
-ms.service: fabric
-ms.date: 09/09/2025
----
   
 # User Data Function definition
   

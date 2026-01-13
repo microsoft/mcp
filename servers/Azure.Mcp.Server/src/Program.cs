@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -13,6 +13,10 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
 {
@@ -22,10 +26,11 @@ internal class Program
     {
         try
         {
-            Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
-            Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServiceStartCommand.ConfigureServices = ConfigureServices;
+            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
+
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -43,6 +48,11 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
+            if (status == 0)
+            {
+                status = (int)HttpStatusCode.OK;
+            }
+
             return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
@@ -56,6 +66,7 @@ internal class Program
             return 1;
         }
     }
+
     private static IAreaSetup[] RegisterAreas()
     {
 
@@ -84,6 +95,7 @@ internal class Program
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
+            new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
@@ -106,6 +118,7 @@ internal class Program
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
+            new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
@@ -124,18 +137,75 @@ internal class Program
         Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
     }
 
+    /// <summary>
+    /// <para>
+    /// Configures services for dependency injection.
+    /// </para>
+    /// <para>
+    /// WARNING: This method is being used for TWO DEPENDENCY INJECTION CONTAINERS:
+    /// </para>
+    /// <list type="number">
+    /// <item>
+    /// <see cref="Main"/>'s command picking: The container used to populate instances of
+    /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
+    /// baesd on the command line input. This container is a local variable in
+    /// <see cref="Main"/>, and it is not tied to
+    /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
+    /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
+    /// </item>
+    /// <item>
+    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
+    /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// is created by the first container, this second container it creates and runs is
+    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// container is built and this <see cref="ConfigureServices"/> method is called sometime
+    /// during that method execution.
+    /// </item>
+    /// </list>
+    /// <para>
+    /// DUE TO THIS DUAL USAGE, PLEASE BE VERY CAREFUL WHEN MODIFYING THIS METHOD. This
+    /// method may have some expectations, but it and all methods it calls must be safe for
+    /// both the stdio and http transport modes.
+    /// </para>
+    /// <para>
+    /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
+    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// transport-specific implementations. This method can add the stdio-specific
+    /// implementation to allow the first container (used for command picking) to work,
+    /// but such transport-specific registrations must be overriden within
+    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// transport-specific implementation based on command line arguments.
+    /// </para>
+    /// <para>
+    /// This large doc comment is copy/pasta in each Program.cs file of this repo, so if
+    /// you're reading this, please keep them in sync and/or add specific warnings per
+    /// project if needed. Below is the list of known differences:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>No differences. This is also copy/pasta as a placeholder for this project.</item>
+    /// </list>
+    /// </summary>
+    /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
-        services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<ITenantService, TenantService>();
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
+
+        // !!! WARNING !!!
+        // stdio-transport-specific implementations of ITenantService and ICacheService.
+        // The http-traport-specific implementations and configurations must be registered
+        // within ServiceStartCommand.ExecuteAsync().
+        services.AddAzureTenantService(addUserAgentClient: true);
+        services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
         {

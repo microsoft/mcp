@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -42,13 +42,13 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result.Message);
+        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result.Message);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -85,7 +85,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -105,7 +105,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -128,7 +128,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -147,7 +147,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -166,7 +166,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);

@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
@@ -33,7 +34,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +54,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.ResourceGroup!,
                 options.TestResourceName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :

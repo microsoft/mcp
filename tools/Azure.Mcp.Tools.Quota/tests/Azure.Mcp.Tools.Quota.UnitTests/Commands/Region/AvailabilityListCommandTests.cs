@@ -4,19 +4,18 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Region;
 
-[Trait("Area", "Quota")]
 public sealed class AvailabilityListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -62,7 +61,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -73,7 +73,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -89,7 +89,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -130,7 +131,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 cognitiveServiceModelName,
                 Arg.Any<string?>(),
-                cognitiveServiceDeploymentSkuName)
+                cognitiveServiceDeploymentSkuName,
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -143,7 +145,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -158,7 +160,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             cognitiveServiceModelName,
             null,
-            cognitiveServiceDeploymentSkuName);
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -189,7 +192,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -202,7 +205,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -218,7 +222,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
         var args = _commandDefinition.Parse([
@@ -229,7 +234,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -255,7 +260,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -266,7 +272,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -282,7 +288,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -297,7 +304,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -308,7 +316,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -339,7 +347,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 cognitiveServiceModelName,
                 cognitiveServiceModelVersion,
-                cognitiveServiceDeploymentSkuName)
+                cognitiveServiceDeploymentSkuName,
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -353,7 +362,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -367,7 +376,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             cognitiveServiceModelName,
             cognitiveServiceModelVersion,
-            cognitiveServiceDeploymentSkuName);
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -385,7 +395,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -398,7 +408,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -419,7 +430,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -430,7 +442,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -446,7 +458,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -477,7 +490,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -488,7 +502,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -501,7 +515,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);

@@ -1,10 +1,20 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
+<#
+.SYNOPSIS
+    Packs NuGet packages for MCP DNX servers and their platforms.
+.PARAMETER ArtifactsPath
+    The path where build artifacts are located.
+.PARAMETER BuildInfoPath
+    The path to the 'build_info.json' file. If not provided, defaults to '.work/build_info.json' in the repo root.
+.PARAMETER OutputPath
+    The path where the generated NuGet packages will be placed.
+#>
 param(
-	[string] $ArtifactsPath,
+    [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-	[string] $OutputPath
+    [string] $OutputPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +23,6 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $tempFolder = "$RepoRoot/.work/temp"
-$nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
 
 # When running locally, ignore missing artifacts instead of failing
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
@@ -21,20 +30,11 @@ $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
 if(!$ArtifactsPath) {
-	$ArtifactsPath = "$RepoRoot/.work/build"
+    $ArtifactsPath = "$RepoRoot/.work/build"
 }
 
 if(!$BuildInfoPath) {
     $BuildInfoPath = "$RepoRoot/.work/build_info.json"
-}
-
-if (!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/packages_dnx"
-}
-
-if(!(Test-Path $ArtifactsPath)) {
-	LogError "Artifacts path $ArtifactsPath does not exist."
-	$exitCode = 1
 }
 
 if (!(Test-Path $BuildInfoPath)) {
@@ -42,7 +42,16 @@ if (!(Test-Path $BuildInfoPath)) {
     $exitCode = 1
 }
 
-$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+$buildInfoDirectory = Split-Path $BuildInfoPath -Parent
+
+if (!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/packages_dnx"
+}
+
+if(!(Test-Path $ArtifactsPath)) {
+    LogError "Artifacts path $ArtifactsPath does not exist."
+    $exitCode = 1
+}
 
 Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
@@ -62,59 +71,6 @@ $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 # Exit early if there were parameter errors
 if($exitCode -ne 0) {
     exit $exitCode
-}
-
-function ExportServerJson {
-    param(
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $Description,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $CommandName,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $PackageId,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $Version,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $RepositoryUrl,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath
-    )
-
-    $output = [ordered]@{
-        '$schema' = "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
-        description = $Description
-        name = "com.microsoft/$CommandName"
-        version = $Version
-        packages = @(
-            [ordered]@{
-                registryType = "nuget"
-                identifier = $PackageId
-                version = $Version
-                transport = [ordered]@{
-                    type = "stdio"
-                }
-                packageArguments = @(
-                    [ordered]@{ type = "positional"; value = "server" },
-                    [ordered]@{ type = "positional"; value = "start" }
-                )
-            }
-        )
-        repository = [ordered]@{
-            url = $RepositoryUrl
-            source = "github"
-        }
-    }
-
-    $output | ConvertTo-Json -Depth 10 | Out-File -Path $OutputPath -Encoding utf8
-
-    Write-Host "`n== Generated $OutputPath` =="
-    Get-Content $OutputPath | Out-Host
-    Write-Host ""
 }
 
 function ExportWrapperToolSettings {
@@ -412,15 +368,22 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     $description = $server.dnxDescription ? $server.dnxDescription : $server.description
     $iconFileName = Split-Path $server.packageIcon -Leaf
 
-    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native -and -not $_.specialPurpose }
     if ($filteredPlatforms.Count -eq 0) {
         LogInfo "No platforms to build for server $($server.name) with native=$native"
         return
     }
 
-    $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+    $serverJsonFile = Join-Path $buildInfoDirectory $server.name "server.json"
 
-    $platformOutputPath = "$serverOutputPath/platform"
+    if (!(Test-Path $serverJsonFile)) {
+        LogError "Server JSON file $serverJsonFile does not exist to pack into NuGet."
+        exit 1
+    }
+
+    $serverOutputPath = Join-Path $OutputPath $server.artifactPath
+
+    $platformOutputPath = Join-Path $serverOutputPath "platform"
     New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 
     # Process all platform packages before the wrapper package
@@ -500,19 +463,10 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
     New-Item -ItemType Directory -Force -Path "$tempFolder/.mcp" | Out-Null
 
-    Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
     Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
     Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force
-
-    # Export ServerJson
-    ExportServerJson `
-        -Description $description `
-        -CommandName $server.cliName `
-        -PackageId $packageId `
-        -Version $server.version `
-        -RepositoryUrl $buildInfo.repositoryUrl `
-        -OutputPath "$tempFolder/.mcp/server.json"
+    Copy-Item -Path $serverJsonFile -Destination "$tempFolder/.mcp/server.json" -Force
 
     # Export WrapperPackageNuspec
     ExportWrapperPackageNuspec `
@@ -535,11 +489,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -PlatformReferences $platformRefs `
         -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
 
+    $insertPayload = @{
+        ToolTitle = '.NET Tool'
+        MCPRepositoryMetadata = "<!-- mcp-name: $($server.mcpRepositoryName) -->"
+    }
+
     & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
         -Command "extract" `
         -InputReadMePath "$RepoRoot/$($server.readmePath)" `
         -PackageType "nuget" `
-        -InsertPayload @{ ToolTitle = '.NET Tool' } `
+        -InsertPayload $insertPayload `
         -OutputDirectory $tempFolder
 
     LogInfo "Creating Nuget Package from $wrapperToolNuspec"
@@ -549,8 +508,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
 Push-Location $RepoRoot
 try {
-	# Clear and recreate the output directory
-	Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    # Clear and recreate the output directory
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
     foreach($server in $buildInfo.servers) {
         BuildServerPackages -server $server -native $false
@@ -560,10 +519,10 @@ try {
         }
     }
 
-	LogSuccess "`nNuGet packaging completed successfully!"
+    LogSuccess "`nNuGet packaging completed successfully!"
 }
 finally {
-	Pop-Location
+    Pop-Location
 }
 
 exit $exitCode

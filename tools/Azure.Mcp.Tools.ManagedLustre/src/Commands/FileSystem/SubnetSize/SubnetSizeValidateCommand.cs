@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -71,7 +71,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -87,7 +87,8 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                                 options.SubnetId!,
                                 options.Location!,
                                 options.Tenant,
-                                options.RetryPolicy);
+                                options.RetryPolicy,
+                                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
@@ -40,7 +40,7 @@ public record UsageInfo(
 
 public interface IUsageChecker
 {
-    Task<List<UsageInfo>> GetUsageForLocationAsync(string location);
+    Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 }
 
 // Abstract base class for checking Azure quotas
@@ -60,7 +60,7 @@ public abstract class AzureUsageChecker : IUsageChecker
         Logger = logger;
     }
 
-    public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location);
+    public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 
 }
 
@@ -81,7 +81,7 @@ public static class UsageCheckerFactory
         { "Microsoft.ContainerInstance", ResourceProvider.ContainerInstance }
     };
 
-    public static IUsageChecker CreateUsageChecker(TokenCredential credential, string provider, string subscriptionId, ILoggerFactory loggerFactory, IHttpClientService httpClientService)
+    public static IUsageChecker CreateUsageChecker(TokenCredential credential, string provider, string subscriptionId, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
     {
         if (!ProviderMapping.TryGetValue(provider, out var resourceProvider))
         {
@@ -96,7 +96,7 @@ public static class UsageCheckerFactory
             ResourceProvider.ContainerApp => new ContainerAppUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerAppUsageChecker>()),
             ResourceProvider.Network => new NetworkUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<NetworkUsageChecker>()),
             ResourceProvider.MachineLearning => new MachineLearningUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<MachineLearningUsageChecker>()),
-            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), httpClientService),
+            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), httpClientFactory),
             ResourceProvider.HDInsight => new HDInsightUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>()),
             ResourceProvider.Search => new SearchUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>()),
             ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>()),
@@ -114,7 +114,8 @@ public static class AzureQuotaService
         string subscriptionId,
         string location,
         ILoggerFactory loggerFactory,
-        IHttpClientService httpClientService)
+        IHttpClientFactory httpClientFactory,
+        CancellationToken cancellationToken)
     {
         // Group resource types by provider to avoid duplicate processing
         var providerToResourceTypes = resourceTypes
@@ -129,8 +130,8 @@ public static class AzureQuotaService
             var (provider, resourceTypesForProvider) = (kvp.Key, kvp.Value);
             try
             {
-                var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, httpClientService);
-                var quotaInfo = await usageChecker.GetUsageForLocationAsync(location);
+                var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, httpClientFactory);
+                var quotaInfo = await usageChecker.GetUsageForLocationAsync(location, cancellationToken);
                 logger.LogDebug("Retrieved quota info for provider {Provider}: {ItemCount} items", provider, quotaInfo.Count);
 
                 return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, quotaInfo));

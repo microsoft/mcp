@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -8,7 +9,9 @@ using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,10 +26,8 @@ using Options = Microsoft.Extensions.Options.Options;
 /// <summary>
 /// Extension methods for configuring Azure MCP server services.
 /// </summary>
-public static class AzureMcpServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
-    private const string DefaultServerName = "Azure MCP Server";
-
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
@@ -64,14 +65,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton(sp =>
-        {
-            return new RegistryToolLoader(
-                sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                sp.GetRequiredService<ILogger<RegistryToolLoader>>()
-            );
-        });
+        services.AddSingleton<RegistryToolLoader>();
 
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
@@ -170,7 +164,34 @@ public static class AzureMcpServiceCollectionExtensions
         }
         else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
         {
-            services.AddSingleton<IToolLoader, ServerToolLoader>();
+            services.AddSingleton<IToolLoader>(sp =>
+            {
+                var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+                var consolidatedStrategy = sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>();
+
+                // Create a new CommandFactory with consolidated command groups
+                var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
+
+                var toolLoaders = new List<IToolLoader>
+                {
+                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    new ServerToolLoader(
+                        sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()
+                    ),
+                    // NamespaceToolLoader enables direct in-process execution for consolidated tools
+                    new NamespaceToolLoader(
+                        consolidatedCommandFactory,
+                        sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
+                        sp,
+                        loggerFactory.CreateLogger<NamespaceToolLoader>(),
+                        false
+                    ),
+                };
+
+                return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
+            });
         }
         else if (serviceStartOptions.Mode == ModeTypes.All)
         {
@@ -190,18 +211,15 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerOptions = services
             .AddOptions<McpServerOptions>()
-            .Configure<IMcpRuntime>((mcpServerOptions, mcpRuntime) =>
+            .Configure<IMcpRuntime, IOptions<AzureMcpServerConfiguration>>((mcpServerOptions, mcpRuntime, serverConfiguration) =>
             {
-                var mcpServerOptionsBuilder = services.AddOptions<McpServerOptions>();
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName();
-                var serverName = entryAssembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? DefaultServerName;
+                var configuration = serverConfiguration.Value;
 
                 mcpServerOptions.ProtocolVersion = "2024-11-05";
                 mcpServerOptions.ServerInfo = new Implementation
                 {
-                    Name = serverName,
-                    Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
+                    Name = configuration.DisplayName,
+                    Version = configuration.Version,
                 };
 
                 mcpServerOptions.Handlers = new()
@@ -216,7 +234,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.EnableInsecureTransports)
+        if (serviceStartOptions.Transport == TransportTypes.Http)
         {
             mcpServerBuilder.WithHttpTransport();
         }
@@ -226,6 +244,57 @@ public static class AzureMcpServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
+    /// </summary>
+    /// <param name="services">Service Collection to add configuration logic to.</param>
+    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    {
+        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEnvironmentVariables()
+            .SetBasePath(AppContext.BaseDirectory)
+            .Build();
+        services.AddSingleton<IConfiguration>(configuration);
+
+        services.AddOptions<AzureMcpServerConfiguration>()
+            .BindConfiguration(string.Empty)
+            .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            {
+                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
+                // the assembly that will run the tool calls.
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly == null)
+                {
+                    throw new InvalidOperationException("Entry assembly must be a managed assembly.");
+                }
+
+                options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
+
+                // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+                // to telemetry endpoints. Support logging captures debug-level information that may contain
+                // sensitive data, so we disable all telemetry as a safety measure.
+                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.SupportLoggingFolder))
+                {
+                    options.IsTelemetryEnabled = false;
+                    return;
+                }
+
+                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
+                // over any other settings.
+                var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
+                var transport = serviceStartOptions.Value.Transport;
+                var isStdioTransport = string.IsNullOrEmpty(transport)
+                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
+
+                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
+                // telemetry is disabled for HTTP transport
+                options.IsTelemetryEnabled = collectTelemetry && isStdioTransport;
+            });
     }
 
     /// <summary>
@@ -261,7 +330,7 @@ public static class AzureMcpServiceCollectionExtensions
     /// <returns>Combined content from all Azure best practices resource files.</returns>
     private static string LoadAzureRulesForBestPractices()
     {
-        var coreAssembly = typeof(AzureMcpServiceCollectionExtensions).Assembly;
+        var coreAssembly = typeof(ServiceCollectionExtensions).Assembly;
         var azureRulesContent = new StringBuilder();
 
         // List of known best practices resource files

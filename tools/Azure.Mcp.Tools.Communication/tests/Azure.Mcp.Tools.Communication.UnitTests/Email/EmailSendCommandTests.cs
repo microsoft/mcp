@@ -1,27 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Azure;
-using Azure.Mcp.Core.Exceptions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
-using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Email;
@@ -101,11 +92,12 @@ public class EmailSendCommandTests
                     Arg.Any<string[]>(),
                     Arg.Any<string[]>(),
                     Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>())
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -123,7 +115,7 @@ public class EmailSendCommandTests
                 // Runtime validation errors (empty values or command validation)
                 try
                 {
-                    var response = await _command.ExecuteAsync(_context, parseResult);
+                    var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
                     // If we reach here without exception, check if it's a validation error response
                     if (response.Status == HttpStatusCode.BadRequest)
@@ -179,11 +171,12 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
@@ -203,7 +196,8 @@ public class EmailSendCommandTests
             null,
             null,
             null,
-            null
+            null,
+            Arg.Any<CancellationToken>()
         );
 
         // Verify the response contains the expected result
@@ -232,24 +226,24 @@ public class EmailSendCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedException = new RequestFailedException("Test error message");
-        _mockCommunicationService
-            .When(x => x.SendEmailAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>()))
-            .Do(x => throw expectedException);
+        _mockCommunicationService.SendEmailAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert

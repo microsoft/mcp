@@ -1,12 +1,11 @@
 using System.CommandLine;
-using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
@@ -50,7 +49,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +63,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
             var result = await _service.GetLedgerEntryAsync(
                 options.LedgerName!,
                 options.TransactionId!,
-                options.CollectionId).ConfigureAwait(false);
+                options.CollectionId,
+                cancellationToken).ConfigureAwait(false);
 
             context.Response.Results = ResponseResult.Create(
                 result,

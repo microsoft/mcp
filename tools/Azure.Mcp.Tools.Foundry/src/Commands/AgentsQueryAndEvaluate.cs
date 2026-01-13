@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -58,7 +59,7 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -77,7 +78,8 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
                 options.Tenant,
-                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList());
+                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList(),
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsQueryAndEvaluateCommandResult(result),

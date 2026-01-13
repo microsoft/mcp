@@ -1,23 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
-using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
-public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerService
+public class ConfidentialLedgerService(ITenantService tenantService)
+    : BaseAzureService(tenantService), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
     private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");
@@ -39,13 +34,13 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         return RequestContent.Create(binary);
     }
 
-    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null)
+    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
-        var credential = await GetCredential();
+        var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
@@ -62,7 +57,7 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         };
     }
 
-    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
+    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
@@ -78,7 +73,7 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        var credential = await GetCredential();
+        var credential = await GetCredential(cancellationToken);
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
 
         Response? getByCollectionResponse = null;

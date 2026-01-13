@@ -3,12 +3,12 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -36,7 +36,7 @@ public class DatabaseQueryCommandTests
     public async Task ExecuteAsync_ReturnsResults_WhenQuerySucceeds()
     {
         var expectedResults = new List<string> { "id, name", "1, John", "2, Jane" };
-        _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users").Returns(expectedResults);
+        _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users", Arg.Any<CancellationToken>()).Returns(expectedResults);
 
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -49,7 +49,7 @@ public class DatabaseQueryCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -64,7 +64,7 @@ public class DatabaseQueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenQueryFails()
     {
-        _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL").ThrowsAsync(new InvalidOperationException("Syntax error"));
+        _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Syntax error"));
 
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -77,7 +77,7 @@ public class DatabaseQueryCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

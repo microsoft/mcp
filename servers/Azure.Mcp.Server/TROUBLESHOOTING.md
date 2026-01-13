@@ -18,11 +18,10 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
-  - [Remote MCP Server](#remote-mcp-server)
-      - [SSE Transport](#sse-transport)
-      - [Streamable HTTP Transport](#streamable-http-transport)
+  - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
+      - [Support Logging](#support-logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
       - [Collecting logs with VS Code](#collecting-logs-with-vs-code)
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
@@ -55,7 +54,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
   "servers": {
     "Azure Storage": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -65,7 +64,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
     },
     "Azure KeyVault": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -85,7 +84,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
   "servers": {
     "Azure Storage Accounts Only": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -97,7 +96,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
     },
     "Essential Azure Tools": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -391,11 +390,13 @@ When `prod` is used, the credential chain becomes:
 ```
 Environment → Workload Identity → Managed Identity
 ```
+**Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
 When `dev` is used, the credential chain becomes:
 ```
-Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential
 ```
+**Note:** `InteractiveBrowserCredential` IS added as fallback for development scenarios.
 
 #### Use Specific Credentials Only
 
@@ -405,7 +406,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -413,11 +414,16 @@ AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
+
+# Use only Managed Identity credential (for Azure-hosted apps)
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 ```
+
+**Important:** When using a specific credential name, `InteractiveBrowserCredential` is NOT added as fallback (except when explicitly requesting `InteractiveBrowserCredential`). Authentication will fail fast if the specified credential is unavailable. This ensures production scenarios (like Azure Web Apps with Managed Identity) fail immediately rather than attempting interactive browser authentication.
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -425,6 +431,22 @@ AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 - `VisualStudioCodeCredential`
 - `VisualStudioCredential`
 - `WorkloadIdentityCredential`
+
+#### Using Managed Identity in Azure
+
+For Azure-hosted applications (Web Apps, Function Apps, Container Apps, AKS, etc.), use Managed Identity:
+
+```bash
+# For System-Assigned Managed Identity
+AZURE_TOKEN_CREDENTIALS=prod
+# or
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
+
+# For User-Assigned Managed Identity, also set:
+AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
+The `AZURE_CLIENT_ID` environment variable specifies which User-Assigned Managed Identity to use. If not set, System-Assigned Managed Identity will be used.
 
 ### Primary Access Token from Wrong Issuer
 
@@ -791,18 +813,98 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
       }
    ```
 
-## Remote MCP Server
+## Remote MCP Server (preview)
 
-### SSE Transport
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
 
->[!WARNING]
->**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
->
-> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+### HTTPS redirection issues
 
-### Streamable HTTP Transport
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
 
-The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
+
+### Common Issues
+
+#### 401 Unauthorized - Invalid Token
+
+**Causes:** Token expired, wrong audience, or missing bearer token.
+
+**Resolution:**
+1. Verify token acquisition:
+   ```bash
+   az account get-access-token --resource api://<your-client-id>
+   ```
+
+2. Validate token claims at [jwt.ms](https://jwt.ms):
+   - `aud`: Must match server's ClientId
+   - `tid`: Must match server's TenantId
+   - `scp`: Must include `Mcp.Tools.ReadWrite`
+
+#### 403 Forbidden - Insufficient Permissions
+
+**Causes:** Missing scope/app role or user not assigned to application.
+
+**Resolution:**
+1. For delegated permissions, check scope in token:
+   ```bash
+   az ad app permission admin-consent --id <client-id>
+   ```
+
+2. Verify user assignment in Azure Portal:
+   - Entra ID → Enterprise Applications → [Your App] → Users and groups
+
+#### OBO Token Exchange Failures
+
+**Causes:** Server app missing API permissions or client token lacks scopes.
+
+**Resolution:**
+1. Grant Azure Management API permissions:
+   ```bash
+   az ad app permission add \
+     --id <server-client-id> \
+     --api https://management.azure.com/ \
+     --api-permissions user_impersonation=Scope
+
+   az ad app permission admin-consent --id <server-client-id>
+   ```
+
+2. Add `knownClientApplications` to server's app manifest:
+   ```json
+   {
+     "knownClientApplications": ["<client-app-id>"]
+   }
+   ```
+
+#### Azure Service Access Denied
+
+**Causes:** Missing RBAC permissions on Azure resources.
+
+**Resolution:**
+
+**For OBO (per-user):**
+```bash
+az role assignment create \
+  --assignee user@domain.com \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg>
+```
+
+**For Hosting Environment (managed identity):**
+```bash
+IDENTITY_ID=$(az webapp identity show \
+  --name <app-name> \
+  --resource-group <rg> \
+  --query principalId -o tsv)
+
+az role assignment create \
+  --assignee $IDENTITY_ID \
+  --role Reader \
+  --scope /subscriptions/<sub-id>
+```
 
 ## Logging and Diagnostics
 
@@ -811,6 +913,45 @@ The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP
 The Azure MCP Server is instrumented using the .NET [EventSource](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) to emit detailed information. Logging follows the pattern of marking operation start, completion, and exceptions. These logs are invaluable for diagnosing Azure MCP Server issues.
 
 Server logs can be obtained by capturing events for provider "Microsoft-Extensions-Logging".
+
+#### Support Logging
+
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-write-support-logs-to-dir` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
+
+> [!WARNING]
+> Support logging may include sensitive information. Use with extreme caution and only when requested by support.
+
+> [!NOTE]
+> When support logging is enabled, all telemetry is automatically disabled to prevent sensitive debug information from being sent to telemetry endpoints.
+
+**Example configuration in mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server (Support Mode)": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@latest",
+        "server",
+        "start",
+        "--dangerously-write-support-logs-to-dir",
+        "/path/to/logs"
+      ]
+    }
+  }
+}
+```
+
+**Command-line usage:**
+
+```bash
+azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+```
+
+The log files will be created with timestamp-based names (e.g., `azmcp_20251202_143052.log`) and will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
 
 #### Collecting logs with dotnet-trace
 
@@ -861,7 +1002,7 @@ By default, VS Code logs informational, warning, and error level messages. To ge
 
 The server supports observability with [OpenTelemetry](https://opentelemetry.io/).
 
-To export telemetry to an OTLP endpoint, set the `OTEL_DISABLE_SDK` environment variable to `false`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
+To export telemetry to an OTLP endpoint, set the `AZURE_MCP_ENABLE_OTLP_EXPORTER` environment variable to `true`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
 
 You can try it locally with the [standalone Aspire dashboard](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/standalone):
 
@@ -881,10 +1022,98 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 
 ### Development in VS Code
 
+#### Running Azure MCP Server Locally for Development
+
+When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
+
+**Option 1: HTTP Mode (Remote)**
+
+**Prerequisites: Create launchSettings.json**
+
+> [!NOTE]
+> Internal contributors may skip this step as the `launchSettings.json` file is already provided in the repository.
+
+Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
+
+1. Create the directory (if it doesn't exist):
+   ```bash
+   mkdir -p servers/Azure.Mcp.Server/src/Properties
+   ```
+
+2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
+   ```json
+   {
+     "profiles": {
+       "debug-remotemcp": {
+         "commandName": "Project",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "environmentVariables": {
+           "ASPNETCORE_ENVIRONMENT": "Development",
+           "ASPNETCORE_URLS": "http://localhost:<port>",
+           "AzureAd__TenantId": "<your-tenant-id>",
+           "AzureAd__ClientId": "<your-client-id>",
+           "AzureAd__Instance": "https://login.microsoftonline.com/"
+         }
+       }
+     }
+   }
+   ```
+
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
+
+```bash
+dotnet build
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
+```
+
+This starts the MCP server in **remote HTTP mode** with the following configuration:
+- **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+- **Environment variables** for Entra ID authentication and ASP.NET Core settings
+- **HTTP endpoint:** `https://localhost:1031` for easier debugging and testing
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "https://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
+
+**Option 2: Stdio Mode (Local)**
+
+If you need to test the server in stdio mode (standard input/output), first build the project and then run the executable directly:
+
+```bash
+dotnet build
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start      # macOS/Linux
+```
+
+This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "args": ["server", "start"]
+    }
+  }
+}
+```
+
 #### Bring your own language model key
 
 [Bring your own language model key](https://code.visualstudio.com/docs/copilot/language-models#_bring-your-own-language-model-key)
-An existing API key from a language model provider can be used to access that provider’s models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
+An existing API key from a language model provider can be used to access that provider's models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
 
 
 ### Locating MCP Server Binaries in VS Code

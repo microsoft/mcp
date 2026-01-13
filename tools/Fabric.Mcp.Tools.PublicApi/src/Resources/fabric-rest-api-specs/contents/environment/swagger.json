@@ -10,13 +10,13 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?preview=true": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?beta=true": {
       "get": {
         "tags": [
           "Staging"
         ],
         "summary": "Get environment staging spark compute.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `beta` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Staging_Get_Spark_Compute_(preview)",
         "produces": [
           "application/json"
@@ -39,9 +39,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/get-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/get-spark-compute).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {
@@ -77,7 +77,7 @@
           "Staging"
         ],
         "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/update-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Request and response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/update-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Request and response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Staging_Update_Spark_Compute_(preview)",
         "consumes": [
           "application/json"
@@ -103,9 +103,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/update-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/update-spark-compute).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {
@@ -146,13 +146,13 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?preview=true": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?beta=true": {
       "get": {
         "tags": [
           "Published"
         ],
         "summary": "Get environment spark compute.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Published_Get_Spark_Compute_(preview)",
         "produces": [
           "application/json"
@@ -175,9 +175,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/get-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/get-spark-compute).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {
@@ -209,13 +209,13 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?preview=false": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?beta=false": {
       "get": {
         "tags": [
           "Staging"
         ],
         "summary": "Get environment staging spark compute.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Staging_GetSparkCompute",
         "produces": [
           "application/json"
@@ -238,7 +238,7 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -276,7 +276,7 @@
           "Staging"
         ],
         "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Staging_UpdateSparkCompute",
         "consumes": [
           "application/json"
@@ -302,7 +302,7 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -348,13 +348,13 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?preview=false": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?beta=false": {
       "get": {
         "tags": [
           "Published"
         ],
         "summary": "Get environment spark compute.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "Published_GetSparkCompute",
         "produces": [
           "application/json"
@@ -377,7 +377,7 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -850,10 +850,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?preview=false": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?beta=false": {
       "get": {
         "summary": "Get a list of libraries staged into environment.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Staging"
         ],        
@@ -883,7 +883,7 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -927,7 +927,7 @@
     "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries": {
       "post": {
         "summary": "Upload spark library into environment.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/upload-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be added is now specified directly in the URL path.\n* The request now supports `application/octet-stream` as `Content-Type` instead of `multipart/form-data`.\n\nThis API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml.\n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `multipart/form-data`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/upload-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be added is now specified directly in the URL path.\n* The request now supports `application/octet-stream` as `Content-Type` instead of `multipart/form-data`.\n\nThis API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml.\n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `multipart/form-data`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Staging"
         ],
@@ -975,7 +975,7 @@
       },
       "delete": {
         "summary": "Deletes a library from environment. It supports deleting one file at a time.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/delete-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be removed is now specified directly in the URL path, rather than as a query parameter in the libraries collection.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/delete-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be removed is now specified directly in the URL path, rather than as a query parameter in the libraries collection.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Staging"
         ],
@@ -1026,10 +1026,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?preview=true": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?beta=true": {
       "get": {
         "summary": "Get environment staging libraries.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Staging"
         ],
@@ -1055,9 +1055,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/list-libraries).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/list-libraries).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {
@@ -1354,10 +1354,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?preview=false": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?beta=false": {
       "get": {
         "summary": "Get environment published libraries.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`)**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Published"
         ],
@@ -1394,7 +1394,7 @@
             "required": false
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -1428,10 +1428,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?preview=true": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?beta=true": {
       "get": {
         "summary": "Get environment published libraries.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Published"
         ],
@@ -1457,9 +1457,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/list-libraries).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/list-libraries).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {
@@ -1538,10 +1538,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?preview=false": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?beta=false": {
       "post": {
         "summary": "Trigger an environment publish operation.",
-        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1568,7 +1568,7 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
             "required": true,
@@ -1583,7 +1583,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Request accepted, publish operation is in progress. Returns the GA contract when `preview=false` (default after March 1, 2026).",
+            "description": "Request accepted, publish operation is in progress. Returns the GA contract when `beta=false` (default after March 1, 2026).",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",
@@ -1620,10 +1620,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?preview=true": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?beta=true": {
       "post": {
         "summary": "Trigger an environment publish operation.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/items/publish-environment). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response is following [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation) pattern and HTTP response code 202 may be returned.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/items/publish-environment). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response is following [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation) pattern and HTTP response code 202 may be returned.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1649,9 +1649,9 @@
             "format": "uuid"
           },
           {
-            "name": "preview",
+            "name": "beta",
             "in": "query",
-            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/items/publish-environment).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/items/publish-environment).\nStarting March 1, 2026, the default value for `beta` will change to `false`.",
             "required": true,
             "type": "boolean",
             "x-ms-deprecation": {

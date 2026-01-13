@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
@@ -55,7 +57,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -84,7 +86,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 options.Subscription!,
                 options.CognitiveServiceModelName,
                 options.CognitiveServiceModelVersion,
-                options.CognitiveServiceDeploymentSkuName);
+                options.CognitiveServiceDeploymentSkuName,
+                cancellationToken);
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 

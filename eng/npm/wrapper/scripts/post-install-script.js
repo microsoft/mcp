@@ -1,23 +1,19 @@
-const fs = require('fs')
-const path = require('path')
 const os = require('os');
 
 const platform = os.platform();
 const arch = os.arch();
 
-const pkgJsonPath = path.join(__dirname, '..', 'package.json');
-let baseName = '@azure/mcp';
-try {
-  const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  if (pkg.name) {
-    baseName = pkg.name;
-  }
-} catch (e) {
-  // fallback to default
+let baseName = '';
+try{
+    const packageJson = require('../package.json');
+    baseName = packageJson.name;
+}
+catch (err) {
+  console.error('Unable to verify platform package installation. Error reading package.json.');
+  process.exit(1);
 }
 
 const requiredPackage = `${baseName}-${platform}-${arch}`;
-
 try {
   require.resolve(requiredPackage);
 } catch (err) {

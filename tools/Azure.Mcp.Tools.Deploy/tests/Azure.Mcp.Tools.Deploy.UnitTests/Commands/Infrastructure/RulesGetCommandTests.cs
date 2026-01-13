@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -43,7 +43,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -63,13 +63,13 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Expected parameters in terraform parameters", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("main.tf", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -104,7 +104,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -125,7 +125,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -145,7 +145,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -168,7 +168,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);

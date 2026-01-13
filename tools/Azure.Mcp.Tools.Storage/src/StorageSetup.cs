@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
+using Azure.Mcp.Tools.Storage.Table.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Storage;
 
@@ -29,19 +30,22 @@ public class StorageSetup : IAreaSetup
 
         services.AddSingleton<ContainerCreateCommand>();
         services.AddSingleton<ContainerGetCommand>();
+
+        services.AddSingleton<TableListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var storage = new CommandGroup(Name,
             """
-            Storage operations - Commands for managing and accessing Azure Storage accounts and the Blobs service for
-            scalable cloud storage solutions. Use this tool when you need to list storage accounts and work with blob
-            containers and blobs. This tool focuses on object storage scenarios. This tool is a hierarchical MCP command
-            router where sub-commands are routed to MCP servers that require specific fields inside the "parameters" object.
-            To invoke a command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available
-            sub-commands for different Azure Storage service operations including blobs. Note that this tool requires
-            appropriate Storage account permissions and will only access storage resources accessible to the authenticated user.
+            Storage operations - Commands for managing and accessing Azure Storage accounts and their data services
+            including Blobs and Tables service for scalable cloud storage solutions. Use this tool when you need to
+            list storage accounts, work with blob containers and blobs, and list tables. This tool focuses on object
+            storage scenarios. This tool is a hierarchical MCP command router where sub-commands are routed to MCP
+            servers that require specific fields inside the "parameters" object. To invoke a command, set "command" and
+            wrap its arguments in "parameters". Set "learn=true" to discover available sub-commands for different Azure
+            Storage service operations including blobs. Note that this tool requires appropriate Storage account
+            permissions and will only access storage resources accessible to the authenticated user.
             """,
             Title);
 
@@ -71,6 +75,13 @@ public class StorageSetup : IAreaSetup
         blobContainer.AddCommand(containerCreate.Name, containerCreate);
         var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
         blobContainer.AddCommand(containerGet.Name, containerGet);
+
+        // Create Table subgroup under storage
+        var tables = new CommandGroup("table", "Storage table operations - Commands for managing tables in your Azure Storage accounts.");
+        storage.AddSubGroup(tables);
+
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        tables.AddCommand(tableList.Name, tableList);
 
         return storage;
     }

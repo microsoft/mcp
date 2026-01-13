@@ -3,6 +3,19 @@ parameters:
   type: string
   values: [ none, internal, public ]
   default: 'none'
+- name: PackageDocker
+  type: boolean
+  default: false
+- name: PackageVSIX
+  type: boolean
+  default: false
+- name: IncludeNative
+  type: boolean
+  default: true
+- name: TestTimeoutInMinutes
+  displayName: Test Timeout In Minutes
+  type: number
+  default: 30
 
 trigger: none
 pr: none
@@ -13,7 +26,8 @@ extends:
     ServerName: Template.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    PackageDocker: false
-    PackageVSIX: false
-    IncludeNative: true
+    PackageDocker: ${{ parameters.PackageDocker }}
+    PackageVSIX: ${{ parameters.PackageVSIX }}
+    IncludeNative: ${{ parameters.IncludeNative }}
+    TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     IsTestPipeline: true

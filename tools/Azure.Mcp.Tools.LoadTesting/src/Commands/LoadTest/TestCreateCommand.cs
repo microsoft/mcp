@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
@@ -41,29 +42,29 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.LoadTesting.Test);
-        command.Options.Add(OptionDefinitions.LoadTesting.Description);
-        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
-        command.Options.Add(OptionDefinitions.LoadTesting.Endpoint);
-        command.Options.Add(OptionDefinitions.LoadTesting.VirtualUsers);
-        command.Options.Add(OptionDefinitions.LoadTesting.Duration);
-        command.Options.Add(OptionDefinitions.LoadTesting.RampUpTime);
+        command.Options.Add(LoadTestingOptionDefinitions.Test);
+        command.Options.Add(LoadTestingOptionDefinitions.Description);
+        command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
+        command.Options.Add(LoadTestingOptionDefinitions.Endpoint);
+        command.Options.Add(LoadTestingOptionDefinitions.VirtualUsers);
+        command.Options.Add(LoadTestingOptionDefinitions.Duration);
+        command.Options.Add(LoadTestingOptionDefinitions.RampUpTime);
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Endpoint.Name);
-        options.VirtualUsers = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.VirtualUsers.Name);
-        options.Duration = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.Duration.Name);
-        options.RampUpTime = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.RampUpTime.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Description.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.DisplayName.Name);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Endpoint.Name);
+        options.VirtualUsers = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.VirtualUsers.Name);
+        options.Duration = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.Duration.Name);
+        options.RampUpTime = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.RampUpTime.Name);
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -90,7 +91,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
                 options.RampUpTime,
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

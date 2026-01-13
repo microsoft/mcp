@@ -4,41 +4,114 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
-public abstract class BaseAzureService(ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
+public abstract class BaseAzureService
 {
-    private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
-    public static readonly string DefaultUserAgent;
+    private static UserAgentPolicy s_sharedUserAgentPolicy;
+    private static string? s_userAgent;
+    private static volatile bool s_initialized = false;
+    private static readonly object s_initializeLock = new();
+    private readonly ITenantService? _tenantServiceDoNotUseDirectly;
 
-    private CustomChainedCredential? _credential;
-    private string? _lastTenantId;
-    private ArmClient? _armClient;
-    private string? _lastArmClientTenantId;
-    private RetryPolicyOptions? _lastRetryPolicy;
-    private readonly ITenantService? _tenantService = tenantService;
-    private readonly ILoggerFactory? _loggerFactory = loggerFactory;
-
-    protected ILoggerFactory LoggerFactory => _loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+    // Cache assembly metadata to avoid repeated reflection
+    private static readonly string s_version;
+    private static readonly string s_framework;
+    private static readonly string s_platform;
+    private static readonly string s_defaultUserAgent;
 
     static BaseAzureService()
     {
         var assembly = typeof(BaseAzureService).Assembly;
-        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
-        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
-        DefaultUserAgent = $"azmcp/{version} ({framework}; {platform})";
-        s_sharedUserAgentPolicy = new UserAgentPolicy(DefaultUserAgent);
+        // Initialize the default user agent policy without transport type
+        s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
+        s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
     }
 
-    protected string UserAgent { get; } = DefaultUserAgent;
+    /// <summary>
+    /// Initializes the user agent policy to include the transport type for all Azure service calls.
+    /// This method must be called once during application startup before creating any <see cref="BaseAzureService"/> instances.
+    /// Subsequent calls will be safely ignored to ensure the policy is initialized only once.
+    /// </summary>
+    /// <param name="transportType">The transport type (e.g., "stdio", "http"). Cannot be null or empty.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="transportType"/> is null or empty.</exception>
+    /// <remarks>
+    /// The user agent string will be formatted as: azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})
+    /// </remarks>
+    public static void InitializeUserAgentPolicy(string transportType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transportType, nameof(transportType));
+
+        // Ensure this method is called only once
+        lock (s_initializeLock)
+        {
+            if (s_initialized)
+            {
+                return;
+            }
+
+            s_userAgent = $"azmcp/{s_version} azmcp-{transportType}/{s_version} ({s_framework}; {s_platform})";
+            s_sharedUserAgentPolicy = new UserAgentPolicy(s_userAgent);
+
+            s_initialized = true;
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
+    /// </summary>
+    /// <param name="tenantService">
+    /// An <see cref="ITenantService"/> used for Azure API calls.
+    /// </param>
+    protected BaseAzureService(ITenantService tenantService)
+    {
+        ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
+        TenantService = tenantService;
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
+    }
+
+    /// <summary>
+    /// DO NOT USE THIS CONSTRUCTOR.
+    /// </summary>
+    /// <remarks>
+    /// This is only to be used by <see cref="Tenant.TenantService"/> to overcome a circular dependency on itself.</remarks>
+    internal BaseAzureService()
+    {
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
+    }
+
+    protected string UserAgent { get; }
+
+    /// <summary>
+    /// Gets or initializes the tenant service for resolving tenant IDs and obtaining credentials.
+    /// </summary>
+    /// <remarks>
+    /// Do not <see langword="init"/> this. The initializer is just for <see cref="Tenant.TenantService"/>
+    /// to overcome a circular dependency on itself. In all other cases, pass the constructor
+    /// a non-null <see cref="ITenantService"/>.
+    /// </remarks>
+    protected ITenantService TenantService
+    {
+        get
+        {
+            return _tenantServiceDoNotUseDirectly
+                ?? throw new InvalidOperationException($"{nameof(TenantService)} is not set. This is a code bug. Use the {nameof(BaseAzureService)} constructor with a non-null {nameof(ITenantService)}.");
+        }
+
+        init
+        {
+            _tenantServiceDoNotUseDirectly = value;
+        }
+    }
 
     /// <summary>
     /// Escapes a string value for safe use in KQL queries to prevent injection attacks.
@@ -57,29 +130,27 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
         return value.Replace("\\", "\\\\").Replace("'", "''");
     }
 
-    protected async Task<string?> ResolveTenantIdAsync(string? tenant)
+    protected async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
-        if (tenant == null || _tenantService == null)
+        if (tenant == null)
             return tenant;
-        return await _tenantService.GetTenantId(tenant);
+        return await TenantService.GetTenantId(tenant, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant = null)
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
     {
-        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
+        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
+        return await GetCredential(null, cancellationToken);
+    }
 
-        // Return cached credential if it exists and tenant ID hasn't changed
-        if (_credential != null && _lastTenantId == tenantId)
-        {
-            return _credential;
-        }
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
+    {
+        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
-            ILogger<CustomChainedCredential>? logger = _loggerFactory?.CreateLogger<CustomChainedCredential>();
-            _credential = new CustomChainedCredential(tenantId, logger);
-            _lastTenantId = tenantId;
-            return _credential;
+            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -90,7 +161,6 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-
         return clientOptions;
     }
 
@@ -131,76 +201,33 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     /// <summary>
-    /// Creates an Azure Resource Manager client with optional retry policy
+    /// Creates an Azure Resource Manager client with an optional retry policy.
     /// </summary>
-    /// <param name="tenant">Optional Azure tenant ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="armClientOptions">Optional ARM client options</param>
-    protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, ArmClientOptions? armClientOptions = null)
+    /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
+    /// <param name="retryPolicy">Optional retry policy configuration.</param>
+    /// <param name="armClientOptions">Optional ARM client options.</param>
+    protected async Task<ArmClient> CreateArmClientAsync(
+        string? tenantIdOrName = null,
+        RetryPolicyOptions? retryPolicy = null,
+        ArmClientOptions? armClientOptions = null,
+        CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(tenant);
-
-        // Return cached client if parameters match
-        if (_armClient != null &&
-            _lastArmClientTenantId == tenantId &&
-            armClientOptions == null &&
-            RetryPolicyOptions.AreEqual(_lastRetryPolicy, retryPolicy))
-        {
-            return _armClient;
-        }
+        var tenantId = await ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
         try
         {
-            var credential = await GetCredential(tenantId);
-            var options = armClientOptions ?? new ArmClientOptions();
+            TokenCredential credential = await GetCredential(tenantId, cancellationToken);
+            ArmClientOptions options = armClientOptions ?? new();
+            options.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
-            _armClient = new ArmClient(credential, default, options);
-            _lastArmClientTenantId = tenantId;
-            _lastRetryPolicy = retryPolicy;
-
-            return _armClient;
+            ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
+            return armClient;
         }
         catch (Exception ex)
         {
             throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
         }
-    }
-
-    /// <summary>
-    /// Generic token caching mechanism that handles token acquisition and caching with expiration
-    /// </summary>
-    /// <param name="resource">The Azure resource scope for which to get the token</param>
-    /// <param name="getCachedToken">Function to get the currently cached token</param>
-    /// <param name="setCachedToken">Action to set/cache the new token</param>
-    /// <param name="getExpiryTime">Function to get the current token expiry time</param>
-    /// <param name="setExpiryTime">Action to set the new token expiry time</param>
-    /// <param name="tenant">Optional tenant for credential acquisition</param>
-    /// <param name="tokenExpirationBufferSeconds">Buffer seconds before actual expiration (default: 300)</param>
-    /// <returns>A valid access token</returns>
-    protected async Task<string> GetCachedTokenAsync(
-        string resource,
-        Func<string?> getCachedToken,
-        Action<string> setCachedToken,
-        Func<DateTimeOffset> getExpiryTime,
-        Action<DateTimeOffset> setExpiryTime,
-        string? tenant = null,
-        int tokenExpirationBufferSeconds = 300)
-    {
-        var cachedToken = getCachedToken();
-        if (cachedToken != null && DateTimeOffset.UtcNow < getExpiryTime())
-        {
-            return cachedToken;
-        }
-
-        var credential = await GetCredential(tenant);
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-
-        setCachedToken(accessToken.Token);
-        setExpiryTime(accessToken.ExpiresOn.AddSeconds(-tokenExpirationBufferSeconds));
-
-        return accessToken.Token;
     }
 
     /// <summary>

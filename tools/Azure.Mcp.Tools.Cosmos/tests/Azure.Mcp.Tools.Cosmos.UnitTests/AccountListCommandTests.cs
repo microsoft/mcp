@@ -4,12 +4,12 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -44,13 +44,13 @@ public class AccountListCommandTests
     {
         // Arrange
         var expectedAccounts = new List<string> { "account1", "account2" };
-        _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -67,13 +67,13 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
     {
         // Arrange
-        _cosmosService.GetCosmosAccounts("sub123", null, null)
+        _cosmosService.GetCosmosAccounts("sub123", null, null, Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -90,7 +90,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -104,13 +104,13 @@ public class AccountListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "sub123";
 
-        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -123,13 +123,13 @@ public class AccountListCommandTests
     {
         // Arrange
         var subscriptionId = "sub123";
-        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);

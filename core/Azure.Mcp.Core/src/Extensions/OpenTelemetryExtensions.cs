@@ -10,6 +10,8 @@ using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -17,30 +19,13 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+    /// <summary>
+    /// The App Insights connection string to send telemetry to Microsoft.
+    /// </summary>
+    private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
-        services.AddOptions<AzureMcpServerConfiguration>()
-            .Configure(options =>
-            {
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName() ?? new AssemblyName();
-                if (assemblyName?.Version != null)
-                {
-                    options.Version = assemblyName.Version.ToString();
-                }
-
-#if RELEASE
-                var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
-
-                options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry)
-                    || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-#else
-                options.IsTelemetryEnabled = false;
-#endif
-            });
-
         services.AddSingleton<ITelemetryService, TelemetryService>();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -82,13 +67,6 @@ public static class OpenTelemetryExtensions
         });
 #endif
 
-        var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        if (string.IsNullOrEmpty(appInsightsConnectionString))
-        {
-            appInsightsConnectionString = DefaultAppInsights;
-        }
-
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
             var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
@@ -100,22 +78,73 @@ public static class OpenTelemetryExtensions
             builder.AddSource(serverConfig.Value.Name);
         });
 
-        services.AddOpenTelemetry()
+        var otelBuilder = services.AddOpenTelemetry()
             .ConfigureResource(r =>
             {
                 var version = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
 
                 r.AddService("azmcp", version)
                     .AddTelemetrySdk();
-            })
-            .UseAzureMonitorExporter(options =>
-            {
-#if DEBUG
-                options.EnableLiveMetrics = true;
-                options.Diagnostics.IsLoggingEnabled = true;
-                options.Diagnostics.IsLoggingContentEnabled = true;
-#endif
-                options.ConnectionString = appInsightsConnectionString;
             });
+
+        var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+
+        if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
+        {
+            // Configure telemetry to be sent to user-provided Application Insights instance regardless of build configuration.
+            ConfigureAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString, "UserProvided");
+        }
+
+        // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
+#if RELEASE
+        // This environment variable can be used to disable Microsoft telemetry collection.
+        // By default, Microsoft telemetry is enabled.
+        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
+
+        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
+
+        if (shouldCollectMicrosoftTelemetry)
+        {
+            ConfigureAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString, "Microsoft");
+        }
+#endif
+
+        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
+        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
+        {
+            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
+                .WithMetrics(metrics => metrics.AddOtlpExporter())
+                .WithLogging(logging => logging.AddOtlpExporter());
+        }
+    }
+
+    private static void ConfigureAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
+    {
+        otelBuilder.WithLogging(logging =>
+        {
+            logging.AddAzureMonitorLogExporter(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
+
+        otelBuilder.WithMetrics(metrics =>
+        {
+            metrics.AddAzureMonitorMetricExporter(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
+
+        otelBuilder.WithTracing(tracing =>
+        {
+            tracing.AddAzureMonitorTraceExporter(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
     }
 }

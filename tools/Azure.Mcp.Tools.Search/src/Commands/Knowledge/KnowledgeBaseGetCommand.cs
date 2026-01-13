@@ -4,11 +4,13 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
@@ -58,7 +60,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +72,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy);
+            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)

@@ -18,9 +18,11 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Adding a New Command](#adding-a-new-command)
   - [Testing](#testing)
     - [Unit Tests](#unit-tests)
+      - [Cancellation plumbing](#cancellation-plumbing)
     - [End-to-end Tests](#end-to-end-tests)
     - [Testing Local Build with VS Code](#testing-local-build-with-vs-code)
       - [Build the Server](#build-the-server)
+      - [Run the Azure MCP server in HTTP mode](#run-the-azure-mcp-server-in-http-mode)
       - [Configure mcp.json](#configure-mcpjson)
       - [Server Modes](#server-modes)
       - [Start from IDE](#start-from-ide)
@@ -56,7 +58,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Getting Started
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > If you are a **Microsoft employee** then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
 
 ### Prerequisites
@@ -91,6 +93,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
+
 ## Development Workflow
 
 ### Development Process
@@ -104,7 +107,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Adding a New Command
 
-> [!TIP]  
+> [!TIP]
 > **Submit One Tool Per Pull Request**
 >
 > We strongly recommend submitting **one tool per pull request** to streamline the review process and provide better onboarding experience. This approach results in:
@@ -115,6 +118,7 @@ If you are contributing significant changes, or if the issue is already assigned
 > - **Incremental progress**: Get your first tool merged to establish baseline, then build upon it
 >
 > If you're planning to contribute multiple tools, please:
+>
 > 1. Submit your most important or representative tool as your first PR to establish the code patterns.
 > 2. Use that baseline to inform your subsequent tool PRs.
 
@@ -140,24 +144,37 @@ If you are contributing significant changes, or if the issue is already assigned
    - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
-6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
+6. **Create a changelog entry** (if your change is a new feature, bug fix, or breaking change):
+   - Use the generator script to create a changelog entry (see `docs/changelog-entries.md` for details):
+     ```powershell
+     # Interactive mode (prompts for server)
+     ./eng/scripts/New-ChangelogEntry.ps1
+     
+     # Or with all parameters
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ```
+   - Or manually create a YAML file in `servers/{ServerName}/changelog-entries/`
+   - Not every PR needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates. If unsure, add to the "Other Changes" section or ask a maintainer.
 
-7. **Add new tool to consolidated mode**:
+7. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
+
+8. **Add new tool to consolidated mode**:
    - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
    - Paste the follow prompt for Copilot to generate the change to add the new tool:
-      ```txt 
+      ```txt
       I have this list of tools which haven't been matched with any consolidated tools in this file. Help me add them to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tools where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
 
       <Add new tool name here>
       ```
    - Use the following command to find out the correct tool name for your new tool
       ```
-      cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+      cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
       ./azmcp[.exe] tools list --name --namespace <tool_area>
       ```
    - Commit the change.
 
-8. **Create Pull Request**:
+9. **Create Pull Request**:
    - Reference the issue you created
    - Include tests in the `/tests` folder
    - Ensure all tests pass
@@ -189,6 +206,14 @@ Requirements:
 - Mock external service calls
 - Test argument validation
 
+#### Cancellation plumbing
+
+To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
+
+Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+
+Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
+
 ### End-to-end Tests
 
 End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
@@ -205,25 +230,126 @@ Build the project at the root directory of this repository:
 dotnet build
 ```
 
+#### Run the Azure MCP server in HTTP mode
+
+**Option 1: Using dotnet run (uses launchSettings.json)**
+
+**Prerequisites: Create launchSettings.json**
+
+> [!NOTE]
+> Internal contributors may skip this step as the `launchSettings.json` file is already provided in the repository.
+
+Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
+
+1. Create the directory (if it doesn't exist):
+   ```bash
+   mkdir -p servers/Azure.Mcp.Server/src/Properties
+   ```
+
+2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
+   ```json
+   {
+     "profiles": {
+       "debug-remotemcp": {
+         "commandName": "Project",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "environmentVariables": {
+           "ASPNETCORE_ENVIRONMENT": "Development",
+           "ASPNETCORE_URLS": "http://localhost:<port>",
+           "AzureAd__TenantId": "<your-tenant-id>",
+           "AzureAd__ClientId": "<your-client-id>",
+           "AzureAd__Instance": "https://login.microsoftonline.com/"
+         }
+       }
+     }
+   }
+   ```
+
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
+
+```bash
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
+```
+
+**Option 2: Using the built executable directly**
+
+Build the project first, then run the executable with the necessary environment variables:
+
+```powershell
+# Set environment variables (PowerShell)
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:<port>"
+$env:AzureAd__TenantId = "<your-tenant-id>"
+$env:AzureAd__ClientId = "<your-client-id>"
+$env:AzureAd__Instance = "https://login.microsoftonline.com/"
+
+# Run the executable
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+```bash
+# Set environment variables (Bash)
+export ASPNETCORE_ENVIRONMENT="Development"
+export ASPNETCORE_URLS="http://localhost:<port>"
+export AzureAd__TenantId="<your-tenant-id>"
+export AzureAd__ClientId="<your-client-id>"
+export AzureAd__Instance="https://login.microsoftonline.com/"
+
+# Run the executable
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+> **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
+>
+> For local development, when running with HTTPS (either via `ASPNETCORE_URLS` or HTTPS redirection), you must generate a self-signed development certificate:
+>
+>**Windows and macOS:**
+> ```bash
+> dotnet dev-certs https --trust
+> ```
+>
+> **Linux:**
+> ```bash
+> dotnet dev-certs https
+> ```
+>
+> On Linux, you must manually trust the generated certificate. See the [official documentation](https://learn.microsoft.com/dotnet/core/tools/dotnet-dev-certs) for instructions on how to do this.
+
 #### Configure mcp.json
 
-Update your mcp.json to point to the locally built azmcp executable:
+Update your mcp.json to point to the locally built azmcp executable.
+
+**Stdio Mode:**
 
 ```json
 {
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
 }
 ```
 
+**HTTP Mode:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "https://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
+
 > [!NOTE]
-> Replace `<absolute-path-to>` with the full path to your built executable.
+> For stdio mode, replace `<absolute-path-to>` with the full path to your built executable.
 > On **Windows**, use `azmcp.exe`. On **macOS/Linux**, use `azmcp`.
+> For HTTP mode, ensure the server is running on the specified port before connecting (port 1031 is the default port configured in launchSettings.json).
 
 #### Server Modes
 
@@ -236,7 +362,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -250,7 +376,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -264,7 +390,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -278,7 +404,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -293,7 +419,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "consolidated"]
     }
   }
@@ -307,7 +433,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -321,7 +447,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
     }
   }
@@ -554,7 +680,7 @@ Supported comment annotations:
   ```
 
 - Section Insert
-  - **Purpose:** Insert a chunk of text into a line for a specified package type. 
+  - **Purpose:** Insert a chunk of text into a line for a specified package type.
   - **Example:**
   `<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->`
 

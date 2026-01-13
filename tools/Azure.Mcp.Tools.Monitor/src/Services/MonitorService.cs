@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
+using Azure.Monitor.Query.Logs;
+using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -25,16 +24,13 @@ public class MonitorService(
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientService httpClientService) : BaseAzureService(tenantService), IMonitorService
+    IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat
         = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-
-    // Token caching fields
-    private string? _cachedManagementToken;
-    private DateTimeOffset _managementTokenExpiryTime;
-    private const int TokenExpirationBufferSeconds = 300; // 5 minutes buffer
+    public const string HttpClientName = "AzureMcpMonitorService";
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -44,12 +40,13 @@ public class MonitorService(
         int? hours,
         int? limit,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
         query = BuildQuery(query, table, limit);
 
-        var credential = await GetCredential(tenant);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
 
         if (retryPolicy != null)
@@ -60,15 +57,18 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
         var client = new LogsQueryClient(credential, options);
-        var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+        var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
         try
         {
             var response = await client.QueryResourceAsync(
                 ResourceIdentifier.Parse(resourceId),
                 query,
-                timeRange);
+                timeRange,
+                options: null,
+                cancellationToken);
             return ParseQueryResults(response.Value.Table);
         }
         catch (Exception ex)
@@ -104,11 +104,12 @@ public class MonitorService(
         string query,
         int timeSpanDays = 1,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
 
-        var credential = await GetCredential(tenant);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
 
         if (retryPolicy != null)
@@ -119,16 +120,19 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
         var client = new LogsQueryClient(credential, options);
 
         try
         {
-            var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
+            var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
-                new QueryTimeRange(TimeSpan.FromDays(timeSpanDays))
+                new LogsQueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
+                options: null,
+                cancellationToken
             );
 
             var results = new List<JsonNode>();
@@ -164,17 +168,18 @@ public class MonitorService(
         string workspace,
         string? tableType,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
         try
         {
-            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
+            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
-            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
+            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
                 .ConfigureAwait(false);
 
             if (workspaceResponse?.Value == null)
@@ -184,8 +189,8 @@ public class MonitorService(
 
             var workspaceResource = workspaceResponse.Value;
             var tableOperations = workspaceResource.GetOperationalInsightsTables();
-            var tables = await tableOperations.GetAllAsync()
-                .ToListAsync()
+            var tables = await tableOperations.GetAllAsync(cancellationToken)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return [.. tables
@@ -203,22 +208,23 @@ public class MonitorService(
     public async Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
             var workspaces = await subscriptionResource
-                .GetOperationalInsightsWorkspacesAsync()
+                .GetOperationalInsightsWorkspacesAsync(cancellationToken)
                 .Select(workspace => new WorkspaceInfo
                 {
                     Name = workspace.Data.Name,
                     CustomerId = workspace.Data.CustomerId?.ToString() ?? string.Empty,
                 })
-                .ToListAsync()
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return workspaces;
@@ -236,17 +242,18 @@ public class MonitorService(
         int? hours,
         int? limit,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(table), table));
 
-        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
+        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
         query = BuildQuery(query, table, limit);
         ValidateRequiredParameters((nameof(query), query));
 
         try
         {
-            var credential = await GetCredential(tenant);
+            var credential = await GetCredential(tenant, cancellationToken);
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
 
             if (retryPolicy != null)
@@ -257,13 +264,16 @@ public class MonitorService(
                 options.Retry.Mode = retryPolicy.Mode;
                 options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
+            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
             var client = new LogsQueryClient(credential, options);
-            var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+            var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
-                timeRange);
+                timeRange,
+                options: null,
+                cancellationToken);
 
             return ParseQueryResults(response.Value.Table);
         }
@@ -326,16 +336,17 @@ public class MonitorService(
         string resourceGroup,
         string workspace,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
         try
         {
-            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
+            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
-            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
                 ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
+            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
                 .ConfigureAwait(false);
 
             if (workspaceResponse?.Value == null)
@@ -345,7 +356,7 @@ public class MonitorService(
 
             var workspaceResource = workspaceResponse.Value;
             var tableOperations = workspaceResource.GetOperationalInsightsTables();
-            var tables = await tableOperations.GetAllAsync().ToListAsync().ConfigureAwait(false);
+            var tables = await tableOperations.GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
 
             var tableTypes = tables
                 .Select(table => table.Data.Schema.TableType?.ToString() ?? string.Empty)
@@ -371,7 +382,8 @@ public class MonitorService(
         ActivityLogEventLevel? eventLevel,
         int top,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
@@ -384,14 +396,14 @@ public class MonitorService(
         {
             // Resolve the resource ID from the resource name
             var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
-                subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
+                subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
 
             string resourceId = resourceIdentifier.ToString();
             string subscriptionId = resourceIdentifier.SubscriptionId
                 ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
             // Get the activity logs from the Azure Management API
-            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy);
+            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
 
             // Take only the requested number of logs
             return activityLogs.Take(top).ToList();
@@ -408,7 +420,8 @@ public class MonitorService(
         double hours,
         ActivityLogEventLevel? eventLevel,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         var returnValue = new List<ActivityLogEventData>();
 
@@ -433,14 +446,16 @@ public class MonitorService(
         query += $"&$filter={Uri.EscapeDataString(filter)}";
         uriBuilder.Query = query;
 
-        // Get cached access token
-        var tokenString = await GetCachedManagementTokenAsync(tenant);
+        TokenCredential credential = await GetCredential(tenant, cancellationToken);
+        AccessToken accessToken = await credential.GetTokenAsync(
+            new TokenRequestContext(["https://management.azure.com/.default"]),
+            cancellationToken);
 
         // Make paginated requests
         string? nextRequestUrl = uriBuilder.Uri.ToString();
         do
         {
-            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, tokenString);
+            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, accessToken.Token, cancellationToken);
             returnValue.AddRange(listResponse.Value);
             nextRequestUrl = listResponse.NextLink;
         } while (!string.IsNullOrEmpty(nextRequestUrl));
@@ -448,24 +463,26 @@ public class MonitorService(
         return returnValue;
     }
 
-    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token)
+    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token, CancellationToken cancellationToken)
     {
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        using HttpResponseMessage response = await httpClientService.DefaultClient.SendAsync(httpRequest);
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
-            using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            using Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
             ActivityLogListResponse? responseObject = await JsonSerializer.DeserializeAsync(
                 responseStream,
-                MonitorJsonContext.Default.ActivityLogListResponse);
+                MonitorJsonContext.Default.ActivityLogListResponse,
+                cancellationToken);
             return responseObject ?? new ActivityLogListResponse();
         }
         else
         {
-            string responseString = await response.Content.ReadAsStringAsync();
+            string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
             string errorMessage;
             if (!string.IsNullOrEmpty(responseString))
             {
@@ -493,11 +510,12 @@ public class MonitorService(
         string workspace,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // If we're given an ID and need an ID, or given a name and need a name, return as is
         bool isId = IsWorkspaceId(workspace);
-        var workspaces = await ListWorkspaces(subscription, tenant, retryPolicy);
+        var workspaces = await ListWorkspaces(subscription, tenant, retryPolicy, cancellationToken);
 
         // Find the workspace
         var matchingWorkspace = workspaces.FirstOrDefault(w =>
@@ -510,17 +528,5 @@ public class MonitorService(
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
-    }
-
-    private async Task<string> GetCachedManagementTokenAsync(string? tenant)
-    {
-        return await GetCachedTokenAsync(
-            "https://management.azure.com",
-            () => _cachedManagementToken,
-            token => _cachedManagementToken = token,
-            () => _managementTokenExpiryTime,
-            expiry => _managementTokenExpiryTime = expiry,
-            tenant,
-            TokenExpirationBufferSeconds);
     }
 }

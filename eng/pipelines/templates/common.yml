@@ -18,6 +18,9 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: TestTimeoutInMinutes
+  type: number
+  default: 30
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -29,7 +32,7 @@ resources:
   - repository: azure-sdk-build-tools
     type: git
     name: internal/azure-sdk-build-tools
-    ref: refs/tags/azure-sdk-build-tools_20250808.1
+    ref: refs/tags/azure-sdk-build-tools_20251112.1
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
@@ -69,7 +72,7 @@ extends:
       - ${{ each os in split('linux|windows|macOS', '|') }}:
         - template: /eng/pipelines/templates/jobs/build.yml
           parameters:
-            TestTimeoutInMinutes: 30
+            TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}
@@ -112,7 +115,7 @@ extends:
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
-            ServerName: ${{ parameters.ServerName }}
+            ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
             PackageDocker: ${{ parameters.PackageDocker }}
             PackageVSIX: ${{ parameters.PackageVSIX }}
 

@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.LiveTests;
@@ -19,9 +20,11 @@ public class CosmosDbFixture : IAsyncLifetime
         var settingsFixture = new LiveTestSettingsFixture();
         await settingsFixture.InitializeAsync();
 
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
         _client = new CosmosClient(
             accountEndpoint: $"https://{settingsFixture.Settings.ResourceBaseName}.documents.azure.com:443/",
-            tokenCredential: new CustomChainedCredential()
+            tokenCredential: await tokenProvider.GetTokenCredentialAsync(default, default)
         );
         Container container = _client.GetContainer("ToDoList", "Items");
         ToDoItem entry = new ToDoItem();

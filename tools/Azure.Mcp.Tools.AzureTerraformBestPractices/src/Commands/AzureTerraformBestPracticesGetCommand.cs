@@ -6,6 +6,8 @@ using System.Reflection;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
@@ -47,7 +49,7 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
 
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;

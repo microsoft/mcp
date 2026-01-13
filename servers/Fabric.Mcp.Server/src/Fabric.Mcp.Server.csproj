@@ -1,23 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.0-beta.6</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
+    <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric-icon.png</PackageIcon>
 
-    <!--
-    Defaults to the microsoft logo if not specified.
-    <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric_icon.png</PackageIcon>
-    -->
+    <!-- Official MCP repository settings -->
+    <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
 
     <!-- docker settings -->
-    <DockerImageName></DockerImageName>
+    <DockerImageName>fabric/fabric-mcp</DockerImageName>
 
     <!-- dnx/nuget settings -->
     <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>
@@ -27,7 +27,7 @@
     <!-- vsix settings -->
     <VsixPackagePrefix>vscode-fabric-mcp</VsixPackagePrefix>
     <VsixDescription></VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
+    <VsixPublisher>fabric</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -67,8 +67,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Fabric.*\src\*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
@@ -53,7 +52,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Validate first, then bind
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -77,7 +76,8 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
                 options.ConnectionString ?? string.Empty, // connectionString - will be generated if not provided
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new Result(connectionInfo),

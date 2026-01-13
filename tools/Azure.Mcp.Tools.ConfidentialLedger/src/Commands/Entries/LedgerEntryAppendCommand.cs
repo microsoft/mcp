@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
@@ -53,7 +53,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +64,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
 
         try
         {
-            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId);
+            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
         }
         catch (Exception ex)

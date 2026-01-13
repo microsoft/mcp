@@ -1,23 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Xml;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Monitor;
+using Azure.ResourceManager.Monitor.Models;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
-    : BaseAzureService(), IMonitorMetricsService
+public class MonitorMetricsService(IResourceResolverService resourceResolverService, ITenantService tenantService)
+    : BaseAzureService(tenantService), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
-    private readonly IMetricsQueryClientService _metricsQueryClientService = metricsQueryClientService ?? throw new ArgumentNullException(nameof(metricsQueryClientService));
 
     public async Task<List<MetricResult>> QueryMetricsAsync(
         string subscription,
@@ -32,13 +35,19 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? aggregation = null,
         string? filter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        if (string.IsNullOrEmpty(resourceId))
+        {
+            throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
+        }
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
         // Parse time range
         DateTimeOffset? startTimeOffset = null;
@@ -62,32 +71,42 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             endTimeOffset = end;
         }
 
-        // Build query options
-        var queryOptions = new MetricsQueryOptions();
+        // Build query options for new API
+        var options = new ArmResourceGetMonitorMetricsOptions
+        {
+            Metricnames = string.Join(",", metricNames),
+            Metricnamespace = metricNamespace
+        };
 
+        // Set timespan with proper ISO 8601 format
         if (startTimeOffset.HasValue && endTimeOffset.HasValue)
         {
-            queryOptions.TimeRange = new QueryTimeRange(startTimeOffset.Value, endTimeOffset.Value);
+            options.Timespan = $"{ToIsoString(startTimeOffset.Value)}/{ToIsoString(endTimeOffset.Value)}";
         }
         else if (startTimeOffset.HasValue)
         {
-            queryOptions.TimeRange = new QueryTimeRange(startTimeOffset.Value, DateTimeOffset.UtcNow);
+            options.Timespan = $"{ToIsoString(startTimeOffset.Value)}/{ToIsoString(DateTimeOffset.UtcNow)}";
         }
         else if (endTimeOffset.HasValue)
         {
-            queryOptions.TimeRange = new QueryTimeRange(endTimeOffset.Value - TimeSpan.FromDays(1), endTimeOffset.Value);
+            var defaultStart = endTimeOffset.Value - TimeSpan.FromDays(1);
+            options.Timespan = $"{ToIsoString(defaultStart)}/{ToIsoString(endTimeOffset.Value)}";
         }
         else
         {
             // Default to last 24 hours if no time range specified
-            queryOptions.TimeRange = new QueryTimeRange(TimeSpan.FromDays(1));
+            var defaultEnd = DateTimeOffset.UtcNow;
+            var defaultStart = defaultEnd - TimeSpan.FromDays(1);
+
+            options.Timespan = $"{ToIsoString(defaultStart)}/{ToIsoString(defaultEnd)}";
         }
 
         if (!string.IsNullOrEmpty(interval))
         {
             try
             {
-                queryOptions.Granularity = XmlConvert.ToTimeSpan(interval);
+                var granularity = XmlConvert.ToTimeSpan(interval);
+                options.Interval = granularity;
             }
             catch (Exception ex)
             {
@@ -97,95 +116,86 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
         if (!string.IsNullOrEmpty(aggregation))
         {
-            var aggregationTypes = aggregation.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(a => a.Trim())
-                .ToList();
-            queryOptions.Aggregations.Clear();
-            foreach (var agg in aggregationTypes)
-            {
-                if (Enum.TryParse<MetricAggregationType>(agg, true, out var aggType))
-                {
-                    queryOptions.Aggregations.Add(aggType);
-                }
-            }
+            options.Aggregation = aggregation;
         }
 
         if (!string.IsNullOrEmpty(filter))
         {
-            queryOptions.Filter = filter;
+            options.Filter = filter;
         }
 
-        queryOptions.MetricNamespace = metricNamespace;
-
-        // Query metrics
-        var response = await client.QueryResourceAsync(
-            resourceId,
-            metricNames,
-            queryOptions);
+        // Query metrics using new API
+        var metricsPageable = armClient.GetMonitorMetricsAsync(
+            new ResourceIdentifier(resourceId!),
+            options,
+            cancellationToken);
 
         // Convert response directly to compact format
         var results = new List<MetricResult>();
-        foreach (var metric in response.Value.Metrics)
+        await foreach (var metric in metricsPageable.WithCancellation(cancellationToken))
         {
             var compactResult = new MetricResult
             {
-                Name = metric.Name ?? string.Empty,
+                Name = metric.Name?.Value ?? string.Empty,
                 Unit = metric.Unit.ToString(),
                 TimeSeries = new List<MetricTimeSeries>()
             };
 
-            foreach (var timeSeries in metric.TimeSeries)
+            foreach (var timeSeries in metric.Timeseries)
             {
-                if (timeSeries.Values.Count == 0)
+                if (timeSeries.Data.Count == 0)
                     continue;
 
                 var compactTimeSeries = new MetricTimeSeries
                 {
                     Metadata = new Dictionary<string, string>(),
-                    Start = timeSeries.Values.First().TimeStamp.UtcDateTime,
-                    End = timeSeries.Values.Last().TimeStamp.UtcDateTime,
+                    Start = timeSeries.Data.First().TimeStamp.UtcDateTime,
+                    End = timeSeries.Data.Last().TimeStamp.UtcDateTime,
                     Interval = interval ?? "PT1M"
                 };
 
                 // Add metadata/dimensions
-                if (timeSeries.Metadata != null)
+                if (timeSeries.Metadatavalues != null)
                 {
-                    foreach (var kvp in timeSeries.Metadata)
+                    foreach (var metadata in timeSeries.Metadatavalues)
                     {
-                        compactTimeSeries.Metadata[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
+                        if (metadata.Name?.Value != null && metadata.Value != null)
+                        {
+                            compactTimeSeries.Metadata[metadata.Name.Value] = metadata.Value;
+                        }
                     }
                 }
 
                 // Extract values into arrays, only including non-null arrays
-                var avgValues = timeSeries.Values
+                var avgValues = timeSeries.Data
                     .Where(v => v.Average.HasValue)
                     .Select(v => v.Average!.Value)
                     .ToArray();
                 if (avgValues.Length > 0)
                     compactTimeSeries.AvgBuckets = avgValues;
 
-                var minValues = timeSeries.Values
+                var minValues = timeSeries.Data
                     .Where(v => v.Minimum.HasValue)
                     .Select(v => v.Minimum!.Value)
                     .ToArray();
                 if (minValues.Length > 0)
                     compactTimeSeries.MinBuckets = minValues;
 
-                var maxValues = timeSeries.Values
+                var maxValues = timeSeries.Data
                     .Where(v => v.Maximum.HasValue)
                     .Select(v => v.Maximum!.Value)
                     .ToArray();
                 if (maxValues.Length > 0)
                     compactTimeSeries.MaxBuckets = maxValues;
 
-                var totalValues = timeSeries.Values
+                var totalValues = timeSeries.Data
                     .Where(v => v.Total.HasValue)
                     .Select(v => v.Total!.Value)
                     .ToArray();
                 if (totalValues.Length > 0)
                     compactTimeSeries.TotalBuckets = totalValues;
 
-                var countValues = timeSeries.Values
+                var countValues = timeSeries.Data
                     .Where(v => v.Count.HasValue)
                     .Select(v => v.Count!.Value)
                     .ToArray();
@@ -209,62 +219,67 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? metricNamespace = null,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        if (string.IsNullOrEmpty(resourceId))
+        {
+            throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
+        }
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // List metric definitions using the metrics query client
-        var response = client.GetMetricDefinitionsAsync(resourceId, metricNamespace);
+        // List metric definitions using the new API
+        var definitionsPageable = armClient.GetMonitorMetricDefinitionsAsync(
+            new ResourceIdentifier(resourceId!),
+            metricNamespace,
+            cancellationToken);
 
         var results = new List<MetricDefinition>();
-        var pages = response.AsPages();
-        await foreach (var page in pages)
+        await foreach (var definition in definitionsPageable.WithCancellation(cancellationToken))
         {
-            foreach (Azure.Monitor.Query.Models.MetricDefinition definition in page.Values)
+            var definitionName = definition.Name?.Value;
+            if (string.IsNullOrEmpty(definitionName))
             {
-                if (string.IsNullOrEmpty(definition.Name))
-                {
-                    continue;
-                }
-                if (!string.IsNullOrEmpty(searchString) &&
-                    !definition.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) &&
-                    !(definition.DisplayDescription?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
-                {
-                    continue;
-                }
-                var metricDef = new MetricDefinition
-                {
-                    Dimensions = definition.Dimensions?.ToList() ?? new(),
-                    Name = definition.Name,
-                    MetricNamespace = definition.Namespace,
-                    Description = definition.DisplayDescription,
-                    Category = definition.Category,
-                    Unit = definition.Unit?.ToString() ?? string.Empty,
-                    IsDimensionRequired = definition.IsDimensionRequired,
-                    PrimaryAggregationType = definition.PrimaryAggregationType?.ToString()
-                };
-
-                // Add supported aggregation types
-                if (definition.SupportedAggregationTypes != null)
-                {
-                    metricDef.SupportedAggregationTypes = [.. definition.SupportedAggregationTypes.Select(a => a.ToString())];
-                }
-
-                // Convert metric availabilities to allowed intervals (ISO 8601 duration format)
-                if (definition.MetricAvailabilities != null)
-                {
-                    metricDef.AllowedIntervals = [.. definition.MetricAvailabilities
-                        .Where(a => a.Granularity.HasValue)
-                        .Select(a => XmlConvert.ToString(a.Granularity!.Value))
-                        .Distinct()
-                        .OrderBy(interval => interval)];
-                }
-
-                results.Add(metricDef);
+                continue;
             }
+            if (!string.IsNullOrEmpty(searchString) &&
+                !definitionName.Contains(searchString, StringComparison.OrdinalIgnoreCase) &&
+                !(definition.DisplayDescription?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                continue;
+            }
+            var metricDef = new MetricDefinition
+            {
+                Dimensions = definition.Dimensions?.Select(d => d.Value).ToList() ?? new(),
+                Name = definitionName,
+                MetricNamespace = definition.Namespace,
+                Description = definition.DisplayDescription,
+                Category = definition.Category,
+                Unit = definition.Unit?.ToString() ?? string.Empty,
+                IsDimensionRequired = definition.IsDimensionRequired ?? false,
+                PrimaryAggregationType = definition.PrimaryAggregationType?.ToString()
+            };
+
+            // Add supported aggregation types
+            if (definition.SupportedAggregationTypes != null)
+            {
+                metricDef.SupportedAggregationTypes = [.. definition.SupportedAggregationTypes.Select(a => a.ToString())];
+            }
+
+            // Convert metric availabilities to allowed intervals (ISO 8601 duration format)
+            if (definition.MetricAvailabilities != null)
+            {
+                metricDef.AllowedIntervals = [.. definition.MetricAvailabilities
+                    .Where(a => a.TimeGrain.HasValue)
+                    .Select(a => XmlConvert.ToString(a.TimeGrain!.Value))
+                    .Distinct()
+                    .OrderBy(interval => interval)];
+            }
+
+            results.Add(metricDef);
         }
         return results;
     }
@@ -276,38 +291,55 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string resourceName,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        if (string.IsNullOrEmpty(resourceId))
+        {
+            throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
+        }
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // List metric namespaces using the metrics query client
-        var response = client.GetMetricNamespacesAsync(resourceId);
+        // List metric namespaces using the new API
+        var namespacesPageable = armClient.GetMonitorMetricNamespacesAsync(
+            new ResourceIdentifier(resourceId!),
+            cancellationToken: cancellationToken);
 
         var results = new List<MetricNamespace>();
-        var pages = response.AsPages();
-        await foreach (var page in pages)
+        await foreach (var ns in namespacesPageable.WithCancellation(cancellationToken))
         {
-            foreach (Azure.Monitor.Query.Models.MetricNamespace ns in page.Values)
+            var namespaceName = ns.Name;
+            // Apply search string filtering if provided
+            if (!string.IsNullOrEmpty(searchString) &&
+                !(namespaceName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
             {
-                // Apply search string filtering if provided
-                if (!string.IsNullOrEmpty(searchString) &&
-                    !(ns.Name?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false))
-                {
-                    continue;
-                }
-
-                results.Add(new MetricNamespace
-                {
-                    Name = ns.FullyQualifiedName,
-                    Type = ns.Type ?? string.Empty,
-                    ClassificationType = ns.Classification?.ToString() ?? string.Empty
-                });
+                continue;
             }
+
+            results.Add(new MetricNamespace
+            {
+                Name = ns.MetricNamespaceNameValue ?? namespaceName ?? string.Empty,
+                Type = ns.ResourceType.ToString(),
+                ClassificationType = ns.Classification?.ToString() ?? string.Empty
+            });
         }
 
         return results;
+    }
+
+    private string ToIsoString(DateTimeOffset dto)
+    {
+        if (dto.Offset == TimeSpan.Zero)
+        {
+            const string utcFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+            return dto.ToString(utcFormat, CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            return dto.ToString("O", CultureInfo.InvariantCulture);
+        }
     }
 }

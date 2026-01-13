@@ -20,6 +20,7 @@
     - [ ] Updated command list in `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and/or `/docs/fabric-commands.md`
     - [ ] Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
+    - [ ] For tools with new names, including new tools or renamed tools, update [`consolidated-tools.json`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json)
     - [ ] For new tools associated with Azure services or publicly available tools/APIs/products, add URL to documentation in the PR description
 - [ ] Extra steps for **Azure MCP Server** tool changes:
     - [ ] Updated test prompts in `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`

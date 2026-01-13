@@ -37,7 +37,7 @@ jobs:
             Write-Host "`n`nContents of $path`:"
             Get-ChildItem $path -Recurse
 
-        - task: EsrpRelease@9
+        - task: ESRPRelease@10
           displayName: Publish platform packages to npmjs.com
           inputs:
             ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -54,7 +54,7 @@ jobs:
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
             MainPublisher: 'ESRPRELPACMANTEST'
             ProductState: latest
-        - task: EsrpRelease@9
+        - task: ESRPRelease@10
           displayName: Publish wrapper package to npmjs.com
           inputs:
             ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -72,7 +72,7 @@ jobs:
             MainPublisher: 'ESRPRELPACMANTEST'
             ProductState: latest
         - ${{ if eq(parameters.IncludeNative, true) }}:
-          - task: EsrpRelease@9
+          - task: ESRPRelease@10
             displayName: Publish native platform packages to npmjs.com
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -89,7 +89,7 @@ jobs:
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
               MainPublisher: 'ESRPRELPACMANTEST'
               ProductState: latest
-          - task: EsrpRelease@9
+          - task: ESRPRelease@10
             displayName: Publish native wrapper package to npmjs.com
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'

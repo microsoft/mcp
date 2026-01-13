@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
@@ -40,23 +41,23 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
-        command.Options.Add(OptionDefinitions.LoadTesting.Test);
-        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
-        command.Options.Add(OptionDefinitions.LoadTesting.Description);
+        command.Options.Add(LoadTestingOptionDefinitions.TestRun);
+        command.Options.Add(LoadTestingOptionDefinitions.Test);
+        command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
+        command.Options.Add(LoadTestingOptionDefinitions.Description);
     }
 
     protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
-        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.DisplayName.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Description.Name);
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -81,7 +82,8 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.DisplayName,
                 options.Description,
                 false, // DebugMode false will default to a normal test run - in future we may add a DebugMode option
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :

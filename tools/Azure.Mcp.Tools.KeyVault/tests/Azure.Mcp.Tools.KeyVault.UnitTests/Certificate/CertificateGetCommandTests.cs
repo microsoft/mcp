@@ -3,12 +3,12 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -50,12 +50,14 @@ public class CertificateGetCommandTests
 
         // TODO (vcolin7): Find a way to mock KeyVaultCertificateWithPolicy
         // We'll test that the service is called correctly, but let it fail since mocking the return is complex
-        _keyVaultService.GetCertificate(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetCertificate(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownCertificateName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -65,15 +67,18 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Verify the service was called with correct parameters
-        await _keyVaultService.Received(1).GetCertificate(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+        await _keyVaultService
+            .Received(1)
+            .GetCertificate(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownCertificateName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
         // Should handle the exception
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -90,7 +95,7 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -104,12 +109,14 @@ public class CertificateGetCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.GetCertificate(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetCertificate(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownCertificateName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -119,7 +126,7 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

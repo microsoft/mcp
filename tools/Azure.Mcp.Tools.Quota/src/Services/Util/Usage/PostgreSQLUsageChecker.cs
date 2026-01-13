@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Net.Http.Headers;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientService httpClientService) : AzureUsageChecker(credential, subscriptionId, logger)
+public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory) : AzureUsageChecker(credential, subscriptionId, logger)
 {
-    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location)
+    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
         try
         {
             var requestUrl = $"{managementEndpoint}/subscriptions/{SubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{location}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
-            using var rawResponse = await GetQuotaByUrlAsync(requestUrl);
+            using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {
@@ -73,7 +73,8 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var response = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
+            var httpClient = _httpClientFactory.CreateClient(nameof(PostgreSQLUsageChecker));
+            var response = await httpClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -25,5 +25,6 @@ public interface IAppLensService
         string subscription,
         string? resourceGroup = null,
         string? resourceType = null,
-        string? tenantId = null);
+        string? tenantId = null,
+        CancellationToken cancellationToken = default);
 }

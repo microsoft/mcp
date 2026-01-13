@@ -7,6 +7,10 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
@@ -70,7 +74,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -82,6 +86,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
+
             var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
@@ -89,7 +94,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.EventData!,
                 options.EventSchema,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(result),

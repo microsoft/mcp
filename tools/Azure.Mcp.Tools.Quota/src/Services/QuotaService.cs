@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Http;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Azure.ResourceManager;
@@ -11,24 +12,29 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientService? httpClientService = null) : BaseAzureService(loggerFactory: loggerFactory), IQuotaService
+public class QuotaService(
+    ITenantService tenantService,
+    ILoggerFactory loggerFactory,
+    IHttpClientFactory httpClientFactory)
+    : BaseAzureService(tenantService), IQuotaService
 {
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
         string subscriptionId,
-        string location)
+        string location,
+        CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential();
+        TokenCredential credential = await GetCredential(cancellationToken);
         Dictionary<string, List<UsageInfo>> quotaByResourceTypes = await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
             subscriptionId,
             location,
-            LoggerFactory,
-            _httpClientService
-            );
+            loggerFactory,
+            _httpClientFactory,
+            cancellationToken);
         return quotaByResourceTypes;
     }
 
@@ -37,9 +43,10 @@ public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientServi
         string subscriptionId,
         string? cognitiveServiceModelName = null,
         string? cognitiveServiceModelVersion = null,
-        string? cognitiveServiceDeploymentSkuName = null)
+        string? cognitiveServiceDeploymentSkuName = null,
+        CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync();
+        ArmClient armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
 
         // Create cognitive service properties if any of the parameters are provided
         CognitiveServiceProperties? cognitiveServiceProperties = null;
@@ -55,7 +62,14 @@ public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientServi
             };
         }
 
-        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(armClient, resourceTypes, subscriptionId, LoggerFactory, cognitiveServiceProperties);
+        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(
+            armClient,
+            resourceTypes,
+            subscriptionId,
+            loggerFactory,
+            cognitiveServiceProperties,
+            cancellationToken);
+
         var allRegions = availableRegions.Values
             .Where(regions => regions.Count > 0)
             .SelectMany(regions => regions)

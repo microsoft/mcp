@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/AzureMcp.sln",
+				"${workspaceFolder}/Microsoft.Mcp.slnx",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -19,7 +19,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/eng/tools/ToolDescriptionEvaluator/ToolDescriptionEvaluator.csproj",
+				"${workspaceFolder}/eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],

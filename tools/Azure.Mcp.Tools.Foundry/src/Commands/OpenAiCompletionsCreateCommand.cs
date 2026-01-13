@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Option;
@@ -9,6 +8,9 @@ using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -22,8 +24,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 
     public override string Description =>
         $"""
-        Create text completions using Azure OpenAI in AI Foundry. Send a prompt or question to Azure OpenAI models 
-        deployed in your AI Foundry resource and receive generated text answers. Use this when you need to create 
+        Create text completions using Azure OpenAI in Microsoft Foundry. Send a prompt or question to Azure OpenAI models 
+        deployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create 
         completions, get AI-generated content, generate answers to questions, or produce text completions from Azure 
         OpenAI based on any input prompt. Supports customization with temperature and max tokens. 
         Requires resource-name, deployment-name, and prompt-text.
@@ -64,7 +66,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -86,7 +88,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.Temperature,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
                 new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo),

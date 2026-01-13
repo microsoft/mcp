@@ -3,10 +3,11 @@
 
 using Azure.Mcp.Core.Areas.Subscription.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 
@@ -33,7 +34,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -45,7 +46,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         try
         {
             var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy);
+            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                     new SubscriptionListCommandResult(subscriptions),

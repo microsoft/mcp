@@ -27,6 +27,9 @@
 - Prefer file-scoped changes over project-wide modifications when possible
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context
+- Write transport-agnostic commands that work in both stdio and HTTP modes
+- Keep commands stateless and thread-safe for multi-user remote scenarios
+- Test commands with different RBAC permissions for OBO scenarios
 
 ## Don't
 - Use `subscriptionId` parameter name
@@ -41,6 +44,11 @@
 - Skip error handling or comprehensive tests
 - Use dashes in command group names (use concatenated lowercase)
 - Make project-wide changes when file-scoped changes suffice
+- Check transport type in commands (stdio vs HTTP)
+- Store per-request state in command instance fields
+- Access HttpContext directly from commands
+- Make transport-specific decisions in command logic
+- Assume single-user scenarios when implementing services
 
 ## Commands
 
@@ -86,7 +94,7 @@ dotnet build
 ### Ask first
 - Installing new packages or dependencies
 - Running project-wide builds or tests
-- Modifying `.csproj`, `.sln`, or configuration files
+- Modifying `.csproj`, `.slnx`, or configuration files
 - Deploying test resources (`Deploy-TestResources.ps1`)
 - Making breaking changes to public APIs
 - Adding new toolsets to the solution
@@ -174,7 +182,7 @@ dotnet build
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- Changelog: Update `CHANGELOG.md` with your changes
+- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
@@ -284,8 +292,8 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 ./eng/scripts/Analyze-AOT-Compact.ps1
 
 # Tool description quality validation
-pushd 'eng/tools/ToolDescriptionEvaluator'
-dotnet run -- --validate --tool-description "Your command description" --prompt "user query"
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
+dotnet run -- --validate --tool-description "Your command description" --prompt "user query" --test-single-tool 'your-tool-name'
 popd
 ```
 
@@ -465,7 +473,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 // All response models must be registered for AOT compatibility
 [JsonSerializable(typeof(StorageAccountGetCommand.StorageAccountListCommandResult))]
 [JsonSerializable(typeof(StorageAccount))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
@@ -501,7 +509,7 @@ tools/Azure.Mcp.Tools.{Service}/
 ### Tool Description Quality Validation
 ```powershell
 # Validate command descriptions for AI agent compatibility
-pushd 'eng/tools/ToolDescriptionEvaluator'
+pushd 'eng/tools/ToolDescriptionEvaluator/src'
 
 # Single prompt validation
 dotnet run -- --validate --tool-description "Get storage accounts in a subscription" --prompt "show me my storage accounts"
@@ -529,7 +537,7 @@ mcp.json configuration for local development:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net9.0/azmcp.exe",
+      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net10.0/azmcp.exe",
       "args": ["server", "start"]
     }
   }
@@ -593,6 +601,63 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 - Implement `BaseAzureResourceService` for efficient Resource Graph queries
 - Follow retry policy patterns with `RetryPolicyOptions`
 
+## Remote MCP Server Architecture
+
+Azure MCP Server supports **stdio** (local) and **HTTP** (remote) transports with different authentication models.
+
+### Key Differences: Stdio vs Remote HTTP
+
+| Aspect | Stdio Mode | Remote HTTP Mode |
+|--------|-----------|------------------|
+| **Concurrency** | Single user | Multiple concurrent users |
+| **State Management** | Can use instance fields | Must be stateless |
+| **Deployment** | Local binaries | Cloud hosting (App Service, AKS) |
+| **Configuration** | Simple (no auth) | Requires Entra ID app registration |
+
+### Authentication Strategies
+
+**On-Behalf-Of (OBO) Flow:**
+- Per-user authorization with audit trails
+- User's RBAC permissions enforced
+- Requires API permissions and admin consent
+- Command: `--run-as-remote-http-service --outgoing-auth-strategy UseOnBehalfOf`
+
+**Hosting Environment Identity:**
+- Service-level permissions using Managed Identity
+- Simpler configuration, no token exchange overhead
+- All users share server's permissions
+- Command: `--run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+
+### Command Implementation for Remote Mode
+
+**Critical Requirements:**
+- Write transport-agnostic commands (work in both stdio and HTTP modes)
+- Use `IAzureTokenCredentialProvider` for all Azure authentication
+- Keep commands stateless and thread-safe (no instance field state)
+- Test with different RBAC permissions for OBO scenarios
+- Provide context-aware error messages for remote scenarios
+
+**Key Patterns:**
+```csharp
+// ✅ Correct: Authentication provider handles both modes
+var credential = await GetCredentialAsync(null, CancellationToken.None);
+var armClient = new ArmClient(credential);
+
+// ❌ Wrong: Don't check transport type or access HttpContext
+if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") != null) { }
+var httpContext = _httpContextAccessor.HttpContext;
+```
+
+### Security Best Practices
+
+1. Always use HTTPS in production
+2. Implement least privilege RBAC
+3. Use OBO for multi-tenant scenarios (preserves user identity)
+4. Secure configuration secrets with Azure Key Vault
+5. Enable Application Insights for monitoring
+6. Validate token claims (audience, issuer, scopes)
+7. Use Managed Identity when possible
+
 ## External MCP Server Integration
 
 The Azure MCP Server can proxy to external MCP servers via `registry.json`:
@@ -622,7 +687,7 @@ When adding new commands:
 1. **Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md`** with new command details
 2. **Add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** (maintain alphabetical order)
 3. **Update toolset README.md** with new functionality
-4. **Update CHANGELOG.md** with changes
+4. **Create changelog entry** if user-facing or critical change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
 5. **Add CODEOWNERS entry** for new toolset
 
 ### Spelling and Content Validation

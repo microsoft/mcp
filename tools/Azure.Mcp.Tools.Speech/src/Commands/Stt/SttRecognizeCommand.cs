@@ -2,19 +2,21 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Stt;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
 public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : BaseSpeechCommand<SttRecognizeOptions>()
 {
-    internal record SttRecognizeCommandResult(ContinuousRecognitionResult Result);
+    internal record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
     private const string CommandTitle = "Recognize Speech from Audio File";
     private readonly ILogger<SttRecognizeCommand> _logger = logger;
@@ -131,7 +133,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -150,13 +152,14 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
                 options.Phrases,
                 options.Format,
                 options.Profanity,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             _logger.LogInformation(
                 "Successfully recognized speech from file: {File}. Full text length: {Length}, Segments: {SegmentCount}",
                 options.File,
-                result.FullText?.Length ?? 0,
-                result.Segments.Count);
+                result.RealtimeContinuousResult?.FullText?.Length ?? 0,
+                result.RealtimeContinuousResult?.Segments.Count ?? 0);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech recognition completed successfully.";

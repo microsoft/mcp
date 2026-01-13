@@ -3,13 +3,13 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -71,19 +71,20 @@ public class DatabaseShowCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.GetDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .GetDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -96,7 +97,8 @@ public class DatabaseShowCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _sqlService.GetDatabaseAsync(
+        _sqlService
+            .GetDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -108,7 +110,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -120,7 +122,8 @@ public class DatabaseShowCommandTests
     public async Task ExecuteAsync_HandlesNotFoundDatabase()
     {
         // Arrange
-        _sqlService.GetDatabaseAsync(
+        _sqlService
+            .GetDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -132,7 +135,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "notfound"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -144,7 +147,8 @@ public class DatabaseShowCommandTests
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
-        _sqlService.GetDatabaseAsync(
+        _sqlService
+            .GetDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -156,7 +160,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);

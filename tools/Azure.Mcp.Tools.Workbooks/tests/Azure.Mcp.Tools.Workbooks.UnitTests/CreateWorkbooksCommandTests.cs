@@ -3,13 +3,13 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -94,7 +94,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -104,7 +105,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -117,7 +118,8 @@ public class CreateWorkbooksCommandTests
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -145,7 +147,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -156,7 +159,7 @@ public class CreateWorkbooksCommandTests
             "--source-id", "custom-source");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -165,7 +168,8 @@ public class CreateWorkbooksCommandTests
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "custom-source",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -178,7 +182,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns((WorkbookInfo?)null);
 
         var context = new CommandContext(_serviceProvider);
@@ -188,7 +193,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -205,7 +210,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new InvalidOperationException("Service error")));
 
         var context = new CommandContext(_serviceProvider);
@@ -215,7 +221,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -247,7 +253,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -257,7 +264,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -266,7 +273,8 @@ public class CreateWorkbooksCommandTests
             "My Test Workbook",
             """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -280,7 +288,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -290,7 +299,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[]}""");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -299,7 +308,8 @@ public class CreateWorkbooksCommandTests
             "Test Workbook",
             """{"items":[]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -314,7 +324,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -326,7 +337,7 @@ public class CreateWorkbooksCommandTests
             "--tenant", "test-tenant");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -336,7 +347,8 @@ public class CreateWorkbooksCommandTests
             """{"items":[]}""",
             "azure monitor",
             Arg.Any<RetryPolicyOptions?>(),
-            "test-tenant");
+            "test-tenant",
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -357,7 +369,7 @@ public class CreateWorkbooksCommandTests
         var parseResult = CreateParseResult([.. args]);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -382,7 +394,7 @@ public class CreateWorkbooksCommandTests
         var parseResult = CreateParseResult([.. args]);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -436,7 +448,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -446,7 +459,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", complexSerializedData);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -465,7 +478,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -479,7 +493,7 @@ public class CreateWorkbooksCommandTests
             "--retry-mode", "1");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -492,7 +506,8 @@ public class CreateWorkbooksCommandTests
                 opts != null &&
                 opts.MaxRetries == 5 &&
                 opts.DelaySeconds == 2.5 &&
-                opts.MaxDelaySeconds == 30));
+                opts.MaxDelaySeconds == 30),
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -505,7 +520,8 @@ public class CreateWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new ArgumentException("Invalid workbook data")));
 
         var context = new CommandContext(_serviceProvider);
@@ -515,7 +531,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);

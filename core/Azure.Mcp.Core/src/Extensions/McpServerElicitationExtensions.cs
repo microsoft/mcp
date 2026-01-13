@@ -3,7 +3,6 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
-using static ModelContextProtocol.Protocol.ElicitRequestParams;
 
 namespace Azure.Mcp.Core.Extensions;
 
@@ -40,8 +39,7 @@ public static class McpServerElicitationExtensions
         // Create the proper MCP protocol elicitation request
         var protocolRequest = new ModelContextProtocol.Protocol.ElicitRequestParams
         {
-            Message = request.Message,
-            RequestedSchema = ConvertToRequestSchema(request.RequestedSchema)
+            Message = request.Message
         };
 
         // Send the real elicitation request through the MCP SDK
@@ -90,36 +88,5 @@ public static class McpServerElicitationExtensions
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Converts our ElicitationRequestParams.RequestedSchema to the MCP protocol RequestSchema.
-    /// </summary>
-    private static RequestSchema ConvertToRequestSchema(JsonObject requestedSchema)
-    {
-        var schema = new RequestSchema();
-
-        // Convert JsonObject schema to RequestSchema
-        foreach (var property in requestedSchema)
-        {
-            if (property.Key == "confirmation" && property.Value != null)
-            {
-                schema.Properties["confirmation"] = new BooleanSchema
-                {
-                    Description = property.Value["description"]?.GetValue<string>() ?? "Confirm to proceed with this operation"
-                };
-            }
-        }
-
-        // Default boolean confirmation schema if no properties found
-        if (!schema.Properties.Any())
-        {
-            schema.Properties["confirmation"] = new BooleanSchema
-            {
-                Description = "Confirm to proceed with this operation"
-            };
-        }
-
-        return schema;
     }
 }

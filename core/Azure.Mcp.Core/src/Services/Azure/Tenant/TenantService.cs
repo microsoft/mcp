@@ -1,24 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
-public class TenantService(ICacheService cacheService)
-    : BaseAzureService, ITenantService
+public class TenantService : BaseAzureService, ITenantService
 {
-    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly IAzureTokenCredentialProvider _credentialProvider;
+    private readonly ICacheService _cacheService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
 
-    public async Task<List<TenantResource>> GetTenants()
+    public TenantService(
+        IAzureTokenCredentialProvider credentialProvider,
+        ICacheService cacheService,
+        IHttpClientFactory clientFactory)
+    {
+        _credentialProvider = credentialProvider;
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _httpClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+        TenantService = this;
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<TenantResource>> GetTenants(CancellationToken cancellationToken)
     {
         // Try to get from cache first
-        var cachedResults = await _cacheService.GetAsync<List<TenantResource>>(CacheGroup, CacheKey, s_cacheDuration);
+        var cachedResults = await _cacheService.GetAsync<List<TenantResource>>(CacheGroup, CacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
             return cachedResults;
@@ -28,7 +44,8 @@ public class TenantService(ICacheService cacheService)
         var results = new List<TenantResource>();
 
         var options = AddDefaultPolicies(new ArmClientOptions());
-        var client = new ArmClient(await GetCredential(), default, options);
+        options.Transport = new HttpClientTransport(GetClient());
+        var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
         await foreach (var tenant in client.GetTenants())
         {
@@ -36,46 +53,64 @@ public class TenantService(ICacheService cacheService)
         }
 
         // Cache the results
-        await _cacheService.SetAsync(CacheGroup, CacheKey, results, s_cacheDuration);
+        await _cacheService.SetAsync(CacheGroup, CacheKey, results, s_cacheDuration, cancellationToken);
         return results;
     }
 
-    public bool IsTenantId(string tenant)
+    /// <inheritdoc/>
+    public bool IsTenantId(string tenantId)
     {
-        return Guid.TryParse(tenant, out _);
+        return Guid.TryParse(tenantId, out _);
     }
 
-    public async Task<string?> GetTenantId(string tenant)
+    /// <inheritdoc/>
+    public async Task<string> GetTenantId(string tenantIdOrName, CancellationToken cancellationToken)
     {
-        if (IsTenantId(tenant))
+        if (IsTenantId(tenantIdOrName))
         {
-            return tenant;
+            return tenantIdOrName;
         }
 
-        return await GetTenantIdByName(tenant);
+        return await GetTenantIdByName(tenantIdOrName, cancellationToken);
     }
 
-    public async Task<string?> GetTenantIdByName(string tenantName)
+    /// <inheritdoc/>
+    public async Task<string> GetTenantIdByName(string tenantName, CancellationToken cancellationToken)
     {
-        var tenants = await GetTenants();
+        var tenants = await GetTenants(cancellationToken);
         var tenant = tenants.FirstOrDefault(t => t.Data.DisplayName?.Equals(tenantName, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with name {tenantName}");
 
-        if (tenant.Data.TenantId == null)
+        string? tenantId = tenant.Data.TenantId?.ToString();
+        if (tenantId == null)
             throw new InvalidOperationException($"Tenant {tenantName} has a null TenantId");
 
-        return tenant.Data.TenantId.ToString();
+        return tenantId.ToString();
     }
 
-    public async Task<string?> GetTenantNameById(string tenantId)
+    /// <inheritdoc/>
+    public async Task<string> GetTenantNameById(string tenantId, CancellationToken cancellationToken)
     {
-        var tenants = await GetTenants();
+        var tenants = await GetTenants(cancellationToken);
         var tenant = tenants.FirstOrDefault(t => t.Data.TenantId?.ToString().Equals(tenantId, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with ID {tenantId}");
 
-        if (tenant.Data.DisplayName == null)
+        string? tenantName = tenant.Data.DisplayName;
+        if (tenantName == null)
             throw new InvalidOperationException($"Tenant with ID {tenantId} has a null DisplayName");
 
-        return tenant.Data.DisplayName;
+        return tenantName;
+    }
+
+    /// <inheritdoc/>
+    public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)
+    {
+        return await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public HttpClient GetClient()
+    {
+        return _httpClientFactory.CreateClient();
     }
 }

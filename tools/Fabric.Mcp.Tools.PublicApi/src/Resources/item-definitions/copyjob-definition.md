@@ -1,12 +1,3 @@
----
-title: Copy job definition
-description: Learn how to create a Copy job item definition when using the Microsoft Fabric REST API.
-ms.title: Microsot Fabric Copy job item definition
-author: anuska-ray
-ms.author: anuskaray
-ms.service: fabric
-ms.date: 02/03/2025
----
   
 # Copy job definition
   

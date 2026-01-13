@@ -1,0 +1,52 @@
+parameters:
+- name: ServerName
+  type: string
+- name: NuGetFeedIndexUrl
+  type: string
+  default: 'https://api.nuget.org/v3/index.json'
+- name: DependsOn
+  type: object
+
+jobs:
+- job: BuildAndUpdateMcpRepository
+  displayName: Publish server.json to MCP Repository
+  ${{ if parameters.DependsOn }}:
+    dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - task: Powershell@2
+    displayName: 'Verify Nuget package was published'
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-NuGetRelease.ps1
+      arguments: >
+        -ServerName '${{ parameters.ServerName }}'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -NuGetFeedIndexUrl '${{ parameters.NuGetFeedIndexUrl }}'
+
+  - task: AzureCLI@2
+    displayName: 'Build go tool and publish server.json'
+    inputs:
+      azureSubscription: 'Azure SDK Engineering System'
+      scriptType: 'pscore'
+      scriptLocation: 'scriptPath'
+      scriptPath: $(Build.SourcesDirectory)/eng/scripts/Deploy-ServerJson.ps1
+      arguments: >
+        -ServerJsonPath: '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
+        -ServerName '${{ parameters.ServerName }}'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -KeyVaultName 'azuresdkengkeyvault'
+        -KeyVaultKeyName 'mcp-registry'
+    env:
+      AZURE_TOKEN_CREDENTIALS: 'AzureCLICredential'  # Have DefaultAzureCredential use the AzureCLI credential

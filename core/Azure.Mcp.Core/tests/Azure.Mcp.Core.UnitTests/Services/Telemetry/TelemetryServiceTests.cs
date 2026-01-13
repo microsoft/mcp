@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -20,7 +21,9 @@ public class TelemetryServiceTests
     {
         Name = "TestService",
         Version = "1.0.0",
-        IsTelemetryEnabled = true
+        IsTelemetryEnabled = true,
+        DisplayName = "Test Display",
+        RootCommandGroupName = "azmcp"
     };
     private readonly IOptions<AzureMcpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
@@ -33,6 +36,7 @@ public class TelemetryServiceTests
         _mockOptions.Value.Returns(_testConfiguration);
 
         _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
+        _mockServiceOptions.Value.Returns(new ServiceStartOptions());
 
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
@@ -127,7 +131,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = "test-transport"
+            Transport = TransportTypes.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
@@ -149,7 +153,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -179,7 +185,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -191,13 +199,13 @@ public class TelemetryServiceTests
         // Test both overloads.
         Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id"));
 
-        var implementation = new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
             Title = "Test MCP server"
         };
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
@@ -210,13 +218,15 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        var implementation = new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
@@ -228,7 +238,7 @@ public class TelemetryServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
@@ -239,7 +249,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = "test-transport"
+            Transport = TransportTypes.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
@@ -247,7 +257,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -279,7 +291,9 @@ public class TelemetryServiceTests
         {
             Name = "TestService",
             Version = "1.0.0",
-            IsTelemetryEnabled = true
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
         };
 
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
@@ -301,17 +315,17 @@ public class TelemetryServiceTests
         var dictionary = tags.ToDictionary();
         Assert.NotEmpty(tags);
 
-        AssertTag(dictionary, TelemetryConstants.TagName.DevDeviceId, TestDeviceId);
-        AssertTag(dictionary, TelemetryConstants.TagName.MacAddressHash, TestMacAddressHash);
+        AssertTag(dictionary, TagName.DevDeviceId, TestDeviceId);
+        AssertTag(dictionary, TagName.MacAddressHash, TestMacAddressHash);
 
         if (expectedServiceOptions != null)
         {
             Assert.NotNull(expectedServiceOptions.Mode);
-            AssertTag(dictionary, TelemetryConstants.TagName.ServerMode, expectedServiceOptions.Mode);
+            AssertTag(dictionary, TagName.ServerMode, expectedServiceOptions.Mode);
         }
         else
         {
-            Assert.False(dictionary.ContainsKey(TelemetryConstants.TagName.ServerMode));
+            Assert.False(dictionary.ContainsKey(TagName.ServerMode));
         }
     }
 

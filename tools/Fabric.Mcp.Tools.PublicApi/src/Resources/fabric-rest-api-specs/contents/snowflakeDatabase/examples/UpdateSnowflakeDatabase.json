@@ -1,0 +1,32 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "snowflakeDatabaseId": "123e4567-e89b-12d3-a456-426614174001",
+    "updateSnowflakeDatabaseRequest": {
+      "displayName": "Updated Database",
+      "description": "This is an updated Snowflake Database item."
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "description": "This is an updated Snowflake Database item.",
+        "displayName": "Updated Database",
+        "id": "123e4567-e89b-12d3-a456-426614174001",
+        "properties": {
+          "snowflakeDatabaseName": "ExampleDatabase",
+          "onelakeTablesPath": "https://onelake.dfs.fabric.microsoft.com/path/to/Tables",
+          "snowflakeVolumePath": "https://onelake.dfs.fabric.microsoft.com/path/to/SnowflakeVolume",
+          "sqlEndpointProperties": {
+            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+            "id": "123e4567-e89b-12d3-a456-426614174004",
+            "provisioningStatus": "Success"
+          },
+          "defaultSchema": "PUBLIC"
+        },
+        "type": "SnowflakeDatabase",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+      }
+    }
+  }
+}
