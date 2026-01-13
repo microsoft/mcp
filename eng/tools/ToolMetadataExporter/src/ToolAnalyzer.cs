@@ -143,7 +143,8 @@ public class ToolAnalyzer
             return;
         }
 
-        var outputFile = Path.Combine(_workingDirectory, "tool_changes.json");
+        var filename = $"tool_changes.{analysisTime.Ticks}.json";
+        var outputFile = Path.Combine(_workingDirectory, filename);
 
         _logger.LogInformation("Tool updates. Writing output to: {FileName}", outputFile);
 
@@ -166,6 +167,8 @@ public class ToolAnalyzer
                 _logger.LogError(ex, "Error writing to {FileName}", outputFile);
             }
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (!_isDryRun)
         {
