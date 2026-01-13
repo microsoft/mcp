@@ -11,6 +11,8 @@ on:
   # pull request merged is the closed event with github.event.pull_request.merged = true
   pull_request_target:
     types: [closed, labeled, opened, reopened, review_requested, synchronize, unlabeled]
+  label:
+    types: [created, edited, deleted]
 
 # This removes all unnecessary permissions, the ones needed will be set below.
 # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -29,6 +31,7 @@ jobs:
       id-token: write
       contents: read
     name: Handle ${{ github.event_name }} ${{ github.event.action }} event with azure login
+    if: github.event_name != 'label'
     runs-on: ubuntu-latest
     steps:
       - name: 'Az CLI login'
