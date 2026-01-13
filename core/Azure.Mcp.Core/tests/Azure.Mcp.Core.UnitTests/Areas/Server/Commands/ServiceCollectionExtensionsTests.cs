@@ -393,6 +393,6 @@ public class ServiceCollectionExtensionsTests
         // Verify the instructions contain expected sections
         Assert.Contains("Azure MCP server usage rules:", instructions);
         Assert.Contains("Use Azure Code Gen Best Practices:", instructions);
-        Assert.Contains("Use Azure SWA Best Practices:", instructions);
+        Assert.Contains("Use Azure AI App Code Generation Best Practices", instructions);
     }
 }
