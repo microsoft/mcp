@@ -203,8 +203,9 @@ function Get-ExistingContributors {
     
     $existingContributors = @{}
     
-    # Look for contributor references in the format @username
-    $contributorMatches = [regex]::Matches($ChangelogContent, '@([a-zA-Z0-9_-]+)')
+    # Look for contributor references in the format @username followed by space or punctuation
+    # This avoids matching package names like @azure/mcp@1.0.0
+    $contributorMatches = [regex]::Matches($ChangelogContent, '(?:^|\s)@([a-zA-Z0-9_-]+)(?:\s|$|[,.])')
     foreach ($match in $contributorMatches) {
         $username = $match.Groups[1].Value
         # Skip common false positives
