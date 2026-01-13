@@ -1304,7 +1304,7 @@ azmcp marketplace product get --subscription <subscription> \
 ```bash
 # Get best practices for secure, production-grade Azure usage
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp get_azure_bestpractices get --resource <resource> --action <action>
+azmcp get azure bestpractices get --resource <resource> --action <action>
 
 # Resource options:
 #   general        - General Azure best practices
@@ -1319,7 +1319,7 @@ azmcp get_azure_bestpractices get --resource <resource> --action <action>
 # Get best practices for building AI applications, workflows and agents in Azure
 # Call this before generating code for any AI application, building with Microsoft Foundry models,
 # working with Microsoft Agent Framework, or implementing AI solutions in Azure.
-azmcp get_azure_bestpractices ai_app
+azmcp get azure bestpractices ai_app
 
 # AI App Development:
 #   ai_app - Comprehensive guidance for AI applications including:
