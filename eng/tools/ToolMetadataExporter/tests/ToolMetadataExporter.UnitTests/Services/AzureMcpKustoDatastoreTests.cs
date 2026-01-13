@@ -666,10 +666,10 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         reader.GetString(Arg.Is(3)).Returns(x => GetCurrentToolId());
         reader.GetString(Arg.Is(4)).Returns(x => GetCurrentToolName());
         reader.GetString(Arg.Is(5)).Returns(x => GetCurrentToolArea());
-        
+
         reader.IsDBNull(Arg.Is(6)).Returns(x => IsReplacedByToolNameNull());
         reader.GetString(Arg.Is(6)).Returns(x => GetCurrentReplacedByToolName());
-        
+
         reader.IsDBNull(Arg.Is(7)).Returns(x => IsReplacedByToolAreaNull());
         reader.GetString(Arg.Is(7)).Returns(x => GetCurrentReplacedByToolArea());
 
