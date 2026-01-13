@@ -134,11 +134,79 @@ function Normalize-Indentation {
     return $line
 }
 
-# Helper function to format a changelog entry with description and PR link
+# Helper function to get contributor information from a PR
+function Get-ContributorFromPR {
+    param([int]$PR)
+    
+    if ($PR -le 0) {
+        return $null
+    }
+    
+    try {
+        # Find commits that reference this PR number in their message
+        $commitInfo = git log --all --format="%H|%an|%ae|%s" --grep="#${PR}" 2>$null | Select-Object -First 1
+        
+        if ($commitInfo -and $commitInfo -match '^([^|]+)\|([^|]+)\|([^|]+)\|(.*)$') {
+            $authorName = $matches[2].Trim()
+            $authorEmail = $matches[3].Trim()
+            
+            # Skip bot accounts
+            if ($authorEmail -match '@users\.noreply\.github\.com$' -and $authorEmail -match '^\d+\+') {
+                # Extract GitHub username from noreply email format: "123456+username@users.noreply.github.com"
+                if ($authorEmail -match '^\d+\+([^@]+)@') {
+                    $githubUsername = $matches[1]
+                    return @{
+                        Name = $authorName
+                        Username = $githubUsername
+                        Email = $authorEmail
+                    }
+                }
+            }
+            elseif ($authorName -notmatch '\[bot\]$' -and $authorEmail -notmatch 'bot@' -and $authorEmail -notmatch '@microsoft\.com$') {
+                # For non-bot, non-Microsoft contributors, try to extract username from email
+                if ($authorEmail -match '^([^@]+)@') {
+                    $username = $matches[1]
+                    return @{
+                        Name = $authorName
+                        Username = $username
+                        Email = $authorEmail
+                    }
+                }
+            }
+        }
+    }
+    catch {
+        # Git command failed, return null
+    }
+    
+    return $null
+}
+
+# Helper function to get all contributors from the existing changelog
+function Get-ExistingContributors {
+    param([string]$ChangelogContent)
+    
+    $existingContributors = @{}
+    
+    # Look for contributor references in the format @username
+    $contributorMatches = [regex]::Matches($ChangelogContent, '@([a-zA-Z0-9_-]+)')
+    foreach ($match in $contributorMatches) {
+        $username = $match.Groups[1].Value
+        # Skip common false positives
+        if ($username -notin @('azure', 'microsoft', 'github', 'users', 'noreply')) {
+            $existingContributors[$username] = $true
+        }
+    }
+    
+    return $existingContributors
+}
+
+# Helper function to format a changelog entry with description, PR link, and contributor attribution
 function Format-ChangelogEntry {
     param(
         [string]$Description,
-        [int]$PR
+        [int]$PR,
+        [hashtable]$Contributor = $null
     )
     
     # Trim leading and trailing whitespace from the entire description
@@ -146,6 +214,15 @@ function Format-ChangelogEntry {
     
     # Normalize tabs to spaces throughout the description
     $Description = $Description -replace "`t", "  "
+    
+    # Build PR link with contributor attribution
+    $prLink = ""
+    if ($PR -gt 0) {
+        $prLink = " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]"
+        if ($Contributor) {
+            $prLink = " by @$($Contributor.Username) in [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]"
+        }
+    }
     
     # Check if description contains multiple lines
     if ($Description.Contains("`n")) {
@@ -156,7 +233,6 @@ function Format-ChangelogEntry {
         
         # Check if this is a list (first line followed by bullet items)
         $isList = $lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+'
-        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
         
         for ($i = 0; $i -lt $lines.Length; $i++) {
             $line = $lines[$i].TrimEnd()  # Trim trailing spaces from each line
@@ -217,8 +293,7 @@ function Format-ChangelogEntry {
             $formattedDescription += "."
         }
         
-        # Add PR link if available
-        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+        # Add PR link with contributor attribution
         return "- $formattedDescription$prLink"
     }
 }
@@ -426,6 +501,26 @@ Write-Host ""
 Write-Host "Successfully validated $($entries.Count) entry/entries" -ForegroundColor Green
 Write-Host ""
 
+# Track contributors from new entries
+Write-Host "Tracking contributors..." -ForegroundColor Cyan
+$contributors = @{}
+$contributorsByPR = @{}
+foreach ($entry in $entries) {
+    if ($entry.PR -gt 0) {
+        $contributor = Get-ContributorFromPR -PR $entry.PR
+        if ($contributor) {
+            $username = $contributor.Username
+            if (-not $contributors.ContainsKey($username)) {
+                $contributors[$username] = $contributor
+                Write-Host "  Found contributor: @$username (PR #$($entry.PR))" -ForegroundColor Gray
+            }
+            $contributorsByPR[$entry.PR] = $contributor
+        }
+    }
+}
+Write-Host "  Total contributors: $($contributors.Count)" -ForegroundColor Green
+Write-Host ""
+
 # Group entries by section and subsection
 # Use $RecommendedSectionHeaders from ChangeLog-Operations.ps1 (imported via common.ps1)
 $groupedEntries = @{}
@@ -554,7 +649,8 @@ foreach ($section in $RecommendedSectionHeaders) {
         # Process entries without subsection first
         if ($subsections.ContainsKey("")) {
             foreach ($entry in $subsections[""]) {
-                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $contributor = if ($contributorsByPR.ContainsKey($entry.PR)) { $contributorsByPR[$entry.PR] } else { $null }
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $contributor
             }
         }
         
@@ -564,7 +660,8 @@ foreach ($section in $RecommendedSectionHeaders) {
             $newEntriesMarkdown += "#### $subsectionName"
             $newEntriesMarkdown += ""
             foreach ($entry in $subsections[$subsectionName]) {
-                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $contributor = if ($contributorsByPR.ContainsKey($entry.PR)) { $contributorsByPR[$entry.PR] } else { $null }
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $contributor
             }
         }
     }
@@ -659,7 +756,8 @@ else {
         
         if ($hasNew -and $groupedEntries[$section].ContainsKey("")) {
             foreach ($entry in $groupedEntries[$section][""]) {
-                $newMainEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $contributor = if ($contributorsByPR.ContainsKey($entry.PR)) { $contributorsByPR[$entry.PR] } else { $null }
+                $newMainEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $contributor
             }
         }
         
@@ -691,7 +789,8 @@ else {
             # New subsection entries
             if ($mapping.New -and $hasNew -and $groupedEntries[$section].ContainsKey($mapping.New)) {
                 foreach ($entry in $groupedEntries[$section][$mapping.New]) {
-                    $subsectionEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                    $contributor = if ($contributorsByPR.ContainsKey($entry.PR)) { $contributorsByPR[$entry.PR] } else { $null }
+                    $subsectionEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $contributor
                 }
             }
             
@@ -716,6 +815,42 @@ else {
             $mergedContent += $sectionContent
         }
     }
+}
+
+# Add contributor sections if there are contributors to acknowledge
+if ($contributors.Count -gt 0) {
+    Write-Host "Identifying new contributors..." -ForegroundColor Cyan
+    
+    # Get existing contributors from the changelog
+    $existingContributors = Get-ExistingContributors -ChangelogContent $changelogContent
+    
+    # Identify new contributors
+    $newContributors = @()
+    foreach ($username in $contributors.Keys) {
+        if (-not $existingContributors.ContainsKey($username)) {
+            $newContributors += @{
+                Username = $username
+                Name = $contributors[$username].Name
+                # Find the first PR for this contributor
+                PR = ($entries | Where-Object { $contributorsByPR.ContainsKey($_.PR) -and $contributorsByPR[$_.PR].Username -eq $username } | Select-Object -First 1).PR
+            }
+            Write-Host "  New contributor: @$username" -ForegroundColor Green
+        }
+    }
+    
+    # Add "New Contributors" section if there are any
+    if ($newContributors.Count -gt 0) {
+        $mergedContent += ""
+        $mergedContent += "### New Contributors"
+        $mergedContent += ""
+        foreach ($contributor in ($newContributors | Sort-Object { $_.Username })) {
+            $prLink = "[[#$($contributor.PR)](https://github.com/microsoft/mcp/pull/$($contributor.PR))]"
+            $mergedContent += "- @$($contributor.Username) made their first contribution in $prLink"
+        }
+    }
+    
+    Write-Host "  Found $($newContributors.Count) new contributor(s)" -ForegroundColor Green
+    Write-Host ""
 }
 
 # Preview output
