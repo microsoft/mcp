@@ -1,6 +1,12 @@
 # Release History
 
 
+## 2.0.0-beta.11 (Unreleased) (pre-release)
+
+### Breaking Changes
+
+- Merged `azureterraformbestpractices` tool into `get_azure_bestpractices` to reduce tool count and prevent tool competition in virtual tool mode. Users should now use `get_azure_bestpractices get --resource terraform --action all` instead of `azureterraformbestpractices get` to access Terraform best practices for Azure.
+
 ## 2.0.0-beta.10 (2026-01-09) (pre-release)
 
 ### Added

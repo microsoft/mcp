@@ -198,7 +198,7 @@ When logging issues, include:
 
 ### IaC Guidance
 - `azmcp_deploy_iac_rules_get` - Get IaC generation rules for resource types
-- `azmcp_azureterraformbestpractices_get` - Get Terraform best practices
+- `azmcp_get_azure_bestpractices_get` - Get Azure best practices (including Terraform)
 - `azmcp_bestpractices_get` - Get general Azure best practices
 
 ### Resource Verification

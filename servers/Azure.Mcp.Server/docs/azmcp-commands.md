@@ -2277,12 +2277,26 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 azmcp subscription list [--tenant-id <tenant-id>]
 ```
 
-### Azure Terraform Best Practices
+### Azure Best Practices
 
 ```bash
-# Get secure, production-grade Azure Terraform best practices for effective code generation and command execution.
+# Get Azure best practices for code generation and deployment
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azureterraformbestpractices get
+azmcp get_azure_bestpractices get --resource <resource> --action <action>
+
+# Available resources: general, azurefunctions, static-web-app, coding-agent, terraform
+# Available actions: all, code-generation, deployment
+# Note: static-web-app, coding-agent, and terraform only support 'all' action
+
+# Examples:
+# Get general Azure best practices for code generation
+azmcp get_azure_bestpractices get --resource general --action code-generation
+
+# Get Terraform best practices for Azure
+azmcp get_azure_bestpractices get --resource terraform --action all
+
+# Get Azure Functions best practices for both code generation and deployment
+azmcp get_azure_bestpractices get --resource azurefunctions --action all
 ```
 
 ### Azure Virtual Desktop Operations

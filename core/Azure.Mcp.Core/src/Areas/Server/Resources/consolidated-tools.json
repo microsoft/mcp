@@ -1010,7 +1010,6 @@
         }
       },
       "mappedToolList": [
-        "azureterraformbestpractices_get",
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
         "get_azure_bestpractices_get",

@@ -715,12 +715,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | subscription_list | What is my current subscription? |
 | subscription_list | What subscriptions do I have? |
 
-## Azure Terraform Best Practices
+## Azure Best Practices
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azureterraformbestpractices_get | Fetch the Azure Terraform best practices |
-| azureterraformbestpractices_get | Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault |
+| get_azure_bestpractices_get | Fetch the Azure Terraform best practices |
+| get_azure_bestpractices_get | Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault |
+| get_azure_bestpractices_get | Get general Azure best practices for code generation |
+| get_azure_bestpractices_get | Get Azure Functions deployment best practices |
 
 ## Azure Virtual Desktop
 

@@ -30,6 +30,7 @@ public class AzureBestPracticesSetup : IAreaSetup
             operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container 
             Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, 
             Azure App Services, or any other Azure technology or programming language. 
+            For Terraform-specific best practices for Azure, use the 'terraform' resource type.
             This command set also includes the command to get AI application best practices, which provides specialized guidance
             for building AI applications, offering recommendations for agents, chatbots, workflows, and other 
             AI-powered features leveraging Microsoft Foundry. 
