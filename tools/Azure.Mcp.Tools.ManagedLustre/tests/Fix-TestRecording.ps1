@@ -1,3 +1,38 @@
+#!/usr/bin/env pwsh
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+#Requires -Version 7.0
+
+<#
+.SYNOPSIS
+    Removes consecutive 'InProgress' responses from Azure Managed Lustre test recordings.
+
+.DESCRIPTION
+    This script processes test recordings for Azure Managed Lustre to optimize recording size
+    by removing consecutive 'InProgress' status responses. It locates the recording file using
+    test-proxy, processes it to remove duplicate InProgress entries, and pushes the updated
+    recording back to the assets repository.
+
+    The script processes the test 'Should_create_azure_managed_lustre_with_storage_and_cmk'.
+
+.EXAMPLE
+    .\Fix-TestRecording.ps1
+    Processes the test recording and removes consecutive InProgress responses.
+
+.NOTES
+    This script requires the test-proxy tool to be installed and accessible in the PATH.
+    The script will:
+    1. Locate the assets path using test-proxy
+    2. Find the recording file for the specified test
+    3. Remove consecutive 'InProgress' status entries
+    4. Push the updated recording back to the assets repository
+#>
+
+[CmdletBinding()]
+param()
+
 $ErrorActionPreference = "Stop"
 
 $testName = 'Should_create_azure_managed_lustre_with_storage_and_cmk'
@@ -31,11 +66,11 @@ $lastStatus = ''
 Write-Host "Original number of entries: $($recording.Entries.Count)" -ForegroundColor Yellow
 # Remove consecutive 'InProgress' responses
 foreach ($entry in $recording.Entries) {
-  $currentStatus = $entry.ResponseBody.status
-  if ($currentStatus -ne 'InProgress' -or $lastStatus -ne 'InProgress') {
-    $newEntries += $entry
-  }
-  $lastStatus = $currentStatus
+    $currentStatus = $entry.ResponseBody.status
+    if ($currentStatus -ne 'InProgress' -or $lastStatus -ne 'InProgress') {
+        $newEntries += $entry
+    }
+    $lastStatus = $currentStatus
 }
 
 $recording.Entries = $newEntries
