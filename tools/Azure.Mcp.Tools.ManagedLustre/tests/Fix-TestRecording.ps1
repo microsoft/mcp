@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 #Requires -Version 7.0
-#Requires -PSEdition Core
 
 <#
 .SYNOPSIS
