@@ -8,7 +8,7 @@
     each tool command. Maintains the existing format, schema, and order.
     
 .PARAMETER AzmcpPath
-    Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe
+    Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe
     
 .PARAMETER DocsPath
     Path to the azmcp-commands.md file. Default: ..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md
@@ -22,7 +22,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$AzmcpPath = "..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe",
+    [string]$AzmcpPath = "..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe",
     [string]$DocsPath = "..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md"
 )
 
