@@ -168,7 +168,7 @@ function ProcessLink([System.Uri]$linkUri) {
     # If we didn't return above, fall through to standard link checking
     return ProcessStandardLink $linkUri
   }
-  if ($linkUri -match '^https?://?github\.com/[^/]+/[^/]+/wiki/.+') {
+  if ($linkUri -match '^https?://github\.com/[^/]+/[^/]+/wiki/.+') {
     # in an unauthenticated session, urls for missing pages will redirect to the wiki root
     return ProcessRedirectLink $linkUri -invalidStatusCodes 302
   }
