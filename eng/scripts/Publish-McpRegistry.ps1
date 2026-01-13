@@ -21,6 +21,7 @@ function ConvertFrom-Base64Url {
     
     # Convert base64url to base64 by replacing URL-safe characters and adding padding
     $base64 = $Base64Url.Replace('-', '+').Replace('_', '/')
+    # Round up to the nearest multiple of 4 for base64 padding requirements
     $paddedBase64 = $base64.PadRight(($base64.Length + 3) -band -bnot 3, '=')
     
     return [Convert]::FromBase64String($paddedBase64)
