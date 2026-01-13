@@ -101,7 +101,7 @@ try {
             -RegistryUrl $StagingRegistryUrl `
             -Domain $Domain `
             -KeyVaultName $KeyVaultName `
-            -KeyVaultKeyName $KeyVaultKeyName
+            -KeyName $KeyVaultKeyName
     } elseif ($publishTarget -eq $PublishTargetProduction) {
         Write-Host "$($serverInfo.name): Deploying server.json to production instance: $ProductionRegistryUrl"
         Publish-ToMcpRegistry `
@@ -109,7 +109,7 @@ try {
             -RegistryUrl $ProductionRegistryUrl `
             -Domain $Domain `
             -KeyVaultName $KeyVaultName `
-            -KeyVaultKeyName $KeyVaultKeyName
+            -KeyName $KeyVaultKeyName
     } elseif ($publishTarget -eq $PublishTargetInternal) { 
         LogInfo "$($serverInfo.name): Internal publish target specified. Skipping deployment to public MCP registry."
     } else {

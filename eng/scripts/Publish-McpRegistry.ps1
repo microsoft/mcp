@@ -143,8 +143,13 @@ function Get-McpRegistryToken {
     
     # Compute SHA-384 hash of timestamp
     $sha384 = [System.Security.Cryptography.SHA384]::Create()
-    $timestampBytes = [System.Text.Encoding]::UTF8.GetBytes($timestamp)
-    $digest = $sha384.ComputeHash($timestampBytes)
+    try {
+        $timestampBytes = [System.Text.Encoding]::UTF8.GetBytes($timestamp)
+        $digest = $sha384.ComputeHash($timestampBytes)
+    }
+    finally {
+        $sha384.Dispose()
+    }
     
     # Sign the digest with Azure Key Vault
     $signatureBase64Url = Invoke-AzureKeyVaultSign -KeyVaultName $KeyVaultName -KeyName $KeyName -Digest $digest
@@ -190,7 +195,7 @@ function Publish-McpServerJson {
         throw "Server JSON file not found: $ServerJsonPath"
     }
     
-    $serverJson = Get-Content $ServerJsonPath -Raw | ConvertFrom-Json
+    $body = Get-Content $ServerJsonPath -Raw
     
     # Publish to registry
     $publishUrl = "$RegistryUrl/v0/publish"
@@ -198,8 +203,6 @@ function Publish-McpServerJson {
         "Content-Type" = "application/json"
         "Authorization" = "Bearer $Token"
     }
-    
-    $body = Get-Content $ServerJsonPath -Raw
     
     $response = Invoke-RestMethod -Uri $publishUrl -Method Post -Body $body -Headers $headers
     
