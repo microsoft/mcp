@@ -35,7 +35,7 @@ public class AzmcpProgram
         _serverInfoTask = GetServerInfoInternalAsync();
         _serverNameTask = GetServerNameInternalAsync();
         _serverVersionTask = GetServerVersionInternalAsync();
-        _listToolsTask = new Lazy<Task<ListToolsResult?>>(() =>GetServerToolsInternalAsync());
+        _listToolsTask = new Lazy<Task<ListToolsResult?>>(() => GetServerToolsInternalAsync());
     }
 
     /// <summary>
