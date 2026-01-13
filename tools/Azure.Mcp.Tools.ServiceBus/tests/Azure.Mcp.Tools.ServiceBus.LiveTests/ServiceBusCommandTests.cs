@@ -7,6 +7,8 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,15 +16,11 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 {
-    public class ServiceBusCommandTests : CommandTestsBase
+    public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
     {
         private const string QueueName = "queue1";
         private const string TopicName = "topic1";
         private const string SubscriptionName = "subscription1";
-
-        public ServiceBusCommandTests(ITestOutputHelper output) : base(output)
-        {
-        }
 
         [Fact(Skip = "The command for this test has been commented out until we know how to surface binary data.")]
         public async Task Queue_peek_messages()

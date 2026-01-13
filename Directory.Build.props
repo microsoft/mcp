@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -44,10 +44,6 @@
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <CopyOutputSymbolsToPublishDirectory>true</CopyOutputSymbolsToPublishDirectory>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <McpServerJsonTemplateFile>$(RepoRoot)eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(BuildNative)' == 'true'">

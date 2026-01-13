@@ -277,6 +277,48 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
+## Azure FileShares
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| fileshares_fileshare_create | Create a new file share <file_share_name> in storage account <account_name> in resource group <resource_group_name> |
+| fileshares_fileshare_create | Create file share <file_share_name> in account <account_name> with quota 100 GB |
+| fileshares_fileshare_create | Create a file share named <file_share_name> in storage account <account_name> with access tier Hot |
+| fileshares_fileshare_create | Set up a new file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_delete | Delete the file share <file_share_name> from storage account <account_name> in resource group <resource_group_name> |
+| fileshares_fileshare_delete | Remove file share <file_share_name> from account <account_name> |
+| fileshares_fileshare_get | List all file shares in storage account <account_name> |
+| fileshares_fileshare_get | Show me the file shares in storage account <account_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | Get details of file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_get | Show me the file share <file_share_name> in account <account_name> |
+| fileshares_fileshare_get | What file shares exist in storage account <account_name>? |
+| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> |
+| fileshares_fileshare_limits_get | What are the file share limits in my subscription? |
+| fileshares_fileshare_limits_get | Show me the file share service limits |
+| fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
+| fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
+| fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
+| fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |
+| fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in account <account_name> |
+| fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> |
+| fileshares_fileshare_snapshot_delete | Delete the snapshot <snapshot_id> from file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_delete | Remove snapshot <snapshot_id> from file share <file_share_name> |
+| fileshares_fileshare_snapshot_get | List all snapshots for file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_get | Show me the snapshots of file share <file_share_name> in account <account_name> |
+| fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
+| fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_update | Update file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_update | Update the quota for file share <file_share_name> to 200 GB |
+| fileshares_fileshare_update | Change the access tier of file share <file_share_name> to Cool |
+| fileshares_fileshare_update | Modify file share <file_share_name> in account <account_name> with new settings |
+| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
+| fileshares_fileshare_usage_get | What is the current usage of file share <file_share_name>? |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
@@ -400,6 +442,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
 | managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
+| managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_list | List all autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_delete | Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_cancel | Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_list | List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
@@ -416,20 +468,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| get_bestpractices_get | Get the latest Azure code generation best practices |
-| get_bestpractices_get | Get the latest Azure deployment best practices |
-| get_bestpractices_get | Get the latest Azure best practices |
-| get_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| get_bestpractices_get | Get the latest Azure Functions deployment best practices |
-| get_bestpractices_get | Get the latest Azure Functions best practices |
-| get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| get_bestpractices_get | What are azure function best practices? |
-| get_bestpractices_get | configure azure mcp in coding agent for my repo |
-| get_bestpractices_ai_app | Get best practices for building AI applications in Azure |
-| get_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
-| get_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
-| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
-| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+| get_azure_bestpractices_get | Get the latest Azure code generation best practices |
+| get_azure_bestpractices_get | Get the latest Azure deployment best practices |
+| get_azure_bestpractices_get | Get the latest Azure best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions code generation best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions deployment best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions best practices |
+| get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| get_azure_bestpractices_get | What are azure function best practices? |
+| get_azure_bestpractices_get | configure azure mcp in coding agent for my repo |
+| get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure |
+| get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
+| get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
+| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
+| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
 ## Azure Monitor
 
 | Tool Name | Test Prompt |
@@ -624,6 +676,35 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
+| storage_table_list | List all tables in the storage account <account> |
+| storage_table_list | Show me the tables in the storage account <account> |
+
+## Azure Storage Sync
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| storagesync_service_create | Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location> |
+| storagesync_service_delete | Delete the Storage Sync Service <service-name> from resource group <resource-group-name> |
+| storagesync_service_get | Get the details of Storage Sync Service <service-name> in resource group <resource-group-name> |
+| storagesync_service_get | List all Storage Sync Services in resource group <resource-group-name> |
+| storagesync_service_update | Update Storage Sync Service <service-name> with new tags |
+| storagesync_registeredserver_get | Get the details of registered server <server-name> in service <service-name> |
+| storagesync_registeredserver_get | List all registered servers in service <service-name> |
+| storagesync_registeredserver_unregister | Unregister server <server-name> from service <service-name> |
+| storagesync_registeredserver_update | Update registered server <server-name> configuration in service <service-name> |
+| storagesync_syncgroup_create | Create a new sync group named <syncgroup-name> in service <service-name> |
+| storagesync_syncgroup_delete | Delete the sync group <syncgroup-name> from service <service-name> |
+| storagesync_syncgroup_get | Get the details of sync group <syncgroup-name> in service <service-name> |
+| storagesync_cloudendpoint_changedetection | Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> for directory path <path> |
+| storagesync_cloudendpoint_create | Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name> |
+| storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> |
+| storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> |
+| storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> |
+| storagesync_serverendpoint_create | Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name> |
+| storagesync_serverendpoint_delete | Delete the server endpoint <endpoint-name> from sync group <syncgroup-name> |
+| storagesync_serverendpoint_get | Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name> |
+| storagesync_serverendpoint_get | List all server endpoints in sync group <syncgroup-name> |
+| storagesync_serverendpoint_update | Update server endpoint <endpoint-name> with cloud tiering enabled and tiering policy in sync group <syncgroup-name> |
 
 ## Azure Subscription Management
 

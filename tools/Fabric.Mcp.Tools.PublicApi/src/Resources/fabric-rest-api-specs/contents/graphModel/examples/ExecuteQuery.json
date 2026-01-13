@@ -5,7 +5,7 @@
         "createQueryResultRequest": {
             "query": "MATCH (node_station:`station`) RETURN TO_JSON_STRING(node_station) AS `station` LIMIT 10;"
         },
-        "preview": true
+        "beta": true
     },
     "responses": {
         "200": {

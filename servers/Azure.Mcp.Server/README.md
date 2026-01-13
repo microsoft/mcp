@@ -106,7 +106,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
 ## IDE
@@ -127,7 +127,7 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
     - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
 1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
 1. Click **install while downloading** to complete the installation.
-   
+
 For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
@@ -239,7 +239,7 @@ Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 ```bash
 dotnet tool install Azure.Mcp
 ```
-or 
+or
 ```bash
 dotnet tool install Azure.Mcp --version <version>
 ```
@@ -342,12 +342,12 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ### Microsoft Foundry
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/) for Microsoft Foundry.
+1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-foundry-aca-mi) for Microsoft Foundry.
 2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
 
 ### Microsoft Copilot Studio
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/) for Microsoft Copilot Studio.
+1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
@@ -382,7 +382,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * Create Microsoft Foundry agent threads
 * List Microsoft Foundry agent threads
 * Get messages of a Microsoft Foundry thread
-  
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -472,6 +472,26 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### 📂 Azure File Shares
+
+* "Get details about a specific file share in my resource group"
+* "Create a new Azure managed file share with NFS protocol"
+* "Create a file share with 64 GiB storage, 3000 IOPS, and 125 MiB/s throughput"
+* "Update the provisioned storage size of my file share"
+* "Update network access settings for my file share"
+* "Delete a file share from my resource group"
+* "Check if a file share name is available"
+* "Get details about a file share snapshot"
+* "Create a snapshot of my file share"
+* "Update tags on a file share snapshot"
+* "Delete a file share snapshot"
+* "Get a private endpoint connection for my file share"
+* "Update private endpoint connection status to Approved"
+* "Delete a private endpoint connection"
+* "Get file share limits and quotas for a region"
+* "Get provisioning recommendations for my file share workload"
+* "Get usage data and metrics for my file share"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -534,7 +554,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
@@ -552,6 +572,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
+- � **Azure FileShares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -572,6 +593,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 💾 **Azure Storage** - Blob storage
+-  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
@@ -589,6 +611,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 ## Feedback and Support
 
 - Check the [Troubleshooting guide](https://aka.ms/azmcp/troubleshooting) to diagnose and resolve common issues with the Azure MCP Server.
+- For advanced troubleshooting, you can enable [support logging](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#support-logging) using the `--dangerously-write-support-logs-to-dir` option.
 - We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
     - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we’d love to hear from you!
 

@@ -1,13 +1,3 @@
----
-title: SQL database definition
-description: Learn how to create a SQL database item definition when using the Microsoft Fabric REST API.
-ms.title: SQL database item definition
-author: yadongyaly
-ms.author: yaly
-ms.reviewer: drskwier
-ms.service: fabric
-ms.date: 10/07/2025
----
   
 # SQL database definition
   

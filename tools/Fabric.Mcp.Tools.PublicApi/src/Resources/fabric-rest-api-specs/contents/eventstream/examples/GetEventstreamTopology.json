@@ -6,8 +6,19 @@
     "responses": {
         "200": {
             "body": {
-                "compatibilityLevel": "1.0",
+                "compatibilityLevel": "1.1",
                 "sources": [
+                    {
+                        "id": "97554164-1b8f-410b-bb72-750f6e88f1c6",
+                        "name": "AzureEventGridNamespaceSource",
+                        "type": "AzureEventGridNamespace",
+                        "properties": {
+                            "namespaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourceGroupName/providers/Microsoft.EventGrid/namespaces/eventGridNamespaceName",
+                            "topic": "eea0a4ba-733a-4519-a20c-3c95f3840efa"
+                        },
+                        "status": "Running",
+                        "error": null
+                    },
                     {
                         "id": "514d0e11-cf65-44fb-a292-fc88a2a78618",
                         "name": "AzureEventHubSource",
@@ -38,6 +49,18 @@
                                     "encoding": "UTF8"
                                 }
                             }
+                        },
+                        "status": "Running",
+                        "error": null
+                    },
+                    {
+                        "id": "7ff51116-df2c-4e47-bf4f-1b59f5f0ed17",
+                        "name": "AzureDataExplorerSource",
+                        "type": "AzureDataExplorer",
+                        "properties": {
+                            "dataConnectionId": "980bd823-8389-471b-a7cd-f5ac33b53061",
+                            "databaseName": "databaseName",
+                            "tableNames": "tableName1,tableName2"
                         },
                         "status": "Running",
                         "error": null
@@ -192,6 +215,47 @@
                         "type": "GooglePubSub",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37"
+                        },
+                        "status": "Running",
+                        "error": null
+                    },
+                    {
+                        "id": "77640306-3525-45cb-978c-f2ce6f1d2605",
+                        "name": "MqttSource",
+                        "type": "Mqtt",
+                        "properties": {
+                            "dataConnectionId": "6950656c-9f6d-48e8-b7d1-6cf9eb7cca28",
+                            "serverVersion": "V5",
+                            "topic": "mqttTopicName"
+                        },
+                        "status": "Running",
+                        "error": null
+                    },
+                    {
+                        "id": "bf273a56-dcb7-4cb1-8be4-5620f769fe1f",
+                        "name": "RealTimeWeatherSource",
+                        "type": "RealTimeWeather",
+                        "properties": {
+                            "latitude": -22.690611,
+                            "longitude": -45.7846301
+                        },
+                        "status": "Running",
+                        "error": null
+                    },
+                    {
+                        "id": "a612baf7-4d64-4522-8850-44847c99016c",
+                        "name": "SolacePubSubSource",
+                        "type": "SolacePubSub",
+                        "properties": {
+                            "dataConnectionId": "684e1958-5999-4f3f-bfe5-e19dd55f9cbf",
+                            "pubSubType": "Topics",
+                            "messageVpnName": "messageVpnName",
+                            "topics": [
+                                "topicName1",
+                                "topicName2"
+                            ],
+                            "mapUserProperties": false,
+                            "mapSolaceProperties": false
                         },
                         "status": "Running",
                         "error": null
@@ -646,6 +710,18 @@
                                 }
                             ],
                             "ignoreMissingOrEmpty": true
+                        }
+                    },
+                    {
+                        "name": "SQLName",
+                        "type": "SQL",
+                        "inputNodes": [
+                            {
+                                "name": "MyNode"
+                            }
+                        ],
+                        "properties": {
+                            "query": "SELECT * INTO [MyStream] FROM [MyNode]"
                         }
                     }
                 ]

@@ -18,9 +18,11 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Adding a New Command](#adding-a-new-command)
   - [Testing](#testing)
     - [Unit Tests](#unit-tests)
+      - [Cancellation plumbing](#cancellation-plumbing)
     - [End-to-end Tests](#end-to-end-tests)
     - [Testing Local Build with VS Code](#testing-local-build-with-vs-code)
       - [Build the Server](#build-the-server)
+      - [Run the Azure MCP server in HTTP mode](#run-the-azure-mcp-server-in-http-mode)
       - [Configure mcp.json](#configure-mcpjson)
       - [Server Modes](#server-modes)
       - [Start from IDE](#start-from-ide)
@@ -91,6 +93,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
+
 ## Development Workflow
 
 ### Development Process
@@ -115,6 +118,7 @@ If you are contributing significant changes, or if the issue is already assigned
 > - **Incremental progress**: Get your first tool merged to establish baseline, then build upon it
 >
 > If you're planning to contribute multiple tools, please:
+>
 > 1. Submit your most important or representative tool as your first PR to establish the code patterns.
 > 2. Use that baseline to inform your subsequent tool PRs.
 
@@ -140,9 +144,22 @@ If you are contributing significant changes, or if the issue is already assigned
    - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
-6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
+6. **Create a changelog entry** (if your change is a new feature, bug fix, or breaking change):
+   - Use the generator script to create a changelog entry (see `docs/changelog-entries.md` for details):
+     ```powershell
+     # Interactive mode (prompts for server)
+     ./eng/scripts/New-ChangelogEntry.ps1
+     
+     # Or with all parameters
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ```
+   - Or manually create a YAML file in `servers/{ServerName}/changelog-entries/`
+   - Not every PR needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates. If unsure, add to the "Other Changes" section or ask a maintainer.
 
-7. **Add new tool to consolidated mode**:
+7. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
+
+8. **Add new tool to consolidated mode**:
    - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
    - Paste the follow prompt for Copilot to generate the change to add the new tool:
       ```txt
@@ -152,12 +169,12 @@ If you are contributing significant changes, or if the issue is already assigned
       ```
    - Use the following command to find out the correct tool name for your new tool
       ```
-      cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+      cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
       ./azmcp[.exe] tools list --name --namespace <tool_area>
       ```
    - Commit the change.
 
-8. **Create Pull Request**:
+9. **Create Pull Request**:
    - Reference the issue you created
    - Include tests in the `/tests` folder
    - Ensure all tests pass
@@ -267,7 +284,7 @@ $env:AzureAd__ClientId = "<your-client-id>"
 $env:AzureAd__Instance = "https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 ```bash
@@ -279,7 +296,7 @@ export AzureAd__ClientId="<your-client-id>"
 export AzureAd__Instance="https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 > **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
@@ -309,7 +326,7 @@ Update your mcp.json to point to the locally built azmcp executable.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -345,7 +362,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -359,7 +376,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -373,7 +390,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -387,7 +404,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -402,7 +419,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "consolidated"]
     }
   }
@@ -416,7 +433,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -430,7 +447,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
     }
   }

@@ -94,7 +94,7 @@ dotnet build
 ### Ask first
 - Installing new packages or dependencies
 - Running project-wide builds or tests
-- Modifying `.csproj`, `.sln`, or configuration files
+- Modifying `.csproj`, `.slnx`, or configuration files
 - Deploying test resources (`Deploy-TestResources.ps1`)
 - Making breaking changes to public APIs
 - Adding new toolsets to the solution
@@ -182,7 +182,7 @@ dotnet build
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- Changelog: Update `CHANGELOG.md` with your changes
+- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
@@ -537,7 +537,7 @@ mcp.json configuration for local development:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net9.0/azmcp.exe",
+      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net10.0/azmcp.exe",
       "args": ["server", "start"]
     }
   }
@@ -687,7 +687,7 @@ When adding new commands:
 1. **Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md`** with new command details
 2. **Add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** (maintain alphabetical order)
 3. **Update toolset README.md** with new functionality
-4. **Update CHANGELOG.md** with changes
+4. **Create changelog entry** if user-facing or critical change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
 5. **Add CODEOWNERS entry** for new toolset
 
 ### Spelling and Content Validation
