@@ -151,13 +151,8 @@ function ProcessLink([System.Uri]$linkUri) {
         }
         else {
           # File does not exist locally - this PR would break the link
-          # Log relative path to avoid exposing full filesystem structure
-          $relativePath = if ($localBuildRepoPath) { 
-            $path 
-          } else { 
-            $localPath 
-          }
-          LogError "Link points to file that does not exist in local repo: $linkUri (path: $relativePath)"
+          # Log only the relative path to avoid exposing full filesystem structure
+          LogError "Link points to file that does not exist in local repo: $linkUri (path: $path)"
           return $false
         }
       }
@@ -173,7 +168,7 @@ function ProcessLink([System.Uri]$linkUri) {
     # If we didn't return above, fall through to standard link checking
     return ProcessStandardLink $linkUri
   }
-  if ($linkUri -match '^https?://?github\.com/(?<account>)[^/]+/(?<repo>)[^/]+/wiki/.+') {
+  if ($linkUri -match '^https?://?github\.com/[^/]+/[^/]+/wiki/.+') {
     # in an unauthenticated session, urls for missing pages will redirect to the wiki root
     return ProcessRedirectLink $linkUri -invalidStatusCodes 302
   }
