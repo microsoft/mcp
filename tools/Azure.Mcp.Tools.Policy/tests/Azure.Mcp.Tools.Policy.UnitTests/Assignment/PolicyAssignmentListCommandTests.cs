@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Policy.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -86,7 +86,7 @@ public class PolicyAssignmentListCommandTests
         }
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         if (shouldSucceed)
@@ -133,7 +133,7 @@ public class PolicyAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -165,7 +165,7 @@ public class PolicyAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -192,7 +192,7 @@ public class PolicyAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, parseResult);
+        await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         await _service.Received(1).ListPolicyAssignmentsAsync(
@@ -222,7 +222,7 @@ public class PolicyAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, parseResult);
+        await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         await _service.Received(1).ListPolicyAssignmentsAsync(
@@ -252,7 +252,7 @@ public class PolicyAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

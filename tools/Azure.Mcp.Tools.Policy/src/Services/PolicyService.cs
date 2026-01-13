@@ -28,8 +28,8 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
     {
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy);
-            var armClient = await CreateArmClientAsync(tenantId, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenantId, retryPolicy, cancellationToken: cancellationToken);
 
             var assignments = new List<PolicyAssignment>();
 
