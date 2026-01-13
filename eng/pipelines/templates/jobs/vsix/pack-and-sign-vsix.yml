@@ -48,10 +48,6 @@ jobs:
       arguments: >
         -ArtifactsPath '$(Build.ArtifactStagingDirectory)'
 
-  - pwsh: |
-
-    displayName: "Verify VSIX Signing"
-
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
