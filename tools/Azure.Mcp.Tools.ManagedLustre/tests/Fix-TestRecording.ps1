@@ -16,13 +16,11 @@
     test-proxy, processes it to remove duplicate InProgress entries, and pushes the updated
     recording back to the assets repository.
 
-.PARAMETER TestName
-    The name of the test for which to fix the recording.
-    Default: 'Should_create_azure_managed_lustre_with_storage_and_cmk'
+    The script processes the test 'Should_create_azure_managed_lustre_with_storage_and_cmk'.
 
 .EXAMPLE
     .\Fix-TestRecording.ps1
-    Processes the default test recording and removes consecutive InProgress responses.
+    Processes the test recording and removes consecutive InProgress responses.
 
 .NOTES
     This script requires the test-proxy tool to be installed and accessible in the PATH.
