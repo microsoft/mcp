@@ -8,6 +8,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Merged `azureterraformbestpractices` command into `get_azure_bestpractices` to reduce tool count and prevent tool competition in virtual tool mode. Users should now use `get_azure_bestpractices get --resource terraform --action all` instead of `azureterraformbestpractices get` to access Terraform best practices for Azure.
+
 ### Bugs Fixed
 
 ### Other Changes
