@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/core/" />
+  <Folder Name="/core/Azure.Mcp.Core/" />
+  <Folder Name="/core/Azure.Mcp.Core/src/">
+    <Project Path="../../core/Azure.Mcp.Core/src/Azure.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Fabric.Mcp.Core/" />
+  <Folder Name="/core/Fabric.Mcp.Core/src/">
+    <Project Path="../../core/Fabric.Mcp.Core/src/Fabric.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/" />
+  <Folder Name="/core/Microsoft.Mcp.Core/src/">
+    <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/servers/" />
+  <Folder Name="/servers/Fabric.Mcp.Server/" />
+  <Folder Name="/servers/Fabric.Mcp.Server/src/">
+    <Project Path="./src/Fabric.Mcp.Server.csproj" />
+  </Folder>
+  <Folder Name="/tools/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.PublicApi/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.PublicApi/src/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.PublicApi/src/Fabric.Mcp.Tools.PublicApi.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.PublicApi/tests/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.PublicApi/tests/Fabric.Mcp.Tools.PublicApi.UnitTests/Fabric.Mcp.Tools.PublicApi.UnitTests.csproj" />
+  </Folder>
+</Solution>
+

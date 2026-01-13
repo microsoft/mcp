@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/core/" />
+  <Folder Name="/core/Azure.Mcp.Core/" />
+  <Folder Name="/core/Azure.Mcp.Core/src/">
+    <Project Path="../../core/Azure.Mcp.Core/src/Azure.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/" />
+  <Folder Name="/core/Microsoft.Mcp.Core/src/">
+    <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Template.Mcp.Core/" />
+  <Folder Name="/core/Template.Mcp.Core/src/">
+    <Project Path="../../core/Template.Mcp.Core/src/Template.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/servers/" />
+  <Folder Name="/servers/Template.Mcp.Server/" />
+  <Folder Name="/servers/Template.Mcp.Server/src/">
+    <Project Path="./src/Template.Mcp.Server.csproj" />
+  </Folder>
+</Solution>
+
