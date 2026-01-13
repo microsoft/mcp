@@ -4,7 +4,8 @@
 [CmdletBinding()]
 param(
     [string[]] $ServerNames,
-    [switch] $Flat
+    [switch] $Root,
+    [switch] $All
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -18,7 +19,7 @@ function Update-Solution {
     Write-Host "Updating solution for server directory: $($serverDirectory)"
     $serverName = Split-Path -Leaf $serverDirectory
 
-    $slnFile = "$serverName.slnx"
+    $slnFile = ".temp.slnx"
 
     Write-Host "Removing existing solution files" -ForegroundColor Cyan
     Remove-Item -Path "$serverDirectory/$serverName.sln" -Force -ErrorAction SilentlyContinue
@@ -27,7 +28,7 @@ function Update-Solution {
 
     # we're creating the solution file in the repo root so it auto creates the repo folder structure in the solution
     Write-Host "Creating new solution file: $slnFile" -ForegroundColor Cyan
-    dotnet new sln -n $serverName --format slnx
+    dotnet new sln -n ".temp" --format slnx
 
     Write-Host "Adding server projects and dependencies to solution" -ForegroundColor Cyan
     $serverProjects = Get-ChildItem -Path "$serverDirectory/src" -Filter "*.csproj" | Sort-Object -Property FullName
@@ -61,33 +62,58 @@ function Update-Solution {
         $serverRelativePath = Resolve-Path $fullPath -Relative -RelativeBasePath $serverDirectory
         $contents = $contents.Replace($match.Value, " Path=`"$($serverRelativePath.Replace('\', '/'))`"")
     }
-    Set-Content -Path "$serverDirectory/$slnFile" -Value $contents -Force
+    Set-Content -Path "$serverDirectory/$serverName.slnx" -Value $contents -NoNewline -Force
     Remove-Item -Path $slnFile -Force -ErrorAction SilentlyContinue
     Write-Host "Solution update complete for server: $serverName" -ForegroundColor Green  
+}
+
+function Update-RootSolution {
+    Write-Host "Updating root solution" -ForegroundColor Cyan
+
+    $slnFile = "Microsoft.Mcp.slnx"
+
+    Write-Host "Removing existing root solution files" -ForegroundColor Cyan
+    Remove-Item -Path "$RepoRoot/Microsoft.Mcp.sln" -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path "$RepoRoot/Microsoft.Mcp.slnx" -Force -ErrorAction SilentlyContinue
+    Write-Host "Creating new root solution file: $slnFile" -ForegroundColor Cyan
+    dotnet new sln -n "Microsoft.Mcp" --format slnx
+
+    $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse
+    Write-Host "Adding all projects to root solution" -ForegroundColor Cyan
+    foreach ($project in $allProjects) {
+        dotnet sln $slnFile add $project
+    }   
+
+    Write-Host "Root solution update complete." -ForegroundColor Green  
 }
 
 $originalLocation = Get-Location
 try {
     Set-Location $RepoRoot
 
-    $serverDirectories = Get-ChildItem -Path "$RepoRoot/servers" -Directory
-    $serverFilters = $ServerNames | ForEach-Object { "*$_*" }
-    if ($serverFilters) {
-        $serverDirectories = $serverDirectories | Where-Object {
-            foreach($filter in $serverFilters) {
-                if ($_.Name -like $filter) {
-                    return $true
-                }
-            }
-            return $false
-        }
+    if($All -or $Root) {
+        Update-RootSolution
     }
 
-    foreach ($serverDir in $serverDirectories) {
-        Update-Solution -ServerDirectory $serverDir
+    if($All -or $ServerNames) {
+        $serverDirectories = Get-ChildItem -Path "$RepoRoot/servers" -Directory
+        $serverFilters = $ServerNames | ForEach-Object { "*$_*" }
+        if ($serverFilters) {
+            $serverDirectories = $serverDirectories | Where-Object {
+                foreach($filter in $serverFilters) {
+                    if ($_.Name -like $filter) {
+                        return $true
+                    }
+                }
+                return $false
+            }
+        }
+
+        foreach ($serverDir in $serverDirectories) {
+            Update-Solution -ServerDirectory $serverDir
+        }
     }
 }
 finally {
-    Remove-Item "$RepoRoot/*.slnx" -Force -ErrorAction SilentlyContinue
     Set-Location $originalLocation
 }
