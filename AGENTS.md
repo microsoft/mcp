@@ -94,7 +94,7 @@ dotnet build
 ### Ask first
 - Installing new packages or dependencies
 - Running project-wide builds or tests
-- Modifying `.csproj`, `.sln`, or configuration files
+- Modifying `.csproj`, `.slnx`, or configuration files
 - Deploying test resources (`Deploy-TestResources.ps1`)
 - Making breaking changes to public APIs
 - Adding new toolsets to the solution
