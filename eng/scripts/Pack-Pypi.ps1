@@ -116,6 +116,27 @@ function Get-KeywordsString($keywords) {
     return ($keywords | ForEach-Object { "`"$_`"" }) -join ', '
 }
 
+function Get-PythonCommand {
+    # Try python3 first (common on Linux/macOS), but verify it works
+    # On Windows, "python3" may be a Store alias that doesn't work
+    try {
+        $null = & python3 --version 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            return "python3"
+        }
+    } catch {}
+    
+    # Fall back to python
+    try {
+        $null = & python --version 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            return "python"
+        }
+    } catch {}
+    
+    throw "Python is not installed or not in PATH. Please install Python 3.10+."
+}
+
 function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
 
@@ -139,11 +160,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
     New-Item -ItemType Directory -Force -Path $serverOutputPath | Out-Null
 
-    # Use PyPI package name from csproj
-    $basePackageName = $server.pypiPackageName ?? $server.cliName
-    $description = $server.pypiDescription ?? $server.description
+    # Use PyPI package name from csproj, skip servers without PyPI configuration
+    $basePackageName = if ([string]::IsNullOrWhiteSpace($server.pypiPackageName)) { $null } else { $server.pypiPackageName }
+    if (!$basePackageName) {
+        Write-Host "Skipping $($server.name) - no PyPI package name configured" -ForegroundColor Yellow
+        return
+    }
+    
+    $description = if ([string]::IsNullOrWhiteSpace($server.pypiDescription)) { $server.description } else { $server.pypiDescription }
     $cliName = $server.cliName
-    $keywords = @($server.pypiPackageKeywords ?? $server.npmPackageKeywords)
+    $keywords = @(if ($server.pypiPackageKeywords) { $server.pypiPackageKeywords } else { $server.npmPackageKeywords })
     $moduleName = Get-ModuleName $basePackageName
 
     if ($native) {
@@ -253,7 +279,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Write-Host "  Building wheel" -ForegroundColor Green
         Push-Location $tempFolder
         try {
-            $pythonCmd = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } else { "python" }
+            $pythonCmd = Get-PythonCommand
             
             Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build wheel"
             
@@ -337,7 +363,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
     Push-Location $tempFolder
     try {
-        $pythonCmd = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } else { "python" }
+        $pythonCmd = Get-PythonCommand
         
         Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build"
         Invoke-LoggedCommand "$pythonCmd -m build --sdist"
