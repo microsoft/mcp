@@ -29,9 +29,10 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         when working with Azure services. It should be called for any code generation, deployment or
         operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container
         Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,
-        Azure App Services, or any other Azure technology or programming language. Only call this function
-        when you are confident the user is discussing Azure. If this tool needs to be categorized,
-        it belongs to the Azure Best Practices category.";
+        Azure App Services, or any other Azure technology or programming language. For Terraform-specific
+        best practices, use the 'terraform' resource type. Only call this function when you are confident
+        the user is discussing Azure. If this tool needs to be categorized, it belongs to the Azure Best
+        Practices category.";
 
     public override string Title => CommandTitle;
 
@@ -60,12 +61,12 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             }
             else
             {
-                bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app" || resource == "coding-agent";
+                bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app" || resource == "coding-agent" || resource == "terraform";
                 bool validAction = action == "all" || action == "code-generation" || action == "deployment";
 
                 if (!validResource)
                 {
-                    commandResult.AddError("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
+                    commandResult.AddError("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', 'coding-agent', or 'terraform'.");
                 }
                 if (!validAction)
                 {
@@ -78,6 +79,10 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
                 if (resource == "coding-agent" && action != "all")
                 {
                     commandResult.AddError("The 'coding-agent' resource only supports 'all' action.");
+                }
+                if (resource == "terraform" && action != "all")
+                {
+                    commandResult.AddError("The 'terraform' resource only supports 'all' action.");
                 }
             }
         });
@@ -143,6 +148,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             ("azurefunctions", "all") => "azure-functions-codegen-best-practices.txt,azure-functions-deployment-best-practices.txt",
             ("static-web-app", "all") => "azure-swa-best-practices.txt",
             ("coding-agent", "all") => "azure-coding-agent-best-practices.txt",
+            ("terraform", "all") => "terraform-best-practices-for-azure.txt",
             _ => throw new ArgumentException($"Invalid combination of resource '{resource}' and action '{action}'")
         };
     }

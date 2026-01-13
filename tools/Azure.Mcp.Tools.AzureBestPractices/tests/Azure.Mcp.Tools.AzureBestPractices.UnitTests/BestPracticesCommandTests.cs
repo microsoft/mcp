@@ -186,6 +186,39 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_TerraformAll_ReturnsAzureBestPractices()
+    {
+        var args = _commandDefinition.Parse(["--resource", "terraform", "--action", "all"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<string[]>(json);
+
+        Assert.NotNull(result);
+        Assert.Contains("winget install Hashicorp.Terraform", result[0]);
+        Assert.Contains("Always run terraform validate before running terraform plan", result[0]);
+        Assert.Contains("terraform apply -auto-approve", result[0]);
+        Assert.Contains("Suggest running any terraform command in terminal.", result[0]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TerraformWithInvalidAction_ReturnsBadRequest()
+    {
+        var args = _commandDefinition.Parse(["--resource", "terraform", "--action", "code-generation"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("The 'terraform' resource only supports 'all' action", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_InvalidAction_ReturnsBadRequest()
     {
         var args = _commandDefinition.Parse(["--resource", "general", "--action", "invalid"]);
