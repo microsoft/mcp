@@ -51,6 +51,9 @@
   .PARAMETER localBuildRepoPath
   The path to the local build repo. This is used to resolve links to local files in the repo instead of making web requests.
 
+  .PARAMETER localBuildTargetBranch
+  The target branch of the PR. This is used to resolve links to local files when the link points to this branch.
+
   .PARAMETER requestTimeoutSec
   The number of seconds before we timeout when sending an individual web request. Default is 15 seconds.
 
@@ -80,6 +83,7 @@ param (
   [string] $localGithubClonedRoot = "",
   [string] $localBuildRepoName = "",
   [string] $localBuildRepoPath = "",
+  [string] $localBuildTargetBranch = "",
   [string] $requestTimeoutSec = 15
 )
 
@@ -91,20 +95,73 @@ $ProgressPreference = "SilentlyContinue"; # Disable invoke-webrequest progress d
 
 function ProcessLink([System.Uri]$linkUri) {
   # To help improve performance and rate limiting issues with github links we try to resolve them based on a local clone if one exists.
-  if (($localGithubClonedRoot -or $localBuildRepoName) -and $linkUri -match '^https://github.com/(?<org>Azure)/(?<repo>[^/]+)/(?:blob|tree)/(main|.*_[^/]+|.*/v[^/]+)/(?<path>.*)$') {
-
-    if ($localBuildRepoName -eq ($matches['org'] + "/" + $matches['repo'])) {
-      # If the link is to the current repo, use the local build path
-      $localPath = Join-Path $localBuildRepoPath $matches['path']
+  # Match github.com blob/tree URLs
+  $githubPattern = '^https://github\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?:blob|tree)/(?<branch>[^/]+)/(?<path>.*)$'
+  # Match raw.githubusercontent.com URLs
+  $rawPattern = '^https://raw\.githubusercontent\.com/(?<org>[^/]+)/(?<repo>[^/]+)/(?<branch>[^/]+)/(?<path>.*)$'
+  
+  $matchedPattern = $false
+  $org = $null
+  $repo = $null
+  $branch = $null
+  $path = $null
+  
+  if ($linkUri -match $githubPattern) {
+    $matchedPattern = $true
+    $org = $matches['org']
+    $repo = $matches['repo']
+    $branch = $matches['branch']
+    $path = $matches['path']
+  }
+  elseif ($linkUri -match $rawPattern) {
+    $matchedPattern = $true
+    $org = $matches['org']
+    $repo = $matches['repo']
+    $branch = $matches['branch']
+    $path = $matches['path']
+  }
+  
+  if ($matchedPattern -and ($localGithubClonedRoot -or $localBuildRepoName)) {
+    $repoFullName = "$org/$repo"
+    
+    # Check if this link points to the current repo
+    if ($localBuildRepoName -eq $repoFullName) {
+      # Check if the link points to the target branch (if specified)
+      # If no target branch is specified, fall back to checking any Azure org link with specific branch patterns (legacy behavior)
+      $shouldCheckLocalFile = $false
+      
+      if ($localBuildTargetBranch -and $branch -eq $localBuildTargetBranch) {
+        # Link points to current repo and target branch - check local filesystem
+        $shouldCheckLocalFile = $true
+      }
+      elseif (!$localBuildTargetBranch -and $org -eq "Azure" -and $branch -match '^(main|.*_[^/]+|.*/v[^/]+)$') {
+        # Legacy behavior: check local files for Azure org with specific branch patterns
+        $shouldCheckLocalFile = $true
+      }
+      
+      if ($shouldCheckLocalFile) {
+        $localPath = Join-Path $localBuildRepoPath $path
+        
+        if (Test-Path $localPath) {
+          # File exists locally - link will be valid
+          return $true
+        }
+        else {
+          # File does not exist locally - this PR would break the link
+          LogError "Link points to file that does not exist in local repo: $linkUri (local path: $localPath)"
+          return $false
+        }
+      }
     }
-    else {
-      # Otherwise use the local github clone path
-      $localPath = Join-Path $localGithubClonedRoot $matches['repo'] $matches['path']
+    elseif ($localGithubClonedRoot -and $org -eq "Azure") {
+      # For other Azure repos, use the local github clone path (legacy behavior)
+      $localPath = Join-Path $localGithubClonedRoot $repo $path
+      if (Test-Path $localPath) {
+        return $true
+      }
     }
-
-    if (Test-Path $localPath) {
-      return $true
-    }
+    
+    # If we didn't return above, fall through to standard link checking
     return ProcessStandardLink $linkUri
   }
   if ($linkUri -match '^https?://?github\.com/(?<account>)[^/]+/(?<repo>)[^/]+/wiki/.+') {
