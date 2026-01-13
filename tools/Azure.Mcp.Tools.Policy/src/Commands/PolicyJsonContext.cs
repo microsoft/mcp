@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Policy.Models;
 namespace Azure.Mcp.Tools.Policy.Commands;
 
 [JsonSerializable(typeof(PolicyAssignmentListCommand.PolicyAssignmentListCommandResult))]
-[JsonSerializable(typeof(AssignmentGetCommand.AssignmentGetCommandResult))]
 [JsonSerializable(typeof(PolicyAssignment))]
 [JsonSerializable(typeof(List<PolicyAssignment>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
