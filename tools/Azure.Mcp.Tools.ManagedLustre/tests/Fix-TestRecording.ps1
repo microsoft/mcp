@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-#Requires -Version 6.0
+#Requires -Version 7.0
 #Requires -PSEdition Core
 
 <#
