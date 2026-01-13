@@ -418,7 +418,7 @@ public class ToolAnalyzerTests : IDisposable
 
         // Assert
         await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
-        
+
         // But file should still be written
         var outputFile = Path.Combine(_tempWorkingDirectory, "tool_changes.json");
         Assert.True(File.Exists(outputFile));
