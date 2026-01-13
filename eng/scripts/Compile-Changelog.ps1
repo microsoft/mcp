@@ -157,7 +157,9 @@ function Get-ContributorFromPR {
     
     try {
         # Find commits that reference this PR number in their message
-        $commitInfo = git log --all --format="%H|%an|%ae|%s" --grep="#${PR}" 2>$null | Select-Object -First 1
+        # Limit search to the last 6 months for performance
+        $sixMonthsAgo = (Get-Date).AddMonths(-6).ToString("yyyy-MM-dd")
+        $commitInfo = git log --all --since="$sixMonthsAgo" --format="%H|%an|%ae|%s" --grep="#${PR}" 2>$null | Select-Object -First 1
         
         if ($commitInfo -and $commitInfo -match '^([^|]+)\|([^|]+)\|([^|]+)\|(.*)$') {
             $authorName = $matches[2].Trim()
@@ -205,7 +207,8 @@ function Get-ExistingContributors {
     
     # Look for contributor references in the format @username followed by space or punctuation
     # This avoids matching package names like @azure/mcp@1.0.0
-    $contributorMatches = [regex]::Matches($ChangelogContent, '(?:^|\s)@([a-zA-Z0-9_-]+)(?:\s|$|[,.])')
+    # Use a more specific pattern to avoid backtracking and false positives
+    $contributorMatches = [regex]::Matches($ChangelogContent, '@([a-zA-Z0-9_-]+)(?=\s|$|[,.]|\)|\])')
     foreach ($match in $contributorMatches) {
         $username = $match.Groups[1].Value
         # Skip common false positives
@@ -840,17 +843,19 @@ if ($contributors.Count -gt 0) {
     # Get existing contributors from the changelog
     $existingContributors = Get-ExistingContributors -ChangelogContent $changelogContent
     
-    # Identify new contributors
-    $newContributors = @()
-    foreach ($username in $contributors.Keys) {
-        if (-not $existingContributors.ContainsKey($username)) {
-            $newContributors += @{
-                Username = $username
-                Name = $contributors[$username].Name
-                # Find the first PR for this contributor
-                PR = ($entries | Where-Object { $contributorsByPR.ContainsKey($_.PR) -and $contributorsByPR[$_.PR].Username -eq $username } | Select-Object -First 1).PR
-            }
-            Write-Host "  New contributor: @$username" -ForegroundColor Green
+    # Identify new contributors (using more efficient collection approach)
+    $newContributors = $contributors.Keys | Where-Object { -not $existingContributors.ContainsKey($_) } | ForEach-Object {
+        $username = $_
+        # Find the first PR for this contributor
+        $firstEntry = $entries | Where-Object { $contributorsByPR.ContainsKey($_.PR) -and $contributorsByPR[$_.PR].Username -eq $username } | Select-Object -First 1
+        $prNumber = if ($firstEntry) { $firstEntry.PR } else { 0 }
+        
+        Write-Host "  New contributor: @$username" -ForegroundColor Green
+        
+        @{
+            Username = $username
+            Name = $contributors[$username].Name
+            PR = $prNumber
         }
     }
     
