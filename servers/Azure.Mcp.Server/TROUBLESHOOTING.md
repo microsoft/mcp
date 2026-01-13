@@ -54,7 +54,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
   "servers": {
     "Azure Storage": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -64,7 +64,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
     },
     "Azure KeyVault": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -84,7 +84,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
   "servers": {
     "Azure Storage Accounts Only": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -96,7 +96,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
     },
     "Essential Azure Tools": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -1090,8 +1090,8 @@ If you need to test the server in stdio mode (standard input/output), first buil
 
 ```bash
 dotnet build
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start      # macOS/Linux
 ```
 
 This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
@@ -1103,7 +1103,7 @@ This runs the MCP server in **stdio mode**, which communicates via standard inpu
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
