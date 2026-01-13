@@ -30,7 +30,7 @@ $lastStatus = ''
 
 Write-Host "Original number of entries: $($recording.Entries.Count)" -ForegroundColor Yellow
 # Remove consecutive 'InProgress' responses
-foreach ($entry in $recording.Entries) {                                                                                                                              
+foreach ($entry in $recording.Entries) {
   $currentStatus = $entry.ResponseBody.status
   if ($currentStatus -ne 'InProgress' -or $lastStatus -ne 'InProgress') {
     $newEntries += $entry
