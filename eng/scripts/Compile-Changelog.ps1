@@ -1,12 +1,22 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Compiles changelog entries from YAML files into CHANGELOG.md.
+    Compiles changelog entries from YAML files into CHANGELOG.md with contributor attribution.
 
 .DESCRIPTION
     This script reads all YAML files from the changelog-entries directory,
     validates them against the schema, groups them by section and subsection,
     and inserts the compiled entries into CHANGELOG.md under the specified version section.
+    
+    The script automatically extracts contributor information from git commit history
+    based on PR numbers. For each change, it attributes the PR to the contributor and
+    identifies first-time contributors to add them to a "New Contributors" section.
+    
+    Contributor attribution:
+    - Changes are attributed inline as: "description by @username in [[#123](link)]"
+    - First-time contributors are listed in a "New Contributors" section
+    - Bot accounts and Microsoft employees are excluded from attribution
+    - External contributors are identified from GitHub noreply emails or non-microsoft.com emails
     
     If no version is specified, entries are added to the "Unreleased" section at the top.
     If there is no "Unreleased" section and no version is specified, a new "Unreleased" 
@@ -31,16 +41,19 @@
     ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -DryRun
 
     Preview what will be compiled for Azure.Mcp.Server without making changes.
+    Includes contributor attribution and new contributors section.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
     Compile entries into the Unreleased section for Fabric.Mcp.Server.
+    Contributors will be automatically identified from git commit history.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Version "2.0.0-beta.3"
 
     Compile entries into the 2.0.0-beta.3 version section for Azure.Mcp.Server.
+    Attributes each change to its contributor and lists new contributors.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Version "1.0.0"
@@ -150,11 +163,12 @@ function Get-ContributorFromPR {
             $authorName = $matches[2].Trim()
             $authorEmail = $matches[3].Trim()
             
-            # Skip bot accounts
-            if ($authorEmail -match '@users\.noreply\.github\.com$' -and $authorEmail -match '^\d+\+') {
-                # Extract GitHub username from noreply email format: "123456+username@users.noreply.github.com"
-                if ($authorEmail -match '^\d+\+([^@]+)@') {
-                    $githubUsername = $matches[1]
+            # Check if this is a GitHub user (using noreply email format) 
+            # External contributors typically use format: "123456+username@users.noreply.github.com"
+            if ($authorEmail -match '^\d+\+([^@]+)@users\.noreply\.github\.com$') {
+                $githubUsername = $matches[1]
+                # Skip bot accounts
+                if ($authorName -notmatch '\[bot\]$') {
                     return @{
                         Name = $authorName
                         Username = $githubUsername
@@ -162,8 +176,9 @@ function Get-ContributorFromPR {
                     }
                 }
             }
+            # For other email formats (non-Microsoft, non-bot)
             elseif ($authorName -notmatch '\[bot\]$' -and $authorEmail -notmatch 'bot@' -and $authorEmail -notmatch '@microsoft\.com$') {
-                # For non-bot, non-Microsoft contributors, try to extract username from email
+                # Try to extract username from email
                 if ($authorEmail -match '^([^@]+)@') {
                     $username = $matches[1]
                     return @{
