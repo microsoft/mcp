@@ -1,4 +1,4 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 <#
@@ -12,6 +12,19 @@
     
     This implementation replaces the Go-based publisher tool with native PowerShell code.
 #>
+
+function ConvertFrom-Base64Url {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Base64Url
+    )
+    
+    # Convert base64url to base64 by replacing URL-safe characters and adding padding
+    $base64 = $Base64Url.Replace('-', '+').Replace('_', '/')
+    $paddedBase64 = $base64.PadRight(($base64.Length + 3) -band -bnot 3, '=')
+    
+    return [Convert]::FromBase64String($paddedBase64)
+}
 
 function Get-AzureKeyVaultPublicKey {
     param(
@@ -62,8 +75,8 @@ function Get-CompressedPublicKey {
     )
     
     # Decode base64url to bytes
-    $xBytes = [Convert]::FromBase64String(($X.Replace('-', '+').Replace('_', '/').PadRight(($X.Length + 3) -band -bnot 3, '=')))
-    $yBytes = [Convert]::FromBase64String(($Y.Replace('-', '+').Replace('_', '/').PadRight(($Y.Length + 3) -band -bnot 3, '=')))
+    $xBytes = ConvertFrom-Base64Url -Base64Url $X
+    $yBytes = ConvertFrom-Base64Url -Base64Url $Y
     
     # For P-384, compressed format is: 0x02/0x03 (depending on Y's parity) + X coordinate
     # If Y is even, use 0x02; if Y is odd, use 0x03
@@ -155,7 +168,7 @@ function Get-McpRegistryToken {
     $signatureBase64Url = Invoke-AzureKeyVaultSign -KeyVaultName $KeyVaultName -KeyName $KeyName -Digest $digest
     
     # Convert base64url signature to hex
-    $signatureBytes = [Convert]::FromBase64String(($signatureBase64Url.Replace('-', '+').Replace('_', '/').PadRight(($signatureBase64Url.Length + 3) -band -bnot 3, '=')))
+    $signatureBytes = ConvertFrom-Base64Url -Base64Url $signatureBase64Url
     $signatureHex = [BitConverter]::ToString($signatureBytes).Replace('-', '').ToLower()
     
     # Exchange signature for registry token
