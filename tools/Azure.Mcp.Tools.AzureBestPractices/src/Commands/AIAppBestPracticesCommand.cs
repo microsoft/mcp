@@ -45,9 +45,7 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         @"Returns best practices and code generation guidance for building AI applications in Azure. 
         Use this command when you need recommendations on how to write code for AI agents, chatbots, workflows, or any AI / LLM features.
         This command also provides guidance for code generation on Microsoft Foundry for application development. 
-        When the request involves code generation of AI components or applications in any capacity, use this command instead of calling the general code generation best practices command.
-        Call this `get_bestpractices_ai_app` command first before creating any plans, todos or code.
-        If this tool needs to be categorized, it belongs to the Azure Best Practices category.";
+        When the request involves code generation of AI components or AI applications in any capacity, use this command instead of calling the general code generation best practices command.";
 
     public override string Title => CommandTitle;
 
