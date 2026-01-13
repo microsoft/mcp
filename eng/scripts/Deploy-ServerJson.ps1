@@ -9,6 +9,8 @@
     https://eng.ms/docs/coreai/devdiv/one-engineering-system-1es/1es-gadecast/ospoost/ai-guidance-for-microsoft-developers/mcp/publishing-to-the-official-mcp-registry
 
     Supported publish targets are: 'public' and 'public_staging'.
+    
+    This script uses native PowerShell to authenticate with Azure Key Vault and publish to the MCP registry.
 .PARAMETER ServerName
     Name of the MCP server under "./servers/" folder whose server.json will be deployed.
 .PARAMETER ServerJsonPath
@@ -19,8 +21,6 @@
     Name of the Azure Key Vault containing the credentials for MCP registry login.
 .PARAMETER KeyVaultKeyName
     Name of the Key Vault key to use for MCP registry login.
-.PARAMETER BuildOnly
-    If specified, only builds the MCP publisher tool without deploying the server.json.
 .EXAMPLE
     Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
     Updates the server.json for the Azure.Mcp.Server to the production MCP registry using credentials from the specified Key Vault.
@@ -33,20 +33,22 @@ param(
     [string] $ServerName,
     [string] $BuildInfoPath,
     [string] $KeyVaultName,
-    [string] $KeyVaultKeyName,
-    [switch] $BuildOnly
+    [string] $KeyVaultKeyName
 )
 
 $ErrorActionPreference = "Stop" 
 . "$PSScriptRoot/../common/scripts/common.ps1"
+. "$PSScriptRoot/Publish-McpRegistry.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-$StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
-$TemporaryDirectory = "$RepoRoot/.work/temp_deploy_server_json"
 
 $PublishTargetInternal = "internal"
 $PublishTargetStaging = "public_staging"
 $PublishTargetProduction = "public"
 $KnownPublishTargets = @($PublishTargetInternal, $PublishTargetStaging, $PublishTargetProduction)
+
+$ProductionRegistryUrl = "https://registry.modelcontextprotocol.io"
+$StagingRegistryUrl = "https://staging.registry.modelcontextprotocol.io"
+$Domain = "microsoft.com"
 
 if (!(Test-Path $ServerJsonPath)) {
     LogError "Server JSON file $ServerJsonPath does not exist. Run eng/scripts/New-ServerJson.ps1 to create it."
@@ -83,51 +85,31 @@ if (-not $KnownPublishTargets.Contains($publishTarget)) {
 
 Write-Host "Preparing to deploy '$ServerJsonPath' with type '$publishTarget'."
 
-if (!(Test-Path $TemporaryDirectory)) {
-    New-Item -ItemType Directory -Path $TemporaryDirectory | Out-Null
-}
-
-Set-Location $TemporaryDirectory
-
-# Install Microsoft Go
-Write-Host "Installing Microsoft Go and building MCP publishing tool..."
-
-# This go-install.ps1 script could be checked into your source repository
-$goInstallScriptPath = "$PSScriptRoot/Install-Go.ps1"
-if (!(Test-Path $goInstallScriptPath)) {
-    LogError "Go install script not found at $goInstallScriptPath"
+# Ensure Az.Accounts module is available for Azure authentication
+if (-not (Get-Module -ListAvailable -Name Az.Accounts)) {
+    LogError "Az.Accounts module is not installed. Please install it using: Install-Module -Name Az.Accounts"
     exit 1
 }
 
-. $goInstallScriptPath
-
-# Enable compliant crypto
-$env:GOEXPERIMENT = "systemcrypto"
-
-# Clone and build the publisher tool
-git clone --branch "v1.3.7" https://github.com/modelcontextprotocol/registry
-
-Set-Location registry
-
-go build -o $TemporaryDirectory/mcp-publisher.exe ./cmd/publisher
-
-# show help for the tool to ensure it's working
-& $TemporaryDirectory/mcp-publisher.exe --help
-
-if ($BuildOnly) {
-    Write-Host "Build only flag specified. Exiting before deployment."
-    exit 0
-}
+Import-Module Az.Accounts -ErrorAction Stop
 
 try {
     if ($publishTarget -eq $PublishTargetStaging) {
-        Write-Host "$($serverInfo.name): Deploying server.json to staging instance: $StagingRegistry"
-        & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com -registry https://staging.registry.modelcontextprotocol.io
-        & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath -registry https://staging.registry.modelcontextprotocol.io
+        Write-Host "$($serverInfo.name): Deploying server.json to staging instance: $StagingRegistryUrl"
+        Publish-ToMcpRegistry `
+            -ServerJsonPath $ServerJsonPath `
+            -RegistryUrl $StagingRegistryUrl `
+            -Domain $Domain `
+            -KeyVaultName $KeyVaultName `
+            -KeyVaultKeyName $KeyVaultKeyName
     } elseif ($publishTarget -eq $PublishTargetProduction) {
-        Write-Host "$($serverInfo.name): Deploying server.json to production instance."
-        & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
-        & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
+        Write-Host "$($serverInfo.name): Deploying server.json to production instance: $ProductionRegistryUrl"
+        Publish-ToMcpRegistry `
+            -ServerJsonPath $ServerJsonPath `
+            -RegistryUrl $ProductionRegistryUrl `
+            -Domain $Domain `
+            -KeyVaultName $KeyVaultName `
+            -KeyVaultKeyName $KeyVaultKeyName
     } elseif ($publishTarget -eq $PublishTargetInternal) { 
         LogInfo "$($serverInfo.name): Internal publish target specified. Skipping deployment to public MCP registry."
     } else {
@@ -135,6 +117,7 @@ try {
         exit 1
     }
 }
-finally {
-    Pop-Location
+catch {
+    LogError "Failed to publish to MCP registry: $_"
+    throw
 }
