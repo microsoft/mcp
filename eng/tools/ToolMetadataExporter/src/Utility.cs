@@ -37,7 +37,7 @@ public class Utility(ILogger<Utility> logger)
             // Save the dynamically loaded tools to tools.json for future use
             if (result != null)
             {
-                var fullPath = Path.Combine(workDirectory, "tools.json");
+                var fullPath = Path.Combine(workDirectory, $"tools.{DateTimeOffset.UtcNow.Ticks}.json");
                 await SaveToolsToJsonAsync(result, fullPath);
 
                 _logger.LogInformation($"💾 Saved {result.Tools?.Count} tools to {fullPath}");
@@ -151,6 +151,7 @@ public class Utility(ILogger<Utility> logger)
 
         using (var process = new Process { StartInfo = processStartInfo })
         {
+            _logger.LogInformation("Executing command: {FileName} {Arguments}", processStartInfo.FileName, processStartInfo.Arguments);
             process.Start();
 
             var output = await process.StandardOutput.ReadToEndAsync();
