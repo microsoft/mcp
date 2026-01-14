@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
@@ -31,7 +32,17 @@ public static class AuthenticationServiceCollectionExtensions
     /// </remarks>
     public static IServiceCollection AddSingleIdentityTokenCredentialProvider(this IServiceCollection services)
     {
-        services.TryAddSingleton<IAzureTokenCredentialProvider, SingleIdentityTokenCredentialProvider>();
+        // Register cloud configuration
+        services.TryAddSingleton<IAzureCloudConfiguration, AzureCloudConfiguration>();
+        
+        // Set the static cloud configuration on CustomChainedCredential
+        services.TryAddSingleton<IAzureTokenCredentialProvider>(sp =>
+        {
+            var cloudConfig = sp.GetRequiredService<IAzureCloudConfiguration>();
+            CustomChainedCredential.CloudConfiguration = cloudConfig;
+            return new SingleIdentityTokenCredentialProvider(sp.GetRequiredService<ILoggerFactory>());
+        });
+        
         return services;
     }
 

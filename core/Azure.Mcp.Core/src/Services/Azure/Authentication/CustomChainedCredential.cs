@@ -71,6 +71,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
+    
+    /// <summary>
+    /// Cloud configuration for authority host. Set by DI container during service registration.
+    /// </summary>
+    internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
@@ -97,7 +102,6 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
-
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
@@ -177,6 +181,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                 Name = TokenCacheName,
             }
         };
+        
+        if (CloudConfiguration != null)
+        {
+            brokerOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
 
         if (clientId is not null)
         {
@@ -291,6 +300,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             workloadOptions.TenantId = tenantId;
         }
+        if (CloudConfiguration != null)
+        {
+            workloadOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential"));
     }
 
@@ -299,9 +312,25 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         // Check if AZURE_CLIENT_ID is set for User-Assigned Managed Identity
         string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
 
-        ManagedIdentityCredential managedIdentityCredential = string.IsNullOrEmpty(clientId)
-            ? new ManagedIdentityCredential() // System-Assigned MI
-            : new ManagedIdentityCredential(clientId); // User-Assigned MI
+        ManagedIdentityCredential managedIdentityCredential;
+        if (!string.IsNullOrEmpty(clientId))
+        {
+            var options = new ManagedIdentityCredentialOptions(ManagedIdentityId.FromUserAssignedClientId(clientId));
+            if (CloudConfiguration != null)
+            {
+                options.AuthorityHost = CloudConfiguration.AuthorityHost;
+            }
+            managedIdentityCredential = new ManagedIdentityCredential(options);
+        }
+        else
+        {
+            var options = new ManagedIdentityCredentialOptions();
+            if (CloudConfiguration != null)
+            {
+                options.AuthorityHost = CloudConfiguration.AuthorityHost;
+            }
+            managedIdentityCredential = new ManagedIdentityCredential(options);
+        }
 
         credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
@@ -313,6 +342,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             vsOptions.TenantId = tenantId;
         }
+        if (CloudConfiguration != null)
+        {
+            vsOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential"));
     }
 
@@ -322,6 +355,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         if (!string.IsNullOrEmpty(tenantId))
         {
             vscodeOptions.TenantId = tenantId;
+        }
+        if (CloudConfiguration != null)
+        {
+            vscodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
         credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential"));
     }
@@ -333,6 +370,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             cliOptions.TenantId = tenantId;
         }
+        if (CloudConfiguration != null)
+        {
+            cliOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential"));
     }
 
@@ -343,6 +384,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             psOptions.TenantId = tenantId;
         }
+        if (CloudConfiguration != null)
+        {
+            psOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
         credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential"));
     }
 
@@ -352,6 +397,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         if (!string.IsNullOrEmpty(tenantId))
         {
             azdOptions.TenantId = tenantId;
+        }
+        if (CloudConfiguration != null)
+        {
+            azdOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
         credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
     }
