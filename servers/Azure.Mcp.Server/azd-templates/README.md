@@ -6,7 +6,7 @@ Azure MCP can be hosted as a remote MCP server in an Azure Container App. Here a
 
 This template deploys an Azure Container App to run Azure MCP as a remote MCP server using a managed identity assigned to the container app. THe MCP server will have the permissions to call downstream APIs granted to the assigned managed identity. This hosting option is a good fit if you plan to give the same level of access to all users of the MCP server.
 
-This template also gives instructions on how to connect to this server from a Foundry Agent. Follow the instructions in https://github.com/Azure-Samples/azmcp-foundry-aca-mi to deploy such a a remotely self-hosted Azure MCP Server.
+This template also gives instructions on how to connect to this server from a Foundry Agent. Follow the instructions in https://github.com/Azure-Samples/azmcp-foundry-aca-mi to deploy such a remotely self-hosted Azure MCP Server.
 
 ## ACA with Copilot Studio agent using managed identity
 
