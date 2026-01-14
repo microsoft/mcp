@@ -1,0 +1,2 @@
+# todo: fill this with release bits that mirror the release job from azure-sdk-for-python:
+# https://github.com/Azure/azure-sdk-for-python/blob/28a76e0ab69cf584fe8380fe1eac5c40aa9b698a/eng/pipelines/templates/stages/archetype-python-release.yml#L144
