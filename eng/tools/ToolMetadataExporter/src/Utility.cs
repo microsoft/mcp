@@ -3,12 +3,17 @@
 
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
 
-public class Utility
+public class Utility(ILogger<Utility> logger)
 {
+    public const string NewLineRegexPattern = "\r\n|\n|\r";
+
+    private readonly ILogger<Utility> _logger = logger;
+
     internal virtual async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
         try
@@ -32,9 +37,10 @@ public class Utility
             // Save the dynamically loaded tools to tools.json for future use
             if (result != null)
             {
-                await SaveToolsToJsonAsync(result, Path.Combine(workDirectory, "tools.json"));
+                var fullPath = Path.Combine(workDirectory, "tools.json");
+                await SaveToolsToJsonAsync(result, fullPath);
 
-                Console.WriteLine($"💾 Saved {result.Tools?.Count} tools to tools.json");
+                _logger.LogInformation($"💾 Saved {result.Tools?.Count} tools to {fullPath}");
             }
 
             return result;
@@ -54,7 +60,7 @@ public class Utility
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
 
-        string[] array = Regex.Split(output, "\r\n|\n|\r");
+        string[] array = Regex.Split(output, NewLineRegexPattern);
         for (int i = 0; i < array.Length; i++)
         {
             string? line = array[i];
