@@ -178,5 +178,53 @@ public interface IManagedLustreService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    // One-time blob import jobs
+    Task<string> CreateImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? conflictResolutionMode = null,
+        string[]? importPrefixes = null,
+        long? maximumErrors = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Models.ImportJob> CancelImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Models.ImportJob> GetImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<Models.ImportJob>> ListImportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
 
