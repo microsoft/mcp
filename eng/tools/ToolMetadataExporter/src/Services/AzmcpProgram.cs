@@ -169,7 +169,7 @@ public class AzmcpProgram
         //
         //          Description:
         //              Azure MCP Server
-        var lines = Regex.Split(helpOutput, "\r\n|\r|\n");
+        var lines = Regex.Split(helpOutput, Utility.NewLineRegexPattern);
         var isFound = false;
         var serverName = string.Empty;
         for (int i = 0; i < lines.Length; i++)
