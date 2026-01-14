@@ -638,7 +638,7 @@ public sealed class NamespaceToolLoader(
 
         var samplingRequest = new CreateMessageRequestParams
         {
-            MaxTokens = 1000,
+            MaxTokens = 1000, // arbitrary limit that can be changed in the future as needed; MCP requires a max be specified
             Messages = [
                 new SamplingMessage
                 {
