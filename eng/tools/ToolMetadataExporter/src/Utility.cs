@@ -133,38 +133,37 @@ public class Utility
         var isDll = string.Equals(fileInfo.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
         var fileName = isDll ? "dotnet" : fileInfo.FullName;
         var argumentsToUse = isDll ? $"{fileInfo.FullName} " : arguments;
-
-        var process = new Process
+        var processStartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = argumentsToUse,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+            FileName = fileName,
+            Arguments = argumentsToUse,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
         };
 
-        process.Start();
-
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync();
-
-        if (checkErrorCode && process.ExitCode != 0)
+        using (var process = new Process { StartInfo = processStartInfo })
         {
-            if (isCiMode)
+            process.Start();
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+
+            if (checkErrorCode && process.ExitCode != 0)
             {
-                return string.Empty; // Graceful fallback in CI
+                if (isCiMode)
+                {
+                    return string.Empty; // Graceful fallback in CI
+                }
+
+                throw new InvalidOperationException($"Failed to execute operation '{arguments}' from azmcp: {error}");
             }
 
-            throw new InvalidOperationException($"Failed to execute operation '{arguments}' from azmcp: {error}");
+            return output;
         }
-
-        return output;
     }
 
     private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath, bool isCiMode = false)
