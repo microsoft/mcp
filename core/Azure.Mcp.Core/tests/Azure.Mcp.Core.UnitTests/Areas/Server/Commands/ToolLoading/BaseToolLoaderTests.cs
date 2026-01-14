@@ -192,12 +192,13 @@ public class BaseToolLoaderTests
 
         var samplingRequest = new CreateMessageRequestParams
         {
+            MaxTokens = 1000,
             Messages =
             [
                 new SamplingMessage
                 {
                     Role = Role.User,
-                    Content = new TextContentBlock { Text = "Test message" }
+                    Content = [new TextContentBlock { Text = "Test message" }]
                 }
             ]
         };
@@ -208,7 +209,7 @@ public class BaseToolLoaderTests
             Result = JsonSerializer.SerializeToNode(new CreateMessageResult
             {
                 Role = Role.Assistant,
-                Content = new TextContentBlock { Text = "Mock response" },
+                Content = [new TextContentBlock { Text = "Mock response" }],
                 Model = "test-model"
             })
         };
@@ -237,12 +238,27 @@ public class BaseToolLoaderTests
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
+            {
+                Form = new(),
+            }
         };
         mockServer.ClientCapabilities.Returns(capabilities);
 
         var elicitationRequest = new ElicitRequestParams
         {
-            Message = "Please enter your password:"
+            Message = "Please enter your password:",
+            RequestedSchema = new()
+            {
+                Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>()
+                {
+                    ["password"] = new ElicitRequestParams.StringSchema
+                    {
+                        Title = "password",
+                        Description = "The user's password.",
+                    }
+                },
+                Required = ["password"],
+            }
         };
 
         var mockResponse = new JsonRpcResponse

@@ -147,7 +147,7 @@ public sealed class RegistryToolLoader(
     /// </summary>
     /// <param name="args">The arguments to transform to parameters.</param>
     /// <returns>A dictionary of parameter names and values compatible with McpClientExtensions.CallToolAsync.</returns>
-    private static Dictionary<string, object?> TransformArgumentsToDictionary(IReadOnlyDictionary<string, JsonElement>? args)
+    private static Dictionary<string, object?> TransformArgumentsToDictionary(IDictionary<string, JsonElement>? args)
     {
         if (args == null)
         {
