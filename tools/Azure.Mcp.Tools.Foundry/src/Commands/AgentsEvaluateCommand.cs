@@ -69,6 +69,16 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             var result = await service.EvaluateAgent(
                 options.EvaluatorName!,
@@ -77,6 +87,7 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
                 options.ToolDefinitions,
+                httpClientFactory: httpClientFactory,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
