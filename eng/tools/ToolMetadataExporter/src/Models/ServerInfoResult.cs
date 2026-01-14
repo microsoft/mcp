@@ -11,7 +11,6 @@ namespace ToolMetadataExporter.Models;
 public class ServerInfoResult
 {
     [JsonPropertyName("status")]
-
     public int Status { get; set; }
 
     [JsonPropertyName("message")]
