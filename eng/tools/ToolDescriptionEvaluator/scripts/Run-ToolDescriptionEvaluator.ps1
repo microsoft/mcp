@@ -51,8 +51,8 @@ $ErrorActionPreference = 'Stop'
 
 try {
     # Get absolute paths
-    $repoRoot = Resolve-Path "$PSScriptRoot/../../../" | Select-Object -ExpandProperty Path
-    $toolDir = Resolve-Path "$PSScriptRoot" | Select-Object -ExpandProperty Path
+    $repoRoot = Resolve-Path "$PSScriptRoot/../../../../" | Select-Object -ExpandProperty Path
+    $toolDir = Resolve-Path "$PSScriptRoot/../src" | Select-Object -ExpandProperty Path
 
     # Build the whole Azure MCP Server project if needed
     if ($BuildAzureMcp)
