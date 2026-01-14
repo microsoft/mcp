@@ -54,7 +54,7 @@ public class Utility
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
 
-        string[] array = Regex.Split(output, "\n\r");
+        string[] array = Regex.Split(output, "\r\n|\n|\r");
         for (int i = 0; i < array.Length; i++)
         {
             string? line = array[i];
