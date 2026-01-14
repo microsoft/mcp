@@ -120,14 +120,14 @@ public class AzmcpProgram
             var result = JsonSerializer.Deserialize(output, ModelsSerializationContext.Default.ServerInfoResult);
             if (result == null || result.Results == null)
             {
-                _logger.LogInformation("The MCP server returned an invalid JSON response. Output: {Output}", output);
+                _logger.LogDebug("The MCP server returned an invalid JSON response. Output: {Output}", output);
             }
 
             return result?.Results;
         }
         catch (JsonException ex)
         {
-            _logger.LogInformation(ex, "The MCP server did not return valid JSON output for the 'server info' command. Output: {Output}", output);
+            _logger.LogDebug(ex, "The MCP server did not return valid JSON output for the 'server info' command. Output: {Output}", output);
             return null;
         }
     }
@@ -184,7 +184,7 @@ public class AzmcpProgram
 
         if (!isFound)
         {
-            _logger.LogError("Could not find server name in --help output.");
+            _logger.LogDebug("Could not find server name in --help output.");
             return null;
         }
         else
