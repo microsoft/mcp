@@ -19,7 +19,7 @@ public static class CommandExtensions
     /// <param name="command">The command to parse options for</param>
     /// <param name="arguments">Dictionary of argument name/value pairs</param>
     /// <returns>ParseResult containing the parsed arguments</returns>
-    public static ParseResult ParseFromDictionary(this Command command, IReadOnlyDictionary<string, JsonElement>? arguments)
+    public static ParseResult ParseFromDictionary(this Command command, IDictionary<string, JsonElement>? arguments)
     {
         if (arguments == null || arguments.Count == 0)
         {
@@ -76,7 +76,7 @@ public static class CommandExtensions
         return command.Parse([.. args]);
     }
 
-    public static ParseResult ParseFromRawMcpToolInput(this Command command, IReadOnlyDictionary<string, JsonElement>? arguments)
+    public static ParseResult ParseFromRawMcpToolInput(this Command command, IDictionary<string, JsonElement>? arguments)
     {
         var args = new List<string>();
 
