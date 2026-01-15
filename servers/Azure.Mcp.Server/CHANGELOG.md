@@ -83,6 +83,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
 
 ### Bugs Fixed
+- Updated Azure Function code generation best practices instrunctions to include Azure examples to help LLM not generating undesiable patterns. [[#1267](https://github.com/microsoft/mcp/pull/1267)]
 
 - Fixed a serialization issue in the Foundry Agent File Search tool. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
 
