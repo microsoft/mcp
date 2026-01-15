@@ -51,7 +51,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
     protected override VmGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmNameName);
+        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
         return options;
     }
 

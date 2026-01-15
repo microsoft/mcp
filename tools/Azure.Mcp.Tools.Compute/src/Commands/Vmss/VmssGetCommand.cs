@@ -51,7 +51,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
     protected override VmssGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssNameName);
+        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
         return options;
     }
 

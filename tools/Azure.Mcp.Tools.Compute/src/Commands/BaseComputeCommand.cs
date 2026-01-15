@@ -23,7 +23,7 @@ public abstract class BaseComputeCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ResourceGroupName);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ResourceGroup.Name);
         return options;
     }
 }
