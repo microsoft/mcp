@@ -220,7 +220,7 @@ public class CommandFactory
 
                 if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);; //.AddTag(TagName.ErrorDetails, response.Message);
+                    activity?.SetStatus(ActivityStatusCode.Error);
                 }
 
                 return (int)response.Status;
@@ -229,7 +229,7 @@ public class CommandFactory
             {
                 _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}",
                     command.Name, ex);
-                activity?.SetStatus(ActivityStatusCode.Error); //?.AddTag(TagName.ErrorDetails, ex.Message);
+                activity?.SetStatus(ActivityStatusCode.Error);
                 return 1;
             }
             finally

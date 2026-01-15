@@ -48,7 +48,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected virtual void HandleException(CommandContext context, Exception ex)
     {
-        context.Activity?.SetStatus(ActivityStatusCode.Error); //?.AddTag(TagName.ErrorDetails, ex.Message);
+        context.Activity?.SetStatus(ActivityStatusCode.Error);
 
         var response = context.Response;
 
