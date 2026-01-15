@@ -80,7 +80,7 @@ Authentication & Authorization
 
 Generation steps:
 1. Analyze service requirements
-2. If the user specifices the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
+2. If the user specifies the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
 3. Plan security measures
 4. Design error handling
 5. Optimize performance

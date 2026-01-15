@@ -8,7 +8,7 @@ Azure Functions deployment best practices:
         - .NET Azure Functions with EventGrid Sample: https://github.com/Azure-Samples/functions-quickstart-dotnet-azd-eventgrid-blob/tree/main/infra
     - If Flex Consumption is not an option, prefer Elastic Premium (EP) SKU.
     - Always use Linux OS for Python-based Functions.
-    - If the user specifices the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
+    - If the user specifies the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
     - Configure Function authentication or stronger mechanisms; avoid anonymous access.
     - Enable private networking options such as Virtual Network (VNET) integration or private endpoints for enhanced security.
     - Deploy one Function per Function App for optimal horizontal scaling.
