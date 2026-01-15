@@ -3,6 +3,10 @@
 
 namespace Azure.Mcp.Tools.Policy.Models;
 
+/// <summary>
+/// Represents a policy definition model reserved for future policy-related commands and functionality.
+/// This class is intentionally defined but may not yet be referenced by the current implementation.
+/// </summary>
 public class PolicyDefinition
 {
     /// <summary>The ID of the policy definition.</summary>
