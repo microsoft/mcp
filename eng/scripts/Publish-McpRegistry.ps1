@@ -27,70 +27,6 @@ function ConvertFrom-Base64Url {
     return [Convert]::FromBase64String($paddedBase64)
 }
 
-function Get-AzureKeyVaultPublicKey {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$KeyVaultName,
-        [Parameter(Mandatory=$true)]
-        [string]$KeyName
-    )
-    
-    $vaultUrl = "https://$KeyVaultName.vault.azure.net"
-    $keyUrl = "$vaultUrl/keys/$KeyName"
-    
-    Write-Host "Getting public key from Azure Key Vault: $KeyVaultName, key: $KeyName"
-    
-    # Get access token for Key Vault
-    $token = Get-AzAccessToken -AsSecureString -ResourceUrl "https://vault.azure.net"
-    
-    # Get key details including public key
-    $headers = @{
-        "Authorization" = "Bearer $($token.Token | ConvertFrom-SecureString -AsPlainText)"
-        "Content-Type" = "application/json"
-    }
-    
-    $response = Invoke-RestMethod -Uri "$keyUrl/?api-version=7.4" -Method Get -Headers $headers
-    
-    if ($response.key.kty -ne "EC" -and $response.key.kty -ne "EC-HSM") {
-        throw "Unsupported key type: $($response.key.kty). Only EC or EC-HSM keys are supported."
-    }
-    
-    if ($response.key.crv -ne "P-384") {
-        throw "Unsupported curve: $($response.key.crv). Only P-384 is supported."
-    }
-    
-    return @{
-        X = $response.key.x
-        Y = $response.key.y
-        Curve = $response.key.crv
-        KeyId = $response.key.kid
-    }
-}
-
-function Get-CompressedPublicKey {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$X,
-        [Parameter(Mandatory=$true)]
-        [string]$Y
-    )
-    
-    # Decode base64url to bytes
-    $xBytes = ConvertFrom-Base64Url -Base64Url $X
-    $yBytes = ConvertFrom-Base64Url -Base64Url $Y
-    
-    # For P-384, compressed format is: 0x02/0x03 (depending on Y's parity) + X coordinate
-    # If Y is even, use 0x02; if Y is odd, use 0x03
-    $yLast = $yBytes[$yBytes.Length - 1]
-    $prefix = if (($yLast -band 1) -eq 0) { 0x02 } else { 0x03 }
-    
-    $compressed = [byte[]]::new($xBytes.Length + 1)
-    $compressed[0] = $prefix
-    [Array]::Copy($xBytes, 0, $compressed, 1, $xBytes.Length)
-    
-    return [Convert]::ToBase64String($compressed)
-}
-
 function Invoke-AzureKeyVaultSign {
     param(
         [Parameter(Mandatory=$true)]
@@ -142,14 +78,6 @@ function Get-McpRegistryToken {
     )
     
     Write-Host "Authenticating with MCP registry using DNS authentication..."
-    
-    # Get public key info
-    $keyInfo = Get-AzureKeyVaultPublicKey -KeyVaultName $KeyVaultName -KeyName $KeyName
-    
-    # Get compressed public key for proof record
-    $compressedPublicKey = Get-CompressedPublicKey -X $keyInfo.X -Y $keyInfo.Y
-    Write-Host "Expected proof record:"
-    Write-Host "v=MCPv1; k=ecdsap384; p=$compressedPublicKey"
     
     # Generate timestamp in RFC3339 format
     $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
