@@ -113,15 +113,15 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
         try
         {
             var resourceId = new ResourceIdentifier(policyDefinitionId);
-            
+
             // Extract the policy definition name from the resource ID
             // Format: /providers/Microsoft.Authorization/policyDefinitions/{name}
             // or /subscriptions/{sub}/providers/Microsoft.Authorization/policyDefinitions/{name}
             var policyDefinitionName = resourceId.Name;
-            
+
             // Determine if this is a built-in (tenant-level) or subscription-level policy
             SubscriptionPolicyDefinitionResource? policyDefinitionResource = null;
-            
+
             if (policyDefinitionId.Contains("/subscriptions/"))
             {
                 // Subscription-level policy definition
