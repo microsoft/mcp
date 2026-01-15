@@ -6,9 +6,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added 12 Azure FileShares tools for managing Azure managed file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
-  - **FileShare** tools (5): CheckNameAvailability, Create, Delete, Get, Update
-  - **FileShare Snapshot** tools (4): Create, Delete, Get, Update
+- Added 12 Azure File Shares tools for managing Azure managed file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+  - **File Share** tools (5): CheckNameAvailability, Create, Delete, Get, Update
+  - **File Share Snapshot** tools (4): Create, Delete, Get, Update
   - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
 
 ### Breaking Changes
