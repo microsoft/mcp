@@ -96,7 +96,6 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             // HttpClientTransportOptions offers an OAuth property to configure client side OAuth parameters, such as RedirectUri and ClientId.
             // When OAuth property is set, the MCP client will attempt to complete the Auth flow following the MCP protocol.
             // However, there is a gap between what MCP protocol requires the OAuth provider to implement and what Entra supports. This MCP client will always send a resource parameter to the token endpoint because it is required by the MCP protocol but Entra doesn't support it. More details in issue #939 and related discussions in modelcontextprotocol/csharp-sdk GitHub repo.
-            // See DefaultAuthorizationUrlHandler in ClientOAuthProvider.cs in modelcontextprotocol/csharp-sdk GitHub repo.
         };
 
         HttpClientTransport clientTransport;
