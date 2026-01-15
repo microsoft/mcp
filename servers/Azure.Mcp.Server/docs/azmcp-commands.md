@@ -1818,6 +1818,14 @@ azmcp quota usage check --subscription <subscription> \
                         --resource-types <resource-types>
 ```
 
+### Azure Policy Operations
+```bash
+# List Azure Policy Assignments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp policy assignment list --subscription <subscription> \
+                           --scope <scope>
+```
+
 ### Azure RBAC Operations
 
 ```bash

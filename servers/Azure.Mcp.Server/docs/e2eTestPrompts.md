@@ -579,6 +579,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_health-events_list | List active service health events in my subscription |
 | resourcehealth_health-events_list | Show me planned maintenance events for my Azure services |
 
+## Azure Policy
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| policy_assignment_list | List Azure Policies in the subscription <subscription_id> |
+
+
 ## Azure Service Bus
 
 | Tool Name | Test Prompt |
