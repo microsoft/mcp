@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Mcp.Core.Areas.Server.Options;
@@ -59,6 +60,41 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
 
         var client = CreateClient(baseAddress);
         configureClient(client);
+        return client;
+    }
+
+    /// <summary>
+    /// Creates a new HttpClient instance with a customized function to acquire an access token for its outgoing requests.
+    /// </summary>
+    /// <param name="accessTokenProvider">A function to acquire access token.</param>
+    /// <param name="baseAddress">The base address for the HttpClient</param>
+    /// <returns>A new HttpClient instance.</returns>
+    public HttpClient CreateClientWithAccessToken(Func<CancellationToken, Task<string>> accessTokenProvider, Uri? baseAddress)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(HttpClientService));
+        }
+
+        ArgumentNullException.ThrowIfNull(accessTokenProvider);
+
+        var handler = CreateHttpClientHandler();
+
+        var accessTokenHandler = new AccessTokenHandler(accessTokenProvider)
+        {
+            InnerHandler = handler
+        };
+
+        var client = new HttpClient(accessTokenHandler, disposeHandler: true);
+
+        client.Timeout = _options.DefaultTimeout;
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+
+        if (baseAddress != null)
+        {
+            client.BaseAddress = baseAddress;
+        }
+
         return client;
     }
 
@@ -189,6 +225,29 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
                 _defaultClient.Value.Dispose();
             }
             _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// DelegatingHandler that adds a Bearer access token to each outgoing request.
+    /// </summary>
+    private sealed class AccessTokenHandler : DelegatingHandler
+    {
+        private readonly Func<CancellationToken, Task<string>> _accessTokenProvider;
+
+        public AccessTokenHandler(Func<CancellationToken, Task<string>> accessTokenProvider)
+        {
+            _accessTokenProvider = accessTokenProvider ?? throw new ArgumentNullException(nameof(accessTokenProvider));
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var token = await _accessTokenProvider(cancellationToken);
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 }
