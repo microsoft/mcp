@@ -68,7 +68,7 @@ public sealed class McpRuntime : IMcpRuntime
                 Text = "Cannot call tools with null parameters.",
             };
 
-            activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, content.Text);
+            activity?.SetStatus(ActivityStatusCode.Error); //?.AddTag(TagName.ErrorDetails, content.Text);
 
             return new CallToolResult
             {
@@ -129,8 +129,8 @@ public sealed class McpRuntime : IMcpRuntime
         // due to missing dependencies or misconfiguration.
         catch (InvalidOperationException ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
-                ?.AddTag(TagName.ErrorDetails, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
+                //?.AddTag(TagName.ErrorDetails, ex.Message);
 
             return new CallToolResult
             {
@@ -143,8 +143,8 @@ public sealed class McpRuntime : IMcpRuntime
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
-                ?.AddTag(TagName.ErrorDetails, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
+                //?.AddTag(TagName.ErrorDetails, ex.Message);
 
             throw;
         }
@@ -186,8 +186,8 @@ public sealed class McpRuntime : IMcpRuntime
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler")
-                ?.SetTag(TagName.ErrorDetails, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler");
+                //?.SetTag(TagName.ErrorDetails, ex.Message);
             throw;
         }
     }
