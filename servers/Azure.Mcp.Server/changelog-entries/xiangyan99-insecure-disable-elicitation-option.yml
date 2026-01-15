@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported."

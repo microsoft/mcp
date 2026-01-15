@@ -2,15 +2,59 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.11 (Unreleased)
+## 2.0.0-beta.11 (2026-01-14)
 
 ### Features Added
 
+- Added 12 Azure FileShares tools for managing Azure managed file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+  - **FileShare** tools (5): CheckNameAvailability, Create, Delete, Get, Update
+  - **FileShare Snapshot** tools (4): Create, Delete, Get, Update
+  - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
+
 ### Breaking Changes
 
-### Bugs Fixed
+- Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported. [[#1374](https://github.com/microsoft/mcp/pull/1374)]
+- Renamed the `storagesync_cloudendpoint_triggerchangedetection` tool to `storagesync_cloudendpoint_changedetection`. The `--directory-path` parameter is now required. Added new optional parameters: `--change-detection-mode` (supports 'Default' or 'Recursive') and `--paths` (array of relative paths for change detection).
 
 ### Other Changes
+
+- Updated repository to build projects using .NET 10. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
+- Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+
+#### Dependency Updates
+
+- Removed `System.Linq.AsyncEnumerable` package dependency as it is no longer used. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
+- Replaced `Azure.Monitor.Query` package dependency with `Azure.ResourceManager.Monitor` to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+- Updated versions for the following dependencies: [[#1221](https://github.com/microsoft/mcp/pull/1221), [#1409](https://github.com/microsoft/mcp/pull/1409), [#1465](https://github.com/microsoft/mcp/pull/1465), [#1501](https://github.com/microsoft/mcp/pull/1501)]
+  - `Azure.Core`: `1.49.0` → `1.50.0`
+  - `Azure.Identity`: `1.16.0` → `1.17.1`
+  - `Azure.Identity.Broker`: `1.3.0` → `1.3.1`
+  - `ModelContextProtocol`: `0.4.0-preview.3` → `0.6.0-preview.1`
+  - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.3` → `0.6.0-preview.1`
+  - `Microsoft.AspNetCore.SignalR.Client`: `9.0.9` → `10.0.1`
+  - `Microsoft.Extensions.AI.Abstractions`: `9.10.0` → `10.2.0`
+  - `Microsoft.Extensions.AI.Evaluation`: `9.10.0` → `10.2.0`
+  - `Microsoft.Extensions.AI.Evaluation.Quality`: `9.10.0` → `10.2.0`
+  - `Microsoft.Extensions.AI.OpenAI`: `9.10.0-preview.1.25513.3` → `10.2.0-preview.1.26063.2`
+  - `Microsoft.Extensions.Caching.Memory`: `9.0.9` → `10.0.2`
+  - `Microsoft.Extensions.Configuration`: `9.0.9` → `10.0.2`
+  - `Microsoft.Extensions.Configuration.EnvironmentVariables`: `9.0.9` → `10.0.2`
+  - `Microsoft.Extensions.Configuration.Json`: `9.0.9` → `10.0.2`
+  - `Microsoft.Extensions.DependencyInjection`: `9.0.9` → `10.0.2`
+  - `Microsoft.Extensions.Hosting`: `9.0.9` → `10.0.2`
+  - `Microsoft.HybridRow`: `1.1.0-preview3` → `1.1.0-preview4`
+  - `Microsoft.Identity.Abstractions`: `9.5.0` → `10.0.0`
+  - `Microsoft.Identity.Web`: `4.0.1` → `4.3.0`
+  - `Microsoft.Identity.Web.Azure`: `4.0.1` → `4.3.0`
+  - `Microsoft.NET.Test.Sdk`: `17.13.0` → `18.0.1`
+  - `Npgsql`: `9.0.3` → `10.0.1`
+  - `System.CommandLine`: `2.0.0-rc.1.25451.107` → `2.0.1`
+  - `System.Formats.Asn1`: `9.0.9` → `10.0.2`
+  - `System.IdentityModel.Tokens.Jwt`: `8.14.0` → `8.15.0`
+  - `System.Net.ServerSentEvents`: `10.0.0-rc.1.25451.107` → `10.0.2`
+  - `System.Numerics.Tensors`: `9.0.0` → `10.0.2`
+  - `System.Text.Json`: `9.0.9` → `10.0.2`
+- Updated Azure.Identity, Azure.Identity.Broker, and Azure.Core to versions 1.17.1, 1.3.1, and 1.50.0, respectively. [[#1465](https://github.com/microsoft/mcp/pull/1465)]
 
 ## 2.0.0-beta.10 (2026-01-09)
 
@@ -26,28 +70,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `managedlustre_fs_blob_autoexport_cancel` - Cancel running autoexport jobs
   - `managedlustre_fs_blob_autoexport_delete` - Delete autoexport job records
 - Added support for listing tables in Azure Storage via command `azmcp_storage_table_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
-- Added Azure FileShares module with 12 commands for managing Azure managed file shares:
-  - **FileShare** commands (5): CheckNameAvailability, Create, Delete, Get, Update
-  - **FileShare Snapshot** commands (4): Create, Delete, Get, Update
-  - **Informational** commands (3): GetLimits, GetProvisioningRecommendation, GetUsageData
 
 ## 2.0.0-beta.9 (2026-01-06)
 
 ### Features Added
 
-- Added Azure Storage Sync (StorageSync) module with 18 commands for managing cloud synchronization of file shares:
-  - **StorageSyncService** commands (4): Create, Delete, Get, Update
-  - **RegisteredServer** commands (3): Get, Unregister, Update
-  - **SyncGroup** commands (3): Create, Delete, Get
-  - **CloudEndpoint** commands (4): Create, Delete, Get, TriggerChangeDetection
-  - **ServerEndpoint** commands (4): Create, Delete, Get, Update
-
-- Added support logging capability with `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints.
-- Replace hard-coded strings for Azure.Mcp.Server with ones from IConfiguration. [[#1269](https://github.com/microsoft/mcp/pull/1269)]
-
-### Breaking Changes
-
-- Removed `Azure.Monitor.Query` package dependency as that is now deprecated. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+- Added 18 Azure Storage Sync tools for managing cloud synchronization of file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+  - **StorageSyncService** tools (4): Create, Delete, Get, Update
+  - **RegisteredServer** tools (3): Get, Unregister, Update
+  - **SyncGroup** tools (3): Create, Delete, Get
+  - **CloudEndpoint** tools (4): Create, Delete, Get, TriggerChangeDetection
+  - **ServerEndpoint** tools (4): Create, Delete, Get, Update
+- Added support for logging to local files using the `--dangerously-write-support-logs-to-dir` option for troubleshooting and support scenarios. When enabled, detailed debug-level logs are written to automatically-generated timestamped log files (e.g., `azmcp_20251202_143052.log`) in the specified folder. All telemetry is automatically disabled when support logging is enabled to prevent sensitive debug information from being sent to telemetry endpoints. [[#1305](https://github.com/microsoft/mcp/pull/1305)]
 
 ### Bugs Fixed
 
