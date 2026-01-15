@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -8,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 
@@ -66,7 +68,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
                     Description = assignment.Data.Description,
                     Metadata = assignment.Data.Metadata?.ToString(),
                     Parameters = assignment.Data.Parameters?.ToString(),
-                    Identity = assignment.Data.ManagedIdentity?.ToString(),
+                    Identity = SerializeManagedIdentity(assignment.Data.ManagedIdentity),
                     Location = assignment.Data.Location?.ToString()
                 };
 
@@ -172,6 +174,30 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
                 policyDefinitionId);
             throw;
         }
+    }
+
+    private static string? SerializeManagedIdentity(ManagedServiceIdentity? identity)
+    {
+        if (identity == null)
+        {
+            return null;
+        }
+
+        var identityData = new ManagedIdentityInfo
+        {
+            Type = identity.ManagedServiceIdentityType.ToString(),
+            PrincipalId = identity.PrincipalId?.ToString(),
+            TenantId = identity.TenantId?.ToString(),
+            UserAssignedIdentities = identity.UserAssignedIdentities?.ToDictionary(
+                kvp => kvp.Key.ToString(),
+                kvp => new UserAssignedIdentityDetails
+                {
+                    PrincipalId = kvp.Value.PrincipalId?.ToString(),
+                    ClientId = kvp.Value.ClientId?.ToString()
+                })
+        };
+
+        return JsonSerializer.Serialize(identityData, Commands.PolicyJsonContext.Default.ManagedIdentityInfo);
     }
 
 }
