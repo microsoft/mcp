@@ -581,6 +581,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 📈 **Azure Monitor** - Logging, metrics, and health monitoring
+- ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
