@@ -54,7 +54,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `System.Net.ServerSentEvents`: `10.0.0-rc.1.25451.107` → `10.0.2`
   - `System.Numerics.Tensors`: `9.0.0` → `10.0.2`
   - `System.Text.Json`: `9.0.9` → `10.0.2`
-- Updated Azure.Identity, Azure.Identity.Broker, and Azure.Core to versions 1.17.1, 1.3.1, and 1.50.0, respectively. [[#1465](https://github.com/microsoft/mcp/pull/1465)]
 
 ## 2.0.0-beta.10 (2026-01-09)
 
