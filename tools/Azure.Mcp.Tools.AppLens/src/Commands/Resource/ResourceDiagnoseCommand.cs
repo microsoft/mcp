@@ -91,7 +91,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
             {
                 Success<AppLensInsights> success => ResponseResult.Create(new(success.Data, Message: null), AppLensJsonContext.Default.ResourceDiagnoseCommandResult),
                 Failure<AppLensInsights> failure => ResponseResult.Create(new ResourceDiagnoseCommandResult(null, failure.Message), AppLensJsonContext.Default.ResourceDiagnoseCommandResult),
-                _ => throw new InvalidOperationException($"Unexpected result type from ${nameof(service.DiagnoseResourceAsync)}.")
+                _ => throw new InvalidOperationException($"Unexpected result type from {nameof(service.DiagnoseResourceAsync)}.")
             };
         }
         catch (Exception ex)
