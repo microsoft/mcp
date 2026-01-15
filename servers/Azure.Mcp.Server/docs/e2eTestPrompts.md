@@ -277,7 +277,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
-## Azure FileShares
+## Azure File Shares
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
