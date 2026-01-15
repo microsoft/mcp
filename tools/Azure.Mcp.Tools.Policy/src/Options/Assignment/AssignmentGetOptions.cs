@@ -16,5 +16,5 @@ public class AssignmentGetOptions : BasePolicyOptions
 {
     public string? Assignment { get; set; }
 
-    public PolicyAssignment[] policyAssignments { get; set; } = Array.Empty<PolicyAssignment>();
+    public PolicyAssignment[] PolicyAssignments { get; set; } = Array.Empty<PolicyAssignment>();
 }
