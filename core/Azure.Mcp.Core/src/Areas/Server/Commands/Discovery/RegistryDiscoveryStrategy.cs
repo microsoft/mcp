@@ -4,6 +4,8 @@
 using System.Reflection;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -15,9 +17,11 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// </summary>
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> options, ILogger<RegistryDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> options, ILogger<RegistryDiscoveryStrategy> logger, IHttpClientService httpClientService, IAzureTokenCredentialProvider tokenCredentialProvider) : BaseDiscoveryStrategy(logger)
 {
     private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
     /// <inheritdoc/>
     public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
@@ -33,7 +37,7 @@ public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> opti
             .Where(s => _options.Value.Namespace == null ||
                        _options.Value.Namespace.Length == 0 ||
                        _options.Value.Namespace.Contains(s.Key, StringComparer.OrdinalIgnoreCase))
-            .Select(s => new RegistryServerProvider(s.Key, s.Value))
+            .Select(s => new RegistryServerProvider(s.Key, s.Value, _httpClientService, _tokenCredentialProvider))
             .Cast<IMcpServerProvider>();
     }
 

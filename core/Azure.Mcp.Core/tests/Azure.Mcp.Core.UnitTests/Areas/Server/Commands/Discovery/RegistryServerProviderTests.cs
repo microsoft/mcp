@@ -5,13 +5,24 @@ using System.Net;
 using System.Net.Sockets;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
+using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Http;
 using ModelContextProtocol.Client;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class RegistryServerProviderTests
 {
+    private static RegistryServerProvider CreateServerProvider(string id, RegistryServerInfo serverInfo)
+    {
+        var httpClientService = NSubstitute.Substitute.For<IHttpClientService>();
+        httpClientService.CreateClientWithAccessToken(Arg.Any<Func<CancellationToken, Task<string>>>(), Arg.Any<Uri?>())
+            .Returns(new HttpClient());
+        var tokenCredentialProvider = NSubstitute.Substitute.For<IAzureTokenCredentialProvider>();
+        return new RegistryServerProvider(id, serverInfo, httpClientService, tokenCredentialProvider);
+    }
     [Fact]
     public void Constructor_InitializesCorrectly()
     {
@@ -23,7 +34,7 @@ public class RegistryServerProviderTests
         };
 
         // Act
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Assert
         Assert.NotNull(provider);
@@ -39,7 +50,7 @@ public class RegistryServerProviderTests
         {
             Description = "Test Description"
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -61,7 +72,7 @@ public class RegistryServerProviderTests
         {
             Description = null
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -85,7 +96,7 @@ public class RegistryServerProviderTests
             Title = testTitle,
             Description = "Test Description"
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -109,7 +120,7 @@ public class RegistryServerProviderTests
     //         Description = "Test SSE Provider",
     //         Url = $"{server.Endpoint}/mcp"
     //     };
-    //     var provider = new RegistryServerProvider(testId, serverInfo);
+    //     var provider = CreateServerProvider(testId, serverInfo);
 
     //     // Act & Assert
     //     var exception = await Assert.ThrowsAsync<HttpRequestException>(
@@ -130,7 +141,7 @@ public class RegistryServerProviderTests
             Command = "echo",
             Args = ["hello world"]
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
@@ -156,7 +167,7 @@ public class RegistryServerProviderTests
                     { "TEST_VAR", "test value" }
                 }
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
@@ -176,7 +187,7 @@ public class RegistryServerProviderTests
             Description = "Invalid Provider - No Transport"
             // No Url or Type specified
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(
@@ -197,7 +208,7 @@ public class RegistryServerProviderTests
             Type = "stdio"
             // No Command specified
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -221,7 +232,7 @@ public class RegistryServerProviderTests
             Args = ["--serve"],
             InstallInstructions = installInstructions
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException with install instructions
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
