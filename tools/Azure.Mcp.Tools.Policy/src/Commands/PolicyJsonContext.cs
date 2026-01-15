@@ -10,5 +10,6 @@ namespace Azure.Mcp.Tools.Policy.Commands;
 [JsonSerializable(typeof(PolicyAssignmentListCommand.PolicyAssignmentListCommandResult))]
 [JsonSerializable(typeof(PolicyAssignment))]
 [JsonSerializable(typeof(List<PolicyAssignment>))]
+[JsonSerializable(typeof(PolicyDefinition))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 public partial class PolicyJsonContext : JsonSerializerContext;

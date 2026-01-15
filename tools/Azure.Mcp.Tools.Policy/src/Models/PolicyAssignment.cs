@@ -40,4 +40,7 @@ public class PolicyAssignment
 
     /// <summary>The location of the managed identity.</summary>
     public string? Location { get; set; }
+
+    /// <summary>The policy definition details associated with this assignment.</summary>
+    public PolicyDefinition? PolicyDefinition { get; set; }
 }

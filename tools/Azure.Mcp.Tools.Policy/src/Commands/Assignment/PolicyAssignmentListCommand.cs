@@ -30,9 +30,10 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
     public override string Description =>
         """
         List policy assignments in a subscription or scope. This command retrieves all Azure Policy
-        assignments, including their definitions, enforcement modes, parameters, and metadata. You can
-        optionally filter by scope to list assignments at a specific resource group, resource, or
-        management group level.
+        assignments along with their complete policy definition details (rules, effects, parameters schema),
+        enforcement modes, assignment parameters, and metadata. This enables agents to understand policy
+        requirements and design compliant cloud services. You can optionally filter by scope to list
+        assignments at a specific resource group, resource, or management group level.
         """;
 
     public override string Title => CommandTitle;

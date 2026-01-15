@@ -23,4 +23,18 @@ public interface IPolicyService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a policy definition by its resource ID.
+    /// </summary>
+    /// <param name="policyDefinitionId">The resource ID of the policy definition.</param>
+    /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
+    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <returns>The policy definition or null if not found.</returns>
+    Task<PolicyDefinition?> GetPolicyDefinitionAsync(
+        string policyDefinitionId,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
