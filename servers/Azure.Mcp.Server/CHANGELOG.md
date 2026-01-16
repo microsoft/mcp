@@ -20,6 +20,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `get_bestpractices_get` → `get_azure_bestpractices_get`
   - `get_bestpractices_ai_app` → `get_azure_bestpractices_ai_app`
 
+- Fixed various exceptions being thrown by the AppLens tool. [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+
 ### Other Changes
 
 - Updated repository to build projects using .NET 10. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
