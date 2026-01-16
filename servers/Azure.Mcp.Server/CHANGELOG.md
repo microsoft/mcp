@@ -10,7 +10,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **File Share** tools (5): CheckNameAvailability, Create, Delete, Get, Update
   - **File Share Snapshot** tools (4): Create, Delete, Get, Update
   - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
-- Added support for list and viewing individual Azure Policy assignments in subscriptions or scopes. [[#1483](https://github.com/microsoft/mcp/pull/1483)]
+- Added support for listing and viewing individual Azure Policy assignments in subscriptions or scopes. [[#1483](https://github.com/microsoft/mcp/pull/1483)]
 
 ### Breaking Changes
 
