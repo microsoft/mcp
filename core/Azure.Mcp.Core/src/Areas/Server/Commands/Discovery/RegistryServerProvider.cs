@@ -42,7 +42,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
         Func<McpClientOptions, CancellationToken, Task<McpClient>>? clientFactory = null;
-        
+
         if (!string.IsNullOrWhiteSpace(_serverInfo.Url))
         {
             clientFactory = CreateHttpClientAsync;
