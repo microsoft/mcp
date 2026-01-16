@@ -27,4 +27,12 @@ public interface IHttpClientService
     /// <param name="configureClient">Additional configuration for the HttpClient.</param>
     /// <returns>A new HttpClient instance.</returns>
     HttpClient CreateClient(Uri? baseAddress, Action<HttpClient> configureClient);
+
+    /// <summary>
+    /// Creates a new HttpClient instance with a customized function to acquire an access token for its outgoing requests.
+    /// </summary>
+    /// <param name="accessTokenProvider">A function to acquire access token.</param>
+    /// <param name="baseAddress">The base address for the HttpClient</param>
+    /// <returns>A new HttpClient instance.</returns>
+    HttpClient CreateClientWithAccessToken(Func<CancellationToken, Task<string>> accessTokenProvider, Uri? baseAddress = null);
 }

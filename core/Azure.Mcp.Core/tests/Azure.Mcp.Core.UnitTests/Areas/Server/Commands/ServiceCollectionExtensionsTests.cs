@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
@@ -22,6 +23,7 @@ public class ServiceCollectionExtensionsTests
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
         services.AddSingleton<CommandFactory>(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
+        services.AddSingleIdentityTokenCredentialProvider();
 
         return services;
     }
