@@ -101,7 +101,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         HttpClientTransport clientTransport;
         if (_serverInfo.OAuthScopes is not null)
         {
-            var FetchAccessToken = async (CancellationToken cancellationToken) =>
+            var fetchAccessToken = async (CancellationToken cancellationToken) =>
             {
                 var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
                 var tokenContext = new Azure.Core.TokenRequestContext(_serverInfo.OAuthScopes);
@@ -109,7 +109,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
                 return token.Token;
             };
 
-            var client = _httpClientService.CreateClientWithAccessToken(FetchAccessToken);
+            var client = _httpClientService.CreateClientWithAccessToken(fetchAccessToken);
             clientTransport = new HttpClientTransport(transportOptions, client, ownsHttpClient: true);
         }
         else
