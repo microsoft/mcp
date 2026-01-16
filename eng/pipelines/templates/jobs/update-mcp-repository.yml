@@ -36,7 +36,7 @@ jobs:
         -NuGetFeedIndexUrl '${{ parameters.NuGetFeedIndexUrl }}'
 
   - task: AzureCLI@2
-    displayName: 'Build go tool and publish server.json'
+    displayName: 'Publish server.json to MCP registry'
     inputs:
       azureSubscription: 'Azure SDK Engineering System'
       scriptType: 'pscore'
