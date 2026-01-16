@@ -19,7 +19,7 @@ public class RegistryServerProviderTests
     {
         var httpClientService = NSubstitute.Substitute.For<IHttpClientService>();
         httpClientService.CreateClientWithAccessToken(Arg.Any<Func<CancellationToken, Task<string>>>(), Arg.Any<Uri?>())
-            .Returns(new HttpClient());
+            .Returns(Substitute.For<HttpClient>());
         var tokenCredentialProvider = NSubstitute.Substitute.For<IAzureTokenCredentialProvider>();
         return new RegistryServerProvider(id, serverInfo, httpClientService, tokenCredentialProvider);
     }

@@ -69,7 +69,7 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     /// <param name="accessTokenProvider">A function to acquire access token.</param>
     /// <param name="baseAddress">The base address for the HttpClient</param>
     /// <returns>A new HttpClient instance.</returns>
-    public HttpClient CreateClientWithAccessToken(Func<CancellationToken, Task<string>> accessTokenProvider, Uri? baseAddress)
+    public HttpClient CreateClientWithAccessToken(Func<CancellationToken, Task<string>> accessTokenProvider, Uri? baseAddress = null)
     {
         if (_disposed)
         {
