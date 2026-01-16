@@ -1,6 +1,6 @@
 # Release History
 
-## 2.0.0-beta.11 (2026-01-14) (pre-release)
+## 2.0.0-beta.11 (2026-01-16) (pre-release)
 
 ### Added
 
@@ -8,11 +8,15 @@
   - **File Share** tools (5): CheckNameAvailability, Create, Delete, Get, Update
   - **File Share Snapshot** tools (4): Create, Delete, Get, Update
   - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
+- Added support for listing and viewing individual Azure Policy assignments in subscriptions or scopes. [[#1483](https://github.com/microsoft/mcp/pull/1483)]
 
 ### Changed
 
 - **Breaking:** Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported. [[#1374](https://github.com/microsoft/mcp/pull/1374)]
 - **Breaking:** Renamed the `storagesync_cloudendpoint_triggerchangedetection` tool to `storagesync_cloudendpoint_changedetection`. The `--directory-path` parameter is now required. Added new optional parameters: `--change-detection-mode` (supports 'Default' or 'Recursive') and `--paths` (array of relative paths for change detection).
+- **Breaking:** Renamed the following commands: [[#1474](https://github.com/microsoft/mcp/pull/1474)]
+  - `get_bestpractices_get` → `get_azure_bestpractices_get`
+  - `get_bestpractices_ai_app` → `get_azure_bestpractices_ai_app`
 - Updated repository to build projects using .NET 10. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
 - Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
 

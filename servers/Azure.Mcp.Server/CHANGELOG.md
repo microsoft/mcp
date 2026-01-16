@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.11 (2026-01-14)
+## 2.0.0-beta.11 (2026-01-16)
 
 ### Features Added
 
@@ -10,11 +10,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **File Share** tools (5): CheckNameAvailability, Create, Delete, Get, Update
   - **File Share Snapshot** tools (4): Create, Delete, Get, Update
   - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
+- Added support for listing and viewing individual Azure Policy assignments in subscriptions or scopes. [[#1483](https://github.com/microsoft/mcp/pull/1483)]
 
 ### Breaking Changes
 
 - Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported. [[#1374](https://github.com/microsoft/mcp/pull/1374)]
 - Renamed the `storagesync_cloudendpoint_triggerchangedetection` tool to `storagesync_cloudendpoint_changedetection`. The `--directory-path` parameter is now required. Added new optional parameters: `--change-detection-mode` (supports 'Default' or 'Recursive') and `--paths` (array of relative paths for change detection).
+- Renamed the following commands: [[#1474](https://github.com/microsoft/mcp/pull/1474)]
+  - `get_bestpractices_get` → `get_azure_bestpractices_get`
+  - `get_bestpractices_ai_app` → `get_azure_bestpractices_ai_app`
 
 ### Other Changes
 
@@ -29,6 +33,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `Azure.Core`: `1.49.0` → `1.50.0`
   - `Azure.Identity`: `1.16.0` → `1.17.1`
   - `Azure.Identity.Broker`: `1.3.0` → `1.3.1`
+  - `Azure.AI.OpenAI`: `2.7.0-beta.1` → `2.8.0-beta.1`
   - `ModelContextProtocol`: `0.4.0-preview.3` → `0.6.0-preview.1`
   - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.3` → `0.6.0-preview.1`
   - `Microsoft.AspNetCore.SignalR.Client`: `9.0.9` → `10.0.1`
