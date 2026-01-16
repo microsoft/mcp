@@ -1823,7 +1823,7 @@ azmcp quota usage check --subscription <subscription> \
 # List Azure Policy Assignments
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp policy assignment list --subscription <subscription> \
-                           --scope <scope>
+                             --scope <scope>
 ```
 
 ### Azure RBAC Operations
