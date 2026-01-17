@@ -295,12 +295,12 @@ try {
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
 
-    $command = "dotnet test '$solutionPath' $coverageArg $resultsArg $loggerArg"
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
 
     if($TestType -eq 'Recorded') {
         $maxParallel = [Math]::Max([Environment]::ProcessorCount, 1)
         # Recorded tests spin up the proxy per test-class; cap concurrency to avoid starving the box
-        $command += " --maxcpucount $maxParallel"
+        $command += " -maxcpucount:$maxParallel"
     }
 
     if($Members.Count -gt 0) {
