@@ -38,22 +38,22 @@ Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
 # Resolve important paths
-$repoRoot = Resolve-Path "$PSScriptRoot/../../../" | Select-Object -ExpandProperty Path
-$toolDir  = Resolve-Path "$PSScriptRoot" | Select-Object -ExpandProperty Path
+$repoRoot = Resolve-Path "$PSScriptRoot/../../../../" | Select-Object -ExpandProperty Path
+$toolDir  = Resolve-Path "$PSScriptRoot/../src" | Select-Object -ExpandProperty Path
 $jsonFile = "$toolDir/tools.json"
 
 # Build the whole Azure MCP Server project if needed
 if ($BuildAzureMcp)
 {
-    Write-Host "Building root project to enable dynamic tool loading..." -ForegroundColor Yellow
+    Write-Host "Building server solution to enable dynamic tool loading..." -ForegroundColor Yellow
 
-    & dotnet build "$repoRoot/AzureMcp.sln"
+    & dotnet build "$repoRoot/servers/Azure.Mcp.Server/Azure.Mcp.Server.slnx"
 
     if ($LASTEXITCODE -ne 0) {
-        throw "Failed to build root project"
+        throw "Failed to build server solution"
     }
 
-    Write-Host "Root project build completed successfully!" -ForegroundColor Green
+    Write-Host "Server solution build completed successfully!" -ForegroundColor Green
 }
 
 # Locate azmcp CLI artifact (platform & build-type agnostic) like Run-ToolDescriptionEvaluator.ps1
@@ -86,7 +86,7 @@ foreach ($root in $searchRoots) {
 if (-not $cliArtifact) {
     Write-Error "Could not locate 'azmcp' CLI under: $($searchRoots -join ', ')"
     Write-Host "Try building the solution first:" -ForegroundColor Yellow
-    Write-Host "  dotnet build `"$repoRoot/AzureMcp.sln`"" -ForegroundColor Yellow
+    Write-Host "  dotnet build `"$repoRoot/servers/Azure.Mcp.Server/Azure.Mcp.Server.slnx`"" -ForegroundColor Yellow
 
     exit 1
 }

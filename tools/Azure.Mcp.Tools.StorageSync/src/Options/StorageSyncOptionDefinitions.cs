@@ -71,7 +71,8 @@ public static class StorageSyncOptionDefinitions
         private const string StorageAccountResourceIdName = "storage-account-resource-id";
         private const string AzureFileShareNameName = "azure-file-share-name";
         private const string DirectoryPathName = "directory-path";
-        private const string RecursiveName = "recursive";
+        private const string ChangeDetectionModeName = "change-detection-mode";
+        private const string PathsName = "paths";
 
         public static readonly Option<string> Name = new($"--{NameName}", "-ce")
         {
@@ -93,12 +94,18 @@ public static class StorageSyncOptionDefinitions
 
         public static readonly Option<string> DirectoryPath = new($"--{DirectoryPathName}")
         {
-            Description = "The directory path for change detection"
+            Description = "Relative path to a directory on the Azure File share for which change detection is to be performed"
         };
 
-        public static readonly Option<bool> Recursive = new($"--{RecursiveName}", "-r")
+        public static readonly Option<string> ChangeDetectionMode = new($"--{ChangeDetectionModeName}")
         {
-            Description = "Recursively include subdirectories for change detection"
+            Description = "Change detection mode: 'Default' (directory only) or 'Recursive' (directory and subdirectories). Applies to the directory specified in directory-path"
+        };
+
+        public static readonly Option<string[]> Paths = new($"--{PathsName}")
+        {
+            Description = "Array of relative paths on the Azure File share to be included in change detection. Can be files and directories",
+            AllowMultipleArgumentsPerToken = true
         };
     }
 

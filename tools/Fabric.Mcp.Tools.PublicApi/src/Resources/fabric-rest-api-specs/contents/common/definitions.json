@@ -192,7 +192,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -338,6 +338,10 @@
                 "description": "A Map."
             },
             {
+              "value": "Ontology",
+              "description": "An Ontology."
+            },
+            {
                 "value": "UserDataFunction",
                 "description": "A User Data Function."
             },
@@ -360,6 +364,10 @@
             {
                 "value": "CosmosDBDatabase",
                 "description": "A Cosmos DB Database."
+            },
+            {
+                "value": "EventSchemaSet",
+                "description": "An EventSchemaSet."
             }
           ]
         },
@@ -630,6 +638,11 @@
                     "type": "string",
                     "maxLength": 100,
                     "description": "The owner name. Maximum length is 100 characters."
+                },
+                "customDomainName": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "> [!NOTE]\n> Support for GitHub Enterprise with Data residency (ghe.com) is currently in Preview.([learn more](/fabric/fundamentals/preview)).\n\nThe name of the enterprise github domain if it's not github.com. Only GitHub Enterprise with data residency domains (ghe.com) are supported. Maximum length is 100 characters."
                 }
             },
             "allOf": [

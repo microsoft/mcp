@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Commands;
@@ -262,7 +263,7 @@ public class EventsPublishCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+                    Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedResult));
         }
 
@@ -947,3 +948,4 @@ public class EventsPublishCommandTests
         Assert.Equal(2, result!.Result.PublishedEventCount);
     }
 }
+
