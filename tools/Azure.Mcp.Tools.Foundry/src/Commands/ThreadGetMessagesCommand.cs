@@ -61,11 +61,22 @@ public class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             ThreadGetMessagesResult result = await service.GetMessages(
                 options.Endpoint!,
                 options.ThreadId!,
                 options.Tenant,
+                httpClientFactory: httpClientFactory,
                 cancellationToken: cancellationToken
             );
 

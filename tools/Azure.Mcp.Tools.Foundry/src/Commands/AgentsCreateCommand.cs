@@ -65,6 +65,16 @@ public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
 
         try
         {
+            IHttpClientFactory? httpClientFactory = null;
+            try
+            {
+                httpClientFactory = context.GetService<IHttpClientFactory>();
+            }
+            catch (InvalidOperationException)
+            {
+                // IHttpClientFactory not registered - this is fine for production scenarios
+            }
+
             var service = context.GetService<IFoundryService>();
             AgentsCreateResult result = await service.CreateAgent(
                 options.Endpoint!,
@@ -72,6 +82,7 @@ public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
                 options.AgentName!,
                 options.SystemInstruction!,
                 options.Tenant,
+                httpClientFactory: httpClientFactory,
                 cancellationToken: cancellationToken
             );
 
