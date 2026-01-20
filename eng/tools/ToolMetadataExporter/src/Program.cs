@@ -42,7 +42,8 @@ public class Program
         services.AddSingleton<IAzureMcpDatastore, AzureMcpKustoDatastore>()
             .AddSingleton<Utility>()
             .AddSingleton<AzmcpProgram>()
-            .AddSingleton<ToolAnalyzer>();
+            .AddSingleton<ToolAnalyzer>()
+            .AddSingleton<RunInformation>();
 
         services.AddOptions<CommandLineOptions>()
             .Bind(configuration);

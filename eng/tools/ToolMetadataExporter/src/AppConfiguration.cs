@@ -22,4 +22,6 @@ public class AppConfiguration
     public string? AzmcpExe { get; set; }
 
     public bool IsAzmcpExeSpecified { get; set; }
+
+    public bool UseAnalysisTime { get; set; }
 }

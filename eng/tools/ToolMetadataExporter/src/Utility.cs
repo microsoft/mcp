@@ -8,11 +8,16 @@ using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
 
-public class Utility(ILogger<Utility> logger)
+public class Utility
 {
     public const string NewLineRegexPattern = "\r\n|\n|\r";
 
-    private readonly ILogger<Utility> _logger = logger;
+    private readonly ILogger<Utility> _logger;
+
+    public Utility(ILogger<Utility> logger)
+    {
+        _logger = logger;
+    }
 
     internal virtual async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
@@ -33,15 +38,6 @@ public class Utility(ILogger<Utility> logger)
 
             // Parse the JSON output
             var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
-
-            // Save the dynamically loaded tools to tools.json for future use
-            if (result != null)
-            {
-                var fullPath = Path.Combine(workDirectory, $"tools.{DateTimeOffset.UtcNow.Ticks}.json");
-                await SaveToolsToJsonAsync(result, fullPath);
-
-                _logger.LogInformation($"💾 Saved {result.Tools?.Count} tools to {fullPath}");
-            }
 
             return result;
         }
@@ -77,50 +73,6 @@ public class Utility(ILogger<Utility> logger)
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--version", checkErrorCode: false);
         return output.Trim();
-    }
-
-    internal string FindAzmcpAsync(string repositoryRoot, bool isCiMode = false)
-    {
-        var searchRoots = new List<string>
-            {
-                Path.Combine(repositoryRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
-                Path.Combine(repositoryRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
-            };
-
-        var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
-        FileInfo? cliArtifact = null;
-
-        foreach (var root in searchRoots.Where(Directory.Exists))
-        {
-            foreach (var name in candidateNames)
-            {
-                var found = new DirectoryInfo(root)
-                    .EnumerateFiles(name, SearchOption.AllDirectories)
-                    .FirstOrDefault();
-                if (found != null)
-                {
-                    cliArtifact = found;
-                    break;
-                }
-            }
-
-            if (cliArtifact != null)
-            {
-                break;
-            }
-        }
-
-        if (cliArtifact != null)
-        {
-            return cliArtifact.FullName;
-        }
-
-        if (isCiMode)
-        {
-            return string.Empty; // Graceful fallback in CI
-        }
-
-        throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
     }
 
     /// <summary>
@@ -173,33 +125,6 @@ public class Utility(ILogger<Utility> logger)
         }
     }
 
-    private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath, bool isCiMode = false)
-    {
-        if (!File.Exists(filePath))
-        {
-            if (isCiMode)
-            {
-                return null; // Let caller handle this gracefully
-            }
-
-            throw new FileNotFoundException($"Tools file not found: {filePath}");
-        }
-
-        var json = await File.ReadAllTextAsync(filePath);
-
-        // Process the JSON
-        if (json.StartsWith('\'') && json.EndsWith('\''))
-        {
-            json = json[1..^1]; // Remove first and last characters (quotes)
-            json = json.Replace("\\'", "'"); // Convert \' --> '
-            json = json.Replace("\\\\\"", "'"); // Convert \\" --> '
-        }
-
-        var result = JsonSerializer.Deserialize(json, SourceGenerationContext.Default.ListToolsResult);
-
-        return result;
-    }
-
     private static string? GetJsonFromOutput(string? output)
     {
         if (output == null)
@@ -229,7 +154,7 @@ public class Utility(ILogger<Utility> logger)
         return string.Join('\n', lines.Skip(jsonStartIndex));
     }
 
-    private static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
+    internal static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
     {
         try
         {
@@ -289,14 +214,20 @@ public class Utility(ILogger<Utility> logger)
                .Replace(UnicodeChars.RightDoubleQuote, "\"");
     }
 
-    // Traverse up from a starting directory to find the repo root (containing AzureMcp.sln or .git)
+    /// <summary>
+    /// Traverse up from a starting directory to find the repo root.
+    /// Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git).
+    /// </summary>
+    /// <param name="startDir">Directory to start upwards traversal</param>
+    /// <returns>Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git</returns>
+    /// <exception cref="InvalidOperationException">If the solution cannot be found.</exception>
     internal static string FindRepoRoot(string startDir)
     {
         var dir = new DirectoryInfo(startDir);
 
         while (dir != null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "AzureMcp.sln")) ||
+            if (File.Exists(Path.Combine(dir.FullName, Constants.RepositoryRootSolution)) ||
                 Directory.Exists(Path.Combine(dir.FullName, ".git")))
             {
                 return dir.FullName;
@@ -304,7 +235,7 @@ public class Utility(ILogger<Utility> logger)
             dir = dir.Parent;
         }
 
-        throw new InvalidOperationException("Could not find repo root (AzureMcp.sln or .git).");
+        throw new InvalidOperationException($"Could not find repo root {Constants.RepositoryRootSolution} or .git).");
     }
 
     internal static class UnicodeChars

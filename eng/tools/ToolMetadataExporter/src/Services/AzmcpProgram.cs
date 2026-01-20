@@ -15,19 +15,20 @@ namespace ToolMetadataExporter.Services;
 public class AzmcpProgram
 {
     private readonly string _toolDirectory;
-    private readonly string _azureMcp;
+
     private readonly Utility _utility;
     private readonly ILogger<AzmcpProgram> _logger;
+    private readonly Lazy<Task<ListToolsResult?>> _listToolsTask;
+
     private readonly Task<ServerInfo?> _serverInfoTask;
     private readonly Task<string> _serverNameTask;
-    private readonly Lazy<Task<ListToolsResult?>> _listToolsTask;
     private readonly Task<string> _serverVersionTask;
 
     public AzmcpProgram(Utility utility, IOptions<AppConfiguration> options, ILogger<AzmcpProgram> logger)
     {
         _toolDirectory = options.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));
 
-        _azureMcp = options.Value.AzmcpExe
+        AzMcpExe = options.Value.AzmcpExe
             ?? throw new ArgumentNullException(nameof(CommandLineOptions.AzmcpExe));
         _utility = utility;
         _logger = logger;
@@ -35,8 +36,39 @@ public class AzmcpProgram
         _serverInfoTask = GetServerInfoInternalAsync();
         _serverNameTask = GetServerNameInternalAsync();
         _serverVersionTask = GetServerVersionInternalAsync();
-        _listToolsTask = new Lazy<Task<ListToolsResult?>>(() => GetServerToolsInternalAsync());
+        _listToolsTask = new Lazy<Task<ListToolsResult?>>(GetServerToolsInternalAsync);
+
+        var fileInfo = new FileInfo(AzMcpExe);
+        AzMcpBuildDateTime = new DateTimeOffset(fileInfo.LastWriteTimeUtc, TimeSpan.Zero);
     }
+
+    /// <summary>
+    /// Used to create an empty AzmcpProgram instance for initialization purposes.
+    /// </summary>
+    internal AzmcpProgram()
+    {
+        _toolDirectory = string.Empty;
+        _utility = null!;
+        _logger = null!;
+
+        _serverNameTask = Task.FromResult(string.Empty);
+        _serverInfoTask = Task.FromResult<ServerInfo?>(null);
+        _serverVersionTask = Task.FromResult(string.Empty);
+        _listToolsTask = new Lazy<Task<ListToolsResult?>>(() => Task.FromResult<ListToolsResult?>(null));
+
+        AzMcpExe = string.Empty;
+        AzMcpBuildDateTime = DateTimeOffset.MaxValue;
+    }
+
+    /// <summary>
+    /// Path to the MCP server file name.
+    /// </summary>
+    public string AzMcpExe { get; }
+
+    /// <summary>
+    /// Gets the date time of when <see cref="AzMcpExe" /> was built.
+    /// </summary>
+    public virtual DateTimeOffset AzMcpBuildDateTime { get; }
 
     /// <summary>
     /// Gets the name of the MCP server in lower case.
@@ -103,7 +135,7 @@ public class AzmcpProgram
 
     private Task<ListToolsResult?> GetServerToolsInternalAsync()
     {
-        return _utility.LoadToolsDynamicallyAsync(_azureMcp, _toolDirectory, false);
+        return _utility.LoadToolsDynamicallyAsync(AzMcpExe, _toolDirectory, isCiMode: false);
     }
 
     /// <summary>
@@ -113,7 +145,7 @@ public class AzmcpProgram
     /// This may be the case when "server info" has not been implemented by the server.</returns>
     private async Task<ServerInfo?> GetServerInfoInternalAsync()
     {
-        var output = await _utility.ExecuteAzmcpAsync(_azureMcp, "server info", checkErrorCode: false);
+        var output = await _utility.ExecuteAzmcpAsync(AzMcpExe, "server info", checkErrorCode: false);
 
         try
         {
@@ -139,7 +171,7 @@ public class AzmcpProgram
     private async Task<string> InvokeServerVersionCommandAsync()
     {
         // Invoking --version returns an error code of 1.
-        var versionOutput = (await _utility.ExecuteAzmcpAsync(_azureMcp, "--version", checkErrorCode: false)).Trim();
+        var versionOutput = (await _utility.ExecuteAzmcpAsync(AzMcpExe, "--version", checkErrorCode: false)).Trim();
 
         // The version output may contain a git hash after a '+' character.
         // Example: "1.0.0+4c6c98bca777f54350e426c01177a2b91ad12fd4"
@@ -161,7 +193,7 @@ public class AzmcpProgram
     private async Task<string?> GetServerNameWithHelpCommandAsync()
     {
         // Invoking --help returns an error code of 1.
-        var helpOutput = await _utility.ExecuteAzmcpAsync(_azureMcp, "--help", checkErrorCode: false);
+        var helpOutput = await _utility.ExecuteAzmcpAsync(AzMcpExe, "--help", checkErrorCode: false);
 
         // Parse the help output by looking for "Description".  The following line
         // is the server name.

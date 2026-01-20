@@ -14,31 +14,37 @@ public class ToolAnalyzer
 {
     private const string Separator = "_";
 
-    private readonly AzmcpProgram _azmcpExe;
+    private readonly AzmcpProgram _azmcpProgram;
     private readonly IAzureMcpDatastore _azureMcpDatastore;
+    private readonly RunInformation _runInformation;
     private readonly ILogger<ToolAnalyzer> _logger;
     private readonly string _workingDirectory;
     private readonly bool _isDryRun;
+    private readonly bool _useAnalysisTime;
 
-    public ToolAnalyzer(AzmcpProgram program, IAzureMcpDatastore azureMcpDatastore,
+    public ToolAnalyzer(AzmcpProgram program, IAzureMcpDatastore azureMcpDatastore, RunInformation runInformation,
         IOptions<AppConfiguration> configuration, ILogger<ToolAnalyzer> logger)
     {
-        _azmcpExe = program;
+        _azmcpProgram = program;
         _azureMcpDatastore = azureMcpDatastore;
+        _runInformation = runInformation;
         _logger = logger;
 
         _workingDirectory = configuration.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));
         ;
         _isDryRun = configuration.Value.IsDryRun;
+        _useAnalysisTime = configuration.Value.UseAnalysisTime;
     }
 
     public async Task RunAsync(DateTimeOffset analysisTime, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", _isDryRun);
 
-        var serverName = await _azmcpExe.GetServerNameAsync();
-        var serverVersion = await _azmcpExe.GetServerVersionAsync();
-        var currentTools = await _azmcpExe.LoadToolsDynamicallyAsync();
+        var serverName = await _azmcpProgram.GetServerNameAsync();
+        var serverVersion = await _azmcpProgram.GetServerVersionAsync();
+        var currentTools = await _azmcpProgram.LoadToolsDynamicallyAsync();
 
         if (currentTools == null)
         {
@@ -50,6 +56,14 @@ public class ToolAnalyzer
             _logger.LogWarning("azmcp program did not return any tools.");
             return;
         }
+
+        var toolsBaseFileName = await GetOutputFileNameAsync("tool", analysisTime, cancellationToken);
+        var toolsFileFullPath = Path.Combine(_workingDirectory, $"{toolsBaseFileName}.json)");
+
+        await Utility.SaveToolsToJsonAsync(currentTools, toolsFileFullPath);
+        _logger.LogInformation($"💾 Saved {currentTools.Tools?.Count} tools to {toolsFileFullPath}.");
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var existingTools = (await _azureMcpDatastore.GetAvailableToolsAsync(cancellationToken)).ToDictionary(x => x.ToolId);
 
@@ -66,7 +80,8 @@ public class ToolAnalyzer
         // then there is an update.
         var changes = new List<McpToolEvent>();
 
-        foreach (var tool in currentTools.Tools)
+        // Suppress Null deference warning: currentTools.Tools is checked for null above.
+        foreach (var tool in currentTools.Tools!)
         {
             if (string.IsNullOrEmpty(tool.Id))
             {
@@ -143,8 +158,8 @@ public class ToolAnalyzer
             return;
         }
 
-        var filename = $"tool_changes.{analysisTime.Ticks}.json";
-        var outputFile = Path.Combine(_workingDirectory, filename);
+        var filename = await GetOutputFileNameAsync("tool_changes", analysisTime, cancellationToken);
+        var outputFile = Path.Combine(_workingDirectory, $"{filename}.json)");
 
         _logger.LogInformation("Tool updates. Writing output to: {FileName}", outputFile);
 
@@ -175,6 +190,16 @@ public class ToolAnalyzer
             _logger.LogInformation("Updating datastore.");
             await _azureMcpDatastore.AddToolEventsAsync(changes, cancellationToken);
         }
+    }
+
+    internal async Task<string> GetOutputFileNameAsync(string baseName, DateTimeOffset analysisTime, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var serverVersion = await _azmcpProgram.GetServerVersionAsync();
+        var fileDate = _useAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
+
+        return $"{serverVersion}_{baseName}_{fileDate:yyyyMMddHHmmss}.json";
     }
 
     private static string? GetToolArea(Tool tool)

@@ -23,4 +23,10 @@ internal class CommandLineOptions
     /// Gets or sets the full path to the AzMcp executable file.
     /// </summary>
     public string? AzmcpExe { get; set; }
+
+    /// <summary>
+    /// True to use the analysis datetime for <see cref="Kusto.McpToolEvent.EventTime"/>, else the date of <see cref="AzmcpProgram.AzMcpBuildDateTime"/> is used.  Default value is true.
+    /// </summary>
+    /// <remarks>Setting value to false is useful for post-release analysis where the <see cref="AzmcpExe"/> was downloaded as a NuGet package.</remarks>
+    public bool? UseAnalysisTime { get; set; } = true;
 }
