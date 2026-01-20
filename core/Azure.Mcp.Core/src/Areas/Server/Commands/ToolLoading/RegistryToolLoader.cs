@@ -178,46 +178,72 @@ public sealed class RegistryToolLoader(
                 return;
             }
 
-            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
+            var startTime = Stopwatch.GetTimestamp();
+            _logger.LogInformation("Starting server discovery and initialization...");
 
-            foreach (var server in serverList)
+            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
+            var serverArray = serverList.ToArray();
+            _logger.LogInformation("Discovered {ServerCount} servers. Beginning parallel client initialization...", serverArray.Length);
+
+            // Parallelize server initialization to reduce startup time
+            var initializationTasks = serverArray.Select(async server =>
             {
                 var serverMetadata = server.CreateMetadata();
-                McpClient? mcpClient;
                 try
                 {
-                    mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
+                    var mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
+                    
+                    if (mcpClient == null)
+                    {
+                        _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
+                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                    }
+
+                    var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
+                    var filteredTools = toolsResponse
+                        .Select(t => t.ProtocolTool)
+                        .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                        .ToArray();
+
+                    return (serverMetadata.Name, mcpClient, (IEnumerable<Tool>?)filteredTools);
                 }
                 catch (InvalidOperationException ex)
                 {
                     _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                    continue;
+                    return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                    continue;
+                    return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
                 }
+            });
 
-                if (mcpClient == null)
+            var results = await Task.WhenAll(initializationTasks);
+            
+            var successCount = 0;
+            var toolCount = 0;
+            
+            // Process results and populate the client cache and tool map
+            foreach (var (serverName, mcpClient, tools) in results)
+            {
+                if (mcpClient != null && tools != null)
                 {
-                    _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
-                    continue;
-                }
-
-                // Add to discovered clients list for caching
-                _discoveredClients.Add(mcpClient);
-
-                var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-                var filteredTools = toolsResponse
-                    .Select(t => t.ProtocolTool)
-                    .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true));
-
-                foreach (var tool in filteredTools)
-                {
-                    _toolClientMap[tool.Name] = (serverMetadata.Name, mcpClient);
+                    _discoveredClients.Add(mcpClient);
+                    
+                    foreach (var tool in tools)
+                    {
+                        _toolClientMap[tool.Name] = (serverName, mcpClient);
+                        toolCount++;
+                    }
+                    successCount++;
                 }
             }
+
+            var elapsedMs = Stopwatch.GetElapsedTime(startTime).TotalMilliseconds;
+            _logger.LogInformation(
+                "Server initialization complete. Successfully initialized {SuccessCount}/{TotalCount} servers with {ToolCount} tools in {ElapsedMs:F0}ms",
+                successCount, serverArray.Length, toolCount, elapsedMs);
 
             _isInitialized = true;
         }
