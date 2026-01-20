@@ -49,6 +49,11 @@ public static class AzureMigrateOptionDefinitions
     public const string ConnectivitySubscriptionIdName = "connectivity-subscription-id";
 
     /// <summary>
+    /// The security subscription ID option name.
+    /// </summary>
+    public const string SecuritySubscriptionIdName = "security-subscription-id";
+
+    /// <summary>
     /// The regions option name.
     /// </summary>
     public const string RegionsName = "regions";
@@ -72,6 +77,11 @@ public static class AzureMigrateOptionDefinitions
     /// The organization name option name.
     /// </summary>
     public const string OrganizationNameName = "organization-name";
+
+    /// <summary>
+    /// The migrate project resource ID option name.
+    /// </summary>
+    public const string MigrateProjectResourceIdName = "migrate-project-resource-id";
 
     /// <summary>
     /// The user's question or modification request for landing zone guidance.
@@ -162,6 +172,17 @@ public static class AzureMigrateOptionDefinitions
     };
 
     /// <summary>
+    /// The security subscription ID (GUID format).
+    /// </summary>
+    public static readonly Option<string> SecuritySubscriptionId = new(
+        $"--{SecuritySubscriptionIdName}"
+    )
+    {
+        Description = "The Azure subscription ID for security resources (GUID format).",
+        Required = false
+    };
+
+    /// <summary>
     /// The comma-separated list of Azure regions.
     /// </summary>
     public static readonly Option<string> Regions = new(
@@ -202,7 +223,7 @@ public static class AzureMigrateOptionDefinitions
     )
     {
         Description = "The Azure Migrate project name for landing zone generation context.",
-        Required = false
+        Required = true
     };
 
     /// <summary>
@@ -213,6 +234,17 @@ public static class AzureMigrateOptionDefinitions
     )
     {
         Description = "The organization name for the landing zone.",
+        Required = false
+    };
+
+    /// <summary>
+    /// The full resource ID of the Azure Migrate project.
+    /// </summary>
+    public static readonly Option<string> MigrateProjectResourceId = new(
+        $"--{MigrateProjectResourceIdName}"
+    )
+    {
+        Description = "The full resource ID of the Azure Migrate project (alternative to subscription/resourceGroup/migrateProjectName).",
         Required = false
     };
 }

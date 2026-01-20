@@ -109,4 +109,80 @@ public class GetModificationGuidanceCommandTests
         Assert.NotEmpty(result.Guidance);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        // Arrange
+        var expectedException = new InvalidOperationException("Service error occurred");
+        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<string>(expectedException));
+
+        var parseResult = _commandDefinition.Parse(["--topic", "enable bastion"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
+        
+        // Verify logging
+        _logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("Error generating guidance for")),
+            expectedException,
+            Arg.Any<Func<object, Exception?, string>>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesHttpRequestException()
+    {
+        // Arrange
+        var httpException = new HttpRequestException("Network error", null, HttpStatusCode.ServiceUnavailable);
+        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<string>(httpException));
+
+        var parseResult = _commandDefinition.Parse(["--topic", "disable ddos"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Message);
+        
+        // Verify the exception was logged
+        _logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Any<object>(),
+            httpException,
+            Arg.Any<Func<object, Exception?, string>>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesArgumentException()
+    {
+        // Arrange
+        var argumentException = new ArgumentException("Invalid parameter", "topic");
+        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<string>(argumentException));
+
+        var parseResult = _commandDefinition.Parse(["--topic", "invalid input"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        
+        // Verify error was logged with correct question
+        _logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("invalid input")),
+            argumentException,
+            Arg.Any<Func<object, Exception?, string>>());
+    }
 }

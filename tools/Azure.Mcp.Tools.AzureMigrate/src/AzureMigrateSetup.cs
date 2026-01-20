@@ -41,18 +41,21 @@ public class AzureMigrateSetup : IAreaSetup
             Name,
             """
             Azure Landing Zone operations - Provides guidance and documentation for modifying Azure Landing Zone
-            templates and configurations. Helps with policy changes, service configuration, resource naming,
-            network topology, identity management, governance, and starter module customizations. This tool focuses
+            templates and configurations, and supports generating new platform landing zones. Helps with policy changes, 
+            service configuration, resource naming, network topology, identity management, governance, and starter module 
+            customizations. Can generate complete platform landing zone deployments with customizable parameters including 
+            region types, firewall configuration, network architecture, and subscription assignments. This tool focuses
             on providing best practices and recommendations for both platform and application landing zones across
             different deployment methods (Bicep, Terraform, Portal). Use this tool when you need guidance on
-            implementing or customizing Azure Landing Zones according to Microsoft's Cloud Adoption Framework.
+            implementing or customizing Azure Landing Zones, or when you need to generate a new platform landing zone
+            according to Microsoft's Cloud Adoption Framework.
             """,
             Title);
 
         // Create platform landing zone subgroup
         var platformLandingZone = new CommandGroup(
             "platformlandingzone",
-            "Platform landing zone operations - Commands for generating guidance on platform landing zone configuration and customization.");
+            "Platform landing zone operations - Commands for generating new platform landing zones and providing guidance on configuration and customization.");
         azureMigrate.AddSubGroup(platformLandingZone);
 
         // Register platform landing zone commands

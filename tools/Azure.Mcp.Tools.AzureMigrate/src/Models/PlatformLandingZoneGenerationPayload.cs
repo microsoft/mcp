@@ -6,55 +6,55 @@ namespace Azure.Mcp.Tools.AzureMigrate.Models;
 /// <summary>
 /// Payload for platform landing zone generation.
 /// </summary>
-public sealed class PlatformLandingZoneGenerationPayload
+public record PlatformLandingZoneGenerationPayload
 {
     /// <summary>
-    /// Gets or sets the region type.
+    /// Gets or initializes the region type.
     /// </summary>
-    public string? RegionType { get; set; }
+    public string? RegionType { get; init; }
 
     /// <summary>
-    /// Gets or sets the firewall type.
+    /// Gets or initializes the firewall type.
     /// </summary>
-    public string? FireWallType { get; set; }
+    public string? FireWallType { get; init; }
 
     /// <summary>
-    /// Gets or sets the network architecture.
+    /// Gets or initializes the network architecture.
     /// </summary>
-    public string? NetworkArchitecture { get; set; }
+    public string? NetworkArchitecture { get; init; }
 
     /// <summary>
-    /// Gets or sets the identity subscription ID.
+    /// Gets or initializes the identity subscription ID.
     /// </summary>
-    public string? IdentitySubscriptionId { get; set; }
+    public string? IdentitySubscriptionId { get; init; }
 
     /// <summary>
-    /// Gets or sets the management subscription ID.
+    /// Gets or initializes the management subscription ID.
     /// </summary>
-    public string? ManagementSubscriptionId { get; set; }
+    public string? ManagementSubscriptionId { get; init; }
 
     /// <summary>
-    /// Gets or sets the connectivity subscription ID.
+    /// Gets or initializes the connectivity subscription ID.
     /// </summary>
-    public string? ConnectivitySubscriptionId { get; set; }
+    public string? ConnectivitySubscriptionId { get; init; }
 
     /// <summary>
-    /// Gets or sets the version control system.
+    /// Gets or initializes the version control system.
     /// </summary>
-    public string? VersionControlSystem { get; set; }
+    public string? VersionControlSystem { get; init; }
 
     /// <summary>
-    /// Gets or sets the regions.
+    /// Gets or initializes the regions.
     /// </summary>
-    public string[]? Regions { get; set; }
+    public string[]? Regions { get; init; }
 
     /// <summary>
-    /// Gets or sets the service name (environment name).
+    /// Gets or initializes the service name (environment name).
     /// </summary>
-    public string? ServiceName { get; set; }
+    public string? ServiceName { get; init; }
 
     /// <summary>
-    /// Gets or sets the organization name.
+    /// Gets or initializes the organization name.
     /// </summary>
-    public string? OrganizationName { get; set; }
+    public string? OrganizationName { get; init; }
 }

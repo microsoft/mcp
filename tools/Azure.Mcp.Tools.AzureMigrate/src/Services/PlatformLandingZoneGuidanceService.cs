@@ -45,8 +45,8 @@ public sealed class PlatformLandingZoneGuidanceService(
         if (string.IsNullOrWhiteSpace(question))
             return BuildScenarioCatalog();
 
-        var policyMatches = await GetPolicyMatchesAsync(question, cancellationToken);
-        var scenarios = FindMatchingScenarios(question, policyMatches.Count > 0);
+        List<PolicyMatch> policyMatches = await GetPolicyMatchesAsync(question, cancellationToken);
+        List<AlzScenarioDefinition> scenarios = FindMatchingScenarios(question, policyMatches.Count > 0);
 
         if (policyMatches.Count > 0 && scenarios.Count == 0)
         {
@@ -186,8 +186,8 @@ public sealed class PlatformLandingZoneGuidanceService(
             if (ScenarioInstructionCache.TryGetValue(scenario.Key, out cached))
                 return cached;
 
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync(new Uri(scenario.DocumentationUrl), cancellationToken);
+            HttpClient httpClient = _httpClientFactory.CreateClient();
+            HttpResponseMessage response = await httpClient.GetAsync(new Uri(scenario.DocumentationUrl), cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to fetch {Url}: {Status}", scenario.DocumentationUrl, response.StatusCode);
@@ -211,7 +211,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
     private async Task<List<PolicyMatch>> GetPolicyMatchesAsync(string question, CancellationToken cancellationToken)
     {
-        await EnsurePolicyLocationCacheAsync(cancellationToken);
+        await EnsurePolicyLocationCacheAsync(_httpClientFactory, cancellationToken);
         var normalized = question.ToUpperInvariant();
         var matches = new List<PolicyMatch>();
 
@@ -225,7 +225,7 @@ public sealed class PlatformLandingZoneGuidanceService(
                 continue;
             }
 
-            var words = policy.Split(['-', '_', ' '], StringSplitOptions.RemoveEmptyEntries).Where(w => w.Length > 2);
+            IEnumerable<string> words = policy.Split(['-', '_', ' '], StringSplitOptions.RemoveEmptyEntries).Where(w => w.Length > 2);
             var matchCount = words.Count(w => normalized.Contains(w));
             var threshold = Math.Min(2, words.Count());
             
@@ -236,7 +236,7 @@ public sealed class PlatformLandingZoneGuidanceService(
         return matches;
     }
 
-    private async Task EnsurePolicyLocationCacheAsync(CancellationToken cancellationToken)
+    private static async Task EnsurePolicyLocationCacheAsync(IHttpClientFactory httpClientFactory, CancellationToken cancellationToken)
     {
         var cacheExpiry = TimeSpan.FromHours(6);
         if (PolicyLocationCache.Count > 0 && DateTime.UtcNow - s_policyCacheLoadedAt < cacheExpiry)
@@ -251,11 +251,11 @@ public sealed class PlatformLandingZoneGuidanceService(
             PolicyLocationCache.Clear();
             const string baseUrl = "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones-Library/main/platform/alz/archetype_definitions";
             
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient();
             foreach (var fileName in ArchetypeDefinitionFiles)
             {
                 var url = $"{baseUrl}/{fileName}";
-                using var response = await httpClient.GetAsync(new Uri(url), cancellationToken);
+                using HttpResponseMessage response = await httpClient.GetAsync(new Uri(url), cancellationToken);
                 if (!response.IsSuccessStatusCode)
                     continue;
 
@@ -267,14 +267,12 @@ public sealed class PlatformLandingZoneGuidanceService(
                 if (!doc.RootElement.TryGetProperty("policy_assignments", out var assignments))
                     continue;
 
-                foreach (var assignment in assignments.EnumerateArray())
+                foreach (var policy in assignments.EnumerateArray()
+                    .Select(a => a.GetString())
+                    .Where(p => !string.IsNullOrWhiteSpace(p)))
                 {
-                    var policy = assignment.GetString();
-                    if (string.IsNullOrWhiteSpace(policy))
-                        continue;
-
-                    if (!PolicyLocationCache.TryGetValue(policy, out var locs))
-                        PolicyLocationCache[policy] = locs = [];
+                    if (!PolicyLocationCache.TryGetValue(policy!, out var locs))
+                        PolicyLocationCache[policy!] = locs = [];
 
                     if (!locs.Any(l => l.SourceFileName.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
                         locs.Add(new PolicyLocation(archetype, fileName, url));

@@ -53,6 +53,12 @@ public class GenerateLandingZoneOptions : BaseAzureMigrateOptions
     public string? ConnectivitySubscriptionId { get; set; }
 
     /// <summary>
+    /// Gets or sets the security subscription ID (GUID format).
+    /// </summary>
+    [JsonPropertyName("securitySubscriptionId")]
+    public string? SecuritySubscriptionId { get; set; }
+
+    /// <summary>
     /// Gets or sets the comma-separated list of Azure regions.
     /// </summary>
     [JsonPropertyName("regions")]
@@ -81,4 +87,10 @@ public class GenerateLandingZoneOptions : BaseAzureMigrateOptions
     /// </summary>
     [JsonPropertyName("migrateProjectName")]
     public string? MigrateProjectName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the full resource ID of the Azure Migrate project.
+    /// </summary>
+    [JsonPropertyName("migrateProjectResourceId")]
+    public string? MigrateProjectResourceId { get; set; }
 }

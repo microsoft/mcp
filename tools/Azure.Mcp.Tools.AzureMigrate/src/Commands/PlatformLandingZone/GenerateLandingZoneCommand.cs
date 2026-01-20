@@ -39,11 +39,12 @@ public sealed class GenerateLandingZoneCommand(
     /// <inheritdoc/>
     public override string Description =>
         """
-        Always use this command when the user needs to generate a platform landing zone.
+        ALWAYS use this command when the user needs to generate/create a new platform landing zone.
         Collects necessary parameters, generates the landing zone, and provides download options.
 
         Actions:
         - update: Update cached parameters for landing zone generation (regionType, fireWallType, networkArchitecture, subscriptions, etc.)
+        - check: Check if a landing zone already exists for the Migrate project
         - generate: Generate a new platform landing zone (will prompt for missing parameters if not all provided)
         - download: Download the generated landing zone to local workspace
         - status: View current status of cached parameters and see what's missing
@@ -72,11 +73,13 @@ public sealed class GenerateLandingZoneCommand(
         - Assign default values where applicable if not provided.
 
         Example workflow:
-        1. Check status to see what's missing: action='status'
-        2. Update parameters: action='update' regionType='multi' fireWallType='azurefirewall' networkArchitecture='hubspoke' ...
-        3. Verify parameters: action='status'
-        4. Generate landing zone: action='generate' (will fail with helpful message if parameters missing)
-        5. Download files: action='download'
+        1. Check if landing zone already exists: action='check'
+        2. Check status to see what's missing: action='status'
+        3. Update parameters: action='update' regionType='multi' fireWallType='azurefirewall' networkArchitecture='hubspoke' ...
+        4. Verify parameters: action='status'
+        5. Generate landing zone: action='generate' (will fail with helpful message if parameters missing)
+        6. Download files: action='download'
+        7. Extract the downloaded zip to the root of the local workspace
         """;
 
     /// <inheritdoc/>
@@ -102,11 +105,13 @@ public sealed class GenerateLandingZoneCommand(
         command.Options.Add(AzureMigrateOptionDefinitions.IdentitySubscriptionId);
         command.Options.Add(AzureMigrateOptionDefinitions.ManagementSubscriptionId);
         command.Options.Add(AzureMigrateOptionDefinitions.ConnectivitySubscriptionId);
+        command.Options.Add(AzureMigrateOptionDefinitions.SecuritySubscriptionId);
         command.Options.Add(AzureMigrateOptionDefinitions.Regions);
         command.Options.Add(AzureMigrateOptionDefinitions.EnvironmentName);
         command.Options.Add(AzureMigrateOptionDefinitions.VersionControlSystem);
         command.Options.Add(AzureMigrateOptionDefinitions.OrganizationName);
         command.Options.Add(AzureMigrateOptionDefinitions.MigrateProjectName);
+        command.Options.Add(AzureMigrateOptionDefinitions.MigrateProjectResourceId);
     }
 
     /// <inheritdoc/>
@@ -121,11 +126,13 @@ public sealed class GenerateLandingZoneCommand(
         options.IdentitySubscriptionId = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.IdentitySubscriptionId.Name);
         options.ManagementSubscriptionId = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.ManagementSubscriptionId.Name);
         options.ConnectivitySubscriptionId = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.ConnectivitySubscriptionId.Name);
+        options.SecuritySubscriptionId = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.SecuritySubscriptionId.Name);
         options.Regions = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.Regions.Name);
         options.EnvironmentName = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.EnvironmentName.Name);
         options.VersionControlSystem = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.VersionControlSystem.Name);
         options.OrganizationName = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.OrganizationName.Name);
         options.MigrateProjectName = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.MigrateProjectName.Name)!;
+        options.MigrateProjectResourceId = parseResult.GetValueOrDefault<string>(AzureMigrateOptionDefinitions.MigrateProjectResourceId.Name);
         return options;
     }
 
@@ -171,10 +178,11 @@ public sealed class GenerateLandingZoneCommand(
             var result = action switch
             {
                 "update" => await HandleUpdateActionAsync(platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                "check" => await HandleCheckActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
                 "generate" => await HandleGenerateActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
                 "download" => await HandleDownloadActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
                 "status" => HandleStatusAction(platformLandingZoneService, landingZoneContext),
-                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: update, generate, download, status.")
+                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: update, check, generate, download, status.")
             };
 
             context.Response.Results = ResponseResult.Create(
@@ -220,6 +228,23 @@ public sealed class GenerateLandingZoneCommand(
         return message;
     }
 
+    private static async Task<string> HandleCheckActionAsync(
+        IPlatformLandingZoneService service,
+        PlatformLandingZoneContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await service.CheckExistingLandingZoneAsync(context, cancellationToken);
+
+        if (exists)
+        {
+            return $"Landing zone exists for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'." +
+                   " You can download it using the 'download' action and then extract the files to the root of your local workspace.";
+        }
+
+        return $"No landing zone found for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'. " +
+               "You can generate a new landing zone using the 'generate' action.";
+    }
+
     private static async Task<string> HandleGenerateActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
@@ -262,7 +287,7 @@ public sealed class GenerateLandingZoneCommand(
         var outputPath = Environment.CurrentDirectory;
         var filePath = await service.DownloadLandingZoneAsync(context, outputPath, cancellationToken);
 
-        return $"Landing zone downloaded successfully to: {filePath}";
+        return $"Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace." + "To make changes to the landing zone, you can use the 'GetModificationGuidance' command for guidance on modifying the configuration files.";
     }
 
     private static string HandleStatusAction(

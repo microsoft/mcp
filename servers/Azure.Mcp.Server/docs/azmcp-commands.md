@@ -1783,7 +1783,7 @@ azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
 
 ```bash
 # Get guidance and recommendations for modifying existing Platform Landing Zone (PLZ) configurations
-# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azuremigrate platformlandingzone getmodificationguidance --topic <modification-topic>
 ```
 

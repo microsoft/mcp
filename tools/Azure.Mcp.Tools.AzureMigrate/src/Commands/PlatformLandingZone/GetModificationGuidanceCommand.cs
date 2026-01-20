@@ -36,6 +36,7 @@ public sealed class GetModificationGuidanceCommand(
         """
         This tool should not be used to generate new landing zones from scratch.
         It is specifically designed to help you MODIFY existing Azure Landing Zone (ALZ) configurations
+        If the user wants to generate a new landing zone, they should use the 'generatelandingzone' command instead.
         Modifies the configuration files in your workspace, including:
         - Service configuration: DDoS protection, Bastion, DNS zones, Virtual Network Gateways, Azure Monitor Agent (AMA), Microsoft Defender, AMBA alerts
         - Policy management: changing enforcement modes, disabling/removing policy assignments, policy customization
@@ -50,10 +51,10 @@ public sealed class GetModificationGuidanceCommand(
         Examples: "enable DDoS protection", "turn off Bastion", "disable Enable-DDoS-VNET policy", "change IP ranges", 
         "customize resource names", "implement zero trust"
         
-        **IMPORTANT**: Always pass the user's COMPLETE question/request as the 'topic' parameter. Do not leave it empty.
+        **IMPORTANT**: You should pass the user's COMPLETE question/request as the 'topic' parameter so the tool has full context.
         
         Parameter:
-        - topic (required): Pass the user's complete question or modification request here
+        - topic: The user's complete question or modification request here
         """;
 
     /// <inheritdoc/>

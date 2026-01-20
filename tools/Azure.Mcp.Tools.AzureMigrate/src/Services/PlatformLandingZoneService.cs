@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 /// Service for platform landing zone operations.
 /// </summary>
 public sealed class PlatformLandingZoneService(
-    IHttpClientFactory httpClientFactory, ISubscriptionService subscriptionService, ITenantService tenantService,
+    ISubscriptionService subscriptionService, ITenantService tenantService,
     ILogger<PlatformLandingZoneService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IPlatformLandingZoneService
 {
     private const string ArmBaseUrl = "https://management.azure.com";
@@ -28,7 +28,6 @@ public sealed class PlatformLandingZoneService(
     private const int MaxPollingAttempts = 24;
     private const int PollingIntervalSeconds = 5;
     private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> s_parameterCache = new();
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly ILogger<PlatformLandingZoneService> _logger = logger;
 
     /// <inheritdoc/>
@@ -47,7 +46,7 @@ public sealed class PlatformLandingZoneService(
         CancellationToken cancellationToken = default)
     {
         var key = GetCacheKey(context);
-        var existing = s_parameterCache.GetOrAdd(key, _ => new PlatformLandingZoneParameters
+        PlatformLandingZoneParameters existing = s_parameterCache.GetOrAdd(key, _ => new PlatformLandingZoneParameters
         {
             RegionType = null,
             FireWallType = null,
@@ -67,9 +66,9 @@ public sealed class PlatformLandingZoneService(
             throw new ArgumentException("regionType must be 'single' or 'multi'", nameof(regionType));
         }
 
-        if (fireWallType != null && fireWallType != "azurefirewall" && fireWallType != "nva" && fireWallType != "none")
+        if (fireWallType != null && fireWallType != "azurefirewall" && fireWallType != "nva")
         {
-            throw new ArgumentException("fireWallType must be 'azurefirewall', 'nva', or 'none'", nameof(fireWallType));
+            throw new ArgumentException("fireWallType must be 'azurefirewall', 'nva'", nameof(fireWallType));
         }
 
         if (networkArchitecture != null && networkArchitecture != "hubspoke" && networkArchitecture != "vwan")
@@ -77,7 +76,7 @@ public sealed class PlatformLandingZoneService(
             throw new ArgumentException("networkArchitecture must be 'hubspoke' or 'vwan'", nameof(networkArchitecture));
         }
 
-        var updated = existing with
+        PlatformLandingZoneParameters updated = existing with
         {
             RegionType = regionType ?? existing.RegionType,
             FireWallType = fireWallType ?? existing.FireWallType,
@@ -93,7 +92,6 @@ public sealed class PlatformLandingZoneService(
         };
 
         s_parameterCache[key] = updated;
-        _logger.LogInformation("Updated parameters for {Key}. Complete: {IsComplete}", key, updated.IsComplete);
 
         return Task.FromResult(updated);
     }
@@ -104,7 +102,7 @@ public sealed class PlatformLandingZoneService(
         CancellationToken cancellationToken = default)
     {
         string? tenant = null;
-        var url = $"{ArmBaseUrl}/subscriptions/{context.SubscriptionId}/resourceGroups/{context.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{context.MigrateProjectName}?api-version={ApiVersion}";
+        var url = $"{ArmBaseUrl}/subscriptions/{context.SubscriptionId}/resourceGroups/{context.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{context.MigrateProjectName}/CheckPlatformLandingZone?api-version={ApiVersion}";
 
         _logger.LogInformation("Checking existing landing zone at {Url}", url);
 
@@ -213,8 +211,8 @@ public sealed class PlatformLandingZoneService(
 
         _logger.LogInformation("Downloading landing zone from {Url} to {Path}", downloadUrl, outputPath);
 
-        var downloadClient = _httpClientFactory.CreateClient();
-        var downloadResponse = await downloadClient.GetAsync(downloadUrl, cancellationToken);
+        HttpClient downloadClient = TenantService.GetClient();
+        HttpResponseMessage downloadResponse = await downloadClient.GetAsync(downloadUrl, cancellationToken);
         downloadResponse.EnsureSuccessStatusCode();
 
         var content = await downloadResponse.Content.ReadAsByteArrayAsync(cancellationToken);
@@ -252,7 +250,7 @@ public sealed class PlatformLandingZoneService(
 
         if (!parameters.IsComplete)
         {
-            var missing = GetMissingParameters(context);
+            List<string> missing = GetMissingParameters(context);
             status.AppendLine($"  Missing: {string.Join(", ", missing)}");
         }
 
@@ -307,22 +305,6 @@ public sealed class PlatformLandingZoneService(
         {
             throw new InvalidOperationException("PlatformLandingZone creation failed");
         }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(responseContent);
-            if (doc.RootElement.TryGetProperty("message", out var messageElement))
-            {
-                var message = messageElement.GetString();
-                if (IsFailureMessage(message))
-                {
-                    throw new InvalidOperationException(message ?? "PlatformLandingZone creation failed");
-                }
-            }
-        }
-        catch (JsonException)
-        {
-        }
     }
 
     private static bool IsFailureMessage(string? message) =>
@@ -334,9 +316,9 @@ public sealed class PlatformLandingZoneService(
 
     private async Task<HttpClient> GetAuthenticatedHttpClientAsync(string? tenant, CancellationToken cancellationToken)
     {
-        var httpClient = TenantService.GetClient();
-        var credential = await TenantService.GetTokenCredentialAsync(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
+        HttpClient httpClient = TenantService.GetClient();
+        TokenCredential credential = await TenantService.GetTokenCredentialAsync(tenant, cancellationToken);
+        AccessToken token = await credential.GetTokenAsync(
             new TokenRequestContext(["https://management.azure.com/.default"]), cancellationToken);
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         return httpClient;
@@ -373,18 +355,18 @@ public sealed class PlatformLandingZoneService(
 
     private async Task<string> MakeHttpGetRequestAsync(string url, string? tenant, CancellationToken cancellationToken)
     {
-        var httpClient = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
-        var response = await httpClient.GetAsync(url, cancellationToken);
+        HttpClient httpClient = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        HttpResponseMessage response = await httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
     private async Task<string> MakeHttpPostRequestAsync<TPayload>(string url, TPayload payload, JsonSerializerContext context, string? tenant, CancellationToken cancellationToken)
     {
-        var httpClient = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        HttpClient httpClient = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
         var json = JsonSerializer.Serialize(payload, typeof(TPayload), context);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(url, content, cancellationToken);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await httpClient.PostAsync(url, content, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
     } 
