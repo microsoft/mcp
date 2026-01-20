@@ -186,4 +186,4 @@ builder.Services.AddHybridCache(options =>
 ## Additional Resources
 
 - [HybridCache in ASP.NET Core](https://learn.microsoft.com/aspnet/core/performance/caching/hybrid)
-- [YARP forwarder configuration](https://microsoft.github.io/reverse-proxy/articles/configure-forwarder.html)
+- [YARP forwarder configuration](https://learn.microsoft.com/aspnet/core/fundamentals/servers/yarp/direct-forwarding)
