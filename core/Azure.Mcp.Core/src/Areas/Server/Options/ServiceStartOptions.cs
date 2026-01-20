@@ -81,4 +81,14 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("supportLoggingFolder")]
     public string? SupportLoggingFolder { get; set; } = null;
+
+    /// <summary>
+    /// Determines whether the server is running in HTTP mode with On-Behalf-Of authentication.
+    /// </summary>
+    /// <returns>True if running in HTTP transport with On-Behalf-Of authentication; false otherwise.</returns>
+    public bool IsHttpOnBehalfOfMode()
+    {
+        return Transport == TransportTypes.Http
+            && OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf;
+    }
 }
