@@ -4,12 +4,15 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
 
 public class Utility
 {
+    public const string RepositoryRootSolution = "AzureMcp.sln";
+
     public const string NewLineRegexPattern = "\r\n|\n|\r";
 
     private readonly ILogger<Utility> _logger;
@@ -227,7 +230,7 @@ public class Utility
 
         while (dir != null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, Constants.RepositoryRootSolution)) ||
+            if (File.Exists(Path.Combine(dir.FullName, RepositoryRootSolution)) ||
                 Directory.Exists(Path.Combine(dir.FullName, ".git")))
             {
                 return dir.FullName;
@@ -235,7 +238,7 @@ public class Utility
             dir = dir.Parent;
         }
 
-        throw new InvalidOperationException($"Could not find repo root {Constants.RepositoryRootSolution} or .git).");
+        throw new InvalidOperationException($"Could not find repo root {RepositoryRootSolution} or .git).");
     }
 
     internal static class UnicodeChars
