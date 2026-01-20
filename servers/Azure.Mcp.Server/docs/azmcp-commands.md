@@ -227,9 +227,9 @@ The `azmcp server start` command supports the following options:
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
-| `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
+| `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
 
-> **⚠️ Security Warning for `--insecure-disable-elicitation`:**
+> **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
 > This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
@@ -240,7 +240,7 @@ The `azmcp server start` command supports the following options:
 > **Example usage (use with caution):**
 > ```bash
 > # For automated scenarios only - bypasses security prompts
-> azmcp server start --insecure-disable-elicitation
+> azmcp server start --dangerously-disable-elicitation
 > ```
 
 #### Server Info
@@ -1252,7 +1252,7 @@ Tools that handle sensitive data such as secrets require user consent before exe
 > - Certificate private keys
 > - Other confidential data
 >
-> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--insecure-disable-elicitation` server start option, but this should only be used in trusted environments.
+> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--dangerously-disable-elicitation` server start option, but this should only be used in trusted environments.
 
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
@@ -1816,6 +1816,14 @@ azmcp quota region availability list --subscription <subscription> \
 azmcp quota usage check --subscription <subscription> \
                         --region <region> \
                         --resource-types <resource-types>
+```
+
+### Azure Policy Operations
+```bash
+# List Azure Policy Assignments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp policy assignment list --subscription <subscription> \
+                             --scope <scope>
 ```
 
 ### Azure RBAC Operations

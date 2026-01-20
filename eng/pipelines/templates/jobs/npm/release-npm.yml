@@ -8,7 +8,7 @@ parameters:
 
 jobs:
 - deployment: PublishNpm
-  displayName: "Publish to npmjs.com"
+  displayName: "Publish to npmjs.com and 1ES MCP registry"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   templateContext:
@@ -106,6 +106,12 @@ jobs:
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
               MainPublisher: 'ESRPRELPACMANTEST'
               ProductState: latest
+        - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
+          parameters:
+            PathToArtifacts: $(Pipeline.Workspace)/drop
+            Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
+            ServiceConnection: 'Azure SDK MCP Server Connection'
+            Tag: latest
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop

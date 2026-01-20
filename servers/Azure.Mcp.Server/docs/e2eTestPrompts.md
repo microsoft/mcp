@@ -277,45 +277,45 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
-## Azure FileShares
+## Azure File Shares
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| fileshares_fileshare_create | Create a new file share <file_share_name> in storage account <account_name> in resource group <resource_group_name> |
-| fileshares_fileshare_create | Create file share <file_share_name> in account <account_name> with quota 100 GB |
-| fileshares_fileshare_create | Create a file share named <file_share_name> in storage account <account_name> with access tier Hot |
-| fileshares_fileshare_create | Set up a new file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_delete | Delete the file share <file_share_name> from storage account <account_name> in resource group <resource_group_name> |
-| fileshares_fileshare_delete | Remove file share <file_share_name> from account <account_name> |
-| fileshares_fileshare_get | List all file shares in storage account <account_name> |
-| fileshares_fileshare_get | Show me the file shares in storage account <account_name> in resource group <resource_group_name> |
-| fileshares_fileshare_get | Get details of file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_get | Show me the file share <file_share_name> in account <account_name> |
-| fileshares_fileshare_get | What file shares exist in storage account <account_name>? |
-| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> |
-| fileshares_fileshare_limits_get | What are the file share limits in my subscription? |
-| fileshares_fileshare_limits_get | Show me the file share service limits |
+| fileshares_fileshare_create | Create a new file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_create | Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage |
+| fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> |
+| fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> |
+| fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | List all file shares in my subscription |
+| fileshares_fileshare_get | Show me the file shares in resource group <resource_group_name> |
+| fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? |
+| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> in location <location> |
+| fileshares_fileshare_limits_get | What are the file share limits in my subscription for location <location>? |
+| fileshares_fileshare_limits_get | Show me the file share service limits in location <location> |
 | fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
 | fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
 | fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
-| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |
-| fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in account <account_name> |
+| fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> |
-| fileshares_fileshare_snapshot_delete | Delete the snapshot <snapshot_id> from file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_delete | Delete the snapshot <snapshot_id> from file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_delete | Remove snapshot <snapshot_id> from file share <file_share_name> |
-| fileshares_fileshare_snapshot_get | List all snapshots for file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_snapshot_get | Show me the snapshots of file share <file_share_name> in account <account_name> |
+| fileshares_fileshare_snapshot_get | List all snapshots for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_get | Show me the snapshots of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
-| fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
-| fileshares_fileshare_update | Update file share <file_share_name> in storage account <account_name> |
-| fileshares_fileshare_update | Update the quota for file share <file_share_name> to 200 GB |
-| fileshares_fileshare_update | Change the access tier of file share <file_share_name> to Cool |
-| fileshares_fileshare_update | Modify file share <file_share_name> in account <account_name> with new settings |
-| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in storage account <account_name> |
+| fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
+| fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
+| fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
+| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
 | fileshares_fileshare_usage_get | What is the current usage of file share <file_share_name>? |
 
@@ -578,6 +578,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
 | resourcehealth_health-events_list | List active service health events in my subscription |
 | resourcehealth_health-events_list | Show me planned maintenance events for my Azure services |
+
+## Azure Policy
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| policy_assignment_list | List Azure Policies in the subscription <subscription_id> |
+
 
 ## Azure Service Bus
 

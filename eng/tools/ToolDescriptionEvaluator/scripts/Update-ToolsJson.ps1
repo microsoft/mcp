@@ -38,8 +38,8 @@ Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
 # Resolve important paths
-$repoRoot = Resolve-Path "$PSScriptRoot/../../../" | Select-Object -ExpandProperty Path
-$toolDir  = Resolve-Path "$PSScriptRoot" | Select-Object -ExpandProperty Path
+$repoRoot = Resolve-Path "$PSScriptRoot/../../../../" | Select-Object -ExpandProperty Path
+$toolDir  = Resolve-Path "$PSScriptRoot/../src" | Select-Object -ExpandProperty Path
 $jsonFile = "$toolDir/tools.json"
 
 # Build the whole Azure MCP Server project if needed

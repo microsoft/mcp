@@ -66,24 +66,24 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{   2. Search for `chat.mcp.autostart`.}} -->
 <!-- insert-section: vsix {{   3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.}} -->
 <!-- insert-section: vsix {{   4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.}} -->
-<!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ToolTip.png)}}-->
+<!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/images/vsix/ToolTip.png)}}-->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   #### **Manual Start (if autostart is off)**}} -->
 <!-- insert-section: vsix {{   1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).}} -->
 <!-- insert-section: vsix {{   2. Run `MCP: List Servers`.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ListServers.png)}} -->
+<!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/images/vsix/ListServers.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   3. Select `Azure MCP Server ext`, then click **Start Server**.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/SelectServer.png)}} -->
-<!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/StartServer.png)}} -->
+<!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/images/vsix/SelectServer.png)}} -->
+<!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/images/vsix/StartServer.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   4. **Check That It's Running**}} -->
 <!-- insert-section: vsix {{      - Go to the **Output** tab in VS Code.}} -->
 <!-- insert-section: vsix {{      - Look for log messages confirming the server started successfully.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/Output.png)}} -->
+<!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/images/vsix/Output.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
@@ -572,7 +572,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
-- � **Azure FileShares** - Azure managed file share operations
+- � **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -581,6 +581,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 📈 **Azure Monitor** - Logging, metrics, and health monitoring
+- ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
