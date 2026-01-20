@@ -50,9 +50,9 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
         }
 
         return new Recommendation(
-                ResourceId: advisorRecommendation?.Properties?.ResourceMetadata?.ResourceId ?? "Unknown",
-                RecommendationText: advisorRecommendation?.Properties?.ShortDescription?.Problem ?? "Unknown",
-                Category: advisorRecommendation?.Properties?.Category ?? "Unknown"
+                ResourceId: advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown",
+                RecommendationText: advisorRecommendation.Properties?.ShortDescription?.Problem ?? "Unknown",
+                Category: advisorRecommendation.Properties?.Category ?? "Unknown"
             );
     }
 }
