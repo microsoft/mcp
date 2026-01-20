@@ -5,7 +5,7 @@ using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public interface ICosmosService : IDisposable, IAsyncDisposable
+public interface ICosmosService : IAsyncDisposable
 {
     Task<List<string>> GetCosmosAccounts(
         string subscription,
