@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -11,7 +12,7 @@ namespace Azure.Mcp.Core.UnitTests.Services.Azure.Authentication;
 
 /// <summary>
 /// Tests for AzureCloudConfiguration to verify sovereign cloud support.
-/// These tests verify that cloud names and custom URLs are correctly parsed to authority hosts.
+/// These tests verify that cloud names and custom URLs are correctly parsed to authority hosts and ARM environments.
 /// </summary>
 public class AzureCloudConfigurationTests
 {
@@ -45,6 +46,89 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
+    /// Tests that well-known cloud names are correctly mapped to their ARM environments.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureCloud")]
+    [InlineData("AzurePublicCloud")]
+    [InlineData("public")]
+    public void ParseCloudValue_PublicCloud_ReturnsPublicArmEnvironment(string cloudName)
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(ArmEnvironment.AzurePublicCloud, cloudConfig.ArmEnvironment);
+    }
+
+    /// <summary>
+    /// Tests that US Government cloud names are correctly mapped to their ARM environment.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureUSGovernment")]
+    [InlineData("AzureUSGovernmentCloud")]
+    [InlineData("usgov")]
+    [InlineData("usgovernment")]
+    public void ParseCloudValue_USGovernmentCloud_ReturnsGovernmentArmEnvironment(string cloudName)
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(ArmEnvironment.AzureGovernment, cloudConfig.ArmEnvironment);
+    }
+
+    /// <summary>
+    /// Tests that China cloud names are correctly mapped to their ARM environment.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureChinaCloud")]
+    [InlineData("china")]
+    public void ParseCloudValue_ChinaCloud_ReturnsChinaArmEnvironment(string cloudName)
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(ArmEnvironment.AzureChina, cloudConfig.ArmEnvironment);
+    }
+
+    /// <summary>
+    /// Tests that Germany cloud names are correctly mapped to their ARM environment.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureGermanyCloud")]
+    [InlineData("germany")]
+    public void ParseCloudValue_GermanyCloud_ReturnsGermanyArmEnvironment(string cloudName)
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(ArmEnvironment.AzureGermany, cloudConfig.ArmEnvironment);
+    }
+
+    /// <summary>
     /// Tests that custom HTTPS URLs are correctly parsed as authority hosts.
     /// </summary>
     [Theory]
@@ -66,6 +150,26 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
+    /// Tests that custom HTTPS URLs default to public cloud ARM environment.
+    /// </summary>
+    [Theory]
+    [InlineData("https://login.custom-cloud.com")]
+    [InlineData("https://login.mycustomcloud.de")]
+    public void ParseCloudValue_CustomUrls_DefaultsToPublicArmEnvironment(string customUrl)
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = customUrl })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(ArmEnvironment.AzurePublicCloud, cloudConfig.ArmEnvironment);
+    }
+
+    /// <summary>
     /// Tests that when no cloud configuration is provided, the default public cloud is used.
     /// </summary>
     [Fact]
@@ -79,6 +183,7 @@ public class AzureCloudConfigurationTests
 
         // Assert
         Assert.Equal(new Uri("https://login.microsoftonline.com"), cloudConfig.AuthorityHost);
+        Assert.Equal(ArmEnvironment.AzurePublicCloud, cloudConfig.ArmEnvironment);
     }
 
     /// <summary>
