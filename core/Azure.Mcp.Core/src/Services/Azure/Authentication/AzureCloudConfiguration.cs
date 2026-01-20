@@ -19,7 +19,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
     /// </summary>
     /// <param name="configuration">The configuration to read from.</param>
-    /// <param name="serviceStartOptions">The service start options (may not be configured yet).</param>
+    /// <param name="serviceStartOptions">Optional service start options that can provide the cloud configuration.</param>
     public AzureCloudConfiguration(IConfiguration configuration, IOptions<ServiceStartOptions>? serviceStartOptions = null)
     {
         // Try to get cloud configuration from various sources in priority order:
