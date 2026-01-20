@@ -18,7 +18,7 @@ public class AzureMigrateSetup : IAreaSetup
     public string Name => "azuremigrate";
 
     /// <inheritdoc/>
-    public string Title => "Azure Landing Zone Guidance";
+    public string Title => "Azure Landing Zone Generation and Guidance";
 
     /// <inheritdoc/>
     public void ConfigureServices(IServiceCollection services)
@@ -26,12 +26,12 @@ public class AzureMigrateSetup : IAreaSetup
         // Register guidance service and command
         services.AddSingleton<IPlatformLandingZoneGuidanceService, PlatformLandingZoneGuidanceService>();
         services.AddHttpClient<PlatformLandingZoneGuidanceService>();
-        services.AddSingleton<GetModificationGuidanceCommand>();
+        services.AddSingleton<GetGuidanceCommand>();
 
         // Register landing zone service and command
         services.AddSingleton<IPlatformLandingZoneService, PlatformLandingZoneService>();
         services.AddHttpClient<PlatformLandingZoneService>();
-        services.AddSingleton<GenerateLandingZoneCommand>();
+        services.AddSingleton<GenerateCommand>();
     }
 
     /// <inheritdoc/>
@@ -59,11 +59,11 @@ public class AzureMigrateSetup : IAreaSetup
         azureMigrate.AddSubGroup(platformLandingZone);
 
         // Register platform landing zone commands
-        var platformLandingZoneGetModificationGuidance = serviceProvider.GetRequiredService<GetModificationGuidanceCommand>();
-        platformLandingZone.AddCommand(platformLandingZoneGetModificationGuidance.Name, platformLandingZoneGetModificationGuidance);
+        var platformLandingZoneGetGuidance = serviceProvider.GetRequiredService<GetGuidanceCommand>();
+        platformLandingZone.AddCommand(platformLandingZoneGetGuidance.Name, platformLandingZoneGetGuidance);
 
-        var platformLandingZoneGenerateLandingZone = serviceProvider.GetRequiredService<GenerateLandingZoneCommand>();
-        platformLandingZone.AddCommand(platformLandingZoneGenerateLandingZone.Name, platformLandingZoneGenerateLandingZone);
+        var platformLandingZoneGenerate = serviceProvider.GetRequiredService<GenerateCommand>();
+        platformLandingZone.AddCommand(platformLandingZoneGenerate.Name, platformLandingZoneGenerate);
 
         return azureMigrate;
     }

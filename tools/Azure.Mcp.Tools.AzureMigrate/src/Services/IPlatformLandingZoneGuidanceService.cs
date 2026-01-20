@@ -14,5 +14,5 @@ public interface IPlatformLandingZoneGuidanceService
     /// <param name="question">The user's question or modification request.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The guidance response.</returns>
-    Task<string> GetModificationGuidanceAsync(string question, CancellationToken cancellationToken = default);
+    Task<string> GetGuidanceAsync(string question, CancellationToken cancellationToken = default);
 }

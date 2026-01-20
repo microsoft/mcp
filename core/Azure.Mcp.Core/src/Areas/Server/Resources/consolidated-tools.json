@@ -3067,7 +3067,7 @@
         }
       },
       "mappedToolList": [
-        "azuremigrate_platformlandingzone_generatelandingzone"
+        "azuremigrate_platformlandingzone_generate"
       ]
     },
     {
@@ -3100,7 +3100,7 @@
         }
       },
       "mappedToolList": [
-        "azuremigrate_platformlandingzone_getmodificationguidance"
+        "azuremigrate_platformlandingzone_getguidance"
       ]
     }
   ]

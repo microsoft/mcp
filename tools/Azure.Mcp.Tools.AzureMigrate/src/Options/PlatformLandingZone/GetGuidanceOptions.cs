@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 
 /// <summary>
-/// Options for the platform landing zone get modification guidance command.
+/// Options for the platform landing zone get guidance command.
 /// </summary>
-public class GetModificationGuidanceOptions : BaseAzureMigrateOptions
+public class GetGuidanceOptions : BaseAzureMigrateOptions
 {
     /// <summary>
     /// Gets or sets the user's question or modification request for the landing zone.

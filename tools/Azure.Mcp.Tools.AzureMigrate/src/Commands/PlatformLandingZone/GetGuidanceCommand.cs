@@ -18,25 +18,25 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
-public sealed class GetModificationGuidanceCommand(
-    ILogger<GetModificationGuidanceCommand> logger)
-    : BaseAzureMigrateCommand<GetModificationGuidanceOptions>()
+public sealed class GetGuidanceCommand(
+    ILogger<GetGuidanceCommand> logger)
+    : BaseAzureMigrateCommand<GetGuidanceOptions>()
 {
     private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
-    private readonly ILogger<GetModificationGuidanceCommand> _logger = logger;
+    private readonly ILogger<GetGuidanceCommand> _logger = logger;
 
     /// <inheritdoc/>
     public override string Id => "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b";
 
     /// <inheritdoc/>
-    public override string Name => "getmodificationguidance";
+    public override string Name => "getguidance";
 
     /// <inheritdoc/>
     public override string Description =>
         """
         This tool should not be used to generate new landing zones from scratch.
         It is specifically designed to help you MODIFY existing Azure Landing Zone (ALZ) configurations
-        If the user wants to generate a new landing zone, they should use the 'generatelandingzone' command instead.
+        If the user wants to generate a new landing zone, they should use the 'generate' command instead.
         Modifies the configuration files in your workspace, including:
         - Service configuration: DDoS protection, Bastion, DNS zones, Virtual Network Gateways, Azure Monitor Agent (AMA), Microsoft Defender, AMBA alerts
         - Policy management: changing enforcement modes, disabling/removing policy assignments, policy customization
@@ -79,7 +79,7 @@ public sealed class GetModificationGuidanceCommand(
     }
 
     /// <inheritdoc/>
-    protected override GetModificationGuidanceOptions BindOptions(ParseResult parseResult)
+    protected override GetGuidanceOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Topic = parseResult.GetValueOrDefault(AzureMigrateOptionDefinitions.Topic) ?? string.Empty;
@@ -97,7 +97,7 @@ public sealed class GetModificationGuidanceCommand(
 
         var options = BindOptions(parseResult);
         var question = options.Topic?.Trim() ?? string.Empty;
-        
+
         if (string.IsNullOrWhiteSpace(question) && parseResult.UnmatchedTokens != null && parseResult.UnmatchedTokens.Any())
         {
             question = string.Join(" ", parseResult.UnmatchedTokens).Trim();
@@ -107,11 +107,11 @@ public sealed class GetModificationGuidanceCommand(
         try
         {
             var service = context.GetService<IPlatformLandingZoneGuidanceService>();
-            var guidance = await service.GetModificationGuidanceAsync(question, cancellationToken);
+            var guidance = await service.GetGuidanceAsync(question, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new GetModificationGuidanceCommandResult(guidance),
-                AzureMigrateJsonContext.Default.GetModificationGuidanceCommandResult);
+                new GetGuidanceCommandResult(guidance),
+                AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
         }
         catch (Exception ex)
         {
@@ -122,6 +122,6 @@ public sealed class GetModificationGuidanceCommand(
         return context.Response;
     }
 
-    internal record GetModificationGuidanceCommandResult(
+    internal record GetGuidanceCommandResult(
         [property: JsonPropertyName("guidance")] string Guidance);
 }

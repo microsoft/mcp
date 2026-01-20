@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 /// <summary>
 /// Options for the platform landing zone generate landing zone command.
 /// </summary>
-public class GenerateLandingZoneOptions : BaseAzureMigrateOptions
+public class GenerateOptions : BaseAzureMigrateOptions
 {
     /// <summary>
     /// Gets or sets the action to perform (update, generate, download, status).

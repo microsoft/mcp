@@ -40,7 +40,7 @@ public sealed class PlatformLandingZoneGuidanceService(
     ];
 
     /// <inheritdoc/>
-    public async Task<string> GetModificationGuidanceAsync(string question, CancellationToken cancellationToken = default)
+    public async Task<string> GetGuidanceAsync(string question, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(question))
             return BuildScenarioCatalog();
@@ -218,7 +218,7 @@ public sealed class PlatformLandingZoneGuidanceService(
         foreach (var (policyName, locations) in PolicyLocationCache)
         {
             var policy = policyName.ToUpperInvariant();
-            
+
             if (normalized.Contains(policy))
             {
                 matches.Add(new PolicyMatch(policyName, locations));
@@ -228,7 +228,7 @@ public sealed class PlatformLandingZoneGuidanceService(
             IEnumerable<string> words = policy.Split(['-', '_', ' '], StringSplitOptions.RemoveEmptyEntries).Where(w => w.Length > 2);
             var matchCount = words.Count(w => normalized.Contains(w));
             var threshold = Math.Min(2, words.Count());
-            
+
             if (matchCount >= threshold)
                 matches.Add(new PolicyMatch(policyName, locations));
         }
@@ -250,7 +250,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
             PolicyLocationCache.Clear();
             const string baseUrl = "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones-Library/main/platform/alz/archetype_definitions";
-            
+
             var httpClient = httpClientFactory.CreateClient();
             foreach (var fileName in ArchetypeDefinitionFiles)
             {
@@ -260,7 +260,7 @@ public sealed class PlatformLandingZoneGuidanceService(
                     continue;
 
                 using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-                var archetype = doc.RootElement.TryGetProperty("name", out var n) 
+                var archetype = doc.RootElement.TryGetProperty("name", out var n)
                     ? n.GetString() ?? Path.GetFileNameWithoutExtension(fileName)
                     : Path.GetFileNameWithoutExtension(fileName);
 

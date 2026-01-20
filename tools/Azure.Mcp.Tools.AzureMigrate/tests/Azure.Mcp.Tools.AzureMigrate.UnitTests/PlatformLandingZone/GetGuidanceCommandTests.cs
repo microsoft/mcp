@@ -12,18 +12,18 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
-public class GetModificationGuidanceCommandTests
+public class GetGuidanceCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<GetModificationGuidanceCommand> _logger;
+    private readonly ILogger<GetGuidanceCommand> _logger;
     private readonly IPlatformLandingZoneGuidanceService _guidanceService;
-    private readonly GetModificationGuidanceCommand _command;
+    private readonly GetGuidanceCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public GetModificationGuidanceCommandTests()
+    public GetGuidanceCommandTests()
     {
-        _logger = Substitute.For<ILogger<GetModificationGuidanceCommand>>();
+        _logger = Substitute.For<ILogger<GetGuidanceCommand>>();
         _guidanceService = Substitute.For<IPlatformLandingZoneGuidanceService>();
 
         var collection = new ServiceCollection();
@@ -38,7 +38,7 @@ public class GetModificationGuidanceCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("getmodificationguidance", command.Name);
+        Assert.Equal("getguidance", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -50,7 +50,7 @@ public class GetModificationGuidanceCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args)
     {
         // Arrange
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns("Sample guidance response");
 
         // Act
@@ -67,7 +67,7 @@ public class GetModificationGuidanceCommandTests
     public async Task ExecuteAsync_ReturnsScenarioCatalog_WhenEmptyQuestion()
     {
         // Arrange
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns("Available Azure Landing Zone modification scenarios: ...");
 
         var parseResult = _commandDefinition.Parse([]);
@@ -80,7 +80,7 @@ public class GetModificationGuidanceCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetModificationGuidanceCommandResult);
+        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Available Azure Landing Zone modification scenarios", result.Guidance);
@@ -90,7 +90,7 @@ public class GetModificationGuidanceCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns("Bastion guidance: To enable Bastion, configure...");
 
         var parseResult = _commandDefinition.Parse(["--topic", "bastion"]);
@@ -103,7 +103,7 @@ public class GetModificationGuidanceCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetModificationGuidanceCommandResult);
+        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.Guidance);
@@ -114,7 +114,7 @@ public class GetModificationGuidanceCommandTests
     {
         // Arrange
         var expectedException = new InvalidOperationException("Service error occurred");
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(expectedException));
 
         var parseResult = _commandDefinition.Parse(["--topic", "enable bastion"]);
@@ -140,7 +140,7 @@ public class GetModificationGuidanceCommandTests
     {
         // Arrange
         var httpException = new HttpRequestException("Network error", null, HttpStatusCode.ServiceUnavailable);
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(httpException));
 
         var parseResult = _commandDefinition.Parse(["--topic", "disable ddos"]);
@@ -166,7 +166,7 @@ public class GetModificationGuidanceCommandTests
     {
         // Arrange
         var argumentException = new ArgumentException("Invalid parameter", "topic");
-        _guidanceService.GetModificationGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(argumentException));
 
         var parseResult = _commandDefinition.Parse(["--topic", "invalid input"]);

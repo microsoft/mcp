@@ -20,18 +20,18 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to generate and download platform landing zone configurations.
 /// </summary>
-public sealed class GenerateLandingZoneCommand(
-    ILogger<GenerateLandingZoneCommand> logger)
-    : SubscriptionCommand<GenerateLandingZoneOptions>()
+public sealed class GenerateCommand(
+    ILogger<GenerateCommand> logger)
+    : SubscriptionCommand<GenerateOptions>()
 {
     private const string CommandTitle = "Generate and Download Platform Landing Zone";
-    private readonly ILogger<GenerateLandingZoneCommand> _logger = logger;
+    private readonly ILogger<GenerateCommand> _logger = logger;
 
     /// <inheritdoc/>
     public override string Id => "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b";
 
     /// <inheritdoc/>
-    public override string Name => "generatelandingzone";
+    public override string Name => "generate";
 
     /// <inheritdoc/>
     public override string Title => CommandTitle;
@@ -115,7 +115,7 @@ public sealed class GenerateLandingZoneCommand(
     }
 
     /// <inheritdoc/>
-    protected override GenerateLandingZoneOptions BindOptions(ParseResult parseResult)
+    protected override GenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name)!;
@@ -186,8 +186,8 @@ public sealed class GenerateLandingZoneCommand(
             };
 
             context.Response.Results = ResponseResult.Create(
-                new GenerateLandingZoneCommandResult(result),
-                AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+                new GenerateCommandResult(result),
+                AzureMigrateJsonContext.Default.GenerateCommandResult);
         }
         catch (Exception ex)
         {
@@ -201,7 +201,7 @@ public sealed class GenerateLandingZoneCommand(
     private static async Task<string> HandleUpdateActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
-        GenerateLandingZoneOptions options,
+        GenerateOptions options,
         CancellationToken cancellationToken)
     {
         var updated = await service.UpdateParametersAsync(
@@ -238,7 +238,7 @@ public sealed class GenerateLandingZoneCommand(
         if (exists)
         {
             return $"Landing zone exists for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'." +
-                   " You can download it using the 'download' action and then extract the files to the root of your local workspace.";
+                   " You can download it using the 'download' action and then extract the files to the root of your local workspace." + "Delete the zip after extraction.";
         }
 
         return $"No landing zone found for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'. " +
@@ -287,7 +287,7 @@ public sealed class GenerateLandingZoneCommand(
         var outputPath = Environment.CurrentDirectory;
         var filePath = await service.DownloadLandingZoneAsync(context, outputPath, cancellationToken);
 
-        return $"Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace." + "To make changes to the landing zone, you can use the 'GetModificationGuidance' command for guidance on modifying the configuration files.";
+        return $"Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace." + "To make changes to the landing zone, you can use the 'GetGuidance' command for guidance on modifying the configuration files." + "Delete the zip after extraction.";
     }
 
     private static string HandleStatusAction(
@@ -301,5 +301,5 @@ public sealed class GenerateLandingZoneCommand(
     /// Result for the platform landing zone generate landing zone command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record GenerateLandingZoneCommandResult([property: JsonPropertyName("message")] string Message);
+    internal sealed record GenerateCommandResult([property: JsonPropertyName("message")] string Message);
 }

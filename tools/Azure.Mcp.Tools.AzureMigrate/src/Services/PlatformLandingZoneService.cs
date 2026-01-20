@@ -139,9 +139,9 @@ public sealed class PlatformLandingZoneService(
         }
 
         var generateUrl = $"{ArmBaseUrl}/subscriptions/{context.SubscriptionId}/resourceGroups/{context.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{context.MigrateProjectName}/GeneratePlatformLandingZone?api-version={ApiVersion}";
-        
+
         var regionsArray = parameters.Regions?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
-        
+
         var payload = new PlatformLandingZoneGenerationPayload
         {
             RegionType = parameters.RegionType,
@@ -174,7 +174,7 @@ public sealed class PlatformLandingZoneService(
     {
         string? tenant = null;
         var downloadStatusUrl = $"{ArmBaseUrl}/subscriptions/{context.SubscriptionId}/resourceGroups/{context.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{context.MigrateProjectName}/DownloadPlatformLandingZone?api-version={ApiVersion}";
-        
+
         _logger.LogInformation("Polling for landing zone completion and download URL");
 
         var client = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
@@ -279,16 +279,26 @@ public sealed class PlatformLandingZoneService(
         }
 
         var missing = new List<string>();
-        if (string.IsNullOrEmpty(parameters.RegionType)) missing.Add("regionType");
-        if (string.IsNullOrEmpty(parameters.FireWallType)) missing.Add("fireWallType");
-        if (string.IsNullOrEmpty(parameters.NetworkArchitecture)) missing.Add("networkArchitecture");
-        if (string.IsNullOrEmpty(parameters.IdentitySubscriptionId)) missing.Add("identitySubscriptionId");
-        if (string.IsNullOrEmpty(parameters.ManagementSubscriptionId)) missing.Add("managementSubscriptionId");
-        if (string.IsNullOrEmpty(parameters.ConnectivitySubscriptionId)) missing.Add("connectivitySubscriptionId");
-        if (string.IsNullOrEmpty(parameters.Regions)) missing.Add("regions");
-        if (string.IsNullOrEmpty(parameters.EnvironmentName)) missing.Add("environmentName");
-        if (string.IsNullOrEmpty(parameters.VersionControlSystem)) missing.Add("versionControlSystem");
-        if (string.IsNullOrEmpty(parameters.OrganizationName)) missing.Add("organizationName");
+        if (string.IsNullOrEmpty(parameters.RegionType))
+            missing.Add("regionType");
+        if (string.IsNullOrEmpty(parameters.FireWallType))
+            missing.Add("fireWallType");
+        if (string.IsNullOrEmpty(parameters.NetworkArchitecture))
+            missing.Add("networkArchitecture");
+        if (string.IsNullOrEmpty(parameters.IdentitySubscriptionId))
+            missing.Add("identitySubscriptionId");
+        if (string.IsNullOrEmpty(parameters.ManagementSubscriptionId))
+            missing.Add("managementSubscriptionId");
+        if (string.IsNullOrEmpty(parameters.ConnectivitySubscriptionId))
+            missing.Add("connectivitySubscriptionId");
+        if (string.IsNullOrEmpty(parameters.Regions))
+            missing.Add("regions");
+        if (string.IsNullOrEmpty(parameters.EnvironmentName))
+            missing.Add("environmentName");
+        if (string.IsNullOrEmpty(parameters.VersionControlSystem))
+            missing.Add("versionControlSystem");
+        if (string.IsNullOrEmpty(parameters.OrganizationName))
+            missing.Add("organizationName");
 
         return missing;
     }
@@ -329,12 +339,12 @@ public sealed class PlatformLandingZoneService(
         try
         {
             using var doc = JsonDocument.Parse(responseContent);
-            
+
             if (doc.RootElement.TryGetProperty("downloadUrl", out var downloadUrlElement))
             {
                 return downloadUrlElement.GetString();
             }
-            
+
             if (doc.RootElement.TryGetProperty("properties", out var properties) &&
                 properties.TryGetProperty("downloadUrl", out var propsDownloadUrl))
             {
@@ -349,7 +359,7 @@ public sealed class PlatformLandingZoneService(
                 return trimmed;
             }
         }
-        
+
         return null;
     }
 
@@ -369,5 +379,5 @@ public sealed class PlatformLandingZoneService(
         HttpResponseMessage response = await httpClient.PostAsync(url, content, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
-    } 
+    }
 }

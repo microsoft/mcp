@@ -19,19 +19,19 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
-public class GenerateLandingZoneCommandTests
+public class GenerateCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IPlatformLandingZoneService _platformLandingZoneService;
-    private readonly ILogger<GenerateLandingZoneCommand> _logger;
-    private readonly GenerateLandingZoneCommand _command;
+    private readonly ILogger<GenerateCommand> _logger;
+    private readonly GenerateCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public GenerateLandingZoneCommandTests()
+    public GenerateCommandTests()
     {
         _platformLandingZoneService = Substitute.For<IPlatformLandingZoneService>();
-        _logger = Substitute.For<ILogger<GenerateLandingZoneCommand>>();
+        _logger = Substitute.For<ILogger<GenerateCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_platformLandingZoneService);
 
@@ -45,7 +45,7 @@ public class GenerateLandingZoneCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("generatelandingzone", command.Name);
+        Assert.Equal("generate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
         Assert.Contains("update", command.Description);
@@ -196,7 +196,7 @@ public class GenerateLandingZoneCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Parameters updated successfully", result.Message);
@@ -237,7 +237,7 @@ public class GenerateLandingZoneCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("downloaded successfully", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -280,7 +280,7 @@ public class GenerateLandingZoneCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Landing zone generated successfully", result.Message);
@@ -315,7 +315,7 @@ public class GenerateLandingZoneCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Cannot generate landing zone", result.Message);
@@ -363,7 +363,7 @@ public class GenerateLandingZoneCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -400,7 +400,7 @@ public class GenerateLandingZoneCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(statusMessage, result.Message);
@@ -626,7 +626,7 @@ public class GenerateLandingZoneCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateLandingZoneCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Complete: True", result.Message);

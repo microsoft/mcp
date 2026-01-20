@@ -7,8 +7,8 @@ using Azure.Mcp.Tools.AzureMigrate.Models;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands;
 
-[JsonSerializable(typeof(GetModificationGuidanceCommand.GetModificationGuidanceCommandResult))]
-[JsonSerializable(typeof(GenerateLandingZoneCommand.GenerateLandingZoneCommandResult))]
+[JsonSerializable(typeof(GetGuidanceCommand.GetGuidanceCommandResult))]
+[JsonSerializable(typeof(GenerateCommand.GenerateCommandResult))]
 [JsonSerializable(typeof(PlatformLandingZoneParameters))]
 [JsonSerializable(typeof(PlatformLandingZoneGenerationPayload))]
 [JsonSourceGenerationOptions(
