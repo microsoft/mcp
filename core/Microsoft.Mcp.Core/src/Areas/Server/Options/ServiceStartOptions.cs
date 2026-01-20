@@ -89,4 +89,11 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("cloud")]
     public string? Cloud { get; set; } = null;
+
+    /// <summary>
+    /// Gets a value indicating whether the server is running in HTTP mode with On-Behalf-Of authentication.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsHttpOnBehalfOfMode => Transport == TransportTypes.Http
+        && OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf;
 }
