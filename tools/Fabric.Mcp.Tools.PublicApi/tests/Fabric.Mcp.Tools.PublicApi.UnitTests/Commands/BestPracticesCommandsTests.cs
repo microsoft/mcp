@@ -3,11 +3,11 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -201,7 +201,7 @@ public class BestPracticesCommandsTests
             { "example2.json", "content2" }
         };
 
-        fabricService.GetWorkloadExamplesAsync("notebook").Returns(expectedExamples);
+        fabricService.GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>()).Returns(expectedExamples);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -216,7 +216,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
-        await fabricService.Received(1).GetWorkloadExamplesAsync("notebook");
+        await fabricService.Received(1).GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -240,7 +240,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
-        await fabricService.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>());
+        await fabricService.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -251,7 +251,7 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetWorkloadExamplesAsync("notebook").ThrowsAsync(new InvalidOperationException("Service error"));
+        fabricService.GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);

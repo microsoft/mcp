@@ -5,12 +5,12 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -49,7 +49,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
         var args = _commandDefinition.Parse([
@@ -81,7 +82,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -114,7 +116,8 @@ public class ContainerListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([

@@ -7,6 +7,8 @@ using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Options.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
@@ -65,7 +67,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!);
+            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }

@@ -6,6 +6,8 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -19,7 +21,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
 
     public override string Description =>
         """
-        List model deployments in an Azure AI Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. 
+        List model deployments in a Microsoft Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. 
         Use this to audit what models are deployed before invoking or creating new deployments. Requires the project 
         endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists 
         deployed models only - use models_list to discover available catalog/base models.

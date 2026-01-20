@@ -38,6 +38,13 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
       }
     }
   }
+
+  resource tableServices 'tableServices' = {
+    name: 'default'
+    resource fooTable 'tables' = { name: 'foo' }
+    resource barTable 'tables' = { name: 'bar' }
+    resource bazTable 'tables' = { name: 'baz' }
+  }
 }
 
 resource blobContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {

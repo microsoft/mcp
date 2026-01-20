@@ -6,12 +6,12 @@ using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Elicitation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -158,7 +158,7 @@ public sealed class CommandFactoryToolLoader(
             var elicitationResult = await HandleSecretElicitationAsync(
                 request,
                 toolName,
-                _options.Value.InsecureDisableElicitation,
+                _options.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
 

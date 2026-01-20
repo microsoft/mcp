@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -43,7 +43,11 @@ public class KnowledgeSourceGetCommandTests
             new("source2", "IndexSource", "Second source")
         };
 
-        _searchService.ListKnowledgeSources(Arg.Is("service123"), Arg.Is((string?)null), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeSources(
+            Arg.Is("service123"),
+            Arg.Is((string?)null),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedSources);
 
         var command = new KnowledgeSourceGetCommand(_logger);
@@ -67,7 +71,11 @@ public class KnowledgeSourceGetCommandTests
     {
         var expectedSource = new KnowledgeSourceInfo("source1", "BlobSource", "First source");
 
-        _searchService.ListKnowledgeSources(Arg.Is("service123"), Arg.Is("source1"), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeSources(
+            Arg.Is("service123"),
+            Arg.Is("source1"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
 
         var command = new KnowledgeSourceGetCommand(_logger);
@@ -90,7 +98,11 @@ public class KnowledgeSourceGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoSources()
     {
-        _searchService.ListKnowledgeSources(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
+        _searchService.ListKnowledgeSources(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()).Returns([]);
 
         var command = new KnowledgeSourceGetCommand(_logger);
 
@@ -112,7 +124,11 @@ public class KnowledgeSourceGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.ListKnowledgeSources(Arg.Is(serviceName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeSources(
+            Arg.Is(serviceName),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new KnowledgeSourceGetCommand(_logger);

@@ -3,8 +3,8 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
@@ -12,13 +12,13 @@ using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Events;
 
-[Trait("Area", "EventGrid")]
 public class EventsPublishCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -263,7 +263,7 @@ public class EventsPublishCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+                    Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedResult));
         }
 
@@ -948,3 +948,4 @@ public class EventsPublishCommandTests
         Assert.Equal(2, result!.Result.PublishedEventCount);
     }
 }
+

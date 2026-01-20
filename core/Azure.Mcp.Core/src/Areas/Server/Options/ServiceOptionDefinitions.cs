@@ -12,8 +12,9 @@ public static class ServiceOptionDefinitions
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
     public const string DangerouslyDisableHttpIncomingAuthName = "dangerously-disable-http-incoming-auth";
-    public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
+    public const string DangerouslyDisableElicitationName = "dangerously-disable-elicitation";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
+    public const string DangerouslyWriteSupportLogsToDirName = "dangerously-write-support-logs-to-dir";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -76,8 +77,8 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> InsecureDisableElicitation = new(
-        $"--{InsecureDisableElicitationName}")
+    public static readonly Option<bool> DangerouslyDisableElicitation = new(
+        $"--{DangerouslyDisableElicitationName}")
     {
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
@@ -90,5 +91,13 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Outgoing authentication strategy for Azure service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
         DefaultValueFactory = _ => Options.OutgoingAuthStrategy.NotSet
+    };
+
+    public static readonly Option<string?> DangerouslyWriteSupportLogsToDir = new(
+        $"--{DangerouslyWriteSupportLogsToDirName}")
+    {
+        Required = false,
+        Description = "Dangerously enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). This may include sensitive information in logs. Use with extreme caution and only when requested by support.",
+        DefaultValueFactory = _ => null
     };
 }

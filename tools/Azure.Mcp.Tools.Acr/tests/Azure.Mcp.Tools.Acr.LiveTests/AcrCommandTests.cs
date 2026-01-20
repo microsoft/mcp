@@ -5,20 +5,35 @@ using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.LiveTests;
 
-[Trait("Area", "Acr")]
-[Trait("Category", "Live")]
-public class AcrCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..data.properties.loginServer") {
+             Value = "sanitized.azurecr.io"
+        })
+    ];
+
     [Theory]
     [InlineData(AuthMethod.Credential)]
     public async Task Should_list_acr_registries_by_subscription(AuthMethod authMethod)
     {
         // Arrange & Act
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "acr_registry_list",
             new()
@@ -40,7 +55,7 @@ public class AcrCommandTests(ITestOutputHelper output)
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
+                    { "resource-group", resourceGroupName },
                     { "auth-method", authMethod.ToString() }
                 });
 
@@ -54,8 +69,8 @@ public class AcrCommandTests(ITestOutputHelper output)
         // Validate that the test registry exists (created by bicep as baseName)
         var hasTestRegistry = registryItems.Any(item =>
             item.TryGetProperty("name", out var nameProp) &&
-            string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase));
-        Assert.True(hasTestRegistry, $"Expected test registry '{Settings.ResourceBaseName}' to exist.");
+            string.Equals(nameProp.GetString(), resourceBaseName, StringComparison.OrdinalIgnoreCase));
+        Assert.True(hasTestRegistry, $"Expected test registry '{resourceBaseName}' to exist.");
 
         foreach (var item in registryItems)
         {
@@ -84,12 +99,14 @@ public class AcrCommandTests(ITestOutputHelper output)
     [InlineData(AuthMethod.Credential)]
     public async Task Should_list_repositories_for_registries(AuthMethod authMethod)
     {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "acr_registry_repository_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", resourceGroupName },
                 { "auth-method", authMethod.ToString() }
             });
 
@@ -103,7 +120,7 @@ public class AcrCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, map.ValueKind);
 
         // Validate we have entries for the test registry and the seeded 'testrepo'
-        var repoArray = map.AssertProperty(Settings.ResourceBaseName);
+        var repoArray = map.AssertProperty(resourceBaseName);
         Assert.Equal(JsonValueKind.Array, repoArray.ValueKind);
         var repos = repoArray.EnumerateArray().Select(e => e.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         Assert.Contains("testrepo", repos);

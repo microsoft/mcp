@@ -1,27 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Azure;
-using Azure.Mcp.Core.Exceptions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
-using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Email;
@@ -235,22 +226,21 @@ public class EmailSendCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedException = new RequestFailedException("Test error message");
-        _mockCommunicationService
-            .When(x => x.SendEmailAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>()))
-            .Do(x => throw expectedException);
+        _mockCommunicationService.SendEmailAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);

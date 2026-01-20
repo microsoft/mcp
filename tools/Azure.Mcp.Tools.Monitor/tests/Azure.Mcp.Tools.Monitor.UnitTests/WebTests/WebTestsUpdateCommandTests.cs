@@ -4,15 +4,15 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.WebTests;
@@ -165,13 +165,31 @@ public class WebTestsUpdateCommandTests
             };
 
             _service.UpdateWebTest(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-                Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-                Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-                Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string[]?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<IReadOnlyDictionary<string, string>?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
 
@@ -214,13 +232,31 @@ public class WebTestsUpdateCommandTests
                 Location = "eastus"
             };
             _service.UpdateWebTest(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-                Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-                Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-                Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string[]?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<IReadOnlyDictionary<string, string>?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
 
@@ -264,13 +300,31 @@ public class WebTestsUpdateCommandTests
                 Location = "eastus"
             };
             _service.UpdateWebTest(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-                Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-                Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-                Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string[]?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<IReadOnlyDictionary<string, string>?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
 
@@ -311,13 +365,31 @@ public class WebTestsUpdateCommandTests
         };
 
         _service.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -381,13 +453,31 @@ public class WebTestsUpdateCommandTests
         };
 
         _service.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -427,7 +517,8 @@ public class WebTestsUpdateCommandTests
             30,
             90,
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -450,13 +541,31 @@ public class WebTestsUpdateCommandTests
         };
 
         _service.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -493,7 +602,8 @@ public class WebTestsUpdateCommandTests
             null,                      // sslLifetimeCheckInDays - not provided, should be null
             null,                      // timeoutInSeconds - not provided, should be null
             null,                      // tenant
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -519,13 +629,31 @@ public class WebTestsUpdateCommandTests
         };
 
         _service.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -561,7 +689,8 @@ public class WebTestsUpdateCommandTests
             null,                      // sslLifetimeCheckInDays - not provided, should be null
             30,                        // timeoutInSeconds - explicitly provided as 30
             null,                      // tenant
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -596,15 +725,33 @@ public class WebTestsUpdateCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service unavailable");
-        _service.When(x => x.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+        _service.UpdateWebTest(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var args = new string[] { "--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1" };
         var parseResult = _commandDefinition.Parse(args);
@@ -623,15 +770,33 @@ public class WebTestsUpdateCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service error");
-        _service.When(x => x.UpdateWebTest(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<bool?>(),
-            Arg.Any<int?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(),
-            Arg.Any<bool?>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
-            Arg.Any<bool?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+        _service.UpdateWebTest(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var args = new string[] { "--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1" };
         var parseResult = _commandDefinition.Parse(args);

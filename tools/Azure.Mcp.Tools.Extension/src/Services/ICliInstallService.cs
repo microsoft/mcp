@@ -5,5 +5,5 @@ namespace Azure.Mcp.Tools.Extension.Services;
 
 public interface ICliInstallService
 {
-    public Task<HttpResponseMessage> GetCliInstallInstructions(string cliType);
+    public Task<HttpResponseMessage> GetCliInstallInstructions(string cliType, CancellationToken cancellationToken);
 }

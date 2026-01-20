@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -51,7 +51,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -95,7 +96,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is((string?)null),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -116,7 +118,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
         var command = new TestCreateCommand(_logger);

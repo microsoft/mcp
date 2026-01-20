@@ -1,0 +1,191 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "OperationsAgent data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "OperationsAgent": {
+            "description": "A OperationsAgent object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The OperationsAgent properties.",
+                    "$ref": "#/definitions/OperationsAgentProperties"
+                }
+            }
+        },
+        "OperationsAgentProperties": {
+            "description": "The OperationsAgent properties.",
+            "type": "object",
+            "required": [
+                "state"
+            ],
+            "properties": {
+                "state": {
+                "description": "The current state of the OperationsAgent. Additional AgentState values may be added over time.",
+                "type": "string",
+                "enum": [
+                    "Active",
+                    "Inactive"
+                ],
+                "x-ms-enum": {
+                    "name": "AgentState",
+                    "modelAsString": true,
+                    "values": [
+                    {
+                        "value": "Active",
+                        "description": "The OperationsAgent is active and running."
+                    },
+                    {
+                        "value": "Inactive",
+                        "description": "The OperationsAgent is inactive and not running."
+                    }
+                    ]
+                }
+                }
+            }
+        },
+        "OperationsAgents": {
+            "description": "A list of Operations Agents.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Operations Agents.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OperationsAgent"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateOperationsAgentRequest": {
+            "description": "Create OperationsAgent request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The OperationsAgent display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The OperationsAgent description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the OperationsAgent is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The OperationsAgent public definition.",
+                    "$ref": "#/definitions/OperationsAgentPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateOperationsAgentDefinitionRequest": {
+            "description": "Update OperationsAgent public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/OperationsAgentPublicDefinition"
+                }
+            }
+        },
+        "OperationsAgentDefinitionResponse": {
+            "description": "OperationsAgent public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/OperationsAgentPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "OperationsAgentPublicDefinition" : {
+            "description": "OperationsAgent public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/operations-agent) for more details on how to craft a OperationsAgent public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "OperationsAgentV1"
+                        ],
+                        "x-ms-enum": {
+                        "name": "OperationsAgentDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                            "value": "OperationsAgentV1",
+                            "description": "The V1 json format for the OperationsAgent public definition, specifically designed to support CI/CD scenarios in Fabric. see [OperationsAgent - OperationsAgentV1 specification](/rest/api/fabric/articles/item-management/definitions/operations-agent/OperationsAgentV1) for more details."
+                            }
+                        ]
+                        },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OperationsAgentPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "OperationsAgentPublicDefinitionPart": {
+            "description": "OperationsAgent definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The OperationsAgent public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The OperationsAgent public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateOperationsAgentRequest": {
+            "description": "Update OperationsAgent request.",
+            "properties": {
+                "displayName": {
+                    "description": "The OperationsAgent display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The OperationsAgent description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

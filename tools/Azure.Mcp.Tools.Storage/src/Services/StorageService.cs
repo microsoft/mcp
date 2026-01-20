@@ -3,6 +3,8 @@
 
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
+using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Models;
@@ -94,7 +96,8 @@ public class StorageService(
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
@@ -123,7 +126,8 @@ public class StorageService(
                     AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                     EnableHttpsTrafficOnly = true,
                     AllowBlobPublicAccess = false,
-                    IsHnsEnabled = enableHierarchicalNamespace ?? false
+                    IsHnsEnabled = enableHierarchicalNamespace ?? false,
+                    MinimumTlsVersion = "TLS1_2"
                 }
             };
 
@@ -172,14 +176,15 @@ public class StorageService(
         string? blob,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(container), container),
             (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         var blobInfos = new List<BlobInfo>();
@@ -187,7 +192,7 @@ public class StorageService(
         {
             try
             {
-                await foreach (var blobItem in containerClient.GetBlobsAsync())
+                await foreach (var blobItem in containerClient.GetBlobsAsync(cancellationToken: cancellationToken))
                 {
                     blobInfos.Add(new(
                         blobItem.Name,
@@ -223,7 +228,7 @@ public class StorageService(
 
             try
             {
-                var response = await blobClient.GetPropertiesAsync();
+                var response = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
                 var properties = response.Value;
                 blobInfos.Add(new(
                     blob,
@@ -261,18 +266,19 @@ public class StorageService(
         string? container,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
         var containers = new List<ContainerInfo>();
 
         if (string.IsNullOrEmpty(container))
         {
             try
             {
-                await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync())
+                await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync(cancellationToken: cancellationToken))
                 {
                     var properties = containerItem.Properties;
                     containers.Add(new(
@@ -302,7 +308,7 @@ public class StorageService(
 
             try
             {
-                var response = await containerClient.GetPropertiesAsync();
+                var response = await containerClient.GetPropertiesAsync(cancellationToken: cancellationToken);
                 var properties = response.Value;
                 containers.Add(new(
                     container,
@@ -333,20 +339,21 @@ public class StorageService(
         string container,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(container), container),
             (nameof(subscription), subscription));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         try
         {
-            await containerClient.CreateAsync(PublicAccessType.None);
-            var response = await containerClient.GetPropertiesAsync();
+            await containerClient.CreateAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+            var response = await containerClient.GetPropertiesAsync(cancellationToken: cancellationToken);
             var properties = response.Value;
             return new(
                 container,
@@ -372,11 +379,13 @@ public class StorageService(
     private async Task<BlobServiceClient> CreateBlobServiceClient(
         string account,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         var uri = $"https://{account}.blob.core.windows.net";
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant), options);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken), options);
     }
 
     private static string ParseStorageSkuName(string sku)
@@ -420,7 +429,8 @@ public class StorageService(
         string localFilePath,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
@@ -434,13 +444,13 @@ public class StorageService(
             throw new FileNotFoundException($"Local file not found: {localFilePath}");
         }
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
         var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
         var blobClient = blobContainerClient.GetBlobClient(blob);
 
         // Upload the file
         using var fileStream = File.OpenRead(localFilePath);
-        var response = await blobClient.UploadAsync(fileStream, false);
+        var response = await blobClient.UploadAsync(fileStream, false, cancellationToken);
 
         return new BlobUploadResult(
             Blob: blob,
@@ -454,7 +464,7 @@ public class StorageService(
 
     private static StorageAccountInfo ConvertToAccountInfoModel(JsonElement item)
     {
-        Models.StorageAccountData? storageAccount = Models.StorageAccountData.FromJson(item);
+        StorageAccountData? storageAccount = StorageAccountData.FromJson(item);
         if (storageAccount == null)
             throw new InvalidOperationException("Failed to parse storage account data");
 
@@ -469,5 +479,51 @@ public class StorageService(
             CreatedOn: storageAccount.Properties?.CreatedOn,
             AllowBlobPublicAccess: storageAccount.Properties?.AllowBlobPublicAccess,
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
+    }
+
+    protected async Task<TableServiceClient> CreateTableServiceClient(
+        string? account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var defaultUri = $"https://{account}.table.core.windows.net";
+        return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
+    }
+
+    public async Task<List<string>> ListTables(
+        string account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+
+        var tables = new List<string>();
+
+        try
+        {
+            // First attempt with requested auth method
+            var tableServiceClient = await CreateTableServiceClient(
+                account,
+                subscription,
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            await foreach (var table in tableServiceClient.QueryAsync(cancellationToken: cancellationToken))
+            {
+                tables.Add(table.Name);
+            }
+            return tables;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error listing tables: {ex.Message}", ex);
+        }
     }
 }

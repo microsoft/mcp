@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -37,7 +37,7 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsTables_WhenTablesExist()
     {
         var expectedTables = new List<string> { "table1", "table2" };
-        _postgresService.ListTablesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123").Returns(expectedTables);
+        _postgresService.ListTablesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", Arg.Any<CancellationToken>()).Returns(expectedTables);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123"]);
@@ -58,7 +58,7 @@ public class TableListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoTablesExist()
     {
-        _postgresService.ListTablesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123").Returns([]);
+        _postgresService.ListTablesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", Arg.Any<CancellationToken>()).Returns([]);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123"]);

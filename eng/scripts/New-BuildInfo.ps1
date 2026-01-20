@@ -13,32 +13,50 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
-. "$PSScriptRoot/helpers/PathHelpers.ps1"
+. "$PSScriptRoot/helpers/BuildHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
-# We currently only want to build linux-x64 native
-$nativePlatforms = @(
-    'linux-x64-native'
-    #'linux-arm64-native'  We can't currently build arm64 native in a CI run
-    #'macos-x64-native'
-    #'macos-arm64-native'
-    #'windows-x64-native'
-    #'windows-arm64-native'
+$architectures = @('x64', 'arm64')
+
+# Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
+$operatingSystems = Get-OperatingSystems
+
+# Platform names, e.g. windows-arm64, from the standard $operatingSystems X $architectures combinations that should not be built.
+$excludedPlatforms = @(
+    # Currently, all standard platforms are included
 )
 
-# When native builds are shipped, we still may want to build only linux-x64 native in pull requests for pipeline performance
-# if ($isPipelineRun -and $PublishTarget -eq 'none') {
-#     $nativePlatforms = @('linux-x64-native')
-# }
-
-# Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
-# are untrimmed versions of certain platforms available to the docker packaging step
-$additionalUntrimmedPlatforms = @(
-    'linux-x64'
+# Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
+# be targeted or excluded in packaging scripts
+$additionalPlatforms = @(
+    # Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
+    # are untrimmed versions of certain identity-compatible platforms available to the docker packaging step
+    @{
+        name = 'linux-musl-x64-docker'
+        operatingSystem = 'linux'
+        architecture = 'musl-x64'
+        native = $false
+        trimmed = $false
+        specialPurpose = 'docker'
+    }
 )
+
+if ($IncludeNative) {
+    # We currently only want to build linux-x64 native
+    # When native builds are shipped, we still may want to build only linux-x64 native in pull requests for pipeline performance
+
+    $additionalPlatforms += @{
+        name = 'linux-x64-native'
+        operatingSystem = 'linux'
+        architecture = 'x64'
+        native = $true
+        trimmed = $false
+        specialPurpose = 'native'
+    }
+}
 
 if ($BuildId -eq 0) {
     if ($isPipelineRun) {
@@ -62,14 +80,6 @@ $serverDirectories = Get-ChildItem "$RepoRoot/servers" -Directory
 $toolDirectories = Get-ChildItem "$RepoRoot/tools" -Directory
 $coreDirectories = Get-ChildItem "$RepoRoot/core" -Directory
 
-$architectures = @('x64', 'arm64')
-
-$operatingSystems = @(
-    @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
-    @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
-    @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
-)
-
 # Public releases always use the version from the repo without a dynamic prerelease suffix, except for test pipelines
 # which always use a dynamic prerelease suffix to allow for multiple releases from the same commit
 $dynamicPrereleaseVersion = $PublishTarget -ne 'public' -or $TestPipeline
@@ -81,7 +91,7 @@ function Get-LatestMarketplaceVersion {
         [string]$ExtensionId,
         [int]$MajorVersion
     )
-    
+
     try {
         $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1"
         $body = @{
@@ -113,7 +123,7 @@ function Get-LatestMarketplaceVersion {
                         Patch = [int]$Matches[1]
                     }
                 }
-                
+
                 if ($matchingVersions) {
                     $maxPatch = ($matchingVersions | Measure-Object -Property Patch -Maximum).Maximum
                     return [PSCustomObject]@{
@@ -261,6 +271,12 @@ function Get-PathsToTest {
             }
         }
 
+        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
+        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
+            Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
+            $pathsToTest += 'servers/Azure.Mcp.Server'
+        }
+
         $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
 
         <# Making $paths = @(
@@ -277,6 +293,7 @@ function Get-PathsToTest {
         $rootedTestResourcesPath = "$RepoRoot/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasLiveTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0
+        $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
         $hasUnitTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0
 
         $pathsToTest += @{
@@ -285,6 +302,7 @@ function Get-PathsToTest {
             testResourcesPath = $hasTestResources ? $testResourcesPath : $null
             hasLiveTests = $hasLiveTests
             hasUnitTests = $hasUnitTests
+            hasRecordedTests = $hasRecordedTests
         }
     }
 
@@ -368,7 +386,7 @@ function Get-ServerDetails {
         elseif ($PublishTarget -eq 'public') {
             # Check if this is X.0.0-beta.Y series
             $isBetaSeries = $version.Minor -eq 0 -and $version.Patch -eq 0 -and $version.PrereleaseLabel -eq 'beta'
-            
+
             if ($isBetaSeries) {
                 # Map X.0.0-beta.Y -> VSIX X.0.Y (prerelease)
                 $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
@@ -378,17 +396,17 @@ function Get-ServerDetails {
                 # For all non-beta versions, calculate next patch version from marketplace
                 $vscodePath = "$RepoRoot/servers/$serverName/vscode"
                 $packageJsonPath = "$vscodePath/package.json"
-                
+
                 if (Test-Path $packageJsonPath) {
                     $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
                     $publisherId = $packageJson.publisher
                     $extensionName = $packageJson.name
-                    
+
                     if ($publisherId -and $extensionName) {
                         Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
-                        
+
                         $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
-                        
+
                         if ($marketplaceInfo) {
                             # Use next patch version from marketplace
                             $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
@@ -428,7 +446,6 @@ function Get-ServerDetails {
         foreach ($os in $operatingSystems) {
             foreach ($arch in $architectures) {
                 $name = "$($os.name)-$arch"
-                $nativeName = "$name-native"
 
                 if ($excludedPlatforms -notcontains $name) {
                     $platforms += [ordered]@{
@@ -443,40 +460,30 @@ function Get-ServerDetails {
                         trimmed = $true
                     }
                 }
+            }
+        }
 
-                $shouldIncludeNative = $IncludeNative -and
-                    $props.IsAotCompatible -eq 'true' -and
-                    $nativePlatforms -contains $nativeName
+        foreach ($additionalPlatform in $additionalPlatforms) {
+            $name = $additionalPlatform.name
+            $os = $operatingSystems | Where-Object { $_.name -eq $additionalPlatform.operatingSystem }
 
-                if($shouldIncludeNative) {
-                    $platforms += [ordered]@{
-                        name = $nativeName
-                        artifactPath = "$serverName/$nativeName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
-                        architecture = $arch
-                        extension = $os.extension
-                        native = $true
-                        trimmed = $false
-                    }
-                }
+            if (-not $os) {
+                LogError "Additional platform $name has unknown operating system $($additionalPlatform.operatingSystem)"
+                $script:exitCode = 1
+                continue
+            }
 
-                if($additionalUntrimmedPlatforms -contains $name) {
-                    $untrimmedName = "$name-untrimmed"
-                    $platforms += [ordered]@{
-                        name = $untrimmedName
-                        artifactPath = "$serverName/$untrimmedName"
-                        operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
-                        architecture = $arch
-                        extension = $os.extension
-                        native = $false
-                        trimmed = $false
-                        specialPurpose = 'untrimmed'
-                    }
-                }
+            $platforms += [ordered]@{
+                name = $name
+                artifactPath = "$serverName/$name"
+                operatingSystem = $os.name
+                nodeOs = $os.nodeName
+                dotnetOs = $os.dotnetName
+                architecture = $additionalPlatform.architecture
+                extension = $os.extension
+                native = $additionalPlatform.native
+                trimmed = $additionalPlatform.trimmed
+                specialPurpose = $additionalPlatform.specialPurpose
             }
         }
 
@@ -503,6 +510,8 @@ function Get-ServerDetails {
             dnxDescription = $props.DnxDescription
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            mcpRepositoryName = $props.McpRepositoryName
+            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
             platforms = $platforms
         }
     }
@@ -511,7 +520,7 @@ function Get-ServerDetails {
 }
 
 function Get-BuildMatrices {
-    param($servers)
+    param($servers, $pathsToTest)
 
     Write-Host "Forming build matrices"
     $matrices = [ordered]@{}
@@ -549,13 +558,14 @@ function Get-BuildMatrices {
 
             $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
 
+            $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+
             $buildMatrix[$legName] = [ordered]@{
+                BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
-                Architecture = $arch
-                Native = $platform.native
-                Trimmed = $platform.trimmed
                 RunUnitTests = $runUnitTests
+                RunRecordedTests = $runRecordedTests
             }
 
             if($runUnitTests) {
@@ -580,8 +590,8 @@ function Get-ServerMatrix {
     Write-Host "Forming server matrix"
 
     $serverMatrix = [ordered]@{}
-    $platformName = "linux-x64-untrimmed"
-    
+    $platformName = "linux-musl-x64-docker"
+
     foreach ($server in $servers) {
         $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
         $executableExtension = $platform.extension
@@ -607,7 +617,7 @@ Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $pathsToTest = @(Get-PathsToTest)
-    $matrices = Get-BuildMatrices $serverDetails
+    $matrices = Get-BuildMatrices $serverDetails $pathsToTest
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
 
@@ -620,12 +630,12 @@ try {
             if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
                 $matrices[$key] = @{}
             }
-            
+
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
     }
-    
+
     $buildInfo = [ordered]@{
         buildId = $BuildId
         publishTarget = $PublishTarget

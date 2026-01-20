@@ -3,11 +3,11 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -46,7 +46,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
@@ -77,7 +78,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
@@ -105,7 +107,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns("No logs found.");
 
         var args = _commandDefinition.Parse([
@@ -133,7 +136,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(errorMessage);
 
         var args = _commandDefinition.Parse([
@@ -161,7 +165,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Failed to connect to Azure"));
 
         var args = _commandDefinition.Parse([

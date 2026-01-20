@@ -4,20 +4,19 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
-[Trait("Area", "AppConfig")]
 public class KeyValueLockSetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -63,7 +62,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
@@ -97,7 +97,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod");
+            "prod",
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
@@ -130,7 +131,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null);
+            null,
+            Arg.Any<CancellationToken>());
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
@@ -162,7 +164,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod");
+            "prod",
+            Arg.Any<CancellationToken>());
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
@@ -184,7 +187,8 @@ public class KeyValueLockSetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to lock key-value"));
 
         var argsToParse = locked

@@ -3,19 +3,18 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.Hostpool;
 
-[Trait("Area", "VirtualDesktop")]
 public class HostpoolListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -67,9 +66,9 @@ public class HostpoolListCommandTests
                 new() { Name = "hostpool1" },
                 new() { Name = "hostpool2" }
             }.AsReadOnly();
-            _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(hostpools);
-            _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(hostpools);
         }
 
@@ -95,9 +94,9 @@ public class HostpoolListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpools()
     {
         // Arrange
-        _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
-        _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
@@ -114,7 +113,7 @@ public class HostpoolListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<IReadOnlyList<HostPool>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
@@ -137,7 +136,7 @@ public class HostpoolListCommandTests
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
@@ -149,7 +148,7 @@ public class HostpoolListCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>());
+        await _virtualDesktopService.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -161,7 +160,7 @@ public class HostpoolListCommandTests
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        _virtualDesktopService.ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
@@ -173,8 +172,8 @@ public class HostpoolListCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>());
-        await _virtualDesktopService.DidNotReceive().ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _virtualDesktopService.Received(1).ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await _virtualDesktopService.DidNotReceive().ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -186,7 +185,7 @@ public class HostpoolListCommandTests
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
@@ -198,15 +197,15 @@ public class HostpoolListCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>());
-        await _virtualDesktopService.DidNotReceive().ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _virtualDesktopService.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await _virtualDesktopService.DidNotReceive().ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpoolsInResourceGroup()
     {
         // Arrange
-        _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");

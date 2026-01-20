@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
@@ -13,6 +11,8 @@ using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Monitor;
 
@@ -23,12 +23,12 @@ public class MonitorSetup : IAreaSetup
     public string Title => "Azure Monitor";
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClient<IMonitorService, MonitorService>();
+        services.AddHttpClient(MonitorService.HttpClientName);
+        services.AddHttpClient(MonitorHealthModelService.HttpClientName);
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
-        services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();

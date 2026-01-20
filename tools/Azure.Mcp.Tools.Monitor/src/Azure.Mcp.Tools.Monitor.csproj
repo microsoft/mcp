@@ -12,10 +12,11 @@
   <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
-    <PackageReference Include="Azure.Monitor.Query" />
+    <PackageReference Include="Azure.Monitor.Query.Logs" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.ApplicationInsights" />
     <PackageReference Include="Azure.ResourceManager.OperationalInsights" />
+    <PackageReference Include="Azure.ResourceManager.Monitor" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />

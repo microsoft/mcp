@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
@@ -58,7 +59,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolResourceId,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -68,7 +70,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolName!,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -77,7 +80,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolName!,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new([.. userSessions ?? []]), VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult);

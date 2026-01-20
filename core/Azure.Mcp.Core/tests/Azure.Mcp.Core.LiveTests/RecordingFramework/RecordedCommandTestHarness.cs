@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
@@ -23,17 +18,6 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
     public TestMode DesiredMode { get; set; } = TestMode.Record;
 
     public IReadOnlyDictionary<string, string> Variables => TestVariables;
-
-    public string GetRecordingAbsolutePath(string displayName)
-    {
-        var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var relativeDirectory = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null)
-            .Replace('/', Path.DirectorySeparatorChar);
-        var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
-        var absoluteDirectory = Path.Combine(PathResolver.RepositoryRoot, relativeDirectory);
-        Directory.CreateDirectory(absoluteDirectory);
-        return Path.Combine(absoluteDirectory, fileName);
-    }
 
     protected override ValueTask LoadSettingsAsync()
     {

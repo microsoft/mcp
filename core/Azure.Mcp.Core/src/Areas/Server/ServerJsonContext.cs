@@ -3,8 +3,8 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Metadata;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Metadata;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -27,8 +27,7 @@ namespace Azure.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-    WriteIndented = true
+    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
 )]
 internal sealed partial class ServerJsonContext : JsonSerializerContext
 {

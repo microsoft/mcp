@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +38,7 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist()
     {
         var expectedDatabases = new List<string> { "db1", "db2" };
-        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1").Returns(expectedDatabases);
+        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", Arg.Any<CancellationToken>()).Returns(expectedDatabases);
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");
@@ -60,7 +60,7 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
     {
-        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1").Returns([]);
+        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", Arg.Any<CancellationToken>()).Returns([]);
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");
@@ -82,7 +82,7 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
-        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1").ThrowsAsync(new Exception("Test exception"));
+        _postgresService.ListDatabasesAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test exception"));
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");

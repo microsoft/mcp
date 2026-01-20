@@ -3,14 +3,15 @@
 
 using System.CommandLine;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
@@ -62,7 +63,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?
                 ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;
@@ -23,7 +24,7 @@ public class CommandMetadataSyncTests
 
         // Determine the executable path (OS-specific) - assumes build has already happened
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0", exeName);
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -31,11 +32,11 @@ public class CommandMetadataSyncTests
         var originalContent = File.ReadAllText(docsPath);
 
         // Act - Run the update script using ExternalProcessService
-        var processService = new ExternalProcessService();
+        var processService = new ExternalProcessService(NullLogger<ExternalProcessService>.Instance);
         var pwshPath = FindPowerShellExecutable();
         var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
 
-        var updateResult = await processService.ExecuteAsync(pwshPath, arguments);
+        var updateResult = await processService.ExecuteAsync(pwshPath, arguments, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(updateResult.ExitCode == 0,
             $"Update script failed with exit code {updateResult.ExitCode}. Output: {updateResult.Output}. Error: {updateResult.Error}");

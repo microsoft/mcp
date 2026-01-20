@@ -5,6 +5,8 @@ using Azure.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 
@@ -49,7 +51,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis("platform");
+            var apis = await fabricService.GetWorkloadPublicApis("platform", cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

@@ -7,6 +7,8 @@ using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
@@ -70,7 +72,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
                 options.Service!,
                 options.Index!,
                 options.Query!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
         }

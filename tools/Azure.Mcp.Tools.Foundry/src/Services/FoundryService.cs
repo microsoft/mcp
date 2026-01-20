@@ -422,7 +422,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var chatClient = client.GetChatClient(deploymentName);
 
@@ -500,7 +500,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var embeddingClient = client.GetEmbeddingClient(deploymentName);
 
@@ -651,7 +651,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var chatClient = client.GetChatClient(deploymentName);
 
@@ -766,7 +766,8 @@ public class FoundryService(
         string resourceName,
         CognitiveServicesAccountResource cognitiveServicesAccount,
         AuthMethod authMethod,
-        string? tenant = null)
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
     {
         AzureOpenAIClient client;
 
@@ -774,7 +775,7 @@ public class FoundryService(
         {
             case AuthMethod.Key:
                 // Get the access key
-                var keys = await cognitiveServicesAccount.GetKeysAsync();
+                var keys = await cognitiveServicesAccount.GetKeysAsync(cancellationToken);
                 var key = keys.Value.Key1;
 
                 if (string.IsNullOrEmpty(key))
@@ -787,7 +788,7 @@ public class FoundryService(
 
             case AuthMethod.Credential:
             default:
-                var credential = await GetCredential(tenant);
+                var credential = await GetCredential(cancellationToken);
                 client = new AzureOpenAIClient(new Uri(endpoint), credential);
                 break;
         }
@@ -1256,26 +1257,10 @@ public class FoundryService(
             {
                 foreach (RunStepToolCall toolCall in details.ToolCalls)
                 {
-                    Microsoft.Extensions.AI.ChatMessage CreateRequestMessage(string name, Dictionary<string, object?> arguments) =>
-                        new(ChatRole.Assistant, [new FunctionCallContent(toolCall.Id, name, arguments)])
-                        {
-                            AuthorName = step.AssistantId,
-                            MessageId = step.Id,
-                            RawRepresentation = step,
-                        };
-
-                    Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(object result) =>
-                        new(ChatRole.Tool, [new FunctionResultContent(toolCall.Id, result)])
-                        {
-                            AuthorName = step.AssistantId,
-                            MessageId = step.Id,
-                            RawRepresentation = step,
-                        };
-
                     switch (toolCall)
                     {
                         case RunStepFunctionToolCall function:
-                            yield return CreateRequestMessage(function.Name, Parse(function.Arguments) ?? []);
+                            yield return CreateRequestMessage(toolCall.Id, function.Name, Parse(function.Arguments) ?? [], step);
                             // TODO: output doesn't appear to be available in the API
 
                             static Dictionary<string, object?>? Parse(string arguments)
@@ -1287,43 +1272,44 @@ public class FoundryService(
                             break;
 
                         case RunStepCodeInterpreterToolCall code:
-                            yield return CreateRequestMessage("code_interpreter", new() { ["input"] = code.Input });
-                            yield return CreateResponseMessage(string.Concat(code.Outputs.OfType<RunStepCodeInterpreterLogOutput>().Select(o => o.Logs)));
+                            yield return CreateRequestMessage(toolCall.Id, "code_interpreter", new() { ["input"] = code.Input }, step);
+                            yield return CreateResponseMessage(toolCall.Id, string.Concat(code.Outputs.OfType<RunStepCodeInterpreterLogOutput>().Select(o => o.Logs)), step);
                             break;
 
                         case RunStepBingGroundingToolCall bing:
-                            yield return CreateRequestMessage("bing_grounding", new() { ["requesturl"] = bing.BingGrounding["requesturl"] });
+                            yield return CreateRequestMessage(toolCall.Id, "bing_grounding", new() { ["requesturl"] = bing.BingGrounding["requesturl"] }, step);
                             break;
 
                         case RunStepFileSearchToolCall fileSearch:
-                            yield return CreateRequestMessage("file_search", new()
+                            yield return CreateRequestMessage(toolCall.Id, "file_search", new()
                             {
                                 ["ranking_options"] = JsonSerializer.SerializeToElement(new()
                                 {
                                     ["ranker"] = fileSearch.FileSearch.RankingOptions.Ranker,
                                     ["score_threshold"] = fileSearch.FileSearch.RankingOptions.ScoreThreshold,
                                 }, DictionaryTypeInfo)
-                            });
-                            yield return CreateResponseMessage(fileSearch.FileSearch.Results.Select(r => new
+                            }, step);
+                            List<AgentFileSearchResult> fileSearchResults = fileSearch.FileSearch.Results.Select(r => new AgentFileSearchResult
                             {
-                                file_id = r.FileId,
-                                file_name = r.FileName,
-                                score = r.Score,
-                                content = r.Content,
-                            }).ToList());
+                                FileId = r.FileId,
+                                FileName = r.FileName,
+                                Score = r.Score,
+                                Content = r.Content,
+                            }).ToList();
+                            yield return CreateResponseMessage(toolCall.Id, fileSearchResults, step);
                             break;
 
                         case RunStepAzureAISearchToolCall aiSearch:
-                            yield return CreateRequestMessage("azure_ai_search", new() { ["input"] = aiSearch.AzureAISearch["input"] });
-                            yield return CreateResponseMessage(new Dictionary<string, object?>
+                            yield return CreateRequestMessage(toolCall.Id, "azure_ai_search", new() { ["input"] = aiSearch.AzureAISearch["input"] }, step);
+                            yield return CreateResponseMessage(toolCall.Id, new Dictionary<string, string?>
                             {
                                 ["output"] = aiSearch.AzureAISearch["output"]
-                            });
+                            }, step);
                             break;
 
                         case RunStepMicrosoftFabricToolCall fabric:
-                            yield return CreateRequestMessage("fabric_dataagent", new() { ["input"] = fabric.MicrosoftFabric["input"] });
-                            yield return CreateResponseMessage(fabric.MicrosoftFabric["output"]);
+                            yield return CreateRequestMessage(toolCall.Id, "fabric_dataagent", new() { ["input"] = fabric.MicrosoftFabric["input"] }, step);
+                            yield return CreateResponseMessage(toolCall.Id, fabric.MicrosoftFabric["output"], step);
                             break;
                     }
                 }
@@ -1686,5 +1672,67 @@ public class FoundryService(
             }
             return Encoding.UTF8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length);
         }
+    }
+
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
+    internal static Microsoft.Extensions.AI.ChatMessage CreateRequestMessage(string toolCallId, string name, Dictionary<string, object?> arguments, RunStep step)
+    {
+        return new(ChatRole.Assistant, [new FunctionCallContent(toolCallId, name, arguments)])
+        {
+            AuthorName = step.AssistantId,
+            MessageId = step.Id,
+            RawRepresentation = step,
+        };
+    }
+
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be serializable by default or registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
+    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, List<AgentFileSearchResult> result, RunStep step)
+    {
+        return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
+        {
+            AuthorName = step.AssistantId,
+            MessageId = step.Id,
+            RawRepresentation = step,
+        };
+    }
+
+    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, JsonElement result, RunStep step)
+    {
+        return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
+        {
+            AuthorName = step.AssistantId,
+            MessageId = step.Id,
+            RawRepresentation = step,
+        };
+    }
+
+    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, string result, RunStep step)
+    {
+        return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
+        {
+            AuthorName = step.AssistantId,
+            MessageId = step.Id,
+            RawRepresentation = step,
+        };
+    }
+
+    /// <remarks>
+    /// The type of parameter <b>arguments</b> must be serializable by default or registered in the JsonSerializerContext.
+    /// <see cref="FoundryJsonContext"/>
+    /// </remarks>
+    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, IDictionary<string, string?> result, RunStep step)
+    {
+        return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
+        {
+            AuthorName = step.AssistantId,
+            MessageId = step.Id,
+            RawRepresentation = step,
+        };
     }
 }

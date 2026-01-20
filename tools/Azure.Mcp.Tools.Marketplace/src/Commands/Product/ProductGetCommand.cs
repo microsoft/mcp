@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
@@ -43,29 +44,29 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Marketplace.ProductId);
-        command.Options.Add(OptionDefinitions.Marketplace.IncludeStopSoldPlans);
-        command.Options.Add(OptionDefinitions.Marketplace.Language);
-        command.Options.Add(OptionDefinitions.Marketplace.Market);
-        command.Options.Add(OptionDefinitions.Marketplace.LookupOfferInTenantLevel);
-        command.Options.Add(OptionDefinitions.Marketplace.PlanId);
-        command.Options.Add(OptionDefinitions.Marketplace.SkuId);
-        command.Options.Add(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates);
-        command.Options.Add(OptionDefinitions.Marketplace.PricingAudience);
+        command.Options.Add(MarketplaceOptionDefinitions.ProductId);
+        command.Options.Add(MarketplaceOptionDefinitions.IncludeStopSoldPlans);
+        command.Options.Add(MarketplaceOptionDefinitions.Language);
+        command.Options.Add(MarketplaceOptionDefinitions.Market);
+        command.Options.Add(MarketplaceOptionDefinitions.LookupOfferInTenantLevel);
+        command.Options.Add(MarketplaceOptionDefinitions.PlanId);
+        command.Options.Add(MarketplaceOptionDefinitions.SkuId);
+        command.Options.Add(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates);
+        command.Options.Add(MarketplaceOptionDefinitions.PricingAudience);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.ProductId.Name);
-        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeStopSoldPlans.Name);
-        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
-        options.Market = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Market.Name);
-        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.LookupOfferInTenantLevel.Name);
-        options.PlanId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PlanId.Name);
-        options.SkuId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.SkuId.Name);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates.Name);
-        options.PricingAudience = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PricingAudience.Name);
+        options.ProductId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.ProductId.Name);
+        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeStopSoldPlans.Name);
+        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
+        options.Market = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Market.Name);
+        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.LookupOfferInTenantLevel.Name);
+        options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
+        options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
+        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates.Name);
+        options.PricingAudience = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PricingAudience.Name);
         return options;
     }
 

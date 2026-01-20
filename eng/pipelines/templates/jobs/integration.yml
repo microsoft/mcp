@@ -10,6 +10,11 @@ jobs:
 - job: PublishToDev
   displayName: Publish packages to dev feeds
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    # On linux, we'd need mono to run nuget, so just use windows
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
   steps:
   - checkout: self
 
@@ -24,6 +29,17 @@ jobs:
   - download: current
     displayName: Download packages_nuget_signed
     artifact: packages_nuget_signed
+
+  - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
+    parameters:
+      PathToArtifacts: $(Pipeline.Workspace)/packages_npm
+      Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
+      ServiceConnection: 'Azure SDK MCP Server Connection'
+      Access: ''
+      ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
+        Tag: dev
+      ${{ else }}:
+        Tag: pre
 
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
@@ -44,6 +60,7 @@ jobs:
   - task: PowerShell@2
     displayName: 'Attach usage instructions to build summary'
     inputs:
+      pwsh: true
       targetType: 'filePath'
       filePath: 'eng/scripts/Get-PackageUsageText.ps1'
       arguments: >

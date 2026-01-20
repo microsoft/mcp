@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -495,12 +491,27 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
+            {
+                Form = new(),
+            }
         };
         mockServer.ClientCapabilities.Returns(capabilities);
 
         var elicitationRequest = new ElicitRequestParams
         {
-            Message = "Please enter your password:"
+            Message = "Please enter your password:",
+            RequestedSchema = new()
+            {
+                Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>()
+                {
+                    ["password"] = new ElicitRequestParams.StringSchema
+                    {
+                        Title = "password",
+                        Description = "The user's password.",
+                    }
+                },
+                Required = ["password"],
+            }
         };
 
         var mockResponse = new JsonRpcResponse

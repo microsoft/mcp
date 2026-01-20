@@ -34,13 +34,13 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         return RequestContent.Create(binary);
     }
 
-    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null)
+    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
-        var credential = await GetCredential();
+        var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
@@ -57,7 +57,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         };
     }
 
-    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
+    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
@@ -73,7 +73,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        var credential = await GetCredential();
+        var credential = await GetCredential(cancellationToken);
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
 
         Response? getByCollectionResponse = null;

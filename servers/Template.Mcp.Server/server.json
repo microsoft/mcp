@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "<<McpRepositoryName>>",
+  "description": "Template MCP server example.",
+  "version": "<<Version>>",
+  "title": "Template MCP Server",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "identifier": "<<DnxPackageId>>",
+      "version": "<<Version>>",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "server"
+        },
+        {
+          "type": "positional",
+          "value": "start"
+        }
+      ]
+    },
+    {
+      "registryType": "npm",
+      "identifier": "<<NpmPackageName>>",
+      "version": "<<Version>>",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "server"
+        },
+        {
+          "type": "positional",
+          "value": "start"
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/microsoft/mcp",
+    "source": "github",
+    "subfolder": "servers/Template.Mcp.Server"
+  },
+  "websiteUrl": "https://github.com/microsoft/mcp/tree/main/servers/Template.Mcp.Server"
+}

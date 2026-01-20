@@ -5,9 +5,9 @@ using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -147,7 +147,7 @@ public sealed class RegistryToolLoader(
     /// </summary>
     /// <param name="args">The arguments to transform to parameters.</param>
     /// <returns>A dictionary of parameter names and values compatible with McpClientExtensions.CallToolAsync.</returns>
-    private static Dictionary<string, object?> TransformArgumentsToDictionary(IReadOnlyDictionary<string, JsonElement>? args)
+    private static Dictionary<string, object?> TransformArgumentsToDictionary(IDictionary<string, JsonElement>? args)
     {
         if (args == null)
         {
@@ -178,7 +178,7 @@ public sealed class RegistryToolLoader(
                 return;
             }
 
-            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync();
+            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
 
             foreach (var server in serverList)
             {
@@ -186,7 +186,7 @@ public sealed class RegistryToolLoader(
                 McpClient? mcpClient;
                 try
                 {
-                    mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions);
+                    mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
                 }
                 catch (InvalidOperationException ex)
                 {

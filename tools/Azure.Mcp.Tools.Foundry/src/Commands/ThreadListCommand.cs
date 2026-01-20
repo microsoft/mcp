@@ -5,19 +5,21 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class ThreadListCommand : GlobalCommand<ThreadListOptions>
 {
-    private const string CommandTitle = "List AI Foundry Agent Threads";
+    private const string CommandTitle = "List Microsoft Foundry Agent Threads";
     public override string Id => "ec6ce496-cfae-45b6-8ab3-97fb55f861c8";
     public override string Name => "list";
 
 
     public override string Description =>
         """
-            List AI Foundry Agent Threads.
+            List Microsoft Foundry Agent Threads.
         """;
 
     public override ToolMetadata Metadata => new()

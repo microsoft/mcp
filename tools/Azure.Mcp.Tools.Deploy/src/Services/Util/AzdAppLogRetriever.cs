@@ -1,6 +1,6 @@
 using Azure.Core;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
+using Azure.Monitor.Query.Logs;
+using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppService;
@@ -155,7 +155,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
         {
             try
             {
-                var timeRange = new QueryTimeRange(startTime, endTime);
+                var timeRange = new LogsQueryTimeRange(startTime, endTime);
                 var response = await _queryClient!.QueryResourceAsync(new(logAnalyticsId), logSearchQuery, timeRange);
 
                 if (response.Value.Status == LogsQueryResultStatus.Success)

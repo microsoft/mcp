@@ -10,8 +10,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
-[Trait("Toolset", "Speech")]
-[Trait("Category", "Live")]
 public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     #region SpeechToText Tests
@@ -42,8 +40,8 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     [InlineData("en-US", "TheGreatGatsby.wav", "In my younger and more vulnerable years, my father gave me some advice that I've been turning over in my mind ever since. Whenever you feel like criticizing anyone, he told me, just remember that all the people in this world haven't had the advantages that you've had. He didn't say anymore, but we've always been unusually commutative in a reserved way, and I understood that he meant a great deal more than that. In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me.")]
     [InlineData("ar-AE", "ar-rewind-music.wav", "ارجع الموسيقى 20 ثانية.")]
     [InlineData("es-ES", "es-ES.wav", "Rebobinar la música 20 segundos.")]
-    [InlineData("fr-FR", "fr-FR.wav", "Rembobinez la musique de Vingt secondes.")]
-    [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17 Uhr.")]
+    [InlineData("fr-FR", "fr-FR.wav", "Rembobinez la musique de vingt secondes.")]
+    [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17 Uhr")]
     public async Task SpeechToText_WithFastSupportedLanguage_ShouldRecognizeSpeechWithFastTranscription(string? language, string fileName, string expectedText)
     {
         // Arrange

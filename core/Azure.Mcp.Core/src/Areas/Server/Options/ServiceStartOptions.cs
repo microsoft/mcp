@@ -60,11 +60,11 @@ public class ServiceStartOptions
     public bool DangerouslyDisableHttpIncomingAuth { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (insecure mode).
+    /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (dangerous mode).
     /// When true, elicitation will always be treated as accepted without user confirmation.
     /// </summary>
-    [JsonPropertyName("insecureDisableElicitation")]
-    public bool InsecureDisableElicitation { get; set; } = false;
+    [JsonPropertyName("dangerouslyDisableElicitation")]
+    public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the outgoing authentication strategy for Azure service requests.
@@ -72,4 +72,13 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("outgoingAuthStrategy")]
     public OutgoingAuthStrategy OutgoingAuthStrategy { get; set; } = OutgoingAuthStrategy.NotSet;
+
+    /// <summary>
+    /// Gets or sets the folder path for support logging.
+    /// When specified, detailed debug-level logging is enabled and logs are written to
+    /// automatically generated files in this folder with timestamp-based filenames.
+    /// Warning: This may include sensitive information in logs.
+    /// </summary>
+    [JsonPropertyName("supportLoggingFolder")]
+    public string? SupportLoggingFolder { get; set; } = null;
 }

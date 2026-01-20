@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
-using ModelContextProtocol.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
@@ -84,7 +83,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             });
 
         // assert
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result);
+        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result);
     }
 
     [Fact]

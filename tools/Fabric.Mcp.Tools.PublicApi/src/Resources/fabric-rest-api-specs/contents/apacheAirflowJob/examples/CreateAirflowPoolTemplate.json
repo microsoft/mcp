@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "beta": true,
+        "createAirflowPoolTemplateRequest": {
+            "name": "MyAirflowPool",
+            "nodeSize": "Small",
+            "computeScalability": {
+                "minNodeCount": 5,
+                "maxNodeCount": 8
+            },
+            "apacheAirflowJobVersion": "1.0.0"
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/f089354e-8366-4e18-aea3-4cb4a3a50b48/apacheAirflowJobs/poolTemplates/12345678-1234-1234-1234-123456789012"
+            },
+            "body": {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "name": "MyAirflowPool",
+                "nodeSize": "Small",
+                "shutdownPolicy": "OneHourInactivity",
+                "computeScalability": {
+                    "minNodeCount": 5,
+                    "maxNodeCount": 8
+                },
+                "apacheAirflowJobVersion": "1.0.0"
+            }
+        }
+    }
+}

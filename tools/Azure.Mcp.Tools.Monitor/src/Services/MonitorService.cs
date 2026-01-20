@@ -4,17 +4,17 @@
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
+using Azure.Monitor.Query.Logs;
+using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -24,11 +24,13 @@ public class MonitorService(
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientService httpClientService) : BaseAzureService(tenantService), IMonitorService
+    IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat
         = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
+    public const string HttpClientName = "AzureMcpMonitorService";
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -55,8 +57,9 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
         var client = new LogsQueryClient(credential, options);
-        var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+        var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
         try
         {
@@ -117,6 +120,7 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
         var client = new LogsQueryClient(credential, options);
 
         try
@@ -126,7 +130,7 @@ public class MonitorService(
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
-                new QueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
+                new LogsQueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
                 options: null,
                 cancellationToken
             );
@@ -260,8 +264,9 @@ public class MonitorService(
                 options.Retry.Mode = retryPolicy.Mode;
                 options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
+            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
             var client = new LogsQueryClient(credential, options);
-            var timeRange = new QueryTimeRange(TimeSpan.FromHours(hours ?? 24));
+            var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
@@ -463,7 +468,8 @@ public class MonitorService(
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        using HttpResponseMessage response = await httpClientService.DefaultClient.SendAsync(httpRequest, cancellationToken);
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {

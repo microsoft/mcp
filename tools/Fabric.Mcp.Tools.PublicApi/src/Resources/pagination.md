@@ -1,11 +1,6 @@
 ---
 title: Use Pagination with Fabric REST APIs
 description: Understand what pagination is, why it is important, and how to effectively use it with the Microsoft Fabric REST APIs to manage large datasets.
-author: billmath
-ms.author: billmath
-ms.service: fabric
-ms.topic: concept-article
-ms.date: 03/17/2025
 #customer intent: As a Microsoft Fabric user I want to learn how to use pagination with Fabric Rest APIs.
 ---
 

@@ -2,14 +2,17 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Logging;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,10 +22,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 
@@ -75,8 +81,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-        command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -88,7 +95,40 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
             ValidateOutgoingAuthStrategy(commandResult);
+            ValidateSupportLoggingFolder(commandResult);
         });
+    }
+
+    /// <summary>
+    /// Validates that the support logging folder path is valid when specified.
+    /// </summary>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateSupportLoggingFolder(CommandResult commandResult)
+    {
+        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name);
+
+        if (folderPath is null)
+        {
+            return; // Option not specified, nothing to validate
+        }
+
+        // Validate the folder path is not empty or whitespace
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            commandResult.AddError("The --dangerously-write-support-logs-to-dir option requires a valid folder path.");
+            return;
+        }
+
+        // Validate the folder path is actually a valid path format
+        try
+        {
+            // GetFullPath will throw for invalid path characters and other path format issues
+            _ = Path.GetFullPath(folderPath);
+        }
+        catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
+        {
+            commandResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{folderPath}': {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -118,8 +158,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
-            OutgoingAuthStrategy = outgoingAuthStrategy
+            DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
+            OutgoingAuthStrategy = outgoingAuthStrategy,
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name)
         };
         return options;
     }
@@ -139,8 +180,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         var options = BindOptions(parseResult);
 
+        // Update the UserAgentPolicy for all Azure service calls to include the transport type.
+        var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
+        BaseAzureService.InitializeUserAgentPolicy(transport);
+
         try
         {
+            using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
+
             using var host = CreateHost(options);
 
             await InitializeServicesAsync(host.Services);
@@ -170,7 +217,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             activity.SetTag(TagName.Transport, options.Transport);
             activity.SetTag(TagName.ServerMode, options.Mode);
             activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
-            activity.SetTag(TagName.InsecureDisableElicitation, options.InsecureDisableElicitation);
+            activity.SetTag(TagName.DangerouslyDisableElicitation, options.DangerouslyDisableElicitation);
             activity.SetTag(TagName.DangerouslyDisableHttpIncomingAuth, options.DangerouslyDisableHttpIncomingAuth);
             activity.SetTag(TagName.IsDebug, options.Debug);
 
@@ -183,6 +230,26 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
             }
         }
+    }
+
+    /// <summary>
+    /// Configures support logging when a support logging folder is specified.
+    /// This enables debug-level logging for troubleshooting and support purposes.
+    /// </summary>
+    /// <param name="logging">The logging builder to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
+    {
+        if (options.SupportLoggingFolder is null)
+        {
+            return;
+        }
+
+        // Set minimum log level to Debug when support logging is enabled
+        logging.SetMinimumLevel(LogLevel.Debug);
+
+        // Add file logging to the specified folder
+        logging.AddSupportFileLogging(options.SupportLoggingFolder);
     }
 
     /// <summary>
@@ -292,8 +359,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
             $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).",
-        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
-            "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --dangerously-disable-http-incoming-auth") =>
+            "Configuration error to disable incoming HTTP authentication. Ensure proper authentication is configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -357,6 +424,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
                     logging.SetMinimumLevel(LogLevel.Debug);
                 }
+
+                ConfigureSupportLogging(logging, serverOptions);
             })
             .ConfigureServices(services =>
             {
@@ -383,6 +452,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -469,6 +539,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ConfigureMcpServer(services, serverOptions);
 
         WebApplication app = builder.Build();
+
+        UseHttpsRedirectionIfEnabled(app);
 
         // Configure middleware pipeline
         app.UseCors("AllowAll");
@@ -558,6 +630,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -590,6 +663,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         WebApplication app = builder.Build();
 
+        UseHttpsRedirectionIfEnabled(app);
+
         // Configure middleware pipeline
         app.UseCors("AllowAll");
         app.UseRouting();
@@ -615,7 +690,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (!options.DangerouslyDisableHttpIncomingAuth)
         {
-            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle 
+            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle
             // the ASPNETCORE_URLS value without any additional validation.
             return;
         }
@@ -707,5 +782,118 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static string ResolveTransport(CommandResult commandResult)
     {
         return commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo;
+    }
+
+    private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
+    {
+        // Some hosting environments may not need HTTPS redirection, such as:
+        // - Running behind a reverse proxy that handles TLS termination.
+        // - Local development when not using self-signed development certs.
+        // - The application or server's HTTP stack is not listening for non-HTTPS requests.
+        //
+        // Safe default to enable HTTPS redirection unless explicitly opted-out.
+        string? httpsRedirectionOptOut = Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION");
+        if (!bool.TryParse(httpsRedirectionOptOut, out bool isOptedOut) || !isOptedOut)
+        {
+            app.UseHttpsRedirection();
+        }
+
+        return app;
+    }
+
+    /// <summary>
+    /// Configures incoming and outgoing HTTP spans for self-hosted HTTP mode with Azure Monitor exporter.
+    /// </summary>
+    /// <param name="options">The server configuration options.</param>
+    /// <returns>
+    /// A <see cref="TracerProvider"/> instance if telemetry is enabled and properly configured for HTTP transport;
+    /// otherwise, <c>null</c>.
+    /// </returns>
+    /// <remarks>
+    /// Telemetry is only configured when:
+    /// <list type="bullet">
+    /// <item><description>The transport is HTTP (not STDIO)</description></item>
+    /// <item><description>AZURE_MCP_COLLECT_TELEMETRY is not explicitly set to false</description></item>
+    /// <item><description>APPLICATIONINSIGHTS_CONNECTION_STRING environment variable is set</description></item>
+    /// </list>
+    /// The tracer provider includes ASP.NET Core and HttpClient instrumentation with filtering
+    /// to avoid duplicate spans and telemetry loops.
+    /// This telemetry configuration is intended for self-hosted scenarios where
+    /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
+    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
+    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
+    /// </remarks>
+    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
+    {
+        if (options.Transport != TransportTypes.Http)
+        {
+            return null;
+        }
+
+        // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+        // to telemetry endpoints. Support logging captures debug-level information that may contain
+        // sensitive data, so we disable all telemetry as a safety measure.
+        if (!string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
+        {
+            return null;
+        }
+
+        string? collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
+        bool isTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) ||
+            (bool.TryParse(collectTelemetry, out bool shouldCollectTelemetry) && shouldCollectTelemetry);
+
+        string? connectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        if (!isTelemetryEnabled || string.IsNullOrWhiteSpace(connectionString))
+        {
+            return null;
+        }
+
+        return Sdk.CreateTracerProviderBuilder()
+            // captures incoming HTTP requests
+            .AddAspNetCoreInstrumentation()
+            // captures outgoing HTTP requests with filtering
+            .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
+            .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
+            .Build();
+    }
+
+    /// <summary>
+    /// Determines whether an HTTP request should be instrumented for telemetry collection.
+    /// </summary>
+    /// <param name="request">The HTTP request message to evaluate.</param>
+    /// <returns>
+    /// <c>true</c> if the request should be instrumented; otherwise, <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// This method filters out specific requests to prevent telemetry issues:
+    /// <list type="bullet">
+    /// <item><description>Application Insights ingestion endpoints (to avoid telemetry loops)</description></item>
+    /// <item><description>Requests where the parent span is from Azure SDK (to avoid duplicate spans)</description></item>
+    /// </list>
+    /// </remarks>
+    private static bool ShouldInstrumentHttpRequest(HttpRequestMessage request)
+    {
+        // Exclude Application Insights ingestion requests to skip requests that are made to AppInsights when sending telemetry.
+        // See related issue - https://github.com/Azure/azure-sdk-for-net/issues/45366#issuecomment-2278511391
+        if (request.RequestUri?.AbsoluteUri.Contains("applicationinsights.azure.com/v2.1/track", StringComparison.Ordinal) == true)
+        {
+            return false;
+        }
+
+        // **NOTE**: This check is copied from the UseAzureMonitor extension method in the Azure SDK repository:
+        // https://github.com/Azure/azure-sdk-for-net/blob/242ba3eca16d914522669ae62baac7437bf71db8/sdk/monitor/Azure.Monitor.OpenTelemetry.AspNetCore/src/OpenTelemetryBuilderExtensions.cs#L98-L108
+        // The decision to filter these out is not finalized for the product. We may revisit this in the future depending on
+        // how users want to see telemetry from Azure SDK calls made by the MCP server.
+
+        // Azure SDKs create their own client span before calling the service using HttpClient.
+        // To prevent duplicate spans (Azure SDK + HttpClient), filter HttpClient spans when
+        // the parent span is from Azure SDK, as it contains all relevant information.
+        Activity? parentActivity = Activity.Current?.Parent;
+        if (parentActivity?.Source.Name == "Azure.Core.Http")
+        {
+            return false;
+        }
+        return true;
     }
 }

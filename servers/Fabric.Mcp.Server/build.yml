@@ -5,13 +5,17 @@ parameters:
   default: 'none'
 - name: PackageDocker
   type: boolean
-  default: false
+  default: true
 - name: PackageVSIX
   type: boolean
   default: true
 - name: IncludeNative
   type: boolean
   default: true
+- name: TestTimeoutInMinutes
+  displayName: Test Timeout In Minutes
+  type: number
+  default: 30
 
 trigger: none
 pr: none
@@ -25,3 +29,4 @@ extends:
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
     IncludeNative: ${{ parameters.IncludeNative }}
+    TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}

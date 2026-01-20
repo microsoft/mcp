@@ -36,7 +36,7 @@ public class ServerToolLoaderTests
         };
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IReadOnlyDictionary<string, JsonElement>? arguments = null)
+    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
@@ -91,7 +91,7 @@ public class ServerToolLoaderTests
         var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
         var request = CreateRequest();
 
-        mockDiscoveryStrategy.DiscoverServersAsync()
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act

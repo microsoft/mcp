@@ -21,6 +21,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
+      - [Support Logging](#support-logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
       - [Collecting logs with VS Code](#collecting-logs-with-vs-code)
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
@@ -53,7 +54,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
   "servers": {
     "Azure Storage": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -63,7 +64,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
     },
     "Azure KeyVault": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -83,7 +84,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
   "servers": {
     "Azure Storage Accounts Only": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -95,7 +96,7 @@ Use the `--tool` option to expose only specific tools by name. This provides the
     },
     "Essential Azure Tools": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -405,7 +406,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -422,7 +423,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -814,9 +815,17 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ## Remote MCP Server (preview)
 
-Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS).  Detailed setup instructions can be found here:
-- [Azure MCP Server - ACA with Managed Identity](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
-- [Azure MCP Server - ACA with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
+
+### HTTPS redirection issues
+
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
+
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
 
 ### Common Issues
 
@@ -859,7 +868,7 @@ Azure MCP Server 1.0 does not support remote and only supports local (STDIO) tra
      --id <server-client-id> \
      --api https://management.azure.com/ \
      --api-permissions user_impersonation=Scope
-   
+
    az ad app permission admin-consent --id <server-client-id>
    ```
 
@@ -904,6 +913,45 @@ az role assignment create \
 The Azure MCP Server is instrumented using the .NET [EventSource](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) to emit detailed information. Logging follows the pattern of marking operation start, completion, and exceptions. These logs are invaluable for diagnosing Azure MCP Server issues.
 
 Server logs can be obtained by capturing events for provider "Microsoft-Extensions-Logging".
+
+#### Support Logging
+
+For troubleshooting scenarios, you can enable detailed debug-level logging using the `--dangerously-write-support-logs-to-dir` option. This option creates log files with automatically-generated timestamps (e.g., `azmcp_20251202_143052.log`) in the specified folder, ensuring logs are written locally and not accidentally sent over the network.
+
+> [!WARNING]
+> Support logging may include sensitive information. Use with extreme caution and only when requested by support.
+
+> [!NOTE]
+> When support logging is enabled, all telemetry is automatically disabled to prevent sensitive debug information from being sent to telemetry endpoints.
+
+**Example configuration in mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server (Support Mode)": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@latest",
+        "server",
+        "start",
+        "--dangerously-write-support-logs-to-dir",
+        "/path/to/logs"
+      ]
+    }
+  }
+}
+```
+
+**Command-line usage:**
+
+```bash
+azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+```
+
+The log files will be created with timestamp-based names (e.g., `azmcp_20251202_143052.log`) and will contain detailed debug-level information that can help diagnose issues with the Azure MCP Server.
 
 #### Collecting logs with dotnet-trace
 
@@ -1021,7 +1069,7 @@ dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remote
 This starts the MCP server in **remote HTTP mode** with the following configuration:
 - **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
 - **Environment variables** for Entra ID authentication and ASP.NET Core settings
-- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
+- **HTTP endpoint:** `https://localhost:1031` for easier debugging and testing
 
 **To connect to the MCP server, configure your mcp.json:**
 
@@ -1029,7 +1077,7 @@ This starts the MCP server in **remote HTTP mode** with the following configurat
 {
   "servers": {
     "Azure MCP Server": {
-      "url": "http://localhost:1031/",
+      "url": "https://localhost:1031/",
       "type": "http"
     }
   }
@@ -1042,8 +1090,8 @@ If you need to test the server in stdio mode (standard input/output), first buil
 
 ```bash
 dotnet build
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start      # macOS/Linux
 ```
 
 This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
@@ -1055,7 +1103,7 @@ This runs the MCP server in **stdio mode**, which communicates via standard inpu
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }

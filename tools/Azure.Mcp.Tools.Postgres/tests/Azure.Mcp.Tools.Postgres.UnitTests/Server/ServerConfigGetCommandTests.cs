@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -36,7 +36,7 @@ public class ServerConfigGetCommandTests
     public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists()
     {
         var expectedConfig = "config123";
-        _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123").Returns(expectedConfig);
+        _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var command = new ServerConfigGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);
@@ -57,7 +57,7 @@ public class ServerConfigGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenConfigDoesNotExist()
     {
-        _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123").Returns("");
+        _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<CancellationToken>()).Returns("");
 
         var command = new ServerConfigGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);

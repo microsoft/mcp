@@ -18,32 +18,32 @@
 // like Conditional Access on caching?
 public class HttpServiceCacheService : ICacheService
 {
-    public ValueTask ClearAsync()
+    public ValueTask ClearAsync(CancellationToken cancellationToken)
     {
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask ClearGroupAsync(string group)
+    public ValueTask ClearGroupAsync(string group, CancellationToken cancellationToken)
     {
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask DeleteAsync(string group, string key)
+    public ValueTask DeleteAsync(string group, string key, CancellationToken cancellationToken)
     {
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null)
+    public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
         return ValueTask.FromResult<T?>(default);
     }
 
-    public ValueTask<IEnumerable<string>> GetGroupKeysAsync(string group)
+    public ValueTask<IEnumerable<string>> GetGroupKeysAsync(string group, CancellationToken cancellationToken)
     {
         return ValueTask.FromResult<IEnumerable<string>>(Array.Empty<string>());
     }
 
-    public ValueTask SetAsync<T>(string group, string key, T data, TimeSpan? expiration = null)
+    public ValueTask SetAsync<T>(string group, string key, T data, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
         return ValueTask.CompletedTask;
     }

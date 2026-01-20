@@ -3,10 +3,9 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,24 +26,6 @@ public static class OpenTelemetryExtensions
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
-        services.AddOptions<AzureMcpServerConfiguration>()
-            .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
-            {
-                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
-                // the assembly that will run the tool calls.
-                var entryAssembly = Assembly.GetEntryAssembly();
-                if (entryAssembly != null)
-                {
-                    options.Version = GetServerVersion(entryAssembly);
-                }
-
-                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
-                // over any other settings.
-                var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
-
-                options.IsTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-            });
-
         services.AddSingleton<ITelemetryService, TelemetryService>();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -106,15 +87,16 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-        var appInsightsConnectionStrings = new List<(string Name, string ConnectionString)>();
-
         var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
         if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
-            appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
+            // Configure telemetry to be sent to user-provided Application Insights instance regardless of build configuration.
+            ConfigureAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString, "UserProvided");
         }
 
+        // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
+#if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
@@ -123,11 +105,8 @@ public static class OpenTelemetryExtensions
 
         if (shouldCollectMicrosoftTelemetry)
         {
-            appInsightsConnectionStrings.Add(("Microsoft", MicrosoftOwnedAppInsightsConnectionString));
+            ConfigureAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString, "Microsoft");
         }
-
-#if RELEASE
-        ConfigureAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
 #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
@@ -139,64 +118,33 @@ public static class OpenTelemetryExtensions
         }
     }
 
-    /// <summary>
-    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
-    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
-    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
-    /// </summary>
-    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
-    /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly entryAssembly)
+    private static void ConfigureAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
     {
-        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        if (versionAttribute == null)
+        otelBuilder.WithLogging(logging =>
         {
-            throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
-        }
+            logging.AddAzureMonitorLogExporter(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
 
-        string version = versionAttribute.InformationalVersion;
-
-        int hashSeparator = version.IndexOf('+');
-        if (hashSeparator != -1)
+        otelBuilder.WithMetrics(metrics =>
         {
-            version = version.Substring(0, hashSeparator);
-        }
+            metrics.AddAzureMonitorMetricExporter(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
 
-        return version;
-    }
-
-
-    private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
-    {
-        foreach (var exporter in appInsightsConnectionStrings)
+        otelBuilder.WithTracing(tracing =>
         {
-            otelBuilder.WithLogging(logging =>
+            tracing.AddAzureMonitorTraceExporter(options =>
             {
-                logging.AddAzureMonitorLogExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-
-            otelBuilder.WithMetrics(metrics =>
-            {
-                metrics.AddAzureMonitorMetricExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-
-            otelBuilder.WithTracing(tracing =>
-            {
-                tracing.AddAzureMonitorTraceExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-        }
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
     }
 }

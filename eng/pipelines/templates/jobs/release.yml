@@ -47,6 +47,8 @@ jobs:
     env:
       GH_TOKEN: $(azuresdk-github-pat)
 
+- template: /eng/pipelines/templates/jobs/publish-symbols.yml
+
 - template: /eng/pipelines/templates/jobs/npm/release-npm.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
@@ -72,6 +74,13 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 
+- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    DependsOn:
+    - PublishNugetPackage
+    - PublishNpm
+
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
   condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
@@ -83,6 +92,7 @@ jobs:
   - task: PowerShell@2
     displayName: Increment version
     inputs:
+      pwsh: true
       targetType: filePath
       filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
       arguments: >

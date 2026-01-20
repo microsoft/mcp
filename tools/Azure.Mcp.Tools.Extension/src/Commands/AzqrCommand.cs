@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -12,6 +11,9 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
@@ -103,7 +105,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             command += " --json";
 
             var processService = context.GetService<IExternalProcessService>();
-            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds);
+            var result = await processService.ExecuteAsync(azqrPath, command,
+                operationTimeoutSeconds: _processTimeoutSeconds,
+                cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {

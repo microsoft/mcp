@@ -1,6 +1,6 @@
 ﻿using System.Net;
-using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Tools.Postgres.Options;
+using Microsoft.Mcp.Core.Commands;
 using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Providers
@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Postgres.Providers
         public NpgsqlConnection Connection { get; }
         private readonly NpgsqlDataSource _dataSource;
 
-        public static async Task<PostgresResource> CreateAsync(string connectionString, string authType)
+        public static async Task<PostgresResource> CreateAsync(string connectionString, string authType, CancellationToken cancellationToken)
         {
             // Configure SSL settings for secure connection
             var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString)
@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.Postgres.Providers
             NpgsqlConnection connection;
             try
             {
-                connection = await dataSource.OpenConnectionAsync();
+                connection = await dataSource.OpenConnectionAsync(cancellationToken);
             }
             catch (PostgresException e) when (e.Message.Contains("28P01"))
             {

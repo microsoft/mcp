@@ -18,6 +18,9 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: TestTimeoutInMinutes
+  type: number
+  default: 30
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -69,7 +72,7 @@ extends:
       - ${{ each os in split('linux|windows|macOS', '|') }}:
         - template: /eng/pipelines/templates/jobs/build.yml
           parameters:
-            TestTimeoutInMinutes: 30
+            TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}

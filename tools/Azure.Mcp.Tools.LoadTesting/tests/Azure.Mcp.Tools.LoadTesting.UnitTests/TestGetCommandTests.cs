@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -49,7 +49,13 @@ public class TestGetCommandTests
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestGetCommand(_logger);
@@ -80,7 +86,13 @@ public class TestGetCommandTests
     {
         var expected = new Test();
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestGetCommand(_logger);
@@ -99,7 +111,13 @@ public class TestGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
         var command = new TestGetCommand(_logger);

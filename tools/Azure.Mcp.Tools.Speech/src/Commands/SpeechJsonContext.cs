@@ -29,6 +29,5 @@ using Azure.Mcp.Tools.Speech.Models.Realtime;
 [JsonSerializable(typeof(TtsSynthesizeCommand.TtsSynthesizeCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class SpeechJsonContext : JsonSerializerContext;

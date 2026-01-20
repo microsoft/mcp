@@ -6,9 +6,10 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -647,10 +648,10 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task CallToolHandler_WithSecretTool_WhenInsecureDisableElicitationEnabled_BypassesElicitation()
+    public async Task CallToolHandler_WithSecretTool_WhenDangerouslyDisableElicitationEnabled_BypassesElicitation()
     {
-        // Create tool loader with insecure disable elicitation enabled
-        var options = new ToolLoaderOptions(InsecureDisableElicitation: true);
+        // Create tool loader with dangerously disable elicitation enabled
+        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: true);
         var (toolLoader, commandFactory) = CreateToolLoader(options);
 
         // Add the fake secret command to the command factory
@@ -692,10 +693,10 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task CallToolHandler_WithSecretTool_WhenInsecureDisableElicitationDisabled_StillRequiresElicitation()
+    public async Task CallToolHandler_WithSecretTool_WhenDangerouslyDisableElicitationDisabled_StillRequiresElicitation()
     {
-        // Create tool loader with insecure disable elicitation disabled (default)
-        var options = new ToolLoaderOptions(InsecureDisableElicitation: false);
+        // Create tool loader with dangerously disable elicitation disabled (default)
+        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: false);
         var (toolLoader, commandFactory) = CreateToolLoader(options);
 
         // Add the fake secret command to the command factory
@@ -734,23 +735,23 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public void ToolLoaderOptions_DefaultInsecureDisableElicitation_IsFalse()
+    public void ToolLoaderOptions_DefaultDangerouslyDisableElicitation_IsFalse()
     {
         // Arrange & Act
         var options = new ToolLoaderOptions();
 
         // Assert
-        Assert.False(options.InsecureDisableElicitation);
+        Assert.False(options.DangerouslyDisableElicitation);
     }
 
     [Fact]
-    public void ToolLoaderOptions_WithInsecureDisableElicitationTrue_IsSetCorrectly()
+    public void ToolLoaderOptions_WithDangerouslyDisableElicitationTrue_IsSetCorrectly()
     {
         // Arrange & Act
-        var options = new ToolLoaderOptions(InsecureDisableElicitation: true);
+        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: true);
 
         // Assert
-        Assert.True(options.InsecureDisableElicitation);
+        Assert.True(options.DangerouslyDisableElicitation);
     }
 
     [Fact]

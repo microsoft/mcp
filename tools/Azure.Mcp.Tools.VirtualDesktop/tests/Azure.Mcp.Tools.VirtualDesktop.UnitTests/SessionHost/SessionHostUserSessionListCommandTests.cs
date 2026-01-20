@@ -3,20 +3,19 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.SessionHost;
 
-[Trait("Area", "VirtualDesktop")]
 public class SessionHostUserSessionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -86,7 +85,8 @@ public class SessionHostUserSessionListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(userSessions.AsReadOnly());
 
             _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -94,7 +94,8 @@ public class SessionHostUserSessionListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(userSessions.AsReadOnly());
 
             _virtualDesktopService.ListUserSessionsByResourceGroupAsync(
@@ -103,7 +104,8 @@ public class SessionHostUserSessionListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(userSessions.AsReadOnly());
         }
 
@@ -158,7 +160,8 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
@@ -176,7 +179,8 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -202,7 +206,8 @@ public class SessionHostUserSessionListCommandTests
             resourceId,
             "test-sessionhost",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         var parseResult = _commandDefinition.Parse($"--subscription test-sub --hostpool-resource-id {resourceId} --sessionhost test-sessionhost");
@@ -220,14 +225,16 @@ public class SessionHostUserSessionListCommandTests
             resourceId,
             "test-sessionhost",
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
 
         await _virtualDesktopService.DidNotReceive().ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -253,7 +260,8 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --resource-group test-rg");
@@ -272,21 +280,24 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
 
         await _virtualDesktopService.DidNotReceive().ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
 
         await _virtualDesktopService.DidNotReceive().ListUserSessionsByResourceIdAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -300,7 +311,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -308,7 +320,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
@@ -331,7 +344,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -339,7 +353,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
@@ -363,7 +378,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
         _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -371,7 +387,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
@@ -395,7 +412,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
         _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -403,7 +421,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
@@ -439,7 +458,8 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         _virtualDesktopService.ListUserSessionsByResourceIdAsync(
@@ -447,7 +467,8 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(userSessions.AsReadOnly());
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --tenant test-tenant");
@@ -465,6 +486,7 @@ public class SessionHostUserSessionListCommandTests
             "test-hostpool",
             "test-sessionhost",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }

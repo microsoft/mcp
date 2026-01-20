@@ -13,7 +13,6 @@
     },
     "categories": [
         "AI",
-        "Fabric",
         "Chat"
     ],
     "keywords": [
@@ -53,10 +52,12 @@
                     "items": {
                         "type": "string",
                         "enum": [
-                            "publicapis"
+                            "publicapis",
+                            "onelake"
                         ],
                         "markdownEnumDescriptions": [
-                            "Fabric public APIs — Container registry management."
+                            "Fabric public APIs — Fabric public APIs specifications and examples.",
+                            "OneLake — Manage and interact with OneLake data lake storage."
                         ]
                     },
                     "uniqueItems": true,
@@ -67,7 +68,7 @@
                     "type": "string",
                     "enum": ["single", "namespace", "all"],
                     "default": "all",
-                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` collapses all tools down into logical Fabric service namespace grouping, while `all` (default) exposes every MCP tool directly to the MCP client. We recommend all as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool into one single tool that routes internally, `namespace` collapses all tools down into logical Fabric service namespace grouping, while `all` (default) exposes every MCP tool directly to the MCP client. We recommend all as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
 
                 },
                 "fabricMcp.readOnly": {
@@ -91,20 +92,19 @@
     "devDependencies": {
         "@azure/core-auth": "^1.4",
         "@types/chai": "~4",
-        "@types/glob": "~7",
         "@types/mocha": "~10",
         "@types/node": "~16",
         "@types/semver": "~7",
         "@types/sinon": "^17.0.4",
         "@types/vscode": "^1.101.0",
-        "@typescript-eslint/eslint-plugin": "~6",
-        "@typescript-eslint/parser": "~6",
+        "@typescript-eslint/eslint-plugin": "^8.47.0",
+        "@typescript-eslint/parser": "^8.47.0",
         "@vscode/test-electron": "~2",
         "@vscode/vsce": "~3",
         "chai": "~4",
-        "eslint": "~8",
-        "glob": "~8",
-        "mocha": "~10",
+        "eslint": "~9",
+        "glob": "^13.0.0",
+        "mocha": "~11",
         "node-loader": "~2",
         "sinon": "^21.0.0",
         "terser-webpack-plugin": "^5.3.14",

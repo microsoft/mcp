@@ -166,7 +166,7 @@ Rationale:
 - **Live test infrastructure**: Add Bicep template to `tools/Azure.Mcp.Tools.{Toolset}/tests`
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
-- **Solution file integration**: Add new projects to `AzureMcp.sln` with proper GUID generation to avoid conflicts
+- **Solution file integration**: Add new projects to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
 - **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
 
 ## Implementation Guidelines
@@ -519,6 +519,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     private const string CommandTitle = "Human Readable Title";
     private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
 
+    public override string Id => "<GUID>"
+
     public override string Name => "operation";
 
     public override string Description =>
@@ -561,7 +563,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Required validation step
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -583,7 +585,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
                 options.RequiredParam!,  // Required parameters end with !
                 options.OptionalParam,   // Optional parameters are nullable
                 options.Subscription!,   // From SubscriptionCommand
-                options.RetryPolicy);    // From GlobalCommand
+                options.RetryPolicy,     // From GlobalCommand
+                cancellationToken);      // Passed in ExecuteAsync
 
             // Set results if any were returned
             // For enumerable returns, coalesce null into an empty enumerable.
@@ -623,6 +626,10 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
 ```
+
+### Tool ID
+
+The `Id` is a unique GUID given to each tool that can be used to uniquely identify it from every other tool.
 
 ### ToolMetadata Properties
 
@@ -839,11 +846,11 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 
@@ -1068,6 +1075,14 @@ Guidelines:
    - ❌ Bad: `_service.{Operation}(Arg.Is<T>(t => t == value)).Returns(return)`
 - CancellationToken in mocks: Always use `Arg.Any<CancellationToken>()` for CancellationToken parameters when setting up mocks
 - CancellationToken in product code invocation: When invoking real product code objects in unit tests, use `TestContext.Current.CancellationToken` for the CancellationToken parameter
+- If any test mutates environment variables, to prevent conflicts between tests, the test project must:
+  - Reference project `$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj`
+  - Include an `AssemblyAttributes.cs` file with the following contents :
+    ```csharp
+    [assembly: Azure.Mcp.Tests.Helpers.ClearEnvironmentVariablesBeforeTest]
+    [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
+    ```
+
 ### 7. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
@@ -1185,7 +1200,7 @@ using Azure.Mcp.Tools.{Toolset}.Models;
 
 [JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
 [JsonSerializable(typeof(YourModelType))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class {Toolset}JsonContext : JsonSerializerContext;
 ```
 
@@ -1249,7 +1264,7 @@ The base `HandleException` method in BaseCommand handles the response formatting
 ```csharp
 protected virtual void HandleException(CommandContext context, Exception ex)
 {
-    context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
+    context.Activity?.SetStatus(ActivityStatusCode.Error);
 
     var response = context.Response;
     var result = new ExceptionResult(
@@ -1506,8 +1521,6 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-[Trait("Toolset", "{Toolset}")]
-[Trait("Category", "Live")]
 public class {Toolset}CommandTests( ITestOutputHelper output)
     : CommandTestsBase(output)
 {
@@ -1625,8 +1638,8 @@ When creating new C# files, start with only the using statements you actually ne
 
 ```csharp
 // Start minimal - only add what you actually use
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 // Add more using statements as you implement the code
 // Don't copy-paste using blocks from other files
@@ -1656,7 +1669,7 @@ Use these commands to detect and remove unused using statements:
 dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs" --verbosity normal
 
 # Format entire solution (use sparingly - takes longer)
-dotnet format ./AzureMcp.sln --verbosity normal
+dotnet format ./Microsoft.Mcp.slnx --verbosity normal
 
 # Check for analyzer warnings including unused usings
 dotnet build --verbosity normal | Select-String "warning"
@@ -1669,6 +1682,7 @@ dotnet build --verbosity normal | Select-String "warning"
 // Only what's actually used in this file
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 ```
 
 ✅ **Add using statements for better readability:**
@@ -1998,12 +2012,6 @@ catch (Exception ex)
 
 ### Project Setup and Integration Issues
 
-**Issue: Solution file GUID conflicts**
-- **Cause**: Duplicate project GUIDs in the solution file causing build failures
-- **Solution**: Generate unique GUIDs for new projects when adding to `AzureMcp.sln`
-- **Fix**: Use Visual Studio or `dotnet sln add` command to properly add projects with unique GUIDs
-- **Prevention**: Always check for GUID uniqueness when manually editing solution files
-
 **Issue: Missing package references cause compilation errors**
 - **Cause**: Azure Resource Manager package not added to `Directory.Packages.props` before being referenced
 - **Solution**: Add package version to `Directory.Packages.props` first, then reference in project files
@@ -2107,7 +2115,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-      <TargetFramework>net9.0</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <IsPackable>false</IsPackable>
@@ -2175,7 +2183,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 - **Solution**: Use correct generic type: `ILogger<BaseDatabaseCommand<TOptions>>`
 
 **Issue: Missing using statements for TrimAnnotations**
-- **Solution**: Add `using Azure.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
+- **Solution**: Add `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
 
 ### AOT Compilation Issues
 
@@ -2548,7 +2556,7 @@ Every new command needs to be added to the consolidated mode. Here is the instru
 - Add the new commands to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tool descriptions where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
 - Use the following command to find out the correct tool name for your new tool
     ```
-    cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+    cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
     ./azmcp[.exe] tools list --name --namespace <tool_area>
     ```
 
@@ -2592,7 +2600,7 @@ Before submitting:
 ### Package and Project Setup
 - [ ] Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`
 - [ ] **Package version consistency**: Same version used in both `Directory.Packages.props` and project references
-- [ ] **Solution file integration**: Projects added to `AzureMcp.sln` with unique GUIDs (no GUID conflicts)
+- [ ] **Solution file integration**: Projects added to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
 - [ ] **Toolset registration**: Added to `Program.cs` `RegisterAreas()` method in alphabetical order
 - [ ] JSON serialization context includes all new model types
 
@@ -2604,7 +2612,7 @@ Before submitting:
 - [ ] Spelling check passes with `.\eng\common\spelling\Invoke-Cspell.ps1`
 - [ ] **AOT compilation verified** with `./eng/scripts/Build-Local.ps1 -BuildNative`
 - [ ] **Clean up unused using statements**: Run `dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs"` to remove unnecessary imports and ensure consistent formatting
-- [ ] Fix formatting issues with `dotnet format ./AzureMcp.sln` and ensure no warnings
+- [ ] Fix formatting issues with `dotnet format ./Microsoft.Mcp.slnx` and ensure no warnings
 
 ### Azure SDK Integration
 - [ ] All Azure SDK property names verified and correct
@@ -2616,7 +2624,7 @@ Before submitting:
 
 **REQUIRED**: All new commands must update the following documentation files:
 
-- [ ] **CHANGELOG.md**: Add entry under "Unreleased" section describing the new command(s)
+- [ ] **Changelog Entry**: Create a new changelog entry YAML file manually or by using the `./eng/scripts/New-ChangelogEntry.ps1` script/. See `docs/changelog-entries.md` for details.
 - [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
 - [ ] **Run metadata update script**: Execute `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI validation)
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section

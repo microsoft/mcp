@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -18,7 +19,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
     public override string Description =>
         """
-        Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
+        Query a Microsoft Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
         """;
 
     public override ToolMetadata Metadata => new()

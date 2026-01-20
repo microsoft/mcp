@@ -8,6 +8,10 @@
     <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
     <!-- <PackageIcon></PackageIcon> Defaults to the microsoft logo if not specified. -->
 
+    <!-- Official MCP repository settings -->
+    <McpRepositoryName>com.microsoft/template-server-name</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
+
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
@@ -19,11 +23,6 @@
     <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>template,mcp</DnxPackageTags>
-
-    <!-- vsix settings -->
-    <VsixPackagePrefix>vscode-template-mcp</VsixPackagePrefix>
-    <VsixDescription>Template project for validating the microsoft/mcp engineering system</VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -68,5 +67,17 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

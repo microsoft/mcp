@@ -4,4 +4,3 @@
 global using System.CommandLine;
 global using System.Text.Json;
 global using Azure.Mcp.Core.Models;
-global using Azure.Mcp.Core.Models.Command;

@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 
@@ -57,16 +58,17 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the output of the tool invocation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request?.Server?.ClientInfo);
+        using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo);
+        CaptureToolCallMeta(activity, request.Params?.Meta);
 
-        if (request?.Params == null)
+        if (request.Params == null)
         {
             var content = new TextContentBlock
             {
                 Text = "Cannot call tools with null parameters.",
             };
 
-            activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, content.Text);
+            activity?.SetStatus(ActivityStatusCode.Error);
 
             return new CallToolResult
             {
@@ -90,7 +92,7 @@ public sealed class McpRuntime : IMcpRuntime
             var subscription = subscriptionArgument.Value.GetString();
             if (subscription != null)
             {
-                activity?.AddTag(TagName.SubscriptionGuid, subscription);
+                activity?.AddTag(AzureTagName.SubscriptionGuid, subscription);
             }
         }
 
@@ -127,8 +129,7 @@ public sealed class McpRuntime : IMcpRuntime
         // due to missing dependencies or misconfiguration.
         catch (InvalidOperationException ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
-                ?.AddTag(TagName.ErrorDetails, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
 
             return new CallToolResult
             {
@@ -139,12 +140,27 @@ public sealed class McpRuntime : IMcpRuntime
                 IsError = true,
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
-                ?.AddTag(TagName.ErrorDetails, ex.Message);
-
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
             throw;
+        }
+    }
+
+    private static void CaptureToolCallMeta(Activity? activity, JsonObject? meta)
+    {
+        if (activity != null && meta != null)
+        {
+            var vsCodeConversationIdNode = meta["vscode.conversationId"];
+            if (vsCodeConversationIdNode != null && vsCodeConversationIdNode.GetValueKind() == JsonValueKind.String)
+            {
+                activity.AddTag(TagName.VSCodeConversationId, vsCodeConversationIdNode.GetValue<string>());
+            }
+            var vsCodeRequestIdNode = meta["vscode.requestId"];
+            if (vsCodeRequestIdNode != null && vsCodeRequestIdNode.GetValueKind() == JsonValueKind.String)
+            {
+                activity.AddTag(TagName.VSCodeRequestId, vsCodeRequestIdNode.GetValue<string>());
+            }
         }
     }
 
@@ -156,7 +172,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the list of available tools.</returns>
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request?.Server?.ClientInfo);
+        using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo);
 
         try
         {
@@ -165,10 +181,9 @@ public sealed class McpRuntime : IMcpRuntime
 
             return result;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler")
-                ?.SetTag(TagName.ErrorDetails, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler");
             throw;
         }
     }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -13,7 +13,9 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
@@ -28,6 +30,7 @@ internal class Program
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
+
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -63,12 +66,12 @@ internal class Program
             return 1;
         }
     }
+
     private static IAreaSetup[] RegisterAreas()
     {
 
         return [
             // Register core areas
-            new Azure.Mcp.Tools.AzureAIBestPractices.AzureAIBestPracticesSetup(),
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
@@ -92,6 +95,7 @@ internal class Program
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
+            new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
@@ -103,6 +107,7 @@ internal class Program
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
+            new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
@@ -113,6 +118,7 @@ internal class Program
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
+            new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
@@ -184,6 +190,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
@@ -197,7 +204,7 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddAzureTenantService();
+        services.AddAzureTenantService(addUserAgentClient: true);
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)

@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
@@ -40,7 +41,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         try
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> tables = await pgService.ListTablesAsync(options.Subscription!, options.ResourceGroup!, options.AuthType!, options.User!, options.Password, options.Server!, options.Database!);
+            List<string> tables = await pgService.ListTablesAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.AuthType!,
+                options.User!,
+                options.Password,
+                options.Server!,
+                options.Database!,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(tables ?? []), PostgresJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)

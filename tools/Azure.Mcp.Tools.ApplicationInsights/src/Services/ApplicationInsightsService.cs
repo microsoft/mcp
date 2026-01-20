@@ -26,23 +26,33 @@ public class ApplicationInsightsService(
     private readonly IProfilerDataService _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        IEnumerable<JsonNode> results = await GetProfilerInsightsImpAsync(subscription, resourceGroup, tenant, retryPolicy).ConfigureAwait(false);
+        IEnumerable<JsonNode> results = await GetProfilerInsightsImpAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
         return results.Take(MaxRecommendations);
     }
 
-    private async Task<IEnumerable<JsonNode>> GetProfilerInsightsImpAsync(string subscription, string? resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    private async Task<IEnumerable<JsonNode>> GetProfilerInsightsImpAsync(
+        string subscription,
+        string? resourceGroup,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
         List<JsonNode> results = [];
 
         try
         {
-            List<ApplicationInsightsComponentResource> components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy).ConfigureAwait(false);
+            List<ApplicationInsightsComponentResource> components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
 
-            IEnumerable<JsonNode> insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id)).ConfigureAwait(false);
+            IEnumerable<JsonNode> insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
             results.AddRange(insights);
 
             // Return all results for this resource group (outer method enforces global max)
@@ -55,7 +65,12 @@ public class ApplicationInsightsService(
         }
     }
 
-    private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(string subscription, string? resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(
+        string subscription,
+        string? resourceGroup,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(resourceGroup))
         {
@@ -69,7 +84,11 @@ public class ApplicationInsightsService(
         return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         SubscriptionResource targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
         return await targetSubscription.GetApplicationInsightsComponentsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);

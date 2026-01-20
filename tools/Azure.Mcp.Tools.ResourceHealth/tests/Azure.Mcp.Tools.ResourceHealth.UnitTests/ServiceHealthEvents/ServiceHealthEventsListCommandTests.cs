@@ -3,13 +3,14 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResourceHealth.UnitTests.ServiceHealthEvents;
@@ -132,7 +133,7 @@ public class ServiceHealthEventsListCommandTests
     {
         // Arrange
         var expectedError = "Service error";
-        _resourceHealthService.When(x => x.ListServiceHealthEventsAsync(
+        _resourceHealthService.ListServiceHealthEventsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -142,8 +143,8 @@ public class ServiceHealthEventsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()))
-            .Do(x => throw new InvalidOperationException(expectedError));
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(expectedError));
 
         var parsedArgs = _commandDefinition.Parse(["--subscription", "nonexistent-sub"]);
 

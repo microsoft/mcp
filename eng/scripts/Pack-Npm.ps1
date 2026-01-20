@@ -105,6 +105,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         cpu = @()
         optionalDependencies = @{}
         scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
+        mcpName = $server.mcpRepositoryName
     }
 
     # Build the project
@@ -157,6 +158,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             bin = @{ "$cliName-$nodeOs-$arch" = "./$binPath" }
             os = @($nodeOs)
             cpu = @($arch)
+            mcpName = $server.mcpRepositoryName
         }
 
         if($wrapperPackage.os -notcontains $nodeOs) {

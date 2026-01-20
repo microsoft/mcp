@@ -2,38 +2,21 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging.Abstractions;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-[Trait("Area", "Marketplace")]
-public class ProductGetCommandTests : CommandTestsBase
+public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private const string ProductKey = "product";
     private const string ProductId = "test_test_pmc2pc1.vmsr_uat_beta";
     private const string Language = "en";
     private const string Market = "US";
-    private readonly MarketplaceService _marketplaceService;
-
-    public ProductGetCommandTests(ITestOutputHelper output) : base(output)
-    {
-        var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var tenantService = new TenantService(tokenProvider, cacheService);
-        _marketplaceService = new MarketplaceService(tenantService);
-    }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product()
     {
         var result = await CallToolAsync(
@@ -53,7 +36,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_language_option()
     {
         var result = await CallToolAsync(
@@ -74,7 +56,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_market_option()
     {
         var result = await CallToolAsync(
@@ -95,7 +76,6 @@ public class ProductGetCommandTests : CommandTestsBase
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
         var result = await CallToolAsync(

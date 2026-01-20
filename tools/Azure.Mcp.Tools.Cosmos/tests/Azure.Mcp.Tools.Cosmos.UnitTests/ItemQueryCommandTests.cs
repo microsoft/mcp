@@ -2,12 +2,12 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -52,7 +52,10 @@ public class ItemQueryCommandTests
             Arg.Is("container123"),
             Arg.Is(query),
             Arg.Is("sub123"),
-            Arg.Any<AuthMethod>(), null, Arg.Any<RetryPolicyOptions>())
+            Arg.Any<AuthMethod>(),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedItems));
 
         var args = _commandDefinition.Parse([
@@ -94,7 +97,8 @@ public class ItemQueryCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedItems));
 
         var args = _commandDefinition.Parse([
@@ -128,7 +132,8 @@ public class ItemQueryCommandTests
             Arg.Is<string>(s => s == "sub123"),
             Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -165,7 +170,8 @@ public class ItemQueryCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([

@@ -6,19 +6,21 @@ using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Agents;
 using Azure.Mcp.Tools.Foundry.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
 {
-    private const string CommandTitle = "Create an AI Foundry Agent";
+    private const string CommandTitle = "Create a Microsoft Foundry Agent";
     public override string Id => "6de93935-7df0-4161-8618-8daf624dbb23";
     public override string Name => "create";
 
 
     public override string Description =>
         """
-            Creates an AI Foundry Agent that processes messages according to a given system instruction using an existing AI Foundry model deployment.
+            Creates a Microsoft Foundry Agent that processes messages according to a given system instruction using an existing Microsoft Foundry model deployment.
         """;
 
     public override ToolMetadata Metadata => new()

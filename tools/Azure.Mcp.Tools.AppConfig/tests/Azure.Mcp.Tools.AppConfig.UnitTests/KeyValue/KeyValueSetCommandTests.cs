@@ -4,20 +4,19 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
-[Trait("Area", "AppConfig")]
 public class KeyValueSetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -65,7 +64,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<string>(),
-            Arg.Any<string[]>());
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -101,7 +101,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<string>(),
-            Arg.Any<string[]>());
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -139,7 +140,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             null,
             "application/json",
-            Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")));
+            Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -166,7 +168,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string[]>())
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to set key-value"));
 
         var args = _commandDefinition.Parse([

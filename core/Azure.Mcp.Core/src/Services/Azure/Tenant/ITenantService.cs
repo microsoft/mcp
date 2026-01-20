@@ -15,16 +15,18 @@ public interface ITenantService
     /// <summary>
     /// Gets the list of all available Azure tenants.
     /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with a list of <see cref="TenantResource"/>
     /// instances.
     /// </returns>
-    Task<List<TenantResource>> GetTenants();
+    Task<List<TenantResource>> GetTenants(CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets the tenant ID from either a tenant ID or tenant name.
     /// </summary>
     /// <param name="tenantIdOrName">The tenant ID or tenant name.</param>
+    /// <param name="cancellation">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -35,12 +37,13 @@ public interface ITenantService
     /// <exception cref="InvalidOperationException">
     /// Thrown when the tenant has a <see langword="null"> TenantId.
     /// </exception>
-    Task<string> GetTenantId(string tenantIdOrName);
+    Task<string> GetTenantId(string tenantIdOrName, CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets the tenant ID by tenant name.
     /// </summary>
     /// <param name="tenantName">The tenant name.</param>
+    /// <param name="cancellation">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -51,12 +54,13 @@ public interface ITenantService
     /// <exception cref="InvalidOperationException">
     /// Thrown when the tenant has a <see langword="null"> TenantId.
     /// </exception>
-    Task<string> GetTenantIdByName(string tenantName);
+    Task<string> GetTenantIdByName(string tenantName, CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets the tenant name by tenant ID.
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="cancellation">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant name or <see langword="null"/> if not found.
     /// </returns>
@@ -66,7 +70,7 @@ public interface ITenantService
     /// <exception cref="InvalidOperationException">
     /// Thrown when the tenant has a <see langword="null"> DisplayName.
     /// </exception>
-    Task<string> GetTenantNameById(string tenantId);
+    Task<string> GetTenantNameById(string tenantId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Determines whether the specified string is a valid tenant ID (GUID format).
@@ -98,4 +102,30 @@ public interface ITenantService
     Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets a new instance of <see cref="HttpClient"/> configured for use with Azure tenant operations.
+    /// </summary>
+    /// <remarks>
+    /// <para>Each instance includes the following configuration:</para>
+    /// <list type="bullet">
+    /// <item><description>Proxy settings</description></item>
+    /// <item><description>Record/playback handler</description></item>
+    /// <item><description>Timeout configuration</description></item>
+    /// <item><description>User-Agent header</description></item>
+    /// </list>
+    /// <para>Do:</para>
+    /// <list type="bullet">
+    /// <item><description>Utilize the client for a single method or MCP tool invocation.</description></item>
+    /// <item><description>Add request-specific configuration that is scoped to the current operation.</description></item>
+    /// </list>
+    /// <para>Don't:</para>
+    /// <list type="bullet">
+    /// <item><description>Persist the client beyond the lifetime of the invoking tool.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// An <see cref="HttpClient"/> instance configured for use with Azure tenant operations.
+    /// </returns>
+    HttpClient GetClient();
 }

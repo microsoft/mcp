@@ -4,8 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
@@ -13,9 +11,9 @@ using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem;
 
@@ -76,12 +74,31 @@ public class FileSystemCreateCommandTests
         {
             var expected = CreateLustre();
             _svc.CreateFileSystemAsync(
-                Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(Location), Arg.Is(Sku), Arg.Is(Size), Arg.Is(SubnetId), Arg.Is(Zone),
-                Arg.Is("Monday"), Arg.Is("00:00"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-                Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(expected);
+                Arg.Is(Sub),
+                Arg.Is(Rg),
+                Arg.Is(Name),
+                Arg.Is(Location),
+                Arg.Is(Sku),
+                Arg.Is(Size),
+                Arg.Is(SubnetId),
+                Arg.Is(Zone),
+                Arg.Is("Monday"),
+                Arg.Is("00:00"),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<long?>(),
+                Arg.Any<bool>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(expected);
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -132,12 +149,32 @@ public class FileSystemCreateCommandTests
     public async Task ExecuteAsync_RootSquashNotNone_WithParams_CallsService()
     {
         var expected = CreateLustre();
-        _svc.CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
-            "Monday", "00:00",
-            null, null, null,
-            "All", "nid1,nid2", 1000, 1000,
-            false, null, null, null,
-            null, Arg.Any<RetryPolicyOptions?>()).Returns(expected);
+        _svc.CreateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            Location,
+            Sku,
+            Size,
+            SubnetId,
+            Zone,
+            "Monday",
+            "00:00",
+            null,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            1000,
+            1000,
+            false,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expected);
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -159,12 +196,31 @@ public class FileSystemCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
-            "Monday", "00:00",
-            null, null, null,
-            "All", "nid1,nid2", 1000, 1000,
-            false, null, null, null,
-            null, Arg.Any<RetryPolicyOptions?>());
+        await _svc.Received(1).CreateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            Location,
+            Sku,
+            Size,
+            SubnetId,
+            Zone,
+            "Monday",
+            "00:00",
+            null,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            1000,
+            1000,
+            false,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -220,13 +276,32 @@ public class FileSystemCreateCommandTests
     public async Task ExecuteAsync_EncryptionEnabledWithKeyAndVault_CallsService()
     {
         var expected = CreateLustre();
-        _svc.CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
-            "Monday", "00:00",
-            null, null, null,
-            null, null, null, null,
-            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
+        _svc.CreateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            Location,
+            Sku,
+            Size,
+            SubnetId,
+            Zone,
+            "Monday",
+            "00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            "https://kv.vault.azure.net/keys/k/123",
+            "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
-            null, Arg.Any<RetryPolicyOptions?>()).Returns(expected);
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expected);
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -247,24 +322,62 @@ public class FileSystemCreateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
-            "Monday", "00:00",
-            null, null, null,
-            null, null, null, null,
-            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
+        await _svc.Received(1).CreateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            Location,
+            Sku,
+            Size,
+            SubnetId,
+            Zone,
+            "Monday",
+            "00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            "https://kv.vault.azure.net/keys/k/123",
+            "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
-            null, Arg.Any<RetryPolicyOptions?>());
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsGeneralException_Returns500()
     {
-        _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-            Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("error"));
+        _svc.CreateFileSystemAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("error"));
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -287,12 +400,32 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesRequestFailedException_Conflict()
     {
-        _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-            Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Azure.RequestFailedException(409, "conflict"));
+        _svc.CreateFileSystemAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -315,12 +448,31 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HsmOneContainerMissing_ReturnsErrorFromService()
     {
-        _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-            Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
+        _svc.CreateFileSystemAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,

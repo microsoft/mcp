@@ -4,13 +4,13 @@
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 
@@ -73,8 +73,9 @@ public sealed class AzqrCommandTests
         _processService.ExecuteAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IDictionary<string, string>?>(),
             Arg.Any<int>(),
-            Arg.Any<IEnumerable<string>>())
+            Arg.Any<CancellationToken>())
             .Returns(new ProcessResult(0, expectedOutput, string.Empty, $"scan --subscription-id {mockSubscriptionId}"));
 
         try
@@ -89,8 +90,9 @@ public sealed class AzqrCommandTests
             await _processService.Received().ExecuteAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<IDictionary<string, string>?>(),
                 Arg.Any<int>(),
-                Arg.Any<IEnumerable<string>>());
+                Arg.Any<CancellationToken>());
         }
         finally
         {
