@@ -123,7 +123,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         if (string.IsNullOrWhiteSpace(registry))
         {
             var registries = await ListRegistries(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
-            foreach (var reg in registries)
+            foreach (var reg in registries.Results)
             {
                 if (!string.IsNullOrWhiteSpace(reg.Name) && !string.IsNullOrWhiteSpace(reg.LoginServer))
                 {
