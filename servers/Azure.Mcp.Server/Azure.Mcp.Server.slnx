@@ -35,7 +35,6 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Advisor/src/Azure.Mcp.Tools.Advisor.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Advisor/tests/Azure.Mcp.Tools.Advisor.LiveTests/Azure.Mcp.Tools.Advisor.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Advisor/tests/Azure.Mcp.Tools.Advisor.UnitTests/Azure.Mcp.Tools.Advisor.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/" />
