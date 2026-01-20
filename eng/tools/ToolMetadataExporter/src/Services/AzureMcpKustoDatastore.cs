@@ -14,6 +14,8 @@ namespace ToolMetadataExporter.Services;
 
 public class AzureMcpKustoDatastore : IAzureMcpDatastore
 {
+    private const string ExistingToolsKqlFileName = "GetAvailableTools.kql";
+
     private readonly ICslQueryProvider _kustoClient;
     private readonly IKustoIngestClient _ingestClient;
     private readonly ILogger<AzureMcpKustoDatastore> _logger;
@@ -45,11 +47,11 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
 
     public async Task<IList<AzureMcpTool>> GetAvailableToolsAsync(CancellationToken cancellationToken = default)
     {
-        var queryFile = _queriesDirectory.GetFiles("GetAvailableTools.kql").FirstOrDefault();
+        var queryFile = _queriesDirectory.GetFiles(ExistingToolsKqlFileName).FirstOrDefault();
 
         if (queryFile == null)
         {
-            throw new InvalidOperationException($"Could not find GetAvailableTools.kql in {_queriesDirectory.FullName}");
+            throw new InvalidOperationException($"Could not find {ExistingToolsKqlFileName} in {_queriesDirectory.FullName}");
         }
 
         var results = new List<AzureMcpTool>();
@@ -145,14 +147,14 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         var clientRequestProperties = new ClientRequestProperties();
         var reader = await _kustoClient.ExecuteQueryAsync(_databaseName, kql, clientRequestProperties, cancellationToken);
 
-        var eventTimeOrdinal = reader.GetOrdinal("EventTime");
-        var eventTypeOrdinal = reader.GetOrdinal("EventType");
-        var serverVersionOrdinal = reader.GetOrdinal("ServerVersion");
-        var toolIdOrdinal = reader.GetOrdinal("ToolId");
-        var toolNameOrdinal = reader.GetOrdinal("ToolName");
-        var toolAreaOrdinal = reader.GetOrdinal("ToolArea");
-        var replacedByToolNameOrdinal = reader.GetOrdinal("ReplacedByToolName");
-        var replacedByToolAreaOrdinal = reader.GetOrdinal("ReplacedByToolArea");
+        var eventTimeOrdinal = reader.GetOrdinal(nameof(McpToolEvent.EventTime));
+        var eventTypeOrdinal = reader.GetOrdinal(nameof(McpToolEvent.EventType));
+        var serverVersionOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ServerVersion));
+        var toolIdOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ToolId));
+        var toolNameOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ToolName));
+        var toolAreaOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ToolArea));
+        var replacedByToolNameOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ReplacedByToolName));
+        var replacedByToolAreaOrdinal = reader.GetOrdinal(nameof(McpToolEvent.ReplacedByToolArea));
 
         while (reader.Read())
         {
