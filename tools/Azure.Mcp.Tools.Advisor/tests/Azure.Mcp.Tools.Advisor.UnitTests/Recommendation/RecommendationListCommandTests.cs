@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.UnitTests.Recommendation;
 
-public class RecommendationGetCommandTests
+public class RecommendationListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAdvisorService _advisorService;
@@ -22,7 +22,7 @@ public class RecommendationGetCommandTests
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public RecommendationGetCommandTests()
+    public RecommendationListCommandTests()
     {
         _advisorService = Substitute.For<IAdvisorService>();
         _logger = Substitute.For<ILogger<RecommendationListCommand>>();
