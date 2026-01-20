@@ -254,7 +254,6 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendations list --subscription <subscription>
 ```
 
