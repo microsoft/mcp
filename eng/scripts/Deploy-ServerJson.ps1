@@ -105,6 +105,8 @@ if (!(Test-Path $goInstallScriptPath)) {
 $env:GOEXPERIMENT = "systemcrypto"
 
 # Clone and build the publisher tool
+# FYI for EngSys or server.json schema changes. This publisher should be updated any time we update the manifest schema
+# version $schema in any server.json file: https://github.com/modelcontextprotocol/registry/releases/
 git clone --branch "v1.4.0" https://github.com/modelcontextprotocol/registry
 
 Set-Location registry
