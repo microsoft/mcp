@@ -99,6 +99,31 @@ public sealed class ComputeService(
         return MapToVmInstanceView(vmName, instanceView.Value);
     }
 
+    public async Task<(VmInfo VmInfo, VmInstanceView InstanceView)> GetVmWithInstanceViewAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var vmResource = await subscriptionResource
+            .GetResourceGroup(resourceGroup, cancellationToken)
+            .Value
+            .GetVirtualMachines()
+            .GetAsync(vmName, cancellationToken: cancellationToken);
+
+        var vmInfo = MapToVmInfo(vmResource.Value.Data);
+        var instanceView = await vmResource.Value.InstanceViewAsync(cancellationToken);
+        var vmInstanceView = MapToVmInstanceView(vmName, instanceView.Value);
+
+        return (vmInfo, vmInstanceView);
+    }
+
     public async Task<List<VmSizeInfo>> ListVmSizesAsync(
         string location,
         string subscription,

@@ -20,7 +20,13 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> VmName = new($"--{VmNameName}", "--name")
     {
         Description = "The name of the virtual machine",
-        Required = true
+        Required = false
+    };
+
+    public static readonly Option<bool> InstanceView = new("--instance-view")
+    {
+        Description = "Include instance view details (only available when retrieving a specific VM)",
+        Required = false
     };
 
     public static readonly Option<string> VmssName = new($"--{VmssNameName}", "--name")

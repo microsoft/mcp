@@ -22,7 +22,6 @@ public class ComputeSetup : IAreaSetup
 
         // VM commands
         services.AddSingleton<VmGetCommand>();
-        services.AddSingleton<VmListCommand>();
         services.AddSingleton<VmInstanceViewCommand>();
         services.AddSingleton<VmSizesListCommand>();
 
@@ -55,9 +54,6 @@ public class ComputeSetup : IAreaSetup
         // Register VM commands
         var vmGet = serviceProvider.GetRequiredService<VmGetCommand>();
         vm.AddCommand(vmGet.Name, vmGet);
-
-        var vmList = serviceProvider.GetRequiredService<VmListCommand>();
-        vm.AddCommand(vmList.Name, vmList);
 
         var vmInstanceView = serviceProvider.GetRequiredService<VmInstanceViewCommand>();
         vm.AddCommand(vmInstanceView.Name, vmInstanceView);
