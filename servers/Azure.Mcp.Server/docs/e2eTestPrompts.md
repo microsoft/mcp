@@ -482,6 +482,28 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
 | get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
 | get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+
+## Azure Migrate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azuremigrate_platformlandingzone_getmodificationguidance | Get guidance for enabling DDoS protection in my Landing Zone |
+| azuremigrate_platformlandingzone_getmodificationguidance | How do I turn off Bastion in my Platform Landing Zone? |
+| azuremigrate_platformlandingzone_getmodificationguidance | Show me how to change IP address ranges in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getmodificationguidance | Get guidance for implementing zero trust in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getmodificationguidance | How can I disable a policy in my Platform Landing Zone? |
+| azuremigrate_platformlandingzone_getmodificationguidance | Get guidance for changing resource naming patterns in my Landing Zone |
+| azuremigrate_platformlandingzone_getmodificationguidance | Show me how to modify network topology in my Landing Zone |
+| azuremigrate_platformlandingzone_getmodificationguidance | Get guidance for updating management groups in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_generatelandingzone | Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Start landing zone generation for migrate project <migrate-project-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_generatelandingzone | Verify if all parameters are set for migrate project <migrate-project-name> |
+
 ## Azure Monitor
 
 | Tool Name | Test Prompt |

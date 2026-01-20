@@ -1777,6 +1777,77 @@ azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
                                               --job-name <job-name>
 ```
 
+### Azure Migrate Operations
+
+#### Platform Landing Zone Modification Guidance
+
+```bash
+# Get guidance and recommendations for modifying existing Platform Landing Zone (PLZ) configurations
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getmodificationguidance --topic <modification-topic>
+```
+
+#### Platform Landing Zone Generation
+
+```bash
+# Generate platform landing zones with multiple actions
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone generatelandingzone --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --migrate-project <migrate-project-name> \
+                                       --action <action> \
+                                       [action-specific-parameters]
+```
+
+**Actions:**
+
+1. **Update Parameters** (`--action update`)
+   ```bash
+   # Set or update landing zone generation parameters
+   azmcp azuremigrate platformlandingzone generatelandingzone --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --migrate-project <migrate-project-name> \
+                                          --action update \
+                                          --region-type <single|multi> \
+                                          --firewall-type <azurefirewall|nva|none> \
+                                          --network-architecture <hubspoke|vwan> \
+                                          --version-control-system <git|azuredevops> \
+                                          [--identity-subscription <subscription-id>] \
+                                          [--management-subscription <subscription-id>] \
+                                          [--connectivity-subscription <subscription-id>] \
+                                          [--regions <comma-separated-regions>] \
+                                          [--environment-name <environment-name>] \
+                                          [--organization-name <organization-name>]
+   ```
+
+2. **Generate Landing Zone** (`--action generate`)
+   ```bash
+   # Initiate landing zone generation (requires all parameters to be set via update action first)
+   azmcp azuremigrate platformlandingzone generatelandingzone --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --migrate-project <migrate-project-name> \
+                                          --action generate
+   ```
+
+3. **Download Landing Zone** (`--action download`)
+   ```bash
+   # Download generated landing zone files (polls for completion and downloads when ready)
+   azmcp azuremigrate platformlandingzone generatelandingzone --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --migrate-project <migrate-project-name> \
+                                          --action download \
+                                          --output-path <local-directory-path>
+   ```
+
+4. **Check Parameter Status** (`--action status`)
+   ```bash
+   # Check parameter status and completeness
+   azmcp azuremigrate platformlandingzone generatelandingzone --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --migrate-project <migrate-project-name> \
+                                          --action status
+   ```
+
 ### Azure Native ISV Operations
 
 ```bash

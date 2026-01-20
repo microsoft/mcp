@@ -3036,6 +3036,72 @@
       "mappedToolList": [
         "storagesync_cloudendpoint_changedetection"
       ]
+    },
+    {
+      "name": "generate_azure_landing_zones",
+      "description": "Generate and download Azure platform landing zone configurations for Azure Migrate projects. Collect parameters, generate landing zones following Azure Landing Zone architecture patterns, and download the generated infrastructure code.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azuremigrate_platformlandingzone_generatelandingzone"
+      ]
+    },
+    {
+      "name": "get_azure_landing_zone_modification_guidance",
+      "description": "Get modification guidance and recommendations for existing Azure Landing Zone (ALZ) configurations. Provides guidance for modifying service configurations, policy management, resource naming, network topology, identity and governance settings. Works with official Azure Landing Zone documentation to provide exact file paths and configuration changes needed.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azuremigrate_platformlandingzone_getmodificationguidance"
+      ]
     }
   ]
 }
