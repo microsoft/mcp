@@ -39,7 +39,7 @@ public class KeyedServiceTests
         // Act
         services.AddMcpHttpSessionAffinity(); // Should use default
 
-        var provider = services.BuildServiceProvider();;
+        var provider = services.BuildServiceProvider();
 
         // Assert
         var sessionStore = provider.GetService<ISessionStore>();
