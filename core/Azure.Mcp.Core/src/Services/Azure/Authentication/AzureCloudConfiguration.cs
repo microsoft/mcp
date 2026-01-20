@@ -64,8 +64,6 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
                 (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
                 (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment),
-            "azuregermanycloud" or "germany" =>
-                (new Uri("https://login.microsoftonline.de"), ArmEnvironment.AzureGermany),
             _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud) // Default to public cloud if unknown
         };
     }
