@@ -26,6 +26,14 @@ internal class Program
     {
         try
         {
+            // Early exit for --version to avoid expensive initialization
+            if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
+            {
+                var version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown";
+                Console.WriteLine($"Azure MCP Server {version}");
+                return 0;
+            }
+
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
