@@ -5,8 +5,10 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,11 +46,11 @@ public class AccountGetCommandTests
     {
         // Arrange
         var subscription = "sub123";
-        var expectedAccounts = new List<Models.StorageAccountInfo>
-        {
+        var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
+        [
             new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true),
             new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, "Succeeded", DateTimeOffset.UtcNow, false, true)
-        };
+        ], false);
 
         _storageService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -72,8 +74,8 @@ public class AccountGetCommandTests
 
         Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
-        Assert.Equal(expectedAccounts.Count, result.Accounts.Count);
-        Assert.Equal(expectedAccounts.Select(a => a.Name), result.Accounts.Select(a => a.Name));
+        Assert.Equal(expectedAccounts.Results.Count, result.Accounts.Count);
+        Assert.Equal(expectedAccounts.Results.Select(a => a.Name), result.Accounts.Select(a => a.Name));
     }
 
     [Fact]
@@ -88,7 +90,7 @@ public class AccountGetCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
@@ -150,9 +152,9 @@ public class AccountGetCommandTests
     {
         if (shouldSucceed)
         {
-            var expectedAccount = new List<Models.StorageAccountInfo> {
-                new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
-            };
+            var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
+                [ new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true) ],
+                false);
 
             _storageService.GetAccountDetails(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -183,9 +185,9 @@ public class AccountGetCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
-        var expectedAccount = new List<Models.StorageAccountInfo> {
-            new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
-        };
+        var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
+            [ new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true) ],
+            false);
 
         _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -207,9 +209,9 @@ public class AccountGetCommandTests
         Assert.NotNull(result);
         Assert.Single(result.Accounts);
 
-        Assert.Equal(expectedAccount[0].Name, result.Accounts[0].Name);
-        Assert.Equal(expectedAccount[0].Location, result.Accounts[0].Location);
-        Assert.Equal(expectedAccount[0].Kind, result.Accounts[0].Kind);
+        Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
+        Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
+        Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);
     }
 
     [Fact]

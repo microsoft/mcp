@@ -72,7 +72,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(assignments ?? []), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(assignments?.Results ?? [], assignments?.TruncatedResults ?? false), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
         }
         catch (Exception ex)
         {
@@ -83,5 +83,5 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         return context.Response;
     }
 
-    internal record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments);
+    internal record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments, bool TruncatedResults);
 }

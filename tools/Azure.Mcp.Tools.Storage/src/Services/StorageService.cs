@@ -28,7 +28,7 @@ public class StorageService(
 {
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<StorageAccountInfo>> GetAccountDetails(
+    public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
         string? tenant = null,
@@ -76,15 +76,13 @@ public class StorageService(
                     throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
                 }
 
-                accounts.Add(storageAccount);
+                return new ResourceQueryResults<StorageAccountInfo>([ storageAccount ], false);
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
             }
         }
-
-        return accounts;
     }
 
     public async Task<StorageAccountResult> CreateStorageAccount(

@@ -4,12 +4,14 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
@@ -35,7 +37,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsClusters_WhenClustersExist()
     {
         // Arrange
-        var expectedClusters = new List<string> { "clusterA", "clusterB" };
+        var expectedClusters = new ResourceQueryResults<string>([ "clusterA", "clusterB" ], false);
         _kusto.ListClustersAsync(
             "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
@@ -56,7 +58,7 @@ public sealed class ClusterListCommandTests
         var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.ClusterListCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedClusters, result.Clusters);
+        Assert.Equal(expectedClusters.Results, result.Clusters);
     }
 
     [Fact]
@@ -64,7 +66,7 @@ public sealed class ClusterListCommandTests
     {
         // Arrange
         _kusto.ListClustersAsync("sub123", null, null, Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<string>([], false));
 
         var command = new ClusterListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
@@ -93,7 +95,7 @@ public sealed class ClusterListCommandTests
 
         // Arrange
         _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<string>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
         var command = new ClusterListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);

@@ -56,7 +56,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.TruncatedResults ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {
@@ -67,5 +67,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts);
+    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool TruncatedResults);
 }

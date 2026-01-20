@@ -78,7 +78,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of resources converted to the specified type</returns>
-    protected async Task<List<T>> ExecuteResourceQueryAsync<T>(
+    protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
         string? resourceGroup,
         string subscription,
@@ -131,7 +131,7 @@ public abstract class BaseAzureResourceService(
             }
         }
 
-        return results;
+        return new ResourceQueryResults<T>(results, result?.ResultTruncated == ResultTruncated.True);
     }
 
     /// <summary>
@@ -267,3 +267,5 @@ public abstract class BaseAzureResourceService(
         return result.Value;
     }
 }
+
+public sealed record ResourceQueryResults<T>(List<T> Results, bool TruncatedResults);

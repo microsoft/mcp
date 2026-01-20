@@ -17,7 +17,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
 {
     private readonly ILogger<AcrService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<AcrRegistryInfo>> ListRegistries(
+    public async Task<ResourceQueryResults<AcrRegistryInfo>> ListRegistries(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
