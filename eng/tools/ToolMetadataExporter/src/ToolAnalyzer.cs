@@ -73,6 +73,8 @@ public class ToolAnalyzer
             return;
         }
 
+        var eventTime = _useAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
+
         // Iterate through all the current tools and match them against the
         // state Kusto knows about.
         // For each tool, if there is no matching Tool, it is a new tool.
@@ -96,7 +98,7 @@ public class ToolAnalyzer
 
             var changeEvent = new McpToolEvent
             {
-                EventTime = analysisTime,
+                EventTime = eventTime,
                 ToolId = tool.Id,
                 ServerName = serverName,
                 ServerVersion = serverVersion,
@@ -139,7 +141,7 @@ public class ToolAnalyzer
         {
             ServerName = serverName,
             ServerVersion = serverVersion,
-            EventTime = analysisTime,
+            EventTime = eventTime,
             EventType = McpToolEventType.Deleted,
             ToolId = x.Key,
             ToolName = x.Value.ToolName,
@@ -158,8 +160,8 @@ public class ToolAnalyzer
             return;
         }
 
-        var filename = await GetOutputFileNameAsync("tool_changes", analysisTime, cancellationToken);
-        var outputFile = Path.Combine(_workingDirectory, $"{filename}.json)");
+        var filename = await GetOutputFileNameAsync("tool_changes", eventTime, cancellationToken);
+        var outputFile = Path.Combine(_workingDirectory, $"{filename}.json");
 
         _logger.LogInformation("Tool updates. Writing output to: {FileName}", outputFile);
 
