@@ -2,15 +2,10 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.12 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.0-beta.12 (2026-01-20)
 
 ### Bugs Fixed
-
-### Other Changes
+- Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
 
 ## 2.0.0-beta.11 (2026-01-16)
 
