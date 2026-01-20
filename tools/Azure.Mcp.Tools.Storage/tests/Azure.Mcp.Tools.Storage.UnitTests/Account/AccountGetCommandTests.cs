@@ -153,7 +153,7 @@ public class AccountGetCommandTests
         if (shouldSucceed)
         {
             var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
-                [ new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true) ],
+                [new("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
                 false);
 
             _storageService.GetAccountDetails(
@@ -186,7 +186,7 @@ public class AccountGetCommandTests
         var account = "mystorageaccount";
         var subscription = "sub123";
         var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
-            [ new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true) ],
+            [new(account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
             false);
 
         _storageService.GetAccountDetails(

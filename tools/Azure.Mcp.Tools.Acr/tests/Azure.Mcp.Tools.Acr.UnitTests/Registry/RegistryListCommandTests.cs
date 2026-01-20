@@ -108,7 +108,7 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_FiltersById_ReturnsFilteredRegistries()
     {
         // Arrange
-        var expectedRegistries = new ResourceQueryResults<AcrRegistryInfo>([ new("registry1", null, null, null, null) ], false);
+        var expectedRegistries = new ResourceQueryResults<AcrRegistryInfo>([new("registry1", null, null, null, null)], false);
         _service.ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedRegistries);
 

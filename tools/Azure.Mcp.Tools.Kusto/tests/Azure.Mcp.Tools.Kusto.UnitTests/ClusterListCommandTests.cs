@@ -37,7 +37,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsClusters_WhenClustersExist()
     {
         // Arrange
-        var expectedClusters = new ResourceQueryResults<string>([ "clusterA", "clusterB" ], false);
+        var expectedClusters = new ResourceQueryResults<string>(["clusterA", "clusterB"], false);
         _kusto.ListClustersAsync(
             "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);

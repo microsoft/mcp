@@ -76,7 +76,7 @@ public class StorageService(
                     throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
                 }
 
-                return new ResourceQueryResults<StorageAccountInfo>([ storageAccount ], false);
+                return new ResourceQueryResults<StorageAccountInfo>([storageAccount], false);
             }
             catch (Exception ex)
             {
