@@ -17,7 +17,9 @@ public class AzmcpProgramTests
 
     public AzmcpProgramTests()
     {
-        _utility = Substitute.For<Utility>();
+        var utilityLogger = Substitute.For<ILogger<Utility>>();
+        _utility = Substitute.For<Utility>(utilityLogger);
+
         _logger = Substitute.For<ILogger<AzmcpProgram>>();
         _options = Substitute.For<IOptions<AppConfiguration>>();
 

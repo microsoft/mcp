@@ -20,10 +20,12 @@ public class ToolAnalyzerTests : IDisposable
     private readonly IOptions<AppConfiguration> _options;
     private readonly AppConfiguration _appConfiguration;
     private readonly string _tempWorkingDirectory;
+    private readonly RunInformation _runInformation;
 
     public ToolAnalyzerTests()
     {
-        var utility = Substitute.For<Utility>();
+        var utilityLogger = Substitute.For<ILogger<Utility>>();
+        var utility = Substitute.ForPartsOf<Utility>(utilityLogger);
         var logger = Substitute.For<ILogger<AzmcpProgram>>();
         var programOptions = Substitute.For<IOptions<AppConfiguration>>();
         var programConfig = new AppConfiguration
@@ -49,6 +51,8 @@ public class ToolAnalyzerTests : IDisposable
         };
 
         _options.Value.Returns(_appConfiguration);
+
+        _runInformation = new RunInformation(_azmcpProgram);
     }
 
     public void Dispose()
@@ -77,10 +81,11 @@ public class ToolAnalyzerTests : IDisposable
         };
         var invalidOptions = Substitute.For<IOptions<AppConfiguration>>();
         invalidOptions.Value.Returns(invalidConfig);
+        var runInfo = new RunInformation(_azmcpProgram);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ToolAnalyzer(_azmcpProgram, _datastore, invalidOptions, _logger));
+            new ToolAnalyzer(_azmcpProgram, _datastore, runInfo, invalidOptions, _logger));
     }
 
     [Fact]
@@ -91,7 +96,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(null));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
@@ -109,7 +114,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult { Tools = null }));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
@@ -127,7 +132,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult { Tools = [] }));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
@@ -152,7 +157,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -175,7 +180,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -202,7 +207,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -243,7 +248,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -281,7 +286,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -317,7 +322,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
@@ -351,7 +356,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool3
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -381,7 +386,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -411,7 +416,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -442,7 +447,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, cts.Token);
@@ -468,7 +473,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -498,7 +503,7 @@ public class ToolAnalyzerTests : IDisposable
         }));
         _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -531,7 +536,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
@@ -564,7 +569,7 @@ public class ToolAnalyzerTests : IDisposable
             existingTool
         ]));
 
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _options, _logger);
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
