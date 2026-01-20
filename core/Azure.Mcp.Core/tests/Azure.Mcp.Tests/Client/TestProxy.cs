@@ -365,7 +365,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         else
         {
-            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(15));
+            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(30));
         }
 
         if (_httpPort is null)
