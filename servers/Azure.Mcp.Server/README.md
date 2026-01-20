@@ -359,7 +359,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
    > **Alternative Command (using .NET):** `dotnet dnx -p Azure.Mcp server start`
 
-3. Press **Ctrl+S** to save the server configuration.
+3. Press **Ctrl+S** (or **Cmd+S** on macOS) to save the server configuration.
 
 #### Verification
 
