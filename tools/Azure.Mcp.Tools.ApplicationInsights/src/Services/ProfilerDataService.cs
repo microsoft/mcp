@@ -9,7 +9,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.ResourceManager;
@@ -23,7 +22,7 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
 public class ProfilerDataService(
-    IHttpClientService httpClientService,
+    IHttpClientFactory httpClientFactory,
     ILogger<ProfilerDataService> logger,
     ITenantService tenantService)
     : BaseAzureService(tenantService), IProfilerDataService
@@ -31,7 +30,7 @@ public class ProfilerDataService(
     private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
     private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";
 
-    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(Endpoint));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -179,7 +178,8 @@ public class ProfilerDataService(
     internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, cancellationToken);
-        return await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var client = _httpClientFactory.CreateClient();
+        return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, CancellationToken cancellationToken, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
