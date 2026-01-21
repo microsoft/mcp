@@ -3,25 +3,29 @@
 
 using System.Text.Json;
 using Azure.Identity;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-    : RecordedCommandTestsBase(output, fixture)
+public class KustoCommandTests : RecordedCommandTestsBase
 {
     private const string TestDatabaseName = "ToDoLists";
     private const string TestTableName = "ToDoList";
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private const string Sanitized = "Sanitized";
+    private readonly ServiceProvider _httpClientProvider;
+
+    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
+    {
+        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+    }
 
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>
     {
@@ -72,6 +76,12 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
         }),
     ];
 
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        _httpClientProvider.Dispose();
+    }
+
     #region Init
     public override async ValueTask InitializeAsync()
     {
@@ -97,11 +107,9 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
                 });
             var clusterUri = clusterInfo.AssertProperty("cluster").AssertProperty("clusterUri").GetString();
 
-            // Create HttpClientService for KustoClient
-            var httpClientOptions = new HttpClientOptions();
-            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions), null!);
+            var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
 
-            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientService);
+            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientFactory);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
