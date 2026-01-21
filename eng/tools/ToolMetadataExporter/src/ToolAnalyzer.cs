@@ -18,9 +18,8 @@ public class ToolAnalyzer
     private readonly IAzureMcpDatastore _azureMcpDatastore;
     private readonly RunInformation _runInformation;
     private readonly ILogger<ToolAnalyzer> _logger;
+    private readonly AppConfiguration _appConfiguration;
     private readonly string _workingDirectory;
-    private readonly bool _isDryRun;
-    private readonly bool _useAnalysisTime;
 
     public ToolAnalyzer(AzmcpProgram program, IAzureMcpDatastore azureMcpDatastore, RunInformation runInformation,
         IOptions<AppConfiguration> configuration, ILogger<ToolAnalyzer> logger)
@@ -30,19 +29,19 @@ public class ToolAnalyzer
         _runInformation = runInformation;
         _logger = logger;
 
-        _workingDirectory = configuration.Value.WorkDirectory
+        _appConfiguration = configuration.Value ?? throw new ArgumentNullException(nameof(configuration));
+        _workingDirectory = _appConfiguration.WorkDirectory
             ?? throw new ArgumentException(
                 $"Expected non-null value of {nameof(AppConfiguration.WorkDirectory)} in {nameof(configuration)}");
-
-        _isDryRun = configuration.Value.IsDryRun;
-        _useAnalysisTime = configuration.Value.UseAnalysisTime;
     }
 
     public async Task RunAsync(DateTimeOffset analysisTime, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", _isDryRun);
+        _logger.LogInformation("Starting analysis.");
+
+        LogConfiguration();
 
         var serverName = await _azmcpProgram.GetServerNameAsync();
         var serverVersion = await _azmcpProgram.GetServerVersionAsync();
@@ -75,7 +74,7 @@ public class ToolAnalyzer
             return;
         }
 
-        var eventTime = _useAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
+        var eventTime = _appConfiguration.UseAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
 
         // Iterate through all the current tools and match them against the
         // state Kusto knows about.
@@ -189,7 +188,7 @@ public class ToolAnalyzer
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!_isDryRun)
+        if (!_appConfiguration.IsDryRun)
         {
             _logger.LogInformation("Updating datastore.");
             await _azureMcpDatastore.AddToolEventsAsync(changes, cancellationToken);
@@ -202,7 +201,7 @@ public class ToolAnalyzer
 
         var serverVersion = await _azmcpProgram.GetServerVersionAsync();
         var fileName = await _runInformation.GetRunInfoFileNameAsync(baseName);
-        var fileDate = _useAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
+        var fileDate = _appConfiguration.UseAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
 
         return $"{fileName}_{fileDate:yyyyMMddHHmmss}";
     }
@@ -211,5 +210,29 @@ public class ToolAnalyzer
     {
         var split = tool.Command?.Split(" ", 2);
         return split?[0];
+    }
+
+    private void LogConfiguration()
+    {
+        _logger.LogInformation(
+            """
+            Configuration:
+              Working Directory: {WorkingDirectory}
+              Is Dry Run: {IsDryRun}
+              Use Analysis Time: {UseAnalysisTime}
+              Azmcp Exe: {AzmcpExe}
+              MCP Tool Events Table Name: {McpToolEventsTableName}
+              Database Name: {DatabaseName}
+              Query Endpoint: {QueryEndpoint}
+              Ingestion Endpoint: {IngestionEndpoint}
+            """,
+            _workingDirectory,
+            _appConfiguration.IsDryRun,
+            _appConfiguration.UseAnalysisTime,
+            _appConfiguration.AzmcpExe,
+            _appConfiguration.McpToolEventsTableName,
+            _appConfiguration.DatabaseName,
+            _appConfiguration.QueryEndpoint,
+            _appConfiguration.IngestionEndpoint);
     }
 }
