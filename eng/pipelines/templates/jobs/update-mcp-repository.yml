@@ -18,6 +18,8 @@ jobs:
     image: $(LINUXVMIMAGE)
     os: linux
 
+  timeoutInMinutes: 120
+
   steps:
   - checkout: self
 
