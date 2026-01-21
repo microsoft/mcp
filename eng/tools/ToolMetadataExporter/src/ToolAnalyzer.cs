@@ -60,7 +60,7 @@ public class ToolAnalyzer
         }
 
         var toolsBaseFileName = await GetOutputFileNameAsync("tool", analysisTime, cancellationToken);
-        var toolsFileFullPath = Path.Combine(_workingDirectory, $"{toolsBaseFileName}.json)");
+        var toolsFileFullPath = Path.Combine(_workingDirectory, $"{toolsBaseFileName}.json");
 
         await Utility.SaveToolsToJsonAsync(currentTools, toolsFileFullPath);
         _logger.LogInformation("💾 Saved {Count} tools to {ToolsFilePath}.", currentTools.Tools?.Count, toolsFileFullPath);
@@ -201,9 +201,10 @@ public class ToolAnalyzer
         cancellationToken.ThrowIfCancellationRequested();
 
         var serverVersion = await _azmcpProgram.GetServerVersionAsync();
+        var fileName = await _runInformation.GetRunInfoFileNameAsync(baseName);
         var fileDate = _useAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
 
-        return $"{serverVersion}_{baseName}_{fileDate:yyyyMMddHHmmss}.json";
+        return $"{fileName}_{fileDate:yyyyMMddHHmmss}";
     }
 
     private static string? GetToolArea(Tool tool)
