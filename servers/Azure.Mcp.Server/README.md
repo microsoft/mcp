@@ -214,15 +214,16 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
 |-----|---------------|-------------------|
-| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
+| **GitHub Copilot CLI** | `~/.copilot/mcp-config.json` | [Copilot CLI MCP Configuration](#github-copilot-cli-configuration) |
 | **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
-| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
-| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
-| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
-| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
+| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 <!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
@@ -334,6 +335,58 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 </details>
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+
+### GitHub Copilot CLI Configuration
+
+[GitHub Copilot CLI](https://github.blog/changelog/2026-01-14-github-copilot-cli-enhanced-agents-context-management-and-new-ways-to-install/) supports MCP servers via the `/mcp` command.
+
+<details>
+<summary>GitHub Copilot CLI setup instructions</summary>
+
+#### Add Azure MCP Server
+
+1. In a Copilot CLI session, run `/mcp add` to open the MCP server configuration form.
+
+2. Fill in the fields:
+
+   | Field | Value |
+   |-------|-------|
+   | **Server Name** | `azure-mcp` |
+   | **Server Type** | `1` (Local) |
+   | **Command** | `npx -y @azure/mcp@latest server start` |
+   | **Environment Variables** | *(leave blank - uses Azure CLI auth)* |
+   | **Tools** | `*` |
+
+   > **Alternative Command (using .NET):** `dotnet dnx -p Azure.Mcp server start`
+
+3. Press **Ctrl+S** (or **Cmd+S** on macOS) to save the server configuration.
+
+#### Verification
+
+Verify the MCP server is configured by running:
+
+```
+/mcp show
+```
+
+You should see output similar to:
+
+```
+● MCP Server Configuration:
+  • azure-mcp (local): Command: npx
+
+Total servers: 1
+Config file: ~/.copilot/mcp-config.json
+```
+
+#### Managing MCP Servers
+
+- **List servers:** `/mcp show`
+- **Remove a server:** `/mcp remove azure-mcp`
+- **Get help:** `/mcp help`
+
+</details>
+
 <!-- remove-section: end remove_package_manager_section -->
 
 ## Remote MCP Server (preview)
