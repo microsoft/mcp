@@ -9,18 +9,13 @@ using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
 
-public class Utility
+public partial class Utility(ILogger<Utility> logger)
 {
     public const string RepositoryRootSolution = "AzureMcp.sln";
 
     public const string NewLineRegexPattern = "\r\n|\n|\r";
 
-    private readonly ILogger<Utility> _logger;
-
-    public Utility(ILogger<Utility> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<Utility> _logger = logger;
 
     internal virtual async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
     {
@@ -59,7 +54,7 @@ public class Utility
     {
         var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
 
-        string[] array = Regex.Split(output, NewLineRegexPattern);
+        string[] array = NewLineRegex().Split(output);
         for (int i = 0; i < array.Length; i++)
         {
             string? line = array[i];
@@ -141,7 +136,7 @@ public class Utility
 
         for (int i = 0; i < lines.Length; i++)
         {
-            if (lines[i].Trim().StartsWith("{"))
+            if (lines[i].Trim().StartsWith('{'))
             {
                 jsonStartIndex = i;
 
@@ -248,4 +243,7 @@ public class Utility
         public const string LeftDoubleQuote = "\u201C";
         public const string RightDoubleQuote = "\u201D";
     }
+
+    [GeneratedRegex(NewLineRegexPattern)]
+    private static partial Regex NewLineRegex();
 }

@@ -30,8 +30,10 @@ public class ToolAnalyzer
         _runInformation = runInformation;
         _logger = logger;
 
-        _workingDirectory = configuration.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));
-        ;
+        _workingDirectory = configuration.Value.WorkDirectory
+            ?? throw new ArgumentException(
+                $"Expected non-null value of {nameof(AppConfiguration.WorkDirectory)} in {nameof(configuration)}");
+
         _isDryRun = configuration.Value.IsDryRun;
         _useAnalysisTime = configuration.Value.UseAnalysisTime;
     }
@@ -61,7 +63,7 @@ public class ToolAnalyzer
         var toolsFileFullPath = Path.Combine(_workingDirectory, $"{toolsBaseFileName}.json)");
 
         await Utility.SaveToolsToJsonAsync(currentTools, toolsFileFullPath);
-        _logger.LogInformation($"💾 Saved {currentTools.Tools?.Count} tools to {toolsFileFullPath}.");
+        _logger.LogInformation("💾 Saved {Count} tools to {ToolsFilePath}.", currentTools.Tools?.Count, toolsFileFullPath);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -154,7 +156,7 @@ public class ToolAnalyzer
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!changes.Any())
+        if (changes.Count == 0)
         {
             _logger.LogInformation("No changes made.");
             return;
@@ -207,6 +209,6 @@ public class ToolAnalyzer
     private static string? GetToolArea(Tool tool)
     {
         var split = tool.Command?.Split(" ", 2);
-        return split == null ? null : split[0];
+        return split?[0];
     }
 }

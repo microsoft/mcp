@@ -12,7 +12,7 @@ namespace ToolMetadataExporter.Services;
 /// <summary>
 /// Represents the MCP server and exposes methods to interact with it.
 /// </summary>
-public class AzmcpProgram
+public partial class AzmcpProgram
 {
     private readonly string _toolDirectory;
 
@@ -95,7 +95,7 @@ public class AzmcpProgram
     /// <exception cref="InvalidOperationException">If name could not be determined.</exception>
     private async Task<string> GetServerNameInternalAsync()
     {
-        var output = await _serverInfoTask;
+        ServerInfo? output = await _serverInfoTask;
 
         if (output != null)
         {
@@ -121,7 +121,7 @@ public class AzmcpProgram
     /// <exception cref="InvalidOperationException">If a version could not be determined.</exception>
     private async Task<string> GetServerVersionInternalAsync()
     {
-        var output = await _serverInfoTask;
+        ServerInfo? output = await _serverInfoTask;
 
         if (output != null)
         {
@@ -149,7 +149,7 @@ public class AzmcpProgram
 
         try
         {
-            var result = JsonSerializer.Deserialize(output, ModelsSerializationContext.Default.ServerInfoResult);
+            ServerInfoResult? result = JsonSerializer.Deserialize(output, ModelsSerializationContext.Default.ServerInfoResult);
             if (result == null || result.Results == null)
             {
                 _logger.LogDebug("The MCP server returned an invalid JSON response. Output: {Output}", output);
@@ -201,7 +201,7 @@ public class AzmcpProgram
         //
         //          Description:
         //              Azure MCP Server
-        var lines = Regex.Split(helpOutput, Utility.NewLineRegexPattern);
+        var lines = MyRegex().Split(helpOutput);
         var isFound = false;
         var serverName = string.Empty;
         for (int i = 0; i < lines.Length; i++)
@@ -227,4 +227,7 @@ public class AzmcpProgram
             return modified;
         }
     }
+
+    [GeneratedRegex(Utility.NewLineRegexPattern)]
+    private static partial Regex MyRegex();
 }

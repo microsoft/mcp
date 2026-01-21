@@ -32,7 +32,7 @@ public class Program
         await analyzer.RunAsync(DateTimeOffset.UtcNow);
     }
 
-    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    private static void ConfigureServices(IServiceCollection services, ConfigurationManager configuration)
     {
         services.AddLogging(builder =>
         {
@@ -67,18 +67,12 @@ public class Program
                 {
                     existing.AzmcpExe = commandLineOptions.Value.AzmcpExe!;
 
-                    if (existing.WorkDirectory == null)
-                    {
-                        existing.WorkDirectory = exeDir;
-                    }
+                    existing.WorkDirectory ??= exeDir;
                 }
                 else
                 {
                     var repoRoot = Utility.FindRepoRoot(exeDir);
-                    if (existing.WorkDirectory == null)
-                    {
-                        existing.WorkDirectory = Path.Combine(repoRoot, ".work");
-                    }
+                    existing.WorkDirectory ??= Path.Combine(repoRoot, ".work");
 
                     existing.AzmcpExe = Path.Combine(repoRoot, "eng", "tools", "Azmcp", "azmcp.exe");
                 }

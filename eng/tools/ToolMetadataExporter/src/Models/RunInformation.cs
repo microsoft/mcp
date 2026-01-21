@@ -8,16 +8,11 @@ namespace ToolMetadataExporter.Models;
 /// <summary>
 /// Represents information about a specific run of the tool analysis.
 /// </summary>
-public class RunInformation
+public class RunInformation(AzmcpProgram mcpServer)
 {
-    public RunInformation(AzmcpProgram mcpServer)
-    {
-        McpServer = mcpServer;
-    }
-
     public string Id { get; } = Guid.NewGuid().ToString();
 
-    public AzmcpProgram McpServer { get; }
+    public AzmcpProgram McpServer { get; } = mcpServer;
 
     public async Task<string> GetRunInfoFileNameAsync(string baseFileName)
     {

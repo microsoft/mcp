@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Data;
 using System.Runtime.CompilerServices;
 using Kusto.Data.Common;
 using Kusto.Data.Ingestion;
@@ -47,12 +48,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
 
     public async Task<IList<AzureMcpTool>> GetAvailableToolsAsync(CancellationToken cancellationToken = default)
     {
-        var queryFile = _queriesDirectory.GetFiles(ExistingToolsKqlFileName).FirstOrDefault();
-
-        if (queryFile == null)
-        {
-            throw new InvalidOperationException($"Could not find {ExistingToolsKqlFileName} in {_queriesDirectory.FullName}");
-        }
+        var queryFile = _queriesDirectory.GetFiles(ExistingToolsKqlFileName).FirstOrDefault() ?? throw new InvalidOperationException($"Could not find {ExistingToolsKqlFileName} in {_queriesDirectory.FullName}");
 
         var results = new List<AzureMcpTool>();
 
@@ -97,7 +93,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using MemoryStream stream = new MemoryStream();
+        using MemoryStream stream = new();
 
         await JsonSerializer.SerializeAsync(stream, toolEvents, ModelsSerializationContext.Default.ListMcpToolEvent, cancellationToken);
         stream.Seek(0, SeekOrigin.Begin);
@@ -114,12 +110,12 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
             }
         };
 
-        var result = await _ingestClient.IngestFromStreamAsync(stream, ingestionProperties);
+        IKustoIngestionResult result = await _ingestClient.IngestFromStreamAsync(stream, ingestionProperties);
 
         if (result != null)
         {
             _logger.LogInformation("Ingestion results.");
-            foreach (var item in result.GetIngestionStatusCollection())
+            foreach (IngestionStatus? item in result.GetIngestionStatusCollection())
             {
                 _logger.LogInformation("Id: {IngestionSourceId}\tTable: {Table}\tStatus: {Status}\tDetails: {Details}",
                     item.IngestionSourceId,
@@ -145,7 +141,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         var kql = await File.ReadAllTextAsync(kqlFilePath, cancellationToken);
 
         var clientRequestProperties = new ClientRequestProperties();
-        var reader = await _kustoClient.ExecuteQueryAsync(_databaseName, kql, clientRequestProperties, cancellationToken);
+        IDataReader reader = await _kustoClient.ExecuteQueryAsync(_databaseName, kql, clientRequestProperties, cancellationToken);
 
         var eventTimeOrdinal = reader.GetOrdinal(nameof(McpToolEvent.EventTime));
         var eventTypeOrdinal = reader.GetOrdinal(nameof(McpToolEvent.EventType));
@@ -160,7 +156,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var eventTime = reader.GetDateTime(eventTimeOrdinal);
+            DateTime eventTime = reader.GetDateTime(eventTimeOrdinal);
             var eventTypeString = reader.GetString(eventTypeOrdinal);
             var serverVersion = reader.GetString(serverVersionOrdinal);
             var toolId = reader.GetString(toolIdOrdinal);
@@ -173,7 +169,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
                 ? null
                 : reader.GetString(replacedByToolAreaOrdinal);
 
-            if (!Enum.TryParse<McpToolEventType>(eventTypeString, ignoreCase: true, out var eventType))
+            if (!Enum.TryParse<McpToolEventType>(eventTypeString, ignoreCase: true, out McpToolEventType eventType))
             {
                 throw new InvalidOperationException($"Invalid EventType value: '{eventTypeString}'. EventTime: '{eventTime}', ToolName: '{toolName}', ToolArea: '{toolArea}'");
             }
