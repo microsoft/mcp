@@ -14,7 +14,7 @@ namespace ToolMetadataExporter.Services;
 
 public class AzureMcpKustoDatastore : IAzureMcpDatastore
 {
-    private const string ExistingToolsKqlFileName = "GetAvailableTools.kql";
+    internal const string ExistingToolsKqlFileName = "GetAvailableTools.kql";
 
     private readonly ICslQueryProvider _kustoClient;
     private readonly IKustoIngestClient _ingestClient;

@@ -62,8 +62,8 @@ public class Program
 
                 // If a path to azmcp.exe is not provided. Assume that this is running within the context of
                 // the repository and try to find it.
-                existing.IsAzmcpExeSpecified = !string.IsNullOrEmpty(commandLineOptions.Value.AzmcpExe);
-                if (existing.IsAzmcpExeSpecified)
+                var isAzmcpExeSpecified = !string.IsNullOrEmpty(commandLineOptions.Value.AzmcpExe);
+                if (isAzmcpExeSpecified)
                 {
                     existing.AzmcpExe = commandLineOptions.Value.AzmcpExe!;
 
