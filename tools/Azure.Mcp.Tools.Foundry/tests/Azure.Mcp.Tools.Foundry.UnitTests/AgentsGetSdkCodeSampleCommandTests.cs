@@ -4,7 +4,6 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -22,10 +21,11 @@ public class AgentsGetSdkCodeSampleCommandTests
     public AgentsGetSdkCodeSampleCommandTests()
     {
         var collection = new ServiceCollection();
-        var httpClientService = Substitute.For<IHttpClientService>();
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
         var subscriptionService = Substitute.For<ISubscriptionService>();
         var tenantService = Substitute.For<ITenantService>();
-        collection.AddSingleton(httpClientService);
+        collection.AddSingleton(httpClientFactory);
         collection.AddSingleton(subscriptionService);
         collection.AddSingleton(tenantService);
         collection.AddSingleton<IFoundryService, FoundryService>();
