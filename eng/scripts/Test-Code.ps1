@@ -297,12 +297,6 @@ try {
 
     $command = "dotnet test $coverageArg $resultsArg $loggerArg"
 
-    if($TestType -eq 'Recorded') {
-        $maxParallel = [Math]::Max([Environment]::ProcessorCount, 1)
-        # Recorded tests spin up the proxy per test-class; cap concurrency to avoid starving the box
-        $command += " -maxcpucount:$maxParallel"
-    }
-
     if($Members.Count -gt 0) {
         $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
         $command += " --filter '$memberFilterString'"
