@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other Changes
 
+- Updated Microsoft Fabric REST API specifications with new connection credential features: KeyPair credential type with identifier/private key support, Key Vault secret references for Basic/Key/ServicePrincipal/SharedAccessSignature credentials, SQL endpoint recreateTables option for metadata refresh, updated connection examples, and corrected rate limiting documentation for tags APIs
+
 ## 0.0.0-beta.5 (2026-01-05)
 
 ### Features Added
