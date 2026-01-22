@@ -7,17 +7,18 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class NpxTests : IClassFixture<LiveTestSettingsFixture>
+public class NpxTests
 {
     private readonly LiveTestSettings _settings;
 
-    public NpxTests(LiveTestSettingsFixture fixture)
+    public NpxTests()
     {
-        _settings = fixture.Settings;
-
-        if (string.IsNullOrEmpty(_settings.TestPackage))
+        if (!LiveTestSettings.TryLoadTestSettings(out var settings) || string.IsNullOrEmpty(settings.TestPackage))
         {
             Assert.Skip("Can only test packages ");
+        } else
+        {
+            _settings = settings;
         }
     }
 
