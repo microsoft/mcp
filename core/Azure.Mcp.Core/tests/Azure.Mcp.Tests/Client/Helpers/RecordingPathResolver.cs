@@ -126,6 +126,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
 
         string emptyAssets = $@"{{
     ""AssetsRepo"": ""Azure/azure-sdk-assets"",
+    ""AssetsRepoPrefixPath"": """",
     ""TagPrefix"": ""{projectDirName}"",
     ""Tag"": """"
 }}";
