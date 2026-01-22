@@ -11,6 +11,7 @@
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
     <ProjectReference Include="..\..\src\ToolMetadataExporter.csproj" />
   </ItemGroup>
 </Project>
