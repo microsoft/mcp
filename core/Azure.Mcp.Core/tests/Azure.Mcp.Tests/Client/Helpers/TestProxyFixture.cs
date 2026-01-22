@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers
@@ -9,6 +10,8 @@ namespace Azure.Mcp.Tests.Client.Helpers
     /// </summary>
     public class TestProxyFixture : IAsyncLifetime
     {
+        private readonly SemaphoreSlim _startLock = new(1, 1);
+
         public IRecordingPathResolver PathResolver { get; private set; } = new RecordingPathResolver();
 
         /// <summary>
@@ -23,10 +26,28 @@ namespace Azure.Mcp.Tests.Client.Helpers
 
         public async Task StartProxyAsync(string assetsJsonPath)
         {
-            var root = PathResolver.RepositoryRoot;
-            var proxy = new TestProxy();
-            await proxy.Start(root, assetsJsonPath);
-            Proxy = proxy;
+            if (Proxy != null)
+            {
+                return;
+            }
+
+            await _startLock.WaitAsync();
+            try
+            {
+                if (Proxy != null)
+                {
+                    return;
+                }
+
+                var root = PathResolver.RepositoryRoot;
+                var proxy = new TestProxy();
+                await proxy.Start(root, assetsJsonPath);
+                Proxy = proxy;
+            }
+            finally
+            {
+                _startLock.Release();
+            }
         }
 
         public ValueTask DisposeAsync()

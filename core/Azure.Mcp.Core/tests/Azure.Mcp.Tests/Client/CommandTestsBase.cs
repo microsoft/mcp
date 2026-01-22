@@ -78,7 +78,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
     }
 
-    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null, string? recordingId = null)
     {
         await LoadSettingsAsync();
 
@@ -100,6 +100,11 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             // { "AZURE_TENANT_ID", Settings.TenantId },
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
+
+        if (!string.IsNullOrEmpty(recordingId))
+        {
+            envVarDictionary["RECORDING_ID"] = recordingId;
+        }
 
         if (proxy != null && proxy.Proxy != null)
         {
