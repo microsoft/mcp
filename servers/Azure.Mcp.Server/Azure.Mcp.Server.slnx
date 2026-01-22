@@ -120,6 +120,14 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.LiveTests/Azure.Mcp.Tools.Communication.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.UnitTests/Azure.Mcp.Tools.Communication.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/src/Azure.Mcp.Tools.Compute.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.LiveTests/Azure.Mcp.Tools.Compute.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.UnitTests/Azure.Mcp.Tools.Compute.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ConfidentialLedger/src/Azure.Mcp.Tools.ConfidentialLedger.csproj" />
