@@ -30,7 +30,7 @@ public sealed class DiskGetCommand(
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     /// <inheritdoc/>
-    public override string Id => "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d";
+    public override string Id => "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e";
 
     /// <inheritdoc/>
     public override string Name => "get";

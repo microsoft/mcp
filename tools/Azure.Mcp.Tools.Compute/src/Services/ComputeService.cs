@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -34,8 +31,6 @@ public class ComputeService(ISubscriptionService subscriptionService, ITenantSer
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var diskResource = await resourceGroupResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
-
-        var disk = diskResource.Value.Data;
 
         return ConvertToDiskModel(diskResource.Value, resourceGroup);
     }
@@ -78,10 +73,6 @@ public class ComputeService(ISubscriptionService subscriptionService, ITenantSer
             }
 
             return disks;
-        }
-        catch (Azure.RequestFailedException)
-        {
-            throw;
         }
         catch (Exception ex)
         {
