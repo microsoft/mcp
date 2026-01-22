@@ -24,7 +24,7 @@ public sealed class DiskGetCommand(
     : BaseComputeCommand<DiskGetOptions>
 {
     private const string CommandTitle = "Get Disk Details";
-    private const string CommandDescription = "Retrieves detailed information about Azure managed disks. If a specific disk name is provided, returns details for that disk. If no disk name is provided, returns all disks in the specified resource group or subscription.";
+    private const string CommandDescription = "Retrieves detailed information about Azure managed disks. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
@@ -80,19 +80,18 @@ public sealed class DiskGetCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (!string.IsNullOrEmpty(options.Disk))
-            {
-                // Get specific disk
-                if (string.IsNullOrEmpty(options.ResourceGroup))
-                {
-                    throw new ArgumentException("Resource group is required when retrieving a specific disk by name.");
-                }
+            var diskNamePattern = options.Disk;
+            var hasWildcard = !string.IsNullOrEmpty(diskNamePattern) && (diskNamePattern.Contains('*') || diskNamePattern.Contains('?'));
+            var hasResourceGroup = !string.IsNullOrEmpty(options.ResourceGroup);
 
-                _logger.LogInformation("Getting disk {DiskName} in resource group {ResourceGroup}", options.Disk, options.ResourceGroup);
+            if (!string.IsNullOrEmpty(diskNamePattern) && !hasWildcard && hasResourceGroup)
+            {
+                // Get specific disk by exact name and resource group
+                _logger.LogInformation("Getting disk {DiskName} in resource group {ResourceGroup}", diskNamePattern, options.ResourceGroup!);
 
                 var disk = await _computeService.GetDiskAsync(
-                    options.Disk,
-                    options.ResourceGroup,
+                    diskNamePattern,
+                    options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
@@ -102,8 +101,9 @@ public sealed class DiskGetCommand(
             }
             else
             {
-                // List all disks
-                _logger.LogInformation("Listing disks in subscription {Subscription}, resource group {ResourceGroup}", options.Subscription, options.ResourceGroup);
+                // List disks (all, or filtered by pattern/resource group)
+                _logger.LogInformation("Listing disks in subscription {Subscription}, resource group {ResourceGroup}, pattern {Pattern}",
+                    options.Subscription, options.ResourceGroup, diskNamePattern);
 
                 var disks = await _computeService.ListDisksAsync(
                     options.Subscription!,
@@ -111,6 +111,13 @@ public sealed class DiskGetCommand(
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
+
+                // Apply wildcard filtering if disk name pattern is provided
+                if (!string.IsNullOrEmpty(diskNamePattern))
+                {
+                    var pattern = ConvertWildcardToRegex(diskNamePattern);
+                    disks = disks?.Where(d => System.Text.RegularExpressions.Regex.IsMatch(d.Name ?? string.Empty, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase)).ToList();
+                }
 
                 context.Response.Results = ResponseResult.Create(new DiskGetCommandResult(disks ?? []), ComputeJsonContext.Default.DiskGetCommandResult);
             }
@@ -122,6 +129,18 @@ public sealed class DiskGetCommand(
         }
 
         return context.Response;
+    }
+
+    /// <summary>
+    /// Converts a wildcard pattern to a regex pattern.
+    /// </summary>
+    private static string ConvertWildcardToRegex(string wildcard)
+    {
+        // Escape special regex characters except * and ?
+        var pattern = System.Text.RegularExpressions.Regex.Escape(wildcard)
+            .Replace("\\*", ".*")
+            .Replace("\\?", ".");
+        return $"^{pattern}$";
     }
 
     /// <inheritdoc/>

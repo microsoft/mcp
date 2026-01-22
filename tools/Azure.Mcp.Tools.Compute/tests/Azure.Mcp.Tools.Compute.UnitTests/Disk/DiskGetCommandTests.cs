@@ -270,5 +270,196 @@ public class DiskGetCommandTests
         Assert.Equal(mockDisk.SkuName, result.Disks[0].SkuName);
         Assert.Equal(mockDisk.DiskSizeGB, result.Disks[0].DiskSizeGB);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WildcardPatternWithoutResourceGroup_ReturnsFilteredDisks()
+    {
+        // Arrange
+        var subscription = "test-sub";
+        var diskPattern = "win_OsDisk*";
+
+        var mockDisks = new List<Models.Disk>
+        {
+            new()
+            {
+                Name = "win_OsDisk1",
+                Id = $"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Compute/disks/win_OsDisk1",
+                ResourceGroup = "rg1",
+                Location = "eastus",
+                SkuName = "Premium_LRS",
+                DiskSizeGB = 128
+            },
+            new()
+            {
+                Name = "win_OsDisk2",
+                Id = $"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Compute/disks/win_OsDisk2",
+                ResourceGroup = "rg2",
+                Location = "westus",
+                SkuName = "Standard_LRS",
+                DiskSizeGB = 256
+            },
+            new()
+            {
+                Name = "linux-disk",
+                Id = $"/subscriptions/{subscription}/resourceGroups/rg3/providers/Microsoft.Compute/disks/linux-disk",
+                ResourceGroup = "rg3",
+                Location = "eastus",
+                SkuName = "Premium_LRS",
+                DiskSizeGB = 64
+            }
+        };
+
+        _computeService.ListDisksAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(mockDisks);
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskPattern]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disks);
+        Assert.Equal(2, result.Disks.Count);
+        Assert.Contains(result.Disks, d => d.Name == "win_OsDisk1");
+        Assert.Contains(result.Disks, d => d.Name == "win_OsDisk2");
+        Assert.DoesNotContain(result.Disks, d => d.Name == "linux-disk");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WildcardPatternWithResourceGroup_ReturnsFilteredDisksInResourceGroup()
+    {
+        // Arrange
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskPattern = "data*";
+
+        var mockDisks = new List<Models.Disk>
+        {
+            new()
+            {
+                Name = "datadisk1",
+                Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/datadisk1",
+                ResourceGroup = resourceGroup,
+                Location = "eastus",
+                SkuName = "Premium_LRS",
+                DiskSizeGB = 128
+            },
+            new()
+            {
+                Name = "datadisk2",
+                Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/datadisk2",
+                ResourceGroup = resourceGroup,
+                Location = "eastus",
+                SkuName = "Standard_LRS",
+                DiskSizeGB = 256
+            },
+            new()
+            {
+                Name = "osdisk",
+                Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/osdisk",
+                ResourceGroup = resourceGroup,
+                Location = "eastus",
+                SkuName = "Premium_LRS",
+                DiskSizeGB = 64
+            }
+        };
+
+        _computeService.ListDisksAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(mockDisks);
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskPattern, "--resource-group", resourceGroup]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disks);
+        Assert.Equal(2, result.Disks.Count);
+        Assert.Contains(result.Disks, d => d.Name == "datadisk1");
+        Assert.Contains(result.Disks, d => d.Name == "datadisk2");
+        Assert.DoesNotContain(result.Disks, d => d.Name == "osdisk");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExactDiskNameWithoutResourceGroup_ReturnsFilteredDisks()
+    {
+        // Arrange - When disk name is exact but no resource group, should list and filter
+        var subscription = "test-sub";
+        var diskName = "exactdisk";
+
+        var mockDisks = new List<Models.Disk>
+        {
+            new()
+            {
+                Name = "exactdisk",
+                Id = $"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Compute/disks/exactdisk",
+                ResourceGroup = "rg1",
+                Location = "eastus",
+                SkuName = "Premium_LRS",
+                DiskSizeGB = 128
+            },
+            new()
+            {
+                Name = "otherdisk",
+                Id = $"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Compute/disks/otherdisk",
+                ResourceGroup = "rg2",
+                Location = "westus",
+                SkuName = "Standard_LRS",
+                DiskSizeGB = 256
+            }
+        };
+
+        _computeService.ListDisksAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(mockDisks);
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskName]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disks);
+        Assert.Single(result.Disks);
+        Assert.Equal("exactdisk", result.Disks[0].Name);
+    }
 }
 
