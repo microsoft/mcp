@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated Microsoft Fabric REST API specifications with new connection credential features: KeyPair credential type with identifier/private key support, Key Vault secret references for Basic/Key/ServicePrincipal/SharedAccessSignature credentials, SQL endpoint recreateTables option for metadata refresh, updated connection examples, and corrected rate limiting documentation for tags APIs"
+    subsection: "Dependency Updates"
