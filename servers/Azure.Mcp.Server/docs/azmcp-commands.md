@@ -673,6 +673,30 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
+### Azure Compute Operations
+
+```bash
+# List all managed disks in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription>
+
+# List all managed disks in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription> \
+                       --resource-group <resource-group>
+
+# Get details of a specific managed disk
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --disk <disk-name>
+```
+
+**Options:**
+-   `--disk`: The name of the managed disk (optional - if not provided, lists all disks)
+-   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
+-   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
