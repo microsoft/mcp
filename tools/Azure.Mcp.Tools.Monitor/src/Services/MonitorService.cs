@@ -29,7 +29,6 @@ public class MonitorService(
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat
         = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-    public const string HttpClientName = "AzureMcpMonitorService";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
@@ -57,7 +56,7 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
-        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
@@ -120,7 +119,7 @@ public class MonitorService(
             options.Retry.Mode = retryPolicy.Mode;
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
-        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
+        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
 
         try
@@ -264,7 +263,7 @@ public class MonitorService(
                 options.Retry.Mode = retryPolicy.Mode;
                 options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
-            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient(HttpClientName));
+            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
             var client = new LogsQueryClient(credential, options);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
@@ -468,7 +467,7 @@ public class MonitorService(
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var client = _httpClientFactory.CreateClient(HttpClientName);
+        var client = _httpClientFactory.CreateClient();
         using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
 
         if (response.IsSuccessStatusCode)
