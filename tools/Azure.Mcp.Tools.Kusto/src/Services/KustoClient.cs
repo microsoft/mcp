@@ -3,7 +3,6 @@
 
 using System.Text.Json.Nodes;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
@@ -11,15 +10,13 @@ public sealed class KustoClient(
     string clusterUri,
     TokenCredential tokenCredential,
     string userAgent,
-    IHttpClientService httpClientService)
+    IHttpClientFactory httpClientFactory)
 {
     private readonly string _clusterUri = clusterUri;
     private readonly TokenCredential _tokenCredential = tokenCredential;
     private readonly string _userAgent = userAgent;
-    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(clusterUri), client =>
-    {
-        client.Timeout = TimeSpan.FromSeconds(240);
-    });
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromSeconds(240);
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
     private static readonly string s_default_scope = "https://kusto.kusto.windows.net/.default";
@@ -34,7 +31,9 @@ public sealed class KustoClient(
     {
         var uri = _clusterUri + endpoint;
         var httpRequest = await GenerateRequestAsync(uri, database, text, cancellationToken).ConfigureAwait(false);
-        return await SendRequestAsync(_httpClient, httpRequest, cancellationToken).ConfigureAwait(false);
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = s_httpClientTimeout;
+        return await SendRequestAsync(client, httpRequest, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken)
