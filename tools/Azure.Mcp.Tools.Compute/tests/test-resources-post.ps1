@@ -18,7 +18,6 @@ Write-Host "  VM Name: $($DeploymentOutputs['vmName'].Value)" -ForegroundColor C
 Write-Host "  VM2 Name: $($DeploymentOutputs['vm2Name'].Value)" -ForegroundColor Cyan
 Write-Host "  VMSS Name: $($DeploymentOutputs['vmssName'].Value)" -ForegroundColor Cyan
 Write-Host "  Resource Group: $($DeploymentOutputs['resourceGroupName'].Value)" -ForegroundColor Cyan
-Write-Host "  Location: $($DeploymentOutputs['location'].Value)" -ForegroundColor Cyan
 
 # Wait for VMs to be fully provisioned and running
 Write-Host "Waiting for VMs to be fully provisioned..." -ForegroundColor Yellow

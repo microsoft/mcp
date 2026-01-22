@@ -282,4 +282,3 @@ output vm2Name string = vm2.name
 output vmssName string = vmss.name
 output vnetName string = vnet.name
 output resourceGroupName string = resourceGroup().name
-output location string = location
