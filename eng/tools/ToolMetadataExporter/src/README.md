@@ -10,11 +10,11 @@ Extracts tool metadata from the MCP server and exports it to an Azure Data Explo
 1. Create a database (e.g. "McpToolMetadata") within the cluster
 1. In https://dataexplorer.azure.com/, connect to cluster
 1. Click on "Query" tab
-1. Execute [`CreateTable.kql`](./Resources/queries/CreateTable.kql) against the cluster and database
+1. Execute [`CreateTable.kql`](<!--(https://github.com/microsoft/mcp/tree/main/eng/tools/ToolMetadataExporter/src/Resources/queries/CreateTable.kql)--> against the cluster and database
 
 ### 2. Configure Application
 
-1. Open [`appsettings.Development.json`](./appsettings.Development.json)
+1. Open [`appsettings.Development.json`]<!--(https://github.com/microsoft/mcp/tree/main/eng/tools/ToolMetadataExporter/src/appsettings.Development.json)-->
 1. Update "IngestionEndpoint", "QueryEndpoint", "DatabaseName" with the appropriate cluster and database names. Using the example from previous step, it would look like this:
    ```json
      "AppConfig": {
@@ -27,13 +27,13 @@ Extracts tool metadata from the MCP server and exports it to an Azure Data Explo
     1. "IngestionEndpoint" is "Data Ingestion URI"
     1. "QueryEndpoint" is "URI"
 
-Additional configuration settings and their documentation can be found in [AppConfiguration.cs](./src/AppConfiguration.cs).
+Additional configuration settings and their documentation can be found in [AppConfiguration.cs]<!--(https://github.com/microsoft/mcp/tree/main/eng/tools/ToolMetadataExporter/src/AppConfiguration.cs)-->.
 
 ### 3. Run Application
 
-1. Open a terminal in the project src directory: [$RepositoryRoot/eng/tools/ToolMetadataExporter/src](./)
+1. Open a terminal in the project src directory: [$RepositoryRoot/eng/tools/ToolMetadataExporter/src]<!--(https://github.com/microsoft/mcp/tree/main/eng/tools/ToolMetadataExporter/src)-->
 1. Run the application using the command:
    ```bash
    dotnet run --environment DOTNET_ENVIRONMENT=Development
    ```
-   The environment variable `DOTNET_ENVIRONMENT` is set to `Development` to ensure the application uses [`appsettings.Development.json`](./appsettings.Development.json)
+   The environment variable `DOTNET_ENVIRONMENT` is set to `Development` to ensure the application uses [`appsettings.Development.json`]<!--(https://github.com/microsoft/mcp/tree/main/eng/tools/ToolMetadataExporter/src/appsettings.Development.json)-->
