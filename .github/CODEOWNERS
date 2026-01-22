@@ -96,6 +96,12 @@
 # ServiceLabel: %tools-Communication
 # ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
 
+# PRLabel: %tools-Compute
+/tools/Azure.Mcp.Tools.Compute/      @microsoft/azure-mcp @haagha @audreyttt
+
+# ServiceLabel: %tools-Compute
+# ServiceOwners:                       @microsoft/azure-mcp @haagha @audreyttt
+
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
 

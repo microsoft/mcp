@@ -487,6 +487,12 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Send an email from my communication service endpoint with custom sender name and multiple recipients"
 * "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
+### 🖥️ Azure Compute
+
+* "List all my managed disks in subscription 'my-subscription'"
+* "Show me all disks in resource group 'my-resource-group'"
+* "Get details of disk 'my-disk' in resource group 'my-resource-group'"
+
 ### 📦 Azure Container Apps
 
 * "List the container apps in my subscription"
@@ -617,6 +623,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
+- 🖥️ **Azure Compute** - Managed disk operations
 - 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management

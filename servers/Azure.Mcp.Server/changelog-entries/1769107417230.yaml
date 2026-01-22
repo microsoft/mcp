@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added compute_disk_get command to retrieve Azure managed disk information"
