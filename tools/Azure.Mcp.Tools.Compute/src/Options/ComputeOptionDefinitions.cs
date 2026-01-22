@@ -5,17 +5,10 @@ namespace Azure.Mcp.Tools.Compute.Options;
 
 public static class ComputeOptionDefinitions
 {
-    public const string ResourceGroupName = "resource-group";
     public const string VmNameName = "vm-name";
     public const string VmssNameName = "vmss-name";
     public const string InstanceIdName = "instance-id";
     public const string LocationName = "location";
-
-    public static readonly Option<string> ResourceGroup = new($"--{ResourceGroupName}", "-g")
-    {
-        Description = "The name of the resource group",
-        Required = true
-    };
 
     public static readonly Option<string> VmName = new($"--{VmNameName}", "--name")
     {

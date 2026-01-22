@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -10,6 +11,7 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
@@ -47,14 +49,8 @@ public sealed class VmssListCommand(ILogger<VmssListCommand> logger)
     {
         base.RegisterOptions(command);
         // Make resource-group optional for list
-        command.Options.Remove(ComputeOptionDefinitions.ResourceGroup);
-        var optionalRg = new Option<string>(
-            "--resource-group",
-            "-g")
-        {
-            Description = "The name of the resource group (optional - if not specified, lists all VMSS in subscription)"
-        };
-        command.Options.Add(optionalRg);
+        command.Options.Remove(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

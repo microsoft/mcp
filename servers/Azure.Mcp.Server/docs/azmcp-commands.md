@@ -551,6 +551,60 @@ azmcp extension cli generate --cli-type <cli-type>
 azmcp extension cli install --cli-type <cli-type>
 ```
 
+### Azure Compute Operations
+
+#### Virtual Machines
+
+```bash
+# Get Virtual Machine(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription <subscription> \
+                     [--resource-group <resource-group>] \
+                     [--vm-name <vm-name>] \
+                     [--instance-view]
+
+# Examples:
+
+# List all VMs in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription"
+
+# List all VMs in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg"
+
+# Get specific VM details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm"
+
+# Get specific VM with instance view (runtime status)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm" \
+                     --instance-view
+```
+
+**Command Behavior:**
+- **With `--vm-name`**: Gets detailed information about a specific VM (requires `--resource-group`). Optionally include `--instance-view` for runtime status.
+- **With `--resource-group` only**: Lists all VMs in the specified resource group.
+- **With neither**: Lists all VMs in the subscription.
+
+**Returns:**
+- VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
+- When `--instance-view` is specified: Also includes power state, provisioning state, VM agent status, disk status, and extension status.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vm-name`) |
+| `--vm-name`, `--name` | No | Name of the virtual machine |
+| `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
+
 ### Azure Communication Services Operations
 
 #### Email

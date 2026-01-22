@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -10,6 +11,7 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -49,15 +51,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
         base.RegisterOptions(command);
 
         // Make resource-group optional for listing scenarios
-        command.Options.Remove(ComputeOptionDefinitions.ResourceGroup);
-        var optionalResourceGroup = new Option<string>(
-            ComputeOptionDefinitions.ResourceGroup.Name,
-            "-g")
-        {
-            Description = ComputeOptionDefinitions.ResourceGroup.Description,
-            Required = false
-        };
-        command.Options.Add(optionalResourceGroup);
+        command.Options.Remove(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
 
         // Add optional vm-name
         command.Options.Add(ComputeOptionDefinitions.VmName);
