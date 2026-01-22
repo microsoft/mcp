@@ -2,20 +2,20 @@
     "parameters": {
         "createConnectionRequest": {
             "connectivityType": "ShareableCloud",
-            "displayName": "ContosoCloudConnection",
+            "displayName": "SnowflakeCloudConnection",
             "connectionDetails": {
                 "type": "SQL",
                 "creationMethod": "SQL",
                 "parameters": [
-                    {
+                    { 
                         "dataType": "Text",
                         "name": "server",
                         "value": "contoso.database.windows.net"
                     },
                     {
                         "dataType": "Text",
-                        "name": "database",
-                        "value": "sales"
+                        "name": "warehouse",
+                        "value": "snowflake-warehouse"
                     }
                 ]
             },
@@ -25,12 +25,10 @@
                 "connectionEncryption": "NotEncrypted",
                 "skipTestConnection": false,
                 "credentials": {
-                    "credentialType": "Basic",
-                    "username": "admin",
-                    "passwordReference": {
-                        "connectionId": "4399ab2c-7551-4c0e-8aa7-18fc2f217626",
-                        "secretName": "some-secret"
-                    }
+                    "credentialType": "KeyPair",
+                    "identifier": "admin",
+                    "privateKey": "-----BEGIN ENCRYPTED PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQ...\\n-----END ENCRYPTED PRIVATE KEY-----",
+                    "passphrase": "********"
                 }
             }
         }
@@ -41,13 +39,13 @@
                 "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
                 "displayName": "ContosoCloudConnection",
                 "connectivityType": "ShareableCloud",
-                "connectionDetails": {
+                "connectionDetails":{
                     "type": "SQL",
-                    "path": "contoso.database.windows.net;sales"
+                    "path": "contoso.database.windows.net;snowflake-warehouse"
                 },
                 "privacyLevel": "Organizational",
                 "credentialDetails": {
-                    "credentialType": "Basic",
+                    "credentialType": "KeyPair",
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false

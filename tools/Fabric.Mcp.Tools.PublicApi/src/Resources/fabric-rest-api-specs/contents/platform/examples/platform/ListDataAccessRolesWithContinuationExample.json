@@ -12,6 +12,7 @@
           "value": [
             {
               "name": "default_role_1",
+              "eTag": "33c64df551425fcc55e4d42a148795d9f25f89cc",
               "decisionRules": [
                 {
                   "effect": "Permit",
