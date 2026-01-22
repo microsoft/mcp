@@ -365,7 +365,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         else
         {
-            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(30));
+            var secondsToWait = 30;
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD")))
+            {
+                secondsToWait = 90;
+            }
+            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(secondsToWait));
         }
 
         if (_httpPort is null)
