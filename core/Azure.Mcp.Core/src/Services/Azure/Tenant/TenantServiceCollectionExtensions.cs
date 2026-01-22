@@ -66,7 +66,7 @@ public static class TenantServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Add an HttpClient that fetches access token using expected OauthScope for each extenral MCP server registry that needs it.
+    /// Add HttpClient for each registry server with OAuthScopes that knows how to fetch its access token.
     /// </summary>
     private static IServiceCollection AddHttpClientForMcpRegistry(this IServiceCollection services)
     {
