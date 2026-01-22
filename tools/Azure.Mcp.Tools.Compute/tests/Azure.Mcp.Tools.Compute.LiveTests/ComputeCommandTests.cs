@@ -34,18 +34,18 @@ public class ComputeCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("Disks");
+        JsonElement disks = result.Value.AssertProperty("disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.Single(diskList);
 
         JsonElement disk = diskList[0];
-        Assert.Equal(diskName, disk.AssertProperty("Name").GetString());
-        Assert.Equal(resourceGroup, disk.AssertProperty("ResourceGroup").GetString());
-        Assert.NotNull(disk.AssertProperty("Location").GetString());
-        Assert.NotNull(disk.AssertProperty("SkuName").GetString());
-        Assert.True(disk.AssertProperty("DiskSizeGB").GetInt32() > 0);
+        Assert.Equal(diskName, disk.AssertProperty("name").GetString());
+        Assert.Equal(resourceGroup, disk.AssertProperty("resourceGroup").GetString());
+        Assert.NotNull(disk.AssertProperty("location").GetString());
+        Assert.NotNull(disk.AssertProperty("skuName").GetString());
+        Assert.True(disk.AssertProperty("diskSizeGB").GetInt32() > 0);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class ComputeCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("Disks");
+        JsonElement disks = result.Value.AssertProperty("disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
@@ -89,12 +89,12 @@ public class ComputeCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("Disks");
+        JsonElement disks = result.Value.AssertProperty("disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.NotEmpty(diskList);
-        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("ResourceGroup").GetString()));
+        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("resourceGroup").GetString()));
     }
 
     [Fact]
@@ -116,14 +116,12 @@ public class ComputeCommandTests(ITestOutputHelper output)
             });
 
         // Assert
-        // When disk is not found, the response should be null or contain an error
-        // For now, we'll check that we either get null or an empty disk list
-        if (result != null)
-        {
-            JsonElement disks = result.Value.AssertProperty("Disks");
-            List<JsonElement> diskList = disks.EnumerateArray().ToList();
-            Assert.Empty(diskList);
-        }
+        // The MCP server returns error responses with status codes, not exceptions
+        // We expect a result with error information
+        Assert.NotNull(result);
+        // The response should contain error details in the results section
+        // Check that the results property exists
+        Assert.True(result.Value.TryGetProperty("message", out _));
     }
 
     [Fact]
@@ -145,13 +143,11 @@ public class ComputeCommandTests(ITestOutputHelper output)
             });
 
         // Assert
-        // When resource group is invalid, the response should be null or contain an error
-        if (result != null)
-        {
-            JsonElement disks = result.Value.AssertProperty("Disks");
-            List<JsonElement> diskList = disks.EnumerateArray().ToList();
-            Assert.Empty(diskList);
-        }
+        // The MCP server returns error responses with status codes, not exceptions
+        // We expect a result with error information
+        Assert.NotNull(result);
+        // The response should contain error details in the results section
+        Assert.True(result.Value.TryGetProperty("message", out _));
     }
 
     [Fact]
@@ -161,18 +157,20 @@ public class ComputeCommandTests(ITestOutputHelper output)
         var diskName = Settings.DeploymentOutputs["DISKNAME"];
         var subscription = Settings.SubscriptionId;
 
-        // Act & Assert
-        // This should throw or return null because resource group is required when disk is specified
-        // The validation happens in the command, so we expect this to fail
-        await Assert.ThrowsAnyAsync<Exception>(async () =>
-        {
-            await CallToolAsync(
-                "compute_disk_get",
-                new()
-                {
-                    { "subscription", subscription },
-                    { "disk", diskName }
-                });
-        });
+        // Act
+        JsonElement? result = await CallToolAsync(
+            "compute_disk_get",
+            new()
+            {
+                { "subscription", subscription },
+                { "disk", diskName }
+            });
+
+        // Assert
+        // The MCP server returns error responses with status codes, not exceptions
+        // This should return a validation error (status 400)
+        Assert.NotNull(result);
+        // The response should contain error details in the results section
+        Assert.True(result.Value.TryGetProperty("message", out _));
     }
 }
