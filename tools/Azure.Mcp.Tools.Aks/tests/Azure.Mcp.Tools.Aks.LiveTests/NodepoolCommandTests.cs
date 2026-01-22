@@ -4,12 +4,11 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public sealed class NodepoolCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_nodepools_for_cluster()

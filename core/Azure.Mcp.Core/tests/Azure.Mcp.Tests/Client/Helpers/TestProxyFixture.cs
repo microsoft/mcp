@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Threading;
-using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers
 {
     /// <summary>
-    /// xUnit fixture that runs once per test class (or collection if used via [CollectionDefinition]).
-    /// Provides optional access to a shared TestProxy via Proxy property if tests need it later.
+    /// Singleton manager for the test proxy instance. Ensures all tests share a single TestProxy,
+    /// lazily started on demand with semaphore coordination for thread-safe initialization.
     /// </summary>
-    public class TestProxyFixture : IAsyncLifetime
+    public sealed class TestProxyManager
     {
+        private static readonly Lazy<TestProxyManager> _instance = new(() => new TestProxyManager());
         private readonly SemaphoreSlim _startLock = new(1, 1);
 
         public IRecordingPathResolver PathResolver { get; private set; } = new RecordingPathResolver();
 
         /// <summary>
-        /// Proxy instance created lazily. RecordedCommandTestsBase will start it after determining TestMode from LiveTestSettings.
+        /// Proxy instance created lazily on first access. Will be started when StartProxyAsync is called.
         /// </summary>
         public TestProxy? Proxy { get; private set; }
 
-        public ValueTask InitializeAsync()
+        private TestProxyManager()
         {
-            return ValueTask.CompletedTask;
         }
+
+        public static TestProxyManager GetInstance() => _instance.Value;
 
         public async Task StartProxyAsync(string assetsJsonPath)
         {
@@ -50,21 +51,20 @@ namespace Azure.Mcp.Tests.Client.Helpers
             }
         }
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
             if (Proxy is not null)
             {
                 Proxy.Dispose();
+                Proxy = null;
             }
-            return ValueTask.CompletedTask;
         }
 
         /// <summary>
-        /// XUnit class fixtures are created via parameterless constructor, so this method allows configuring a custom path resolver after construction.
-        /// This is necessary if we want to atomically resolve paths in a different way than the default RecordingPathResolver. Unfortunately due to limitations
-        /// with xunit classfixture instantiation we cannot pass parameters to the constructor, EVEN IF they are nullable and have a default.
+        /// Configures a custom path resolver for this manager instance.
+        /// This should be called before proxy initialization.
         /// </summary>
-        /// <param name="pathResolver"></param>
+        /// <param name="pathResolver">The path resolver to use</param>
         public void ConfigurePathResolver(IRecordingPathResolver pathResolver)
         {
             PathResolver = pathResolver;

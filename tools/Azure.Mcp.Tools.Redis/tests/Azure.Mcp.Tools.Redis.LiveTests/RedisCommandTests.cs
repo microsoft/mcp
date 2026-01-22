@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.LiveTests;
 
-public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class RedisCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>
     {

@@ -5,6 +5,7 @@ using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Text;
+using System.Threading;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
@@ -13,20 +14,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase : CommandTestsBase, IAssemblyFixture<TestProxyFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
-    private readonly TestProxyFixture _fixture;
+    private readonly TestProxyManager _proxyManager = TestProxyManager.GetInstance();
 
     protected TestProxy? Proxy { get; private set; }
-
-    protected RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture)
-        : base(output)
-    {
-        _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-        Proxy = _fixture.Proxy;
-    }
 
     protected string RecordingId { get; private set; } = string.Empty;
 
@@ -129,9 +123,7 @@ public abstract class RecordedCommandTestsBase : CommandTestsBase, IAssemblyFixt
         return value;
     }
 
-    protected TestProxyFixture Fixture => _fixture;
-
-    protected IRecordingPathResolver PathResolver => _fixture.PathResolver;
+    protected IRecordingPathResolver PathResolver => _proxyManager.PathResolver;
 
     protected virtual bool IsAsync => false;
 
@@ -148,19 +140,13 @@ public abstract class RecordedCommandTestsBase : CommandTestsBase, IAssemblyFixt
         // load settings first to determine test mode
         await LoadSettingsAsync();
 
-        if (_fixture.Proxy == null)
-        {
-            // start the proxy if needed
-            await StartProxyAsync(_fixture);
-        }
-
         // start recording/playback session to capture recording id before MCP startup
         await StartRecordOrPlayback();
 
         var currentRecordingId = string.IsNullOrWhiteSpace(RecordingId) ? null : RecordingId;
 
         // start MCP client with proxy URL available and recording context
-        await base.InitializeAsyncInternal(_fixture, currentRecordingId);
+        await base.InitializeAsyncInternal(_proxyManager, currentRecordingId);
 
         // apply custom matcher if test has attribute
         await ApplyAttributeMatcherSettings();
@@ -223,25 +209,22 @@ public abstract class RecordedCommandTestsBase : CommandTestsBase, IAssemblyFixt
         }
     }
 
-    public async Task StartProxyAsync(TestProxyFixture fixture)
+    public async Task StartProxyAsync()
     {
         if (TestMode is not (TestMode.Record or TestMode.Playback))
         {
             return;
         }
 
-        var proxyStarted = false;
-
-        if (fixture.Proxy == null)
+        if (_proxyManager.Proxy == null)
         {
             var assetsPath = PathResolver.GetAssetsJson(GetType());
-            await fixture.StartProxyAsync(assetsPath);
-            proxyStarted = true;
+            await _proxyManager.StartProxyAsync(assetsPath);
         }
 
-        Proxy = fixture.Proxy;
+        Proxy = _proxyManager.Proxy;
 
-        if (!proxyStarted || Proxy == null)
+        if (Proxy == null)
         {
             return;
         }
@@ -331,6 +314,12 @@ public abstract class RecordedCommandTestsBase : CommandTestsBase, IAssemblyFixt
         if (TestMode == TestMode.Live)
         {
             return;
+        }
+
+        if (Proxy == null)
+        {
+            // Start proxy if not already started
+            await StartProxyAsync();
         }
 
         if (Proxy == null)

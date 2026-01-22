@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.LiveTests;
 
-public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class LoadTestingCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     private const string TestResourceName = "TestResourceName";
     private const string TestRunId = "TestRunId";

@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.LiveTests;
 
-public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class StorageSyncCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
     {

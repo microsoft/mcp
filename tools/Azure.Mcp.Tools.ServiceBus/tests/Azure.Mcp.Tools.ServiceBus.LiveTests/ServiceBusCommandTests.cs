@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 {
-    public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+    public class ServiceBusCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
     {
         private const string QueueName = "queue1";
         private const string TopicName = "topic1";

@@ -341,7 +341,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
-        var args = $"start --http-proxy --storage-location=\"{storageLocation}\"";
+        var args = $"start --storage-location=\"{storageLocation}\"";
 
         ProcessStartInfo psi = new(proxyExe, args);
         psi.RedirectStandardOutput = true;

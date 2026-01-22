@@ -78,7 +78,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
     }
 
-    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null, string? recordingId = null)
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyManager? proxyManager = null, string? recordingId = null)
     {
         await LoadSettingsAsync();
 
@@ -106,9 +106,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             envVarDictionary["RECORDING_ID"] = recordingId;
         }
 
-        if (proxy != null && proxy.Proxy != null)
+        if (proxyManager != null && proxyManager.Proxy != null)
         {
-            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
+            envVarDictionary.Add("TEST_PROXY_URL", proxyManager.Proxy.BaseUri);
 
             if (TestMode is TestMode.Playback)
             {
