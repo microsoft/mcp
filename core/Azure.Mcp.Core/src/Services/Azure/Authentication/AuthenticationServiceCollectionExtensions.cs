@@ -34,7 +34,7 @@ public static class AuthenticationServiceCollectionExtensions
     {
         // Register cloud configuration
         services.TryAddSingleton<IAzureCloudConfiguration, AzureCloudConfiguration>();
-        
+
         // Set the static cloud configuration on CustomChainedCredential
         services.TryAddSingleton<IAzureTokenCredentialProvider>(sp =>
         {
@@ -42,7 +42,7 @@ public static class AuthenticationServiceCollectionExtensions
             CustomChainedCredential.CloudConfiguration = cloudConfig;
             return new SingleIdentityTokenCredentialProvider(sp.GetRequiredService<ILoggerFactory>());
         });
-        
+
         return services;
     }
 

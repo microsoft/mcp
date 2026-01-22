@@ -250,6 +250,8 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
+    [RequiresUnreferencedCode()]
+    [RequiresDynamicCode()]
     public static void InitializeConfigurationAndOptions(this IServiceCollection services)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";

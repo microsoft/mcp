@@ -301,7 +301,7 @@ public class AzureCloudConfigurationTests
     public void ParseCloudValue_NullOrWhitespace_DefaultsToPublicCloud(string? cloudName)
     {
         // Arrange
-        var configData = cloudName != null 
+        var configData = cloudName != null
             ? new Dictionary<string, string?> { ["cloud"] = cloudName }
             : new Dictionary<string, string?>();
         var config = new ConfigurationBuilder()
@@ -360,8 +360,8 @@ public class AzureCloudConfigurationTests
         // Arrange - Set up multiple configuration sources
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> 
-            { 
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
                 ["cloud"] = "AzureUSGovernment",
                 ["AZURE_CLOUD"] = "AzureGermanyCloud"
             })

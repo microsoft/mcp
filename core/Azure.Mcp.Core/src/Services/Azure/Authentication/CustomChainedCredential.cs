@@ -71,7 +71,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
-    
+
     /// <summary>
     /// Cloud configuration for authority host. Set by DI container during service registration.
     /// </summary>
@@ -181,7 +181,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                 Name = TokenCacheName,
             }
         };
-        
+
         if (CloudConfiguration != null)
         {
             brokerOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
