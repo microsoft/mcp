@@ -14,7 +14,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// </summary>
 /// <param name="id">The unique identifier for the server.</param>
 /// <param name="serverInfo">Configuration information for the server.</param>
-/// <param name="httpClientService">The HTTP client service for creating HTTP clients.</param>
+/// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
 /// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
 public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider) : IMcpServerProvider
 {
@@ -101,6 +101,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         HttpClientTransport clientTransport;
         if (_serverInfo.OAuthScopes is not null)
         {
+            // Registry servers with OAuthScopes must create HttpClient with this key to create an HttpClient that knows how to fetch its access tokens.
             var client = _httpClientFactory.CreateClient(RegistryServerHelper.GetRegistryServerHttpClientName(_serverInfo.Name!));
             clientTransport = new HttpClientTransport(transportOptions, client, ownsHttpClient: true);
         }
