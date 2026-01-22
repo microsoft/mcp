@@ -16,7 +16,8 @@ public class NpxTests
         if (!LiveTestSettings.TryLoadTestSettings(out var settings) || string.IsNullOrEmpty(settings.TestPackage))
         {
             Assert.Skip("Can only test packages ");
-        } else
+        }
+        else
         {
             _settings = settings;
         }

@@ -49,8 +49,8 @@ public class LiveTestSettings
 
     public static bool TryLoadTestSettings([NotNullWhen(true)] out LiveTestSettings? settings)
     {
-       if (TryFindTestSettingsFile(out var path))
-       {
+        if (TryFindTestSettingsFile(out var path))
+        {
             var json = File.ReadAllText(path);
 
             settings = JsonSerializer.Deserialize<LiveTestSettings>(json, new JsonSerializerOptions()
@@ -59,7 +59,7 @@ public class LiveTestSettings
                 Converters = { new JsonStringEnumConverter() }
             });
 
-            if(settings != null)
+            if (settings != null)
             {
                 settings.SettingsDirectory = Path.GetDirectoryName(path) ?? string.Empty;
                 return true;
