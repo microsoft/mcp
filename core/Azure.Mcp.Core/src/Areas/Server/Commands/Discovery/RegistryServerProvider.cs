@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Models;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using ModelContextProtocol.Client;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -16,11 +16,11 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientService">The HTTP client service for creating HTTP clients.</param>
 /// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
-public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientService httpClientService, IAzureTokenCredentialProvider tokenCredentialProvider) : IMcpServerProvider
+public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
-    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
     /// <summary>
@@ -101,15 +101,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         HttpClientTransport clientTransport;
         if (_serverInfo.OAuthScopes is not null)
         {
-            var fetchAccessToken = async (CancellationToken cancellationToken) =>
-            {
-                var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
-                var tokenContext = new Azure.Core.TokenRequestContext(_serverInfo.OAuthScopes);
-                var token = await credential.GetTokenAsync(tokenContext, cancellationToken);
-                return token.Token;
-            };
-
-            var client = _httpClientService.CreateClientWithAccessToken(fetchAccessToken);
+            var client = _httpClientFactory.CreateClient(RegistryServerHelper.GetRegistryServerHttpClientName(_serverInfo.Name!));
             clientTransport = new HttpClientTransport(transportOptions, client, ownsHttpClient: true);
         }
         else
