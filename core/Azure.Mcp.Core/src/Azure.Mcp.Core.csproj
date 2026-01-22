@@ -27,6 +27,5 @@
     <PackageReference Include="Microsoft.Identity.Web" />
     <PackageReference Include="Microsoft.Identity.Web.Azure" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
-    <PackageReference Include="System.Linq.AsyncEnumerable" />
   </ItemGroup>
 </Project>

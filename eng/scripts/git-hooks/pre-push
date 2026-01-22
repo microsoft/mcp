@@ -4,11 +4,11 @@
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 # Since the solution is always in the root, directly find it there
-SOLUTION_FILE=$(find "$REPO_ROOT" -maxdepth 1 -name "*.sln" -type f | head -n 1)
+SOLUTION_FILE=$(find "$REPO_ROOT" -maxdepth 1 -name "*.slnx" -type f | head -n 1)
 
 # Exit if no solution file was found
 if [ -z "$SOLUTION_FILE" ]; then
-    echo "Error: No .sln file found in the repository root."
+    echo "Error: No .slnx file found in the repository root."
     exit 1
 fi
 

@@ -60,11 +60,11 @@ public class ServiceStartOptions
     public bool DangerouslyDisableHttpIncomingAuth { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (insecure mode).
+    /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (dangerous mode).
     /// When true, elicitation will always be treated as accepted without user confirmation.
     /// </summary>
-    [JsonPropertyName("insecureDisableElicitation")]
-    public bool InsecureDisableElicitation { get; set; } = false;
+    [JsonPropertyName("dangerouslyDisableElicitation")]
+    public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the outgoing authentication strategy for Azure service requests.

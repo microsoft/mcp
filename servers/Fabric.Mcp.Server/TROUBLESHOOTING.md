@@ -197,7 +197,7 @@ dotnet clean servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
 dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
 
 # Make executable if using published binary
-chmod +x bin/Release/net9.0/{your-rid}/publish/Fabric.Mcp.Server
+chmod +x bin/Release/net10.0/{your-rid}/publish/Fabric.Mcp.Server
 ```
 
 **Verification:**

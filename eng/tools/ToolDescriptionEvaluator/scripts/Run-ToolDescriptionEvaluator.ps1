@@ -51,21 +51,21 @@ $ErrorActionPreference = 'Stop'
 
 try {
     # Get absolute paths
-    $repoRoot = Resolve-Path "$PSScriptRoot/../../../" | Select-Object -ExpandProperty Path
-    $toolDir = Resolve-Path "$PSScriptRoot" | Select-Object -ExpandProperty Path
+    $repoRoot = Resolve-Path "$PSScriptRoot/../../../../" | Select-Object -ExpandProperty Path
+    $toolDir = Resolve-Path "$PSScriptRoot/../src" | Select-Object -ExpandProperty Path
 
     # Build the whole Azure MCP Server project if needed
     if ($BuildAzureMcp)
     {
         Write-Host "Building root project to enable dynamic tool loading..." -ForegroundColor Yellow
 
-        & dotnet build "$repoRoot/AzureMcp.sln"
-
+        & dotnet build "$repoRoot/servers/Azure.Mcp.Server/Azure.Mcp.Server.slnx"
+`
         if ($LASTEXITCODE -ne 0) {
-            throw "Failed to build root project"
+            throw "Failed to build server solution"
         }
 
-        Write-Host "Root project build completed successfully!" -ForegroundColor Green
+        Write-Host "Server solution build completed successfully!" -ForegroundColor Green
     }
 
     # Locate azmcp CLI artifact (platform & build-type agnostic)

@@ -69,7 +69,7 @@
 /tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AppService
-# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft 
+# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft
 
 
 # PRLabel: %tools-BestPractices
@@ -137,7 +137,7 @@
 /tools/Azure.Mcp.Tools.AzureIsv/       @pachaturvedi @agrimayadav @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ISV
-# ServiceOwners:                       @pachaturvedi @agrimayadav 
+# ServiceOwners:                       @pachaturvedi @agrimayadav
 
 # PRLabel: %tools-Kusto
 /tools/Azure.Mcp.Tools.Kusto/          @prvavill @danield137 @microsoft/azure-mcp
@@ -176,6 +176,12 @@
 # ServiceLabel: %tools-SQL
 # ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
 
+# PRLabel: %tools-Policy
+/tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Policy
+# ServiceOwners:                       @msalaman
+
 # PRLabel: %tools-Postgres
 /tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp
 
@@ -212,6 +218,18 @@
 
 # ServiceLabel: %tools-Storage
 # ServiceOwners:                       @alzimmermsft  @jongio
+
+# PRLabel: %tools-FileShares
+/tools/Azure.Mcp.Tools.FileShares/     @ankushbindlish2 @kszobi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-FileShares
+# ServiceOwners:                       @ankushbindlish2 @kszobi
+
+# PRLabel: %tools-StorageSync
+/tools/Azure.Mcp.Tools.StorageSync/    @ankushbindlish2 @kszobi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-StorageSync
+# ServiceOwners:                       @ankushbindlish2 @kszobi
 
 # PRLabel: %tools-Authorization
 /tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp

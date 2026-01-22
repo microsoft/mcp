@@ -491,12 +491,27 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
+            {
+                Form = new(),
+            }
         };
         mockServer.ClientCapabilities.Returns(capabilities);
 
         var elicitationRequest = new ElicitRequestParams
         {
-            Message = "Please enter your password:"
+            Message = "Please enter your password:",
+            RequestedSchema = new()
+            {
+                Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>()
+                {
+                    ["password"] = new ElicitRequestParams.StringSchema
+                    {
+                        Title = "password",
+                        Description = "The user's password.",
+                    }
+                },
+                Required = ["password"],
+            }
         };
 
         var mockResponse = new JsonRpcResponse

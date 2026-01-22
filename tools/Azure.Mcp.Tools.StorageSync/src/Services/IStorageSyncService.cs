@@ -190,9 +190,9 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string cloudEndpointName,
-        string? directoryPath = null,
-        string[]? filePaths = null,
-        bool recursive = false,
+        string directoryPath,
+        string? changeDetectionMode = null,
+        IList<string>? paths = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

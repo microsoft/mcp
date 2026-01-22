@@ -48,7 +48,7 @@ public static class ServiceCollectionExtensions
         {
             Namespace = serviceStartOptions.Namespace,
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
-            InsecureDisableElicitation = serviceStartOptions.InsecureDisableElicitation,
+            DangerouslyDisableElicitation = serviceStartOptions.DangerouslyDisableElicitation,
             Tool = serviceStartOptions.Tool,
         };
 
@@ -142,7 +142,7 @@ public static class ServiceCollectionExtensions
                 var utilityToolLoaderOptions = new ToolLoaderOptions(
                     Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
-                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation,
+                    DangerouslyDisableElicitation: defaultToolLoaderOptions.DangerouslyDisableElicitation,
                     Tool: defaultToolLoaderOptions.Tool
                 );
 
