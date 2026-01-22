@@ -1,4 +1,0 @@
-pr: 1194
-changes:
-  - section: "Features Added"
-    description: "Added Azure Policy Tool"
