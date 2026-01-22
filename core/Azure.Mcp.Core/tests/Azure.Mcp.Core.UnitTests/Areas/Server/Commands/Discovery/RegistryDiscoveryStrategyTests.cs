@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -15,9 +14,9 @@ public class RegistryDiscoveryStrategyTests
     {
         var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<RegistryDiscoveryStrategy>>();
-        var httpClientService = NSubstitute.Substitute.For<IHttpClientService>();
+        var httpClientFactory = NSubstitute.Substitute.For<IHttpClientFactory>();
         var tokenCredentialProvider = NSubstitute.Substitute.For<IAzureTokenCredentialProvider>();
-        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientService, tokenCredentialProvider);
+        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, tokenCredentialProvider);
     }
 
     [Fact]

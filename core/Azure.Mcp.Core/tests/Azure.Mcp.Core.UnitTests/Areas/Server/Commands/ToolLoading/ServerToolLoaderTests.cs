@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -54,9 +53,9 @@ public class ServerToolLoaderTests
     private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
     {
         var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var httpClientService = Substitute.For<IHttpClientService>();
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var tokenCredentialProvider = Substitute.For<IAzureTokenCredentialProvider>();
-        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientService, tokenCredentialProvider);
+        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, tokenCredentialProvider);
     }
 
     [Fact]

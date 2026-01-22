@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;
@@ -17,11 +16,11 @@ public class RegistryServerProviderTests
 {
     private static RegistryServerProvider CreateServerProvider(string id, RegistryServerInfo serverInfo)
     {
-        var httpClientService = NSubstitute.Substitute.For<IHttpClientService>();
-        httpClientService.CreateClientWithAccessToken(Arg.Any<Func<CancellationToken, Task<string>>>(), Arg.Any<Uri?>())
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>())
             .Returns(Substitute.For<HttpClient>());
-        var tokenCredentialProvider = NSubstitute.Substitute.For<IAzureTokenCredentialProvider>();
-        return new RegistryServerProvider(id, serverInfo, httpClientService, tokenCredentialProvider);
+        var tokenCredentialProvider = Substitute.For<IAzureTokenCredentialProvider>();
+        return new RegistryServerProvider(id, serverInfo, httpClientFactory, tokenCredentialProvider);
     }
     [Fact]
     public void Constructor_InitializesCorrectly()
