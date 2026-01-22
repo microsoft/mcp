@@ -62,7 +62,7 @@ public class ImportJobCancelCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var mockJob = new Models.ImportJob { Name = JobName, AdminStatus = "Cancel" };
+            var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
             _managedLustreService.CancelImportJobAsync(
                 Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName), Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
@@ -94,7 +94,7 @@ public class ImportJobCancelCommandTests
     public async Task ExecuteAsync_ValidInput_CallsServiceAndReturnsSuccess()
     {
         // Arrange
-        var mockJob = new Models.ImportJob { Name = JobName, AdminStatus = "Cancel" };
+        var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
         _managedLustreService.CancelImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
@@ -134,7 +134,7 @@ public class ImportJobCancelCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        var mockJob = new Models.ImportJob { Name = JobName, AdminStatus = "Cancel" };
+        var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
         _managedLustreService.CancelImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())

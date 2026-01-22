@@ -1,66 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.ManagedLustre.Models;
 
 public class ImportJob
 {
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
+    public string? Id { get; set; }
+    public string? Type { get; set; }
+    public string? Location { get; set; }
+    public ImportJobProperties? Properties { get; set; }
+}
 
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("provisioningState")]
-    public string ProvisioningState { get; set; } = string.Empty;
-
-    [JsonPropertyName("conflictResolutionMode")]
-    public string? ConflictResolutionMode { get; set; }
-
-    [JsonPropertyName("importPrefixes")]
+public class ImportJobProperties
+{
+    public string? ProvisioningState { get; set; }
     public string[]? ImportPrefixes { get; set; }
-
-    [JsonPropertyName("maximumErrors")]
-    public int? MaximumErrors { get; set; }
-
-    [JsonPropertyName("totalBlobsImported")]
-    public long? TotalBlobsImported { get; set; }
-
-    [JsonPropertyName("totalErrors")]
-    public long? TotalErrors { get; set; }
-
-    [JsonPropertyName("totalConflicts")]
-    public long? TotalConflicts { get; set; }
-
-    [JsonPropertyName("totalBlobsWalked")]
-    public long? TotalBlobsWalked { get; set; }
-
-    [JsonPropertyName("blobsWalkedPerSecond")]
-    public long? BlobsWalkedPerSecond { get; set; }
-
-    [JsonPropertyName("importedFiles")]
-    public long? ImportedFiles { get; set; }
-
-    [JsonPropertyName("importedDirectories")]
-    public long? ImportedDirectories { get; set; }
-
-    [JsonPropertyName("importedSymlinks")]
-    public long? ImportedSymlinks { get; set; }
-
-    [JsonPropertyName("preexistingFiles")]
-    public long? PreexistingFiles { get; set; }
-
-    [JsonPropertyName("preexistingDirectories")]
-    public long? PreexistingDirectories { get; set; }
-
-    [JsonPropertyName("preexistingSymlinks")]
-    public long? PreexistingSymlinks { get; set; }
-
-    [JsonPropertyName("blobsImportedPerSecond")]
-    public long? BlobsImportedPerSecond { get; set; }
-
-    [JsonPropertyName("adminStatus")]
+    public string? ConflictResolutionMode { get; set; }
+    public long? MaximumErrors { get; set; }
     public string? AdminStatus { get; set; }
+    public ImportJobStatus? Status { get; set; }
+}
+
+public class ImportJobStatus
+{
+    public string? State { get; set; }
+    public long? TotalBlobsWalked { get; set; }
+    public double? BlobsWalkedPerSecond { get; set; }
+    public long? TotalBlobsImported { get; set; }
+    public double? BlobsImportedPerSecond { get; set; }
+    public long? TotalErrors { get; set; }
+    public long? TotalConflicts { get; set; }
 }

@@ -61,6 +61,122 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         return results;
     }
 
+    private static Models.AutoimportJob MapAutoimportJob(AutoImportJobResource job)
+    {
+        var data = job.Data;
+        return new Models.AutoimportJob
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            Type = data.ResourceType.ToString(),
+            Location = data.Location.ToString(),
+            Properties = new Models.AutoimportJobProperties
+            {
+                ProvisioningState = data.ProvisioningState?.ToString(),
+                AutoImportPrefixes = data.AutoImportPrefixes?.ToArray(),
+                ConflictResolutionMode = data.ConflictResolutionMode?.ToString(),
+                EnableDeletions = data.EnableDeletions,
+                MaximumErrors = (int?)data.MaximumErrors,
+                AdminStatus = data.AdminStatus?.ToString(),
+                Status = new Models.AutoimportJobStatus
+                {
+                    State = data.State?.ToString(),
+                    StatusCode = data.StatusCode?.ToString(),
+                    TotalBlobsWalked = data.TotalBlobsWalked,
+                    RateOfBlobWalk = data.RateOfBlobWalk,
+                    TotalBlobsImported = data.TotalBlobsImported,
+                    RateOfBlobImport = data.RateOfBlobImport,
+                    ImportedFiles = data.ImportedFiles,
+                    ImportedDirectories = data.ImportedDirectories,
+                    ImportedSymlinks = data.ImportedSymlinks,
+                    PreexistingFiles = data.PreexistingFiles,
+                    PreexistingDirectories = data.PreexistingDirectories,
+                    PreexistingSymlinks = data.PreexistingSymlinks,
+                    TotalErrors = data.TotalErrors,
+                    TotalConflicts = data.TotalConflicts,
+                    LastStartedTimeUTC = data.LastStartedTimeUTC?.DateTime,
+                    BlobSyncEvents = data.BlobSyncEvents != null ? new Models.BlobSyncEvents
+                    {
+                        ImportedFiles = data.BlobSyncEvents.ImportedFiles,
+                        ImportedDirectories = data.BlobSyncEvents.ImportedDirectories,
+                        ImportedSymlinks = data.BlobSyncEvents.ImportedSymlinks,
+                        PreexistingFiles = data.BlobSyncEvents.PreexistingFiles,
+                        PreexistingDirectories = data.BlobSyncEvents.PreexistingDirectories,
+                        PreexistingSymlinks = data.BlobSyncEvents.PreexistingSymlinks,
+                        TotalBlobsImported = data.BlobSyncEvents.TotalBlobsImported,
+                        RateOfBlobImport = data.BlobSyncEvents.RateOfBlobImport,
+                        TotalErrors = data.BlobSyncEvents.TotalErrors,
+                        TotalConflicts = data.BlobSyncEvents.TotalConflicts,
+                        Deletions = data.BlobSyncEvents.Deletions,
+                        LastTimeFullySynchronized = data.BlobSyncEvents.LastTimeFullySynchronized?.DateTime
+                    } : null
+                }
+            }
+        };
+    }
+
+    private static Models.AutoexportJob MapAutoexportJob(AutoExportJobResource job)
+    {
+        var data = job.Data;
+        return new Models.AutoexportJob
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            Type = data.ResourceType.ToString(),
+            Location = data.Location.ToString(),
+            Properties = new Models.AutoexportJobProperties
+            {
+                ProvisioningState = data.ProvisioningState?.ToString(),
+                AutoExportPrefixes = data.AutoExportPrefixes?.ToArray(),
+                AdminStatus = data.AdminStatus?.ToString(),
+                Status = new Models.AutoexportJobStatus
+                {
+                    State = data.State?.ToString(),
+                    TotalFilesExported = data.TotalFilesExported,
+                    TotalMiBExported = data.TotalMiBExported,
+                    TotalFilesFailed = data.TotalFilesFailed,
+                    ExportIterationCount = data.ExportIterationCount,
+                    CurrentIterationFilesDiscovered = data.CurrentIterationFilesDiscovered,
+                    CurrentIterationMiBDiscovered = data.CurrentIterationMiBDiscovered,
+                    CurrentIterationFilesExported = data.CurrentIterationFilesExported,
+                    CurrentIterationMiBExported = data.CurrentIterationMiBExported,
+                    CurrentIterationFilesFailed = data.CurrentIterationFilesFailed,
+                    LastStartedTime = data.LastStartedTimeUTC?.DateTime
+                }
+            }
+        };
+    }
+
+    private static Models.ImportJob MapImportJob(StorageCacheImportJobResource job)
+    {
+        var data = job.Data;
+        return new Models.ImportJob
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            Type = data.ResourceType.ToString(),
+            Location = data.Location.ToString(),
+            Properties = new Models.ImportJobProperties
+            {
+                ProvisioningState = data.ProvisioningState?.ToString(),
+                ImportPrefixes = data.ImportPrefixes?.ToArray(),
+                ConflictResolutionMode = data.ConflictResolutionMode?.ToString(),
+                MaximumErrors = data.MaximumErrors,
+                AdminStatus = data.AdminStatus?.ToString(),
+                Status = new Models.ImportJobStatus
+                {
+                    State = data.State?.ToString(),
+                    TotalBlobsWalked = data.TotalBlobsWalked,
+                    BlobsWalkedPerSecond = data.BlobsWalkedPerSecond,
+                    TotalBlobsImported = data.TotalBlobsImported,
+                    BlobsImportedPerSecond = data.BlobsImportedPerSecond,
+                    TotalErrors = data.TotalErrors,
+                    TotalConflicts = data.TotalConflicts
+                }
+            }
+        };
+    }
+
     private static LustreFileSystem Map(AmlFileSystemResource fs)
     {
         var data = fs.Data;
@@ -642,29 +758,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             // Get the auto export job
             var job = await fs.Value.GetAutoExportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
 
-            return new Models.AutoexportJob
-            {
-                Name = job.Value.Data.Name,
-                Id = job.Value.Data.Id.ToString(),
-                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
-                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
-                AutoExportPrefixes = job.Value.Data.AutoExportPrefixes?.ToArray(),
-                State = job.Value.Data.State?.ToString(),
-                StatusCode = job.Value.Data.StatusCode,
-                StatusMessage = job.Value.Data.StatusMessage,
-                TotalFilesExported = job.Value.Data.TotalFilesExported,
-                TotalMiBExported = job.Value.Data.TotalMiBExported,
-                TotalFilesFailed = job.Value.Data.TotalFilesFailed,
-                ExportIterationCount = job.Value.Data.ExportIterationCount,
-                LastSuccessfulIterationCompletionTimeUTC = job.Value.Data.LastSuccessfulIterationCompletionTimeUTC,
-                CurrentIterationFilesDiscovered = job.Value.Data.CurrentIterationFilesDiscovered,
-                CurrentIterationMiBDiscovered = job.Value.Data.CurrentIterationMiBDiscovered,
-                CurrentIterationFilesExported = job.Value.Data.CurrentIterationFilesExported,
-                CurrentIterationMiBExported = job.Value.Data.CurrentIterationMiBExported,
-                CurrentIterationFilesFailed = job.Value.Data.CurrentIterationFilesFailed,
-                LastStartedTimeUTC = job.Value.Data.LastStartedTimeUTC,
-                LastCompletionTimeUTC = job.Value.Data.LastCompletionTimeUTC
-            };
+            return MapAutoexportJob(job.Value);
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -704,29 +798,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var jobs = new List<Models.AutoexportJob>();
             await foreach (var job in fs.Value.GetAutoExportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
-                jobs.Add(new Models.AutoexportJob
-                {
-                    Name = job.Data.Name,
-                    Id = job.Data.Id.ToString(),
-                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
-                    AdminStatus = job.Data.AdminStatus?.ToString(),
-                    AutoExportPrefixes = job.Data.AutoExportPrefixes?.ToArray(),
-                    State = job.Data.State?.ToString(),
-                    StatusCode = job.Data.StatusCode,
-                    StatusMessage = job.Data.StatusMessage,
-                    TotalFilesExported = job.Data.TotalFilesExported,
-                    TotalMiBExported = job.Data.TotalMiBExported,
-                    TotalFilesFailed = job.Data.TotalFilesFailed,
-                    ExportIterationCount = job.Data.ExportIterationCount,
-                    LastSuccessfulIterationCompletionTimeUTC = job.Data.LastSuccessfulIterationCompletionTimeUTC,
-                    CurrentIterationFilesDiscovered = job.Data.CurrentIterationFilesDiscovered,
-                    CurrentIterationMiBDiscovered = job.Data.CurrentIterationMiBDiscovered,
-                    CurrentIterationFilesExported = job.Data.CurrentIterationFilesExported,
-                    CurrentIterationMiBExported = job.Data.CurrentIterationMiBExported,
-                    CurrentIterationFilesFailed = job.Data.CurrentIterationFilesFailed,
-                    LastStartedTimeUTC = job.Data.LastStartedTimeUTC,
-                    LastCompletionTimeUTC = job.Data.LastCompletionTimeUTC
-                });
+                jobs.Add(MapAutoexportJob(job));
             }
 
             return jobs;
@@ -963,20 +1035,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             // Get the auto import job
             var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
 
-            return new Models.AutoimportJob
-            {
-                Name = job.Value.Data.Name,
-                Id = job.Value.Data.Id.ToString(),
-                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
-                ConflictResolutionMode = job.Value.Data.ConflictResolutionMode?.ToString(),
-                AutoImportPrefixes = job.Value.Data.AutoImportPrefixes?.ToArray(),
-                AdminStatus = job.Value.Data.AdminStatus?.ToString(),
-                EnableDeletions = job.Value.Data.EnableDeletions,
-                MaximumErrors = (int?)job.Value.Data.MaximumErrors,
-                TotalBlobsImported = job.Value.Data.TotalBlobsImported,
-                TotalConflicts = job.Value.Data.TotalConflicts,
-                TotalErrors = job.Value.Data.TotalErrors
-            };
+            return MapAutoimportJob(job.Value);
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -1016,20 +1075,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var jobs = new List<Models.AutoimportJob>();
             await foreach (var job in fs.Value.GetAutoImportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
-                jobs.Add(new Models.AutoimportJob
-                {
-                    Name = job.Data.Name,
-                    Id = job.Data.Id.ToString(),
-                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
-                    ConflictResolutionMode = job.Data.ConflictResolutionMode?.ToString(),
-                    AutoImportPrefixes = job.Data.AutoImportPrefixes?.ToArray(),
-                    AdminStatus = job.Data.AdminStatus?.ToString(),
-                    EnableDeletions = job.Data.EnableDeletions,
-                    MaximumErrors = (int?)job.Data.MaximumErrors,
-                    TotalBlobsImported = job.Data.TotalBlobsImported,
-                    TotalConflicts = job.Data.TotalConflicts,
-                    TotalErrors = job.Data.TotalErrors
-                });
+                jobs.Add(MapAutoimportJob(job));
             }
 
             return jobs;
@@ -1244,27 +1290,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var jobs = new List<Models.ImportJob>();
             await foreach (var job in fs.Value.GetStorageCacheImportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
-                jobs.Add(new Models.ImportJob
-                {
-                    Name = job.Data.Name,
-                    Id = job.Data.Id.ToString(),
-                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown",
-                    ConflictResolutionMode = job.Data.ConflictResolutionMode?.ToString(),
-                    ImportPrefixes = job.Data.ImportPrefixes?.ToArray(),
-                    MaximumErrors = (int?)job.Data.MaximumErrors,
-                    TotalBlobsImported = job.Data.TotalBlobsImported,
-                    TotalErrors = job.Data.TotalErrors,
-                    TotalConflicts = job.Data.TotalConflicts,
-                    TotalBlobsWalked = job.Data.TotalBlobsWalked,
-                    BlobsWalkedPerSecond = job.Data.BlobsWalkedPerSecond,
-                    ImportedFiles = job.Data.ImportedFiles,
-                    ImportedDirectories = job.Data.ImportedDirectories,
-                    ImportedSymlinks = job.Data.ImportedSymlinks,
-                    PreexistingFiles = job.Data.PreexistingFiles,
-                    PreexistingDirectories = job.Data.PreexistingDirectories,
-                    PreexistingSymlinks = job.Data.PreexistingSymlinks,
-                    BlobsImportedPerSecond = job.Data.BlobsImportedPerSecond
-                });
+                jobs.Add(MapImportJob(job));
             }
 
             return jobs;
@@ -1305,27 +1331,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             // Get the import job
             var job = await fs.Value.GetStorageCacheImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
 
-            return new Models.ImportJob
-            {
-                Name = job.Value.Data.Name,
-                Id = job.Value.Data.Id.ToString(),
-                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown",
-                ConflictResolutionMode = job.Value.Data.ConflictResolutionMode?.ToString(),
-                ImportPrefixes = job.Value.Data.ImportPrefixes?.ToArray(),
-                MaximumErrors = (int?)job.Value.Data.MaximumErrors,
-                TotalBlobsImported = job.Value.Data.TotalBlobsImported,
-                TotalErrors = job.Value.Data.TotalErrors,
-                TotalConflicts = job.Value.Data.TotalConflicts,
-                TotalBlobsWalked = job.Value.Data.TotalBlobsWalked,
-                BlobsWalkedPerSecond = job.Value.Data.BlobsWalkedPerSecond,
-                ImportedFiles = job.Value.Data.ImportedFiles,
-                ImportedDirectories = job.Value.Data.ImportedDirectories,
-                ImportedSymlinks = job.Value.Data.ImportedSymlinks,
-                PreexistingFiles = job.Value.Data.PreexistingFiles,
-                PreexistingDirectories = job.Value.Data.PreexistingDirectories,
-                PreexistingSymlinks = job.Value.Data.PreexistingSymlinks,
-                BlobsImportedPerSecond = job.Value.Data.BlobsImportedPerSecond
-            };
+            return MapImportJob(job.Value);
         }
         catch (Azure.RequestFailedException rfe)
         {
@@ -1377,11 +1383,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             // Get the updated job to return the actual status
             var updatedJob = await job.Value.GetAsync(cancellationToken: cancellationToken);
-            return new Models.ImportJob
-            {
-                Name = updatedJob.Value.Data.Name,
-                AdminStatus = updatedJob.Value.Data.AdminStatus?.ToString()
-            };
+            return MapImportJob(updatedJob.Value);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {

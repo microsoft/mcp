@@ -62,7 +62,7 @@ public class ImportJobGetCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var importJob = new Models.ImportJob { Name = JobName, Id = "id1", ProvisioningState = "Succeeded" };
+            var importJob = new Models.ImportJob { Name = JobName, Id = "id1", Properties = new Models.ImportJobProperties { ProvisioningState = "Succeeded" } };
 
             _managedLustreService.GetImportJobAsync(
                 Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName),
@@ -99,9 +99,12 @@ public class ImportJobGetCommandTests
         {
             Name = JobName,
             Id = "id1",
-            ProvisioningState = "Succeeded",
-            ConflictResolutionMode = "Fail",
-            MaximumErrors = 10
+            Properties = new Models.ImportJobProperties
+            {
+                ProvisioningState = "Succeeded",
+                ConflictResolutionMode = "Fail",
+                MaximumErrors = 10
+            }
         };
 
         _managedLustreService.GetImportJobAsync(
@@ -128,8 +131,8 @@ public class ImportJobGetCommandTests
         // Arrange
         var importJobs = new List<Models.ImportJob>
         {
-            new() { Name = "job1", Id = "id1", ProvisioningState = "Running" },
-            new() { Name = "job2", Id = "id2", ProvisioningState = "Succeeded" }
+            new() { Name = "job1", Id = "id1", Properties = new Models.ImportJobProperties { ProvisioningState = "Running" } },
+            new() { Name = "job2", Id = "id2", Properties = new Models.ImportJobProperties { ProvisioningState = "Succeeded" } }
         };
 
         _managedLustreService.ListImportJobsAsync(
@@ -173,7 +176,7 @@ public class ImportJobGetCommandTests
         // Arrange
         var importJobs = new List<Models.ImportJob>
         {
-            new() { Name = JobName, Id = "id1", ProvisioningState = "Succeeded" }
+            new() { Name = JobName, Id = "id1", Properties = new Models.ImportJobProperties { ProvisioningState = "Succeeded" } }
         };
 
         _managedLustreService.ListImportJobsAsync(

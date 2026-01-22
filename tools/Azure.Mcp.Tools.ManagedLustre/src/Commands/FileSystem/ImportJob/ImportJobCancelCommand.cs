@@ -84,7 +84,7 @@ public sealed class ImportJobCancelCommand(ILogger<ImportJobCancelCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(cancelledJob.Name, cancelledJob.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelResult);
         }
         catch (Exception ex)
         {
