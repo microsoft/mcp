@@ -234,7 +234,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
 | **GitHub Copilot CLI** | `~/.copilot/mcp-config.json` | [Copilot CLI MCP Configuration](#github-copilot-cli-configuration) |
-| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
+| **Claude Code** | Plugin-based installation | [Claude Code Installation Instructions](#claude-code) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
