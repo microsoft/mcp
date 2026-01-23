@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.13 (Unreleased)
+## 2.0.0-beta.14 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.13 (2026-01-22)
+
+### Other Changes
+
+- Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]
 
 ## 2.0.0-beta.12 (2026-01-20)
 

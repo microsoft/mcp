@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -204,7 +205,8 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddAzureTenantService(addUserAgentClient: true);
+        services.AddHttpClientServices(configureDefaults: true);
+        services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
