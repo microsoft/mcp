@@ -50,7 +50,7 @@ public class AssemblyHelperTests
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(
             () => AssemblyHelper.GetAssemblyVersion(assembly));
-        
+
         Assert.Contains("AssemblyInformationalVersionAttribute", exception.Message);
         Assert.Contains("required", exception.Message);
     }
@@ -64,7 +64,7 @@ public class AssemblyHelperTests
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(
             () => AssemblyHelper.GetFullAssemblyVersion(assembly));
-        
+
         Assert.Contains("AssemblyInformationalVersionAttribute", exception.Message);
         Assert.Contains("required", exception.Message);
     }
@@ -82,7 +82,7 @@ public class AssemblyHelperTests
         // Assert
         // Short version should be the prefix of full version (before the '+')
         Assert.StartsWith(shortVersion, fullVersion);
-        
+
         // If full version has build metadata, short version should not
         if (fullVersion.Contains('+'))
         {
@@ -96,9 +96,9 @@ public class AssemblyHelperTests
         // Create a dynamic assembly without AssemblyInformationalVersionAttribute
         var assemblyName = new AssemblyName("TestAssembly");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(
-            assemblyName, 
+            assemblyName,
             AssemblyBuilderAccess.Run);
-        
+
         return assemblyBuilder;
     }
 }
