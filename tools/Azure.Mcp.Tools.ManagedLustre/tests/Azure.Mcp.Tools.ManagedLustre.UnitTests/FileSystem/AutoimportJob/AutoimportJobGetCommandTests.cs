@@ -58,7 +58,10 @@ public class AutoimportJobGetCommandTests
         {
             Name = _jobName,
             Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/{_jobName}",
-            ProvisioningState = "Succeeded"
+            Properties = new Models.AutoimportJobProperties
+            {
+                ProvisioningState = "Succeeded"
+            }
         };
 
         _managedLustreService.GetAutoimportJobAsync(
@@ -183,7 +186,10 @@ public class AutoimportJobGetCommandTests
         {
             Name = _jobName,
             Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/{_jobName}",
-            ProvisioningState = "Running"
+            Properties = new Models.AutoimportJobProperties
+            {
+                ProvisioningState = "Running"
+            }
         };
 
         _managedLustreService.GetAutoimportJobAsync(
@@ -224,8 +230,8 @@ public class AutoimportJobGetCommandTests
         // Arrange
         var expectedJobs = new List<Models.AutoimportJob>
         {
-            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job1", ProvisioningState = "Succeeded" },
-            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job2", ProvisioningState = "Running" }
+            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job1", Properties = new Models.AutoimportJobProperties { ProvisioningState = "Succeeded" } },
+            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoImportJobs/job2", Properties = new Models.AutoimportJobProperties { ProvisioningState = "Running" } }
         };
 
         _managedLustreService.ListAutoimportJobsAsync(
