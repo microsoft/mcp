@@ -711,7 +711,7 @@
       ]
     },
     {
-      "name": "get_azure_advisor_recommendations",
+      "name": "list_azure_advisor_recommendations",
       "description": "Get Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources.",
       "toolMetadata": {
         "destructive": {
