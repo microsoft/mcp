@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +18,7 @@ namespace Azure.Mcp.Tools.Extension.UnitTests;
 public sealed class CliGenerateCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IHttpClientService _httpClientService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ICliGenerateService _cliGenerateService;
     private readonly ILogger<CliGenerateCommand> _logger;
     private readonly CliGenerateCommand _command;
@@ -28,12 +27,12 @@ public sealed class CliGenerateCommandTests
 
     public CliGenerateCommandTests()
     {
-        _httpClientService = Substitute.For<IHttpClientService>();
+        _httpClientFactory = Substitute.For<IHttpClientFactory>();
         _cliGenerateService = Substitute.For<ICliGenerateService>();
         _logger = Substitute.For<ILogger<CliGenerateCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_httpClientService);
+        collection.AddSingleton(_httpClientFactory);
         collection.AddSingleton(_cliGenerateService);
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
