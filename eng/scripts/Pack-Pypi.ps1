@@ -277,7 +277,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         try {
             $pythonCmd = Get-PythonCommand
             
-            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build wheel"
+            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build==1.2.2 wheel==0.45.1"
             
             # Build wheel only (no sdist for platform packages)
             # We use --wheel and then rename to set the correct platform tag
