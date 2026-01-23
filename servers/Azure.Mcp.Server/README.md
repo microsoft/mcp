@@ -423,7 +423,7 @@ npm install -g @azure/mcp@latest
 
 ## Key Configuration Insight
 
-> **Important:** MCP servers must be configured in the **session config** (not CLI arguments) for tools to be available. The critical configuration is:
+> **Important:** MCP servers must be configured in the **session config** for tools to be available. The critical configuration is:
 
 ```json
 {
@@ -514,13 +514,13 @@ if __name__ == "__main__":
 ### Installation
 
 ```bash
-npm install @anthropic-ai/github-copilot-sdk
+npm install @github/copilot-sdk
 ```
 
 ### Configuration (TypeScript)
 
 ```typescript
-import { CopilotClient, SessionEventType } from '@anthropic-ai/github-copilot-sdk';
+import { CopilotClient, SessionEventType } from '@github/copilot-sdk';
 
 async function main() {
   // Initialize the Copilot client
