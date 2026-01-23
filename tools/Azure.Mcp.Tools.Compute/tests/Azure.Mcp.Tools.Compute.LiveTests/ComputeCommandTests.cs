@@ -151,7 +151,7 @@ public class ComputeCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task DiskGet_WithDiskButNoResourceGroup_ReturnsBadRequest()
+    public async Task DiskGet_WithDiskButNoResourceGroup_SearchesAcrossSubscription()
     {
         // Arrange
         var diskName = Settings.DeploymentOutputs["DISKNAME"];
@@ -167,10 +167,12 @@ public class ComputeCommandTests(ITestOutputHelper output)
             });
 
         // Assert
-        // The MCP server returns error responses with status codes, not exceptions
-        // This should return a validation error (status 400)
+        // When disk name is provided without resource group, it searches across the entire subscription
         Assert.NotNull(result);
-        // The response should contain error details in the results section
-        Assert.True(result.Value.TryGetProperty("message", out _));
+        var disks = result.Value.AssertProperty("disks");
+        Assert.NotEmpty(disks.EnumerateArray());
+
+        var disk = disks.EnumerateArray().First();
+        Assert.Equal(diskName, disk.GetProperty("name").GetString());
     }
 }
