@@ -29,11 +29,6 @@ jobs:
       deploy:
         steps:
         - pwsh: |
-            $path = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}'
-            Write-Host "Contents of $path`:"
-            Get-ChildItem $path -Recurse
-
-        - pwsh: |
             $esrpDirectory = "$(Pipeline.Workspace)/esrp-release/${{ parameters.ServerName }}"
             New-Item -ItemType Directory -Force -Path $esrpDirectory
             Get-ChildItem -Path "$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}" `

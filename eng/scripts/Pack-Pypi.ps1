@@ -29,11 +29,8 @@
 .PARAMETER OutputPath
     Path where the PyPI packages will be created.
 
-.PARAMETER UsePaths
-    Switch to use default paths for local development.
-
 .EXAMPLE
-    ./Pack-Pypi.ps1 -UsePaths
+    ./Pack-Pypi.ps1
     Creates PyPI packages using default local paths.
 
 .EXAMPLE
@@ -45,8 +42,7 @@
 param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-    [string] $OutputPath,
-    [switch] $UsePaths
+    [string] $OutputPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -311,71 +307,6 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         }
 
         $builtPlatforms += $platformKey
-    }
-
-    # Build a source distribution (sdist) - just once, platform-independent
-    # The sdist doesn't include binaries, it's for reference/transparency only
-    Write-Host "`nBuilding source distribution for $basePackageName" -ForegroundColor Cyan
-
-    Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-    New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
-    New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName" | Out-Null
-
-    # Copy package __init__.py (without binaries)
-    Copy-Item -Path "$pypiSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
-
-    # Create pyproject.toml for sdist (OS Independent)
-    $pyprojectTemplate = Get-Content "$pypiSourcePath/pyproject.toml.template" -Raw
-
-    $pyprojectContent = $pyprojectTemplate `
-        -replace '{{PACKAGE_NAME}}', $basePackageName `
-        -replace '{{VERSION}}', $server.version `
-        -replace '{{DESCRIPTION}}', $description `
-        -replace '{{KEYWORDS}}', (Get-KeywordsString $keywords) `
-        -replace '{{OS_CLASSIFIER}}', 'OS Independent' `
-        -replace '{{CLI_NAME}}', $cliName `
-        -replace '{{MODULE_NAME}}', $moduleName `
-        -replace '{{HOMEPAGE}}', $server.readmeUrl
-
-    # Remove the artifacts line for sdist since there are no binaries
-    $pyprojectContent = $pyprojectContent -replace 'artifacts = \["src/{{MODULE_NAME}}/bin/\*"\]\n', ''
-    $pyprojectContent = $pyprojectContent -replace 'artifacts = \["src/[^"]+/bin/\*"\]\n', ''
-
-    $pyprojectPath = "$tempFolder/pyproject.toml"
-    $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
-
-    # Update version in __init__.py
-    $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
-    $initPyContent = Get-Content $initPyPath -Raw
-    $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$($server.version)`""
-    $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
-
-    # Process and copy README
-    & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
-        -Command "extract" `
-        -InputReadMePath "$RepoRoot/$($server.readmePath)" `
-        -PackageType "pypi" `
-        -InsertPayload @{ ToolTitle = 'PyPI Package' } `
-        -OutputDirectory $tempFolder
-
-    Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
-    Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
-
-    Push-Location $tempFolder
-    try {
-        $pythonCmd = Get-PythonCommand
-        
-        Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build"
-        Invoke-LoggedCommand "$pythonCmd -m build --sdist"
-
-        $distPath = "$tempFolder/dist"
-        if (Test-Path $distPath) {
-            Copy-Item -Path "$distPath/*.tar.gz" -Destination $serverOutputPath -Force
-            Write-Host "  ✅ Created source distribution" -ForegroundColor Green
-        }
-    }
-    finally {
-        Pop-Location
     }
 
     Write-Host "`n✅ PyPI packages built successfully for $($server.name)" -ForegroundColor Green

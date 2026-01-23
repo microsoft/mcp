@@ -10,6 +10,11 @@ jobs:
   steps:
   - checkout: self
 
+  - task: UsePythonVersion@0
+    displayName: Use Python 3.12
+    inputs:
+      versionSpec: '3.12'
+
   - download: current
     displayName: Download build_info
     artifact: build_info
