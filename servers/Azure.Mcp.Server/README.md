@@ -389,18 +389,18 @@ Config file: ~/.copilot/mcp-config.json
 
 ### GitHub Copilot SDK Configuration
 
-The [GitHub Copilot CLI SDK](https://github.com/github/copilot-sdk) enables programmatic integration of Azure MCP tools into your applications across multiple languages.
+The [GitHub Copilot SDK](https://github.com/github/copilot-sdk) enables programmatic integration of Azure MCP tools into your applications across multiple languages.
 
 <details>
 <summary>GitHub Copilot SDK snippets</summary>
 
-# Using GitHub Copilot CLI SDK with Azure MCP
+# Using GitHub Copilot SDK with Azure MCP
 
-This guide explains how to configure the [GitHub Copilot CLI SDK](https://github.com/github/copilot-sdk) to use Azure MCP (Model Context Protocol) tools for interacting with Azure resources.
+This guide explains how to configure the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) to use Azure MCP (Model Context Protocol) tools for interacting with Azure resources.
 
 ## Overview
 
-Azure MCP provides a set of tools that enable AI assistants to interact with Azure resources directly. When integrated with the Copilot CLI SDK, you can build applications that leverage natural language to manage Azure subscriptions, resource groups, storage accounts, and more.
+Azure MCP provides a set of tools that enable AI assistants to interact with Azure resources directly. When integrated with the Copilot SDK, you can build applications that leverage natural language to manage Azure subscriptions, resource groups, storage accounts, and more.
 
 ## Prerequisites
 
