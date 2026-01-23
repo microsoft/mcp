@@ -514,13 +514,13 @@ if __name__ == "__main__":
 ### Installation
 
 ```bash
-npm install @anthropic-ai/github-copilot-sdk
+npm install @github/copilot-sdk
 ```
 
 ### Configuration (TypeScript)
 
 ```typescript
-import { CopilotClient, SessionEventType } from '@anthropic-ai/github-copilot-sdk';
+import { CopilotClient, SessionEventType } from '@github/copilot-sdk';
 
 async function main() {
   // Initialize the Copilot client
