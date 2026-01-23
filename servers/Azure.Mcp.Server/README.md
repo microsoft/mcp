@@ -27,6 +27,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
+        - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
@@ -149,6 +150,19 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install [Eclipse IDE](https://www.eclipse.org/downloads/packages/).
 1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
 1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
+
+### Claude Code
+
+1. Install [Claude Code](https://code.claude.com/).
+1. Add the `github-copilot-for-azure` marketplace to Claude Code:
+   - Open Claude Code settings
+   - Navigate to the Plugin Marketplaces section
+   - Add a new marketplace with the URL: `https://github.com/microsoft/GitHub-Copilot-for-Azure`
+   - For detailed instructions on adding plugin marketplaces, see the [Claude Code Plugin Marketplaces documentation](https://code.claude.com/docs/en/plugin-marketplaces)
+1. Install the Azure plugin from the newly added marketplace:
+   - Open the plugin installation interface in Claude Code
+   - Search for "Azure" in the github-copilot-for-azure marketplace
+   - Click Install on the Azure plugin
 
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
