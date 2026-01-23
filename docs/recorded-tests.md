@@ -13,7 +13,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
   - Registers any behavior changes from default for the auto-started proxy
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
-- **HTTP Redirect** – In Debug builds the server-side `HttpClientService.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `HttpClientService`.
+- **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `IHttpClientFactory`.
 
 ## Test Proxy Primer (Relevant Bits)
 

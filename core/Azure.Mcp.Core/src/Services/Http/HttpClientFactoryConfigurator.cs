@@ -23,7 +23,7 @@ public static class HttpClientFactoryConfigurator
 
     static HttpClientFactoryConfigurator()
     {
-        var assembly = typeof(HttpClientService).Assembly;
+        var assembly = typeof(HttpClientFactoryConfigurator).Assembly;
         s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
         s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
         s_platform = RuntimeInformation.OSDescription;
