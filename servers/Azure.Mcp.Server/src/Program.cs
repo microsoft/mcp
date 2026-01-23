@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -236,7 +234,6 @@ internal class Program
 
     /// <summary>
     /// Attempts to handle the --version flag without requiring full service initialization.
-    /// This optimization reduces startup time from ~860ms to ~140ms for version queries.
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>Exit code if request was handled, null otherwise.</returns>
@@ -245,9 +242,7 @@ internal class Program
         // Handle --version flag
         if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
         {
-            var assembly = typeof(Program).Assembly;
-            var versionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-            var version = versionAttribute?.InformationalVersion ?? assembly.GetName().Version?.ToString() ?? "unknown";
+            var version = AssemblyHelper.GetFullAssemblyVersion(typeof(Program).Assembly);
             Console.WriteLine(version);
             return 0;
         }
