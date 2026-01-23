@@ -105,8 +105,13 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
         var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
+        // Convert https endpoint to wss for WebSocket-based TTS
+        var wssEndpoint = endpoint
+            .Replace("https://", "wss://", StringComparison.OrdinalIgnoreCase)
+            .TrimEnd('/') + "/tts/cognitiveservices/websocket/v1?traffictype=localmcp";
+
         // Configure Speech SDK with endpoint
-        var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
+        var config = SpeechConfig.FromEndpoint(new Uri(wssEndpoint));
 
         // Set the authorization token
         config.AuthorizationToken = accessToken.Token;

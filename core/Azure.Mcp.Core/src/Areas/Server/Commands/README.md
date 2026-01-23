@@ -6,10 +6,10 @@ There are two ways to start the server in `STDIO` or `SSE` (Streaming HTTP) mode
 
 ## STDIO
 
-`dotnet build && npx @modelcontextprotocol/inspector ./bin/Debug/net9.0/azmcp.exe server start`
+`dotnet build && npx @modelcontextprotocol/inspector ./bin/Debug/net10.0/azmcp.exe server start`
 
 ## SSE
-`dotnet build && ./bin/Debug/net9.0/azmcp.exe server start --transport sse`
+`dotnet build && ./bin/Debug/net10.0/azmcp.exe server start --transport sse`
 
 `npx @modelcontextprotocol/inspector`
 

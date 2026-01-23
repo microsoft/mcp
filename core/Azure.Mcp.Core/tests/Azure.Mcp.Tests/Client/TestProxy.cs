@@ -365,7 +365,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         else
         {
-            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(15));
+            var secondsToWait = 30;
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD")))
+            {
+                secondsToWait = 90;
+            }
+            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(secondsToWait));
         }
 
         if (_httpPort is null)
@@ -381,7 +386,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     {
         try
         {
-            while (!ct.IsCancellationRequested && !reader.EndOfStream)
+            while (!ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
                 if (line == null)

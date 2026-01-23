@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ITenantService tenantService, IHttpClientService httpClientService)
+public class MonitorHealthModelService(ITenantService tenantService, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
-    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     /// <summary>
     /// Retrieves the health information for a specific entity in a health model.
@@ -57,7 +57,8 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", dataplaneToken);
 
-        HttpResponseMessage healthResponse = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
+        var client = _httpClientFactory.CreateClient();
+        HttpResponseMessage healthResponse = await client.SendAsync(request, cancellationToken);
         healthResponse.EnsureSuccessStatusCode();
 
         string healthResponseString = await healthResponse.Content.ReadAsStringAsync(cancellationToken);
@@ -72,7 +73,8 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
+        var client = _httpClientFactory.CreateClient();
+        HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 

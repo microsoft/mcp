@@ -1,0 +1,46 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createOntologyRequest": {
+      "displayName": "Ontology_1",
+      "description": "An ontology description.",
+      "definition": {
+        "parts": [
+          {
+            "path": "definition.json",
+            "payload": "e30=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "EntityTypes/8813598896083/definition.json",
+            "payload": "ew0KICAiaWQiOiAiODgxMzU5ODg5NjA4MyIsDQogICJuYW1lc3BhY2UiOiAidXNlcnR5cGVzIiwNCiAgImJhc2VFbnRpdHlUeXBlSWQiOiBudWxsLA0KICAibmFtZSI6ICJFcXVpcG1lbnQxIiwNCiAgImVudGl0eUlkUGFydHMiOiBbDQogICAgIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogIF0sDQogICJkaXNwbGF5TmFtZVByb3BlcnR5SWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICJuYW1lc3BhY2VUeXBlIjogIkN1c3RvbSIsDQogICJ2aXNpYmlsaXR5IjogIlZpc2libGUiLA0KICAicHJvcGVydGllcyI6IFsNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICAgICAibmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJTdHJpbmciDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzMTk1MDAwMDMzMSIsDQogICAgICAibmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIg0KICAgIH0NCiAgXSwNCiAgInRpbWVzZXJpZXNQcm9wZXJ0aWVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTgxMzY4Nzk2OTUzIiwNCiAgICAgICJuYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiRGF0ZVRpbWUiDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNDU4NDk3OTc0MzMyMDkzNCIsDQogICAgICAibmFtZSI6ICJOYW1lIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwNCiAgICAgICJuYW1lIjogIlRlbXBlcmF0dXJlIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIkRvdWJsZSINCiAgICB9DQogIF0NCn0=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "displayName": "Ontology_1",
+        "description": "An ontology description.",
+        "type": "Ontology",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "id": "5b218778-e7a5-4d73-8187-f10824047655"
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

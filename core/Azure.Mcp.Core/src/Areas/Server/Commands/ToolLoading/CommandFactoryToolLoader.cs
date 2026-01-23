@@ -158,7 +158,7 @@ public sealed class CommandFactoryToolLoader(
             var elicitationResult = await HandleSecretElicitationAsync(
                 request,
                 toolName,
-                _options.Value.InsecureDisableElicitation,
+                _options.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
 
