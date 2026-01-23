@@ -580,7 +580,7 @@ main().catch(console.error);
 ### Installation
 
 ```bash
-go get github.com/github/copilot-sdk-go
+go get github.com/github/copilot-sdk/go
 ```
 
 ### Configuration
@@ -593,7 +593,7 @@ import (
     "fmt"
     "log"
 
-    copilot "github.com/github/copilot-sdk-go"
+    copilot "github.com/github/copilot-sdk/go"
 )
 
 func main() {
