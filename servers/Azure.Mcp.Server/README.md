@@ -154,15 +154,16 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 ### Claude Code
 
 1. Install [Claude Code](https://code.claude.com/).
-1. Add the `github-copilot-for-azure` marketplace to Claude Code:
-   - Open Claude Code settings
-   - Navigate to the Plugin Marketplaces section
-   - Add a new marketplace with the URL: `https://github.com/microsoft/GitHub-Copilot-for-Azure`
-   - For detailed instructions on adding plugin marketplaces, see the [Claude Code Plugin Marketplaces documentation](https://code.claude.com/docs/en/plugin-marketplaces)
-1. Install the Azure plugin from the newly added marketplace:
-   - Open the plugin installation interface in Claude Code
-   - Search for "Azure" in the github-copilot-for-azure marketplace
-   - Click Install on the Azure plugin
+1. Add the `github-copilot-for-azure` marketplace to Claude Code by running the following command in Claude Code:
+   ```
+   /plugin marketplace add https://github.com/microsoft/github-copilot-for-azure
+   ```
+1. Install the Azure plugin from the marketplace by running:
+   ```
+   /plugin install azure@github-copilot-for-azure
+   ```
+
+For more information on adding plugin marketplaces, see the [Claude Code Plugin Marketplaces documentation](https://code.claude.com/docs/en/plugin-marketplaces).
 
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
