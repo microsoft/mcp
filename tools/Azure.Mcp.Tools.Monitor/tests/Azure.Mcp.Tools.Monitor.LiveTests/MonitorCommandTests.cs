@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
+using Microsoft.Extensions.Configuration;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Attributes;
@@ -41,7 +43,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory);
+        var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
+        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration);
         var subscriptionService = new SubscriptionService(cacheService, _tenantService);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
