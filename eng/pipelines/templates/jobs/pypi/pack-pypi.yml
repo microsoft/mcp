@@ -1,0 +1,39 @@
+parameters:
+- name: DependsOn
+  type: object
+
+jobs:
+- job: PackPyPI
+  displayName: "Pack PyPI Package"
+  dependsOn: ${{ parameters.DependsOn }}
+  timeoutInMinutes: 120
+  steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    displayName: Use Python 3.12
+    inputs:
+      versionSpec: '3.12'
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - download: current
+    displayName: Download binaries_signed
+    artifact: binaries_signed
+
+  - task: Powershell@2
+    displayName: "Pack modules for PyPI"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Pypi.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: packages_pypi
