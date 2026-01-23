@@ -12,6 +12,8 @@ namespace ToolMetadataExporter;
 
 public class ToolAnalyzer
 {
+    internal const string DateTimeFormat = "yyyyMMddHHmmss";
+
     private const string Separator = "_";
 
     private readonly AzmcpProgram _azmcpProgram;
@@ -52,7 +54,7 @@ public class ToolAnalyzer
             _logger.LogError("LoadToolsDynamicallyAsync did not return a result.");
             return;
         }
-        else if (currentTools.Tools == null || currentTools.Tools.Count == 0)
+        else if (currentTools.Tools == null)
         {
             _logger.LogWarning("azmcp program did not return any tools.");
             return;
@@ -203,7 +205,7 @@ public class ToolAnalyzer
         var fileName = await _runInformation.GetRunInfoFileNameAsync(baseName);
         var fileDate = _appConfiguration.UseAnalysisTime ? analysisTime : _azmcpProgram.AzMcpBuildDateTime;
 
-        return $"{fileName}_{fileDate:yyyyMMddHHmmss}";
+        return $"{fileName}_{fileDate.ToString(DateTimeFormat)}";
     }
 
     private static string? GetToolArea(Tool tool)

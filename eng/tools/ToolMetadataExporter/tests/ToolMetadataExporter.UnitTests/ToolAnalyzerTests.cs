@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -35,7 +36,7 @@ public class ToolAnalyzerTests : IDisposable
         };
         programOptions.Value.Returns(programConfig);
 
-        _azmcpProgram = Substitute.ForPartsOf<AzmcpProgram>(utility, programOptions, logger);
+        _azmcpProgram = Substitute.For<AzmcpProgram>();
         _datastore = Substitute.For<IAzureMcpDatastore>();
         _logger = Substitute.For<ILogger<ToolAnalyzer>>();
         _options = Substitute.For<IOptions<AppConfiguration>>();
@@ -84,7 +85,7 @@ public class ToolAnalyzerTests : IDisposable
         var runInfo = new RunInformation(_azmcpProgram);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ToolAnalyzer(_azmcpProgram, _datastore, runInfo, invalidOptions, _logger));
     }
 
@@ -92,9 +93,13 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_ReturnsEarly_WhenLoadToolsDynamicallyReturnsNull()
     {
         // Arrange
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(null));
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(null);
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -110,9 +115,13 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_ReturnsEarly_WhenToolsListIsNull()
     {
         // Arrange
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult { Tools = null }));
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult { Tools = null });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -128,9 +137,15 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_ReturnsEarly_WhenToolsListIsEmpty()
     {
         // Arrange
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult { Tools = [] }));
+        var toolsListResult = new ListToolsResult() { Tools = [] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -146,16 +161,22 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_ThrowsException_WhenToolHasNoId()
     {
         // Arrange
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools =
             [
                 new Tool { Id = null, Name = "test-tool", Command = "area command" }
             ]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -169,16 +190,22 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_ThrowsException_WhenToolHasNoCommand()
     {
         // Arrange
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools =
             [
                 new Tool { Id = "tool-1", Name = "test-tool", Command = null }
             ]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -199,13 +226,19 @@ public class ToolAnalyzerTests : IDisposable
         var expectedToolName = "area_command";
         var expectedToolArea = "area";
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult(serverName));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult(serverVersion));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverNameResult = Task.FromResult(serverName);
+        var serverVersionResult = Task.FromResult(serverVersion);
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -237,16 +270,21 @@ public class ToolAnalyzerTests : IDisposable
         var expectedNewToolName = "newarea_newcommand";
         var expectedNewToolArea = "newarea";
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult(serverName));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult(serverVersion));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var toolsListResult = new ListToolsResult() { Tools = [tool] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool
-        ]));
+        ]);
+
+        var serverNameResult = Task.FromResult(serverName);
+        var serverVersionResult = Task.FromResult(serverVersion);
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -275,22 +313,30 @@ public class ToolAnalyzerTests : IDisposable
         var serverVersion = "1.0.0";
         var existingTool = new AzureMcpTool("tool-1", "area_command", "area");
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult(serverName));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult(serverVersion));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = []
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var toolsListResult = new ListToolsResult() { Tools = [] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool
-        ]));
+        ]);
+
+        var serverNameResult = Task.FromResult(serverName);
+        var serverVersionResult = Task.FromResult(serverVersion);
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
 
+         
         // Assert
         await _datastore.Received(1).AddToolEventsAsync(
             Arg.Is<List<McpToolEvent>>(events =>
@@ -311,16 +357,21 @@ public class ToolAnalyzerTests : IDisposable
         var tool = new Tool { Id = "tool-1", Name = "Test Tool", Command = "area command" };
         var existingTool = new AzureMcpTool("tool-1", "area_command", "area");
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var toolsListResult = new ListToolsResult() { Tools = [tool] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool
-        ]));
+        ]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -343,18 +394,24 @@ public class ToolAnalyzerTests : IDisposable
         var existingTool2 = new AzureMcpTool("tool-2", "area2_oldcommand", "area2");
         var existingTool3 = new AzureMcpTool("tool-3", "area3_command3", "area3"); // Deleted
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = [tool1, tool2, tool4]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool1,
             existingTool2,
             existingTool3
-        ]));
+        ]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
+        {
+            Tools = [tool1, tool2, tool4]
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -375,25 +432,38 @@ public class ToolAnalyzerTests : IDisposable
     public async Task RunAsync_WritesChangesToFile()
     {
         // Arrange
+        _appConfiguration.UseAnalysisTime = false;
         var analysisTime = DateTimeOffset.UtcNow;
         var tool = new Tool { Id = "tool-1", Name = "New Tool", Command = "area command" };
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var version = "1.0.0";
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult(version);
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        var buildDate = DateTimeOffset.FromUnixTimeMilliseconds(1769181072910);
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.AzMcpBuildDateTime.Returns(buildDate);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
+
+        var expectedFileName = $"{version}_tool_changes_{buildDate.ToString(ToolAnalyzer.DateTimeFormat)}.json";
 
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
 
         // Assert
-        var outputFile = Path.Combine(_tempWorkingDirectory, "tool_changes.json");
-        Assert.True(File.Exists(outputFile));
+        var outputFile = Path.Combine(_tempWorkingDirectory, expectedFileName);
+        Assert.True(File.Exists(outputFile), $"Expected {outputFile} to exist.");
         var fileContent = await File.ReadAllTextAsync(outputFile, TestContext.Current.CancellationToken);
         Assert.Contains(tool.Id, fileContent);
         Assert.Contains("Created", fileContent);
@@ -404,17 +474,32 @@ public class ToolAnalyzerTests : IDisposable
     {
         // Arrange
         _appConfiguration.IsDryRun = true;
+        _appConfiguration.UseAnalysisTime = true;
+
+        var version = "1.0.0";
         var analysisTime = DateTimeOffset.UtcNow;
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var analysisTimeAsString = analysisTime.ToString(ToolAnalyzer.DateTimeFormat);
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult(version);
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools =
             [
                 new Tool { Id = "tool-1", Name = "New Tool", Command = "area command" }
             ]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        var expectedFileName = $"{version}_tool_changes_{analysisTimeAsString}.json";
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -425,8 +510,8 @@ public class ToolAnalyzerTests : IDisposable
         await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
 
         // But file should still be written
-        var outputFile = Path.Combine(_tempWorkingDirectory, "tool_changes.json");
-        Assert.True(File.Exists(outputFile));
+        var outputFile = Path.Combine(_tempWorkingDirectory, expectedFileName);
+        Assert.True(File.Exists(outputFile), $"Expected {outputFile} to exist.");
     }
 
     [Fact]
@@ -436,21 +521,27 @@ public class ToolAnalyzerTests : IDisposable
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools =
             [
                 new Tool { Id = "tool-1", Name = "Test Tool", Command = "area command" }
             ]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
         // Act
-        await analyzer.RunAsync(DateTimeOffset.UtcNow, cts.Token);
+        await Assert.ThrowsAsync<OperationCanceledException>(() => analyzer.RunAsync(DateTimeOffset.UtcNow, cts.Token));
 
         // Assert - Should return early without throwing
         await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
@@ -465,13 +556,19 @@ public class ToolAnalyzerTests : IDisposable
         var expectedToolName = "area_command";
         var expectedToolArea = "area";
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -492,16 +589,23 @@ public class ToolAnalyzerTests : IDisposable
     {
         // Arrange
         var analysisTime = DateTimeOffset.UtcNow;
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>([]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
         {
             Tools =
             [
                 new Tool { Id = "tool-1", Name = "Test Tool", Command = "area command with spaces" }
             ]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>([]));
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -525,16 +629,22 @@ public class ToolAnalyzerTests : IDisposable
         var existingTool = new AzureMcpTool("tool-1", "oldarea_command", "oldarea");
         var expectedNewToolArea = "newarea";
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool
-        ]));
+        ]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+        var toolsResult = Task.FromResult<ListToolsResult?>(new ListToolsResult
+        {
+            Tools = [tool]
+        });
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -558,16 +668,21 @@ public class ToolAnalyzerTests : IDisposable
         var tool = new Tool { Id = "tool-1", Name = "Test Tool", Command = "AREA COMMAND" };
         var existingTool = new AzureMcpTool("tool-1", "area_command", "area");
 
-        _azmcpProgram.GetServerNameAsync().Returns(Task.FromResult("test-server"));
-        _azmcpProgram.GetServerVersionAsync().Returns(Task.FromResult("1.0.0"));
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(Task.FromResult<ListToolsResult?>(new ListToolsResult
-        {
-            Tools = [tool]
-        }));
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IList<AzureMcpTool>>(
+        var toolsListResult = new ListToolsResult() { Tools = [tool] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var availableTools = Task.FromResult<IList<AzureMcpTool>>(
         [
             existingTool
-        ]));
+        ]);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
