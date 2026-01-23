@@ -153,6 +153,8 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 
 ### Claude Code
 
+The Azure plugin packages the Azure MCP Server along with Azure-related agents and skills, bringing Azure integration to Claude Code in one installation.
+
 1. Install [Claude Code](https://code.claude.com/).
 1. Add the `github-copilot-for-azure` marketplace to Claude Code by running the following command in Claude Code:
    ```
