@@ -16,16 +16,40 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     {
         HandleRedirects = false
     };
-
-    /// <summary>
-    /// 3493 = $..name
-    /// </summary>
-    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "3493"];
-
     public override CustomDefaultMatcher? TestMatcher => new()
     {
         IgnoredHeaders = "x-ms-activity-id,x-ms-cosmos-correlated-activityid"
     };
+
+    /// <summary>
+    /// 3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493"];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceId"){
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceId"){
+            Regex = "subscriptions/([^?\\/]+)",
+            Value = "00000000-0000-0000-0000-000000000000",
+            GroupForReplace = "1"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
+            Regex = "subscriptions/([^?\\/]+)",
+            Value = "00000000-0000-0000-0000-000000000000",
+            GroupForReplace = "1"
+        })
+    ];
 
     [Fact]
     public async Task Should_list_storage_accounts_by_subscription_id()
