@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Mcp.Core.Areas.Server.Options;

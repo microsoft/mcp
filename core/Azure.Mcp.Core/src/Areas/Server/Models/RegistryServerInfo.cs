@@ -19,14 +19,14 @@ public sealed class RegistryServerInfo
     public string? Name { get; set; }
 
     /// <summary>
-    /// URL of the remote server.
-    /// This should be undefined if the transport type is "stdio".
+    /// Gets the URL of the remote server.
+    /// This should be <see langword="null"/> if <see cref="Type"/> is "stdio".
     /// </summary>
     [JsonPropertyName("url")]
     public string? Url { get; init; }
 
     /// <summary>
-    /// OAuth scopes to request in the access token.
+    /// Gets OAuth scopes to request in the access token.
     /// Used for remote MCP servers protected by OAuth.
     /// </summary>
     [JsonPropertyName("oauthScopes")]
@@ -46,7 +46,7 @@ public sealed class RegistryServerInfo
 
     /// <summary>
     /// Gets the transport type, e.g., "stdio".
-    /// This should be undefined if url is defined.
+    /// This should be <see langword="null"/> if <see cref="Url"/> is non-<see langword="null"/>.
     /// </summary>
     [JsonPropertyName("type")]
     public string? Type { get; init; }
