@@ -1,12 +1,11 @@
-﻿using Azure.Mcp.Core.Services.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Services
 {
-    public class NetworkResourceProviderService(ILogger<NetworkResourceProviderService> logger, IHttpClientService httpClientService) : IResourceProviderService
+    public class NetworkResourceProviderService(ILogger<NetworkResourceProviderService> logger, IHttpClientFactory httpClientFactory) : IResourceProviderService
     {
         private readonly ILogger<NetworkResourceProviderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
         private const string BaseGithubUrl = "https://api.github.com/repos/microsoft/";
 
@@ -22,7 +21,8 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
                 using var requestMessage = new HttpRequestMessage(HttpMethod.Get, downloadUrl.GetString());
                 requestMessage.Headers.Add("User-Agent", "request");
 
-                using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken))
+                var client = _httpClientFactory.CreateClient();
+                using (var httpResponse = await client.SendAsync(requestMessage, cancellationToken))
                 {
                     httpResponse.EnsureSuccessStatusCode();
 
@@ -56,7 +56,8 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, resourceName);
             requestMessage.Headers.Add("User-Agent", "request");
 
-            using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken))
+            var client = _httpClientFactory.CreateClient();
+            using (var httpResponse = await client.SendAsync(requestMessage, cancellationToken))
             {
                 httpResponse.EnsureSuccessStatusCode();
 
@@ -73,7 +74,8 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             requestMessage.Headers.Add("User-Agent", "request");
 
-            using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken))
+            var client = _httpClientFactory.CreateClient();
+            using (var httpResponse = await client.SendAsync(requestMessage, cancellationToken))
             {
                 httpResponse.EnsureSuccessStatusCode();
 

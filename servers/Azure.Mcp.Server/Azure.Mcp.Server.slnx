@@ -254,6 +254,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.UnitTests/Azure.Mcp.Tools.MySql.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Policy/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Policy/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Policy/src/Azure.Mcp.Tools.Policy.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Policy/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Policy/tests/Azure.Mcp.Tools.Policy.UnitTests/Azure.Mcp.Tools.Policy.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Postgres/src/Azure.Mcp.Tools.Postgres.csproj" />

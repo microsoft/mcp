@@ -33,6 +33,17 @@ jobs:
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
       PathToArtifacts: $(Pipeline.Workspace)/packages_npm
+      Registry: https://pkgs.dev.azure.com/1es-mcp/1es-mcp/_packaging/1es-mcp-registry/npm/registry/
+      ServiceConnection: 'Azure SDK MCP Server Connection'
+      Access: ''
+      ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
+        Tag: dev
+      ${{ else }}:
+        Tag: pre
+
+  - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
+    parameters:
+      PathToArtifacts: $(Pipeline.Workspace)/packages_npm
       Registry: ${{ parameters.NpmRegistry }}
       ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
         Tag: dev

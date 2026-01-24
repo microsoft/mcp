@@ -8,7 +8,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.AppLens.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,10 +17,10 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
+public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly AppLensOptions _options = new AppLensOptions();
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
@@ -103,7 +102,8 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            using var response = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
+            var client = _httpClientFactory.CreateClient();
+            using var response = await client.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

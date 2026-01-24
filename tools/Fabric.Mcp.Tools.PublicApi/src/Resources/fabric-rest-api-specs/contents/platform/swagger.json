@@ -4395,6 +4395,248 @@
             "$ref": "./examples/platform/CreateOrUpdateDataAccessRolesWithConstraints.json"
           }
         }
+      },
+      "post": {
+        "summary": "Creates or updates (upserts) a single data access role.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Permissions\n\n The caller must have *member* or higher role on the workspace.\n\n## Required Delegated Scopes\n\n OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeDataAccessSecurity"
+        ],
+        "operationId": "OneLakeDataAccessSecurity_CreateOrUpdateSingleDataAccessRole",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The ID of the Fabric item to create or update the role on.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "dataAccessRoleConflictPolicy",
+            "description": "Determines the behavior when there are conflicting data access role assignments. Overwrite means new assignments replace existing ones. Abort means the operation fails if there are conflicts. Additional dataAccessRoleConflictPolicy types may be added over time.",
+            "type": "string",
+            "enum": ["Overwrite", "Abort"],
+            "x-ms-enum": {
+              "name": "DataAccessRoleConflictPolicy",
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Overwrite",
+                  "description": "Create a new role or overwrite existing role with the provided definition."
+                },
+                {
+                  "value": "Abort",
+                  "description": "Abort the operation when there is a conflict with an existing role."
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "createOrUpdateSingleDataAccessRoleRequest",
+            "description": "Wrapper containing exactly one data access role definition (without id).",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/CreateOrUpdateSingleDataAccessRoleRequest"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "header",
+            "name": "If-None-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag doesn't match the provided ETag.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "headers": {
+              "ETag": {
+                "type": "string",
+                "description": "Unique identifier for the resource, used for concurrency control"
+              },
+              "Location": {
+                "type": "string",
+                "description": "URL of the created role resource."
+              }
+            }
+          },
+          "201": {
+            "description": "Role created successfully.",
+            "headers": {
+              "ETag": {
+                "type": "string",
+                "description": "Unique identifier for the resource, used for concurrency control"
+              },
+              "Location": {
+                "type": "string",
+                "description": "URL of the created role resource."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* PreconditionFailed - Indicates that the current resource ETag doesn't match the value specified in the If-Match header.\n\n* Conflict - There are conflicting role assignments and the conflict policy is set to Abort.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create or update single data access role example": {
+            "$ref": "./examples/platform/CreateOrUpdateSingleDataAccessRole.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{roleName}": {
+      "get": {
+        "summary": "Returns data access role details for the given role name.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Permissions\n\n The caller must have *member* or higher role on the workspace.\n\n## Required Delegated Scopes\n\n OneLake.Read.All or OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeDataAccessSecurity"
+        ],
+        "operationId": "OneLakeDataAccessSecurity_GetDataAccessRole",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The ID of the Fabric item to get the role from.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "roleName",
+            "description": "The name of the role to retrieve.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "header",
+            "name": "If-None-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag doesn't match the provided ETag.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/DataAccessRoleBase"
+            },
+            "headers": {
+              "ETag": {
+                "type": "string",
+                "description": "Unique identifier for the resource, used for concurrency control"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* RoleNotFound - Indicates that the specified role was not found.\n\n* PreconditionFailed - Indicates that the current resource ETag doesn't match the value specified in the If-Match header.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get data access role example": {
+            "$ref": "./examples/platform/GetDataAccessRole.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a single data access role.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Permissions\n\n The caller must have *member* or higher role on the workspace.\n\n## Required Delegated Scopes\n\n OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeDataAccessSecurity"
+        ],
+        "operationId": "OneLakeDataAccessSecurity_DeleteDataAccessRole",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The ID of the Fabric item to delete the role from.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "roleName",
+            "description": "The name of the role to delete.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* RoleNotFound - Indicates that the specified role was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete data access role example": {
+            "$ref": "./examples/platform/DeleteDataAccessRole.json"
+          }
+        }
       }
     },
     "/workspaces/{workspaceId}/provisionIdentity": {
@@ -4987,7 +5229,7 @@
     "/workspaces/{workspaceId}/items/{itemId}/applyTags": {
       "post": {
         "summary": "Apply tags on an item.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -5043,7 +5285,7 @@
     "/workspaces/{workspaceId}/items/{itemId}/unapplyTags": {
       "post": {
         "summary": "Unapply tags from an item.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -5867,6 +6109,9 @@
           },
           "Cloud example": {
             "$ref": "./examples/connections/CreateCloudConnection.json"
+          },
+          "Cloud example with KeyPair credentials": {
+            "$ref": "./examples/connections/CreateCloudConnectionWithKeyPair.json"
           }
         }
       }

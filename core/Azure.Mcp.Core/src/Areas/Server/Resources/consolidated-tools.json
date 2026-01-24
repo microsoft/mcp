@@ -810,6 +810,39 @@
       ]
     },
     {
+      "name": "get_azure_policy_assignments",
+      "description": "List and view Azure Policy assignments in subscriptions or scopes. Retrieve policy assignments including their definitions, enforcement modes, parameters, and metadata for governance and compliance management.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "policy_assignment_list"
+      ]
+    },
+    {
       "name": "get_azure_key_vault_items",
       "description": "View and retrieve Azure Key Vault security artifacts, including certificates, keys (both listing and individual key details), secret names and properties (listing only, not secret values), and admin settings.",
       "toolMetadata": {
@@ -1436,6 +1469,7 @@
         "managedlustre_fs_sku_get",
         "managedlustre_fs_blob_autoexport_get",
         "managedlustre_fs_blob_autoimport_get",
+        "managedlustre_fs_blob_import_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1478,7 +1512,8 @@
         "storage_blob_container_create",
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
-        "managedlustre_fs_blob_autoimport_create"
+        "managedlustre_fs_blob_autoimport_create",
+        "managedlustre_fs_blob_import_create"
       ]
     },
     {
@@ -1516,7 +1551,7 @@
     },
     {
       "name": "manage_azure_managed_lustre_sync_jobs",
-      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport and autoexport jobs that sync data between Lustre filesystems and Azure Blob Storage.",
+      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport, autoexport, and one-time import jobs that sync data between Lustre filesystems and Azure Blob Storage.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1547,7 +1582,9 @@
         "managedlustre_fs_blob_autoexport_cancel",
         "managedlustre_fs_blob_autoexport_delete",
         "managedlustre_fs_blob_autoimport_cancel",
-        "managedlustre_fs_blob_autoimport_delete"
+        "managedlustre_fs_blob_autoimport_delete",
+        "managedlustre_fs_blob_import_cancel",
+        "managedlustre_fs_blob_import_delete"
       ]
     },
     {

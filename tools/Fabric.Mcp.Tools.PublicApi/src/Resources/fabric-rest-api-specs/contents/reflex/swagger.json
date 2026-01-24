@@ -63,7 +63,7 @@
       },
       "post": {
         "summary": "Creates a Reflex in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create notebook with definition, refer to [Reflex definition](/rest/api/fabric/articles/item-management/definitions/reflex-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\n Reflex.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a Reflex the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create reflex item with definition, refer to [Reflex definition](/rest/api/fabric/articles/item-management/definitions/reflex-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\n Reflex.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a Reflex the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -102,7 +102,7 @@
             }
           },
           "202": {
-            "description": "Request accepted, notebook provisioning in progress.",
+            "description": "Request accepted, reflex provisioning in progress.",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",

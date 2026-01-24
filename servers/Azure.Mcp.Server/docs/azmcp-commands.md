@@ -1775,6 +1775,38 @@ azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
                                               --resource-group <resource-group> \
                                               --filesystem-name <filesystem-name> \
                                               --job-name <job-name>
+
+# Create a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import create --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         [--job-name <job-name>] \
+                                         [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                         [--import-prefixes <prefix1> --import-prefixes <prefix2> ...] \
+                                         [--maximum-errors <number>]
+
+# Get details of one-time import jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import get --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --filesystem-name <filesystem-name> \
+                                      [--job-name <job-name>]
+
+# Cancel a running one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import cancel --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
+
+# Delete a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import delete --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
 ```
 
 ### Azure Native ISV Operations
@@ -1816,6 +1848,14 @@ azmcp quota region availability list --subscription <subscription> \
 azmcp quota usage check --subscription <subscription> \
                         --region <region> \
                         --resource-types <resource-types>
+```
+
+### Azure Policy Operations
+```bash
+# List Azure Policy Assignments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp policy assignment list --subscription <subscription> \
+                             --scope <scope>
 ```
 
 ### Azure RBAC Operations
