@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-using Azure.Core;
-using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -59,66 +55,7 @@ public static class TenantServiceCollectionExtensions
             services.ConfigureDefaultHttpClient();
         }
 
-        services.AddHttpClientForMcpRegistry();
-
         services.TryAddSingleton<ITenantService, TenantService>();
-        return services;
-    }
-
-    /// <summary>
-    /// Add HttpClient for each registry server with OAuthScopes that knows how to fetch its access token.
-    /// </summary>
-    private static IServiceCollection AddHttpClientForMcpRegistry(this IServiceCollection services)
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = assembly
-            .GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("registry.json", StringComparison.OrdinalIgnoreCase));
-        if (resourceName is null)
-        {
-            return services;
-        }
-
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream is null)
-        {
-            return services;
-        }
-        var registry = JsonSerializer.Deserialize(stream, ServerJsonContext.Default.RegistryRoot);
-        if (registry?.Servers is null)
-        {
-            return services;
-        }
-
-        foreach (var kvp in registry.Servers)
-        {
-            if (kvp.Value is null || string.IsNullOrWhiteSpace(kvp.Value.Url) || kvp.Value.OAuthScopes is null)
-            {
-                continue;
-            }
-            var serverName = kvp.Key;
-            var serverUrl = kvp.Value.Url;
-            var oauthScopes = kvp.Value.OAuthScopes;
-            if (oauthScopes.Length == 0)
-            {
-                continue;
-            }
-
-            services.AddHttpClient(RegistryServerHelper.GetRegistryServerHttpClientName(serverName))
-                .AddHttpMessageHandler((services) =>
-                {
-                    var fetchAccessToken = async (CancellationToken cancellationToken) =>
-                    {
-                        var tokenCredentialProvider = services.GetRequiredService<IAzureTokenCredentialProvider>();
-                        var credential = await tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
-                        var tokenContext = new TokenRequestContext(oauthScopes);
-                        var token = await credential.GetTokenAsync(tokenContext, cancellationToken);
-                        return token.Token;
-                    };
-                    return new AccessTokenHandler(fetchAccessToken);
-                });
-        }
-
         return services;
     }
 }
