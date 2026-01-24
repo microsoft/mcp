@@ -24,7 +24,7 @@ public class CommandMetadataSyncTests
 
         // Determine the executable path (OS-specific) - assumes build has already happened
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0", exeName);
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 

@@ -3,25 +3,96 @@
 
 using System.Text.Json;
 using Azure.Identity;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-public class KustoCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class KustoCommandTests : RecordedCommandTestsBase
 {
     private const string TestDatabaseName = "ToDoLists";
     private const string TestTableName = "ToDoList";
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    private const string Sanitized = "Sanitized";
+    private readonly ServiceProvider _httpClientProvider;
+
+    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
+    {
+        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+    }
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>
+    {
+        new(new BodyKeySanitizerBody("$..displayName")
+        {
+            Value = Sanitized
+        }),
+        new(new BodyKeySanitizerBody("$..id")
+        {
+            Regex = "[tT]enants/([^?\\/]+)",
+            Value = EmptyGuid,
+            GroupForReplace = "1"
+        }),
+    };
+
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
+    {
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "\"domains\"\\s*:\\s*\\[(?s)(?<domains>.*?)\\]",
+          GroupForReplace = "domains",
+          Value = "\"contoso.com\""
+        })
+    };
+
+    public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher
+    {
+        CompareBodies = false
+    };
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => [
+        new(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = Sanitized,
+        }),
+        new(new GeneralRegexSanitizerBody()
+        {
+           Regex = Settings.SubscriptionId,
+           Value = EmptyGuid,
+        }),
+        new(new GeneralRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = Sanitized,
+            GroupForReplace = "1"
+        }),
+    ];
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        _httpClientProvider.Dispose();
+    }
 
     #region Init
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync(); // Initialize the base class first
+
+        // if we're running in playback, we don't need to prepare the cluster for anything, as we aren't actually going to the cluster anyway,
+        // and auth will be sanitized away.
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
 
         try
         {
@@ -36,24 +107,22 @@ public class KustoCommandTests(ITestOutputHelper output)
                 });
             var clusterUri = clusterInfo.AssertProperty("cluster").AssertProperty("clusterUri").GetString();
 
-            // Create HttpClientService for KustoClient
-            var httpClientOptions = new HttpClientOptions();
-            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions), null!);
+            var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
 
-            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientService);
+            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientFactory);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
                 TestContext.Current.CancellationToken).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
-            Assert.Skip("Skipping until auth fixed for Kusto");
+            Assert.Skip($"Skipping until auth fixed for Kusto: {ex.Message}");
         }
     }
     #endregion
 
-    #region Databases 
+    #region Databases
     [Fact]
     public async Task Should_list_databases_in_cluster()
     {

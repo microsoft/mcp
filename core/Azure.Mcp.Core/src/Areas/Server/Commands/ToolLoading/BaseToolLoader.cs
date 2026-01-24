@@ -60,7 +60,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// </returns>
     protected static JsonElement GetParametersJsonElement(RequestContext<CallToolRequestParams> request)
     {
-        IReadOnlyDictionary<string, JsonElement>? args = request.Params?.Arguments;
+        IDictionary<string, JsonElement>? args = request.Params?.Arguments;
         if (args != null && args.TryGetValue("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
         {
             return parametersElem;
@@ -157,7 +157,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// </summary>
     /// <param name="request">The request context containing the MCP server.</param>
     /// <param name="toolName">The name of the tool being invoked.</param>
-    /// <param name="insecureDisableElicitation">Whether elicitation has been disabled via insecure option.</param>
+    /// <param name="dangerouslyDisableElicitation">Whether elicitation has been disabled via dangerous option.</param>
     /// <param name="logger">Logger instance for recording elicitation events.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>
@@ -167,14 +167,14 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     protected static async Task<CallToolResult?> HandleSecretElicitationAsync(
         RequestContext<CallToolRequestParams> request,
         string toolName,
-        bool insecureDisableElicitation,
+        bool dangerouslyDisableElicitation,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        // Check if elicitation is disabled by insecure option
-        if (insecureDisableElicitation)
+        // Check if elicitation is disabled by dangerous option
+        if (dangerouslyDisableElicitation)
         {
-            logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", toolName);
+            logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --dangerously-disable-elicitation. Proceeding without user consent.", toolName);
             return null;
         }
 
