@@ -16,6 +16,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
+    public const string HttpClientName = "AzureMcpMonitorHealthModelService";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     /// <summary>
@@ -57,7 +58,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", dataplaneToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = _httpClientFactory.CreateClient(HttpClientName);
         HttpResponseMessage healthResponse = await client.SendAsync(request, cancellationToken);
         healthResponse.EnsureSuccessStatusCode();
 
@@ -73,7 +74,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = _httpClientFactory.CreateClient(HttpClientName);
         HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         string responseString = await response.Content.ReadAsStringAsync(cancellationToken);

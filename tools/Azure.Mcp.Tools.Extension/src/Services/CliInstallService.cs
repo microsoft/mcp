@@ -2,12 +2,13 @@
 // Licensed under the MIT License
 
 using System.Runtime.InteropServices;
+using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal class CliInstallService(IHttpClientFactory httpClientFactory) : ICliInstallService
+internal class CliInstallService(IHttpClientService httpClientService) : ICliInstallService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IHttpClientService _httpClientService = httpClientService;
 
     public async Task<HttpResponseMessage> GetCliInstallInstructions(string cliType, CancellationToken cancellationToken)
     {
@@ -52,7 +53,7 @@ internal class CliInstallService(IHttpClientFactory httpClientFactory) : ICliIns
             Method = HttpMethod.Get,
             RequestUri = new Uri(instructionsUrl)
         };
-        HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
+        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }
 }

@@ -12,15 +12,14 @@ namespace Azure.Mcp.Core.Extensions;
 public static class HttpClientServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds HTTP client services to the service collection.
+    /// Adds HTTP client services to the service collection with default configuration.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="configureDefaults">If true, applies default settings.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddHttpClientServices(this IServiceCollection services, bool configureDefaults = false)
+    public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        return services.AddHttpClientServices(_ => { }, configureDefaults);
+        return services.AddHttpClientServices(_ => { });
     }
 
     /// <summary>
@@ -28,12 +27,8 @@ public static class HttpClientServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configureOptions">Action to configure HttpClient options.</param>
-    /// <param name="configureDefaults">If true, applies default settings.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddHttpClientServices(
-        this IServiceCollection services,
-        Action<HttpClientOptions> configureOptions,
-        bool configureDefaults = false)
+    public static IServiceCollection AddHttpClientServices(this IServiceCollection services, Action<HttpClientOptions> configureOptions)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configureOptions);
@@ -51,13 +46,8 @@ public static class HttpClientServiceCollectionExtensions
             configureOptions(options);
         });
 
-        // Register the IHttpClientFactory
-        services.AddHttpClient();
-
-        if (configureDefaults)
-        {
-            services.ConfigureDefaultHttpClient();
-        }
+        // Register the HTTP client service
+        services.AddSingleton<IHttpClientService, HttpClientService>();
 
         return services;
     }

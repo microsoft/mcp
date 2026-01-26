@@ -3,11 +3,11 @@
 
 [CmdletBinding()]
 param(
+    [string] $TestResultsPath,
     [string[]] $Paths,
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
-    [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
     [switch] $TestNativeBuild,
@@ -110,7 +110,7 @@ function CreateTestSolution {
     Push-Location $workPath
     try {
         dotnet new sln -n "Tests" | Out-Null
-        dotnet sln add $testProjects --in-root --include-references false | Out-Host
+        dotnet sln add $testProjects --in-root | Out-Host
     }
     finally {
         Pop-Location

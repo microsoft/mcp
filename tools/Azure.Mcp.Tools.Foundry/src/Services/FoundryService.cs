@@ -16,6 +16,7 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options.Thread;
@@ -31,7 +32,7 @@ using OpenAI.Chat;
 namespace Azure.Mcp.Tools.Foundry.Services;
 
 public class FoundryService(
-    IHttpClientFactory httpClientFactory,
+    IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
     ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IFoundryService
@@ -50,7 +51,7 @@ public class FoundryService(
         { "task_adherence", toolDefinitions => new TaskAdherenceEvaluatorContext(toolDefinitions)},
     };
 
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
     public async Task<List<ModelInformation>> ListModels(
@@ -100,8 +101,7 @@ public class FoundryService(
                         Encoding.UTF8,
                         "application/json");
 
-                    var client = _httpClientFactory.CreateClient();
-                    var httpResponse = await client.PostAsync(url, content, cancellationToken);
+                    var httpResponse = await _httpClientService.DefaultClient.PostAsync(url, content, cancellationToken);
                     httpResponse.EnsureSuccessStatusCode();
 
                     var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Kusto.Services;
 using NSubstitute;
 using Xunit;
@@ -12,38 +12,28 @@ namespace Azure.Mcp.Tools.Kusto.UnitTests;
 public sealed class KustoClientTests
 {
     [Fact]
-    public async Task ExecuteCommandAsync_SetsTimeoutTo240Seconds()
+    public void Constructor_SetsTimeoutTo240Seconds()
     {
         // Arrange
+        var clusterUri = "https://test.kusto.windows.net";
         var tokenCredential = Substitute.For<TokenCredential>();
-        tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
-
-        using var httpClient = new HttpClient(new MockHttpMessageHandler());
-
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
-
-        var kustoClient = new KustoClient("https://test.kusto.windows.net", tokenCredential, "azmcp", httpClientFactory);
+        var userAgent = "TestAgent";
+        var httpClientOptions = new HttpClientOptions
+        {
+            DefaultTimeout = TimeSpan.FromSeconds(100)
+        };
+        var optionsWrapper = Microsoft.Extensions.Options.Options.Create(httpClientOptions);
+        var httpClientService = new HttpClientService(optionsWrapper, null!);
 
         // Act
-        var result = await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", CancellationToken.None);
+        var kustoClient = new KustoClient(clusterUri, tokenCredential, userAgent, httpClientService);
 
-        // Assert - verify the timeout was set to 240 seconds
+        // Assert
+        // Use reflection to access the private _httpClient field
+        var httpClientField = typeof(KustoClient).GetField("_httpClient", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(httpClientField);
+        var httpClient = httpClientField.GetValue(kustoClient) as HttpClient;
+        Assert.NotNull(httpClient);
         Assert.Equal(TimeSpan.FromSeconds(240), httpClient.Timeout);
-        Assert.NotNull(result);
-    }
-
-    private sealed class MockHttpMessageHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            // The caller (HttpClient.SendAsync) takes ownership and is responsible for disposal HttpResponseMessage.
-            var response = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("""{"Tables": []}""", System.Text.Encoding.UTF8, "application/json")
-            };
-            return Task.FromResult(response);
-        }
     }
 }

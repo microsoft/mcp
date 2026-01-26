@@ -44,7 +44,7 @@ param (
     [string] $Command,
     [string] $InputReadMePath,
     [string] $OutputDirectory,
-    [ValidateSet('nuget','npm','vsix','pypi')]
+    [ValidateSet('nuget','npm','vsix')]
     [string] $PackageType,
     [hashtable] $InsertPayload = @{}
 )
@@ -101,7 +101,7 @@ function Extract-PackageSpecificReadMe {
         [Parameter(Mandatory=$true)]
         [string] $OutputDirectory,
         [Parameter(Mandatory=$true)]
-        [ValidateSet('nuget','npm','vsix','pypi')]
+        [ValidateSet('nuget','npm','vsix')]
         [string] $PackageType,
         [hashtable] $InsertPayload = @{}
     )

@@ -110,10 +110,6 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
-  parameters:
-    DependsOn: Sign
-
 - template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
   parameters:
     DependsOn: Sign

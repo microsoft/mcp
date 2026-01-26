@@ -1,6 +1,4 @@
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Logs;
-using Azure.ResourceManager;
+using Azure.Core;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
@@ -11,8 +9,7 @@ public static class AzdResourceLogService
     private const string AzureYamlFileName = "azure.yaml";
 
     public static async Task<string> GetAzdResourceLogsAsync(
-        ArmClient armClient,
-        LogsQueryClient logsQueryClient,
+        TokenCredential credential,
         string workspaceFolder,
         string azdEnvName,
         string subscriptionId,
@@ -23,7 +20,7 @@ public static class AzdResourceLogService
 
         try
         {
-            var azdAppLogRetriever = new AzdAppLogRetriever(armClient, logsQueryClient, subscriptionId, azdEnvName);
+            var azdAppLogRetriever = new AzdAppLogRetriever(credential, subscriptionId, azdEnvName);
             await azdAppLogRetriever.InitializeAsync();
             await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync();
 

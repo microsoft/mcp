@@ -18,6 +18,10 @@ public class ServerCommandTests(ITestOutputHelper output)
 
     private async Task<McpClient> CreateClientAsync(params string[] arguments)
     {
+        var settingsFixture = new LiveTestSettingsFixture();
+        await settingsFixture.InitializeAsync();
+        var settings = settingsFixture.Settings;
+
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         StdioClientTransportOptions transportOptions = new()
@@ -34,7 +38,7 @@ public class ServerCommandTests(ITestOutputHelper output)
             }
         };
 
-        if (LiveTestSettings.TryLoadTestSettings(out var settings) && !string.IsNullOrEmpty(settings.TestPackage))
+        if (!string.IsNullOrEmpty(settings.TestPackage))
         {
             Environment.CurrentDirectory = settings.SettingsDirectory;
             transportOptions.Command = "npx";

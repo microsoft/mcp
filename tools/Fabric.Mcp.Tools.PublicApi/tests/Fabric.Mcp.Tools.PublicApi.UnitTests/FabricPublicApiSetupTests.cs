@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Http;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using NSubstitute;
 
 namespace Fabric.Mcp.Tools.PublicApi.Tests;
 
@@ -15,6 +17,7 @@ public class FabricPublicApiSetupTests
     {
         // Arrange
         var services = new ServiceCollection();
+        services.AddSingleton(Substitute.For<IHttpClientService>());
         services.AddLogging();
         var setup = new FabricPublicApiSetup();
 

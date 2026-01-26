@@ -228,11 +228,11 @@
                 "values": [
                     {
                         "value": "SparkJobDefinitionV1",
-                        "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) article for more details."
+                        "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for more details."
                     },
                     {
                         "value": "SparkJobDefinitionV2",
-                        "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) article for more details."
+                        "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for more details."
                     }
                 ]
             }

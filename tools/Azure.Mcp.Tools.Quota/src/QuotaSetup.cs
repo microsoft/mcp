@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
@@ -18,7 +19,18 @@ public sealed class QuotaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient();
+        services.AddOptions<HttpClientOptions>()
+            .Configure(options =>
+            {
+                options.AllProxy = Environment.GetEnvironmentVariable("ALL_PROXY");
+                options.HttpProxy = Environment.GetEnvironmentVariable("HTTP_PROXY");
+                options.HttpsProxy = Environment.GetEnvironmentVariable("HTTPS_PROXY");
+                options.NoProxy = Environment.GetEnvironmentVariable("NO_PROXY");
+            });
+        services.ConfigureDefaultHttpClient();
         services.AddTransient<IQuotaService, QuotaService>();
+
         services.AddTransient<CheckCommand>();
         services.AddTransient<AvailabilityListCommand>();
     }

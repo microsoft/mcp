@@ -6,12 +6,12 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 
 /// <summary>
-/// Options for the platform landing zone request command.
+/// Options for the platform landing zone generate landing zone command.
 /// </summary>
-public class RequestOptions : BaseAzureMigrateOptions
+public class GenerateOptions : BaseAzureMigrateOptions
 {
     /// <summary>
-    /// Gets or sets the action to perform (update, generate, download, status, check).
+    /// Gets or sets the action to perform (update, generate, download, status).
     /// </summary>
     [JsonPropertyName("action")]
     public string? Action { get; set; }

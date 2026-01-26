@@ -23,10 +23,6 @@
     <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>template,mcp</DnxPackageTags>
-
-    <!-- pypi settings -->
-    <PypiPackageName>msmcp-template</PypiPackageName>
-    <PypiPackageKeywords>template,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
   </PropertyGroup>
 
   <PropertyGroup>

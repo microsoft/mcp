@@ -54,10 +54,6 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
-    'PypiPackageName',
-    'PypiPackageKeywords',
-    'PypiDescription',
-
     'IsAotCompatible',
 
     'McpRepositoryName'

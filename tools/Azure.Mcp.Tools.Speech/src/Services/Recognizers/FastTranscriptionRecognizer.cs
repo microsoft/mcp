@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
 
@@ -18,12 +19,12 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// </summary>
 public class FastTranscriptionRecognizer(
     ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
+    IHttpClientService httpClientService,
     ILogger<FastTranscriptionRecognizer> logger)
     : BaseAzureService(tenantService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IHttpClientService _httpClientService = httpClientService;
 
     /// <inheritdoc/>
     public async Task<FastTranscriptionResult> RecognizeAsync(
@@ -123,9 +124,8 @@ public class FastTranscriptionRecognizer(
                     Headers = { Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token) }
                 };
 
-                // Make the request using HttpClient from factory
-                var client = _httpClientFactory.CreateClient();
-                var response = await client.SendAsync(requestMessage, cancellationToken);
+                // Make the request using HttpClient from service
+                var response = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)

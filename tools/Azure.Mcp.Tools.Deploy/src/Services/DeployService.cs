@@ -2,13 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Deploy.Services.Util;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Logs;
-using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
@@ -21,24 +17,13 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
          int? limit = null,
          CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
-        var logsQueryClient = await CreateLogsQueryClientAsync(cancellationToken);
-
+        TokenCredential credential = await GetCredential(cancellationToken);
         string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
-            armClient,
-            logsQueryClient,
+            credential,
             workspaceFolder,
             azdEnvName,
             subscriptionId,
             limit);
         return result;
-    }
-
-    private async Task<LogsQueryClient> CreateLogsQueryClientAsync(CancellationToken cancellationToken)
-    {
-        var credential = await GetCredential(cancellationToken);
-        var options = AddDefaultPolicies(new LogsQueryClientOptions());
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
-        return new LogsQueryClient(credential, options);
     }
 }

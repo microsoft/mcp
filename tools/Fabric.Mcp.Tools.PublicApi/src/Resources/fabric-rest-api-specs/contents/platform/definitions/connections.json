@@ -75,7 +75,7 @@
         "CredentialType": {
             "type": "string",
             "description": "The credential type of the connection. Additional credential types may be added over time.",
-            "enum": ["Windows", "Anonymous", "Basic", "Key", "OAuth2", "WindowsWithoutImpersonation", "SharedAccessSignature", "ServicePrincipal", "WorkspaceIdentity", "KeyPair"],
+            "enum": ["Windows", "Anonymous", "Basic", "Key", "OAuth2", "WindowsWithoutImpersonation", "SharedAccessSignature", "ServicePrincipal", "WorkspaceIdentity"],
             "x-ms-enum": {     
                 "name": "CredentialType",
                 "modelAsString": true,
@@ -115,10 +115,6 @@
                     {
                         "value": "WorkspaceIdentity",
                         "description": "Connection uses workspace identity authentication to connect."
-                    },
-                    {
-                        "value": "KeyPair",
-                        "description": "Connection uses key pair authentication to connect."
                     }
                 ]
             }
@@ -443,26 +439,6 @@
               }
             }
         },
-        "KeyVaultSecretReference": {
-            "required": ["connectionId", "secretName"],
-            "type": "object",
-            "description": "The reference to a secret stored in Azure Key Vault.",
-            "properties": {
-                "connectionId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "The connection ID of the Key Vault connection."
-                },
-                "secretName": {
-                    "type": "string",
-                    "description": "The name of the secret in Key Vault."
-                },
-                "version": {
-                    "type": "string",
-                    "description": "The version of the secret in Key Vault."
-                }
-            }
-        },
         "Credentials": {
             "required": ["credentialType"],
             "type": "object",
@@ -560,7 +536,7 @@
             "x-ms-discriminator-value": "Windows"
         },
         "BasicCredentials": {
-            "required": ["username"],
+            "required": ["username", "password"],
             "type": "object",
             "description": "Credentials for Basic CredentialType.",
             "allOf": [
@@ -575,16 +551,13 @@
                 },
                 "password": {
                     "type": "string",
-                    "description": "The password. Use password or passwordReference. You can't use both at the same time"
-                },
-                "passwordReference": {
-                    "description": "The reference to a password stored in Azure Key Vault. Use password or passwordReference. You can't use both at the same time.",
-                    "$ref": "#/definitions/KeyVaultSecretReference"
+                    "description": "The password."
                 }
             },
             "x-ms-discriminator-value": "Basic"
         },
         "KeyCredentials": {
+            "required": ["key"],
             "type": "object",
             "description": "Credentials for Key CredentialType.",
             "allOf": [
@@ -595,17 +568,13 @@
             "properties": {
                 "key": {
                     "type": "string",
-                    "description": "The key. Use key or keyReference. You can't use both at the same time."
-                },
-                "keyReference": {
-                    "description": "The reference to a key stored in Azure Key Vault. Use key or keyReference. You can't use both at the same time.",
-                    "$ref": "#/definitions/KeyVaultSecretReference"
+                    "description": "The key."
                 }
             },
             "x-ms-discriminator-value": "Key"
         },
         "ServicePrincipalCredentials": {
-            "required": ["tenantId", "servicePrincipalClientId"],
+            "required": ["tenantId", "servicePrincipalClientId", "servicePrincipalSecret"],
             "type": "object",
             "description": "Credentials for ServicePrincipal CredentialType.",
             "allOf": [
@@ -626,16 +595,13 @@
                 },
                 "servicePrincipalSecret": {
                     "type": "string",
-                    "description": "The secret of the service principal. Use servicePrincipalSecret or servicePrincipalSecretReference. You can't use both at the same time."
-                },
-                "servicePrincipalSecretReference": {
-                    "description": "The reference to a service principal secret stored in Azure Key Vault. Use servicePrincipalSecret or servicePrincipalSecretReference. You can't use both at the same time.",
-                    "$ref": "#/definitions/KeyVaultSecretReference"
+                    "description": "The secret of the service principal."
                 }
             },
             "x-ms-discriminator-value": "ServicePrincipal"
         },
         "SharedAccessSignatureCredentials": {
+            "required": ["token"],
             "type": "object",
             "description": "Credentials for SharedAccessSignature CredentialType.",
             "allOf": [
@@ -646,39 +612,10 @@
             "properties": {
                 "token": {
                     "type": "string",
-                    "description": "The token. Use token or tokenReference. You can't use both at the same time."
-                },
-                "tokenReference": {
-                    "description": "The reference to a token stored in Azure Key Vault. Use token or tokenReference. You can't use both at the same time.",
-                    "$ref": "#/definitions/KeyVaultSecretReference"
+                    "description": "The token."
                 }
             },
             "x-ms-discriminator-value": "SharedAccessSignature"
-        },
-        "KeyPairCredentials": {
-            "required": ["identifier", "privateKey"],
-            "type": "object",
-            "description": "Credentials for KeyPair CredentialType.",
-            "allOf": [
-                {
-                    "$ref": "#/definitions/Credentials"
-                }
-            ],
-            "properties": {
-                "identifier": {
-                    "type": "string",
-                    "description": "The identifier for the key."
-                },
-                "privateKey": {
-                    "type": "string",
-                    "description": "The private key based on PKCS #8 standard."
-                },
-                "passphrase": {
-                    "type": "string",
-                    "description": "The passphrase for the private key if the private key is encrypted."
-                }
-            },
-            "x-ms-discriminator-value": "KeyPair"
         },
         "CredentialDetails": {
             "type": "object",

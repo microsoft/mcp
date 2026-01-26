@@ -7,16 +7,17 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public class ResourceHealthService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientFactory httpClientFactory)
+public class ResourceHealthService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService)
     : BaseAzureService(tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
 
     private const string AzureManagementBaseUrl = "https://management.azure.com";
     private const string ResourceHealthApiVersion = "2025-05-01";
@@ -35,8 +36,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 cancellationToken);
 
-            var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
@@ -83,8 +83,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 cancellationToken);
 
-            var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = resourceGroup != null
@@ -138,8 +137,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 cancellationToken);
 
-            var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             // Build OData filter - using correct property paths for Azure Resource Health API

@@ -1,27 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
+namespace Azure.Mcp.Tools.AzureMigrate.Options;
 
 /// <summary>
-/// Static option definitions for Platform Landing Zone commands.
+/// Static option definitions for Azure Migrate commands.
 /// </summary>
-public static class PlatformLandingZoneOptionDefinitions
+public static class AzureMigrateOptionDefinitions
 {
     /// <summary>
-    /// The scenario option name.
+    /// The topic option name.
     /// </summary>
-    public const string ScenarioName = "scenario";
-
-    /// <summary>
-    /// The policy name option name.
-    /// </summary>
-    public const string PolicyNameName = "policy-name";
-
-    /// <summary>
-    /// The list policies option name.
-    /// </summary>
-    public const string ListPoliciesName = "list-policies";
+    public const string TopicName = "topic";
 
     /// <summary>
     /// The action option name.
@@ -94,35 +84,13 @@ public static class PlatformLandingZoneOptionDefinitions
     public const string MigrateProjectResourceIdName = "migrate-project-resource-id";
 
     /// <summary>
-    /// The scenario key for platform landing zone modification.
+    /// The user's question or modification request for landing zone guidance.
     /// </summary>
-    public static readonly Option<string> Scenario = new(
-        $"--{ScenarioName}"
+    public static readonly Option<string> Topic = new(
+        $"--{TopicName}"
     )
     {
-        Description = "The modification scenario key. Valid values: resource-names, management-groups, ddos, bastion, dns, gateways, regions, ip-addresses, policy-enforcement, policy-assignment, ama, amba, defender, zero-trust, slz.",
-        Required = true
-    };
-
-    /// <summary>
-    /// The policy assignment name for policy-related scenarios.
-    /// </summary>
-    public static readonly Option<string> PolicyName = new(
-        $"--{PolicyNameName}"
-    )
-    {
-        Description = "The policy assignment name to look up (e.g., 'Enable-DDoS-VNET'). Used with policy-enforcement or policy-assignment scenarios.",
-        Required = false
-    };
-
-    /// <summary>
-    /// List all available policies organized by archetype.
-    /// </summary>
-    public static readonly Option<bool> ListPolicies = new(
-        $"--{ListPoliciesName}"
-    )
-    {
-        Description = "Set to true to list all available policies organized by archetype. Useful for finding the exact policy name.",
+        Description = "The user's question or modification request (e.g., 'turn off bastion', 'disable Enable-DDoS-VNET policy', 'change IP ranges').",
         Required = false
     };
 
@@ -133,7 +101,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{ActionName}"
     )
     {
-        Description = "The action to perform: 'update' (set parameters), 'check' (check existing platform landing zone), 'generate' (generate platform landing zone), 'download' (get download instructions), 'status' (view parameter status).",
+        Description = "The action to perform: 'update' (set parameters), 'check' (check existing landing zone), 'generate' (generate landing zone), 'download' (get download instructions), 'status' (view parameter status).",
         Required = true
     };
 
@@ -144,18 +112,18 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{RegionTypeName}"
     )
     {
-        Description = "The region type for the Platform Landing Zone. Valid values: 'single', 'multi'.",
+        Description = "The region type for the landing zone. Valid values: 'single', 'multi'.",
         Required = false
     };
 
     /// <summary>
-    /// The firewall type (azurefirewall, nva).
+    /// The firewall type (azurefirewall, nva, or none).
     /// </summary>
     public static readonly Option<string> FireWallType = new(
         $"--{FireWallTypeName}"
     )
     {
-        Description = "The firewall type for the Platform Landing Zone. Valid values: 'azurefirewall', 'nva'.",
+        Description = "The firewall type for the landing zone. Valid values: 'azurefirewall', 'nva', 'none'.",
         Required = false
     };
 
@@ -166,7 +134,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{NetworkArchitectureName}"
     )
     {
-        Description = "The network architecture for the Platform Landing Zone. Valid values: 'hubspoke', 'vwan'.",
+        Description = "The network architecture for the landing zone. Valid values: 'hubspoke', 'vwan'.",
         Required = false
     };
 
@@ -177,7 +145,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{IdentitySubscriptionIdName}"
     )
     {
-        Description = "The Azure subscription ID for the identity management group in Platform Landing Zone (GUID format).",
+        Description = "The Azure subscription ID for the identity management group (GUID format).",
         Required = false
     };
 
@@ -188,7 +156,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{ManagementSubscriptionIdName}"
     )
     {
-        Description = "The Azure subscription ID for the management group in Platform Landing Zone (GUID format).",
+        Description = "The Azure subscription ID for the management group (GUID format).",
         Required = false
     };
 
@@ -199,7 +167,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{ConnectivitySubscriptionIdName}"
     )
     {
-        Description = "The Azure subscription ID for the connectivity group in Platform Landing Zone (GUID format).",
+        Description = "The Azure subscription ID for the connectivity group (GUID format).",
         Required = false
     };
 
@@ -210,7 +178,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{SecuritySubscriptionIdName}"
     )
     {
-        Description = "The Azure subscription ID for security resources in Platform Landing Zone (GUID format).",
+        Description = "The Azure subscription ID for security resources (GUID format).",
         Required = false
     };
 
@@ -221,7 +189,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{RegionsName}"
     )
     {
-        Description = "Comma-separated list of Azure regions for Platform Landing Zone (e.g., 'eastus,westus2').",
+        Description = "Comma-separated list of Azure regions (e.g., 'eastus,westus2').",
         Required = false
     };
 
@@ -232,7 +200,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{EnvironmentNameName}"
     )
     {
-        Description = "The environment name for the Platform Landing Zone.",
+        Description = "The environment name for the landing zone.",
         Required = false
     };
 
@@ -243,7 +211,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{VersionControlSystemName}"
     )
     {
-        Description = "The version control system for the Platform Landing Zone. Valid values: 'local', 'github', 'azuredevops'.",
+        Description = "The version control system for the landing zone. Valid values: 'local', 'github', 'azuredevops'.",
         Required = false
     };
 
@@ -254,7 +222,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{MigrateProjectNameName}"
     )
     {
-        Description = "The Azure Migrate project name for Platform Landing Zone generation context.",
+        Description = "The Azure Migrate project name for landing zone generation context.",
         Required = true
     };
 
@@ -265,7 +233,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{OrganizationNameName}"
     )
     {
-        Description = "The organization name for the Platform Landing Zone.",
+        Description = "The organization name for the landing zone.",
         Required = false
     };
 
@@ -276,7 +244,7 @@ public static class PlatformLandingZoneOptionDefinitions
         $"--{MigrateProjectResourceIdName}"
     )
     {
-        Description = "The full resource ID of the Azure Migrate project for Platform Landing Zone (alternative to subscription/resourceGroup/migrateProjectName).",
+        Description = "The full resource ID of the Azure Migrate project (alternative to subscription/resourceGroup/migrateProjectName).",
         Required = false
     };
 }

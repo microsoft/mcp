@@ -4,13 +4,14 @@
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Models;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider) : ICliGenerateService
+internal class CliGenerateService(IHttpClientService httpClientService, IAzureTokenCredentialProvider tokenCredentialProvider) : ICliGenerateService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IHttpClientService _httpClientService = httpClientService;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
     public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent, CancellationToken cancellationToken)
@@ -42,7 +43,7 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
             Content = content
         };
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
-        HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
+        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }
 }

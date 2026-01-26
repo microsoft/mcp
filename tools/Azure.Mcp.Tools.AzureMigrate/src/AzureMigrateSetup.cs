@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
-using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -24,17 +23,15 @@ public class AzureMigrateSetup : IAreaSetup
     /// <inheritdoc/>
     public void ConfigureServices(IServiceCollection services)
     {
-        // Register shared helpers
-        services.AddSingleton<AzureHttpHelper>();
-
         // Register guidance service and command
         services.AddSingleton<IPlatformLandingZoneGuidanceService, PlatformLandingZoneGuidanceService>();
         services.AddHttpClient<PlatformLandingZoneGuidanceService>();
         services.AddSingleton<GetGuidanceCommand>();
 
-        // Register platform landing zone service and command
+        // Register landing zone service and command
         services.AddSingleton<IPlatformLandingZoneService, PlatformLandingZoneService>();
-        services.AddSingleton<RequestCommand>();
+        services.AddHttpClient<PlatformLandingZoneService>();
+        services.AddSingleton<GenerateCommand>();
     }
 
     /// <inheritdoc/>
@@ -65,8 +62,8 @@ public class AzureMigrateSetup : IAreaSetup
         var platformLandingZoneGetGuidance = serviceProvider.GetRequiredService<GetGuidanceCommand>();
         platformLandingZone.AddCommand(platformLandingZoneGetGuidance.Name, platformLandingZoneGetGuidance);
 
-        var platformLandingZoneRequest = serviceProvider.GetRequiredService<RequestCommand>();
-        platformLandingZone.AddCommand(platformLandingZoneRequest.Name, platformLandingZoneRequest);
+        var platformLandingZoneGenerate = serviceProvider.GetRequiredService<GenerateCommand>();
+        platformLandingZone.AddCommand(platformLandingZoneGenerate.Name, platformLandingZoneGenerate);
 
         return azureMigrate;
     }

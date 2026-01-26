@@ -5,14 +5,13 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture) : RecordedCommandTestsBase(output, testProxyFixture)
+public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
 
     [Fact]
@@ -123,16 +122,4 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
-
-    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
-    [
-        .. base.BodyRegexSanitizers,
-        // Sanitize tag contents
-        new BodyRegexSanitizer(new BodyRegexSanitizerBody
-        {
-            Regex = @"(?is)""tags""\s*:\s*{(.*?)}",
-            GroupForReplace = "1",
-            Value = ""
-        })
-    ];
 }

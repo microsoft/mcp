@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
@@ -11,9 +12,9 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(ITenantService tenantService, IHttpClientService httpClientService) : BaseAzureService(tenantService), IKeyVaultService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
 
     public async Task<List<string>> ListKeys(
         string vaultName,
@@ -306,35 +307,29 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
     // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = vaultUri;
+        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
         var options = new KeyClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new KeyClient(vaultUri, credential, options);
+        return new KeyClient(BuildVaultUri(vaultName), credential, options);
     }
 
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = vaultUri;
+        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
         var options = new SecretClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new SecretClient(vaultUri, credential, options);
+        return new SecretClient(BuildVaultUri(vaultName), credential, options);
     }
 
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = vaultUri;
+        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
         var options = new CertificateClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new CertificateClient(vaultUri, credential, options);
+        return new CertificateClient(BuildVaultUri(vaultName), credential, options);
     }
 
     public async Task<GetSettingsResult> GetVaultSettings(

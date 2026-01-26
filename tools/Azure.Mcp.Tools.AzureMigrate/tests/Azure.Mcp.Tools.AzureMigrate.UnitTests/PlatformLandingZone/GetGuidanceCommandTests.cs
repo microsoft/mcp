@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using static Azure.Mcp.Tools.AzureMigrate.Services.PlatformLandingZoneGuidanceService;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
@@ -42,13 +41,12 @@ public class GetGuidanceCommandTests
         Assert.Equal("getguidance", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("scenario", command.Description);
     }
 
     [Theory]
-    [InlineData("--scenario bastion")]
-    [InlineData("--scenario ddos")]
-    [InlineData("--scenario policy-enforcement")]
+    [InlineData("")]
+    [InlineData("--topic bastion")]
+    [InlineData("--topic \"turn off ddos\"")]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args)
     {
         // Arrange
@@ -66,13 +64,13 @@ public class GetGuidanceCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsGuidance_ForValidScenario()
+    public async Task ExecuteAsync_ReturnsScenarioCatalog_WhenEmptyQuestion()
     {
         // Arrange
-        _guidanceService.GetGuidanceAsync("bastion", Arg.Any<CancellationToken>())
-            .Returns("Bastion guidance: To enable Bastion, configure...");
+        _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns("Available Azure Landing Zone modification scenarios: ...");
 
-        var parseResult = _commandDefinition.Parse(["--scenario", "bastion"]);
+        var parseResult = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -85,7 +83,7 @@ public class GetGuidanceCommandTests
         var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
         Assert.NotNull(result);
-        Assert.Contains("Bastion guidance", result.Guidance);
+        Assert.Contains("Available Azure Landing Zone modification scenarios", result.Guidance);
     }
 
     [Fact]
@@ -93,9 +91,9 @@ public class GetGuidanceCommandTests
     {
         // Arrange
         _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns("DDoS guidance: To enable DDoS protection...");
+            .Returns("Bastion guidance: To enable Bastion, configure...");
 
-        var parseResult = _commandDefinition.Parse(["--scenario", "ddos"]);
+        var parseResult = _commandDefinition.Parse(["--topic", "bastion"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -112,102 +110,6 @@ public class GetGuidanceCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithPolicyName_SearchesForPolicies()
-    {
-        // Arrange
-        _guidanceService.GetGuidanceAsync("policy-enforcement", Arg.Any<CancellationToken>())
-            .Returns("Policy enforcement guidance...");
-
-        _guidanceService.SearchPoliciesAsync("ddos", Arg.Any<CancellationToken>())
-            .Returns([
-                new PolicyLocationResult("Enable-DDoS-VNET", ["corp", "connectivity"])
-            ]);
-
-        var parseResult = _commandDefinition.Parse([
-            "--scenario", "policy-enforcement",
-            "--policy-name", "ddos"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Contains("Enable-DDoS-VNET", result.Guidance);
-        Assert.Contains("corp", result.Guidance);
-        Assert.Contains("connectivity", result.Guidance);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithListPolicies_ReturnsAllPolicies()
-    {
-        // Arrange
-        _guidanceService.GetGuidanceAsync("policy-assignment", Arg.Any<CancellationToken>())
-            .Returns("Policy assignment guidance...");
-
-        _guidanceService.GetAllPoliciesAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, List<string>>
-            {
-                ["corp"] = ["Enable-DDoS-VNET", "Deny-Public-IP"],
-                ["connectivity"] = ["Deploy-ASC-Monitoring"]
-            });
-
-        var parseResult = _commandDefinition.Parse([
-            "--scenario", "policy-assignment",
-            "--list-policies", "true"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Contains("All Policies by Archetype", result.Guidance);
-        Assert.Contains("Enable-DDoS-VNET", result.Guidance);
-        Assert.Contains("Deny-Public-IP", result.Guidance);
-        Assert.Contains("Deploy-ASC-Monitoring", result.Guidance);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_PolicyNotFound_SuggestsListPolicies()
-    {
-        // Arrange
-        _guidanceService.GetGuidanceAsync("policy-enforcement", Arg.Any<CancellationToken>())
-            .Returns("Policy enforcement guidance...");
-
-        _guidanceService.SearchPoliciesAsync("nonexistent", Arg.Any<CancellationToken>())
-            .Returns([]);
-
-        var parseResult = _commandDefinition.Parse([
-            "--scenario", "policy-enforcement",
-            "--policy-name", "nonexistent"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, Commands.AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Contains("No policies matching 'nonexistent' found", result.Guidance);
-        Assert.Contains("list-policies", result.Guidance);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
@@ -215,7 +117,7 @@ public class GetGuidanceCommandTests
         _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(expectedException));
 
-        var parseResult = _commandDefinition.Parse(["--scenario", "bastion"]);
+        var parseResult = _commandDefinition.Parse(["--topic", "enable bastion"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -223,12 +125,12 @@ public class GetGuidanceCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
-
+        
         // Verify logging
         _logger.Received(1).Log(
             LogLevel.Error,
             Arg.Any<EventId>(),
-            Arg.Is<object>(o => o.ToString()!.Contains("Error fetching guidance for scenario")),
+            Arg.Is<object>(o => o.ToString()!.Contains("Error generating guidance for")),
             expectedException,
             Arg.Any<Func<object, Exception?, string>>());
     }
@@ -241,7 +143,7 @@ public class GetGuidanceCommandTests
         _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(httpException));
 
-        var parseResult = _commandDefinition.Parse(["--scenario", "ddos"]);
+        var parseResult = _commandDefinition.Parse(["--topic", "disable ddos"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -249,7 +151,7 @@ public class GetGuidanceCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
-
+        
         // Verify the exception was logged
         _logger.Received(1).Log(
             LogLevel.Error,
@@ -263,23 +165,23 @@ public class GetGuidanceCommandTests
     public async Task ExecuteAsync_HandlesArgumentException()
     {
         // Arrange
-        var argumentException = new ArgumentException("Invalid scenario", "scenario");
+        var argumentException = new ArgumentException("Invalid parameter", "topic");
         _guidanceService.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<string>(argumentException));
 
-        var parseResult = _commandDefinition.Parse(["--scenario", "invalid-scenario"]);
+        var parseResult = _commandDefinition.Parse(["--topic", "invalid input"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-
-        // Verify error was logged
+        
+        // Verify error was logged with correct question
         _logger.Received(1).Log(
             LogLevel.Error,
             Arg.Any<EventId>(),
-            Arg.Any<object>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("invalid input")),
             argumentException,
             Arg.Any<Func<object, Exception?, string>>());
     }
