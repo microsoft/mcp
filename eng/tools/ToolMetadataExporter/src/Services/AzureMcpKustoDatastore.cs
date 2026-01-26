@@ -59,7 +59,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
             if (string.IsNullOrEmpty(latestEvent.ToolId))
             {
                 throw new InvalidOperationException(
-                    $"Cannot have an event with no id. Name: {latestEvent.ToolArea}, Area: {latestEvent.ToolArea}");
+                    $"Cannot have an event with no id. Name: {latestEvent.ToolName}, Area: {latestEvent.ToolArea}");
             }
 
             string? toolName;
