@@ -42,12 +42,12 @@ public interface IPlatformLandingZoneService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a landing zone already exists for the given context.
+    /// Checks if a platform landing zone already exists for the given context.
     /// </summary>
     /// <param name="context">The landing zone context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True if landing zone exists, false otherwise.</returns>
-    Task<bool> CheckExistingLandingZoneAsync(
+    /// <returns>True if platform landing zone exists, false otherwise.</returns>
+    Task<bool> CheckExistingAsync(
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken = default);
 
@@ -57,18 +57,18 @@ public interface IPlatformLandingZoneService
     /// <param name="context">The landing zone context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The download URL if successful, null otherwise.</returns>
-    Task<string?> GenerateLandingZoneAsync(
+    Task<string?> GenerateAsync(
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Downloads the generated landing zone.
+    /// Downloads the generated platform landing zone.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
+    /// <param name="context">The platform landing zone context.</param>
     /// <param name="outputPath">The output path for the downloaded file.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The path to the downloaded file.</returns>
-    Task<string> DownloadLandingZoneAsync(
+    Task<string> DownloadAsync(
         PlatformLandingZoneContext context,
         string outputPath,
         CancellationToken cancellationToken = default);
@@ -76,14 +76,14 @@ public interface IPlatformLandingZoneService
     /// <summary>
     /// Gets the status of cached parameters.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
+    /// <param name="context">The platform landing zone context.</param>
     /// <returns>A message describing the parameter status.</returns>
     string GetParameterStatus(PlatformLandingZoneContext context);
 
     /// <summary>
     /// Gets a list of missing required parameters.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
+    /// <param name="context">The platform landing zone context.</param>
     /// <returns>A list of missing parameter names.</returns>
     List<string> GetMissingParameters(PlatformLandingZoneContext context);
 }

@@ -1,0 +1,44 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+    "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+    "dataAccessRoleConflictPolicy": "Overwrite",
+    "preview": true,
+    "createOrUpdateSingleDataAccessRoleRequest": {
+      "value": [
+        {
+          "name": "DefaultReader",
+          "decisionRules": [
+            {
+              "effect": "Permit",
+              "permission": [
+                {
+                  "attributeName": "Path",
+                  "attributeValueIncludedIn": ["*"]
+                },
+                {
+                  "attributeName": "Action",
+                  "attributeValueIncludedIn": ["Read"]
+                }
+              ]
+            }
+          ],
+          "members": {
+            "fabricItemMembers": [
+              {
+                "itemAccess": ["ReadAll"],
+                "sourcePath": "cfafbeb1-8037-4d0c-896e-a46fb27ff222/25bac802-080d-4f73-8a42-1b406eb1fceb"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "responses": {
+    "200": {
+      "description": "Role updated successfully",
+      "headers": { "ETag": "ccaa9212-0f33-4a42-ae8c-9de28f112222", "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff222/items/25bac802-080d-4f73-8a42-1b406eb1fceb/dataAccessRoles/DefaultReader" }
+    }
+  }
+}

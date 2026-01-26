@@ -1,5 +1,17 @@
 # Release History
 
+## 2.0.0-beta.13 (2026-01-22) (pre-release)
+
+### Changed
+
+- Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]
+
+## 2.0.0-beta.12 (2026-01-20) (pre-release)
+
+### Fixed
+
+- Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
+
 ## 2.0.0-beta.11 (2026-01-16) (pre-release)
 
 ### Added

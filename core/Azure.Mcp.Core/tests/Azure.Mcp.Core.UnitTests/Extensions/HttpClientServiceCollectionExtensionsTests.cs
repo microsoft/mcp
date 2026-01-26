@@ -12,7 +12,7 @@ namespace Azure.Mcp.Core.UnitTests.Extensions;
 public class HttpClientServiceCollectionExtensionsTests
 {
     [Fact]
-    public void AddHttpClientServices_RegistersRequiredServices()
+    public void AddHttpClientServices_RegistersHttpClientOptions()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -22,12 +22,23 @@ public class HttpClientServiceCollectionExtensionsTests
         var serviceProvider = services.BuildServiceProvider();
 
         // Assert
-        var httpClientService = serviceProvider.GetService<IHttpClientService>();
-        Assert.NotNull(httpClientService);
-        Assert.IsType<HttpClientService>(httpClientService);
-
         var options = serviceProvider.GetService<IOptions<HttpClientOptions>>();
         Assert.NotNull(options);
+    }
+
+    [Fact]
+    public void AddHttpClientServices_RegistersHttpClientFactory()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddHttpClientServices();
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        var factory = serviceProvider.GetService<IHttpClientFactory>();
+        Assert.NotNull(factory);
     }
 
     [Fact]

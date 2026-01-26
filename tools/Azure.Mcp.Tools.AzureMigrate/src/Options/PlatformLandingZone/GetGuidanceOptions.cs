@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using System.Text.Json.Serialization;
+
 namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 
 /// <summary>
@@ -9,9 +11,20 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 public class GetGuidanceOptions : BaseAzureMigrateOptions
 {
     /// <summary>
-    /// Gets or sets the user's question or modification request for the landing zone.
-    /// Examples: "turn off bastion", "disable Enable-DDoS-VNET policy", "change IP ranges"
+    /// Gets or sets the scenario key for the modification.
     /// </summary>
-    [JsonPropertyName("topic")]
-    public string? Topic { get; set; }
+    [JsonPropertyName("scenario")]
+    public string? Scenario { get; set; }
+
+    /// <summary>
+    /// Gets or sets the policy name for policy-related scenarios.
+    /// </summary>
+    [JsonPropertyName("policyName")]
+    public string? PolicyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to list all policies by archetype.
+    /// </summary>
+    [JsonPropertyName("listPolicies")]
+    public bool ListPolicies { get; set; }
 }
