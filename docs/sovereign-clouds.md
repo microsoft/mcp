@@ -17,7 +17,6 @@ The following cloud names are recognized and automatically mapped to their respe
 | Azure Public Cloud | `https://login.microsoftonline.com` | `AzureCloud`, `AzurePublicCloud`, `public` |
 | Azure China Cloud | `https://login.chinacloudapi.cn` | `AzureChinaCloud`, `china` |
 | Azure US Government | `https://login.microsoftonline.us` | `AzureUSGovernment`, `AzureUSGovernmentCloud`, `usgov`, `usgovernment` |
-| Azure Germany Cloud | `https://login.microsoftonline.de` | `AzureGermanyCloud`, `germany` |
 
 ### Custom Authority Hosts
 

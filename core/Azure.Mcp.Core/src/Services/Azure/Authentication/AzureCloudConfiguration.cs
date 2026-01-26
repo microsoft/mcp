@@ -31,9 +31,10 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         // 1. ServiceStartOptions (--cloud command line argument)
         // 2. Configuration (appsettings.json or environment variables)
         var cloudValue = serviceStartOptions?.Value?.Cloud
+            ?? configuration["AZURE_CLOUD"]
+            ?? configuration["azure_cloud"]
             ?? configuration["cloud"]
             ?? configuration["Cloud"]
-            ?? configuration["AZURE_CLOUD"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
         (AuthorityHost, ArmEnvironment) = ParseCloudValue(cloudValue);
