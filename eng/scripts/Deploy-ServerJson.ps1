@@ -37,7 +37,7 @@ param(
     [switch] $BuildOnly
 )
 
-$ErrorActionPreference = "Stop" 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
@@ -105,7 +105,9 @@ if (!(Test-Path $goInstallScriptPath)) {
 $env:GOEXPERIMENT = "systemcrypto"
 
 # Clone and build the publisher tool
-git clone --branch "v1.3.7" https://github.com/modelcontextprotocol/registry
+# FYI for EngSys or server.json schema changes. This publisher should be updated any time we update the manifest schema
+# version $schema in any server.json file: https://github.com/modelcontextprotocol/registry/releases/
+git clone --branch "v1.4.0" https://github.com/modelcontextprotocol/registry
 
 Set-Location registry
 
@@ -128,7 +130,7 @@ try {
         Write-Host "$($serverInfo.name): Deploying server.json to production instance."
         & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
         & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
-    } elseif ($publishTarget -eq $PublishTargetInternal) { 
+    } elseif ($publishTarget -eq $PublishTargetInternal) {
         LogInfo "$($serverInfo.name): Internal publish target specified. Skipping deployment to public MCP registry."
     } else {
         LogError "$($serverInfo.name): Unsupported publish target: $publishTarget"

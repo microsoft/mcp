@@ -1469,6 +1469,7 @@
         "managedlustre_fs_sku_get",
         "managedlustre_fs_blob_autoexport_get",
         "managedlustre_fs_blob_autoimport_get",
+        "managedlustre_fs_blob_import_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1511,7 +1512,8 @@
         "storage_blob_container_create",
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
-        "managedlustre_fs_blob_autoimport_create"
+        "managedlustre_fs_blob_autoimport_create",
+        "managedlustre_fs_blob_import_create"
       ]
     },
     {
@@ -1549,7 +1551,7 @@
     },
     {
       "name": "manage_azure_managed_lustre_sync_jobs",
-      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport and autoexport jobs that sync data between Lustre filesystems and Azure Blob Storage.",
+      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport, autoexport, and one-time import jobs that sync data between Lustre filesystems and Azure Blob Storage.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1580,7 +1582,9 @@
         "managedlustre_fs_blob_autoexport_cancel",
         "managedlustre_fs_blob_autoexport_delete",
         "managedlustre_fs_blob_autoimport_cancel",
-        "managedlustre_fs_blob_autoimport_delete"
+        "managedlustre_fs_blob_autoimport_delete",
+        "managedlustre_fs_blob_import_cancel",
+        "managedlustre_fs_blob_import_delete"
       ]
     },
     {

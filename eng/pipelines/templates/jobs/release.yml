@@ -55,6 +55,12 @@ jobs:
     IncludeNative: ${{ parameters.IncludeNative }}
     DependsOn: TagRepository
 
+- template: /eng/pipelines/templates/jobs/pypi/release-pypi.yml
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    IncludeNative: ${{ parameters.IncludeNative }}
+    DependsOn: TagRepository
+
 - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}

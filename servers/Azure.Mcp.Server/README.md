@@ -214,15 +214,16 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
 |-----|---------------|-------------------|
-| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
+| **GitHub Copilot CLI** | `~/.copilot/mcp-config.json` | [Copilot CLI MCP Configuration](#github-copilot-cli-configuration) |
 | **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
-| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
-| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
-| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
-| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
+| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 <!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
@@ -334,6 +335,410 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 </details>
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+
+### GitHub Copilot CLI Configuration
+
+[GitHub Copilot CLI](https://github.blog/changelog/2026-01-14-github-copilot-cli-enhanced-agents-context-management-and-new-ways-to-install/) supports MCP servers via the `/mcp` command.
+
+<details>
+<summary>GitHub Copilot CLI setup instructions</summary>
+
+#### Add Azure MCP Server
+
+1. In a Copilot CLI session, run `/mcp add` to open the MCP server configuration form.
+
+2. Fill in the fields:
+
+   | Field | Value |
+   |-------|-------|
+   | **Server Name** | `azure-mcp` |
+   | **Server Type** | `1` (Local) |
+   | **Command** | `npx -y @azure/mcp@latest server start` |
+   | **Environment Variables** | *(leave blank - uses Azure CLI auth)* |
+   | **Tools** | `*` |
+
+   > **Alternative Command (using .NET):** `dotnet dnx -p Azure.Mcp server start`
+
+3. Press **Ctrl+S** (or **Cmd+S** on macOS) to save the server configuration.
+
+#### Verification
+
+Verify the MCP server is configured by running:
+
+```
+/mcp show
+```
+
+You should see output similar to:
+
+```
+● MCP Server Configuration:
+  • azure-mcp (local): Command: npx
+
+Total servers: 1
+Config file: ~/.copilot/mcp-config.json
+```
+
+#### Managing MCP Servers
+
+- **List servers:** `/mcp show`
+- **Remove a server:** `/mcp remove azure-mcp`
+- **Get help:** `/mcp help`
+
+</details>
+
+### GitHub Copilot SDK Configuration
+
+The [GitHub Copilot SDK](https://github.com/github/copilot-sdk) enables programmatic integration of Azure MCP tools into your applications across multiple languages.
+
+<details>
+<summary>GitHub Copilot SDK snippets</summary>
+
+# Using GitHub Copilot SDK with Azure MCP
+
+This guide explains how to configure the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) to use Azure MCP (Model Context Protocol) tools for interacting with Azure resources.
+
+## Overview
+
+Azure MCP provides a set of tools that enable AI assistants to interact with Azure resources directly. When integrated with the Copilot SDK, you can build applications that leverage natural language to manage Azure subscriptions, resource groups, storage accounts, and more.
+
+## Prerequisites
+
+1. **GitHub Copilot CLI** - Install from [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli)
+2. **Azure MCP Server** - Available via npm: `@azure/mcp`
+3. **Azure CLI** - Authenticated via `az login`
+4. **Valid GitHub Copilot subscription**
+
+### Install Azure MCP Server
+
+```bash
+# Option 1: Use npx (downloads on demand)
+npx -y @azure/mcp@latest server start
+
+# Option 2: Install globally (faster startup)
+npm install -g @azure/mcp@latest
+```
+
+---
+
+## Key Configuration Insight
+
+> **Important:** MCP servers must be configured in the **session config** for tools to be available. The critical configuration is:
+
+```json
+{
+  "mcp_servers": {
+    "azure-mcp": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "tools": ["*"]
+    }
+  }
+}
+```
+
+The `tools: ["*"]` parameter is essential - it enables all tools from the MCP server for the session.
+
+---
+
+## Python
+
+### Installation
+
+```bash
+pip install github-copilot-sdk
+```
+
+### Configuration
+
+```python
+import asyncio
+from copilot import CopilotClient
+from copilot.generated.session_events import SessionEventType
+
+async def main():
+    # Initialize the Copilot client
+    client = CopilotClient({
+        "cli_args": [
+            "--allow-all-tools",
+            "--allow-all-paths",
+        ]
+    })
+
+    await client.start()
+
+    # Configure Azure MCP server in session config
+    azure_mcp_config = {
+        "azure-mcp": {
+            "type": "local",
+            "command": "npx",
+            "args": ["-y", "@azure/mcp@latest", "server", "start"],
+            "tools": ["*"],  # Enable all Azure MCP tools
+        }
+    }
+
+    # Create session with MCP servers
+    session = await client.create_session({
+        "model": "gpt-4.1",  # Default model; BYOK can override
+        "streaming": True,
+        "mcp_servers": azure_mcp_config,
+    })
+
+    # Handle events
+    def handle_event(event):
+        if event.type == SessionEventType.ASSISTANT_MESSAGE_DELTA:
+            if hasattr(event.data, 'delta_content') and event.data.delta_content:
+                print(event.data.delta_content, end="", flush=True)
+        elif event.type == SessionEventType.TOOL_EXECUTION_START:
+            tool_name = getattr(event.data, 'tool_name', 'unknown')
+            print(f"\n[TOOL: {tool_name}]")
+
+    session.on(handle_event)
+
+    # Send prompt
+    await session.send_and_wait({
+        "prompt": "List all resource groups in my Azure subscription"
+    })
+
+    await client.stop()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+---
+
+## Node.js / TypeScript
+
+### Installation
+
+```bash
+npm install @github/copilot-sdk
+```
+
+### Configuration (TypeScript)
+
+```typescript
+import { CopilotClient, SessionEventType } from '@github/copilot-sdk';
+
+async function main() {
+  // Initialize the Copilot client
+  const client = new CopilotClient({
+    cliArgs: [
+      '--allow-all-tools',
+      '--allow-all-paths',
+    ]
+  });
+
+  await client.start();
+
+  // Configure Azure MCP server in session config
+  const azureMcpConfig = {
+    'azure-mcp': {
+      type: 'local' as const,
+      command: 'npx',
+      args: ['-y', '@azure/mcp@latest', 'server', 'start'],
+      tools: ['*'],  // Enable all Azure MCP tools
+    }
+  };
+
+  // Create session with MCP servers
+  const session = await client.createSession({
+    model: 'gpt-4.1',  // Default model; BYOK can override
+    streaming: true,
+    mcpServers: azureMcpConfig,
+  });
+
+  // Handle events
+  session.on((event) => {
+    if (event.type === SessionEventType.ASSISTANT_MESSAGE_DELTA) {
+      if (event.data?.deltaContent) {
+        process.stdout.write(event.data.deltaContent);
+      }
+    } else if (event.type === SessionEventType.TOOL_EXECUTION_START) {
+      const toolName = event.data?.toolName || 'unknown';
+      console.log(`\n[TOOL: ${toolName}]`);
+    }
+  });
+
+  // Send prompt
+  await session.sendAndWait({
+    prompt: 'List all resource groups in my Azure subscription'
+  });
+
+  await client.stop();
+}
+
+main().catch(console.error);
+```
+
+---
+
+## Go
+
+### Installation
+
+```bash
+go get github.com/github/copilot-sdk/go
+```
+
+### Configuration
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    copilot "github.com/github/copilot-sdk/go"
+)
+
+func main() {
+    ctx := context.Background()
+
+    // Initialize the Copilot client
+    client, err := copilot.NewClient(copilot.ClientOptions{
+        CLIArgs: []string{
+            "--allow-all-tools",
+            "--allow-all-paths",
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if err := client.Start(ctx); err != nil {
+        log.Fatal(err)
+    }
+    defer client.Stop(ctx)
+
+    // Configure Azure MCP server in session config
+    azureMcpConfig := map[string]copilot.MCPServerConfig{
+        "azure-mcp": {
+            Type:    "local",
+            Command: "npx",
+            Args:    []string{"-y", "@azure/mcp@latest", "server", "start"},
+            Tools:   []string{"*"}, // Enable all Azure MCP tools
+        },
+    }
+
+    // Create session with MCP servers
+    session, err := client.CreateSession(ctx, copilot.SessionConfig{
+        Model:      "gpt-4.1",  // Default model; BYOK can override
+        Streaming:  true,
+        MCPServers: azureMcpConfig,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Handle events
+    session.OnEvent(func(event copilot.SessionEvent) {
+        switch event.Type {
+        case copilot.AssistantMessageDelta:
+            if event.Data.DeltaContent != "" {
+                fmt.Print(event.Data.DeltaContent)
+            }
+        case copilot.ToolExecutionStart:
+            fmt.Printf("\n[TOOL: %s]\n", event.Data.ToolName)
+        }
+    })
+
+    // Send prompt
+    err = session.SendAndWait(ctx, copilot.Message{
+        Prompt: "List all resource groups in my Azure subscription",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+---
+
+## .NET
+
+### Installation
+
+```bash
+dotnet add package GitHub.Copilot.SDK
+```
+
+### Configuration (C#)
+
+```csharp
+using GitHub.Copilot.SDK;
+using GitHub.Copilot.SDK.Models;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        // Initialize the Copilot client
+        var client = new CopilotClient(new CopilotClientOptions
+        {
+            CliArgs = new[] { "--allow-all-tools", "--allow-all-paths" }
+        });
+
+        await client.StartAsync();
+
+        // Configure Azure MCP server in session config
+        var azureMcpConfig = new Dictionary<string, MCPServerConfig>
+        {
+            ["azure-mcp"] = new MCPServerConfig
+            {
+                Type = "local",
+                Command = "npx",
+                Args = new[] { "-y", "@azure/mcp@latest", "server", "start" },
+                Tools = new[] { "*" }  // Enable all Azure MCP tools
+            }
+        };
+
+        // Create session with MCP servers
+        var session = await client.CreateSessionAsync(new SessionConfig
+        {
+            Model = "gpt-4.1",  // Default model; BYOK can override
+            Streaming = true,
+            McpServers = azureMcpConfig
+        });
+
+        // Handle events
+        session.OnEvent += (sender, e) =>
+        {
+            switch (e.Type)
+            {
+                case SessionEventType.AssistantMessageDelta:
+                    if (!string.IsNullOrEmpty(e.Data?.DeltaContent))
+                    {
+                        Console.Write(e.Data.DeltaContent);
+                    }
+                    break;
+                case SessionEventType.ToolExecutionStart:
+                    Console.WriteLine($"\n[TOOL: {e.Data?.ToolName}]");
+                    break;
+            }
+        };
+
+        // Send prompt
+        await session.SendAndWaitAsync(new Message
+        {
+            Prompt = "List all resource groups in my Azure subscription"
+        });
+
+        await client.StopAsync();
+    }
+}
+```
+
+---
+
+> **Note:** If startup is slow, use a pinned version (`@azure/mcp@2.0.0-beta.13` instead of `@latest`) or install globally (`npm install -g @azure/mcp@latest`).
+
+</details>
+
 <!-- remove-section: end remove_package_manager_section -->
 
 ## Remote MCP Server (preview)

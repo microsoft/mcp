@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Optimized --version flag to bypass full service initialization, reducing response time from ~10s to <3s"
