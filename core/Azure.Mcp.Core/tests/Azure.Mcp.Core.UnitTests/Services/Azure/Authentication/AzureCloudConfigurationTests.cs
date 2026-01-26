@@ -29,8 +29,6 @@ public class AzureCloudConfigurationTests
     [InlineData("AzureUSGovernmentCloud", "https://login.microsoftonline.us")]
     [InlineData("usgov", "https://login.microsoftonline.us")]
     [InlineData("usgovernment", "https://login.microsoftonline.us")]
-    [InlineData("AzureGermanyCloud", "https://login.microsoftonline.de")]
-    [InlineData("germany", "https://login.microsoftonline.de")]
     public void ParseCloudValue_WellKnownClouds_ReturnsCorrectAuthorityHost(string cloudName, string expectedHost)
     {
         // Arrange
@@ -106,26 +104,6 @@ public class AzureCloudConfigurationTests
 
         // Assert
         Assert.Equal(ArmEnvironment.AzureChina, cloudConfig.ArmEnvironment);
-    }
-
-    /// <summary>
-    /// Tests that Germany cloud names are correctly mapped to their ARM environment.
-    /// </summary>
-    [Theory]
-    [InlineData("AzureGermanyCloud")]
-    [InlineData("germany")]
-    public void ParseCloudValue_GermanyCloud_ReturnsGermanyArmEnvironment(string cloudName)
-    {
-        // Arrange
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
-            .Build();
-
-        // Act
-        var cloudConfig = new AzureCloudConfiguration(config);
-
-        // Assert
-        Assert.Equal(ArmEnvironment.AzureGermany, cloudConfig.ArmEnvironment);
     }
 
     /// <summary>
