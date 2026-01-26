@@ -19,19 +19,19 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
-public class GenerateCommandTests
+public class RequestCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IPlatformLandingZoneService _platformLandingZoneService;
-    private readonly ILogger<GenerateCommand> _logger;
-    private readonly GenerateCommand _command;
+    private readonly ILogger<RequestCommand> _logger;
+    private readonly RequestCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public GenerateCommandTests()
+    public RequestCommandTests()
     {
         _platformLandingZoneService = Substitute.For<IPlatformLandingZoneService>();
-        _logger = Substitute.For<ILogger<GenerateCommand>>();
+        _logger = Substitute.For<ILogger<RequestCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_platformLandingZoneService);
 
@@ -45,7 +45,7 @@ public class GenerateCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("generate", command.Name);
+        Assert.Equal("request", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
         Assert.Contains("update", command.Description);
@@ -97,13 +97,13 @@ public class GenerateCommandTests
                 Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(parameters));
 
-            _platformLandingZoneService.DownloadLandingZoneAsync(
+            _platformLandingZoneService.DownloadAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult("/path/to/downloaded/file.zip"));
 
-            _platformLandingZoneService.GenerateLandingZoneAsync(
+            _platformLandingZoneService.GenerateAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<string?>("https://download.url/file.zip"));
@@ -147,13 +147,14 @@ public class GenerateCommandTests
         {
             RegionType = regionType,
             FireWallType = fireWallType,
-            NetworkArchitecture = null,
-            IdentitySubscriptionId = null,
-            ManagementSubscriptionId = null,
-            ConnectivitySubscriptionId = null,
-            Regions = null,
-            EnvironmentName = null,
-            VersionControlSystem = null,
+            NetworkArchitecture = "hubspoke",
+            IdentitySubscriptionId = subscription,
+            ManagementSubscriptionId = subscription,
+            ConnectivitySubscriptionId = subscription,
+            Regions = "eastus",
+            EnvironmentName = "prod",
+            VersionControlSystem = "local",
+            OrganizationName = "contoso",
             CachedAt = DateTime.UtcNow
         };
 
@@ -176,7 +177,7 @@ public class GenerateCommandTests
             .Returns(Task.FromResult(updatedParameters));
 
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string> { "networkArchitecture", "identitySubscriptionId" });
+            .Returns(new List<string>());
 
         var args = _commandDefinition.Parse([
             "--action", "update",
@@ -196,11 +197,11 @@ public class GenerateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Parameters updated successfully", result.Message);
-        Assert.Contains("Complete: False", result.Message);
+        Assert.Contains("Complete: True", result.Message);
     }
 
     [Fact]
@@ -212,7 +213,7 @@ public class GenerateCommandTests
         var projectName = "project1";
         var downloadedPath = "/path/to/downloaded/file.zip";
 
-        _platformLandingZoneService.DownloadLandingZoneAsync(
+        _platformLandingZoneService.DownloadAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
@@ -237,7 +238,7 @@ public class GenerateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("downloaded successfully", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -256,7 +257,7 @@ public class GenerateCommandTests
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
             .Returns(new List<string>());
 
-        _platformLandingZoneService.GenerateLandingZoneAsync(
+        _platformLandingZoneService.GenerateAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
@@ -280,24 +281,29 @@ public class GenerateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
-        Assert.Contains("Landing zone generated successfully", result.Message);
+        Assert.Contains("Platform Landing zone generated successfully", result.Message);
         Assert.Contains(downloadUrl, result.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_GenerateAction_WithMissingParameters_ReturnsGuidanceMessage()
+    public async Task ExecuteAsync_GenerateAction_WithDefaultParameters_Succeeds()
     {
         // Arrange
         var subscription = "sub123";
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        // Mock that parameters are missing
+        // Mock that defaults are applied (no missing parameters)
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string> { "regionType", "fireWallType", "networkArchitecture" });
+            .Returns(new List<string>());
+
+        _platformLandingZoneService.GenerateAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<string?>("https://download.url/landingzone.zip"));
 
         var args = _commandDefinition.Parse([
             "--action", "generate",
@@ -315,18 +321,13 @@ public class GenerateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
-        Assert.Contains("Cannot generate landing zone", result.Message);
-        Assert.Contains("provide the following required parameters", result.Message);
-        Assert.Contains("regionType", result.Message);
-        Assert.Contains("fireWallType", result.Message);
-        Assert.Contains("networkArchitecture", result.Message);
-        Assert.Contains("action='update'", result.Message);
+        Assert.Contains("Platform Landing zone generated successfully", result.Message);
 
-        // Verify GenerateLandingZoneAsync was never called
-        await _platformLandingZoneService.DidNotReceive().GenerateLandingZoneAsync(
+        // Verify GenerateAsync was called
+        await _platformLandingZoneService.Received(1).GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>());
     }
@@ -343,7 +344,7 @@ public class GenerateCommandTests
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
             .Returns(new List<string>());
 
-        _platformLandingZoneService.GenerateLandingZoneAsync(
+        _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<string?>(null));
@@ -363,7 +364,7 @@ public class GenerateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -400,7 +401,7 @@ public class GenerateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(statusMessage, result.Message);
@@ -438,7 +439,7 @@ public class GenerateCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        _platformLandingZoneService.DownloadLandingZoneAsync(
+        _platformLandingZoneService.DownloadAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
@@ -470,7 +471,7 @@ public class GenerateCommandTests
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
             .Returns(new List<string>());
 
-        _platformLandingZoneService.GenerateLandingZoneAsync(
+        _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("HTTP request failed"));
@@ -501,7 +502,7 @@ public class GenerateCommandTests
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
             .Returns(new List<string>());
 
-        _platformLandingZoneService.GenerateLandingZoneAsync(
+        _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Missing required parameters"));
@@ -626,7 +627,7 @@ public class GenerateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.GenerateCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Complete: True", result.Message);

@@ -3042,7 +3042,7 @@
       ]
     },
     {
-      "name": "generate_azure_landing_zones",
+      "name": "generate_azure_platform_landing_zones",
       "description": "Generate and download Azure platform landing zone configurations for Azure Migrate projects. Collect parameters, generate landing zones following Azure Landing Zone architecture patterns, and download the generated infrastructure code.",
       "toolMetadata": {
         "destructive": {

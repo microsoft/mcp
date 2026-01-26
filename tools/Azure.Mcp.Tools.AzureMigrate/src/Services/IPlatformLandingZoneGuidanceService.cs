@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using static Azure.Mcp.Tools.AzureMigrate.Services.PlatformLandingZoneGuidanceService;
+
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
@@ -9,10 +11,25 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 public interface IPlatformLandingZoneGuidanceService
 {
     /// <summary>
-    /// Generates landing zone modification guidance based on a user question.
+    /// Fetches platform landing zone modification guidance for a specific scenario.
     /// </summary>
-    /// <param name="question">The user's question or modification request.</param>
+    /// <param name="scenario">The scenario key (e.g., 'bastion', 'ddos', 'policy-assignment').</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The guidance response.</returns>
-    Task<string> GetGuidanceAsync(string question, CancellationToken cancellationToken = default);
+    /// <returns>The official documentation for the scenario.</returns>
+    Task<string> GetGuidanceAsync(string scenario, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all policies organized by archetype.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>Dictionary of archetype name to list of policy names.</returns>
+    Task<Dictionary<string, List<string>>> GetAllPoliciesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Searches for policies matching a search term across all archetypes.
+    /// </summary>
+    /// <param name="searchTerm">Partial or full policy name to search for (case-insensitive).</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>List of matching policies with their archetype locations.</returns>
+    Task<List<PolicyLocationResult>> SearchPoliciesAsync(string searchTerm, CancellationToken cancellationToken = default);
 }
