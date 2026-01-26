@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
@@ -20,7 +21,11 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// </summary>
     /// <param name="configuration">The configuration to read from.</param>
     /// <param name="serviceStartOptions">Optional service start options that can provide the cloud configuration.</param>
-    public AzureCloudConfiguration(IConfiguration configuration, IOptions<ServiceStartOptions>? serviceStartOptions = null)
+    /// <param name="logger">Optional logger for diagnostics.</param>
+    public AzureCloudConfiguration(
+        IConfiguration configuration,
+        IOptions<ServiceStartOptions>? serviceStartOptions = null,
+        ILogger<AzureCloudConfiguration>? logger = null)
     {
         // Try to get cloud configuration from various sources in priority order:
         // 1. ServiceStartOptions (--cloud command line argument)
@@ -32,6 +37,12 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
         (AuthorityHost, ArmEnvironment) = ParseCloudValue(cloudValue);
+
+        logger?.LogDebug(
+            "Azure cloud configuration initialized. Cloud value: '{CloudValue}', AuthorityHost: '{AuthorityHost}', ArmEnvironment: '{ArmEnvironment}'",
+            cloudValue ?? "(not specified)",
+            AuthorityHost,
+            ArmEnvironment);
     }
 
     /// <inheritdoc/>

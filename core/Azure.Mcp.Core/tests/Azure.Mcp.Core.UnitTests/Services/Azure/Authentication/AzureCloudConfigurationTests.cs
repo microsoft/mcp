@@ -369,4 +369,58 @@ public class AzureCloudConfigurationTests
         // Assert
         Assert.Equal(new Uri("https://login.chinacloudapi.cn"), cloudConfig.AuthorityHost);
     }
+
+    /// <summary>
+    /// Tests that public cloud ARM environment has the correct management endpoint.
+    /// </summary>
+    [Fact]
+    public void ArmEnvironment_PublicCloud_HasCorrectEndpoint()
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureCloud" })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(new Uri("https://management.azure.com"), cloudConfig.ArmEnvironment.Endpoint);
+    }
+
+    /// <summary>
+    /// Tests that China cloud ARM environment has the correct management endpoint.
+    /// </summary>
+    [Fact]
+    public void ArmEnvironment_ChinaCloud_HasCorrectEndpoint()
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureChinaCloud" })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(new Uri("https://management.chinacloudapi.cn"), cloudConfig.ArmEnvironment.Endpoint);
+    }
+
+    /// <summary>
+    /// Tests that US Government cloud ARM environment has the correct management endpoint.
+    /// </summary>
+    [Fact]
+    public void ArmEnvironment_GovernmentCloud_HasCorrectEndpoint()
+    {
+        // Arrange
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureUSGovernment" })
+            .Build();
+
+        // Act
+        var cloudConfig = new AzureCloudConfiguration(config);
+
+        // Assert
+        Assert.Equal(new Uri("https://management.usgovcloudapi.net"), cloudConfig.ArmEnvironment.Endpoint);
+    }
 }
