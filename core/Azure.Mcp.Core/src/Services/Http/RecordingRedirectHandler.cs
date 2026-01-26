@@ -12,6 +12,7 @@ namespace Azure.Mcp.Core.Services.Http;
 /// </summary>
 internal sealed class RecordingRedirectHandler : DelegatingHandler
 {
+    private const string CosmosSerializationHeader = "x-ms-cosmos-supported-serialization-formats";
     private readonly Uri _proxyUri;
 
     public RecordingRedirectHandler(Uri proxyUri)
@@ -42,6 +43,12 @@ internal sealed class RecordingRedirectHandler : DelegatingHandler
                 Path = string.Empty
             };
             message.Headers.Add("x-recording-upstream-base-uri", upstream.Uri.ToString());
+        }
+
+        if (message.Headers.Contains(CosmosSerializationHeader))
+        {
+            // Force Cosmos query responses to JSON so test proxy stores them accurately
+            message.Headers.Remove(CosmosSerializationHeader);
         }
 
         // Rewrite target host/scheme/port
