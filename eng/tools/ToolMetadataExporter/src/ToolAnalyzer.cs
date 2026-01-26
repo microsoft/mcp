@@ -182,9 +182,13 @@ public class ToolAnalyzer
             {
                 await File.WriteAllBytesAsync(outputFile, ms.ToArray(), cancellationToken);
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                _logger.LogError(ex, "Error writing to {FileName}", outputFile);
+                _logger.LogError(ex, "IO error writing to {FileName}", outputFile);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "Unauthorized access writing to {FileName}", outputFile);
             }
         }
 
