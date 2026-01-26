@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Text;
+using System.Threading;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
@@ -12,11 +14,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
-    protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
+    private readonly TestProxyManager _proxyManager = TestProxyManager.GetInstance();
+
+    protected TestProxy? Proxy { get; private set; }
 
     protected string RecordingId { get; private set; } = string.Empty;
 
@@ -119,9 +123,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         return value;
     }
 
-    protected TestProxyFixture Fixture => fixture;
-
-    protected IRecordingPathResolver PathResolver => fixture.PathResolver;
+    protected IRecordingPathResolver PathResolver => _proxyManager.PathResolver;
 
     protected virtual bool IsAsync => false;
 
@@ -138,17 +140,13 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // load settings first to determine test mode
         await LoadSettingsAsync();
 
-        if (fixture.Proxy == null)
-        {
-            // start the proxy if needed
-            await StartProxyAsync(fixture);
-        }
-
-        // start MCP client with proxy URL available
-        await base.InitializeAsyncInternal(fixture);
-
-        // start recording/playback session
+        // start recording/playback session to capture recording id before MCP startup
         await StartRecordOrPlayback();
+
+        var currentRecordingId = string.IsNullOrWhiteSpace(RecordingId) ? null : RecordingId;
+
+        // start MCP client with proxy URL available and recording context
+        await base.InitializeAsyncInternal(_proxyManager, currentRecordingId);
 
         // apply custom matcher if test has attribute
         await ApplyAttributeMatcherSettings();
@@ -211,34 +209,37 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
     }
 
-    public async Task StartProxyAsync(TestProxyFixture fixture)
+    public async Task StartProxyAsync()
     {
-        // we will use the same proxy instance throughout the test class instances, so we only need to start it if not already started.
-        if (TestMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
+        if (TestMode is not (TestMode.Record or TestMode.Playback))
+        {
+            return;
+        }
+
+        if (_proxyManager.Proxy == null)
         {
             var assetsPath = PathResolver.GetAssetsJson(GetType());
-            await fixture.StartProxyAsync(assetsPath);
-            Proxy = fixture.Proxy;
+            await _proxyManager.StartProxyAsync(assetsPath);
+        }
 
-            // onetime on starting the proxy, we have initialized the livetest settings so lets add some additional sanitizers by default
-            if (EnableDefaultSanitizerAdditions)
-            {
-                PopulateDefaultSanitizers();
-            }
+        Proxy = _proxyManager.Proxy;
 
-            // onetime registration of default sanitizers
-            // and deregistering default sanitizers that we don't want
-            if (Proxy != null)
-            {
-                await DisableSanitizersAsync();
-                await ApplySanitizersAsync();
+        if (Proxy == null)
+        {
+            return;
+        }
 
-                // set session matcher for this class if specified
-                if (TestMatcher != null)
-                {
-                    await SetMatcher(TestMatcher);
-                }
-            }
+        if (EnableDefaultSanitizerAdditions)
+        {
+            PopulateDefaultSanitizers();
+        }
+
+        await DisableSanitizersAsync();
+        await ApplySanitizersAsync();
+
+        if (TestMatcher != null)
+        {
+            await SetMatcher(TestMatcher);
         }
     }
 
@@ -313,6 +314,12 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         if (TestMode == TestMode.Live)
         {
             return;
+        }
+
+        if (Proxy == null)
+        {
+            // Start proxy if not already started
+            await StartProxyAsync();
         }
 
         if (Proxy == null)

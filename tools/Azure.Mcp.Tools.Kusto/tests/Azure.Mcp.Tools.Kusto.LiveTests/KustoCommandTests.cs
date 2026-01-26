@@ -22,9 +22,9 @@ public class KustoCommandTests : RecordedCommandTestsBase
     private const string Sanitized = "Sanitized";
     private readonly ServiceProvider _httpClientProvider;
 
-    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
+    public KustoCommandTests(ITestOutputHelper output) : base(output)
     {
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create();
     }
 
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } = new List<BodyKeySanitizer>

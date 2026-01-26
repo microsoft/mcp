@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.LiveTests;
 
-public class VirtualDesktopCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class VirtualDesktopCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
     {

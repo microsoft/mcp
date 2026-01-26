@@ -130,14 +130,13 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     private string RecordingFileLocation = string.Empty;
     private string TestDisplayName = string.Empty;
     private readonly TemporaryAssetsPathResolver Resolver = new();
-    private readonly TestProxyFixture Fixture;
     private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
     private RecordedCommandTestHarness? DefaultHarness;
 
     public RecordedCommandTestsBaseTest()
     {
-        Fixture = new TestProxyFixture();
-        Fixture.ConfigurePathResolver(Resolver);
+        var manager = TestProxyManager.GetInstance();
+        manager.ConfigurePathResolver(Resolver);
     }
 
     [Fact]
@@ -145,13 +144,14 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     {
         await DefaultHarness!.InitializeAsync();
 
-        Assert.NotNull(Fixture.Proxy);
-        Assert.False(string.IsNullOrWhiteSpace(Fixture.Proxy!.BaseUri));
+        var proxyManager = TestProxyManager.GetInstance();
+        Assert.NotNull(proxyManager.Proxy);
+        Assert.False(string.IsNullOrWhiteSpace(proxyManager.Proxy!.BaseUri));
 
         DefaultHarness!.RegisterVariable("sampleKey", "sampleValue");
         await DefaultHarness!.DisposeAsync();
 
-        var recordingPath = Path.Combine(Fixture.PathResolver.RepositoryRoot, ".assets", "437w6mqk5i", RecordingFileLocation);
+        var recordingPath = Path.Combine(proxyManager.PathResolver.RepositoryRoot, ".assets", "437w6mqk5i", RecordingFileLocation);
 
         Assert.True(File.Exists(recordingPath));
 
@@ -169,7 +169,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.True(activeMatcher!.CompareBodies);
         Assert.True(activeMatcher.IgnoreQueryOrdering);
 
-        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput)
         {
             DesiredMode = TestMode.Record,
             EnableDefaultSanitizerAdditions = false,
@@ -180,7 +180,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         DefaultHarness.RegisterVariable("attrKey", "attrValue");
         await DefaultHarness.DisposeAsync();
 
-        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput)
         {
             DesiredMode = TestMode.Playback,
             EnableDefaultSanitizerAdditions = false,
@@ -226,7 +226,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput)
         {
             DesiredMode = TestMode.Record,
             TestMatcher = new CustomDefaultMatcher
@@ -256,7 +256,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         DefaultHarness.RegisterVariable("roundtrip", "value");
         await DefaultHarness.DisposeAsync();
 
-        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput)
         {
             DesiredMode = TestMode.Playback,
         };
@@ -270,7 +270,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     {
         TestDisplayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
 
-        var harness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var harness = new RecordedCommandTestHarness(CollectedOutput)
         {
             DesiredMode = TestMode.Record
         };
@@ -294,8 +294,8 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
             File.Delete(RecordingFileLocation);
         }
 
-        // automatically collect the proxy fixture so that writers of tests don't need to remember to do so and the proxy process doesn't run forever
-        await Fixture.DisposeAsync();
+        // automatically collect the proxy manager so that writers of tests don't need to remember to do so and the proxy process doesn't run forever
+        TestProxyManager.GetInstance().Dispose();
         Resolver.Dispose();
     }
 }

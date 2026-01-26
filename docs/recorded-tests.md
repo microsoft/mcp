@@ -154,7 +154,7 @@ This means values that don't make sense for `sanitization` can be propagated to 
 #### An example of setting each sanitizer type
 
 ```cs
-public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+public class SampleRecordedTest(ITestOutputHelper output) : RecordedCommandTestsBase(output) {
 
     // given a json path
     public override List<BodyKeySanitizer> BodyKeySanitizers => new()
@@ -221,7 +221,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 #### Setting the matcher
 
 ```cs
-public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+public class SampleRecordedTest(ITestOutputHelper output) : RecordedCommandTestsBase(output) {
     public override CustomDefaultMatcher? TestMatcher { get; set; } = new CustomDefaultMatcher()
     {
         // By default, request and response bodies are compared during matching. You can disable this by setting CompareBodies to false.

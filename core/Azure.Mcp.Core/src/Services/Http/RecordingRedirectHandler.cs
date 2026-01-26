@@ -44,6 +44,16 @@ internal sealed class RecordingRedirectHandler : DelegatingHandler
             message.Headers.Add("x-recording-upstream-base-uri", upstream.Uri.ToString());
         }
 
+        // Inject x-recording-id header if RECORDING_ID environment variable is set
+        if (!message.Headers.Contains("x-recording-id"))
+        {
+            var recordingId = Environment.GetEnvironmentVariable("RECORDING_ID");
+            if (!string.IsNullOrWhiteSpace(recordingId))
+            {
+                message.Headers.Add("x-recording-id", recordingId);
+            }
+        }
+
         // Rewrite target host/scheme/port
         var builder = new UriBuilder(_proxyUri)
         {

@@ -33,13 +33,13 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     /// </summary>
     public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493", "AZSDK3447"];
 
-    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
+    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create();
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);

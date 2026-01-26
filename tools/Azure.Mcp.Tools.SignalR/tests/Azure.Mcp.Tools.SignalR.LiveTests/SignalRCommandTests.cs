@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.SignalR.LiveTests;
 
-public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public sealed class SignalRCommandTests(ITestOutputHelper output) : RecordedCommandTestsBase(output)
 {
     private const string SanitizedValue = "Sanitized";
 
