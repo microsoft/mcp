@@ -134,30 +134,6 @@ public class ToolAnalyzerTests : IDisposable
     }
 
     [Fact]
-    public async Task RunAsync_ReturnsEarly_WhenToolsListIsEmpty()
-    {
-        // Arrange
-        var toolsListResult = new ListToolsResult() { Tools = [] };
-        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
-
-        var serverName = Task.FromResult("test-server");
-        var serverVersion = Task.FromResult("1.0.0");
-
-        _azmcpProgram.GetServerNameAsync().Returns(serverName);
-        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
-        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
-
-        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
-
-        // Act
-        await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
-
-        // Assert
-        await _datastore.DidNotReceive().GetAvailableToolsAsync(Arg.Any<CancellationToken>());
-        await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task RunAsync_ThrowsException_WhenToolHasNoId()
     {
         // Arrange
@@ -213,6 +189,45 @@ public class ToolAnalyzerTests : IDisposable
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken));
         Assert.Contains("Tool without a tool area", exception.Message);
+    }
+
+    public static TheoryData<IList<AzureMcpTool>, int> RunAsync_Updates_WhenToolsListIsEmptyArgs =>
+        new()
+        {
+            { new List<AzureMcpTool> { new("tool-1", "area command", "area") }, 1 },
+            { new List<AzureMcpTool>(), 0 },
+        };
+
+    /// <summary>
+    /// Verify the case that if the current tools list is empty, we check against the datastore.
+    /// Happens if previous version there were tools, but in the current version there are none.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(RunAsync_Updates_WhenToolsListIsEmptyArgs))]
+    public async Task RunAsync_Updates_WhenToolsListIsEmpty(IList<AzureMcpTool> existingTools, int numberOfExpectedDatabaseUpdateCalls)
+    {
+        // Arrange
+        var toolsListResult = new ListToolsResult() { Tools = [] };
+        var result = Task.FromResult<ListToolsResult?>(toolsListResult);
+
+        var serverName = Task.FromResult("test-server");
+        var serverVersion = Task.FromResult("1.0.0");
+
+        _azmcpProgram.GetServerNameAsync().Returns(serverName);
+        _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
+        _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
+
+        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(existingTools));
+
+        var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
+
+        // Act
+        await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
+
+        // Assert
+        await _datastore.Received(1).GetAvailableToolsAsync(Arg.Any<CancellationToken>());
+        await _datastore.Received(numberOfExpectedDatabaseUpdateCalls)
+            .AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
