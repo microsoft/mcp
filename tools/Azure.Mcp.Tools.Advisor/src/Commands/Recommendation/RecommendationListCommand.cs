@@ -55,7 +55,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false), 
+            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
                 AdvisorJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)
