@@ -5,6 +5,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using NSubstitute;
@@ -22,6 +23,12 @@ public class BaseAzureServiceTests
 
     public BaseAzureServiceTests()
     {
+        // Mock CloudConfiguration to return a valid ArmEnvironment
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
+        _tenantService.CloudConfiguration.Returns(cloudConfig);
+
         _azureService = new TestAzureService(_tenantService);
         _tenantService.GetTenantId(TenantName, Arg.Any<CancellationToken>()).Returns(TenantId);
         _tenantService.GetTokenCredentialAsync(

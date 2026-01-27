@@ -81,4 +81,12 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("supportLoggingFolder")]
     public string? SupportLoggingFolder { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the Azure cloud environment for authentication.
+    /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment)
+    /// or custom authority host URLs starting with https://.
+    /// </summary>
+    [JsonPropertyName("cloud")]
+    public string? Cloud { get; set; } = null;
 }

@@ -219,6 +219,7 @@ public abstract class BaseAzureService
             TokenCredential credential = await GetCredential(tenantId, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
             options.Transport = new HttpClientTransport(TenantService.GetClient());
+            options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
