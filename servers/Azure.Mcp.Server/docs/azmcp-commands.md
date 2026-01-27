@@ -1816,6 +1816,129 @@ azmcp managedlustre fs blob import delete --subscription <subscription> \
                                          --job-name <job-name>
 ```
 
+### Azure Migrate Operations
+
+#### Platform Landing Zone Modification Guidance
+
+```bash
+# Fetch official Azure Landing Zone modification guidance for a specific scenario
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario <scenario> \
+                                                   [--policy-name <policy-name>] \
+                                                   [--list-policies <true|false>]
+```
+
+**Available Scenarios:**
+
+| Scenario | Description |
+|----------|-------------|
+| `resource-names` | Update resource naming prefixes and suffixes |
+| `management-groups` | Customize management group names and IDs |
+| `ddos` | Enable or disable DDoS protection plan |
+| `bastion` | Turn off Bastion host |
+| `dns` | Turn off Private DNS zones and resolvers |
+| `gateways` | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
+| `regions` | Add or remove secondary regions |
+| `ip-addresses` | Adjust CIDR ranges and IP address space |
+| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce |
+| `policy-assignment` | Remove or disable a policy assignment |
+| `ama` | Turn off Azure Monitoring Agent |
+| `amba` | Deploy Azure Monitoring Baseline Alerts |
+| `defender` | Turn off Defender Plans |
+| `zero-trust` | Implement Zero Trust Networking |
+| `slz` | Implement Sovereign Landing Zone controls |
+
+**Policy-related Options:**
+- `--policy-name`: Search for a specific policy by partial or full name
+- `--list-policies`: Set to `true` to list ALL policies organized by archetype
+
+**Examples:**
+```bash
+# Get guidance for enabling DDoS protection
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario ddos
+
+# Search for policies related to DDoS
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-enforcement \
+                                                   --policy-name ddos
+
+# List all available policies by archetype
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-assignment \
+                                                   --list-policies true
+```
+
+#### Platform Landing Zone Management
+
+```bash
+# Generate, download, and manage Azure Platform Landing Zones
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --migrate-project-name <migrate-project-name> \
+                                               --action <action> \
+                                               [action-specific-parameters]
+```
+
+**Actions:**
+
+1. **Check Existing** (`--action check`)
+   ```bash
+   # Check if a platform landing zone already exists
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action check
+   ```
+
+2. **Update Parameters** (`--action update`)
+   ```bash
+   # Cache all parameters for generation of the platform landing zone
+   # Defaults are applied automatically if not specified
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action update \
+                                                  [--region-type <single|multi>] \
+                                                  [--firewall-type <azurefirewall|nva>] \
+                                                  [--network-architecture <hubspoke|vwan>] \
+                                                  [--version-control-system <local|github|azuredevops>] \
+                                                  [--regions <comma-separated-regions>] \
+                                                  [--environment-name <environment-name>] \
+                                                  [--organization-name <organization-name>] \
+                                                  [--identity-subscription-id <subscription-id>] \
+                                                  [--management-subscription-id <subscription-id>] \
+                                                  [--connectivity-subscription-id <subscription-id>]
+   ```
+
+3. **Generate Landing Zone** (`--action generate`)
+   ```bash
+   # Generate the platform landing zone
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action generate
+   ```
+
+4. **Download Landing Zone** (`--action download`)
+   ```bash
+   # Download generated landing zone files to local workspace
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action download
+   ```
+
+5. **View Status** (`--action status`)
+   ```bash
+   # View cached parameters
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action status
+   ```
+
 ### Azure Native ISV Operations
 
 ```bash

@@ -960,6 +960,11 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Get details about my Storage container"
 * "Upload my file to the blob container"
 
+### 🔄 Azure Migrate
+
+* "Generate a Platform Landing Zone"
+* "Turn off DDoS protection in my Platform Landing Zone"
+* "Turn off Bastion host in my Platform Landing Zone"
 
 ## Complete List of Supported Azure Services
 
@@ -990,6 +995,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
+- 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Logging, metrics, and health monitoring
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
