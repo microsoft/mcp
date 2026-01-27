@@ -57,6 +57,21 @@ try {
         Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit."
     }
 
+    $result = & "$PSScriptRoot/Test-ToolNameCharacters.ps1" -ToolsDirectory "$RepoRoot/tools"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Tool name character validation failed"
+        Write-Host "$($result.Violations.Count) tool(s) with invalid characters found. Review the output below for details."
+        
+        foreach ($violation in $result.Violations) {
+            Write-Host "Tool Area: $($violation.ToolArea), Tool Name: $($violation.ToolName), File: $($violation.FileName)"
+        }
+        
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Tool name character validation passed."
+    }
+
     # Run tool id validation
     $toolIdResult = & "$PSScriptRoot/Test-ToolId.ps1"
 
