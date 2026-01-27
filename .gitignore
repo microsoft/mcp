@@ -27,3 +27,4 @@ generated/
 eng/tools/ToolDescriptionEvaluator/prompts.json
 eng/tools/ToolDescriptionEvaluator/results.md
 eng/tools/ToolDescriptionEvaluator/tools.json
+deploy-log.txt

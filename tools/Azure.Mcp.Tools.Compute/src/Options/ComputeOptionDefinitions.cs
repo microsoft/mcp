@@ -25,13 +25,13 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> VmssName = new($"--{VmssNameName}", "--name")
     {
         Description = "The name of the virtual machine scale set",
-        Required = true
+        Required = false
     };
 
     public static readonly Option<string> InstanceId = new($"--{InstanceIdName}")
     {
         Description = "The instance ID of the virtual machine in the scale set",
-        Required = true
+        Required = false
     };
 
     public static readonly Option<string> Location = new($"--{LocationName}", "-l")
