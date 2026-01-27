@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.UnitTests.Recommendation;
@@ -57,7 +59,7 @@ public class RecommendationListCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns([]);
+                .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -94,7 +96,7 @@ public class RecommendationListCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedRecommendations);
+            .Returns(new ResourceQueryResults<Models.Recommendation>(expectedRecommendations, false));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
@@ -132,7 +134,7 @@ public class RecommendationListCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
@@ -160,7 +162,7 @@ public class RecommendationListCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.Recommendation>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
@@ -180,7 +182,7 @@ public class RecommendationListCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _advisorService.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.Recommendation>>(forbiddenException));
+            .ThrowsAsync(forbiddenException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg"]);
 

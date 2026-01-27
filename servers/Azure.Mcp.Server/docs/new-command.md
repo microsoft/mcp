@@ -202,7 +202,7 @@ Choose the appropriate base class for your service based on the operations neede
    public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
        : BaseAzureResourceService(subscriptionService, tenantService), IMyService
    {
-       public async Task<List<MyResource>> ListResourcesAsync(
+       public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
            RetryPolicyOptions? retryPolicy,

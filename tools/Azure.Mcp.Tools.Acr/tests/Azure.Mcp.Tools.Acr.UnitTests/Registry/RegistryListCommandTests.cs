@@ -6,13 +6,16 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
+using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
@@ -59,11 +62,11 @@ public class RegistryListCommandTests
         if (shouldSucceed)
         {
             _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(
+                .Returns(new ResourceQueryResults<AcrRegistryInfo>(
                 [
                     new("registry1", "eastus", "registry1.azurecr.io", "Basic", "Basic"),
                     new("registry2", "eastus2", "registry2.azurecr.io", "Standard", "Standard")
-                ]);
+                ], false));
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -88,7 +91,7 @@ public class RegistryListCommandTests
     {
         // Arrange
         _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.AcrRegistryInfo>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
@@ -105,7 +108,7 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_FiltersById_ReturnsFilteredRegistries()
     {
         // Arrange
-        var expectedRegistries = new List<Models.AcrRegistryInfo> { new("registry1", null, null, null, null) };
+        var expectedRegistries = new ResourceQueryResults<AcrRegistryInfo>([new("registry1", null, null, null, null)], false);
         _service.ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedRegistries);
 
@@ -125,7 +128,7 @@ public class RegistryListCommandTests
     {
         // Arrange
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<AcrRegistryInfo>([], false));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
@@ -147,9 +150,9 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ReturnsExpectedRegistryProperties()
     {
         // Arrange
-        var registry = new Models.AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
+        var registry = new AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns([registry]);
+            .Returns(new ResourceQueryResults<AcrRegistryInfo>([registry], false));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 

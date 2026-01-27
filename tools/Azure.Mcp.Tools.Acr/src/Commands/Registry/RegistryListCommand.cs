@@ -56,7 +56,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);
         }
         catch (Exception ex)
         {
@@ -69,5 +69,5 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
         return context.Response;
     }
 
-    internal record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries);
+    internal record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
 }

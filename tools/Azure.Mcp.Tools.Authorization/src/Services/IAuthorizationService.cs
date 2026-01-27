@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Models;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
@@ -17,7 +18,7 @@ public interface IAuthorizationService
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
     /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
     /// <returns>List of role assignments in the format "Role Definition ID: Principal ID"</returns>
-    Task<List<RoleAssignment>> ListRoleAssignmentsAsync(
+    Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,
         string scope,
         string? tenantId = null,

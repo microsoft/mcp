@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
 public interface IKustoService
 {
-    Task<List<string>> ListClustersAsync(
+    Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

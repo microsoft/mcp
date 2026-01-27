@@ -15,7 +15,7 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
 {
     private readonly ILogger<AdvisorService> _logger = logger;
 
-    public async Task<List<Recommendation>> ListRecommendationsAsync(
+    public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
