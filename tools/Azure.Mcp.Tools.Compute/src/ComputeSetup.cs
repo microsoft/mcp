@@ -22,15 +22,9 @@ public class ComputeSetup : IAreaSetup
 
         // VM commands
         services.AddSingleton<VmGetCommand>();
-        services.AddSingleton<VmInstanceViewCommand>();
-        services.AddSingleton<VmSizesListCommand>();
 
         // VMSS commands
         services.AddSingleton<VmssGetCommand>();
-        services.AddSingleton<VmssListCommand>();
-        services.AddSingleton<VmssVmsListCommand>();
-        services.AddSingleton<VmssVmGetCommand>();
-        services.AddSingleton<VmssRollingUpgradeStatusCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -55,12 +49,6 @@ public class ComputeSetup : IAreaSetup
         var vmGet = serviceProvider.GetRequiredService<VmGetCommand>();
         vm.AddCommand(vmGet.Name, vmGet);
 
-        var vmInstanceView = serviceProvider.GetRequiredService<VmInstanceViewCommand>();
-        vm.AddCommand(vmInstanceView.Name, vmInstanceView);
-
-        var vmSizesList = serviceProvider.GetRequiredService<VmSizesListCommand>();
-        vm.AddCommand(vmSizesList.Name, vmSizesList);
-
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
@@ -68,18 +56,6 @@ public class ComputeSetup : IAreaSetup
         // Register VMSS commands
         var vmssGet = serviceProvider.GetRequiredService<VmssGetCommand>();
         vmss.AddCommand(vmssGet.Name, vmssGet);
-
-        var vmssList = serviceProvider.GetRequiredService<VmssListCommand>();
-        vmss.AddCommand(vmssList.Name, vmssList);
-
-        var vmssVmsList = serviceProvider.GetRequiredService<VmssVmsListCommand>();
-        vmss.AddCommand(vmssVmsList.Name, vmssVmsList);
-
-        var vmssVmGet = serviceProvider.GetRequiredService<VmssVmGetCommand>();
-        vmss.AddCommand(vmssVmGet.Name, vmssVmGet);
-
-        var vmssRollingUpgradeStatus = serviceProvider.GetRequiredService<VmssRollingUpgradeStatusCommand>();
-        vmss.AddCommand(vmssRollingUpgradeStatus.Name, vmssRollingUpgradeStatus);
 
         return compute;
     }

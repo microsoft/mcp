@@ -28,9 +28,9 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
     public override string Description =>
         """
         Retrieves information about Azure Virtual Machine(s). Behavior depends on provided parameters:
-        - With --vm-name: Gets detailed information about a specific VM (requires --resource-group). Optionally include --instance-view for runtime status.
+        - With --vm-name and --resource-group: Gets detailed information about a specific VM. Optionally include --instance-view for runtime status.
         - With --resource-group only: Lists all VMs in the specified resource group.
-        - With neither: Lists all VMs in the subscription.
+        - Without --resource-group: Lists all VMs in the subscription.
         Returns VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
         """;
 
@@ -49,10 +49,6 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-
-        // Make resource-group optional for listing scenarios
-        command.Options.Remove(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
 
         // Add optional vm-name
         command.Options.Add(ComputeOptionDefinitions.VmName);
@@ -78,11 +74,11 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Custom validation: If vm-name is specified, resource-group is required
+        // Custom validation: If vm-name is specified, resource-group is required (can't get specific VM without resource-group)
         if (!string.IsNullOrEmpty(options.VmName) && string.IsNullOrEmpty(options.ResourceGroup))
         {
             context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "When --vm-name is specified, --resource-group is required.";
+            context.Response.Message = "The --resource-group option is required when retrieving a specific VM with --vm-name.";
             return context.Response;
         }
 
@@ -129,11 +125,11 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
                         ComputeJsonContext.Default.VmGetSingleResult);
                 }
             }
-            // Scenario 2 & 3: List VMs (in resource group or subscription)
+            // Scenario 2: List VMs in resource group
             else
             {
                 var vms = await computeService.ListVmsAsync(
-                    options.ResourceGroup,
+                    options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,

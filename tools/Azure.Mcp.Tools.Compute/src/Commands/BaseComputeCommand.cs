@@ -19,7 +19,7 @@ public abstract class BaseComputeCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
     }
 
     protected override T BindOptions(ParseResult parseResult)

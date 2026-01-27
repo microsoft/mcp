@@ -612,6 +612,59 @@ azmcp compute vm get --subscription "my-subscription" \
 | `--vm-name`, `--name` | No | Name of the virtual machine |
 | `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
 
+#### Virtual Machine Scale Sets
+
+```bash
+# Get Virtual Machine Scale Set(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription <subscription> \
+                       [--resource-group <resource-group>] \
+                       [--vmss-name <vmss-name>] \
+                       [--instance-id <instance-id>]
+
+# Examples:
+
+# List all VMSS in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription"
+
+# List all VMSS in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg"
+
+# Get specific VMSS details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss"
+
+# Get specific VM instance in a VMSS
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss" \
+                       --instance-id "0"
+```
+
+**Command Behavior:**
+- **With `--instance-id`**: Gets detailed information about a specific VM instance in the scale set (requires `--vmss-name` and `--resource-group`).
+- **With `--vmss-name`**: Gets detailed information about a specific VMSS (requires `--resource-group`).
+- **With `--resource-group` only**: Lists all VMSS in the specified resource group.
+- **With neither**: Lists all VMSS in the subscription.
+
+**Returns:**
+- VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, overprovision setting, zones, and tags.
+- When `--instance-id` is specified: Returns VM instance information including instance ID, name, location, VM size, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vmss-name`) |
+| `--vmss-name` | No | Name of the virtual machine scale set |
+| `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
+
 ### Azure Communication Services Operations
 
 #### Email

@@ -40,13 +40,6 @@ public interface IComputeService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<VmSizeInfo>> ListVmSizesAsync(
-        string location,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
     // Virtual Machine Scale Set operations
     Task<VmssInfo> GetVmssAsync(
         string vmssName,
@@ -74,14 +67,6 @@ public interface IComputeService
     Task<VmssVmInfo> GetVmssVmAsync(
         string vmssName,
         string instanceId,
-        string resourceGroup,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    Task<VmssRollingUpgradeStatus> GetVmssRollingUpgradeStatusAsync(
-        string vmssName,
         string resourceGroup,
         string subscription,
         string? tenant = null,

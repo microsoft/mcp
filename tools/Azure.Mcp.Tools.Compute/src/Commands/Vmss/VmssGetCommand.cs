@@ -28,10 +28,10 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
     public override string Description =>
         """
         Retrieves information about Azure Virtual Machine Scale Set(s) and their VM instances. Behavior depends on provided parameters:
-        - With --instance-id: Gets detailed information about a specific VM instance in a scale set (requires --vmss-name and --resource-group).
-        - With --vmss-name: Gets detailed information about a specific VMSS (requires --resource-group).
+        - With --instance-id, --vmss-name, and --resource-group: Gets detailed information about a specific VM instance in a scale set.
+        - With --vmss-name and --resource-group: Gets detailed information about a specific VMSS.
         - With --resource-group only: Lists all scale sets in the specified resource group.
-        - With neither: Lists all scale sets in the subscription.
+        - Without --resource-group: Lists all scale sets in the subscription.
         Returns VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, zones, and tags.
         """;
 
@@ -50,10 +50,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-
-        // Make resource-group optional for listing scenarios
-        command.Options.Remove(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
 
         // Add optional vmss-name
         command.Options.Add(ComputeOptionDefinitions.VmssName);
@@ -79,28 +75,19 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Custom validation: If instance-id is specified, vmss-name and resource-group are required
-        if (!string.IsNullOrEmpty(options.InstanceId))
-        {
-            if (string.IsNullOrEmpty(options.VmssName))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "When --instance-id is specified, --vmss-name is required.";
-                return context.Response;
-            }
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "When --instance-id is specified, --resource-group is required.";
-                return context.Response;
-            }
-        }
-
-        // Custom validation: If vmss-name is specified, resource-group is required
+        // Custom validation: If vmss-name is specified, resource-group is required (can't get specific VMSS without resource-group)
         if (!string.IsNullOrEmpty(options.VmssName) && string.IsNullOrEmpty(options.ResourceGroup))
         {
             context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "When --vmss-name is specified, --resource-group is required.";
+            context.Response.Message = "The --resource-group option is required when retrieving a specific VMSS with --vmss-name.";
+            return context.Response;
+        }
+
+        // Custom validation: If instance-id is specified, vmss-name is required
+        if (!string.IsNullOrEmpty(options.InstanceId) && string.IsNullOrEmpty(options.VmssName))
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = "When --instance-id is specified, --vmss-name is required.";
             return context.Response;
         }
 
@@ -139,11 +126,11 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
                     new VmssGetSingleResult(vmss),
                     ComputeJsonContext.Default.VmssGetSingleResult);
             }
-            // Scenario 3 & 4: List VMSS (in resource group or subscription)
+            // Scenario 3: List VMSS in resource group
             else
             {
                 var vmssList = await computeService.ListVmssAsync(
-                    options.ResourceGroup,
+                    options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,

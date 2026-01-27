@@ -124,26 +124,6 @@ public sealed class ComputeService(
         return (vmInfo, vmInstanceView);
     }
 
-    public async Task<List<VmSizeInfo>> ListVmSizesAsync(
-        string location,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(
-            SubscriptionResource.CreateResourceIdentifier(subscription));
-
-        var sizes = new List<VmSizeInfo>();
-        await foreach (var size in subscriptionResource.GetVirtualMachineSizesAsync(location, cancellationToken: cancellationToken))
-        {
-            sizes.Add(MapToVmSizeInfo(size));
-        }
-
-        return sizes;
-    }
-
     public async Task<VmssInfo> GetVmssAsync(
         string vmssName,
         string resourceGroup,
@@ -250,30 +230,6 @@ public sealed class ComputeService(
         return MapToVmssVmInfo(vmResource.Value.Data);
     }
 
-    public async Task<VmssRollingUpgradeStatus> GetVmssRollingUpgradeStatusAsync(
-        string vmssName,
-        string resourceGroup,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(
-            SubscriptionResource.CreateResourceIdentifier(subscription));
-
-        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-        var vmssResource = await rgResource.Value
-            .GetVirtualMachineScaleSets()
-            .GetAsync(vmssName, cancellationToken: cancellationToken);
-
-        var upgradeStatus = await vmssResource.Value
-            .GetVirtualMachineScaleSetRollingUpgrade()
-            .GetAsync(cancellationToken);
-
-        return MapToVmssRollingUpgradeStatus(vmssName, upgradeStatus.Value.Data);
-    }
-
     private static VmInfo MapToVmInfo(VirtualMachineData data)
     {
         return new VmInfo(
@@ -333,18 +289,6 @@ public sealed class ComputeService(
         );
     }
 
-    private static VmSizeInfo MapToVmSizeInfo(VirtualMachineSize data)
-    {
-        return new VmSizeInfo(
-            Name: data.Name,
-            NumberOfCores: data.NumberOfCores,
-            MemoryInMB: data.MemoryInMB,
-            MaxDataDiskCount: data.MaxDataDiskCount,
-            OsDiskSizeInMB: data.OSDiskSizeInMB,
-            ResourceDiskSizeInMB: data.ResourceDiskSizeInMB
-        );
-    }
-
     private static VmssInfo MapToVmssInfo(VirtualMachineScaleSetData data)
     {
         return new VmssInfo(
@@ -376,33 +320,6 @@ public sealed class ComputeService(
             OsType: data.StorageProfile?.OSDisk?.OSType?.ToString(),
             Zones: data.Zones?.ToList(),
             Tags: data.Tags as IReadOnlyDictionary<string, string>
-        );
-    }
-
-    private static VmssRollingUpgradeStatus MapToVmssRollingUpgradeStatus(string vmssName, VirtualMachineScaleSetRollingUpgradeData data)
-    {
-        return new VmssRollingUpgradeStatus(
-            Name: vmssName,
-            Policy: data.Policy != null ? new UpgradePolicyInfo(
-                Mode: null,
-                MaxBatchInstancePercent: data.Policy.MaxBatchInstancePercent,
-                MaxUnhealthyInstancePercent: data.Policy.MaxUnhealthyInstancePercent,
-                MaxUnhealthyUpgradedInstancePercent: data.Policy.MaxUnhealthyUpgradedInstancePercent,
-                PauseTimeBetweenBatches: data.Policy.PauseTimeBetweenBatches?.ToString()
-            ) : null,
-            RunningStatus: data.RunningStatus != null ? new Models.RollingUpgradeRunningStatus(
-                Code: data.RunningStatus.Code?.ToString(),
-                StartTime: data.RunningStatus.StartOn,  // Changed from StartTime
-                LastAction: data.RunningStatus.LastAction?.ToString(),
-                LastActionTime: data.RunningStatus.LastActionOn  // Changed from LastActionTime
-            ) : null,
-            Progress: data.Progress != null ? new Models.RollingUpgradeProgressInfo(
-                SuccessfulInstanceCount: data.Progress.SuccessfulInstanceCount,
-                FailedInstanceCount: data.Progress.FailedInstanceCount,
-                InProgressInstanceCount: data.Progress.InProgressInstanceCount,
-                PendingInstanceCount: data.Progress.PendingInstanceCount
-            ) : null,
-            Error: data.Error?.Message
         );
     }
 }

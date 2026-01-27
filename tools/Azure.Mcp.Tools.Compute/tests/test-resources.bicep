@@ -20,7 +20,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_A1_v2'
+param vmSize string = 'Standard_B2s'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -109,72 +109,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   }
 }
 
-// Second VM for multi-VM list testing
-resource vm2 'Microsoft.Compute/virtualMachines@2023-09-01' = {
-  name: '${baseName}-vm2'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-        managedDisk: {
-          storageAccountType: 'Standard_LRS'
-        }
-      }
-    }
-    osProfile: {
-      computerName: '${baseName}-vm2'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-      linuxConfiguration: {
-        disablePasswordAuthentication: false
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic2.id
-          properties: {
-            primary: true
-          }
-        }
-      ]
-    }
-  }
-  tags: {
-    environment: 'test'
-    purpose: 'mcp-testing'
-  }
-}
-
-// Network Interface for second VM
-resource nic2 'Microsoft.Network/networkInterfaces@2023-05-01' = {
-  name: '${baseName}-nic2'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: vnet.properties.subnets[0].id
-          }
-          privateIPAllocationMethod: 'Dynamic'
-        }
-      }
-    ]
-  }
-}
-
 // Virtual Machine Scale Set for VMSS testing
 resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
   name: '${baseName}-vmss'
@@ -182,7 +116,7 @@ resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
   sku: {
     name: vmSize
     tier: 'Standard'
-    capacity: 2
+    capacity: 1
   }
   properties: {
     overprovision: false
@@ -278,7 +212,6 @@ resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-0
 
 // Output values for test consumption
 output vmName string = vm.name
-output vm2Name string = vm2.name
 output vmssName string = vmss.name
 output vnetName string = vnet.name
 output resourceGroupName string = resourceGroup().name

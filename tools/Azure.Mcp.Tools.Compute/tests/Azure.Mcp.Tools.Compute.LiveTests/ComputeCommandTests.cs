@@ -35,17 +35,16 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var vms = result.AssertProperty("vms");
+        var vms = result.AssertProperty("Vms");
         Assert.Equal(JsonValueKind.Array, vms.ValueKind);
         Assert.NotEmpty(vms.EnumerateArray());
 
-        // Verify we have at least the test VMs
+        // Verify we have at least the test VM
         var vmNames = vms.EnumerateArray()
             .Select(vm => vm.GetProperty("name").GetString())
             .ToList();
 
-        Assert.Contains(Settings.DeploymentOutputs["vmName"], vmNames);
-        Assert.Contains(Settings.DeploymentOutputs["vm2Name"], vmNames);
+        Assert.Contains(Settings.DeploymentOutputs["VMNAME"], vmNames);
     }
 
     [Fact]
@@ -59,21 +58,20 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName }
             });
 
-        var vms = result.AssertProperty("vms");
+        var vms = result.AssertProperty("Vms");
         Assert.Equal(JsonValueKind.Array, vms.ValueKind);
 
         var vmArray = vms.EnumerateArray().ToList();
-        Assert.Equal(2, vmArray.Count); // Should have exactly 2 VMs in the test resource group
+        Assert.True(vmArray.Count >= 1); // Should have at least 1 VM in the test resource group
 
         var vmNames = vmArray.Select(vm => vm.GetProperty("name").GetString()).ToList();
-        Assert.Contains(Settings.DeploymentOutputs["vmName"], vmNames);
-        Assert.Contains(Settings.DeploymentOutputs["vm2Name"], vmNames);
+        Assert.Contains(Settings.DeploymentOutputs["VMNAME"], vmNames);
     }
 
     [Fact]
     public async Task Should_get_specific_vm_details()
     {
-        var vmName = Settings.DeploymentOutputs["vmName"];
+        var vmName = Settings.DeploymentOutputs["VMNAME"];
 
         var result = await CallToolAsync(
             "compute_vm_get",
@@ -84,7 +82,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "vm-name", vmName }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var name = vm.GetProperty("name");
@@ -94,7 +92,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.NotNull(location.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B1s", vmSize.GetString());
+        Assert.Equal("Standard_B2s", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("Linux", osType.GetString());
@@ -106,7 +104,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_get_vm_with_instance_view()
     {
-        var vmName = Settings.DeploymentOutputs["vmName"];
+        var vmName = Settings.DeploymentOutputs["VMNAME"];
 
         var result = await CallToolAsync(
             "compute_vm_get",
@@ -118,14 +116,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "instance-view", true }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var name = vm.GetProperty("name");
         Assert.Equal(vmName, name.GetString());
 
         // Verify instance view is present
-        var instanceView = result.AssertProperty("instanceView");
+        var instanceView = result.AssertProperty("InstanceView");
         Assert.Equal(JsonValueKind.Object, instanceView.ValueKind);
 
         // Check for power state
@@ -133,9 +131,9 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.NotNull(powerState.GetString());
         // Should be "running" or similar VM state
 
-        // Check for provisioning state
+        // Check for provisioning state (lowercase in instance view)
         var provisioningState = instanceView.GetProperty("provisioningState");
-        Assert.Equal("Succeeded", provisioningState.GetString());
+        Assert.Equal("succeeded", provisioningState.GetString());
     }
 
     [Fact]
@@ -148,7 +146,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var vmssList = result.AssertProperty("vmssList");
+        var vmssList = result.AssertProperty("VmssList");
         Assert.Equal(JsonValueKind.Array, vmssList.ValueKind);
         Assert.NotEmpty(vmssList.EnumerateArray());
 
@@ -156,13 +154,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             .Select(vmss => vmss.GetProperty("name").GetString())
             .ToList();
 
-        Assert.Contains(Settings.DeploymentOutputs["vmssName"], vmssNames);
+        Assert.Contains(Settings.DeploymentOutputs["VMSSNAME"], vmssNames);
     }
 
     [Fact]
     public async Task Should_get_specific_vmss_details()
     {
-        var vmssName = Settings.DeploymentOutputs["vmssName"];
+        var vmssName = Settings.DeploymentOutputs["VMSSNAME"];
 
         var result = await CallToolAsync(
             "compute_vmss_get",
@@ -173,7 +171,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "vmss-name", vmssName }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var name = vmss.GetProperty("name");
@@ -182,80 +180,32 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var location = vmss.GetProperty("location");
         Assert.NotNull(location.GetString());
 
-        var skuName = vmss.GetProperty("skuName");
-        Assert.Equal("Standard_B1s", skuName.GetString());
-    }
-
-    [Fact]
-    public async Task Should_list_vmss_vms()
-    {
-        var vmssName = Settings.DeploymentOutputs["vmssName"];
-
-        var result = await CallToolAsync(
-            "compute_vmss_vms_list",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", vmssName }
-            });
-
-        var vms = result.AssertProperty("vms");
-        Assert.Equal(JsonValueKind.Array, vms.ValueKind);
-
-        // Should have 2 instances based on capacity in Bicep
-        var vmArray = vms.EnumerateArray().ToList();
-        Assert.Equal(2, vmArray.Count);
-
-        // Verify each VM has required properties
-        foreach (var vm in vmArray)
-        {
-            var instanceId = vm.GetProperty("instanceId");
-            Assert.NotNull(instanceId.GetString());
-
-            var vmId = vm.GetProperty("vmId");
-            Assert.NotNull(vmId.GetString());
-
-            var provisioningState = vm.GetProperty("provisioningState");
-            Assert.Equal("Succeeded", provisioningState.GetString());
-        }
+        var sku = vmss.GetProperty("sku");
+        Assert.Equal(JsonValueKind.Object, sku.ValueKind);
+        var skuName = sku.GetProperty("name");
+        Assert.Equal("Standard_B2s", skuName.GetString());
     }
 
     [Fact]
     public async Task Should_get_specific_vmss_vm()
     {
-        var vmssName = Settings.DeploymentOutputs["vmssName"];
+        var vmssName = Settings.DeploymentOutputs["VMSSNAME"];
 
-        // First get the list to find an instance ID
-        var listResult = await CallToolAsync(
-            "compute_vmss_vms_list",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", vmssName }
-            });
-
-        var vms = listResult.AssertProperty("vms");
-        var firstVm = vms.EnumerateArray().First();
-        var instanceId = firstVm.GetProperty("instanceId").GetString();
-        Assert.NotNull(instanceId);
-
-        // Now get that specific instance
+        // Get first instance (instance-id "0")
         var result = await CallToolAsync(
-            "compute_vmss_vm_get",
+            "compute_vmss_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", vmssName },
-                { "instance-id", instanceId }
+                { "instance-id", "0" }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("VmInstance");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var returnedInstanceId = vm.GetProperty("instanceId");
-        Assert.Equal(instanceId, returnedInstanceId.GetString());
+        Assert.Equal("0", returnedInstanceId.GetString());
     }
 }

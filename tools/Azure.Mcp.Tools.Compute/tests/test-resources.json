@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "10396994833152861140"
+      "templateHash": "6489926815758586760"
     }
   },
   "parameters": {
@@ -148,78 +148,6 @@
       ]
     },
     {
-      "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2023-09-01",
-      "name": "[format('{0}-vm2', parameters('baseName'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "Standard_D2s_v3"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "Canonical",
-            "offer": "0001-com-ubuntu-server-jammy",
-            "sku": "22_04-lts-gen2",
-            "version": "latest"
-          },
-          "osDisk": {
-            "createOption": "FromImage",
-            "managedDisk": {
-              "storageAccountType": "Standard_LRS"
-            }
-          }
-        },
-        "osProfile": {
-          "computerName": "[format('{0}-vm2', parameters('baseName'))]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]",
-          "linuxConfiguration": {
-            "disablePasswordAuthentication": false
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic2', parameters('baseName')))]",
-              "properties": {
-                "primary": true
-              }
-            }
-          ]
-        }
-      },
-      "tags": {
-        "environment": "test",
-        "purpose": "mcp-testing"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic2', parameters('baseName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2023-05-01",
-      "name": "[format('{0}-nic2', parameters('baseName'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "subnet": {
-                "id": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName'))), '2023-05-01').subnets[0].id]"
-              },
-              "privateIPAllocationMethod": "Dynamic"
-            }
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName')))]"
-      ]
-    },
-    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "apiVersion": "2023-09-01",
       "name": "[format('{0}-vmss', parameters('baseName'))]",
@@ -227,7 +155,7 @@
       "sku": {
         "name": "[parameters('vmSize')]",
         "tier": "Standard",
-        "capacity": 2
+        "capacity": 1
       },
       "properties": {
         "overprovision": false,
@@ -309,10 +237,6 @@
       "type": "string",
       "value": "[format('{0}-vm', parameters('baseName'))]"
     },
-    "vm2Name": {
-      "type": "string",
-      "value": "[format('{0}-vm2', parameters('baseName'))]"
-    },
     "vmssName": {
       "type": "string",
       "value": "[format('{0}-vmss', parameters('baseName'))]"
@@ -324,10 +248,6 @@
     "resourceGroupName": {
       "type": "string",
       "value": "[resourceGroup().name]"
-    },
-    "location": {
-      "type": "string",
-      "value": "[parameters('location')]"
     }
   }
 }
