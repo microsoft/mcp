@@ -192,7 +192,7 @@ public sealed class RegistryToolLoader(
                 try
                 {
                     var mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
-                    
+
                     if (mcpClient == null)
                     {
                         _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
@@ -220,17 +220,17 @@ public sealed class RegistryToolLoader(
             });
 
             var results = await Task.WhenAll(initializationTasks);
-            
+
             var successCount = 0;
             var toolCount = 0;
-            
+
             // Process results and populate the client cache and tool map
             foreach (var (serverName, mcpClient, tools) in results)
             {
                 if (mcpClient != null && tools != null)
                 {
                     _discoveredClients.Add(mcpClient);
-                    
+
                     foreach (var tool in tools)
                     {
                         _toolClientMap[tool.Name] = (serverName, mcpClient);
