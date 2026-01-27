@@ -191,31 +191,58 @@ public sealed class RegistryToolLoader(
                 var serverMetadata = server.CreateMetadata();
                 try
                 {
-                    var mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
-
-                    if (mcpClient == null)
+                    McpClient mcpClient;
+                    try
                     {
-                        _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
+                        mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
+
+                        if (mcpClient == null)
+                        {
+                            _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
+                            return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Rethrow cancellation to prevent setting _isInitialized
+                        throw;
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
+                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
                         return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
                     }
 
-                    var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-                    var filteredTools = toolsResponse
-                        .Select(t => t.ProtocolTool)
-                        .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                        .ToArray();
+                    try
+                    {
+                        var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
+                        var filteredTools = toolsResponse
+                            .Select(t => t.ProtocolTool)
+                            .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                            .ToArray();
 
-                    return (serverMetadata.Name, mcpClient, (IEnumerable<Tool>?)filteredTools);
+                        return (serverMetadata.Name, mcpClient, (IEnumerable<Tool>?)filteredTools);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Rethrow cancellation to prevent setting _isInitialized
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Failed to list tools for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
+                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                    }
                 }
-                catch (InvalidOperationException ex)
+                catch (OperationCanceledException)
                 {
-                    _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                    return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                    return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                    // Rethrow cancellation to prevent setting _isInitialized
+                    throw;
                 }
             });
 
