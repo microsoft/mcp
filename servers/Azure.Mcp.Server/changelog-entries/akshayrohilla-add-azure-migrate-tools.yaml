@@ -1,0 +1,4 @@
+pr: 1524
+changes:
+  - section: "Features Added"
+    description: "Added support for Azure Migrate platform landing zone operations with two new commands: azmcp_azuremigrate_platformlandingzone_getguidance provides scenario-based guidance for Azure Landing Zone configurations including policy search and archetype-based policy listing, while azmcp_azuremigrate_platformlandingzone_request enables checking, generating, updating and downloading, platform landing zone configurations based on user inputs."
