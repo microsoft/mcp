@@ -6,7 +6,7 @@
     Runs tool selection confidence analysis as part of CI pipeline
 
 .DESCRIPTION
-    This script runs the tool selection analysis to validate that the Azure MCP Server's
+    This script runs the tool selection analysis to validate that an MCP Server's
     tool selection algorithm works correctly. It's designed to be CI-friendly and
     will gracefully skip when required credentials are not available.
 
@@ -14,7 +14,7 @@
     Skip the test if Azure OpenAI credentials are not configured (default: true in CI)
 
 .PARAMETER ToolsFile
-    Use a JSON file containing tool data instead of dynamically loading it from the Azure MCP Server
+    Use a JSON file containing tool data instead of dynamically loading it from the MCP Server
 
 .PARAMETER PromptsFile
     Use a JSON or markdown file containing prompts to test instead of the default e2eTestPrompts.md
@@ -31,9 +31,16 @@
 .PARAMETER TestPrompts
     Array of test prompts (used with -ValidateMode)
 
+.PARAMETER ServerName
+    The MCP server to test (default: "Azure.Mcp.Server")
+
 .EXAMPLE
     # Standard CI run (graceful skip if no credentials)
     ./Test-ToolSelection.ps1
+    
+.EXAMPLE
+    # Test Fabric MCP Server
+    ./Test-ToolSelection.ps1 -ServerName "Fabric.Mcp.Server"
     
 .EXAMPLE
     # Use custom tools file
@@ -59,7 +66,8 @@ param(
     [switch]$OutputMarkdown,
     [switch]$ValidateMode,
     [string]$ToolDescription,
-    [string[]]$TestPrompts
+    [string[]]$TestPrompts,
+    [string]$ServerName = "Azure.Mcp.Server"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -67,7 +75,7 @@ Set-StrictMode -Version 3.0
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $toolSelectionPath = "$RepoRoot/eng/tools/ToolDescriptionEvaluator/src"
-$defaultMarkdownPrompts = "$RepoRoot/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md"
+$defaultMarkdownPrompts = "$RepoRoot/servers/$ServerName/docs/e2eTestPrompts.md"
 
 if (-not (Test-Path $toolSelectionPath)) {
     Write-Host "⏭️  Tool Description Evaluator utility not found at $toolSelectionPath - skipping"
@@ -79,7 +87,7 @@ Push-Location $toolSelectionPath
 
 try {
     # Check if we have the required sources for dynamic loading
-    $hasSourceCode = Test-Path "$RepoRoot/servers/Azure.Mcp.Server/src"
+    $hasSourceCode = Test-Path "$RepoRoot/servers/$ServerName/src"
     $hasMarkdownPrompts = Test-Path $defaultMarkdownPrompts
     
     # Check if we have fallback test data files

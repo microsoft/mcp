@@ -271,10 +271,17 @@ function Get-PathsToTest {
             }
         }
 
-        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
-        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
-            Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
-            $pathsToTest += 'servers/Azure.Mcp.Server'
+        # Include all servers that have test directories to ensure comprehensive validation in PRs
+        $allServers = Get-ChildItem -Path "$RepoRoot/servers" -Directory | ForEach-Object { $_.Name }
+        foreach ($serverName in $allServers) {
+            $serverPath = "servers/$serverName"
+            $serverTestPath = "$RepoRoot/$serverPath/tests"
+            
+            # Only include servers that have tests and aren't already in the test paths
+            if ((Test-Path $serverTestPath) -and ($pathsToTest -notcontains $serverPath)) {
+                Write-Host "Adding $serverPath to test paths for PR validation" -ForegroundColor Cyan
+                $pathsToTest += $serverPath
+            }
         }
 
         $normalizedPaths = @($pathsToTest | Sort-Object -Unique)

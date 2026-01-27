@@ -37,8 +37,9 @@ resources:
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
   parameters:
-    # We pick a single internal pipeline to use for autoBaseline. This should be a pipeline that runs often on main with normal code paths, i.e. not Template.Mcp.Server
-    autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'mcp - Azure.Mcp.Server'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
+    # We pick production MCP server pipelines for autoBaseline. This should be pipelines that run often on main with normal code paths.
+    # Test servers (e.g. Template.Mcp.Server) are excluded from baseline tracking.
+    autoBaseline: ${{ and(or(eq(variables['Build.DefinitionName'], 'mcp - Azure.Mcp.Server'), eq(variables['Build.DefinitionName'], 'mcp - Fabric.Mcp.Server')), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
     stages:
     - stage: Initialize
       pool:
