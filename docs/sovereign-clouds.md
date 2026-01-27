@@ -30,7 +30,19 @@ The URL must start with `https://`.
 
 ## Configuration Methods
 
-You can configure the cloud environment using one of the following methods, listed in priority order:
+You can configure the cloud environment using one of the following methods. The server resolves the cloud configuration using this priority order:
+
+| Priority | Source | Configuration Key |
+|----------|--------|-------------------|
+| 1 | Command line argument | `--cloud` |
+| 2 | IConfiguration | `AZURE_CLOUD` |
+| 3 | IConfiguration | `azure_cloud` |
+| 4 | IConfiguration | `cloud` |
+| 5 | IConfiguration | `Cloud` |
+| 6 | Environment variable | `AZURE_CLOUD` (direct fallback) |
+| Default | Fallback | `AzurePublicCloud` |
+
+> **Note:** IConfiguration in .NET includes multiple providers in order: `appsettings.json`, `appsettings.{Environment}.json`, user secrets (development), environment variables, and command line arguments. This means environment variables set via `AZURE_CLOUD` will be found at priority 2 through the IConfiguration system before the direct fallback at priority 6.
 
 ### 1. Command Line Argument (Highest Priority)
 
