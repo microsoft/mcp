@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Improved server startup performance by parallelizing external MCP server initialization, reducing startup time from ~20 seconds to ~1-2 seconds when using registry-based servers"
