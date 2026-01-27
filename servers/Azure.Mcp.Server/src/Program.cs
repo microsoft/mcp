@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -26,6 +27,14 @@ internal class Program
     {
         try
         {
+            // Fast path: Handle simple metadata requests without initializing service infrastructure
+            // This optimization reduces startup time from ~10s to <3s for these queries
+            var fastPathResult = TryHandleFastPathRequest(args);
+            if (fastPathResult.HasValue)
+            {
+                return fastPathResult.Value;
+            }
+
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
@@ -86,10 +95,12 @@ internal class Program
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
+            new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
+            new Azure.Mcp.Tools.Advisor.AdvisorSetup(),
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
@@ -204,7 +215,8 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddAzureTenantService(addUserAgentClient: true);
+        services.AddHttpClientServices(configureDefaults: true);
+        services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
@@ -221,5 +233,23 @@ internal class Program
         // invalid telemetry published.
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
         await telemetryService.InitializeAsync();
+    }
+
+    /// <summary>
+    /// Attempts to handle the --version flag without requiring full service initialization.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns>Exit code if request was handled, null otherwise.</returns>
+    private static int? TryHandleFastPathRequest(string[] args)
+    {
+        // Handle --version flag
+        if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
+        {
+            var version = AssemblyHelper.GetFullAssemblyVersion(typeof(Program).Assembly);
+            Console.WriteLine(version);
+            return 0;
+        }
+
+        return null;
     }
 }

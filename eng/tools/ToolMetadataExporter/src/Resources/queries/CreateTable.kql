@@ -1,0 +1,11 @@
+.create table McpToolEvents (
+    EventTime: datetime,
+    EventType: string,
+    ServerVersion: string,
+    ServerName: string,
+    ToolId: string,
+    ToolName: string,
+    ToolArea: string,
+    ReplacedByToolName: string,
+    ReplacedByToolArea: string
+)

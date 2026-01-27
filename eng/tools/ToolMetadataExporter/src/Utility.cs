@@ -1,0 +1,249 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
+using ToolSelection.Models;
+
+namespace ToolMetadataExporter;
+
+public partial class Utility(ILogger<Utility> logger)
+{
+    public const string RepositoryRootSolution = "AzureMcp.sln";
+
+    public const string NewLineRegexPattern = "\r\n|\n|\r";
+
+    private readonly ILogger<Utility> _logger = logger;
+
+    internal virtual async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string serverFile, string workDirectory, bool isCiMode = false)
+    {
+        try
+        {
+            var output = await ExecuteAzmcpAsync(serverFile, "tools list", isCiMode);
+            var jsonOutput = GetJsonFromOutput(output);
+
+            if (jsonOutput == null)
+            {
+                if (isCiMode)
+                {
+                    return null; // Graceful fallback in CI
+                }
+
+                throw new InvalidOperationException("No JSON output found from azmcp command.");
+            }
+
+            // Parse the JSON output
+            var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+
+            return result;
+        }
+        catch (Exception)
+        {
+            if (isCiMode)
+            {
+                return null; // Graceful fallback in CI
+            }
+
+            throw;
+        }
+    }
+
+    internal async Task<string> GetServerName(string serverFile)
+    {
+        var output = await ExecuteAzmcpAsync(serverFile, "--help", checkErrorCode: false);
+
+        string[] array = NewLineRegex().Split(output);
+        for (int i = 0; i < array.Length; i++)
+        {
+            string? line = array[i];
+            if (line.StartsWith("Description:"))
+            {
+                return array[i + 1].Trim();
+            }
+        }
+
+        throw new InvalidOperationException("Could not find server name");
+    }
+
+    internal async Task<string> GetVersionAsync(string serverFile)
+    {
+        var output = await ExecuteAzmcpAsync(serverFile, "--version", checkErrorCode: false);
+        return output.Trim();
+    }
+
+    /// <summary>
+    /// Invokes the azmcp executable with the specified arguments and returns the standard output.
+    /// </summary>
+    /// <param name="serverFile">Assembly to invoke.</param>
+    /// <param name="arguments">Arguments to program.</param>
+    /// <param name="isCiMode">True if it is in CI mode.</param>
+    /// <param name="checkErrorCode">True to check error code and throw an InvalidOperationException if code is not 0.</param>
+    /// <returns>Standard output as a string.</returns>
+    /// <exception cref="InvalidOperationException">If <paramref name="checkErrorCode"/> is true and exit code is not 0.</exception>
+    internal virtual async Task<string> ExecuteAzmcpAsync(string serverFile, string arguments,
+        bool isCiMode = false, bool checkErrorCode = true)
+    {
+        var fileInfo = new FileInfo(serverFile);
+        var isDll = string.Equals(fileInfo.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
+        var fileName = isDll ? "dotnet" : fileInfo.FullName;
+        var argumentsToUse = isDll ? $"{fileInfo.FullName} " : arguments;
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = argumentsToUse,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using (var process = new Process { StartInfo = processStartInfo })
+        {
+            _logger.LogInformation("Executing command: {FileName} {Arguments}", processStartInfo.FileName, processStartInfo.Arguments);
+            process.Start();
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+
+            if (checkErrorCode && process.ExitCode != 0)
+            {
+                if (isCiMode)
+                {
+                    return string.Empty; // Graceful fallback in CI
+                }
+
+                throw new InvalidOperationException($"Failed to execute operation '{arguments}' from azmcp: {error}");
+            }
+
+            return output;
+        }
+    }
+
+    private static string? GetJsonFromOutput(string? output)
+    {
+        if (output == null)
+        {
+            return null;
+        }
+
+        // Filter out non-JSON lines (like launch settings messages)
+        var lines = output.Split('\n');
+        var jsonStartIndex = -1;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].Trim().StartsWith('{'))
+            {
+                jsonStartIndex = i;
+
+                break;
+            }
+        }
+
+        if (jsonStartIndex == -1)
+        {
+            return null;
+        }
+
+        return string.Join('\n', lines.Skip(jsonStartIndex));
+    }
+
+    internal static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
+    {
+        try
+        {
+            // Normalize only tool and option descriptions instead of escaping the entire JSON document
+            if (toolsResult.Tools != null)
+            {
+                foreach (var tool in toolsResult.Tools)
+                {
+                    if (!string.IsNullOrEmpty(tool.Description))
+                    {
+                        tool.Description = EscapeCharacters(tool.Description);
+                    }
+
+                    if (tool.Options != null)
+                    {
+                        foreach (var opt in tool.Options)
+                        {
+                            if (!string.IsNullOrEmpty(opt.Description))
+                            {
+                                opt.Description = EscapeCharacters(opt.Description);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var writerOptions = new JsonWriterOptions
+            {
+                Indented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            using var stream = new MemoryStream();
+            using (var jsonWriter = new Utf8JsonWriter(stream, writerOptions))
+            {
+                JsonSerializer.Serialize(jsonWriter, toolsResult, SourceGenerationContext.Default.ListToolsResult);
+            }
+
+            await File.WriteAllBytesAsync(filePath, stream.ToArray());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️  Warning: Failed to save tools to {filePath}: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
+
+    private static string EscapeCharacters(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        // Normalize only the fancy “curly” quotes to straight ASCII. Identity replacements were removed.
+        return text.Replace(UnicodeChars.LeftSingleQuote, "'")
+               .Replace(UnicodeChars.RightSingleQuote, "'")
+               .Replace(UnicodeChars.LeftDoubleQuote, "\"")
+               .Replace(UnicodeChars.RightDoubleQuote, "\"");
+    }
+
+    /// <summary>
+    /// Traverse up from a starting directory to find the repo root.
+    /// Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git).
+    /// </summary>
+    /// <param name="startDir">Directory to start upwards traversal</param>
+    /// <returns>Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git</returns>
+    /// <exception cref="InvalidOperationException">If the solution cannot be found.</exception>
+    internal static string FindRepoRoot(string startDir)
+    {
+        var dir = new DirectoryInfo(startDir);
+
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, RepositoryRootSolution)) ||
+                Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            {
+                return dir.FullName;
+            }
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException($"Could not find repo root {RepositoryRootSolution} or .git).");
+    }
+
+    internal static class UnicodeChars
+    {
+        public const string LeftSingleQuote = "\u2018";
+        public const string RightSingleQuote = "\u2019";
+        public const string LeftDoubleQuote = "\u201C";
+        public const string RightDoubleQuote = "\u201D";
+    }
+
+    [GeneratedRegex(NewLineRegexPattern)]
+    private static partial Regex NewLineRegex();
+}
