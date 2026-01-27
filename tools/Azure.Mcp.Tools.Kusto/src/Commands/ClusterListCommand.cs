@@ -52,7 +52,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(clusterNames?.Results ?? [], clusterNames?.TruncatedResults ?? false), KustoJsonContext.Default.ClusterListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false), KustoJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {
@@ -63,5 +63,5 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record ClusterListCommandResult(List<string> Clusters, bool TruncatedResults);
+    internal record ClusterListCommandResult(List<string> Clusters, bool AreResultsTruncated);
 }

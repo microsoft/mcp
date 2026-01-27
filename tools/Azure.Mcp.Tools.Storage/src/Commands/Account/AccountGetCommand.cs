@@ -77,7 +77,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.TruncatedResults ?? false), StorageJsonContext.Default.AccountGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,5 +97,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     }
 
     // Strongly-typed result record
-    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool TruncatedResults);
+    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
 }

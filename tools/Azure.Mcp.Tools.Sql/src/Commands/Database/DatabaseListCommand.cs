@@ -62,7 +62,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(databases?.Results ?? [], databases?.TruncatedResults ?? false), SqlJsonContext.Default.DatabaseListResult);
+            context.Response.Results = ResponseResult.Create(new(databases?.Results ?? [], databases?.AreResultsTruncated ?? false), SqlJsonContext.Default.DatabaseListResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,5 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseListResult(List<SqlDatabase> Databases, bool TruncatedResults);
+    internal record DatabaseListResult(List<SqlDatabase> Databases, bool AreResultsTruncated);
 }

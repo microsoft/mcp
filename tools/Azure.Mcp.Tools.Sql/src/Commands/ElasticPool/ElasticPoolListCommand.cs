@@ -62,7 +62,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(elasticPools?.Results ?? [], elasticPools?.TruncatedResults ?? false), SqlJsonContext.Default.ElasticPoolListResult);
+            context.Response.Results = ResponseResult.Create(new(elasticPools?.Results ?? [], elasticPools?.AreResultsTruncated ?? false), SqlJsonContext.Default.ElasticPoolListResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,5 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools, bool TruncatedResults);
+    internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools, bool AreResultsTruncated);
 }

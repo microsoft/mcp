@@ -268,4 +268,4 @@ public abstract class BaseAzureResourceService(
     }
 }
 
-public sealed record ResourceQueryResults<T>(List<T> Results, bool TruncatedResults);
+public sealed record ResourceQueryResults<T>(List<T> Results, bool AreResultsTruncated);

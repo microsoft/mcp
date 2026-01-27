@@ -1,4 +1,4 @@
 pr: 1526
 changes:
   - section: "Other Changes"
-    description: "Added TruncatedResults to tools that list resources using Resource Graph"
+    description: "Added AreResultsTruncated to tools that list resources using Resource Graph"

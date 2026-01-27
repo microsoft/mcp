@@ -59,7 +59,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(workspaces?.Results ?? [], workspaces?.TruncatedResults ?? false), GrafanaJsonContext.Default.WorkspaceListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(workspaces?.Results ?? [], workspaces?.AreResultsTruncated ?? false), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }
         catch (Exception ex)
         {
@@ -71,5 +71,5 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
         return context.Response;
     }
 
-    internal record WorkspaceListCommandResult(IEnumerable<GrafanaWorkspace> Workspaces, bool TruncatedResults);
+    internal record WorkspaceListCommandResult(IEnumerable<GrafanaWorkspace> Workspaces, bool AreResultsTruncated);
 }
