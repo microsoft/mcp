@@ -5,13 +5,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.14 (2026-01-27)
 
 ### Features Added
-- Added MCP tool for List Advisor Recommendations- `advisor_recommendations_list`  [[#1519](https://github.com/microsoft/mcp/pull/1519)]
+- Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`  [[#1519](https://github.com/microsoft/mcp/pull/1519)]
 - Added Azure Managed Lustre fs blob import management commands: 
 `managedlustre_fs_blob_import_create`, 
 `managedlustre_fs_blob_import_get`, 
 `managedlustre_fs_blob_import_cancel`, 
 `managedlustre_fs_blob_import_delete` [[#1492](https://github.com/microsoft/mcp/pull/1492)]
-- Sovereign Cloud supported added for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
+- Added Sovereign Cloud support for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
 - Added support for Azure Migrate platform landing zone operations with two new commands: `azmcp_azuremigrate_platformlandingzone_getguidance` provides scenario-based guidance for Azure Landing Zone configurations including policy search and archetype-based policy listing, while `azmcp_azuremigrate_platformlandingzone_request` enables checking, generating, updating and downloading, platform landing zone configurations based on user inputs. [[#1524](https://github.com/microsoft/mcp/pull/1524)]
 - Added ToolMetadataExporter to export current azmcp tool metadata (supporting Azure MCP metadata/telemetry documentation workflows). [[#992](https://github.com/microsoft/mcp/pull/992)]
 - Added UVX (uvx) support, enabling running MCP servers via `uvx` for improved Python/uv-based workflows. [[#1359](https://github.com/microsoft/mcp/pull/1359)]

@@ -4,13 +4,13 @@
 
 ### Added
 
-- Added MCP tool for List Advisor Recommendations- `advisor_recommendations_list`  [[#1519](https://github.com/microsoft/mcp/pull/1519)]
+- Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`  [[#1519](https://github.com/microsoft/mcp/pull/1519)]
 - Added Azure Managed Lustre fs blob import management commands: 
 `managedlustre_fs_blob_import_create`, 
 `managedlustre_fs_blob_import_get`, 
 `managedlustre_fs_blob_import_cancel`, 
 `managedlustre_fs_blob_import_delete` [[#1492](https://github.com/microsoft/mcp/pull/1492)]
-- Sovereign Cloud supported added for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
+- Added Sovereign Cloud support for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
 - Added support for Azure Migrate platform landing zone operations with two new commands: `azmcp_azuremigrate_platformlandingzone_getguidance` provides scenario-based guidance for Azure Landing Zone configurations including policy search and archetype-based policy listing, while `azmcp_azuremigrate_platformlandingzone_request` enables checking, generating, updating and downloading, platform landing zone configurations based on user inputs. [[#1524](https://github.com/microsoft/mcp/pull/1524)]
 - Added ToolMetadataExporter to export current azmcp tool metadata (supporting Azure MCP metadata/telemetry documentation workflows). [[#992](https://github.com/microsoft/mcp/pull/992)]
 - Added UVX (uvx) support, enabling running MCP servers via `uvx` for improved Python/uv-based workflows. [[#1359](https://github.com/microsoft/mcp/pull/1359)]
@@ -20,17 +20,16 @@
 - Optimized --version flag to bypass full service initialization, reducing response time from ~10s to <3s [[#1531](https://github.com/microsoft/mcp/pull/1531)]
 - Replaced the in-house `HttpClientService` with the built-in .NET `IHttpClientFactory` for HTTP client creation/management, improving configurability and aligning with recommended .NET patterns. [[#1564](https://github.com/microsoft/mcp/pull/1564)]
 
-## 2.0.0-beta.12 (2026-01-20) (pre-release)
-
-### Fixed
-
-- Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
-
 ## 2.0.0-beta.13 (2026-01-22) (pre-release)
 
 ### Changed
 
 - Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]0
+
+## 2.0.0-beta.12 (2026-01-20) (pre-release)
+
+### Fixed
+
 - Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
 
 ## 2.0.0-beta.11 (2026-01-16) (pre-release)
