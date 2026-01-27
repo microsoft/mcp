@@ -711,6 +711,39 @@
       ]
     },
     {
+      "name": "list_azure_advisor_recommendations",
+      "description": "Get Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_list"
+      ]
+    },
+    {
       "name": "generate_azure_cli_commands",
       "description": "Generate Azure CLI commands from natural language descriptions to help answer questions about Azure environments and operations",
       "toolMetadata": {

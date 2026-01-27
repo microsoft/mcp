@@ -2,6 +2,14 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
+## Azure Advisor
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| advisor_recommendations_list | List all recommendations in my subscription |
+| advisor_recommendations_list | Show me Advisor recommendations in the subscription <subscription> |
+| advisor_recommendations_list | List all Advisor recommendations in the subscription <subscription> |
+
 ## Azure AI Search
 
 | Tool Name | Test Prompt |

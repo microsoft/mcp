@@ -887,7 +887,7 @@
   "foundry_models_list": [
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
-  ],
+  ],  
   "foundry_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],
@@ -915,5 +915,10 @@
   ],
   "foundry_threads_list": [
     "List my Microsoft Foundry threads"
+  ],
+  "advisor_recommendations_list": [
+    "List all recommendations in my subscription",
+    "Show me Advisor recommendations in the subscription <subscription>",
+    "List all Advisor recommendations in the subscription <subscription>"
   ]
 }
