@@ -2,15 +2,26 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.14 (Unreleased)
+## 2.0.0-beta.14 (2026-01-27)
 
 ### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+- Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`. [[#1519](https://github.com/microsoft/mcp/pull/1519)]
+- Added new Azure Managed Lustre fileshare blob import management tools: [[#1492](https://github.com/microsoft/mcp/pull/1492)]
+  - `managedlustre_fs_blob_import_create`
+  - `managedlustre_fs_blob_import_get`
+  - `managedlustre_fs_blob_import_cancel`
+  - `managedlustre_fs_blob_import_delete`
+- Added Sovereign Cloud support for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
+- Added support for Azure Migrate platform landing zone operations with two new commands:  [[#1524](https://github.com/microsoft/mcp/pull/1524)]
+  - `azmcp_azuremigrate_platformlandingzone_getguidance` - provides scenario-based guidance for Azure Landing Zone configurations including policy search and archetype-based policy listing
+  - `azmcp_azuremigrate_platformlandingzone_request` - enables checking, generating, updating and downloading, platform landing zone configurations based on user inputs
+- Added UVX support, enabling running MCP servers via `uvx` for improved Python/uv-based workflows. [[#1359](https://github.com/microsoft/mcp/pull/1359)]
 
 ### Other Changes
+
+- Optimized `--version` flag to bypass full service initialization, reducing response time from ~10s to <3s. [[#1531](https://github.com/microsoft/mcp/pull/1531)]
+- Replaced the in-house `HttpClientService` with the built-in .NET `IHttpClientFactory` for HTTP client creation/management, improving configurability and aligning with recommended .NET patterns. [[#1564](https://github.com/microsoft/mcp/pull/1564)]
+- Added the internal utility `ToolMetadataExporter` to export current azmcp tool metadata (supporting Azure MCP metadata/telemetry documentation workflows). [[#992](https://github.com/microsoft/mcp/pull/992)]
 
 ## 2.0.0-beta.13 (2026-01-22)
 
