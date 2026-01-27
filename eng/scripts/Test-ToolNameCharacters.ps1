@@ -3,10 +3,72 @@
 
 <#
 .SYNOPSIS
-    Performs tool name character validations.  Each tool name must only contain alphanumeric characters, hyphens, and underscores.
+    Performs tool name character validations for MCP tools.
 
 .DESCRIPTION
-    This script validates that tool names are valid across all tools.
+    This script validates that tool names defined in *Command.cs and *Setup.cs files follow 
+    the naming conventions. Each tool name group must:
+    - Contain only alphanumeric characters or dashes
+    - Not start or end with a dash
+
+    The script scans all tool area directories under the specified ToolsDirectory, extracts
+    tool names from the Name property definitions, and validates them against the naming rules.
+
+.PARAMETER ToolsDirectory
+    The root directory containing tool area subdirectories. Each subdirectory is scanned for
+    *Command.cs and *Setup.cs files containing tool name definitions.
+
+.OUTPUTS
+    PSCustomObject
+    Returns an object with the following properties:
+
+    HasViolations [bool]
+        True if any tool name violations were found, False otherwise.
+
+    Violations [ToolNameViolation[]]
+        An array of ToolNameViolation objects, each containing:
+        - ToolArea [string]: The name of the tool area directory where the violation was found
+        - FileName [string]: Full path to the file containing the violation
+        - ToolName [string]: The invalid tool name
+
+    ErrorMessage [string]
+        Description of the naming rule that was violated.
+
+.EXAMPLE
+    PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools"
+    PS> $result.HasViolations
+    False
+
+    Validates all tools and returns no violations when all names are valid.
+
+.EXAMPLE
+    PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools"
+    PS> $result.HasViolations
+    True
+    PS> $result.Violations | Format-Table ToolArea, ToolName, FileName
+
+    ToolArea                     ToolName          FileName
+    --------                     --------          --------
+    Azure.Mcp.Tools.Storage      -invalid-start    D:\git\mcp\tools\...\BlobCommand.cs
+    Azure.Mcp.Tools.KeyVault     ends-with-dash-   D:\git\mcp\tools\...\SecretCommand.cs
+
+    Shows how to list all violations when invalid tool names are found.
+
+.EXAMPLE
+    PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools"
+    PS> $result.Violations | Format-List *
+
+    ToolArea : Azure.Mcp.Tools.Storage
+    FileName : D:\git\mcp\tools\Azure.Mcp.Tools.Storage\src\Commands\BlobCommand.cs
+    ToolName : storage_blob_get
+
+    Detailed view of a violation. The tool name "storage_blob_get" is invalid because it 
+    contains underscores instead of dashes.
+
+.EXAMPLE
+    PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools" -Debug
+    
+    Runs validation with debug output showing each file processed and a summary of violations.
 #>
 param(
     [Parameter(Mandatory)]
@@ -32,10 +94,12 @@ class ToolArea {
 }
 
 class ToolNameViolation {
-    [string]$FileName
+    [string]$ToolArea
     [string]$ToolName
+    [string]$FileName
     
-    ToolNameViolation([string]$FileName, [string]$ToolName) {
+    ToolNameViolation([string]$ToolArea, [string]$FileName, [string]$ToolName) {
+        $this.ToolArea = $ToolArea
         $this.FileName = $FileName
         $this.ToolName = $ToolName
     }
@@ -48,7 +112,7 @@ function Test-ToolAreaTools {
     )
 
     $name = $(Split-Path $ToolAreaDirectory -Leaf)
-    $toolAreaResult = [ToolArea]::new($name)
+    $toolViolationsForArea = @()
 
     $areaTools = Get-ChildItem -Path $ToolAreaDirectory -Recurse -Include *Command.cs, *Setup.cs
 
@@ -57,7 +121,7 @@ function Test-ToolAreaTools {
     }
 
     foreach ($file in $areaTools) {
-        Write-Debug "Processing file: $($file.FullName)"
+        Write-Debug "Processing: $($file.FullName)"
         $content = Get-Content $file.FullName
 
         if ($file.Name -like '*Command.cs') {
@@ -83,13 +147,13 @@ function Test-ToolAreaTools {
                 $isValid = $($ToolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$')
 
                 if (-not $isValid) {
-                    $toolAreaResult.AddViolation([ToolNameViolation]::new($file.FullName, $toolName))
+                    $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName)
                 }
             }
         }
     }
 
-    return $toolAreaResult
+    return $toolViolationsForArea
 }
 
 $ErrorActionPreference = 'Stop'
@@ -103,7 +167,7 @@ foreach ($toolAreaDir in $toolAreaDirectories) {
     Write-Debug "Processing tool area: $($toolAreaDir.FullName)"
     $toolAreaResult = Test-ToolAreaTools -ToolAreaDirectory $toolAreaDir.FullName
 
-    if ($toolAreaResult.HasViolations()) {
+    if ($toolAreaResult.Count -gt 0) {
         $overallViolations += $toolAreaResult
     }
 }
@@ -113,13 +177,10 @@ Write-Debug "SUMMARY"
 Write-Debug "Tools Directory: $ToolsDirectory"
 Write-Debug "Total violations found: $($overallViolations.Count)"
 
-foreach ($area in $overallViolations) {
-    Write-Debug "Area: $($area.ToolArea)"
-    foreach ($violation in $area.Violations) {
-        Write-Debug "  - ToolName: $($violation.ToolName)"
-        Write-Debug "  - File: $($violation.FileName)"
-    }
-    Write-Debug
+foreach ($violation in $overallViolations) {
+    Write-Debug "Area: $($violation.ToolArea)"
+    Write-Debug "  - ToolName: $($violation.ToolName)"
+    Write-Debug "  - File: $($violation.FileName)"
 }
 
 Write-Debug "=================================================="
