@@ -431,7 +431,7 @@ Choose the appropriate base class based on operations:
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
-    public async Task<List<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
+    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
