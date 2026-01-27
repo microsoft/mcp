@@ -24,7 +24,7 @@
 
 ### Changed
 
-- Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]0
+- Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]
 
 ## 2.0.0-beta.12 (2026-01-20) (pre-release)
 
