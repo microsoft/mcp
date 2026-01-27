@@ -27,6 +27,9 @@ public static class ManagedLustreOptionDefinitions
     public const string sourceVault = "source-vault";
     public const string userAssignedIdentityId = "user-assigned-identity-id";
     public const string filesystemName = "filesystem-name";
+    public const string jobName = "job-name";
+    public const string conflictResolutionMode = "conflict-resolution-mode";
+    public const string maximumErrors = "maximum-errors";
 
     public static readonly Option<string> SkuOption = new(
         $"--{sku}"
@@ -270,12 +273,22 @@ public static class ManagedLustreOptionDefinitions
         Description = "Whether to enable deletions during auto import. This only affects overwrite-dirty mode. Default: false."
     };
 
-    public static readonly Option<long> MaximumErrorsOption = new(
+    public static readonly Option<long?> MaximumErrorsOption = new(
         "--maximum-errors"
     )
     {
         Required = false,
         Description = "Total non-conflict-oriented errors (e.g., OS errors) that import will tolerate before exiting with failure. -1: infinite. 0: exit immediately on any error."
+    };
+
+    // Blob Import specific options
+    public static readonly Option<string[]> ImportPrefixesOption = new(
+        "--import-prefixes"
+    )
+    {
+        Required = false,
+        Description = "Array of blob paths/prefixes to import from blob storage. Default: '/'. Maximum: 100 paths. Example: --import-prefixes /data --import-prefixes /logs",
+        Arity = ArgumentArity.OneOrMore
     };
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();

@@ -59,6 +59,12 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-Advisor
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Advisor
+# ServiceOwners:                       @ankiga-MSFT
+
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp
 
@@ -71,6 +77,11 @@
 # ServiceLabel: %tools-AppService
 # ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft
 
+# PRLabel: %tools-AzureMigrate
+/tools/Azure.Mcp.Tools.AzureMigrate/      @akshayrohilla @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AzureMigrate
+# ServiceOwners:                       @akshayrohilla @yeddlapurishivasai @mentaltraffic @andynski
 
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @XiaofuHuang @microsoft/azure-mcp
@@ -183,6 +194,12 @@
 # ServiceLabel: %tools-SQL
 # ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
 
+# PRLabel: %tools-Policy
+/tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Policy
+# ServiceOwners:                       @msalaman
+
 # PRLabel: %tools-Postgres
 /tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp
 
@@ -219,6 +236,18 @@
 
 # ServiceLabel: %tools-Storage
 # ServiceOwners:                       @alzimmermsft  @jongio
+
+# PRLabel: %tools-FileShares
+/tools/Azure.Mcp.Tools.FileShares/     @ankushbindlish2 @kszobi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-FileShares
+# ServiceOwners:                       @ankushbindlish2 @kszobi
+
+# PRLabel: %tools-StorageSync
+/tools/Azure.Mcp.Tools.StorageSync/    @ankushbindlish2 @kszobi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-StorageSync
+# ServiceOwners:                       @ankushbindlish2 @kszobi
 
 # PRLabel: %tools-Authorization
 /tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp

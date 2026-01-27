@@ -2,6 +2,14 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
+## Azure Advisor
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| advisor_recommendations_list | List all recommendations in my subscription |
+| advisor_recommendations_list | Show me Advisor recommendations in the subscription <subscription> |
+| advisor_recommendations_list | List all Advisor recommendations in the subscription <subscription> |
+
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
@@ -296,6 +304,48 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
+## Azure File Shares
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| fileshares_fileshare_create | Create a new file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_create | Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage |
+| fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> |
+| fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> |
+| fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | List all file shares in my subscription |
+| fileshares_fileshare_get | Show me the file shares in resource group <resource_group_name> |
+| fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? |
+| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> in location <location> |
+| fileshares_fileshare_limits_get | What are the file share limits in my subscription for location <location>? |
+| fileshares_fileshare_limits_get | Show me the file share service limits in location <location> |
+| fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
+| fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
+| fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
+| fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |
+| fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> |
+| fileshares_fileshare_snapshot_delete | Delete the snapshot <snapshot_id> from file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_delete | Remove snapshot <snapshot_id> from file share <file_share_name> |
+| fileshares_fileshare_snapshot_get | List all snapshots for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_get | Show me the snapshots of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
+| fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
+| fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
+| fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
+| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
+| fileshares_fileshare_usage_get | What is the current usage of file share <file_share_name>? |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
@@ -429,6 +479,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_list | List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_import_create | Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_import_get | Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_import_get | List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_import_cancel | Cancel the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_import_delete | Delete the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
@@ -445,20 +500,46 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| get_bestpractices_get | Get the latest Azure code generation best practices |
-| get_bestpractices_get | Get the latest Azure deployment best practices |
-| get_bestpractices_get | Get the latest Azure best practices |
-| get_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| get_bestpractices_get | Get the latest Azure Functions deployment best practices |
-| get_bestpractices_get | Get the latest Azure Functions best practices |
-| get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| get_bestpractices_get | What are azure function best practices? |
-| get_bestpractices_get | configure azure mcp in coding agent for my repo |
-| get_bestpractices_ai_app | Get best practices for building AI applications in Azure |
-| get_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
-| get_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
-| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
-| get_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+| get_azure_bestpractices_get | Get the latest Azure code generation best practices |
+| get_azure_bestpractices_get | Get the latest Azure deployment best practices |
+| get_azure_bestpractices_get | Get the latest Azure best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions code generation best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions deployment best practices |
+| get_azure_bestpractices_get | Get the latest Azure Functions best practices |
+| get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| get_azure_bestpractices_get | What are azure function best practices? |
+| get_azure_bestpractices_get | configure azure mcp in coding agent for my repo |
+| get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure |
+| get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
+| get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
+| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
+| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+
+## Azure Migrate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azuremigrate_platformlandingzone_getguidance | Get guidance for enabling DDoS protection in my Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | How do I turn off Bastion in my Platform Landing Zone? |
+| azuremigrate_platformlandingzone_getguidance | Show me how to change IP address ranges in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | Get guidance for implementing zero trust in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | How can I disable a policy in my Platform Landing Zone? |
+| azuremigrate_platformlandingzone_getguidance | Get guidance for changing resource naming patterns in my Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | Show me how to modify network topology in my Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | Get guidance for updating management groups in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | Search for DDoS policies in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | List all available policies by archetype in my Landing Zone |
+| azuremigrate_platformlandingzone_getguidance | Find policies related to storage encryption in my Platform Landing Zone |
+| azuremigrate_platformlandingzone_request | Check if a platform landing zone already exists for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
+| azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> |
+| azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Verify if all parameters are set for migrate project <migrate-project-name> |
+
 ## Azure Monitor
 
 | Tool Name | Test Prompt |
@@ -555,6 +636,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
 | resourcehealth_health-events_list | List active service health events in my subscription |
 | resourcehealth_health-events_list | Show me planned maintenance events for my Azure services |
+
+## Azure Policy
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| policy_assignment_list | List Azure Policies in the subscription <subscription_id> |
+
 
 ## Azure Service Bus
 

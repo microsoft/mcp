@@ -560,14 +560,14 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "get_bestpractices_ai_app": [
+  "get_azure_bestpractices_ai_app": [
     "Get best practices for building AI applications in Azure",
     "Show me the best practices for Microsoft Foundry agents code generation",
     "Get guidance for building agents with Microsoft Foundry",
     "Create an AI app that helps me to manage travel queries.",
     "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
   ],
-  "get_bestpractices_get": [
+  "get_azure_bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
     "Get the latest Azure best practices",
@@ -887,7 +887,7 @@
   "foundry_models_list": [
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
-  ],
+  ],  
   "foundry_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],
@@ -915,5 +915,10 @@
   ],
   "foundry_threads_list": [
     "List my Microsoft Foundry threads"
+  ],
+  "advisor_recommendations_list": [
+    "List all recommendations in my subscription",
+    "Show me Advisor recommendations in the subscription <subscription>",
+    "List all Advisor recommendations in the subscription <subscription>"
   ]
 }

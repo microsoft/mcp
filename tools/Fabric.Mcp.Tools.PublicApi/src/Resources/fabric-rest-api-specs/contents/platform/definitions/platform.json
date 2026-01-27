@@ -797,13 +797,28 @@
           "description": "A list of roles that are used to manage data access security and ensure that only authorized users can view certain data. A role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be a Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/DataAccessRole"
+            "$ref": "#/definitions/DataAccessRoleListItem"
           }
         }
       },
       "allOf": [
         {
           "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DataAccessRoleListItem": {
+      "description": "Data access role object returned by list operations. Includes the entity tag (ETag) used for concurrency control.",
+      "allOf": [
+        { "$ref": "#/definitions/DataAccessRole" },
+        {
+          "type": "object",
+          "properties": {
+            "eTag": {
+              "description": "Entity tag for the role, used for concurrency control.",
+              "type": "string"
+            }
+          }
         }
       ]
     },
@@ -820,17 +835,11 @@
         }
       }
     },
-    "DataAccessRole": {
-      "description": "A Data access role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Data access roles are used to manage data access security and ensure that only authorized users can view, edit, or delete certain data. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be an Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
+    "DataAccessRoleBase": {
+      "description": "Base data access role object used for single-role operations (does not include id). Represents a set of permissions and permission scopes that define allowed actions for scoped data.",
       "type": "object",
       "required": [ "name", "decisionRules" ],
       "properties": {
-        "id": {
-          "description": "The unique id for the Data access role.",
-          "type": "string",
-          "format": "uuid",
-          "readOnly": true
-        },
         "name": {
           "description": "The name of the Data access role.",
           "type": "string"
@@ -846,6 +855,37 @@
           "description": "The members object which contains the members of the role as arrays of different member types.",
           "type": "object",
           "$ref": "#/definitions/Members"
+        }
+      }
+    },
+    "DataAccessRole": {
+      "description": "Full data access role object including server-assigned id.",
+      "allOf": [
+        { "$ref": "#/definitions/DataAccessRoleBase" },
+        {
+          "type": "object",
+          "description": "Extends base data access role with server-assigned read-only id property.",
+          "properties": {
+            "id": {
+              "description": "The unique id for the Data access role.",
+              "type": "string",
+              "format": "uuid",
+              "readOnly": true
+            }
+          }
+        }
+      ]
+    },
+    "CreateOrUpdateSingleDataAccessRoleRequest": {
+      "description": "Wrapper object for creating or updating a single data access role (without id).",
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A single data access role definition (id is not included).",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/definitions/DataAccessRoleBase" }
         }
       }
     },
