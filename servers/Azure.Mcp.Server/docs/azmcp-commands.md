@@ -250,6 +250,13 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
+### Azure Advisor Operations
+
+```bash
+# List Advisor recommendations in a subscription
+azmcp advisor recommendations list --subscription <subscription>
+```
+
 ### Azure AI Search Operations
 
 ```bash
