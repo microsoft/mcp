@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Grafana.Services;
 public class GrafanaService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IGrafanaService
 {
-    public async Task<IEnumerable<GrafanaWorkspace>> ListWorkspacesAsync(
+    public async Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

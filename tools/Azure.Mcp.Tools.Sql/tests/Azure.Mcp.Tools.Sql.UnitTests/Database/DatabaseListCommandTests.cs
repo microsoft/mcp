@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -51,8 +52,8 @@ public class DatabaseListCommandTests
 
         if (shouldSucceed)
         {
-            var databases = new List<SqlDatabase>
-            {
+            var databases = new ResourceQueryResults<SqlDatabase>(
+            [
                 new("master", "/subscriptions/test-sub/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/master",
                     "Microsoft.Sql/servers/databases", "East US", null, "Online", "SQL_Latin1_General_CP1_CI_AS",
                     DateTimeOffset.UtcNow, null, "System", "System", null, DateTimeOffset.UtcNow, "Disabled", false),
@@ -60,7 +61,7 @@ public class DatabaseListCommandTests
                     "Microsoft.Sql/servers/databases", "East US",
                     new DatabaseSku("Standard", "Standard", 20, null, "268435456000"), "Online", "SQL_Latin1_General_CP1_CI_AS",
                     DateTimeOffset.UtcNow, 268435456000, "S0", "Standard", null, DateTimeOffset.UtcNow, "Disabled", false)
-            };
+            ], false);
 
             _sqlService
                 .ListDatabasesAsync(
@@ -116,8 +117,8 @@ public class DatabaseListCommandTests
         // Arrange
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
 
-        var expectedDatabases = new List<SqlDatabase>
-        {
+        var expectedDatabases = new ResourceQueryResults<SqlDatabase>(
+        [
             new("master", "/subscriptions/test-sub/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/master",
                 "Microsoft.Sql/servers/databases", "East US", null, "Online", "SQL_Latin1_General_CP1_CI_AS",
                 DateTimeOffset.UtcNow, null, "System", "System", null, DateTimeOffset.UtcNow, "Disabled", false),
@@ -125,7 +126,7 @@ public class DatabaseListCommandTests
                 "Microsoft.Sql/servers/databases", "East US",
                 new DatabaseSku("Standard", "Standard", 20, null, "268435456000"), "Online", "SQL_Latin1_General_CP1_CI_AS",
                 DateTimeOffset.UtcNow, 268435456000, "S0", "Standard", null, DateTimeOffset.UtcNow, "Disabled", false)
-        };
+        ], false);
 
         _sqlService
             .ListDatabasesAsync(
