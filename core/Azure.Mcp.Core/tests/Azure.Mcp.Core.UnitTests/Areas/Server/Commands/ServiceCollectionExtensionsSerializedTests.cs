@@ -52,8 +52,7 @@ public class ServiceCollectionExtensionsSerializedTests
     }
 
     /// <summary>
-    /// When <see cref="TransportTypes.Http"/> is used, telemetry is disabled
-    /// even when AZURE_MCP_COLLECT_TELEMETRY is explicitly set to true.
+    /// When <see cref="TransportTypes.Http"/> is used, telemetry is enabled by default.
     /// </summary>
     [Fact]
     public void InitializeConfigurationAndOptions_HttpTransport()
@@ -66,7 +65,6 @@ public class ServiceCollectionExtensionsSerializedTests
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 
         // Act
-        Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
         ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
         var provider = services.BuildServiceProvider();
 
@@ -79,7 +77,7 @@ public class ServiceCollectionExtensionsSerializedTests
         Assert.Equal("Azure.Mcp.Server", actual.Name);
         Assert.Equal("Azure MCP Server", actual.DisplayName);
         Assert.Equal("azmcp", actual.RootCommandGroupName);
-        Assert.False(actual.IsTelemetryEnabled);
+        Assert.True(actual.IsTelemetryEnabled);
     }
 
     [Fact]

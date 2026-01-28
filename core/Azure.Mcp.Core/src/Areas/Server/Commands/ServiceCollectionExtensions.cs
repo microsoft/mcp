@@ -292,14 +292,7 @@ public static class ServiceCollectionExtensions
 
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
                 // over any other settings.
-                var collectTelemetry = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
-                var transport = serviceStartOptions.Value.Transport;
-                var isStdioTransport = string.IsNullOrEmpty(transport)
-                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
-
-                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
-                // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = collectTelemetry && isStdioTransport;
+                options.IsTelemetryEnabled = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
             });
     }
 
