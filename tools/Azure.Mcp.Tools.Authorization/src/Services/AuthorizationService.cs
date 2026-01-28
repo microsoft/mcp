@@ -18,7 +18,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
 {
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<RoleAssignment>> ListRoleAssignmentsAsync(
+    public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,
         string scope,
         string? tenantId = null,

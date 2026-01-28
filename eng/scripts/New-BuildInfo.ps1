@@ -510,9 +510,12 @@ function Get-ServerDetails {
             dnxDescription = $props.DnxDescription
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            pypiPackageName = $props.PypiPackageName
+            pypiDescription = $props.PypiDescription
+            pypiPackageKeywords = @($props.PypiPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
             serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
-            platforms = $platforms
         }
     }
 
