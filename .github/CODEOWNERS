@@ -108,7 +108,7 @@
 # ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
 
 # PRLabel: %tools-Compute
-/tools/Azure.Mcp.Tools.Compute/         @g2vinay @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Compute/         @g2vinay @haagha @audreytoney @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Communication
 # ServiceOwners:                       @haagha @audreytoney @saakpan
