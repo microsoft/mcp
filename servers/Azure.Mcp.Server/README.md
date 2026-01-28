@@ -55,7 +55,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 # Overview
 
-**Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
+**Azure MCP Server** supercharges your agents with Azure context across **42+ different Azure services**.
 
 # Installation
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
@@ -910,7 +910,16 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Send an email from my communication service endpoint with custom sender name and multiple recipients"
 * "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
-### 📦 Azure Container Apps
+### � Azure Compute
+
+* "List all virtual machines in my subscription"
+* "Show me all VMs in resource group 'my-resource-group'"
+* "Get details for virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Get virtual machine 'my-vm' with instance view including power state and runtime status"
+* "Show me the power state and provisioning status of VM 'my-vm'"
+* "What is the current status of my virtual machine 'my-vm'?"
+
+### �📦 Azure Container Apps
 
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
@@ -1035,7 +1044,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **42+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1046,7 +1055,8 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
-- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
+- � **Azure Compute** - Virtual Machine and Virtual Machine Scale Set management
+- �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations

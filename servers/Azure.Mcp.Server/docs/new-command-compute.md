@@ -166,7 +166,7 @@ Rationale:
 - **Live test infrastructure**: Add Bicep template to `tools/Azure.Mcp.Tools.{Toolset}/tests`
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
-- **Solution file integration**: Add new projects to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
+- **Solution file integration**: Add new projects to `AzureMcp.sln` with proper GUID generation to avoid conflicts
 - **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
 
 ## Implementation Guidelines
@@ -202,7 +202,7 @@ Choose the appropriate base class for your service based on the operations neede
    public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
        : BaseAzureResourceService(subscriptionService, tenantService), IMyService
    {
-       public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
+       public async Task<List<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
            RetryPolicyOptions? retryPolicy,
@@ -1387,7 +1387,7 @@ The base `HandleException` method in BaseCommand handles the response formatting
 ```csharp
 protected virtual void HandleException(CommandContext context, Exception ex)
 {
-    context.Activity?.SetStatus(ActivityStatusCode.Error);
+    context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
 
     var response = context.Response;
     var result = new ExceptionResult(
@@ -1792,7 +1792,7 @@ Use these commands to detect and remove unused using statements:
 dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs" --verbosity normal
 
 # Format entire solution (use sparingly - takes longer)
-dotnet format ./Microsoft.Mcp.slnx --verbosity normal
+dotnet format ./AzureMcp.sln --verbosity normal
 
 # Check for analyzer warnings including unused usings
 dotnet build --verbosity normal | Select-String "warning"
@@ -2135,6 +2135,12 @@ catch (Exception ex)
 
 ### Project Setup and Integration Issues
 
+**Issue: Solution file GUID conflicts**
+- **Cause**: Duplicate project GUIDs in the solution file causing build failures
+- **Solution**: Generate unique GUIDs for new projects when adding to `AzureMcp.sln`
+- **Fix**: Use Visual Studio or `dotnet sln add` command to properly add projects with unique GUIDs
+- **Prevention**: Always check for GUID uniqueness when manually editing solution files
+
 **Issue: Missing package references cause compilation errors**
 - **Cause**: Azure Resource Manager package not added to `Directory.Packages.props` before being referenced
 - **Solution**: Add package version to `Directory.Packages.props` first, then reference in project files
@@ -2238,7 +2244,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-      <TargetFramework>net10.0</TargetFramework>
+      <TargetFramework>net9.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <IsPackable>false</IsPackable>
@@ -2679,7 +2685,7 @@ Every new command needs to be added to the consolidated mode. Here is the instru
 - Add the new commands to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tool descriptions where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
 - Use the following command to find out the correct tool name for your new tool
     ```
-    cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
+    cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
     ./azmcp[.exe] tools list --name --namespace <tool_area>
     ```
 
@@ -2723,7 +2729,7 @@ Before submitting:
 ### Package and Project Setup
 - [ ] Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`
 - [ ] **Package version consistency**: Same version used in both `Directory.Packages.props` and project references
-- [ ] **Solution file integration**: Projects added to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
+- [ ] **Solution file integration**: Projects added to `AzureMcp.sln` with unique GUIDs (no GUID conflicts)
 - [ ] **Toolset registration**: Added to `Program.cs` `RegisterAreas()` method in alphabetical order
 - [ ] JSON serialization context includes all new model types
 
@@ -2735,7 +2741,7 @@ Before submitting:
 - [ ] Spelling check passes with `.\eng\common\spelling\Invoke-Cspell.ps1`
 - [ ] **AOT compilation verified** with `./eng/scripts/Build-Local.ps1 -BuildNative`
 - [ ] **Clean up unused using statements**: Run `dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs"` to remove unnecessary imports and ensure consistent formatting
-- [ ] Fix formatting issues with `dotnet format ./Microsoft.Mcp.slnx` and ensure no warnings
+- [ ] Fix formatting issues with `dotnet format ./AzureMcp.sln` and ensure no warnings
 
 ### Azure SDK Integration
 - [ ] All Azure SDK property names verified and correct
