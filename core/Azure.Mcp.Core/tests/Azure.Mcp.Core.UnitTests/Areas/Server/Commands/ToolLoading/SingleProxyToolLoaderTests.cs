@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -15,6 +16,14 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
 public class SingleProxyToolLoaderTests
 {
+    private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
+    {
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var registryRoot = RegistryServerHelper.GetRegistryRoot();
+        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
+    }
+
     private static (SingleProxyToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(bool useRealDiscovery = true)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
@@ -31,7 +40,7 @@ public class SingleProxyToolLoaderTests
                 commandGroupLogger
             );
             var registryLogger = serviceProvider.GetRequiredService<ILogger<RegistryDiscoveryStrategy>>();
-            var registryDiscoveryStrategy = new RegistryDiscoveryStrategy(options, registryLogger);
+            var registryDiscoveryStrategy = CreateStrategy(options.Value, registryLogger);
             var compositeLogger = serviceProvider.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
             var compositeDiscoveryStrategy = new CompositeDiscoveryStrategy([
                 commandGroupDiscoveryStrategy,
