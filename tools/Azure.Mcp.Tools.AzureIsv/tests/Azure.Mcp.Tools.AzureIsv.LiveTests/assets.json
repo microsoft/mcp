@@ -1,5 +1,6 @@
 {
     "AssetsRepo": "Azure/azure-sdk-assets",
-    "TagPrefix": "Azure.Mcp.Tools.Azurelsv.LiveTests",
-    "Tag": ""
+    "AssetsRepoPrefixPath": "",
+    "TagPrefix": "Azure.Mcp.Tools.AzureIsv.LiveTests",
+    "Tag": "Azure.Mcp.Tools.AzureIsv.LiveTests_2b589333a0"
 }
