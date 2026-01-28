@@ -196,7 +196,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "azure-mcp-server": {
+            "Azure MCP Server": {
             "command": "npx",
             "args": [
                 "-y",
@@ -217,7 +217,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "azure-mcp-server": {
+            "Azure MCP Server": {
                 "command": "uvx",
                 "args": [
                     "--from",
