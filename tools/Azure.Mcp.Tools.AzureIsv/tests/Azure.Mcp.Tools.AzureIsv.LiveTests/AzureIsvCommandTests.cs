@@ -15,7 +15,7 @@ public class AzureIsvCommandTests(ITestOutputHelper output,TestProxyFixture fixt
     public async Task Should_list_datadog_monitored_resources()
     {
         // Skipping test if Tenant is not 'Customer LED Tenant'
-        if (Settings.TenantId != "888d76fa-54b2-4ced-8ee5-aac1585adee7")
+        if (Settings.TenantId != "888d76fa-54b2-4ced-8ee5-aac1585adee7" && Settings.TestMode != Tests.Helpers.TestMode.Playback)
         {
             Assert.Skip("Test skipped because Tenant is not 'Customer LED Tenant'.");
         }
