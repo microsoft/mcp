@@ -3,17 +3,14 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests : CommandTestsBase
+public class CommunicationCommandTests (ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public CommunicationCommandTests(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public async Task Should_SendSms_WithValidParameters()
     {
