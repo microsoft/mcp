@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Microsoft.ModelContextProtocol.HttpServer.Distributed</PackageId>
     <Title>Microsoft Model Context Protocol Distributed Http Server Extensions</Title>
     <Description>ASP.NET Core extensions for building enterprise-grade MCP servers that do not require external session affinity, yet work with session-aware features.</Description>
