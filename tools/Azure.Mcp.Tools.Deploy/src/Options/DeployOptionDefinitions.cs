@@ -56,44 +56,37 @@ public static class DeployOptionDefinitions
 
     public class PipelineGenerateOptions : SubscriptionOptions
     {
-        public const string UseAZDPipelineConfigName = "use-azd-pipeline-config";
-        public const string OrganizationNameName = "organization-name";
-        public const string RepositoryNameName = "repository-name";
-        public const string GithubEnvironmentNameName = "github-environment-name";
+        public const string isAZDProjectName = "is-azd-project";
+        public const string PipelinePlatformName = "pipeline-platform";
 
-        public static readonly Option<bool> UseAZDPipelineConfig = new(
-            $"--{UseAZDPipelineConfigName}"
+        public const string DeployOptionName = "deploy-option";
+
+        public static readonly Option<bool> isAZDProject = new(
+            $"--{isAZDProjectName}"
         )
         {
-            Description = "Whether to use azd tool to set up the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
+            Description = "Whether to use azd tool in the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
             DefaultValueFactory = _ => false,
-            Required = false
+            Required = true
         };
 
-        public static readonly Option<string> OrganizationName = new(
-            $"--{OrganizationNameName}"
+        public static readonly Option<string> pipelinePlatform = new(
+            $"--{PipelinePlatformName}"
         )
         {
-            Description = "The name of the organization or the user account name of the current Github repository. DO NOT fill this in if you're not sure.",
-            Required = false
+            Description = "The platform for the deployment pipeline. Valid values: github-actions, azure-devops.",
+            DefaultValueFactory = _ => "github-actions",
+            Required = true,
         };
 
-        public static readonly Option<string> RepositoryName = new(
-            $"--{RepositoryNameName}"
+        public static readonly Option<string> deployOption = new(
+            $"--{DeployOptionName}"
         )
         {
-            Description = "The name of the current Github repository. DO NOT fill this in if you're not sure.",
-            Required = false
+            Description = "Valid values: deploy-only, provision-and-deploy. Default to deploy-only. Set to 'provision-and-deploy' ONLY WHEN user explicitly wants infra provisioning pipeline using local provisioning scripts.",
+            DefaultValueFactory = _ => "deploy-only",
+            Required = true
         };
-
-        public static readonly Option<string> GithubEnvironmentName = new(
-            $"--{GithubEnvironmentNameName}"
-        )
-        {
-            Description = "The name of the environment to which the deployment pipeline will be deployed. DO NOT fill this in if you're not sure.",
-            Required = false
-        };
-
     }
 
     public static class PlanGet

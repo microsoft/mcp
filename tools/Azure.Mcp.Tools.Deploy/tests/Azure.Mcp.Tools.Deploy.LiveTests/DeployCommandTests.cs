@@ -79,7 +79,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             new()
             {
                 { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", true }
+                { "is-azd-project", true }
             });
 
         // assert
@@ -95,7 +95,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             new()
             {
                 { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", false },
+                { "is-azd-project", false },
                 { "organization-name", "test-org" },
                 { "repository-name", "test-repo" },
                 { "github-environment-name", "production" }

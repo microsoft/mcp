@@ -37,50 +37,6 @@ public class GuidanceGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "true"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result.Message);
-    }
-
-    [Fact]
-    public async Task Should_generate_pipeline_with_github_details()
-    {
-        // arrange
-        var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false",
-            "--organization-name", "test-org",
-            "--repository-name", "test-repo",
-            "--github-environment-name", "production"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
-        Assert.Contains("test-org", result.Message);
-        Assert.Contains("test-repo", result.Message);
-        Assert.Contains("production", result.Message);
-    }
-
-    [Fact]
-    public async Task Should_generate_pipeline_with_default_azd_pipeline_config()
-    {
-        // arrange - not providing use-azd-pipeline-config should default to false
-        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id"
         ]);
 
@@ -91,17 +47,21 @@ public class GuidanceGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
-        Assert.Contains("Github Actions workflow", result.Message);
+        Assert.Contains("When user confirms that Azure resources are ready for deployment", result.Message);
+        Assert.Contains("Create a setup-azure-auth-for-pipeline.sh or setup-azure-auth-for-pipeline.ps1 script to automate the auth configuration.", result.Message);
+        Assert.Contains("Create Github environments and set up approval checks in ALL environments.", result.Message);
+        Assert.Contains("Use User-assigned Managed Identity with OIDC for login to Azure in the pipeline.", result.Message);
     }
 
     [Fact]
-    public async Task Should_generate_pipeline_with_minimal_github_info()
+    public async Task Should_generate_pipeline_with_github_actions()
     {
         // arrange
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false"
+            "--is-azd-project", "false",
+            "--pipeline-platform", "github-actions",
+            "--deploy-option", "deploy-only",
         ]);
 
         // act
@@ -111,20 +71,21 @@ public class GuidanceGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
-        Assert.Contains("{$organization-of-repo}", result.Message);
-        Assert.Contains("{$repository-name}", result.Message);
-        Assert.Contains("dev", result.Message); // default environment
+        Assert.Contains("When user confirms that Azure resources are ready for deployment", result.Message);
+        Assert.Contains("Create a setup-azure-auth-for-pipeline.sh or setup-azure-auth-for-pipeline.ps1 script to automate the auth configuration.", result.Message);
+        Assert.Contains("Create Github environments and set up approval checks in ALL environments.", result.Message);
+        Assert.Contains("Use User-assigned Managed Identity with OIDC for login to Azure in the pipeline.", result.Message);
     }
 
     [Fact]
-    public async Task Should_handle_guid_subscription_id()
+    public async Task Should_generate_pipeline_with_azure_devops()
     {
-        // arrange
-        var guidSubscriptionId = "12345678-1234-1234-1234-123456789abc";
+        // arrange - not providing is-azd-project should default to false
         var args = _commandDefinition.Parse([
-            "--subscription", guidSubscriptionId,
-            "--use-azd-pipeline-config", "false"
+            "--subscription", "test-subscription-id",
+            "--is-azd-project", "false",
+            "--pipeline-platform", "azure-devops",
+            "--deploy-option", "deploy-only",
         ]);
 
         // act
@@ -134,35 +95,19 @@ public class GuidanceGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains($"User is deploying to subscription {guidSubscriptionId}", result.Message);
+        Assert.Contains("When user confirms that Azure resources are ready for deployment", result.Message);
+        Assert.Contains("You should use a .azure/pipeline-setup.md file to outline the steps.", result.Message);
+        Assert.Contains("Use Service Principal(app registration) with workflow identity federation to login to Azure in the pipeline.", result.Message);
+        Assert.Contains("Set up Service Connection in Azure DevOps using app registration with workflow identity federation.", result.Message);
     }
 
     [Fact]
-    public async Task Should_handle_non_guid_subscription_id()
-    {
-        // arrange
-        var args = _commandDefinition.Parse([
-            "--subscription", "my-subscription-name",
-            "--use-azd-pipeline-config", "false"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("az account show --query id -o tsv", result.Message);
-    }
-
-    [Fact]
-    public async Task Should_include_service_principal_creation_steps()
+    public async Task Should_generate_pipeline_with_provision_and_deploy()
     {
         // arrange
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false"
+            "--is-azd-project", "false"
         ]);
 
         // act
@@ -172,8 +117,6 @@ public class GuidanceGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("az ad sp create-for-rbac", result.Message);
-        Assert.Contains("federated-credential create", result.Message);
-        Assert.Contains("gh secret set", result.Message);
+        Assert.Contains("When user wants to include provisioning", result.Message);
     }
 }
