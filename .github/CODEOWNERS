@@ -110,7 +110,7 @@
 # PRLabel: %tools-Compute
 /tools/Azure.Mcp.Tools.Compute/         @g2vinay @haagha @audreytoney @microsoft/azure-mcp
 
-# ServiceLabel: %tools-Communication
+# ServiceLabel: %tools-Compute
 # ServiceOwners:                       @haagha @audreytoney @saakpan
 
 
