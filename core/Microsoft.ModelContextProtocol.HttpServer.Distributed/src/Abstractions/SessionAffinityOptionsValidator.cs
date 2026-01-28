@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Microsoft.Extensions.Options;
 
 namespace Microsoft.ModelContextProtocol.HttpServer.Distributed.Abstractions;

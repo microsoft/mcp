@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Buffers;
 using System.Text;
 using Microsoft.ModelContextProtocol.HttpServer.Distributed.Abstractions;
