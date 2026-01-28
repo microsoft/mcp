@@ -32,6 +32,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NuGet](#nuget)
         - [NPM](#npm)
         - [Docker](#docker)
+        - [GitHub Copilot CLI Configuration](#github-copilot-cli-configuration)
+        - [GitHub Copilot SDK Configuration](#github-copilot-sdk-configuration)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)
         - [Microsoft Foundry](#microsoft-foundry)
         - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
