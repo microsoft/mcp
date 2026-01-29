@@ -44,7 +44,8 @@ internal class TelemetryService : ITelemetryService
         [
             new(TagName.AzureMcpVersion, options.Value.Version),
             new(TagName.ServerMode, serverOptions.Value.Mode),
-            new(TagName.Transport, serverOptions.Value.Transport)
+            new(TagName.Transport, serverOptions.Value.Transport),
+            new(TagName.Host, System.Runtime.InteropServices.RuntimeInformation.OSDescription)
         ];
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);

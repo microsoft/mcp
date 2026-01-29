@@ -1,0 +1,4 @@
+pr: 1604
+changes:
+  - section: "Features Added"
+    description: "Added host information to tools execution telemetry"

@@ -317,6 +317,7 @@ public class TelemetryServiceTests
 
         AssertTag(dictionary, TagName.DevDeviceId, TestDeviceId);
         AssertTag(dictionary, TagName.MacAddressHash, TestMacAddressHash);
+        AssertTag(dictionary, TagName.Host, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
 
         if (expectedServiceOptions != null)
         {
