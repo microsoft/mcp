@@ -107,7 +107,8 @@ public class GuidanceGetCommandTests
         // arrange
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--is-azd-project", "false"
+            "--is-azd-project", "false",
+            "--deploy-option", "provision-and-deploy",
         ]);
 
         // act

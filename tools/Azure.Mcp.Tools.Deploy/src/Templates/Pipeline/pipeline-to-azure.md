@@ -13,12 +13,8 @@ Follow ALL of the following rules to provide CI/CD pipeline files and configurat
 *How you do configurations*:
 - Configure Azure authentication and environment setup for the pipeline as per the instructions below.
 - You should use a .azure/pipeline-setup.md file to outline the steps. The file should contain the steps and explain the tasks to be done by the user.
-{{SetUpMethodPrompt}}
+{{SetupMethodPrompt}}
 *Azure Authentication Configuration Guidance*:
 {{AzureAuthConfigPrompt}}
 *Pipeline Environment Setup Guidance*:
-    - Create Github environments and set up approval checks in ALL environments.
-    - Configure the Github Actions variables and secrets needed for the deployment pipeline for *different environments*.
-    - Refer to the managed identity created in the 'Azure Authentication Configuration Guidance' section for OIDC setup.
-    - You can use Github CLI and Github CLI or guide user to use UI to finish the setup.
-    - AZD IaC check: if Bicep is using resource group scope, AZURE_RESOURCE_GROUP variable should be set to the environment.
+{{EnvironmentSetupPrompt}}

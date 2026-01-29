@@ -28,15 +28,8 @@ public static class PipelineGenerationUtil
     /// <returns>A formatted pipeline guidelines string.</returns>
     public static string GeneratePipelineGuidelines(GuidanceGetOptions options)
     {
-        if (options.IsAZDProject)
-        {
-            return "Run `azd pipeline config` to help the user create a deployment pipeline.";
-        }
-        else
-        {
-            var parameters = CreatePipelineParameters(options);
-            return TemplateService.ProcessTemplate("Pipeline/azcli-pipeline", parameters.ToDictionary());
-        }
+        var parameters = CreatePipelineParameters(options);
+        return TemplateService.ProcessTemplate("Pipeline/pipeline-to-azure", parameters.ToDictionary());
     }
 
     private static string GeneratePrerequisiteChecksPrompt(GuidanceGetOptions options)
@@ -98,7 +91,7 @@ public static class PipelineGenerationUtil
         var prompt = "";
         if (options.PipelinePlatform == Models.PipelinePlatform.GitHubActions)
         {
-            prompt += "- Create a new **User - assigned Managed Identity** in a SEPARATE resource group.\n" +
+            prompt += "- Create a new **User-assigned Managed Identity** in a SEPARATE resource group.\n" +
                 "- This Managed Identity works for the pipeline. DO NOT CONFUSE it with any existing Managed Identity used by the application.\n" +
                 "- Set up Managed Identity with federated credentials and RBAC(e.g.contributor to resource groups and AcrPull) to authenticate(azure login with OIDC), push images and deploy applications to Azure in the pipeline for different environments.\n" +
                 "- Federated credentials should be set with proper subject * *to different environments * *(instead of branch), issuer, and audience. Description is NOT a valid property.\n";
