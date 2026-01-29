@@ -338,14 +338,14 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
     }
 
-    protected virtual async void Dispose(bool disposing)
+    protected virtual async void Dispose(bool disposing, CancellationToken cancellationToken)
     {
         if (!_disposed)
         {
             if (disposing)
             {
                 // Get all cached client keys
-                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
+                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, cancellationToken);
 
                 // Filter for client keys only (those that start with the client prefix)
                 var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
@@ -353,7 +353,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
                 // Retrieve and dispose each client
                 foreach (var key in clientKeys)
                 {
-                    var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
+                    var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: cancellationToken);
                     client?.Dispose();
                 }
                 _disposed = true;
@@ -361,9 +361,9 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
     }
 
-    public void Dispose()
+    public void Dispose(CancellationToken cancellationToken)
     {
-        Dispose(disposing: true);
+        Dispose(disposing: true, cancellationToken);
         GC.SuppressFinalize(this);
     }
 

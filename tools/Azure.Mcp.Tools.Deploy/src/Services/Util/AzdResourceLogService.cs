@@ -13,6 +13,7 @@ public static class AzdResourceLogService
         string workspaceFolder,
         string azdEnvName,
         string subscriptionId,
+        CancellationToken cancellationToken,
         int? limit = null)
     {
         var toolErrorLogs = new List<string>();
@@ -21,8 +22,8 @@ public static class AzdResourceLogService
         try
         {
             var azdAppLogRetriever = new AzdAppLogRetriever(credential, subscriptionId, azdEnvName);
-            await azdAppLogRetriever.InitializeAsync(CancellationToken.None);
-            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync(CancellationToken.None);
+            await azdAppLogRetriever.InitializeAsync(cancellationToken);
+            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync(cancellationToken);
 
             var services = GetServicesFromAzureYaml(workspaceFolder);
 
@@ -33,7 +34,7 @@ public static class AzdResourceLogService
                     if (service.Host != null)
                     {
                         var resourceType = ResourceTypeExtensions.GetResourceTypeFromHost(service.Host);
-                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit, CancellationToken.None);
+                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit, cancellationToken);
                         appLogs.Add(logs);
                     }
                 }
