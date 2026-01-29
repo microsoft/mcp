@@ -259,7 +259,7 @@ class Program
             var db = new VectorDB(new CosineSimilarity());
             var stopwatch = Stopwatch.StartNew();
 
-            await PopulateDatabaseAsync(db, tools, embeddingService, CancellationToken.None);
+            await PopulateDatabaseAsync(db, tools, embeddingService);
 
             stopwatch.Stop();
 
@@ -286,7 +286,7 @@ class Program
 
             if (testSingleToolMode)
             {
-                await TestSingleToolAsync(testToolDescription, testPrompts, embeddingService, db, maxResultsPerTest, CancellationToken.None);
+                await TestSingleToolAsync(testToolDescription, testPrompts, embeddingService, db, maxResultsPerTest);
 
                 return;
             }
@@ -351,7 +351,7 @@ class Program
 
                     if (toolNameAndPrompts != null)
                     {
-                        await SavePromptsToJsonAsync(toolNameAndPrompts, promptsJsonPath, CancellationToken.None);
+                        await SavePromptsToJsonAsync(toolNameAndPrompts, promptsJsonPath);
                         Console.WriteLine($"💾 Saved prompts to prompts.json");
                     }
                     else
@@ -574,7 +574,7 @@ class Program
         // Save the dynamically loaded tools to tools.json for future use
         if (result != null)
         {
-            await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"), CancellationToken.None);
+            await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"));
 
             Console.WriteLine($"💾 Saved {result.Tools?.Count} tools to tools.json");
         }
@@ -599,7 +599,7 @@ class Program
         return result;
     }
 
-    private static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath, CancellationToken cancellationToken = default)
+    private static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
     {
         try
         {
@@ -638,7 +638,7 @@ class Program
                 JsonSerializer.Serialize(jsonWriter, toolsResult, SourceGenerationContext.Default.ListToolsResult);
             }
 
-            await File.WriteAllBytesAsync(filePath, stream.ToArray(), cancellationToken);
+            await File.WriteAllBytesAsync(filePath, stream.ToArray());
         }
         catch (Exception ex)
         {
@@ -732,7 +732,7 @@ class Program
         return prompts;
     }
 
-    private static async Task SavePromptsToJsonAsync(Dictionary<string, List<string>> prompts, string filePath, CancellationToken cancellationToken = default)
+    private static async Task SavePromptsToJsonAsync(Dictionary<string, List<string>> prompts, string filePath)
     {
         try
         {
@@ -761,7 +761,7 @@ class Program
                 JsonSerializer.Serialize(jsonWriter, prompts, SourceGenerationContext.Default.DictionaryStringListString);
             }
 
-            await File.WriteAllBytesAsync(filePath, stream.ToArray(), cancellationToken);
+            await File.WriteAllBytesAsync(filePath, stream.ToArray());
         }
         catch (Exception ex)
         {
@@ -782,7 +782,7 @@ class Program
                .Replace(UnicodeChars.RightDoubleQuote, "\"");
     }
 
-    private static async Task PopulateDatabaseAsync(VectorDB db, List<Tool> tools, EmbeddingService embeddingService, CancellationToken cancellationToken = default)
+    private static async Task PopulateDatabaseAsync(VectorDB db, List<Tool> tools, EmbeddingService embeddingService)
     {
         const int threshold = 2;
 
@@ -794,8 +794,8 @@ class Program
             var right = tools.Skip(half).ToList();
 
             await Task.WhenAll(
-                PopulateDatabaseAsync(db, left, embeddingService, cancellationToken),
-                PopulateDatabaseAsync(db, right, embeddingService, cancellationToken));
+                PopulateDatabaseAsync(db, left, embeddingService),
+                PopulateDatabaseAsync(db, right, embeddingService));
 
             return;
         }
@@ -817,7 +817,7 @@ class Program
                 toolName = tool.Command?.Replace(" ", SpaceReplacement) ?? tool.Name;
             }
 
-            var vector = await embeddingService.CreateEmbeddingsAsync(input, cancellationToken);
+            var vector = await embeddingService.CreateEmbeddingsAsync(input);
 
             db.Upsert(new Entry(toolName, tool, vector));
         }
@@ -1046,7 +1046,7 @@ class Program
             foreach (var prompt in prompts)
             {
                 metrics.TotalTests++;
-                var vector = await embeddingService.CreateEmbeddingsAsync(prompt, CancellationToken.None);
+                var vector = await embeddingService.CreateEmbeddingsAsync(prompt);
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
@@ -1193,7 +1193,7 @@ class Program
         Console.WriteLine("    --prompt \"what storage accounts do I have\"");
     }
 
-    private static async Task TestSingleToolAsync(string? toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5, CancellationToken cancellationToken = default)
+    private static async Task TestSingleToolAsync(string? toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5)
     {
         Console.WriteLine("🔧 Testing Single Tool Description");
         Console.WriteLine($"📋 Tool Description: {toolDescription}");
@@ -1218,7 +1218,7 @@ class Program
                 }
             };
 
-            await PopulateDatabaseAsync(db, testTools, embeddingService, cancellationToken);
+            await PopulateDatabaseAsync(db, testTools, embeddingService);
 
             // Test each prompt against all tools
             var testNumber = 1;
@@ -1228,7 +1228,7 @@ class Program
                 Console.WriteLine($"🎯 Test {testNumber}: \"{testPrompt}\"");
                 Console.WriteLine();
 
-                var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt, cancellationToken);
+                var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt);
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
@@ -1326,7 +1326,7 @@ class Program
 
             foreach (var testPrompt in testPrompts)
             {
-                var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt, CancellationToken.None);
+                var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt);
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
