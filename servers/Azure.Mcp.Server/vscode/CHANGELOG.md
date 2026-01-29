@@ -1,5 +1,21 @@
 # Release History
 
+## 2.0.0-beta.15 (2026-01-29) (pre-release)
+
+### Added
+
+- Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
+
+### Fixed
+
+- Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
+- Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
+
+### Changed
+
+- Added AreResultsTruncated to tools that list resources using Resource Graph. [[#1526](https://github.com/microsoft/mcp/pull/1526)]
+- Improved server startup performance by parallelizing external MCP server initialization, reducing startup time from ~20 seconds to ~1-2 seconds when using registry-based servers. [[#1534](https://github.com/microsoft/mcp/pull/1534)]
+
 ## 2.0.0-beta.14 (2026-01-27) (pre-release)
 
 ### Added
