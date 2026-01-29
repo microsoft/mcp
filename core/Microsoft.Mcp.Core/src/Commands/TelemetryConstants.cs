@@ -24,7 +24,7 @@ public class TagName
     public const string IsReadOnly = "IsReadOnly";
     public const string Namespace = "Namespace";
     public const string ToolCount = "ToolCount";
-    public const string InsecureDisableElicitation = "InsecureDisableElicitation";
+    public const string DangerouslyDisableElicitation = "DangerouslyDisableElicitation";
     public const string IsDebug = "IsDebug";
     public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
     public const string Tool = "Tool";

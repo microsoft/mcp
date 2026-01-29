@@ -12,6 +12,7 @@
           "value": [
             {
               "name": "DefaultReader",
+              "eTag": "44d64df551425fcc55e4d42a148795d9f25f89dd",
               "decisionRules": [
                 {
                   "effect": "Permit",

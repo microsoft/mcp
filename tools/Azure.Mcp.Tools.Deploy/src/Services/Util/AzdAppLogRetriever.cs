@@ -1,4 +1,3 @@
-using Azure.Core;
 using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager;
@@ -8,7 +7,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
-public class AzdAppLogRetriever(TokenCredential credential, string subscriptionId, string azdEnvName)
+public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryClient, string subscriptionId, string azdEnvName)
 {
     private readonly string _subscriptionId = subscriptionId;
     private readonly string _azdEnvName = azdEnvName;
@@ -17,8 +16,8 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
     private readonly List<string> _logAnalyticsWorkspaceIds = new();
     private string _resourceGroupName = string.Empty;
 
-    private ArmClient? _armClient;
-    private LogsQueryClient? _queryClient;
+    private readonly ArmClient _armClient = armClient ?? throw new ArgumentNullException(nameof(armClient));
+    private readonly LogsQueryClient _queryClient = logsQueryClient ?? throw new ArgumentNullException(nameof(logsQueryClient));
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -34,7 +33,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
 
     public async Task GetLogAnalyticsWorkspacesInfoAsync(CancellationToken cancellationToken)
     {
-        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+        var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
         var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName, cancellationToken);
 
         var filter = "resourceType eq 'Microsoft.OperationalInsights/workspaces'";
@@ -52,8 +51,8 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
 
     public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string serviceName, CancellationToken cancellationToken)
     {
-        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
-        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName, cancellationToken);
+        var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
 
         var filter = $"tagName eq 'azd-service-name' and tagValue eq '{serviceName}'";
         var apps = new List<GenericResource>();
@@ -107,7 +106,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
             case ResourceType.ContainerApps:
                 logSearchQuery = GetContainerAppLogsQuery(app.Data.Name, actualLimit);
                 // Get last deployment time for container apps
-                var containerAppResource = _armClient!.GetContainerAppResource(app.Id);
+                var containerAppResource = _armClient.GetContainerAppResource(app.Id);
                 var containerApp = await containerAppResource.GetAsync(cancellationToken);
 
                 await foreach (var revision in containerApp.Value.GetContainerAppRevisions())
@@ -123,7 +122,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
 
             case ResourceType.AppService:
             case ResourceType.FunctionApp:
-                var webSiteResource = _armClient!.GetWebSiteResource(app.Id);
+                var webSiteResource = _armClient.GetWebSiteResource(app.Id);
 
                 await foreach (var deployment in webSiteResource.GetSiteDeployments())
                 {
@@ -156,7 +155,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
             try
             {
                 var timeRange = new LogsQueryTimeRange(startTime, endTime);
-                var response = await _queryClient!.QueryResourceAsync(new(logAnalyticsId), logSearchQuery, timeRange, cancellationToken: cancellationToken);
+                var response = await _queryClient.QueryResourceAsync(new(logAnalyticsId), logSearchQuery, timeRange, cancellationToken: cancellationToken);
 
                 if (response.Value.Status == LogsQueryResultStatus.Success)
                 {
@@ -187,7 +186,7 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
 
     private async Task<string> GetResourceGroupNameAsync(CancellationToken cancellationToken)
     {
-        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+        var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
 
         await foreach (var resourceGroup in subscription.GetResourceGroups())
         {

@@ -264,7 +264,7 @@ public sealed class NamespaceToolLoader(
         string? intent,
         string namespaceName,
         string command,
-        IReadOnlyDictionary<string, JsonElement> parameters,
+        IDictionary<string, JsonElement> parameters,
         CancellationToken cancellationToken)
     {
         if (request.Params == null)
@@ -339,7 +339,7 @@ public sealed class NamespaceToolLoader(
                 var elicitationResult = await HandleSecretElicitationAsync(
                     request,
                     $"{namespaceName} {command}",
-                    _options.Value.InsecureDisableElicitation,
+                    _options.Value.DangerouslyDisableElicitation,
                     _logger,
                     cancellationToken);
 
@@ -458,7 +458,7 @@ public sealed class NamespaceToolLoader(
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = GetChildToolList(request, namespaceName);
-            (string? commandName, IReadOnlyDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
+            (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
             if (commandName != null)
             {
                 response = await InvokeChildToolAsync(request, intent, namespaceName, commandName, parameters, cancellationToken);
@@ -586,7 +586,7 @@ public sealed class NamespaceToolLoader(
             string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static IReadOnlyDictionary<string, JsonElement> GetParametersFromArgs(IReadOnlyDictionary<string, JsonElement>? args)
+    private static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
         if (args == null || !args.TryGetValue("parameters", out var paramsElem))
         {
@@ -620,10 +620,10 @@ public sealed class NamespaceToolLoader(
             {
                 Progress = 0f,
                 Message = message,
-            }, cancellationToken);
+            }, cancellationToken: cancellationToken);
     }
 
-    private async Task<(string? commandName, IReadOnlyDictionary<string, JsonElement> parameters)> GetCommandAndParametersFromIntentAsync(
+    private async Task<(string? commandName, Dictionary<string, JsonElement> parameters)> GetCommandAndParametersFromIntentAsync(
         RequestContext<CallToolRequestParams> request,
         string intent,
         string namespaceName,
@@ -638,11 +638,12 @@ public sealed class NamespaceToolLoader(
 
         var samplingRequest = new CreateMessageRequestParams
         {
+            MaxTokens = 1000, // arbitrary limit that can be changed in the future as needed; MCP requires a max be specified
             Messages = [
                 new SamplingMessage
                 {
                     Role = Role.Assistant,
-                    Content = new TextContentBlock{
+                    Content = [new TextContentBlock{
                         Text = $"""
                             This is a list of available commands for the {namespaceName} server.
 
@@ -666,17 +667,17 @@ public sealed class NamespaceToolLoader(
                             Available Commands:
                             {availableToolsJson}
                             """
-                    }
+                    }]
                 }
             ],
         };
         try
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
-            var samplingContent = samplingResponse.Content as TextContentBlock;
+            var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
             var toolCallJson = samplingContent?.Text?.Trim();
             string? commandName = null;
-            IReadOnlyDictionary<string, JsonElement> parameters = new Dictionary<string, JsonElement>();
+            var parameters = new Dictionary<string, JsonElement>();
 
             if (!string.IsNullOrEmpty(toolCallJson))
             {
