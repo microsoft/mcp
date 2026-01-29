@@ -31,6 +31,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
+        - [PyPI](#pypi)
         - [Docker](#docker)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)
         - [Microsoft Foundry](#microsoft-foundry)
@@ -195,7 +196,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "azure-mcp-server": {
+            "Azure MCP Server": {
             "command": "npx",
             "args": [
                 "-y",
@@ -208,6 +209,28 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     }
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
+<!-- remove-section: start nuget;npm remove_uvx_config_sub_section -->
+#### Option 3: Configure using Python (uvx)
+- To use Azure MCP server from Python, you must have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed. uv is a fast Python package installer and resolver. To verify your installation run: `uv --version` and `uvx --version`.
+-  Configure the `mcp.json` file with the following:
+
+    ```json
+    {
+        "mcpServers": {
+            "Azure MCP Server": {
+                "command": "uvx",
+                "args": [
+                    "--from",
+                    "msmcp-azure",
+                    "azmcp",
+                    "server",
+                    "start"
+                ]
+            }
+        }
+    }
+    ```
+<!-- remove-section: end remove_uvx_config_sub_section -->
 <!-- remove-section: start nuget remove_custom_client_config_table -->
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
@@ -291,6 +314,50 @@ To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (
 
 **Architecture:**
 To understand how platform-specific binaries are installed with @azure/mcp, review the [wrapper binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md).
+
+</details>
+
+### PyPI
+
+Install the Python package: [msmcp-azure](https://pypi.org/project/msmcp-azure/).
+
+**Run directly without installation (using uvx - recommended):**
+
+```bash
+uvx --from msmcp-azure azmcp server start
+```
+
+**Install as a global tool (using pipx):**
+
+```bash
+pipx install msmcp-azure
+```
+
+**Install using pip:**
+
+```bash
+pip install msmcp-azure
+```
+
+**Install a specific version:**
+
+```bash
+pip install msmcp-azure==<version>
+```
+
+<details>
+<summary>Additional instructions</summary>
+
+**When to use uvx vs pipx vs pip:**
+
+-   **uvx (recommended):** Run directly without installation. Best for MCP server usage where you want the latest version without managing installations.
+-   **pipx:** Install as an isolated global tool. Best when you want a persistent installation that doesn't interfere with other Python projects.
+-   **pip:** Install in the current Python environment. Best for integration into existing Python projects or virtual environments.
+
+**Prerequisites:**
+
+-   [uv](https://docs.astral.sh/uv/getting-started/installation/) for `uvx` commands
+-   Python 3.10+ for `pip` or `pipx` installation
 
 </details>
 
