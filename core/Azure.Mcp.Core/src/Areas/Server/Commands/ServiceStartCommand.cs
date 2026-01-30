@@ -523,18 +523,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         services.AddHealthChecks();
 
         // Configure CORS
-        // We're allowing all origins, methods, and headers to support any web
-        // browser clients.
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", policy =>
-            {
-                policy.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
+        ConfigureCors(services, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -545,7 +537,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         UseHttpsRedirectionIfEnabled(app);
 
         // Configure middleware pipeline
-        app.UseCors("AllowAll");
+        app.UseCors("McpCorsPolicy");
         app.UseRouting();
 
         // Add OAuth protected resource metadata middleware
@@ -640,18 +632,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         services.AddSingleIdentityTokenCredentialProvider();
 
         // Configure CORS
-        // We're allowing all origins, methods, and headers to support any web
-        // browser clients.
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", policy =>
-            {
-                policy.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
+        ConfigureCors(services, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -668,11 +652,63 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         UseHttpsRedirectionIfEnabled(app);
 
         // Configure middleware pipeline
-        app.UseCors("AllowAll");
+        app.UseCors("McpCorsPolicy");
         app.UseRouting();
         app.MapMcp();
 
         return app;
+    }
+
+    /// <summary>
+    /// Configures CORS policy based on environment and configuration.
+    /// In development mode (unauthenticated), restricts to localhost for security.
+    /// In production (authenticated), allows all origins (safe due to authentication requirement).
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="serverOptions">The server configuration options.</param>
+    private static void ConfigureCors(IServiceCollection services, ServiceStartOptions serverOptions)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("McpCorsPolicy", policy =>
+            {
+                // In unauthenticated mode (development), restrict to localhost by default
+                // Allows localhost with any port to support various development scenarios:
+                // - Port 1031: Default HTTP mode (launchSettings.json)
+                // - Port 5008: SSE mode default
+                // - Port 5173: MCP Inspector tool
+                // - Custom ports: User-specified via ASPNETCORE_URLS
+                if (serverOptions.DangerouslyDisableHttpIncomingAuth)
+                {
+                    policy.SetIsOriginAllowed(origin =>
+                          {
+                              if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                              {
+                                  // Allow localhost and 127.0.0.1 with any port
+                                  return uri.Host == "localhost" || 
+                                         uri.Host == "127.0.0.1" ||
+                                         uri.Host == "[::1]"; // IPv6 loopback
+                              }
+                              return false;
+                          })
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials(); // Required when using SetIsOriginAllowed
+                }
+                // In authenticated mode (production), allow all origins by default
+                // This is safe because:
+                // 1. Authentication (JWT Bearer) validates all requests regardless of origin
+                // 2. CORS is a browser security mechanism, not a server security feature
+                // 3. MCP clients (GitHub Copilot in VS Code/Codespaces) need to connect from various origins
+                // 4. The server still enforces authentication and authorization on every request
+                else
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                }
+            });
+        });
     }
 
     /// <summary>
