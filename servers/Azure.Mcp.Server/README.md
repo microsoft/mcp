@@ -33,9 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
-        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -812,14 +810,8 @@ class Program
 
 Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Microsoft Foundry
+Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-foundry-aca-mi) for Microsoft Foundry.
-2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
-
-### Microsoft Copilot Studio
-
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
