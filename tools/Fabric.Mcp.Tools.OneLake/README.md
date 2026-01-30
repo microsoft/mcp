@@ -44,6 +44,7 @@ The OneLake MCP tools are configured to use the Microsoft Fabric production envi
 OneLake Data Plane: https://api.onelake.fabric.microsoft.com
 OneLake DFS API: https://onelake.dfs.fabric.microsoft.com
 OneLake Blob API: https://onelake.blob.fabric.microsoft.com
+OneLake Table API: https://onelake.table.fabric.microsoft.com
 Fabric API: https://api.fabric.microsoft.com/v1
 ```
 
@@ -688,6 +689,9 @@ fabmcp.exe onelake table config get --workspace "47242da5-ff3b-46fb-a94f-977909b
 
 # List available namespaces (schemas)
 fabmcp.exe onelake table namespace list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# Get namespace details
+fabmcp.exe onelake table namespace get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales"
 
 # List tables published under a namespace
 fabmcp.exe onelake table list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales"
