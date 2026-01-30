@@ -33,9 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
-        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
