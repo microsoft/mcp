@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
+using Fabric.Mcp.Tools.OneLake.Commands.Table;
 using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +46,13 @@ public class FabricOneLakeSetup : IAreaSetup
         // Register directory commands
         services.AddSingleton<DirectoryCreateCommand>();
         services.AddSingleton<DirectoryDeleteCommand>();
+
+        // Register table commands
+        services.AddSingleton<TableConfigGetCommand>();
+        services.AddSingleton<TableListCommand>();
+        services.AddSingleton<TableGetCommand>();
+        services.AddSingleton<TableNamespaceListCommand>();
+        services.AddSingleton<TableNamespaceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -81,6 +89,15 @@ public class FabricOneLakeSetup : IAreaSetup
 
         var directoryGroup = new CommandGroup("directory", "Directory operations - Commands for creating and deleting OneLake directories.");
         fabricOneLake.AddSubGroup(directoryGroup);
+
+        var tableGroup = new CommandGroup("table", "Table operations - Commands for interacting with OneLake table endpoints.");
+        fabricOneLake.AddSubGroup(tableGroup);
+
+        var tableConfigGroup = new CommandGroup("config", "Table configuration commands - Inspect table endpoint configuration details.");
+        tableGroup.AddSubGroup(tableConfigGroup);
+
+        var tableNamespaceGroup = new CommandGroup("namespace", "Table namespace operations - Commands for browsing OneLake table namespaces.");
+        tableGroup.AddSubGroup(tableNamespaceGroup);
 
         var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
         workspaceGroup.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
@@ -123,6 +140,21 @@ public class FabricOneLakeSetup : IAreaSetup
 
         var directoryDeleteCommand = serviceProvider.GetRequiredService<DirectoryDeleteCommand>();
         directoryGroup.AddCommand(directoryDeleteCommand.Name, directoryDeleteCommand);
+
+        var tableConfigGetCommand = serviceProvider.GetRequiredService<TableConfigGetCommand>();
+        tableConfigGroup.AddCommand(tableConfigGetCommand.Name, tableConfigGetCommand);
+
+        var tableListCommand = serviceProvider.GetRequiredService<TableListCommand>();
+        tableGroup.AddCommand(tableListCommand.Name, tableListCommand);
+
+        var tableGetCommand = serviceProvider.GetRequiredService<TableGetCommand>();
+        tableGroup.AddCommand(tableGetCommand.Name, tableGetCommand);
+
+        var tableNamespaceListCommand = serviceProvider.GetRequiredService<TableNamespaceListCommand>();
+        tableNamespaceGroup.AddCommand(tableNamespaceListCommand.Name, tableNamespaceListCommand);
+
+        var tableNamespaceGetCommand = serviceProvider.GetRequiredService<TableNamespaceGetCommand>();
+        tableNamespaceGroup.AddCommand(tableNamespaceGetCommand.Name, tableNamespaceGetCommand);
 
         return fabricOneLake;
     }

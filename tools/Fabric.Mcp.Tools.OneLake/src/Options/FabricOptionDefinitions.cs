@@ -75,56 +75,6 @@ public static class FabricOptionDefinitions
         Required = false
     };
 
-    // Shortcut options
-    public const string ShortcutNameName = "shortcut-name";
-    public static readonly Option<string> ShortcutName = new($"--{ShortcutNameName}")
-    {
-        Description = "The name of the OneLake shortcut.",
-        Required = true
-    };
-
-    public const string ShortcutPathName = "shortcut-path";
-    public static readonly Option<string> ShortcutPath = new($"--{ShortcutPathName}")
-    {
-        Description = "The path where the shortcut is located.",
-        Required = true
-    };
-
-    public const string TargetTypeName = "target-type";
-    public static readonly Option<string> TargetType = new($"--{TargetTypeName}")
-    {
-        Description = "The type of shortcut target (OneLake, AdlsGen2, S3).",
-        Required = true
-    };
-
-    public const string TargetUrlName = "target-url";
-    public static readonly Option<string> TargetUrl = new($"--{TargetUrlName}")
-    {
-        Description = "The URL of the shortcut target.",
-        Required = false
-    };
-
-    public const string TargetWorkspaceIdName = "target-workspace-id";
-    public static readonly Option<string> TargetWorkspaceId = new($"--{TargetWorkspaceIdName}")
-    {
-        Description = "The workspace ID for OneLake shortcut target.",
-        Required = false
-    };
-
-    public const string TargetItemIdName = "target-item-id";
-    public static readonly Option<string> TargetItemId = new($"--{TargetItemIdName}")
-    {
-        Description = "The item ID for OneLake shortcut target.",
-        Required = false
-    };
-
-    public const string TargetPathName = "target-path";
-    public static readonly Option<string> TargetPath = new($"--{TargetPathName}")
-    {
-        Description = "The path for the shortcut target.",
-        Required = false
-    };
-
     // Data operation options
     public const string RecursiveName = "recursive";
     public static readonly Option<bool> Recursive = new($"--{RecursiveName}")
@@ -205,5 +155,27 @@ public static class FabricOptionDefinitions
     {
         Description = "The endpoint type to use for listing items (fabric-api, blob, auto). Default is 'auto' which uses blob endpoint when appropriate.",
         Required = false
+    };
+
+    // Table namespace options
+    public const string NamespaceName = "namespace";
+    public static readonly Option<string> Namespace = new($"--{NamespaceName}")
+    {
+        Description = "The table namespace (schema) to inspect within the OneLake table API.",
+        Required = true
+    };
+
+    public const string SchemaName = "schema";
+    public static readonly Option<string> Schema = new($"--{SchemaName}")
+    {
+        Description = "Alias for --namespace when specifying table schemas in the OneLake table API.",
+        Required = false
+    };
+
+    public const string TableName = "table";
+    public static readonly Option<string> Table = new($"--{TableName}")
+    {
+        Description = "The table name exposed by the OneLake table API.",
+        Required = true
     };
 }
