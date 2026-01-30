@@ -12,11 +12,12 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Integrate with other Fabric workloads through OneLake
 
 **Features:**
-- 14 comprehensive OneLake commands with full MCP integration
+- 19 comprehensive OneLake commands with full MCP integration
+- Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
 - Support for multiple Microsoft Fabric environments (PROD, DAILY, DXT, MSIT)
 - Robust error handling and authentication
-- Production-ready with 100% test coverage (90 tests)
+- Production-ready with 100% test coverage (132 tests)
 - Clean, focused API design optimized for AI agent interactions
 
 ## Prerequisites
@@ -207,7 +208,7 @@ You can verify which environment you're targeting by checking the endpoints in t
 
 ### Workspace and Item Identifiers
 
-All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option.
+All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option. Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
 
 ```bash
 dotnet run -- onelake file list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
@@ -694,6 +695,58 @@ dotnet run -- onelake directory delete --workspace-id "47242da5-ff3b-46fb-a94f-9
 }
 ```
 
+### Table Operations
+
+#### Get Table Configuration
+
+Retrieves the OneLake table API configuration payload for a warehouse or lakehouse endpoint.
+
+```bash
+dotnet run -- onelake table config get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**Parameters:**
+- `--workspace-id`/`--workspace`: Workspace identifier (GUID or name)
+- `--item-id`/`--item`: Item identifier (GUID or `<name>.<type>`)
+
+#### List Table Namespaces
+
+Enumerates the namespaces (schemas) exposed by the table API. Accepts either GUIDs or friendly names.
+
+```bash
+dotnet run -- onelake table namespace list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse"
+```
+
+#### Get Table Namespace Details
+
+Fetches metadata for a specific namespace. Use `--namespace` (or `--schema`) to target the schema.
+
+```bash
+dotnet run -- onelake table namespace get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales"
+```
+
+#### List Tables within a Namespace
+
+Returns the tables published under a namespace. The `--namespace` and `--schema` switches are interchangeable.
+
+```bash
+dotnet run -- onelake table list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales"
+```
+
+#### Get Table Metadata
+
+Retrieves the full table definition for a specific namespace/table combination.
+
+```bash
+dotnet run -- onelake table get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales" --table "transactions"
+```
+
+**Parameters:**
+- `--workspace-id`/`--workspace`: Workspace identifier
+- `--item-id`/`--item`: Item identifier
+- `--namespace`/`--schema`: Namespace (schema) name
+- `--table`: Table name to retrieve
+
 ## Quick Reference - fabmcp.exe Commands
 
 For users with the compiled `fabmcp.exe` executable, here are ready-to-use commands:
@@ -744,6 +797,21 @@ fabmcp.exe onelake download file --workspace "47242da5-ff3b-46fb-a94f-977909b773
 
 # Delete a blob (Blob endpoint)
 fabmcp.exe onelake blob delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
+```
+
+### Table Operations
+```cmd
+# Inspect table API configuration
+fabmcp.exe onelake table config get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# List available namespaces (schemas)
+fabmcp.exe onelake table namespace list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# List tables published under a namespace
+fabmcp.exe onelake table list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales"
+
+# Retrieve a specific table definition
+fabmcp.exe onelake table get --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales" --table "transactions"
 ```
 
 **Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).

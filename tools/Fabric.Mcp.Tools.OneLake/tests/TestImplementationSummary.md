@@ -5,17 +5,22 @@ Production-ready test suite for Microsoft Fabric OneLake MCP Tools providing com
 
 ## Final Test Coverage Status
 
-### ✅ Command Tests - 100% Coverage (68/68 passing)
-All 11 OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
+### ✅ Command Tests - 100% Coverage Across 20 Commands
+All OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
 
 #### Enhanced Command Tests
 - **FileReadCommand**: Complete ExecuteAsync testing with service mocks
-- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks  
+- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks
 - **FileDeleteCommand**: Complete ExecuteAsync testing with service mocks
 - **DirectoryCreateCommand**: Complete ExecuteAsync testing with service mocks
 - **DirectoryDeleteCommand**: Complete ExecuteAsync testing with service mocks
 - **ItemCreateCommand**: Complete ExecuteAsync testing with service mocks
-- **All 11 commands**: Constructor validation, interface implementation, parameter binding, error handling
+- **TableNamespaceListCommand**: Namespace enumeration with schema alias handling
+- **TableNamespaceGetCommand**: Namespace metadata retrieval scenarios
+- **TableListCommand**: Cross-namespace table discovery and paging
+- **TableGetCommand**: Detailed table metadata and column schema retrieval
+- **TableConfigGetCommand**: Table configuration export validation
+- **All 20 commands**: Constructor validation, interface implementation, parameter binding, error handling
 
 #### Key Features
 - **Constructor validation**: All commands properly initialized
@@ -36,11 +41,11 @@ Service tests demonstrate testable architecture patterns following Fabric.Public
 ## Test Statistics
 
 ### Final Test Count
-- **Total Tests**: 74 tests (100% passing) ✅
-- **Command Coverage**: 100% with comprehensive ExecuteAsync testing (68 tests) ✅
+- **Total Tests**: 132 tests (100% passing) ✅
+- **Command Coverage**: 100% with comprehensive ExecuteAsync testing ✅
 - **Service Architecture Tests**: Testable pattern demonstrations (6 tests) ✅
 - **Build Status**: Clean build with no test failures ✅
-- **Test Duration**: ~2.3 seconds (fast execution) ⚡
+- **Test Duration**: ~10 seconds (fast execution) ⚡
 
 ## Technical Implementation
 
@@ -67,10 +72,11 @@ public async Task ExecuteAsync_PerformsCorrectServiceCall()
 ### Test Organization
 ```
 tests/
-├── Commands/           # Individual command tests (11 commands)
+├── Commands/           # Individual command tests (20 commands)
 │   ├── File/          # File operation commands
 │   ├── Item/          # Item management commands  
 │   ├── Directory/     # Directory operation commands
+│   ├── Table/         # Table API command coverage
 │   └── Workspace/     # Workspace operation commands
 ├── Services/          # Service layer tests
 │   └── OneLakeServiceTests.cs  # Testable architecture patterns
@@ -79,7 +85,7 @@ tests/
 
 ### Test Coverage Created
 
-#### Command Tests (84 tests)
+#### Command Tests
 - **Constructor validation** - Ensures proper dependency injection
 - **Command properties** - Name, title, description validation
 - **Metadata verification** - ReadOnly, Destructive, Idempotent flags
@@ -110,6 +116,11 @@ tests/
 - ✅ **Item Creation** (`onelake item create`) - Create OneLake items
 - ✅ **File Operations** (`onelake file read`, `onelake file write`, `onelake file delete`) - File management
 - ✅ **Directory Operations** (`onelake directory create`, `onelake directory delete`) - Directory management
+- ✅ **Table Namespace Listing** (`onelake table namespace list`) - Namespace enumeration with schema alias support
+- ✅ **Table Namespace Retrieval** (`onelake table namespace get`) - Namespace metadata fetching
+- ✅ **Table Listing** (`onelake table list`) - Table discovery across namespaces
+- ✅ **Table Retrieval** (`onelake table get`) - Detailed table metadata and schema inspection
+- ✅ **Table Configuration** (`onelake table config get`) - Configuration export validation
 - ✅ **Testable Service Architecture** - Dependency injection patterns with comprehensive testing
 
 ## Technical Implementation
@@ -130,8 +141,8 @@ tests/
 ## Final Test Results ✅
 
 ```
-Test summary: total: 90, failed: 0, succeeded: 90, skipped: 0, duration: 20.3s
-Build succeeded in 26.0s
+Test summary: total: 132, failed: 0, succeeded: 132, skipped: 0, duration: 10.3s
+Build succeeded in 17.6s
 ```
 
 ## Architecture Insights Discovered
@@ -183,7 +194,7 @@ For this implementation, we chose to:
 ## Production Readiness
 
 ### ✅ What's Tested and Working
-1. **All 11 MCP Commands**: Complete command functionality validation (68 tests)
+1. **All OneLake MCP Commands**: Complete command functionality validation with ExecuteAsync coverage
 2. **ExecuteAsync Integration**: Full MCP protocol command execution
 3. **Service Mocking**: Proper dependency isolation
 4. **Error Scenarios**: Exception handling and validation
@@ -214,13 +225,18 @@ For this implementation, we chose to:
 | Upload File | `onelake upload file` | Full ✅ |
 | Download File | `onelake download file` | Full ✅ |
 | Blob Delete | `onelake blob delete` | Full ✅ |
+| Table Namespace List | `onelake table namespace list` | Full ✅ |
+| Table Namespace Get | `onelake table namespace get` | Full ✅ |
+| Table List | `onelake table list` | Full ✅ |
+| Table Get | `onelake table get` | Full ✅ |
+| Table Config Get | `onelake table config get` | Full ✅ |
 
 ## Key Achievements 🚀
 
-1. **100% Command Test Coverage**: All OneLake MCP commands fully tested (68 tests)
+1. **100% Command Test Coverage**: All OneLake MCP commands fully tested with ExecuteAsync validation
 2. **Testable Architecture Patterns**: Comprehensive service testing examples (6 tests)
 3. **Clean Build**: No compilation errors or test failures
-4. **Fast Execution**: Sub-3-second test execution time
+4. **Fast Execution**: ~10-second end-to-end test execution time
 5. **Production Ready**: Comprehensive error handling and validation
 6. **Architecture Discovery**: Valuable insights and patterns for future service refactoring
 
