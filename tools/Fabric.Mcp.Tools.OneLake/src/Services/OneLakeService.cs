@@ -332,7 +332,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, warehouseQueryValue) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
-        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/v1/config?warehouse={warehouseQueryValue}";
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/config?warehouse={warehouseQueryValue}";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         using var reader = new StreamReader(responseStream);
@@ -362,7 +362,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
-        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/v1/{warehousePrefix}/namespaces";
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         using var reader = new StreamReader(responseStream);
@@ -404,7 +404,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
         var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
         var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
-        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/v1/{warehousePrefix}/namespaces/{encodedNamespace}";
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         using var reader = new StreamReader(responseStream);
@@ -446,7 +446,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
         var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
         var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
-        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables";
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         using var reader = new StreamReader(responseStream);
@@ -501,7 +501,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
         var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
         var encodedTable = Uri.EscapeDataString(trimmedTableName);
-        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables/{encodedTable}";
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables/{encodedTable}";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         using var reader = new StreamReader(responseStream);
@@ -1823,8 +1823,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
         var workspaceSegment = Uri.EscapeDataString(normalizedWorkspaceId.TrimEnd('/'));
         var itemSegment = Uri.EscapeDataString(normalizedItemIdentifier.TrimStart('/'));
-        var warehousePrefix = $"warehouse/{workspaceSegment}/{itemSegment}";
-        var warehouseQueryValue = ExtractWarehouseQueryValue(warehousePrefix);
+        var warehousePrefix = $"{workspaceSegment}/{itemSegment}";
+        var warehouseQueryValue = warehousePrefix;
 
         return (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, warehouseQueryValue);
     }
