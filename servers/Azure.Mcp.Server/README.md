@@ -812,7 +812,7 @@ class Program
 
 Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-Checkout the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
+Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
