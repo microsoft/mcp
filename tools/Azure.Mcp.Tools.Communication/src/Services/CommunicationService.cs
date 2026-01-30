@@ -3,6 +3,7 @@
 
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -44,7 +45,11 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         {
             // Create SMS client using Azure credential from base class and endpoint
             var credential = await GetCredential(tenantId, cancellationToken);
-            var smsClient = new SmsClient(new Uri(endpoint), credential);
+
+            var smsClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new SmsClientOptions()), retryPolicy);
+            smsClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+
+            var smsClient = new SmsClient(new Uri(endpoint), credential, smsClientOptions);
 
             var sendOptions = new SmsSendOptions(enableDeliveryReport)
             {
@@ -124,7 +129,11 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         {
             // Create email client with credential from base class
             var credential = await GetCredential(tenantId, cancellationToken);
-            var emailClient = new EmailClient(new Uri(endpoint), credential);
+
+            var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), retryPolicy);
+            emailClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+
+            var emailClient = new EmailClient(new Uri(endpoint), credential, emailClientOptions);
 
             // Create the email content
             var emailContent = new EmailContent(subject);

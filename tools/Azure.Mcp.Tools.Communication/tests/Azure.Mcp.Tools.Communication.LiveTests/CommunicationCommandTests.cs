@@ -3,34 +3,110 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests : CommandTestsBase
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public CommunicationCommandTests(ITestOutputHelper output) : base(output)
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    private string? endpointRecorded;
+    private string? fromSms;
+    private string? toSms;
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override async ValueTask InitializeAsync()
     {
+        await LoadSettingsAsync();
+        if (TestMode == Tests.Helpers.TestMode.Playback)
+        {
+            endpointRecorded = "https://sanitized.communication.azure.com";
+            fromSms = "12345678900";
+            toSms = "12345678901";
+        }
+        else
+        {
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
+            fromSms = tempFromSms!.Substring(1); // Remove '+' for regex matching
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var tempToSms);
+            toSms = tempToSms!.Substring(1); // Remove '+' for regex matching
+        }
+
+        await base.InitializeAsync();
     }
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        ..base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = endpointRecorded,
+            Value = "https://sanitized.communication.azure.com",
+        })
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..to")
+        {
+            Value = "12345678901"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.from")
+        {
+            Value = "12345678900"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..repeatabilityRequestId")
+        {
+            Value = EmptyGuid
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..repeatabilityFirstSent")
+        {
+            Value = "Fri, 30 Jan 2026 01:02:04 GMT"
+        })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        ..base.HeaderRegexSanitizers,
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Operation-Id")
+        {
+            Value = EmptyGuid
+        })
+    ];
 
     [Fact]
     public async Task Should_SendSms_WithValidParameters()
     {
-        // Get configuration from DeploymentOutputs in Settings
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out var endpoint);
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var fromPhone);
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var toPhone);
-        Assert.SkipWhen(string.IsNullOrEmpty(endpoint), "Communication Services endpoint not configured for live testing");
-        Assert.SkipWhen(string.IsNullOrEmpty(fromPhone), "From phone number not configured for live testing");
-        Assert.SkipWhen(string.IsNullOrEmpty(toPhone), "To phone number not configured for live testing");
+
+        if (TestMode != Tests.Helpers.TestMode.Playback)
+        {
+            Assert.SkipWhen(string.IsNullOrEmpty(endpointRecorded), "Communication Services endpoint not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(fromSms), "From phone number not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(toSms), "To phone number not configured for live testing");
+        }
+
         var result = await CallToolAsync(
             "communication_sms_send",
             new()
             {
-                { "endpoint", endpoint },
-                { "from", fromPhone },
-                { "to", new[] { toPhone } },
+                { "endpoint", endpointRecorded },
+                { "from", fromSms },
+                { "to", new[] { toSms } },
                 { "message", "Test SMS from Azure MCP Live Test" },
                 { "enable-delivery-report", true },
                 { "tag", "live-test" }
@@ -57,7 +133,7 @@ public class CommunicationCommandTests : CommandTestsBase
 
         // Verify the result values
         Assert.NotNull(messageId);
-        Assert.StartsWith("+", to);
+        Assert.Equal(toSms, to);
         Assert.True(successful, "SMS was not sent successfully");
         Assert.True(Guid.TryParse(messageId, out _), "MessageId should be a valid GUID");
 
