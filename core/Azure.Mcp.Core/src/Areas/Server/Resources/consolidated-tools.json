@@ -2247,6 +2247,40 @@
       ]
     },
     {
+      "name": "get_azure_compute_resources",
+      "description": "Get details about Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_get",
+        "compute_vmss_get"
+      ]
+    },
+    {
       "name": "get_azure_virtual_desktop_details",
       "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
       "toolMetadata": {
