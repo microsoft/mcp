@@ -73,6 +73,14 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
         [
             ..base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..to")
+        {
+            Value = "12345678901"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.from")
+        {
+            Value = "12345678900"
+        }),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..repeatabilityRequestId")
         {
             Value = EmptyGuid
@@ -135,7 +143,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
 
         // Verify the result values
         Assert.NotNull(messageId);
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? toSms : "+" + toSms, to);
+        Assert.Equal(toSms, to);
         Assert.True(successful, "SMS was not sent successfully");
         Assert.True(Guid.TryParse(messageId, out _), "MessageId should be a valid GUID");
 
