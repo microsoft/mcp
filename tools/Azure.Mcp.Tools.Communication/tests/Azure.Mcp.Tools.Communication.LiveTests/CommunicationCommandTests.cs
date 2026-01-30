@@ -57,17 +57,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
             {
                 Regex = endpointRecorded,
                 Value = "https://sanitized.communication.azure.com",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = fromSms,
-                Value = "12345678900",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = toSms,
-                Value = "12345678901",
-            }),
+            })
     ];
 
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
