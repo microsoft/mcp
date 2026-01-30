@@ -316,85 +316,38 @@ public static class OneLakeEndpoints
     public const string StorageScope = "https://storage.azure.com/.default";
 
     // Environment-aware Fabric API base URL
-    public static string GetFabricApiBaseUrl() => GetEndpoints(CurrentEnvironment).FabricApiBaseUrl;
+    public static string GetFabricApiBaseUrl() => ProductionEndpoints.FabricApiBaseUrl;
 
     // Environment-aware Fabric authentication scope
-    public static string GetFabricScope() => GetEndpoints(CurrentEnvironment).FabricScope;
+    public static string GetFabricScope() => ProductionEndpoints.FabricScope;
 
     public static readonly string[] FabricScopes =
     [
         "https://api.fabric.microsoft.com/.default"
     ];
 
-    // Environment-specific endpoints
-    private static readonly Dictionary<string, OneLakeEnvironmentEndpoints> EnvironmentEndpoints = new()
+    // Production environment endpoints
+    private static readonly OneLakeEnvironmentEndpoints ProductionEndpoints = new()
     {
-        ["PROD"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["DAILY"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://daily-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://daily-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://daily-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://daily-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://dailyapi.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["DXT"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://dxt-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://dxt-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://dxt-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://dxt-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://dxt-api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["MSIT"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://msit-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://msit-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://msit-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://msit-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://msit-api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        }
+        OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
+        OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
+        OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
+        OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com",
+        FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
+        FabricScope = "https://api.fabric.microsoft.com/.default"
     };
 
-    // Get current environment from environment variable or default to PROD
-    private static string CurrentEnvironment =>
-        Environment.GetEnvironmentVariable("ONELAKE_ENVIRONMENT")?.ToUpperInvariant() ?? "PROD";
+    // Public properties that return production URLs
+    public static string OneLakeDataPlaneBaseUrl => ProductionEndpoints.OneLakeDataPlaneBaseUrl;
 
-    // Public properties that return environment-specific URLs
-    public static string OneLakeDataPlaneBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBaseUrl;
+    public static string OneLakeDataPlaneDfsBaseUrl => ProductionEndpoints.OneLakeDataPlaneDfsBaseUrl;
 
-    public static string OneLakeDataPlaneDfsBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneDfsBaseUrl;
+    public static string OneLakeDataPlaneBlobBaseUrl => ProductionEndpoints.OneLakeDataPlaneBlobBaseUrl;
 
-    public static string OneLakeDataPlaneBlobBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBlobBaseUrl;
+    public static string OneLakeTableApiBaseUrl => ProductionEndpoints.OneLakeTableApiBaseUrl;
 
-    public static string OneLakeTableApiBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeTableApiBaseUrl;
-
-    // Method to get endpoints for a specific environment
-    public static OneLakeEnvironmentEndpoints GetEndpoints(string environment)
-    {
-        var env = environment.ToUpperInvariant();
-        return EnvironmentEndpoints.TryGetValue(env, out var endpoints)
-            ? endpoints
-            : EnvironmentEndpoints["PROD"];
-    }
-
-    // Method to list available environments
-    public static IEnumerable<string> GetAvailableEnvironments() => EnvironmentEndpoints.Keys;
+    // Method to get production endpoints
+    public static OneLakeEnvironmentEndpoints GetEndpoints(string environment) => ProductionEndpoints;
 }
 
 public class OneLakeEnvironmentEndpoints

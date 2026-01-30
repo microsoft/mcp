@@ -15,7 +15,7 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - 19 comprehensive OneLake commands with full MCP integration
 - Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
-- Support for multiple Microsoft Fabric environments (PROD, DAILY, DXT, MSIT)
+- Support for Microsoft Fabric production environment
 - Robust error handling and authentication
 - Production-ready with 100% test coverage (132 tests)
 - Clean, focused API design optimized for AI agent interactions
@@ -36,22 +36,10 @@ az login
 
 ## Environment Configuration
 
-The OneLake MCP tools support multiple Microsoft Fabric environments. You can configure which environment to target using the `ONELAKE_ENVIRONMENT` environment variable.
+The OneLake MCP tools are configured to use the Microsoft Fabric production environment.
 
-### Supported Environments
+### Production Environment Endpoints
 
-| Environment | Description | Use Case |
-|-------------|-------------|----------|
-| **PROD** | Production Microsoft Fabric | Default environment for production workloads |
-| **DAILY** | Daily build environment | Testing with latest Fabric features |
-| **DXT** | Developer experience testing | Internal Microsoft testing |
-| **MSIT** | Microsoft IT environment | Microsoft internal operations |
-
-### Environment Endpoints
-
-Each environment has specific endpoints for different OneLake services:
-
-#### Production (PROD) - Default
 ```
 OneLake Data Plane: https://api.onelake.fabric.microsoft.com
 OneLake DFS API: https://onelake.dfs.fabric.microsoft.com
@@ -59,138 +47,32 @@ OneLake Blob API: https://onelake.blob.fabric.microsoft.com
 Fabric API: https://api.fabric.microsoft.com/v1
 ```
 
-#### Daily Build (DAILY)
-```
-OneLake Data Plane: https://daily-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://daily-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://daily-onelake.blob.fabric.microsoft.com
-Fabric API: https://dailyapi.fabric.microsoft.com/v1
-```
+### Getting Started
 
-#### DXT Environment
-```
-OneLake Data Plane: https://dxt-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://dxt-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://dxt-onelake.blob.fabric.microsoft.com
-Fabric API: https://dxt-api.fabric.microsoft.com/v1
-```
+Simply use the commands without any environment configuration:
 
-#### MSIT Environment
-```
-OneLake Data Plane: https://msit-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://msit-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://msit-onelake.blob.fabric.microsoft.com
-Fabric API: https://msit-api.fabric.microsoft.com/v1
-```
-
-### Setting the Environment
-
-#### Windows (PowerShell)
-```powershell
-# Set environment for current session
-$env:ONELAKE_ENVIRONMENT = "DAILY"
-
-# Set environment permanently
-[Environment]::SetEnvironmentVariable("ONELAKE_ENVIRONMENT", "DAILY", "User")
-
-# Run commands with specific environment
-$env:ONELAKE_ENVIRONMENT = "DAILY"; dotnet run -- onelake workspace list
-```
-
-#### Windows (Command Prompt)
-```cmd
-# Set environment for current session
-set ONELAKE_ENVIRONMENT=DAILY
-
-# Set environment permanently
-setx ONELAKE_ENVIRONMENT DAILY
-
-# Run commands with specific environment
-set ONELAKE_ENVIRONMENT=DAILY && dotnet run -- onelake workspace list
-```
-
-#### Linux/macOS (Bash)
 ```bash
-# Set environment for current session
-export ONELAKE_ENVIRONMENT=DAILY
-
-# Set environment permanently (add to ~/.bashrc or ~/.zshrc)
-echo 'export ONELAKE_ENVIRONMENT=DAILY' >> ~/.bashrc
-
-# Run commands with specific environment
-ONELAKE_ENVIRONMENT=DAILY dotnet run -- onelake workspace list
-```
-
-### Environment-Specific Usage Examples
-
-#### Working with Production Environment (Default)
-```bash
-# No environment variable needed - PROD is default
+# List workspaces
 dotnet run -- onelake workspace list
+
+# Read files
 dotnet run -- onelake file read --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "data.json"
+
+# Write files
+dotnet run -- onelake file write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Hello OneLake"
 ```
 
-#### Working with Daily Build Environment
-```bash
-# Set environment variable
-export ONELAKE_ENVIRONMENT=DAILY
+### MCP Client Configuration
 
-# Now all commands will use DAILY endpoints
-dotnet run -- onelake workspace list
-dotnet run -- onelake file write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Testing daily build"
-```
-
-#### Testing with Multiple Environments
-```bash
-# Test against production
-unset ONELAKE_ENVIRONMENT
-dotnet run -- onelake workspace list
-
-# Test against daily build
-export ONELAKE_ENVIRONMENT=DAILY
-dotnet run -- onelake workspace list
-
-# Test against DXT
-export ONELAKE_ENVIRONMENT=DXT
-dotnet run -- onelake workspace list
-```
-
-### PowerShell Script Environment Configuration
-
-Update the PowerShell upload scripts to work with different environments:
-
-```powershell
-# At the top of upload_files.ps1
-$env:ONELAKE_ENVIRONMENT = "DAILY"  # or "PROD", "DXT", "MSIT"
-
-# Rest of the script remains the same
-$workspaceId = "your-workspace-id"
-$itemId = "your-item-id"
-# ... script continues
-```
-
-### MCP Client Configuration with Environments
-
-Configure your MCP client to use specific environments:
+Configure your MCP client to use OneLake tools:
 
 ```json
 {
   "servers": {
-    "fabric-onelake-prod": {
+    "fabric-onelake": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"],
-      "env": {
-        "ONELAKE_ENVIRONMENT": "PROD"
-      }
-    },
-    "fabric-onelake-daily": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"],
-      "env": {
-        "ONELAKE_ENVIRONMENT": "DAILY"
-      }
+      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"]
     }
   }
 }
@@ -905,9 +787,6 @@ The tool provides detailed error messages and proper HTTP status codes:
 You can set these environment variables for convenience:
 
 ```bash
-# Target environment (PROD, DAILY, DXT, MSIT)
-export ONELAKE_ENVIRONMENT=DAILY
-
 # Frequently used IDs to avoid repetitive typing
 export FABRIC_WORKSPACE_ID="47242da5-ff3b-46fb-a94f-977909b773d5"
 export FABRIC_ITEM_ID="0e67ed13-2bb6-49be-9c87-a1105a4ea342"
