@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -49,6 +50,14 @@ public class ServerToolLoaderTests
         };
     }
 
+    private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
+    {
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var registryRoot = RegistryServerHelper.GetRegistryRoot();
+        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
+    }
+
     [Fact]
     public async Task CallToolHandler_WithoutListToolsFirst_ShouldSucceed()
     {
@@ -58,7 +67,7 @@ public class ServerToolLoaderTests
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
-        var discoveryStrategy = new RegistryDiscoveryStrategy(serviceStartOptions, discoveryLogger);
+        var discoveryStrategy = CreateStrategy(serviceStartOptions.Value, discoveryLogger);
         var logger = loggerFactory.CreateLogger<ServerToolLoader>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
@@ -112,7 +121,7 @@ public class ServerToolLoaderTests
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
-        var discoveryStrategy = new RegistryDiscoveryStrategy(serviceStartOptions, discoveryLogger);
+        var discoveryStrategy = CreateStrategy(serviceStartOptions.Value, discoveryLogger);
         var logger = loggerFactory.CreateLogger<ServerToolLoader>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
