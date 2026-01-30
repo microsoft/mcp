@@ -164,6 +164,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // start recording/playback session
         await StartRecordOrPlayback();
 
+        // Ensure HTTP client has the recording ID if we are using HTTP transport
+        SetHttpRecordingId(RecordingId);
+
         // apply custom matcher if test has attribute
         await ApplyAttributeMatcherSettings(methodInfo);
 
