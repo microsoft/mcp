@@ -38,34 +38,35 @@ public class EmailSendCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
 
         await base.InitializeAsync();
     }
+
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
-         ..base.GeneralRegexSanitizers,
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.ResourceBaseName,
-                Value = "Sanitized",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.SubscriptionId,
-                Value = EmptyGuid,
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = endpointRecorded,
-                Value = "https://sanitized.communication.azure.com",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = fromEmail,
-                Value = "DoNotReply@domain.com",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = toEmail,
-                Value = "placeholder@microsoft.com",
-            }),
+        ..base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = endpointRecorded,
+            Value = "https://sanitized.communication.azure.com",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = fromEmail,
+            Value = "DoNotReply@domain.com",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = toEmail,
+            Value = "placeholder@microsoft.com",
+        }),
     ];
 
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>

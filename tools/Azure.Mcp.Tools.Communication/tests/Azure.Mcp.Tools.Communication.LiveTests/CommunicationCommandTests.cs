@@ -29,7 +29,6 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         }
         else
         {
-
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
             fromSms = tempFromSms!.Substring(1); // Remove '+' for regex matching
@@ -41,28 +40,28 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     }
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
- [
-      ..base.GeneralRegexSanitizers,
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.ResourceBaseName,
-                Value = "Sanitized",
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.SubscriptionId,
-                Value = EmptyGuid,
-            }),
-            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = endpointRecorded,
-                Value = "https://sanitized.communication.azure.com",
-            })
+    [
+        ..base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = endpointRecorded,
+            Value = "https://sanitized.communication.azure.com",
+        })
     ];
 
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
-        [
-            ..base.BodyKeySanitizers,
+    [
+        ..base.BodyKeySanitizers,
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..to")
         {
             Value = "12345678901"
@@ -79,7 +78,8 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             Value = "Fri, 30 Jan 2026 01:02:04 GMT"
         })
-        ];
+    ];
+
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
     [
         ..base.HeaderRegexSanitizers,
