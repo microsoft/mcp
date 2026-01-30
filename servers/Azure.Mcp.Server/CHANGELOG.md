@@ -17,8 +17,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 - Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
 
-### Breaking Changes
-
 ### Bugs Fixed
 - Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
 - Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
