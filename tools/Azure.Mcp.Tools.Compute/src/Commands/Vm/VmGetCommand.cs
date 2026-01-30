@@ -27,11 +27,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
 
     public override string Description =>
         """
-        Retrieves information about Azure Virtual Machine(s). Behavior depends on provided parameters:
-        - With --vm-name and --resource-group: Gets detailed information about a specific VM. Optionally include --instance-view for runtime status.
-        - With --resource-group only: Lists all VMs in the specified resource group.
-        - Without --resource-group: Lists all VMs in the subscription.
-        Returns VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
+        List or get Azure Virtual Machines (VMs) in a subscription or resource group. Returns VM details including name, location, size, provisioning state, OS type, and instance view with runtime status and power state.
         """;
 
     public override string Title => CommandTitle;

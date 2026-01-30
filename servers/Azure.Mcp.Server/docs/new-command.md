@@ -369,25 +369,6 @@ var vms = vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync();
 // Pattern: Get{ResourceType}() returns collection, then .GetAsync() or .GetAllAsync()
 ```
 
-**Specialized Resource Collection Patterns:**
-Some Azure resources require specific collection access patterns:
-
-```csharp
-// ✅ Correct: Rolling upgrade status for VMSS
-var upgradeStatus = await vmssResource.Value
-    .GetVirtualMachineScaleSetRollingUpgrade()  // Get the collection
-    .GetAsync(cancellationToken);  // Then get the latest
-
-// ❌ Wrong: Method doesn't exist
-var upgradeStatus = await vmssResource.Value
-    .GetLatestVirtualMachineScaleSetRollingUpgradeAsync(cancellationToken);
-
-// ✅ Correct: VMSS instances
-var vms = vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync();
-
-// Pattern: Get{ResourceType}() returns collection, then .GetAsync() or .GetAllAsync()
-```
-
 ### 2. Options Class
 
 ```csharp

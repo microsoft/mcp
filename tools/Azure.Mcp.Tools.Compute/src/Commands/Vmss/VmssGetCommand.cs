@@ -27,12 +27,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
 
     public override string Description =>
         """
-        Retrieves information about Azure Virtual Machine Scale Set(s) and their VM instances. Behavior depends on provided parameters:
-        - With --instance-id, --vmss-name, and --resource-group: Gets detailed information about a specific VM instance in a scale set.
-        - With --vmss-name and --resource-group: Gets detailed information about a specific VMSS.
-        - With --resource-group only: Lists all scale sets in the specified resource group.
-        - Without --resource-group: Lists all scale sets in the subscription.
-        Returns VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, zones, and tags.
+        List or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information.
         """;
 
     public override string Title => CommandTitle;
