@@ -15,7 +15,6 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - 19 comprehensive OneLake commands with full MCP integration
 - Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
-- Support for Microsoft Fabric production environment
 - Robust error handling and authentication
 - Production-ready with 100% test coverage (132 tests)
 - Clean, focused API design optimized for AI agent interactions
