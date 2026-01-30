@@ -1,0 +1,15 @@
+<Project>
+  <!-- Import the root Directory.Build.props for shared properties -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- Use the repo root's Directory.Packages.props for central package management -->
+    <DirectoryPackagesPropsPath>$(RepoRoot)Directory.Packages.props</DirectoryPackagesPropsPath>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+</Project>
