@@ -52,8 +52,9 @@ jobs:
             "ToolName": "sign",
             "ToolVersion": "1.0",
             "Parameters": {
-              "contenttype": "1.2.840.113549.1.7.1",
-              "alg": "sha256"
+              "P7CE": "/p7ce DetachedSignedData",
+              "P7EKU": "1.2.840.113549.1.7.1",
+              "FileDigest": "/fd SHA256"
             }
           }
         ]
