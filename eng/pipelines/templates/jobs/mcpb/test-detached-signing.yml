@@ -1,6 +1,10 @@
 # Test pipeline for MCPB detached PKCS#7 signing using ESRP
 # This pipeline takes an unsigned .mcpb file from the repo and signs it using
 # Microsoft's ESRP service with a detached PKCS#7 signature.
+#
+# ESRP replaces the input file with the signature (same name/extension).
+# We use the VSIX pattern: copy the mcpb to a .signature.p7s file, sign that,
+# then combine the original mcpb with the resulting signature.
 
 jobs:
 - job: MCPB_Detached_Sign
@@ -16,7 +20,7 @@ jobs:
   - pwsh: |
       Write-Host "Preparing MCPB file for signing..."
       $sourcePath = "$(Build.SourcesDirectory)/Azure.Mcp.Server-unsigned.mcpb"
-      $destPath = "$(Build.ArtifactStagingDirectory)/unsigned"
+      $destPath = "$(Build.ArtifactStagingDirectory)/to_sign"
 
       if (-not (Test-Path $sourcePath)) {
           Write-Error "MCPB file not found: $sourcePath"
@@ -24,10 +28,18 @@ jobs:
       }
 
       New-Item -ItemType Directory -Path $destPath -Force | Out-Null
-      Copy-Item -Path $sourcePath -Destination $destPath -Force
+      
+      # Copy the original mcpb file (we'll need this later)
+      Copy-Item -Path $sourcePath -Destination "$destPath/Azure.Mcp.Server-unsigned.p7s" -Force
+      
+      # Create a copy with .signature.p7s extension for ESRP to sign
+      # ESRP will replace this file's content with the detached signature
+      Copy-Item -Path $sourcePath -Destination "$destPath/Azure.Mcp.Server.signature.p7s" -Force
 
-      Write-Host "Copied $sourcePath to $destPath"
-      Get-ChildItem -Path $destPath -Recurse | ForEach-Object { Write-Host $_.FullName }
+      Write-Host "Files staged for signing:"
+      Get-ChildItem -Path $destPath -Recurse | ForEach-Object { 
+          Write-Host "  $($_.Name) - $($_.Length) bytes" 
+      }
     displayName: "Stage MCPB file for signing"
 
   - task: EsrpCodeSigning@6
@@ -40,8 +52,8 @@ jobs:
       EsrpClientId: '5e796b8d-3c4d-4e28-93f6-12a44f4368a0'
       AuthAKVName: 'kv-azuresdk-codesign'
       AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
-      FolderPath: $(Build.ArtifactStagingDirectory)/unsigned
-      Pattern: '**/*.mcpb'
+      FolderPath: $(Build.ArtifactStagingDirectory)/to_sign
+      Pattern: '**/*.signature.p7s'
       UseMinimatch: true
       signConfigType: inlineSignParams
       inlineOperation: |
@@ -61,26 +73,139 @@ jobs:
 
   - pwsh: |
       Write-Host "Checking signing results..."
-      $unsignedPath = "$(Build.ArtifactStagingDirectory)/unsigned"
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
 
-      # List all files after signing
-      Write-Host "Files after signing operation:"
-      Get-ChildItem -Path $unsignedPath -Recurse | ForEach-Object {
-          Write-Host "$($_.FullName) - $($_.Length) bytes"
+      Write-Host "`nFiles after signing operation:"
+      Get-ChildItem -Path $toSignPath -Recurse | ForEach-Object {
+          Write-Host "  $($_.Name) - $($_.Length) bytes"
       }
 
-      # Check for .p7s detached signature file
-      $p7sFiles = Get-ChildItem -Path $unsignedPath -Filter "*.p7s" -Recurse
-      if ($p7sFiles.Count -eq 0) {
-          Write-Warning "No .p7s detached signature files found. Checking for other signature artifacts..."
-          Get-ChildItem -Path $unsignedPath -Recurse | Where-Object { $_.Extension -ne ".mcpb" }
+      # The .signature.p7s file should now contain the detached signature
+      $sigFile = Get-ChildItem -Path $toSignPath -Filter "*.signature.p7s" | Select-Object -First 1
+      if ($sigFile) {
+          $sigBytes = [System.IO.File]::ReadAllBytes($sigFile.FullName)
+          Write-Host "`nSignature file: $($sigFile.Name)"
+          Write-Host "Signature size: $($sigBytes.Length) bytes"
+          Write-Host "First 16 bytes (hex): $([BitConverter]::ToString($sigBytes[0..15]))"
+          
+          # Check if it looks like a PKCS#7 signature (starts with 0x30 = SEQUENCE)
+          if ($sigBytes[0] -eq 0x30) {
+              Write-Host "✓ File appears to be a valid DER-encoded PKCS#7 signature"
+          } else {
+              Write-Warning "File may not be a valid PKCS#7 signature (expected 0x30, got 0x$($sigBytes[0].ToString('X2')))"
+          }
       } else {
-          Write-Host "Found detached signature files:"
-          $p7sFiles | ForEach-Object { Write-Host $_.FullName }
+          Write-Error "No .signature.p7s file found!"
+          exit 1
       }
     displayName: "Inspect signing results"
 
+  # Publish the raw signature file for inspection
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)/unsigned
-      ArtifactName: mcpb_signed
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/to_sign
+      ArtifactName: mcpb_detached_signature
+
+  - pwsh: |
+      Write-Host "Appending detached signature to MCPB file..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+      $outputPath = "$(Build.ArtifactStagingDirectory)/signed"
+      New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
+
+      # Find the original .mcpb and the .signature.p7s files
+      $mcpbFile = Get-ChildItem -Path $toSignPath -Filter "*.mcpb" | Select-Object -First 1
+      $sigFile = Get-ChildItem -Path $toSignPath -Filter "*.signature.p7s" | Select-Object -First 1
+
+      if (-not $mcpbFile) {
+          Write-Error "No .mcpb file found!"
+          exit 1
+      }
+
+      if (-not $sigFile) {
+          Write-Error "No .signature.p7s file found!"
+          exit 1
+      }
+
+      Write-Host "MCPB file: $($mcpbFile.FullName) ($($mcpbFile.Length) bytes)"
+      Write-Host "Signature file: $($sigFile.FullName) ($($sigFile.Length) bytes)"
+
+      # Read the files
+      $mcpbBytes = [System.IO.File]::ReadAllBytes($mcpbFile.FullName)
+      $sigBytes = [System.IO.File]::ReadAllBytes($sigFile.FullName)
+
+      Write-Host "`nSignature size: $($sigBytes.Length) bytes"
+      Write-Host "First 16 bytes of signature (hex): $([BitConverter]::ToString($sigBytes[0..15]))"
+
+      # Create the signed MCPB with MCPB_SIG_V1 header and MCPB_SIG_END footer
+      # Format: <original mcpb> + "MCPB_SIG_V1" + <4-byte little-endian sig length> + <signature> + "MCPB_SIG_END"
+      $header = [System.Text.Encoding]::ASCII.GetBytes("MCPB_SIG_V1")
+      $footer = [System.Text.Encoding]::ASCII.GetBytes("MCPB_SIG_END")
+      $sigLengthBytes = [BitConverter]::GetBytes([uint32]$sigBytes.Length)
+
+      # Combine all parts
+      $signedMcpbPath = Join-Path $outputPath "Azure.Mcp.Server-signed.mcpb"
+      $outputStream = [System.IO.File]::Create($signedMcpbPath)
+      try {
+          $outputStream.Write($mcpbBytes, 0, $mcpbBytes.Length)
+          $outputStream.Write($header, 0, $header.Length)
+          $outputStream.Write($sigLengthBytes, 0, $sigLengthBytes.Length)
+          $outputStream.Write($sigBytes, 0, $sigBytes.Length)
+          $outputStream.Write($footer, 0, $footer.Length)
+      }
+      finally {
+          $outputStream.Close()
+      }
+
+      $signedFile = Get-Item $signedMcpbPath
+      Write-Host "`nSigned MCPB created: $signedMcpbPath"
+      Write-Host "Original size: $($mcpbFile.Length) bytes"
+      Write-Host "Signed size: $($signedFile.Length) bytes"
+      Write-Host "Signature overhead: $($signedFile.Length - $mcpbFile.Length) bytes"
+
+      # Verify the footer is correct
+      $verifyBytes = [System.IO.File]::ReadAllBytes($signedMcpbPath)
+      $lastBytes = [System.Text.Encoding]::ASCII.GetString($verifyBytes[-12..-1])
+      Write-Host "`nLast 12 bytes (should be MCPB_SIG_END): $lastBytes"
+    displayName: "Append signature to MCPB"
+
+  # Publish the final signed MCPB
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
+      ArtifactName: mcpb_signed_bundle
+
+  - pwsh: |
+      Write-Host "Installing MCPB CLI (.NET global tool)..."
+      dotnet tool install --global Mcpb.Cli --version 0.3.5
+      
+      # Add .NET tools to PATH for this session
+      $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+      
+      Write-Host "`nVerifying mcpb is available..."
+      mcpb --version
+    displayName: "Install MCPB CLI"
+
+  - pwsh: |
+      # Add .NET tools to PATH for this session
+      $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+      
+      $signedPath = "$(Build.ArtifactStagingDirectory)/signed/Azure.Mcp.Server-signed.mcpb"
+      
+      Write-Host "Verifying signed MCPB with mcpb CLI..."
+      Write-Host "File: $signedPath"
+      Write-Host ""
+      
+      # Get info about the signed bundle
+      Write-Host "=== MCPB Info ==="
+      mcpb info $signedPath
+      
+      Write-Host "`n=== MCPB Verify ==="
+      mcpb verify $signedPath
+      
+      if ($LASTEXITCODE -eq 0) {
+          Write-Host "`n✓ Signature verification PASSED"
+      } else {
+          Write-Warning "`n✗ Signature verification FAILED (exit code: $LASTEXITCODE)"
+          Write-Host "This may be expected if the certificate chain is not trusted by the mcpb CLI."
+      }
+    displayName: "Verify signature with MCPB CLI"
