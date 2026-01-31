@@ -30,7 +30,7 @@ jobs:
       New-Item -ItemType Directory -Path $destPath -Force | Out-Null
       
       # Copy the original mcpb file (we'll need this later)
-      Copy-Item -Path $sourcePath -Destination "$destPath/Azure.Mcp.Server-unsigned.p7s" -Force
+      Copy-Item -Path $sourcePath -Destination "$destPath/Azure.Mcp.Server-unsigned.mcpb" -Force
       
       # Create a copy with .signature.p7s extension for ESRP to sign
       # ESRP will replace this file's content with the detached signature
