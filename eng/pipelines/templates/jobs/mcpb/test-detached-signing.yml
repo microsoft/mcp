@@ -1,0 +1,85 @@
+# Test pipeline for MCPB detached PKCS#7 signing using ESRP
+# This pipeline takes an unsigned .mcpb file from the repo and signs it using
+# Microsoft's ESRP service with a detached PKCS#7 signature.
+
+jobs:
+- job: MCPB_Detached_Sign
+  displayName: "MCPB Detached PKCS#7 Signing"
+  timeoutInMinutes: 30
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - pwsh: |
+      Write-Host "Preparing MCPB file for signing..."
+      $sourcePath = "$(Build.SourcesDirectory)/Azure.Mcp.Server-unsigned.mcpb"
+      $destPath = "$(Build.ArtifactStagingDirectory)/unsigned"
+
+      if (-not (Test-Path $sourcePath)) {
+          Write-Error "MCPB file not found: $sourcePath"
+          exit 1
+      }
+
+      New-Item -ItemType Directory -Path $destPath -Force | Out-Null
+      Copy-Item -Path $sourcePath -Destination $destPath -Force
+
+      Write-Host "Copied $sourcePath to $destPath"
+      Get-ChildItem -Path $destPath -Recurse | ForEach-Object { Write-Host $_.FullName }
+    displayName: "Stage MCPB file for signing"
+
+  - task: EsrpCodeSigning@6
+    displayName: 'Sign MCPB - Detached PKCS#7'
+    inputs:
+      ConnectedServiceName: 'Azure SDK PME Managed Identity'
+      UseMSIAuthentication: true
+      AppRegistrationClientId: '4fa2001b-ad7a-4a1e-9185-d6ea881f8712'
+      AppRegistrationTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+      EsrpClientId: '5e796b8d-3c4d-4e28-93f6-12a44f4368a0'
+      AuthAKVName: 'kv-azuresdk-codesign'
+      AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
+      FolderPath: $(Build.ArtifactStagingDirectory)/unsigned
+      Pattern: '**/*.mcpb'
+      UseMinimatch: true
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "Pkcs7DetachedSign",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {
+              "contenttype": "1.2.840.113549.1.7.1",
+              "alg": "sha256"
+            }
+          }
+        ]
+
+  - pwsh: |
+      Write-Host "Checking signing results..."
+      $unsignedPath = "$(Build.ArtifactStagingDirectory)/unsigned"
+
+      # List all files after signing
+      Write-Host "Files after signing operation:"
+      Get-ChildItem -Path $unsignedPath -Recurse | ForEach-Object {
+          Write-Host "$($_.FullName) - $($_.Length) bytes"
+      }
+
+      # Check for .p7s detached signature file
+      $p7sFiles = Get-ChildItem -Path $unsignedPath -Filter "*.p7s" -Recurse
+      if ($p7sFiles.Count -eq 0) {
+          Write-Warning "No .p7s detached signature files found. Checking for other signature artifacts..."
+          Get-ChildItem -Path $unsignedPath -Recurse | Where-Object { $_.Extension -ne ".mcpb" }
+      } else {
+          Write-Host "Found detached signature files:"
+          $p7sFiles | ForEach-Object { Write-Host $_.FullName }
+      }
+    displayName: "Inspect signing results"
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/unsigned
+      ArtifactName: mcpb_signed
