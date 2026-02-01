@@ -1988,6 +1988,35 @@ azmcp policy assignment list --subscription <subscription> \
                              --scope <scope>
 ```
 
+### Azure Pricing Operations
+
+```bash
+# Get Azure retail pricing information
+# Requires at least one filter: --sku, --service, --region, --service-family, --price-type, or --filter
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp pricing get --sku <sku> \
+                  [--service <service>] \
+                  [--region <region>] \
+                  [--service-family <service-family>] \
+                  [--price-type <price-type>] \
+                  [--currency <currency>] \
+                  [--include-savings-plan] \
+                  [--filter <odata-filter>]
+```
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--sku` | No* | - | ARM SKU name (e.g., Standard_D4s_v5) |
+| `--service` | No* | - | Azure service name (e.g., Virtual Machines, Storage) |
+| `--region` | No* | - | Azure region (e.g., eastus, westeurope) |
+| `--service-family` | No* | - | Service family (e.g., Compute, Storage, Databases) |
+| `--price-type` | No* | - | Price type (Consumption, Reservation, DevTestConsumption) |
+| `--currency` | No | USD | Currency code (e.g., USD, EUR) |
+| `--include-savings-plan` | No | false | Include savings plan pricing (uses preview API) |
+| `--filter` | No* | - | Raw OData filter for advanced queries |
+
+\* At least one filter option is required.
+
 ### Azure RBAC Operations
 
 ```bash
