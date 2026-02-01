@@ -120,6 +120,7 @@ internal class Program
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
+            new Azure.Mcp.Tools.Pricing.PricingSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
