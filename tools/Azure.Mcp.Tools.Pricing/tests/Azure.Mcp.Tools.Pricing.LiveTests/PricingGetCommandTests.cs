@@ -51,6 +51,7 @@ public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFi
             "pricing_get",
             new()
             {
+                { "sku", "Standard_D4s_v5" },
                 { "service", "Virtual Machines" },
                 { "region", "eastus" }
             });
