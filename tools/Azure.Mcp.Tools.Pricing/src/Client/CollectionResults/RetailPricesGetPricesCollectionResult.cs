@@ -75,14 +75,9 @@ namespace AzureRetailPrices
         public override ContinuationToken GetContinuationToken(ClientResult page)
         {
             Uri nextPage = ((RetailPricesResponse)page).NextPageLink;
-            if (nextPage != null)
-            {
-                return ContinuationToken.FromBytes(BinaryData.FromString(nextPage.AbsoluteUri));
-            }
-            else
-            {
-                return null;
-            }
+            return nextPage != null  
+                ? ContinuationToken.FromBytes(BinaryData.FromString(nextPage.AbsoluteUri))  
+                : null;
         }
     }
 }

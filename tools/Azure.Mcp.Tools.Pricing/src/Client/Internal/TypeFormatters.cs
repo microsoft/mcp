@@ -93,23 +93,9 @@ namespace AzureRetailPrices
             for (; i < value.Length; i++)
             {
                 char ch = value[i];
-                if (ch == '-')
-                {
-                    output[i] = '+';
-                }
-                else
-                {
-                    if (ch == '_')
-                    {
-                        output[i] = '/';
-                    }
-                    else
-                    {
-                        output[i] = ch;
-                    }
-                }
+                output[i] = ch == '-' ? '+' : ch == '_' ? '/' : ch;
             }
-
+            
             for (; i < output.Length; i++)
             {
                 output[i] = '=';

@@ -246,7 +246,6 @@ public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFi
         // Reservation prices should have reservation term
         var price = priceArray[0];
         price.AssertProperty("priceType");
-        // ReservationTerm may be present for reservation prices
     }
 
     [Fact]
