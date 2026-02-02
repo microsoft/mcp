@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers.Text;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -157,17 +157,42 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             id = Guid.NewGuid().ToString()
         };
 
-        var uri = $"{_baseUrl}/mcp";
         var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-        var resp = await _http!.PostAsync(uri, content);
-        var body = await resp.Content.ReadAsStringAsync();
-        resp.EnsureSuccessStatusCode();
-
-        var root = JsonSerializer.Deserialize<JsonElement>(body);
-        if (root.TryGetProperty("result", out var result) &&
-            result.TryGetProperty("results", out var results))
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
         {
-            return results;
+            Content = content
+        };
+        requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        var resp = await _http!.SendAsync(requestMessage);
+        if (resp.IsSuccessStatusCode)
+        {
+            var body = await resp.Content.ReadAsStringAsync();
+            var json = ExtractJsonFromSse(body);
+            if (json == null)
+            {
+                return null;
+            }
+            var root = JsonSerializer.Deserialize<JsonElement>(json);
+            if (root.TryGetProperty("result", out var result) &&
+               result.TryGetProperty("content", out var contentArray) &&
+               contentArray.GetArrayLength() > 0)
+            {
+                var firstContent = contentArray[0];
+                if (firstContent.TryGetProperty("text", out var textElement))
+                {
+                    var textContent = textElement.GetString();
+                    if (!string.IsNullOrEmpty(textContent))
+                    {
+                        var parsed = JsonSerializer.Deserialize<JsonElement>(textContent);
+                        if (parsed.TryGetProperty("results", out var results))
+                        {
+                            return results;
+                        }
+                    }
+                }
+            }
         }
         return null;
     }
@@ -175,7 +200,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     private async Task StartHttpServerProcessAsync(TestProxyFixture? proxy, string executablePath, List<string> arguments)
     {
         // Configure arguments for HTTP mode
-        arguments.AddRange(new[] { "--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity" });
+        arguments.AddRange(new[] { "--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity", "--dangerously-disable-http-incoming-auth" });
 
         var envVarDictionary = GetEnvironmentVariables(proxy);
 
@@ -195,7 +220,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         _httpServerProcess = Process.Start(processStartInfo);
 
-        await WaitForServerReadinessAsync(_baseUrl);
+        await WaitForServerReadinessAsync();
     }
 
     private Dictionary<string, string?> GetEnvironmentVariables(TestProxyFixture? proxy)
@@ -231,30 +256,74 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         return envVarDictionary;
     }
 
-    private async Task WaitForServerReadinessAsync(string? uri, int timeoutSeconds = 30, int pollIntervalMs = 500)
+    private async Task WaitForServerReadinessAsync(int timeoutSeconds = 60, int pollIntervalMs = 500)
     {
-        using var httpClient = new HttpClient();
-        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        var stopwatch = Stopwatch.StartNew();
+        if (string.IsNullOrWhiteSpace(_baseUrl))
+        {
+            throw new ArgumentException("Base URL is not set (ASPNETCORE_URLS).");
+        }
 
-        while (stopwatch.Elapsed < timeout)
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        while (DateTime.UtcNow < deadline)
         {
             try
             {
-                var response = await httpClient.GetAsync(uri);
-                if (response.IsSuccessStatusCode)
+                var request = new
                 {
-                    return; // Server is ready
+                    jsonrpc = "2.0",
+                    method = "tools/list",
+                    @params = new { },
+                    id = Guid.NewGuid().ToString()
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
+                {
+                    Content = content
+                };
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+                using var resp = await _http!.SendAsync(requestMessage);
+                if (resp.IsSuccessStatusCode)
+                {
+                    return;
                 }
             }
-            catch (HttpRequestException)
+            catch
             {
-                // Server not yet available, continue polling
+                // swallow and retry
             }
+
             await Task.Delay(pollIntervalMs);
         }
 
-        throw new TimeoutException($"Server at {uri} did not become ready within {timeoutSeconds} seconds");
+        throw new TimeoutException($"MCP server at {_baseUrl} did not become ready within {timeoutSeconds} seconds.");
+    }
+
+    private static string? ExtractJsonFromSse(string response)
+    {
+        var trimmed = response.TrimStart();
+        if (trimmed.StartsWith('{'))
+        {
+            return response;
+        }
+
+        foreach (var line in response.Split('\n'))
+        {
+            var cleanLine = line.Trim();
+
+            if (cleanLine.StartsWith("data:", StringComparison.Ordinal))
+            {
+                var jsonPart = cleanLine[5..].TrimStart(); // Remove "data:" and any leading whitespace
+                if (jsonPart.StartsWith('{'))
+                {
+                    return jsonPart;
+                }
+            }
+        }
+
+        return null;
     }
 
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
@@ -356,6 +425,11 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     public virtual async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
+        if (_http is not null)
+        {
+            _http.Dispose();
+            _http = null;
+        }
         Dispose(disposing: false);
         GC.SuppressFinalize(this);
     }
@@ -406,6 +480,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     // overrides should still call base.DisposeAsyncCore()
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        await Client.DisposeAsync().ConfigureAwait(false);
+        if (Client != null)
+            await Client.DisposeAsync().ConfigureAwait(false);
     }
 }

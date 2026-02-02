@@ -2,12 +2,12 @@
   "profiles": {
     "debug-remotemcp": {
       "commandName": "Project",
-      "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+      "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity --dangerously-disable-http-incoming-auth",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:1031",
         "AzureAd__TenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
-        "AzureAd__ClientId": "ca1e0302-d50a-47d7-b5e6-7aff49884bce",
+        "AzureAd__ClientId": "2d83e5a3-929f-49d5-9835-516849ceb9f4",
         "AzureAd__Instance": "https://login.microsoftonline.com/"
       },
       "dotnetRunMessages": true
@@ -22,4 +22,3 @@
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json"
-}
