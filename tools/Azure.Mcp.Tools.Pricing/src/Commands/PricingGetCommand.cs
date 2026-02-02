@@ -25,17 +25,11 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
     public override string Name => "get";
 
     public override string Description =>
-    "Get Azure retail pricing information. " +
-    "MANDATORY: Do NOT call this tool if the user only specifies a broad service name (e.g., 'Virtual Machines', 'Storage', 'SQL Database') without a specific SKU. " +
-    "Instead, FIRST ask the user which specific SKU or tier they want pricing for. " +
-    "If the user asks to compare pricing across regions or SKUs without specifying exact SKU names, ask them which specific SKUs they want to compare. " +
-    "Do NOT assume or pick default SKUs. " +
-    "Only call this tool AFTER the user provides a specific SKU (--sku) or confirms they want all pricing for that service. " +
-    "Requires at least one filter: --sku, --service, --region, --service-family, or --filter. " +
-    "SAVINGS PLAN: 'SavingsPlan' is NOT a valid --price-type. Use --include-savings-plan flag instead. " +
-    "Valid --price-type values: Consumption, Reservation, DevTestConsumption. " +
-    "When --include-savings-plan is true, Consumption items include nested 'savingsPlan' array with 1-year/3-year pricing (mainly Linux VMs).";
-    
+    "Get Azure retail pricing information. CRITICAL/MANDATORY: Do NOT call this tool if the user only specifies a broad service name (e.g., 'Virtual Machines', 'Storage', 'SQL Database') without a specific SKU. Instead, FIRST ask the user which specific SKU or tier they want pricing for. If the user asks to compare pricing across regions or SKUs without specifying exact ARM SKU names, ask them which specific SKUs they want to compare. " +
+    "Do NOT assume or pick default SKUs. Only call this tool AFTER the user provides a specific SKU (--sku) or confirms they want all pricing for that service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. SAVINGS PLAN: 'SavingsPlan' is NOT a valid --price-type. Use --include-savings-plan flag instead. " +
+    "Valid --price-type values: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption items include nested 'savingsPlan' array with 1-year/3-year pricing (mainly Linux VMs). " +
+    "FOR BICEP/ARM COST ESTIMATION: When user asks to estimate costs from a Bicep or ARM template file, read the file, extract each resource's type and SKU, call this tool for each resource and aggregate the monthly costs (hourly price * 730 hours/month).";
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -81,13 +75,13 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
             }
 
             // Require --sku when --service is provided (broad service queries return too many results)
-            // if (!string.IsNullOrEmpty(service) && string.IsNullOrEmpty(sku))
-            // {
-            //     result.AddError(
-            //         $"When querying by service '{service}', you must also specify --sku to narrow results. " +
-            //         "Ask the user which specific SKU they want pricing for. " +
-            //         "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).");
-            // }
+            if (!string.IsNullOrEmpty(service) && string.IsNullOrEmpty(sku))
+            {
+                result.AddError(
+                    $"When querying by service '{service}', you must also specify --sku to narrow results. " +
+                    "Ask the user which specific SKU they want pricing for. " +
+                    "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).");
+            }
         });
     }
 

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Pricing.LiveTests;
 public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     private const string PricesKey = "prices";
+    public override bool EnableDefaultSanitizerAdditions => false;
 
     [Fact]
     public async Task Should_get_prices_by_sku()
