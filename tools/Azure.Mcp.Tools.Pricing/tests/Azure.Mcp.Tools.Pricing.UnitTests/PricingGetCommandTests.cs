@@ -45,13 +45,13 @@ public sealed class PricingGetCommandTests
 
     [Theory]
     [InlineData("--sku Standard_D4s_v5")]
-    [InlineData("--service \"Virtual Machines\"")]
+    [InlineData("--sku Standard_D4s_v5 --service \"Virtual Machines\"")]
     [InlineData("--region eastus")]
     [InlineData("--service-family Compute")]
     [InlineData("--price-type Consumption")]
     [InlineData("--filter \"meterId eq 'abc-123'\"")]
     [InlineData("--sku Standard_D4s_v5 --region eastus")]
-    [InlineData("--service \"Virtual Machines\" --currency EUR")]
+    [InlineData("--sku Standard_D4s_v5 --service \"Virtual Machines\" --currency EUR")]
     public async Task ExecuteAsync_WithValidFilters_ReturnsPrices(string cliArgs)
     {
         // Arrange
@@ -237,7 +237,7 @@ public sealed class PricingGetCommandTests
             .Returns(new List<PriceItem>());
 
         var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse("--service \"Virtual Machines\" --currency EUR");
+        var args = command.GetCommand().Parse("--sku Standard_D4s_v5 --currency EUR");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -245,8 +245,8 @@ public sealed class PricingGetCommandTests
 
         // Assert
         await _pricingService.Received(1).GetPricesAsync(
+            "Standard_D4s_v5",
             null,
-            "Virtual Machines",
             null,
             null,
             null,
