@@ -17,7 +17,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
     /// <exception cref="InvalidOperationException">If there is no folder to persist data in.</exception>
     public abstract string GetStoragePath();
 
-    public override async Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken)
+    public override async Task<string?> GetOrCreateDeviceId()
     {
         string cachePath;
         try
@@ -37,7 +37,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
         }
 
         var deviceId = GenerateDeviceId();
-        if (await WriteValueToDisk(cachePath, DeviceId, deviceId, cancellationToken))
+        if (await WriteValueToDisk(cachePath, DeviceId, deviceId))
         {
             return deviceId;
         }
@@ -55,8 +55,8 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
     /// <param name="fileName">The name of the file.</param>
     /// <param name="value">The value to write in the file.</param>
     /// <returns>True, if the value was successfully written.</returns>
-    ///
-    public async virtual Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value, CancellationToken cancellationToken)
+    /// 
+    public async virtual Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value)
     {
         // If the value is not set, return immediately.
         if (string.IsNullOrWhiteSpace(value))
@@ -80,7 +80,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
         {
             File.Delete(fullPath);
 
-            await File.WriteAllTextAsync(fullPath, value, Encoding.UTF8, cancellationToken);
+            await File.WriteAllTextAsync(fullPath, value, Encoding.UTF8);
             return true;
         }
         catch (Exception ex)

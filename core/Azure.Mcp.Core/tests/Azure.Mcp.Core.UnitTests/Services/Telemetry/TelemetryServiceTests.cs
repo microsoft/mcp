@@ -39,8 +39,8 @@ public class TelemetryServiceTests
         _mockServiceOptions.Value.Returns(new ServiceStartOptions());
 
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
-        _mockInformationProvider.GetMacAddressHash(Arg.Any<CancellationToken>()).Returns(Task.FromResult(TestMacAddressHash));
-        _mockInformationProvider.GetOrCreateDeviceId(Arg.Any<CancellationToken>()).Returns(Task.FromResult<string?>(TestDeviceId));
+        _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
+        _mockInformationProvider.GetOrCreateDeviceId().Returns(Task.FromResult<string?>(TestDeviceId));
 
         _logger = Substitute.For<ILogger<TelemetryService>>();
     }
@@ -163,7 +163,7 @@ public class TelemetryServiceTests
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
 
-        await service.InitializeAsync(CancellationToken.None);
+        await service.InitializeAsync();
 
         // Act
         var activity = service.StartActivity(activityId);
@@ -236,7 +236,7 @@ public class TelemetryServiceTests
         // Act & Assert
         using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger);
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
         Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
@@ -267,7 +267,7 @@ public class TelemetryServiceTests
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
 
-        await service.InitializeAsync(CancellationToken.None);
+        await service.InitializeAsync();
 
         var defaultTags = service.GetDefaultTags();
 
@@ -301,12 +301,12 @@ public class TelemetryServiceTests
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
 
-        await service.InitializeAsync(CancellationToken.None);
-        await service.InitializeAsync(CancellationToken.None);
+        await service.InitializeAsync();
+        await service.InitializeAsync();
 
         // Act
-        await _mockInformationProvider.Received(1).GetOrCreateDeviceId(Arg.Any<CancellationToken>());
-        await _mockInformationProvider.Received(1).GetMacAddressHash(Arg.Any<CancellationToken>());
+        await _mockInformationProvider.Received(1).GetOrCreateDeviceId();
+        await _mockInformationProvider.Received(1).GetMacAddressHash();
     }
 
     private static void AssertDefaultTags(IReadOnlyList<KeyValuePair<string, object?>> tags,
@@ -337,9 +337,9 @@ public class TelemetryServiceTests
 
     private class ExceptionalInformationProvider : IMachineInformationProvider
     {
-        public Task<string> GetMacAddressHash(CancellationToken cancellationToken) => Task.FromResult("test-mac-address");
+        public Task<string> GetMacAddressHash() => Task.FromResult("test-mac-address");
 
-        public Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken) => Task.FromException<string?>(
+        public Task<string?> GetOrCreateDeviceId() => Task.FromException<string?>(
             new ArgumentNullException("test-exception"));
     }
 }

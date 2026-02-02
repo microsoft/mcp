@@ -110,7 +110,7 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public async Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task InitializeAsync()
     {
         if (!_isEnabled)
         {
@@ -122,7 +122,7 @@ internal class TelemetryService : ITelemetryService
         if (_initalizationTask == null)
         {
             // Get async lock for starting initialization
-            await _initalizeLock.WaitAsync(cancellationToken);
+            await _initalizeLock.WaitAsync();
 
             try
             {
@@ -148,8 +148,8 @@ internal class TelemetryService : ITelemetryService
         {
             try
             {
-                var macAddressHash = await _informationProvider.GetMacAddressHash(CancellationToken.None);
-                var deviceId = await _informationProvider.GetOrCreateDeviceId(CancellationToken.None);
+                var macAddressHash = await _informationProvider.GetMacAddressHash();
+                var deviceId = await _informationProvider.GetOrCreateDeviceId();
 
                 _tagsList.Add(new(TagName.MacAddressHash, macAddressHash));
                 _tagsList.Add(new(TagName.DevDeviceId, deviceId));

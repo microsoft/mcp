@@ -16,7 +16,7 @@ public class DefaultMachineInformationProviderTests
         var logger = Substitute.For<ILogger<DefaultMachineInformationProvider>>();
         var provider = new DefaultMachineInformationProvider(logger);
 
-        var result = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var result = await provider.GetOrCreateDeviceId();
 
         Assert.Null(result);
     }

@@ -48,14 +48,14 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
-    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath, CancellationToken cancellationToken = default)
+    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
     {
         if (_cachedExecutable != null)
         {
             return _cachedExecutable;
         }
 
-        await s_downloadLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await s_downloadLock.WaitAsync().ConfigureAwait(false);
         try
         {
             var proxyDir = GetProxyDirectory();
@@ -74,7 +74,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
                 return _cachedExecutable;
             }
 
-            await DownloadProxyAsync(proxyDir, version, cancellationToken);
+            await DownloadProxyAsync(proxyDir, version);
 
             _cachedExecutable = FindExecutableInDirectory(proxyDir);
 
@@ -91,16 +91,16 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedExecutable;
     }
 
-    private async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath, CancellationToken cancellationToken = default)
+    private async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath)
     {
-        await s_downloadLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await s_downloadLock.WaitAsync().ConfigureAwait(false);
         FileStream? lockStream = null;
         try
         {
             var proxyDir = GetProxyDirectory();
             lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
 
-            await RestoreAssetsAsync(proxyExe, assetsJsonPath, repositoryRoot, cancellationToken).ConfigureAwait(false);
+            await RestoreAssetsAsync(proxyExe, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
         }
         finally
         {
@@ -109,7 +109,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private async Task DownloadProxyAsync(string proxyDirectory, string version, CancellationToken cancellationToken = default)
+    private async Task DownloadProxyAsync(string proxyDirectory, string version)
     {
         var assetName = GetAssetNameForPlatform();
         var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
@@ -121,8 +121,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         using var client = new HttpClient();
-        byte[] bytes = await DownloadWithRetryAsync(client, url, cancellationToken).ConfigureAwait(false);
-        await File.WriteAllBytesAsync(downloadPath, bytes, cancellationToken).ConfigureAwait(false);
+        byte[] bytes = await DownloadWithRetryAsync(client, url).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(downloadPath, bytes).ConfigureAwait(false);
 
         var toolDirectory = Path.Combine(proxyDirectory, "Azure.Sdk.Tools.TestProxy");
         if (Directory.Exists(toolDirectory))
@@ -141,28 +141,28 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             ZipFile.ExtractToDirectory(downloadPath, proxyDirectory, overwriteFiles: true);
         }
 
-        await File.WriteAllTextAsync(Path.Combine(proxyDirectory, "version.txt"), version, cancellationToken).ConfigureAwait(false);
+        await File.WriteAllTextAsync(Path.Combine(proxyDirectory, "version.txt"), version).ConfigureAwait(false);
     }
 
-    private static async Task<byte[]> DownloadWithRetryAsync(HttpClient client, string url, CancellationToken cancellationToken = default)
+    private static async Task<byte[]> DownloadWithRetryAsync(HttpClient client, string url)
     {
         var attempt = 0;
         while (true)
         {
             try
             {
-                return await client.GetByteArrayAsync(url, cancellationToken).ConfigureAwait(false);
+                return await client.GetByteArrayAsync(url).ConfigureAwait(false);
             }
             catch when (attempt < DownloadRetryDelays.Length)
             {
                 var delay = DownloadRetryDelays[attempt];
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(delay).ConfigureAwait(false);
                 attempt++;
             }
         }
     }
 
-    private static async Task RestoreAssetsAsync(string proxyExe, string assetsJsonPath, string repositoryRoot, CancellationToken cancellationToken = default)
+    private static async Task RestoreAssetsAsync(string proxyExe, string assetsJsonPath, string repositoryRoot)
     {
         var resolvedAssetsPath = Path.IsPathRooted(assetsJsonPath)
             ? assetsJsonPath
@@ -183,10 +183,10 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         };
 
         using var process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy restore process.");
-        var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
 
-        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        await process.WaitForExitAsync().ConfigureAwait(false);
         var stdout = await stdoutTask.ConfigureAwait(false);
         var stderr = await stderrTask.ConfigureAwait(false);
 
@@ -325,15 +325,15 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return proxyDirectory;
     }
 
-    public async Task Start(string repositoryRoot, string assetsJsonPath, CancellationToken cancellationToken = default)
+    public async Task Start(string repositoryRoot, string assetsJsonPath)
     {
         if (_process != null)
         {
             return;
         }
 
-        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath, cancellationToken).ConfigureAwait(false);
-        await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath, cancellationToken).ConfigureAwait(false);
+        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
@@ -356,8 +356,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             throw new InvalidOperationException("Failed to start test proxy process.");
         }
         _cts = new CancellationTokenSource();
-        _ = Task.Run(() => _pumpAsync(_process.StandardError, stderr, _cts.Token), _cts.Token);
-        _ = Task.Run(() => _pumpAsync(_process.StandardOutput, stdout, _cts.Token), _cts.Token);
+        _ = Task.Run(() => _pumpAsync(_process.StandardError, stderr, _cts.Token));
+        _ = Task.Run(() => _pumpAsync(_process.StandardOutput, stdout, _cts.Token));
 
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
         {

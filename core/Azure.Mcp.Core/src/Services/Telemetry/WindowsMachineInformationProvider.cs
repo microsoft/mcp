@@ -18,7 +18,7 @@ internal class WindowsMachineInformationProvider(ILogger<WindowsMachineInformati
 
     private readonly ILogger<WindowsMachineInformationProvider> _logger = logger;
 
-    public override Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken)
+    public override Task<string?> GetOrCreateDeviceId()
     {
         return Task.Run<string?>(() =>
         {
@@ -49,7 +49,7 @@ internal class WindowsMachineInformationProvider(ILogger<WindowsMachineInformati
             }
 
             return newDeviceId;
-        }, cancellationToken);
+        });
     }
 
     private static bool TryGetRegistryValue(string registryRoot, string keyName, out string value)

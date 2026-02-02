@@ -31,7 +31,7 @@ public class UnixInformationProviderTests
         var provider = new TestUnixInformationProvider(_logger, storagePath: TestStorageDirectory.ToString(), throwOnGetStoragePath: true);
 
         // Act
-        var result = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var result = await provider.GetOrCreateDeviceId();
 
         // Assert
         Assert.Null(result);
@@ -46,7 +46,7 @@ public class UnixInformationProviderTests
         var provider = new NoOpUnixInformationProvider(existingDeviceId, true);
 
         // Act
-        var result = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var result = await provider.GetOrCreateDeviceId();
 
         // Assert
         Assert.Equal(existingDeviceId, result);
@@ -65,7 +65,7 @@ public class UnixInformationProviderTests
         var provider = new NoOpUnixInformationProvider(null, true);
 
         // Act
-        var result = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var result = await provider.GetOrCreateDeviceId();
 
         // Assert
         Assert.NotNull(result);
@@ -85,7 +85,7 @@ public class UnixInformationProviderTests
         var provider = new NoOpUnixInformationProvider(null, false);
 
         // Act
-        var result = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var result = await provider.GetOrCreateDeviceId();
 
         // Assert
         Assert.Null(result);
@@ -188,11 +188,11 @@ public class UnixInformationProviderTests
 
         public string GetTestStoragePath() => GetStoragePath();
 
-        public override Task<string?> GetOrCreateDeviceId(CancellationToken cancellationToken)
+        public override Task<string?> GetOrCreateDeviceId()
         {
             if (string.IsNullOrEmpty(_deviceId))
             {
-                return base.GetOrCreateDeviceId(cancellationToken);
+                return base.GetOrCreateDeviceId();
             }
             else
             {

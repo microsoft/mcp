@@ -24,14 +24,14 @@ public class WindowsInformationProviderTests
         var provider = new WindowsMachineInformationProvider(_logger);
 
         // Act
-        var deviceId = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var deviceId = await provider.GetOrCreateDeviceId();
 
         // Assert
         Assert.NotNull(deviceId);
         Assert.NotEmpty(deviceId);
 
         // Verify it's persisted by calling again
-        var deviceId2 = await provider.GetOrCreateDeviceId(CancellationToken.None);
+        var deviceId2 = await provider.GetOrCreateDeviceId();
         Assert.Equal(deviceId, deviceId2);
     }
 }
