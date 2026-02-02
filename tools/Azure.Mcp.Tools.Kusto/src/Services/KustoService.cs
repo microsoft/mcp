@@ -36,7 +36,7 @@ public sealed class KustoService(
         return $"{tenantKey}:{clusterUri}";
     }
 
-    public async Task<List<string>> ListClustersAsync(
+    public async Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscriptionId,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
