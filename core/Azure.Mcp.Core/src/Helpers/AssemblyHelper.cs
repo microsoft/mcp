@@ -37,4 +37,23 @@ public static class AssemblyHelper
 
         return version;
     }
+
+    /// <summary>
+    /// Gets the full informational version for an assembly, including build metadata (git commit hash).
+    /// For example, returns "6.14.0-rc.116+54d611f7" including the git hash after '+'.
+    /// </summary>
+    /// <param name="assembly">The assembly to extract version information from.</param>
+    /// <returns>The full informational version string including build metadata.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the assembly does not have an AssemblyInformationalVersionAttribute.</exception>
+    public static string GetFullAssemblyVersion(Assembly assembly)
+    {
+        AssemblyInformationalVersionAttribute? versionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (versionAttribute == null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on assembly '{assembly.FullName}'.");
+        }
+
+        return versionAttribute.InformationalVersion;
+    }
 }

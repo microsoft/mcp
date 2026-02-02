@@ -13,6 +13,11 @@ namespace Azure.Mcp.Core.Services.Azure.Tenant;
 public interface ITenantService
 {
     /// <summary>
+    /// Gets the Azure cloud configuration for the current environment.
+    /// </summary>
+    IAzureCloudConfiguration CloudConfiguration { get; }
+
+    /// <summary>
     /// Gets the list of all available Azure tenants.
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the operation.</param>

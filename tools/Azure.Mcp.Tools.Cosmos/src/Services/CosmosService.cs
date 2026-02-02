@@ -13,7 +13,7 @@ using Microsoft.Azure.Cosmos;
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
 public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
+    : BaseAzureService(tenantService), ICosmosService, IDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -338,26 +338,32 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
     }
 
-    public async ValueTask DisposeAsync()
+    protected virtual async void Dispose(bool disposing)
     {
         if (!_disposed)
         {
-            // Get all cached client keys
-            var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
-
-            // Filter for client keys only (those that start with the client prefix)
-            var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
-
-            // Retrieve and dispose each client
-            foreach (var key in clientKeys)
+            if (disposing)
             {
-                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: CancellationToken.None);
-                client?.Dispose();
+                // Get all cached client keys
+                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
+
+                // Filter for client keys only (those that start with the client prefix)
+                var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
+
+                // Retrieve and dispose each client
+                foreach (var key in clientKeys)
+                {
+                    var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
+                    client?.Dispose();
+                }
+                _disposed = true;
             }
-
-            _disposed = true;
         }
+    }
 
+    public void Dispose()
+    {
+        Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
