@@ -1,0 +1,4 @@
+pr: 1625
+changes:
+  - section: "Other Changes"
+    description: "Removed usage of ErrorDetails telemetry tag in preparation for replacement by more actionable error tags"
