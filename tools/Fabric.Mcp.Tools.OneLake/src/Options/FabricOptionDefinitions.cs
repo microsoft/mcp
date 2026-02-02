@@ -27,7 +27,7 @@ public static class FabricOptionDefinitions
     public const string ItemName = "item";
     public static readonly Option<string> Item = new($"--{ItemName}")
     {
-        Description = "The name or ID of the Fabric item.",
+        Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
         Required = false
     };
 

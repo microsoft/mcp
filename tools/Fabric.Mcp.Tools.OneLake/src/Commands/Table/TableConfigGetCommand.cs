@@ -27,7 +27,7 @@ public sealed class TableConfigGetCommand(
     public override string Id => "bc15c475-0329-4cc3-aaa8-0e9f3fbde6f8";
     public override string Name => "get";
     public override string Title => "Get OneLake Table Configuration";
-    public override string Description => "Retrieve detailed configuration metadata for a OneLake warehouse or lakehouse table endpoint using the OneLake Table API.";
+    public override string Description => "Retrieve detailed configuration metadata for a OneLake warehouse or lakehouse table endpoint using the OneLake Table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse').";
 
     public override ToolMetadata Metadata => new()
     {

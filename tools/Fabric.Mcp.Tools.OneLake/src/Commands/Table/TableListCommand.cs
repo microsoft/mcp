@@ -26,7 +26,7 @@ public sealed class TableListCommand(
     public override string Id => "7b1688e5-2a16-475d-8fd1-9bf3b0acf4f7";
     public override string Name => "list";
     public override string Title => "List OneLake Tables";
-    public override string Description => "Enumerate tables exposed by the OneLake table API for a given namespace (schema).";
+    public override string Description => "Enumerate tables exposed by the OneLake table API for a given namespace (schema). CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse').";
 
     public override ToolMetadata Metadata => new()
     {
