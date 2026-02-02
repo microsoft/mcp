@@ -21,9 +21,6 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        _armClient = new ArmClient(credential, _subscriptionId);
-        _queryClient = new LogsQueryClient(credential);
-
         _resourceGroupName = await GetResourceGroupNameAsync(cancellationToken);
         if (string.IsNullOrEmpty(_resourceGroupName))
         {
@@ -52,7 +49,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string serviceName, CancellationToken cancellationToken)
     {
         var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
-        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
+        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName, cancellationToken);
 
         var filter = $"tagName eq 'azd-service-name' and tagValue eq '{serviceName}'";
         var apps = new List<GenericResource>();
@@ -89,7 +86,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
         $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
-    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null, CancellationToken cancellationToken)
+    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, CancellationToken cancellationToken, string serviceName, int? limit = null)
     {
         var app = await RegisterAppAsync(resourceType, serviceName, cancellationToken);
         var getLogErrors = new List<string>();

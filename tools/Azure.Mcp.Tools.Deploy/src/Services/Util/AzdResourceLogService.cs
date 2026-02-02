@@ -37,7 +37,7 @@ public static class AzdResourceLogService
                     if (service.Host != null)
                     {
                         var resourceType = ResourceTypeExtensions.GetResourceTypeFromHost(service.Host);
-                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit, cancellationToken);
+                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, cancellationToken, serviceName, limit);
                         appLogs.Add(logs);
                     }
                 }
