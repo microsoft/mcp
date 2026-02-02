@@ -22,8 +22,7 @@ public static class OpenTelemetryExtensions
     /// <summary>
     /// The App Insights connection string to send telemetry to Microsoft.
     /// </summary>
-    // private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
-    private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=4a9e69be-77aa-49cf-96a3-93f1c3f24b6d;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=fb90db50-fbd5-4b62-a7d1-c17a74c2d735";
+    private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
@@ -51,18 +50,7 @@ public static class OpenTelemetryExtensions
 
     public static void ConfigureOpenTelemetryLogger(this ILoggingBuilder builder)
     {
-        // builder.AddOpenTelemetry(logger =>
-        // {
-        //     logger.AddAzureMonitorLogExporter(options =>
-        //     {
-        //         var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        //         if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
-        //         {
-        //             options.ConnectionString = userProvidedAppInsightsConnectionString;
-        //         }
-        //     });
-        // });
+        // Do nothing here. The OpenTelemetry logger is configured in EnableAzureMonitor.
     }
 
     private static void EnableAzureMonitor(this IServiceCollection services)
@@ -105,7 +93,7 @@ public static class OpenTelemetryExtensions
         }
 
         // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
-// #if RELEASE
+#if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
@@ -116,7 +104,7 @@ public static class OpenTelemetryExtensions
         {
             ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString, "Microsoft");
         }
-// #endif
+#endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
@@ -129,8 +117,6 @@ public static class OpenTelemetryExtensions
 
     private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
     {
-        Console.WriteLine($"Configuring Azure Monitor Exporter for {name} telemetry with connection string: {appInsightsConnectionString}");
-       
         otelBuilder.WithMetrics(metrics =>
         {
             metrics.AddAzureMonitorMetricExporter(options =>
@@ -152,7 +138,6 @@ public static class OpenTelemetryExtensions
 
     private static void ConfigureUserProvidedAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
     {
-        Console.WriteLine($"Configuring Azure Monitor Exporter for {name} telemetry with connection string: {appInsightsConnectionString}");
         otelBuilder.WithLogging(logging =>
         {
             logging.AddAzureMonitorLogExporter(options =>
