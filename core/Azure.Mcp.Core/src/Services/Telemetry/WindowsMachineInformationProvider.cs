@@ -49,7 +49,7 @@ internal class WindowsMachineInformationProvider(ILogger<WindowsMachineInformati
             }
 
             return newDeviceId;
-        });
+        }, cancellationToken);
     }
 
     private static bool TryGetRegistryValue(string registryRoot, string keyName, out string value)

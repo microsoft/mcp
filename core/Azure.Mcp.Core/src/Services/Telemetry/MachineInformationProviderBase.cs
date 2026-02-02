@@ -49,7 +49,7 @@ internal abstract class MachineInformationProviderBase(ILogger<MachineInformatio
                 _logger.LogError(ex, "Unable to calculate MAC address hash.");
                 return NotAvailable;
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>

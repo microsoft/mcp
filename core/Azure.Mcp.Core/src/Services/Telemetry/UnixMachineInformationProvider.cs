@@ -37,7 +37,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
         }
 
         var deviceId = GenerateDeviceId();
-        if (await WriteValueToDisk(cachePath, DeviceId, deviceId))
+        if (await WriteValueToDisk(cachePath, DeviceId, deviceId, cancellationToken))
         {
             return deviceId;
         }
@@ -56,7 +56,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
     /// <param name="value">The value to write in the file.</param>
     /// <returns>True, if the value was successfully written.</returns>
     ///
-    public async virtual Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value)
+    public async virtual Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value, CancellationToken cancellationToken)
     {
         // If the value is not set, return immediately.
         if (string.IsNullOrWhiteSpace(value))
@@ -80,7 +80,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
         {
             File.Delete(fullPath);
 
-            await File.WriteAllTextAsync(fullPath, value, Encoding.UTF8);
+            await File.WriteAllTextAsync(fullPath, value, Encoding.UTF8, cancellationToken);
             return true;
         }
         catch (Exception ex)
