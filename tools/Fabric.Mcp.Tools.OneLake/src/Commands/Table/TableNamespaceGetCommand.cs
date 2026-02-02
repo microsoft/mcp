@@ -45,7 +45,8 @@ public sealed class TableNamespaceGetCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
     }
 
     protected override TableNamespaceGetOptions BindOptions(ParseResult parseResult)
@@ -56,6 +57,7 @@ public sealed class TableNamespaceGetCommand(
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
         options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Namespace.Name);
+        options.Namespace ??= parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Schema.Name);
         return options;
     }
 

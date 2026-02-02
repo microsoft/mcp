@@ -53,7 +53,7 @@ public class FabricOneLakeSetupTests
         Assert.True(configGroup!.Commands.ContainsKey("get"));
 
         Assert.True(tableGroup.Commands.ContainsKey("list"));
-    Assert.True(tableGroup.Commands.ContainsKey("get"));
+        Assert.True(tableGroup.Commands.ContainsKey("get"));
 
         var namespaceGroup = tableGroup.SubGroup.FirstOrDefault(g => g.Name == "namespace");
         Assert.NotNull(namespaceGroup);

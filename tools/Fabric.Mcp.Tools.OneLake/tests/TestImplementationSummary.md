@@ -5,7 +5,7 @@ Production-ready test suite for Microsoft Fabric OneLake MCP Tools providing com
 
 ## Final Test Coverage Status
 
-### ✅ Command Tests - 100% Coverage Across 20 Commands
+### ✅ Command Tests - 100% Coverage Across 19 Commands
 All OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
 
 #### Enhanced Command Tests
@@ -20,7 +20,7 @@ All OneLake commands have comprehensive test coverage with ExecuteAsync testing 
 - **TableListCommand**: Cross-namespace table discovery and paging
 - **TableGetCommand**: Detailed table metadata and column schema retrieval
 - **TableConfigGetCommand**: Table configuration export validation
-- **All 20 commands**: Constructor validation, interface implementation, parameter binding, error handling
+- **All 19 commands**: Constructor validation, interface implementation, parameter binding, error handling
 
 #### Key Features
 - **Constructor validation**: All commands properly initialized

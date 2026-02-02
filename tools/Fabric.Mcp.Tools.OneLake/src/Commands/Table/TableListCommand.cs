@@ -45,7 +45,7 @@ public sealed class TableListCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
     }
 

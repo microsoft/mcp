@@ -331,7 +331,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
         }
 
-        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, warehouseQueryValue) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var (normalizedWorkspaceId, normalizedItemIdentifier, _, warehouseQueryValue) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/config?warehouse={warehouseQueryValue}";
 
         using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
