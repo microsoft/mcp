@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure Retail Pricing MCP tool for querying Azure service pricing information"
