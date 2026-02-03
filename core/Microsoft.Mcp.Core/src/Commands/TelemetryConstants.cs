@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security.Cryptography.X509Certificates;
+
 namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
@@ -39,4 +41,10 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
+}
+
+public class AppInsightsInstanceType
+{
+    public const string Microsoft = "Microsoft";
+    public const string UserProvided = "UserProvided";
 }

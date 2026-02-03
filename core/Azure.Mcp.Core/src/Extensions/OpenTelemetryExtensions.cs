@@ -5,11 +5,13 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Commands;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -89,11 +91,11 @@ public static class OpenTelemetryExtensions
         if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
             // Configure telemetry to be sent to user-provided Application Insights instance regardless of build configuration.
-            ConfigureUserProvidedAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString, "UserProvided");
+            ConfigureUserProvidedAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString);
         }
 
         // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
-#if RELEASE
+// #if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
@@ -102,9 +104,9 @@ public static class OpenTelemetryExtensions
 
         if (shouldCollectMicrosoftTelemetry)
         {
-            ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString, "Microsoft");
+            ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString);
         }
-#endif
+// #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
@@ -115,7 +117,12 @@ public static class OpenTelemetryExtensions
         }
     }
 
-    private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
+    /// <summary>
+    /// Configures OpenTelemetry to use Azure Monitor exporters with Microsoft's Application Insights instance.
+    /// </summary>
+    /// <param name="otelBuilder">The OpenTelemetry builder to configure.</param>
+    /// <param name="appInsightsConnectionString">The Application Insights connection string for Microsoft's telemetry instance.</param>
+    private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString)
     {
         otelBuilder.WithMetrics(metrics =>
         {
@@ -123,7 +130,7 @@ public static class OpenTelemetryExtensions
             {
                 options.ConnectionString = appInsightsConnectionString;
             },
-            name: name);
+            name: AppInsightsInstanceType.Microsoft);
         });
 
         otelBuilder.WithTracing(tracing =>
@@ -132,11 +139,16 @@ public static class OpenTelemetryExtensions
             {
                 options.ConnectionString = appInsightsConnectionString;
             },
-            name: name);
+            name: AppInsightsInstanceType.Microsoft);
         });
     }
 
-    private static void ConfigureUserProvidedAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
+    /// <summary>
+    /// Configures OpenTelemetry to use Azure Monitor exporters with a user-provided Application Insights connection string.
+    /// </summary>
+    /// <param name="otelBuilder">The OpenTelemetry builder to configure.</param>
+    /// <param name="appInsightsConnectionString">The Application Insights connection string provided by the user.</param>
+    private static void ConfigureUserProvidedAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString)
     {
         otelBuilder.WithLogging(logging =>
         {
@@ -144,7 +156,7 @@ public static class OpenTelemetryExtensions
             {
                 options.ConnectionString = appInsightsConnectionString;
             },
-            name: name);
+            name: AppInsightsInstanceType.UserProvided);
         });
 
         otelBuilder.WithMetrics(metrics =>
@@ -153,7 +165,7 @@ public static class OpenTelemetryExtensions
             {
                 options.ConnectionString = appInsightsConnectionString;
             },
-            name: name);
+            name: AppInsightsInstanceType.UserProvided);
         });
 
         otelBuilder.WithTracing(tracing =>
@@ -162,7 +174,7 @@ public static class OpenTelemetryExtensions
             {
                 options.ConnectionString = appInsightsConnectionString;
             },
-            name: name);
+            name: AppInsightsInstanceType.UserProvided);
         });
     }
 }
