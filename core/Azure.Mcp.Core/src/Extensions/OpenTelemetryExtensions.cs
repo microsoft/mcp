@@ -52,7 +52,9 @@ public static class OpenTelemetryExtensions
 
     public static void ConfigureOpenTelemetryLogger(this ILoggingBuilder builder)
     {
-        // Do nothing here. The OpenTelemetry logger is configured in EnableAzureMonitor.
+        // Intentionally left empty. OpenTelemetry logging is configured as part of EnableAzureMonitor
+        // when a telemetry destination (for example, a user-provided Application Insights instance)
+        // is enabled. This method does not perform any logging configuration itself.
     }
 
     private static void EnableAzureMonitor(this IServiceCollection services)
