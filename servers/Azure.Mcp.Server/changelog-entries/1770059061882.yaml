@@ -1,0 +1,4 @@
+pr: 1625
+changes:
+  - section: "Other Changes"
+    description: "Removed ErrorDetails from telemetry"
