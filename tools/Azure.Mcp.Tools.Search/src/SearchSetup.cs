@@ -33,16 +33,11 @@ public class SearchSetup : IAreaSetup
     {
         var search = new CommandGroup(Name,
         """
-        Search operations - Commands for Azure AI Search (formerly known as \"Azure Cognitive Search\") services,
-        search indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,
-        search indexes, or introspect search services and their components. This tool supports enterprise search,
-        document search, and knowledge mining. Do not use this tool for database queries or Azure Monitor
-        logs, this tool is specifically designed for Azure AI Search. This tool is a hierarchical MCP command
-        router where sub-commands are routed to MCP servers that require specific fields inside the \"parameters\"
-        object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\"
-        to discover available sub-commands for different search service and index operations. Note that this tool
-        requires appropriate Azure AI Search permissions and will only access search resources accessible to the
-        authenticated user.
+        Search operations – Commands to manage and query Azure AI Search services, indexes, and
+        knowledge sources. Supports enterprise search, document search, and knowledge mining. Not
+        intended for database queries or Azure Monitor logs. This is a hierarchical MCP command
+        router using the command field and parameters; set learn=true to discover available
+        sub-commands.
         """, Title);
 
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");

@@ -39,15 +39,10 @@ public class SpeechSetup : IAreaSetup
     {
         var speech = new CommandGroup(Name,
             """
-            Speech operations - Commands for Azure AI Services Speech functionality including speech-to-text (STT) 
-            recognition, text-to-speech (TTS) synthesis, audio processing, and language detection. Use this tool when you need to convert spoken 
-            audio to text, convert text to spoken audio, process audio files, or work with speech recognition services. This tool supports 
-            multiple audio formats, configurable recognition languages, profanity filtering options, and both 
-            simple and detailed output formats. This tool is a hierarchical MCP command router where sub-commands 
-            are routed to MCP servers that require specific fields inside the "parameters" object. To invoke a 
-            command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available 
-            sub-commands for different Azure AI Services Speech operations. Note that this tool requires Azure AI 
-            Services Speech endpoints and will only access speech resources accessible to the authenticated user.
+            Speech operations – Commands to work with Azure AI Services Speech, including speech-to-text (STT) recognition,
+            text-to-speech (TTS) synthesis, audio processing, and language detection. Uses a hierarchical MCP command model
+            with command and parameters; set learn=true to discover sub-commands. Supports multiple audio formats, languages,
+            and output options.
             """, Title);
 
         var stt = new CommandGroup(

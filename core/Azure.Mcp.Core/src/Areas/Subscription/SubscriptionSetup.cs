@@ -14,6 +14,8 @@ public class SubscriptionSetup : IAreaSetup
 
     public string Title => "Azure Subscriptions Management";
 
+    public CommandCategory Category => CommandCategory.SubscriptionManagement;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<SubscriptionListCommand>();

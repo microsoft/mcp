@@ -42,17 +42,7 @@ public class AzureMigrateSetup : IAreaSetup
     {
         var azureMigrate = new CommandGroup(
             Name,
-            """
-            Azure Landing Zone operations - Provides guidance and documentation for modifying Azure Landing Zone
-            templates and configurations, and supports generating new platform landing zones. Helps with policy changes, 
-            service configuration, resource naming, network topology, identity management, governance, and starter module 
-            customizations. Can generate complete platform landing zone deployments with customizable parameters including 
-            region types, firewall configuration, network architecture, and subscription assignments. This tool focuses
-            on providing best practices and recommendations for both platform and application landing zones across
-            different deployment methods (Bicep, Terraform, Portal). Use this tool when you need guidance on
-            implementing or customizing Azure Landing Zones, or when you need to generate a new platform landing zone
-            according to Microsoft's Cloud Adoption Framework.
-            """,
+            "Azure Landing Zone operations – Guidance and tooling for customizing and generating Azure Landing Zones, including policy configuration, networking, identity, governance, and naming standards. Supports generating platform landing zones using Bicep, Terraform, or the Azure portal in alignment with Microsoft's Cloud Adoption Framework.",
             Title);
 
         // Create platform landing zone subgroup
