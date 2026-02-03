@@ -16,6 +16,10 @@ Use `azd` for Static Web Apps when:
 - You want reproducible deployments
 - Production deployments
 
+When using azd for deployment, make sure to
+- Include a package.json file in the source directory
+- Tag the Static Web App resource in Bicep with the correct azd-service-name
+
 **ALTERNATIVE PATH: SWA CLI**
 
 Use SWA CLI (`swa`) ONLY when:
@@ -78,28 +82,6 @@ services:
     language: python
     host: function
 ```
-
----
-
-## Build Output Locations by Framework
-
-| Framework | Build Command | outputLocation | appLocation |
-|-----------|---------------|----------------|-------------|
-| React (CRA) | `npm run build` | `build` | `/` |
-| React (Vite) | `npm run build` | `dist` | `/` |
-| Vue | `npm run build` | `dist` | `/` |
-| Angular | `ng build` | `dist/<project-name>` | `/` |
-| Next.js (static) | `next build && next export` | `out` | `/` |
-| Nuxt (static) | `nuxt generate` | `dist` | `/` |
-| Svelte | `npm run build` | `public` | `/` |
-| SvelteKit (static) | `npm run build` | `build` | `/` |
-| Astro | `npm run build` | `dist` | `/` |
-| Gatsby | `gatsby build` | `public` | `/` |
-| Hugo | `hugo` | `public` | `/` |
-| Jekyll | `jekyll build` | `_site` | `/` |
-| Docusaurus | `npm run build` | `build` | `/` |
-| VuePress | `vuepress build` | `.vuepress/dist` | `/` |
-| Eleventy | `npx eleventy` | `_site` | `/` |
 
 ---
 
