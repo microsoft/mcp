@@ -1,0 +1,6 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Improved input validation in ResourceHealth and Kusto tools:
+      - ResourceHealth: Added resource ID validation using Azure.Core.ResourceIdentifier.Parse()
+      - Kusto: Added cluster URI validation with domain suffix and hostname allowlist
