@@ -19,6 +19,7 @@
 
 - Removed ErrorDetails from telemetry. [[#1625](https://github.com/microsoft/mcp/pull/1625)]
 - Updated bestpractices tool description to ask LLM to use azure skills. [[#1622](https://github.com/microsoft/mcp/pull/1622)]
+- Updated swa app deployment instructions in bestpractices tool. [[#1637](https://github.com/microsoft/mcp/pull/1637)]
 
 ## 2.0.0-beta.15 (2026-01-29) (pre-release)
 
