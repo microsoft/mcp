@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -13,10 +14,10 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorHealthModelService(ITenantService tenantService, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     /// <summary>
     /// Retrieves the health information for a specific entity in a health model.
@@ -68,7 +69,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     private async Task<string> GetDataplaneEndpointAsync(string subscriptionId, string resourceGroupName, string healthModelName, CancellationToken cancellationToken)
     {
         string token = await GetControlPlaneTokenAsync(cancellationToken);
-        string healthModelUrl = $"{ManagementApiBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
+        string healthModelUrl = $"{GetManagementEndpoint()}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -106,7 +107,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     {
         TokenCredential credential = await GetCredential(cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{ManagementApiBaseUrl}/.default"]),
+            new TokenRequestContext([$"{GetManagementEndpoint()}/.default"]),
             cancellationToken);
 
         return accessToken.Token;
@@ -120,5 +121,25 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
             cancellationToken);
 
         return accessToken.Token;
+    }
+
+    private Uri GetManagementEndpoint()
+    {
+        return _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+    }
+
+    private Uri GetHealthModelsDataApiScope()
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri("https://data.healthmodels.azure.com/");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri("https://data.healthmodels.azure.cn/");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+                return new Uri("https://data.healthmodels.azure.us/");
+            default:
+                return new Uri("https://data.healthmodels.azure.com/");
+        }
     }
 }

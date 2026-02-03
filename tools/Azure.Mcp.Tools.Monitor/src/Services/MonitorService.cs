@@ -7,6 +7,7 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -27,8 +28,7 @@ public class MonitorService(
     IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
-    private const string ActivityLogEndpointFormat
-        = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
@@ -424,7 +424,7 @@ public class MonitorService(
     {
         var returnValue = new List<ActivityLogEventData>();
 
-        string endpoint = string.Format(ActivityLogEndpointFormat, subscriptionId);
+        string endpoint = string.Format(GetLogActivityEndpoint().ToString(), subscriptionId);
         var uriBuilder = new UriBuilder(endpoint);
 
         // Build the query parameters
@@ -447,7 +447,7 @@ public class MonitorService(
 
         TokenCredential credential = await GetCredential(tenant, cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext(["https://management.azure.com/.default"]),
+            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         // Make paginated requests
@@ -527,5 +527,20 @@ public class MonitorService(
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
+    }
+
+    private Uri GetLogActivityEndpoint()
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri("https://management.chinacloudapi.cn/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+                return new Uri("https://management.usgovcloudapi.net/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+            default:
+                return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+        }
     }
 }
