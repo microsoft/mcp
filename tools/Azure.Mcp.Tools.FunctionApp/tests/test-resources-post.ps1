@@ -3,7 +3,8 @@ param(
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
     [string] $BaseName,
-    [hashtable] $DeploymentOutputs
+    [hashtable] $DeploymentOutputs,
+    [switch] $UseHttpTransport
 )
 
 $ErrorActionPreference = "Stop"

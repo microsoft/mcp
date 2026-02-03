@@ -1,9 +1,10 @@
-﻿param(
+param(
     [string] $TenantId,
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
     [string] $BaseName,
-    [hashtable] $DeploymentOutputs
+    [hashtable] $DeploymentOutputs,
+    [switch] $UseHttpTransport
 )
 
 $ErrorActionPreference = "Stop"

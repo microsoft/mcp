@@ -9,7 +9,8 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory)]
-    [hashtable] $AdditionalParameters
+    [hashtable] $AdditionalParameters,
+    [switch] $UseHttpTransport
 )
 
 Write-Host "Running ResourceHealth post-deployment setup..."
