@@ -306,6 +306,12 @@
 # ServiceLabel: %tools-ResourceHealth
 # ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
 
+# PRLabel: %tools-Price
+/tools/Azure.Mcp.Tools.Pricing/      @anannya03 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Price
+# ServiceOwners:                     @anannya03
+
 ##################
 # Fabric MCP
 ##################
