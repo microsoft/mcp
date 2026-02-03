@@ -106,7 +106,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
                 var containerAppResource = _armClient.GetContainerAppResource(app.Id);
                 var containerApp = await containerAppResource.GetAsync(cancellationToken);
 
-                await foreach (var revision in containerApp.Value.GetContainerAppRevisions())
+                await foreach (var revision in containerApp.Value.GetContainerAppRevisions().WithCancellation(cancellationToken))
                 {
                     var revisionData = await revision.GetAsync(cancellationToken);
                     if (revisionData.Value.Data.IsActive == true)
@@ -121,7 +121,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
             case ResourceType.FunctionApp:
                 var webSiteResource = _armClient.GetWebSiteResource(app.Id);
 
-                await foreach (var deployment in webSiteResource.GetSiteDeployments())
+                await foreach (var deployment in webSiteResource.GetSiteDeployments().WithCancellation(cancellationToken))
                 {
                     var deploymentData = await deployment.GetAsync(cancellationToken);
                     if (deploymentData.Value.Data.IsActive == true)
