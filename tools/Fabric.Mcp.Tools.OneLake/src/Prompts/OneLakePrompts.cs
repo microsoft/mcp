@@ -78,4 +78,30 @@ sql:
 
         return new[] { new ChatMessage(ChatRole.User, content) };
     }
+
+    [McpServerPrompt(Name = "onelake_confirm_delete")]
+    [Description("Ask the user to confirm destructive OneLake delete operations before invoking tools.")]
+    public static ChatMessage[] ConfirmDelete(
+        [Description("Fabric workspace ID or name")] string workspace,
+        [Description("Lakehouse name")] string lakehouse,
+        [Description("Path that will be deleted")] string path,
+        [Description("Operation description (file, directory, etc.)")] string operation,
+        [Description("Set to true when the delete will run recursively")] bool recursive = false)
+    {
+        var message =
+$@"Confirm with the user before deleting a OneLake resource.
+
+Target:
+- Workspace: {workspace}
+- Lakehouse: {lakehouse}
+- Path: {path}
+- Operation: {operation}{(recursive ? " (recursive)" : string.Empty)}
+
+Ask the user explicitly if they are sure they want to proceed. Require a clear affirmative response (yes/confirm) before calling any delete tool. If they decline or stay silent, stop and report that the deletion was cancelled.";
+
+        return new[]
+        {
+            new ChatMessage(ChatRole.User, message)
+        };
+    }
 }
