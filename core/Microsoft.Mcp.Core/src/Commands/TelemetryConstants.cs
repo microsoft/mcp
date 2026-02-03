@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security.Cryptography.X509Certificates;
-
 namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
