@@ -631,8 +631,9 @@ The signing script will auto-discover servers based on the `servers/` directory 
 
 ### Phase 1: Core Scripts and Templates (Week 1)
 - [x] Implement `Pack-Mcpb.ps1` for packaging (integrated with build_info.json)
-- [ ] Implement `Sign-McpbWithEsrp.ps1` for signing
-- [ ] Implement `Convert-P7sToMcpbSignature.ps1` for signature conversion
+- [x] Implement `Sign-McpbWithEsrp.ps1` for signing
+- [x] Implement `Convert-P7sToMcpbSignature.ps1` for signature conversion
+- [x] Implement `Test-McpbSignature.ps1` for verification
 - [x] Verify manifest.json for Azure.Mcp.Server (uses manifest_version 0.3)
 - [ ] Add unit tests for signature conversion
 - [x] Document local usage
