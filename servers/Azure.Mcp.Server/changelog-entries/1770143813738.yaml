@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Update swa app deployment instructions in bestpractices tool"
