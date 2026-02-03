@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -10,6 +11,7 @@ using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
@@ -178,8 +180,8 @@ public class FoundryService(
 
         try
         {
-            var credential = await GetCredential(tenantId, cancellationToken);
-            var deploymentsClient = new AIProjectClient(new Uri(endpoint), credential).GetDeploymentsClient();
+            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+            var deploymentsClient = projectClient.GetDeploymentsClient();
 
             var deployments = new List<Deployment>();
             await foreach (var deployment in deploymentsClient.GetDeploymentsAsync(cancellationToken: cancellationToken))
@@ -298,8 +300,8 @@ public class FoundryService(
 
         try
         {
-            var credential = await GetCredential(tenantId, cancellationToken);
-            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+            var indexesClient = projectClient.GetIndexesClient();
 
             var indexes = new List<KnowledgeIndexInformation>();
             await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
@@ -347,8 +349,8 @@ public class FoundryService(
 
         try
         {
-            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+            var indexesClient = projectClient.GetIndexesClient();
 
             // Find the index by name using async enumerable
             var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
@@ -771,6 +773,13 @@ public class FoundryService(
     {
         AzureOpenAIClient client;
 
+        // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
+        var httpClient = _httpClientFactory.CreateClient();
+        var clientOptions = new AzureOpenAIClientOptions
+        {
+            Transport = new HttpClientPipelineTransport(httpClient)
+        };
+
         switch (authMethod)
         {
             case AuthMethod.Key:
@@ -783,16 +792,54 @@ public class FoundryService(
                     throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
                 }
 
-                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key), clientOptions);
                 break;
 
             case AuthMethod.Credential:
             default:
                 var credential = await GetCredential(cancellationToken);
-                client = new AzureOpenAIClient(new Uri(endpoint), credential);
+                client = new AzureOpenAIClient(new Uri(endpoint), credential, clientOptions);
                 break;
         }
         return client;
+    }
+
+    private async Task<AIProjectClient> CreateAIProjectClientWithAuth(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await GetCredential(tenant, cancellationToken);
+
+        // Configure AIProjectClientOptions with HttpClient transport for test proxy support
+        var httpClient = _httpClientFactory.CreateClient();
+        var clientOptions = new AIProjectClientOptions
+        {
+            Transport = new HttpClientTransport(httpClient)
+        };
+
+        // Debug logging to trace test proxy configuration
+        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+        Console.WriteLine($"[DEBUG] TEST_PROXY_URL: '{testProxyUrl ?? "NOT SET"}'");
+        Console.WriteLine($"[DEBUG] HttpClient BaseAddress: {httpClient.BaseAddress}");
+        Console.WriteLine($"[DEBUG] Transport type: {clientOptions.Transport.GetType().Name}");
+
+        // Check if RecordingRedirectHandler type is loaded (only exists in DEBUG builds)
+        var recordingHandlerType = Type.GetType("Azure.Mcp.Core.Testing.RecordingRedirectHandler, Azure.Mcp.Core");
+        Console.WriteLine($"[DEBUG] RecordingRedirectHandler type found: {recordingHandlerType != null}");
+        Console.WriteLine($"[DEBUG] Is DEBUG build: {IsDebugBuild()}");
+
+        return new AIProjectClient(new Uri(endpoint), credential, clientOptions);
+    }
+
+    [System.Diagnostics.Conditional("DEBUG")]
+    private static void IsDebugCondition() { }
+
+    private static bool IsDebugBuild()
+    {
+        bool isDebug = false;
+        IsDebugCondition();
+        return isDebug;
     }
 
     public async Task<List<PersistentAgent>> ListAgents(
@@ -805,8 +852,8 @@ public class FoundryService(
 
         try
         {
-            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
+            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+            var agentsClient = projectClient.GetPersistentAgentsClient();
 
             var agents = new List<PersistentAgent>();
             await foreach (var agent in agentsClient.Administration.GetAgentsAsync(cancellationToken: cancellationToken))
@@ -839,8 +886,7 @@ public class FoundryService(
             (nameof(modelDeploymentName), modelDeploymentName),
             (nameof(agentName), agentName),
             (nameof(systemInstruction), systemInstruction));
-        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
 
         // Validate if the model deployment exists
         var deploymentsClient = projectClient.GetDeploymentsClient();
@@ -886,10 +932,12 @@ public class FoundryService(
                 (nameof(query), query),
                 (nameof(endpoint), endpoint));
 
-            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-            var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
+            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+            var agentsClient = projectClient.GetPersistentAgentsClient();
 
-            var thread = await CreateThreadCore(endpoint, query, credential, cancellationToken: cancellationToken);
+            PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
+                [new ThreadMessageOptions(MessageRole.User, query)],
+                cancellationToken: cancellationToken);
             var threadId = thread.Id;
 
             var run = await agentsClient.Runs.CreateRunAsync(threadId, agentId, cancellationToken: cancellationToken);
@@ -1097,8 +1145,7 @@ public class FoundryService(
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint));
 
-        var credential = await GetCredential(tenantId, cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
@@ -1135,11 +1182,15 @@ public class FoundryService(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(userMessage), userMessage));
 
-        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
+        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
 
         try
         {
-            var thread = await CreateThreadCore(projectEndpoint, userMessage, credential, cancellationToken: cancellationToken);
+            PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
+                [new ThreadMessageOptions(MessageRole.User, userMessage)],
+                cancellationToken: cancellationToken);
+
             return new ThreadCreateResult()
             {
                 ThreadId = thread.Id,
@@ -1164,8 +1215,7 @@ public class FoundryService(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(threadId), threadId));
 
-        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         try
@@ -1187,23 +1237,6 @@ public class FoundryService(
         {
             throw new Exception($"Unable to get messages. Get messages request failed with: {ex.Message}", ex);
         }
-    }
-
-    private async Task<PersistentAgentThread> CreateThreadCore(
-        string projectEndpoint,
-        string userMessage,
-        TokenCredential credential,
-        CancellationToken cancellationToken = default)
-    {
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
-        var agentsClient = projectClient.GetPersistentAgentsClient();
-
-        PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
-            [new ThreadMessageOptions(MessageRole.User, userMessage)],
-            cancellationToken: cancellationToken);
-
-        return thread;
-
     }
 
     private List<ToolDefinitionAIFunction> ConvertToolDefinitionsFromString(string? toolDefinitions)
@@ -1505,14 +1538,12 @@ public class FoundryService(
             }
             else
             {
-                // List AI resources in specific resource group - filter by resource group
-                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
+                // List AI resources in specific resource group - use resource group scope for better performance
+                var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
+                await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
                 {
-                    if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
-                        resources.Add(resourceInfo);
-                    }
+                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                    resources.Add(resourceInfo);
                 }
             }
 
