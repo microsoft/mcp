@@ -15,6 +15,7 @@ public static class ServiceOptionDefinitions
     public const string DangerouslyDisableElicitationName = "dangerously-disable-elicitation";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
     public const string DangerouslyWriteSupportLogsToDirName = "dangerously-write-support-logs-to-dir";
+    public const string CloudName = "cloud";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -98,6 +99,14 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Description = "Dangerously enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). This may include sensitive information in logs. Use with extreme caution and only when requested by support.",
+        DefaultValueFactory = _ => null
+    };
+
+    public static readonly Option<string?> Cloud = new(
+        $"--{CloudName}")
+    {
+        Required = false,
+        Description = "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, AzureUSGovernment, or a custom authority host URL starting with https://",
         DefaultValueFactory = _ => null
     };
 }
