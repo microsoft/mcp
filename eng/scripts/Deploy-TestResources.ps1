@@ -7,7 +7,7 @@ param(
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel,
-    [switch] $UseHttpTransport
+    [switch]$UseHttpTransport
 )
 
 $ErrorActionPreference = 'Stop'
