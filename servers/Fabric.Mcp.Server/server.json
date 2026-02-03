@@ -1,6 +1,6 @@
 {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "com.microsoft/fabric-mcp",
+    "name": "<<McpRepositoryName>>",
     "description": "MCP tools for interacting with Microsoft Fabric",
     "version": "<<Version>>",
     "title": "Microsoft Fabric MCP Server",
