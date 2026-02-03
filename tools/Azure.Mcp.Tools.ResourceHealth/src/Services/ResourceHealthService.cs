@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
+using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
@@ -16,9 +17,9 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
     : BaseAzureService(tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private const string AzureManagementBaseUrl = "https://management.azure.com";
     private const string ResourceHealthApiVersion = "2025-05-01";
 
     public async Task<AvailabilityStatus> GetAvailabilityStatusAsync(
@@ -30,13 +31,15 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
         try
         {
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+            
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([$"{managementEndpoint}/.default"]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            client.BaseAddress = managementEndpoint;
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
@@ -78,13 +81,14 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([$"{managementEndpoint}/.default"]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            client.BaseAddress = managementEndpoint;
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = resourceGroup != null
@@ -133,13 +137,15 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([$"{managementEndpoint}/.default"]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(AzureManagementBaseUrl);
+            client.BaseAddress = managementEndpoint;
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             // Build OData filter - using correct property paths for Azure Resource Health API

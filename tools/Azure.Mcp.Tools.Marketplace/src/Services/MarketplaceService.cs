@@ -15,7 +15,8 @@ namespace Azure.Mcp.Tools.Marketplace.Services;
 public class MarketplaceService(ITenantService tenantService)
     : BaseAzureService(tenantService), IMarketplaceService
 {
-    private const string ManagementApiBaseUrl = "https://management.azure.com";
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+
     private const string ApiVersion = "2023-01-01-preview";
 
     /// <summary>
@@ -55,7 +56,8 @@ public class MarketplaceService(ITenantService tenantService)
             (nameof(productId), productId),
             (nameof(subscription), subscription));
 
-        string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
+        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
         return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
@@ -92,12 +94,14 @@ public class MarketplaceService(ITenantService tenantService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
+        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        string productsUrl = BuildProductsListUrl(managementEndpoint, subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
         return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy, cancellationToken);
     }
 
     private static string BuildProductsListUrl(
+        Uri managementEndpoint,
         string subscription,
         string? language,
         string? search,
@@ -136,7 +140,7 @@ public class MarketplaceService(ITenantService tenantService)
 
         queryParams.Add("storefront=any"); // include all storefronts
         string queryString = string.Join("&", queryParams);
-        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
+        return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
     }
 
     private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -154,6 +158,7 @@ public class MarketplaceService(ITenantService tenantService)
 
 
     private static string BuildProductUrl(
+        Uri managementEndpoint,
         string subscription,
         string productId,
         bool? includeStopSoldPlans,
@@ -191,7 +196,7 @@ public class MarketplaceService(ITenantService tenantService)
             queryParams.Add($"includeServiceInstructionTemplates={includeServiceInstructionTemplates.Value.ToString().ToLower()}");
 
         string queryString = string.Join("&", queryParams);
-        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
+        return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
     }
 
     private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -208,7 +213,8 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
     {
-        var tokenRequestContext = new TokenRequestContext([$"{ManagementApiBaseUrl}/.default"]);
+        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var tokenRequestContext = new TokenRequestContext([$"{managementEndpoint}/.default"]);
         var tokenCredential = await GetCredential(tenantId, cancellationToken);
         return await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
