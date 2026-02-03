@@ -8,6 +8,8 @@ using Azure.Mcp.Tools.Compute.Models;
 
 namespace Azure.Mcp.Tools.Compute.Commands;
 
+[JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
+[JsonSerializable(typeof(VmCreateResult))]
 [JsonSerializable(typeof(VmGetCommand.VmGetSingleResult))]
 [JsonSerializable(typeof(VmGetCommand.VmGetListResult))]
 [JsonSerializable(typeof(VmssGetCommand.VmssGetSingleResult))]
@@ -17,6 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(VmInstanceView))]
 [JsonSerializable(typeof(VmssInfo))]
 [JsonSerializable(typeof(VmssVmInfo))]
+[JsonSerializable(typeof(WorkloadConfiguration))]
 [JsonSerializable(typeof(List<VmInfo>))]
 [JsonSerializable(typeof(List<VmssInfo>))]
 [JsonSerializable(typeof(List<VmssVmInfo>))]

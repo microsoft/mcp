@@ -40,6 +40,32 @@ public interface IComputeService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<VmCreateResult> CreateVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string adminUsername,
+        string? vmSize = null,
+        string? image = null,
+        string? adminPassword = null,
+        string? sshPublicKey = null,
+        string? workload = null,
+        string? osType = null,
+        string? virtualNetwork = null,
+        string? subnet = null,
+        string? publicIpAddress = null,
+        string? networkSecurityGroup = null,
+        bool? noPublicIp = null,
+        string? zone = null,
+        int? osDiskSizeGb = null,
+        string? osDiskType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    WorkloadConfiguration GetWorkloadConfiguration(string? workload);
+
     // Virtual Machine Scale Set operations
     Task<VmssInfo> GetVmssAsync(
         string vmssName,
