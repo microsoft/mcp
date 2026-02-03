@@ -95,7 +95,7 @@ public static class OpenTelemetryExtensions
         }
 
         // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
-// #if RELEASE
+#if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
@@ -106,7 +106,7 @@ public static class OpenTelemetryExtensions
         {
             ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString);
         }
-// #endif
+#endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
