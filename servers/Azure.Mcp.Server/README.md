@@ -33,9 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
-        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -812,14 +810,8 @@ class Program
 
 Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Microsoft Foundry
+Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-foundry-aca-mi) for Microsoft Foundry.
-2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
-
-### Microsoft Copilot Studio
-
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
@@ -910,7 +902,16 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Send an email from my communication service endpoint with custom sender name and multiple recipients"
 * "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
-### 📦 Azure Container Apps
+### � Azure Compute
+
+* "List all virtual machines in my subscription"
+* "Show me all VMs in resource group 'my-resource-group'"
+* "Get details for virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Get virtual machine 'my-vm' with instance view including power state and runtime status"
+* "Show me the power state and provisioning status of VM 'my-vm'"
+* "What is the current status of my virtual machine 'my-vm'?"
+
+### �📦 Azure Container Apps
 
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
@@ -1035,7 +1036,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **42+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1046,7 +1047,8 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
-- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
+- � **Azure Compute** - Virtual Machine and Virtual Machine Scale Set management
+- �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations

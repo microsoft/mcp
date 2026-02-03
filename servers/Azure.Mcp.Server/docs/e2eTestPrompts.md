@@ -161,6 +161,32 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | communication_sms_send | Send SMS from my communication service to <phone-number-1> |
 | communication_sms_send | Send an SMS with delivery receipt tracking |
 
+## Azure Compute
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| compute_vm_get | List all virtual machines in my subscription |
+| compute_vm_get | Show me all VMs in my subscription |
+| compute_vm_get | What virtual machines do I have? |
+| compute_vm_get | List virtual machines in resource group <resource-group-name> |
+| compute_vm_get | Show me VMs in resource group <resource-group-name> |
+| compute_vm_get | What VMs are in resource group <resource-group-name>? |
+| compute_vm_get | Get details for virtual machine <vm-name> in resource group <resource-group-name> |
+| compute_vm_get | Show me virtual machine <vm-name> in resource group <resource-group-name> |
+| compute_vm_get | What are the details of VM <vm-name> in resource group <resource-group-name>? |
+| compute_vm_get | Get virtual machine <vm-name> with instance view in resource group <resource-group-name> |
+| compute_vm_get | Show me VM <vm-name> with runtime status in resource group <resource-group-name> |
+| compute_vm_get | What is the power state of virtual machine <vm-name> in resource group <resource-group-name>? |
+| compute_vm_get | Get VM <vm-name> status and provisioning state in resource group <resource-group-name> |
+| compute_vm_get | Show me the current status of VM <vm-name> |
+| compute_vmss_get | List all virtual machine scale sets in my subscription |
+| compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
+| compute_vmss_get | What scale sets are in resource group <resource-group-name>? |
+| compute_vmss_get | Get details for virtual machine scale set <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_get | Show me VMSS <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_get | Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_get | What is the status of instance <instance-id> in scale set <vmss-name>? |
+
 ## Azure Confidential Ledger
 
 | Tool Name | Test Prompt |

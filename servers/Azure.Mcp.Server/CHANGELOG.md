@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.15 (Unreleased)
+## 2.0.0-beta.16 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,20 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.15 (2026-01-29)
+
+### Features Added
+- Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
+
+### Bugs Fixed
+- Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
+- Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
+
+### Other Changes
+
+- Added AreResultsTruncated to tools that list resources using Resource Graph. [[#1526](https://github.com/microsoft/mcp/pull/1526)]
+- Improved server startup performance by parallelizing external MCP server initialization, reducing startup time from ~20 seconds to ~1-2 seconds when using registry-based servers. [[#1534](https://github.com/microsoft/mcp/pull/1534)]
 
 ## 2.0.0-beta.14 (2026-01-27)
 

@@ -1,4 +1,0 @@
-pr: 1602
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed a regression that disabled telemetry for remote Azure MCP server"
