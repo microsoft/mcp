@@ -12,10 +12,10 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
-using Azure.Search.Documents.Agents;
-using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
+using Azure.Search.Documents.KnowledgeBases;
+using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
 
 namespace Azure.Mcp.Tools.Search.Services;
@@ -207,14 +207,14 @@ public sealed class SearchService(
 
             if (string.IsNullOrEmpty(knowledgeBaseName))
             {
-                await foreach (var knowledgeBase in searchClient.GetKnowledgeAgentsAsync(cancellationToken: cancellationToken))
+                await foreach (var knowledgeBase in searchClient.GetKnowledgeBasesAsync(cancellationToken: cancellationToken))
                 {
                     bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
                 }
             }
             else
             {
-                var result = await searchClient.GetKnowledgeAgentAsync(knowledgeBaseName, cancellationToken: cancellationToken);
+                var result = await searchClient.GetKnowledgeBaseAsync(knowledgeBaseName, cancellationToken: cancellationToken);
                 if (result?.Value != null)
                 {
                     if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
@@ -246,16 +246,19 @@ public sealed class SearchService(
         {
             var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
 
+            var knowledgeBase = await searchClient.GetKnowledgeBaseAsync(baseName, cancellationToken: cancellationToken);
+            if (knowledgeBase?.Value == null)
+            {
+                throw new InvalidOperationException($"Knowledge base '{baseName}' not found in service '{serviceName}'.");
+            }
+
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
-
-            var request = new KnowledgeAgentRetrievalRequest(
-                messages != null ?
-                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
-                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
+            var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
+            var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
+            var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
 
             var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
 
@@ -266,6 +269,37 @@ public sealed class SearchService(
         {
             throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
         }
+    }
+
+    internal static KnowledgeBaseRetrievalRequest BuildKnowledgeBaseRetrievalRequest(
+        bool useMinimalReasoning,
+        string? query,
+        IEnumerable<(string role, string message)>? messages)
+    {
+        var request = new KnowledgeBaseRetrievalRequest();
+
+        if (useMinimalReasoning)
+        {
+            var intent = messages != null && messages.Any()
+                ? string.Join("\n", messages.Select(m => m.message))
+                : query ?? string.Empty;
+
+            request.Intents.Add(new KnowledgeRetrievalSemanticIntent(intent));
+            return request;
+        }
+
+        if (messages != null && messages.Any())
+        {
+            foreach ((string role, string message) in messages)
+            {
+                request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
+            }
+
+            return request;
+        }
+
+        request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
+        return request;
     }
 
     internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
