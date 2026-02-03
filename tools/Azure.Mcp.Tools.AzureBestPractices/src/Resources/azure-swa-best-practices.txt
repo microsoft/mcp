@@ -308,6 +308,9 @@ resource staticWebAppSettings 'Microsoft.Web/staticSites/config@2022-09-01' = {
 # Initialize (if not already)
 azd init
 
+Note that `azd init` should only be used for new projects (no existing SWA resource) and that for existing resources 
+the agent should reuse the current azure.yaml/infra instead of running azd init
+
 # Deploy everything
 azd up
 
