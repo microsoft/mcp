@@ -635,7 +635,7 @@ The signing script will auto-discover servers based on the `servers/` directory 
 - [x] Implement `Convert-P7sToMcpbSignature.ps1` for signature conversion
 - [x] Implement `Test-McpbSignature.ps1` for verification
 - [x] Verify manifest.json for Azure.Mcp.Server (uses manifest_version 0.3)
-- [ ] Add unit tests for signature conversion
+- [x] Add unit tests for signature conversion
 - [x] Document local usage
 - [x] Validate MCPB bundle works in Claude Desktop
 
