@@ -2101,7 +2101,7 @@ azmcp policy assignment list --subscription <subscription> \
 # Get Azure retail pricing information
 # Requires at least one filter: --sku, --service, --region, --service-family, --price-type, or --filter
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp pricing get --sku <sku> \
+azmcp pricing get [--sku <sku>] \
                   [--service <service>] \
                   [--region <region>] \
                   [--service-family <service-family>] \
