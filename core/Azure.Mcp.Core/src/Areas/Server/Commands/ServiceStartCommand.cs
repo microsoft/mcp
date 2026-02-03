@@ -685,7 +685,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                               if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
                               {
                                   // Allow localhost and 127.0.0.1 with any port
-                                  return uri.Host == "localhost" || 
+                                  return uri.Host == "localhost" ||
                                          uri.Host == "127.0.0.1" ||
                                          uri.Host == "[::1]"; // IPv6 loopback
                               }
@@ -888,11 +888,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return Sdk.CreateTracerProviderBuilder()
-            // captures incoming HTTP requests
             .AddAspNetCoreInstrumentation()
-            // captures outgoing HTTP requests with filtering
-            .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
-            .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
+            .AddHttpClientInstrumentation(o =>
+            o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
+            .AddAzureMonitorTraceExporter(exporterOptions =>
+            exporterOptions.ConnectionString = connectionString)
             .Build();
     }
 
