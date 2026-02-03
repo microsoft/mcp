@@ -1,43 +1,366 @@
-When creating, deploying, or managing static web apps, make use of the Static Web Apps CLI.
+## Workflow Reference
 
-## Handling Configuration Files
+For multi-step deployment workflow, use these skills if they are available:
+1. `azure-prepare` - Detects SWA, generates azure.yaml and Bicep
+2. `azure-validate` - Validates configuration before deployment
+3. `azure-deploy` - Executes deployment with azd
 
-Do not create the staticwebapp.config.json or swa-cli.config.json files manually.
-They will be created by the Static Web Apps CLI.
+## Deployment Path Selection
 
-## Installing the Static Web Apps CLI
+**PREFERRED PATH: Azure Developer CLI (azd)**
 
-Install the Static Web Apps CLI using npm, if it hasn't been installed already:
+Use `azd` for Static Web Apps when:
+- You need infrastructure-as-code (Bicep/Terraform)
+- You want CI/CD pipeline generation
+- You're deploying SWA with Azure Functions backend
+- You want reproducible deployments
+- Production deployments
+
+**ALTERNATIVE PATH: SWA CLI**
+
+Use SWA CLI (`swa`) ONLY when:
+- User explicitly requests SWA CLI
+- Local development preview (`swa start`)
+- Quick prototyping without IaC requirements
+
+⚠️ **Default to azd unless user explicitly requests SWA CLI.**
+
+---
+
+## Service Configuration Patterns
+
+### azure.yaml Configuration
+
+Basic Static Web App:
+```yaml
+name: my-swa-app
+services:
+  web:
+    project: ./src
+    language: js
+    host: staticwebapp
+```
+
+With API Backend (Azure Functions):
+```yaml
+name: my-fullstack-swa
+services:
+  web:
+    project: ./src/web
+    language: js
+    host: staticwebapp
+  api:
+    project: ./src/api
+    language: js
+    host: function
+```
+
+TypeScript Project:
+```yaml
+name: my-ts-swa
+services:
+  web:
+    project: ./src
+    language: ts
+    host: staticwebapp
+```
+
+Python API Backend:
+```yaml
+name: my-swa-python-api
+services:
+  web:
+    project: ./frontend
+    language: js
+    host: staticwebapp
+  api:
+    project: ./api
+    language: python
+    host: function
+```
+
+---
+
+## Build Output Locations by Framework
+
+| Framework | Build Command | outputLocation | appLocation |
+|-----------|---------------|----------------|-------------|
+| React (CRA) | `npm run build` | `build` | `/` |
+| React (Vite) | `npm run build` | `dist` | `/` |
+| Vue | `npm run build` | `dist` | `/` |
+| Angular | `ng build` | `dist/<project-name>` | `/` |
+| Next.js (static) | `next build && next export` | `out` | `/` |
+| Nuxt (static) | `nuxt generate` | `dist` | `/` |
+| Svelte | `npm run build` | `public` | `/` |
+| SvelteKit (static) | `npm run build` | `build` | `/` |
+| Astro | `npm run build` | `dist` | `/` |
+| Gatsby | `gatsby build` | `public` | `/` |
+| Hugo | `hugo` | `public` | `/` |
+| Jekyll | `jekyll build` | `_site` | `/` |
+| Docusaurus | `npm run build` | `build` | `/` |
+| VuePress | `vuepress build` | `.vuepress/dist` | `/` |
+| Eleventy | `npx eleventy` | `_site` | `/` |
+
+---
+
+## Bicep Patterns
+
+### Basic Static Web App
+
+```bicep
+@description('Name prefix for all resources')
+param resourcePrefix string
+
+@description('Location for resources')
+param location string = resourceGroup().location
+
+@description('SKU for Static Web App')
+@allowed(['Free', 'Standard'])
+param sku string = 'Free'
+
+var uniqueSuffix = uniqueString(resourceGroup().id)
+
+resource staticWebApp 'Microsoft.Web/staticSites@2022-09-01' = {
+  name: '${resourcePrefix}-swa-${uniqueSuffix}'
+  location: location
+  sku: {
+    name: sku
+    tier: sku
+  }
+  properties: {
+    buildProperties: {
+      appLocation: '/'
+      apiLocation: 'api'
+      outputLocation: 'dist'
+    }
+  }
+}
+
+output endpoint string = 'https://${staticWebApp.properties.defaultHostname}'
+output resourceId string = staticWebApp.id
+```
+
+### With Managed Identity
+
+```bicep
+resource staticWebApp 'Microsoft.Web/staticSites@2022-09-01' = {
+  name: '${resourcePrefix}-swa-${uniqueSuffix}'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    buildProperties: {
+      appLocation: '/'
+      apiLocation: 'api'
+      outputLocation: 'dist'
+    }
+  }
+}
+```
+
+### With Custom Domain
+
+```bicep
+resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-09-01' = {
+  parent: staticWebApp
+  name: 'www.example.com'
+  properties: {}
+}
+```
+
+### Application Settings for API
+
+```bicep
+resource staticWebAppSettings 'Microsoft.Web/staticSites/config@2022-09-01' = {
+  parent: staticWebApp
+  name: 'appsettings'
+  properties: {
+    DATABASE_URL: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=db-url)'
+    API_KEY: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=api-key)'
+  }
+}
+```
+
+---
+
+## SKU Selection
+
+| SKU | Monthly Cost | Use When |
+|-----|--------------|----------|
+| **Free** | $0 | Development, prototyping, personal projects, demos |
+| **Standard** | ~$9/app | Production, custom domains needed, SLA required, authentication customization |
+
+### Free Tier Limits
+- 2 custom domains
+- 0.5 GB storage
+- 100 GB bandwidth/month
+- Shared infrastructure
+
+### Standard Tier Features
+- 5 custom domains
+- 2 GB storage  
+- 100 GB bandwidth/month (overage billed)
+- 99.95% SLA
+- Advanced authentication options
+- Staging environments
+
+---
+
+## Route Configuration (staticwebapp.config.json)
+
+### Basic SPA Configuration
+
+```json
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/*.{png,jpg,gif,css,js,ico,svg,woff,woff2}"]
+  }
+}
+```
+
+### With Authentication
+
+```json
+{
+  "routes": [
+    {
+      "route": "/admin/*",
+      "allowedRoles": ["admin"]
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": ["authenticated"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/*.{png,jpg,gif,css,js}"]
+  },
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad",
+      "statusCode": 302
+    }
+  }
+}
+```
+
+### With Response Headers
+
+```json
+{
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": "default-src 'self'"
+  }
+}
+```
+
+### With Redirects
+
+```json
+{
+  "routes": [
+    {
+      "route": "/old-path",
+      "redirect": "/new-path",
+      "statusCode": 301
+    }
+  ]
+}
+```
+
+---
+
+## Authentication Providers
+
+### Azure Active Directory (Entra ID)
+
+```json
+{
+  "auth": {
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/<tenant-id>/v2.0",
+          "clientIdSettingName": "AAD_CLIENT_ID",
+          "clientSecretSettingName": "AAD_CLIENT_SECRET"
+        }
+      }
+    }
+  }
+}
+```
+
+### GitHub
+
+```json
+{
+  "auth": {
+    "identityProviders": {
+      "github": {
+        "registration": {
+          "clientIdSettingName": "GITHUB_CLIENT_ID",
+          "clientSecretSettingName": "GITHUB_CLIENT_SECRET"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## Deployment Commands
+
+### Using azd (Preferred)
+
+```bash
+# Initialize (if not already)
+azd init
+
+# Deploy everything
+azd up
+
+# Deploy code only (infrastructure exists)
+azd deploy
+
+# Preview infrastructure changes
+azd provision --preview
+```
+
+### Using SWA CLI (Alternative - Explicit Request Only)
+
+For local development preview:
 ```bash
 npm install -g @azure/static-web-apps-cli
-```
-
-## Initializing a Static Web App
-
-When creating a new Static Web App, initialize it with the following command:
-```bash
 npx swa init --yes
-```
-
-Call this before creating any files.
-
-## Building the Static Web App
-
-To build the Static Web App, use the following command:
-```bash
 npx swa build
+npx swa start          # Local preview
 ```
 
-## Pre-deployment check
-Check *.config.json file to make sure "appLocation" and "outputLocation" are not pointing to the same location. If they are, create a new folder under the root directory and update "outputLocation" to point to it.
-
-## Deploying the Static Web App to Azure
-
-To deploy the Static Web App, use the following command:
+For deployment (non-IaC):
 ```bash
 npx swa deploy --env production
 ```
 
-This will deploy it to the "production" environment. Always confirm with the user before deploying the static web app.
+⚠️ **For production deployments, prefer azd for IaC benefits.**
 
-When deployment succeeds the CLI will always return the URL of the deployed static web app. If it does not return a URL, then the deployment failed.
+---
+
+## Common Issues and Solutions
+
+| Issue | Solution |
+|-------|----------|
+| Blank page after deploy | Check `outputLocation` matches build output |
+| API 404 errors | Verify `apiLocation` in build properties |
+| Routes not working | Add `navigationFallback` for SPA |
+| Auth redirect loops | Check `responseOverrides` configuration |
+| Custom domain SSL errors | Wait for certificate provisioning (up to 24h) |
