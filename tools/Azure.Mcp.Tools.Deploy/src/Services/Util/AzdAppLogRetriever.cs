@@ -86,7 +86,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
         $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
-    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, CancellationToken cancellationToken, string serviceName, int? limit = null)
+    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null, CancellationToken cancellationToken = default)
     {
         var app = await RegisterAppAsync(resourceType, serviceName, cancellationToken);
         var getLogErrors = new List<string>();

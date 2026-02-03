@@ -30,8 +30,8 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
             workspaceFolder,
             azdEnvName,
             subscriptionId,
-            cancellationToken,
-            limit);
+            limit,
+            cancellationToken);
         return result;
     }
 
