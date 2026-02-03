@@ -151,6 +151,13 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.LiveTests/Azure.Mcp.Tools.Deploy.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.UnitTests/Azure.Mcp.Tools.Deploy.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DocumentDb/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.DocumentDb/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DocumentDb/src/Azure.Mcp.Tools.DocumentDb.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DocumentDb/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DocumentDb/tests/Azure.Mcp.Tools.DocumentDb.UnitTests/Azure.Mcp.Tools.DocumentDb.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/src/Azure.Mcp.Tools.EventGrid.csproj" />
