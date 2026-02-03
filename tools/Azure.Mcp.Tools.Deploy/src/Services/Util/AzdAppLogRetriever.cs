@@ -185,7 +185,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     {
         var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
 
-        await foreach (var resourceGroup in subscription.GetResourceGroups())
+        await foreach (var resourceGroup in subscription.GetResourceGroups().WithCancellation(cancellationToken))
         {
             if (resourceGroup.Data.Tags.TryGetValue("azd-env-name", out var envName) && envName == _azdEnvName)
             {
