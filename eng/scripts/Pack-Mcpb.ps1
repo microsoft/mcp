@@ -164,6 +164,9 @@ Processing MCPB packaging:
         
         $executableName = $server.cliName + $platform.extension
         
+        # Update version from build_info.json (source of truth for all packaging)
+        $manifest.version = $server.version
+        
         # Update entry_point with platform-specific executable (relative path for mcpb pack verification)
         $manifest.server.entry_point = "server/$executableName"
         
