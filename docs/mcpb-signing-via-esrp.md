@@ -266,7 +266,7 @@ Location: `eng/pipelines/templates/pack-and-sign-mcpb.yml`
 ```
 eng/
 ├── scripts/
-│   ├── New-McpbPackage.ps1             # MCPB packaging script
+│   ├── Pack-Mcpb.ps1                   # MCPB packaging script (uses build_info.json)
 │   ├── Sign-McpbWithEsrp.ps1           # Main signing script
 │   ├── Convert-P7sToMcpbSignature.ps1  # Signature conversion utility
 │   └── Test-McpbSignature.ps1          # Verification wrapper
@@ -278,13 +278,24 @@ eng/
 servers/
 └── {ServerName}/
     └ mcpb/
-      └── manifest.json                   # MCPB manifest (pre-created)
-      └── servericon.png                  # Server icon
+      ├── manifest.json                 # MCPB manifest (pre-created)
+      └── servericon.png                # Server icon
 ```
+
+### Integration with Build Info
+
+The MCPB packaging scripts integrate with the existing `build_info.json` infrastructure, which is the source of truth for all packaging scripts. This provides:
+
+- **Consistent versioning** across all package formats (npm, NuGet, VSIX, MCPB)
+- **Platform discovery** from the build matrix
+- **Server metadata** (name, cliName, description, icon path)
+- **Artifact paths** for locating trimmed binaries
+
+The `build_info.json` file is created by `New-BuildInfo.ps1` and consumed by all `Pack-*.ps1` scripts.
 
 ### Manifest Requirements
 
-Each server must have a complete `manifest.json` file ready before packaging. The manifest should:
+Each server must have a complete `manifest.json` file in `servers/{ServerName}/mcpb/`. The manifest should:
 
 1. **Use `platform_overrides`** in `mcp_config` to handle cross-platform executable paths (Windows `.exe` vs Unix)
 2. **Include all metadata** (name, version, description, author, etc.)
@@ -292,109 +303,65 @@ Each server must have a complete `manifest.json` file ready before packaging. Th
 
 The `mcpb pack` command will automatically populate the `tools` array from the server's MCP tool definitions during packaging.
 
+**Important Path Handling:**
+- **`entry_point`**: Must be a relative path (e.g., `server/azmcp.exe`) without `${__dirname}`. The `mcpb pack` command verifies this file exists in the staging directory.
+- **`mcp_config.command`**: Should use `${__dirname}` prefix (e.g., `${__dirname}/server/azmcp.exe`) for runtime path resolution. Both dotnet and npm mcpb validators accept this.
+
+The `Pack-Mcpb.ps1` script automatically adds the platform-specific extension (`.exe` for Windows) to both paths.
+
+**Important Manifest Version:** The manifest must use `"manifest_version": "0.3"` or higher to support the `_meta` field that `mcpb pack --update` adds. Using `0.2` will cause Claude Desktop to reject the bundle with "Unrecognized key(s) in object: '_meta'".
+
 **Example:** See [servers/Azure.Mcp.Server/manifest.json](../servers/Azure.Mcp.Server/manifest.json) for a complete manifest.
 
-### Script: `New-McpbPackage.ps1`
+### Script: `Pack-Mcpb.ps1`
+
+This is the main packaging script that follows the same patterns as `Pack-Npm.ps1`, `Pack-Vsix.ps1`, etc.
 
 ```powershell
 <#
 .SYNOPSIS
-    Creates an MCPB package from trimmed server binaries.
+    Creates MCPB (MCP Bundle) packages from trimmed server binaries.
 
 .DESCRIPTION
-    This script prepares the MCPB directory structure, copies the manifest,
-    and packages the server using the MCPB CLI tool.
+    This script packages MCP servers into the MCPB format using the official MCPB CLI tool.
+    It reads server and platform information from build_info.json and creates unsigned .mcpb
+    files for each platform. The packages can then be signed using ESRP in a separate step.
 
-.PARAMETER ServerName
-    Name of the server (e.g., Azure.Mcp.Server).
+.PARAMETER ArtifactsPath
+    Path to the build artifacts directory containing the trimmed server binaries.
+    Defaults to ".work/build" in the repo root.
 
-.PARAMETER Platform
-    Target platform (win-x64, linux-x64, osx-x64, osx-arm64).
-
-.PARAMETER PublishPath
-    Path to the trimmed binaries from dotnet publish.
-
-.PARAMETER ManifestPath
-    Path to the server's manifest.json file.
-
-.PARAMETER IconPath
-    Path to the server icon (optional). Defaults to icon next to manifest.
+.PARAMETER BuildInfoPath
+    Path to the build_info.json file containing server and platform details.
+    Defaults to ".work/build_info.json" in the repo root.
 
 .PARAMETER OutputPath
-    Output directory for the .mcpb file.
+    Output directory for the .mcpb files.
+    Defaults to ".work/packages_mcpb" in the repo root.
 
 .EXAMPLE
-    ./New-McpbPackage.ps1 -ServerName "Azure.Mcp.Server" -Platform "win-x64" `
-        -PublishPath "./publish/win-x64" `
-        -ManifestPath "servers/Azure.Mcp.Server/manifest.json"
+    # Package all servers for all platforms (uses build_info.json)
+    ./Pack-Mcpb.ps1
+
+.EXAMPLE
+    # Specify custom paths
+    ./Pack-Mcpb.ps1 -ArtifactsPath ".work/build" -OutputPath ".work/packages_mcpb"
 #>
 param(
-    [Parameter(Mandatory)]
-    [string]$ServerName,
-    
-    [Parameter(Mandatory)]
-    [ValidateSet('win-x64', 'linux-x64', 'osx-x64', 'osx-arm64')]
-    [string]$Platform,
-    
-    [Parameter(Mandatory)]
-    [string]$PublishPath,
-    
-    [Parameter(Mandatory)]
-    [string]$ManifestPath,
-    
-    [Parameter(Mandatory)]
-    [string]$OutputPath,
-
-    [string]$IconPath
+    [string] $ArtifactsPath,
+    [string] $BuildInfoPath,
+    [string] $OutputPath
 )
 
-# Ensure MCPB CLI is installed
-if (-not (Get-Command mcpb -ErrorAction SilentlyContinue)) {
-    Write-Host "Installing MCPB CLI..."
-    dotnet tool install --global Mcpb.Cli
-}
-
-# Create staging directory
-$stagingDir = Join-Path $OutputPath "staging" $Platform
-New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $stagingDir "server") -Force | Out-Null
-
-# Copy trimmed binaries
-Write-Host "Copying trimmed binaries from $PublishPath..."
-Copy-Item -Path "$PublishPath/*" -Destination (Join-Path $stagingDir "server") -Recurse
-
-# Copy manifest (cross-platform support via platform_overrides in mcp_config)
-Write-Host "Copying manifest from $ManifestPath..."
-Copy-Item $ManifestPath (Join-Path $stagingDir "manifest.json")
-
-# Copy icon
-if (-not $IconPath) {
-    $IconPath = Join-Path (Split-Path $ManifestPath) "servericon.png"
-}
-
-if (Test-Path $IconPath) {
-    # Rename icon to servericon.png just in case
-    Copy-Item $IconPath $stagingDir "servericon.png"
-}
-
-# Validate manifest
-Write-Host "Validating manifest..."
-mcpb validate $stagingDir
-if ($LASTEXITCODE -ne 0) {
-    throw "Manifest validation failed"
-}
-
-# Pack the MCPB
-$mcpbFile = Join-Path $OutputPath "$ServerName-$Platform.mcpb"
-Write-Host "Packing MCPB to $mcpbFile..."
-mcpb pack $stagingDir $mcpbFile
-if ($LASTEXITCODE -ne 0) {
-    throw "MCPB packing failed"
-}
-
-Write-Host "Created: $mcpbFile"
-return $mcpbFile
+# ... (see eng/scripts/Pack-Mcpb.ps1 for full implementation)
 ```
+
+**Key behaviors:**
+- Reads server list and platform definitions from `build_info.json`
+- Filters to trimmed, non-native, non-special-purpose platforms
+- Creates `.mcpb` files named `{ServerName}-{os}-{arch}.mcpb` (e.g., `Azure.Mcp.Server-win-x64.mcpb`)
+- Validates manifest with `mcpb validate` before packaging
+- Copies LICENSE and NOTICE.txt into each bundle
 
 ### Script: `Sign-McpbWithEsrp.ps1`
 
@@ -465,18 +432,12 @@ function Convert-P7sToMcpbSignature {
 
 ```yaml
 parameters:
-  - name: serverName
+  - name: buildInfoArtifact
     type: string
+    default: 'build-info'
   - name: publishArtifact
     type: string
     default: 'publish-trimmed'
-  - name: platforms
-    type: object
-    default:
-      - win-x64
-      - linux-x64
-      - osx-x64
-      - osx-arm64
 
 jobs:
   - job: PackMcpb
@@ -492,21 +453,23 @@ jobs:
           custom: 'tool'
           arguments: 'install --global Mcpb.Cli'
       
+      # Download build info
+      - download: current
+        artifact: ${{ parameters.buildInfoArtifact }}
+        displayName: 'Download build info'
+      
       # Download trimmed binaries
       - download: current
         artifact: ${{ parameters.publishArtifact }}
         displayName: 'Download trimmed binaries'
       
-      # Package each platform
-      - ${{ each platform in parameters.platforms }}:
-        - pwsh: |
-            ./eng/scripts/New-McpbPackage.ps1 `
-              -ServerName '${{ parameters.serverName }}' `
-              -Platform '${{ platform }}' `
-              -PublishPath '$(Pipeline.Workspace)/${{ parameters.publishArtifact }}/${{ platform }}' `
-              -ManifestPath 'servers/${{ parameters.serverName }}/manifest.json' `
-              -OutputPath '$(Build.ArtifactStagingDirectory)/mcpb'
-          displayName: 'Package MCPB for ${{ platform }}'
+      # Package all servers for all platforms using build_info.json
+      - pwsh: |
+          ./eng/scripts/Pack-Mcpb.ps1 `
+            -ArtifactsPath '$(Pipeline.Workspace)/${{ parameters.publishArtifact }}' `
+            -BuildInfoPath '$(Pipeline.Workspace)/${{ parameters.buildInfoArtifact }}/build_info.json' `
+            -OutputPath '$(Build.ArtifactStagingDirectory)/mcpb'
+        displayName: 'Package MCPB bundles'
       
       # Publish unsigned MCPB artifacts
       - publish: '$(Build.ArtifactStagingDirectory)/mcpb'
@@ -667,12 +630,13 @@ The signing script will auto-discover servers based on the `servers/` directory 
 ## Implementation Phases
 
 ### Phase 1: Core Scripts and Templates (Week 1)
-- [ ] Implement `New-McpbPackage.ps1` for packaging
+- [x] Implement `Pack-Mcpb.ps1` for packaging (integrated with build_info.json)
 - [ ] Implement `Sign-McpbWithEsrp.ps1` for signing
 - [ ] Implement `Convert-P7sToMcpbSignature.ps1` for signature conversion
-- [ ] Verify manifest.json for Azure.Mcp.Server (it has already been created)
+- [x] Verify manifest.json for Azure.Mcp.Server (uses manifest_version 0.3)
 - [ ] Add unit tests for signature conversion
-- [ ] Document local usage
+- [x] Document local usage
+- [x] Validate MCPB bundle works in Claude Desktop
 
 ### Phase 2: Pipeline Integration (Week 2)
 - [ ] Create `pack-and-sign-mcpb.yml` pipeline template
@@ -691,35 +655,50 @@ The signing script will auto-discover servers based on the `servers/` directory 
 
 ## Local Development and Testing
 
-### Manual Packaging (without signing)
+### Using Pack-Mcpb.ps1 (Recommended)
 
-```bash
-# Install MCPB CLI
-dotnet tool install --global Mcpb.Cli
+The easiest way to create MCPB packages locally is to use the same script the pipeline uses:
 
-# Build trimmed server
+```powershell
+# Step 1: Build trimmed server binaries
 ./eng/scripts/Build-Code.ps1 -ServerName "Azure.Mcp.Server" -SelfContained -ReleaseBuild -Trimmed
 
-# Create MCPB package
-./eng/scripts/New-McpbPackage.ps1 `
-    -ServerName "Azure.Mcp.Server" `
-    -Platform "win-x64" `
-    -PublishPath "servers/Azure.Mcp.Server/src/bin/Release/net10.0/win-x64/publish" `
-    -ManifestPath "servers/Azure.Mcp.Server/manifest.json" `
-    -OutputPath "./artifacts/mcpb"
+# Step 2: Generate build_info.json
+./eng/scripts/New-BuildInfo.ps1 -ServerName "Azure.Mcp.Server"
 
-# Validate the package
-mcpb info ./artifacts/mcpb/Azure.Mcp.Server-win-x64.mcpb
+# Step 3: Create MCPB packages for all platforms
+./eng/scripts/Pack-Mcpb.ps1
+
+# Output will be in .work/packages_mcpb/
+```
+
+Or with custom paths:
+
+```powershell
+./eng/scripts/Pack-Mcpb.ps1 `
+    -ArtifactsPath ".work/build" `
+    -BuildInfoPath ".work/build_info.json" `
+    -OutputPath "./artifacts/mcpb"
+```
+
+### Validate and Inspect Packages
+
+```bash
+# Show package information
+mcpb info .work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb
+
+# Validate manifest without packing
+mcpb validate servers/Azure.Mcp.Server/mcpb/
 ```
 
 ### Self-Signed Testing
 
 ```bash
 # Sign with self-signed certificate for local testing
-mcpb sign ./artifacts/mcpb/Azure.Mcp.Server-win-x64.mcpb --self-signed
+mcpb sign .work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb --self-signed
 
 # Verify (will show self-signed warning)
-mcpb verify ./artifacts/mcpb/Azure.Mcp.Server-win-x64.mcpb
+mcpb verify .work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb
 ```
 
 ### Testing with Claude Desktop
