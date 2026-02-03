@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Virtual Machine Scale Set (VMSS) get operations to retrieve VMSS information including listing across subscriptions or resource groups, getting specific VMSS details, and retrieving individual VM instances within a scale set"
