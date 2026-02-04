@@ -12,8 +12,8 @@ jobs:
   strategy:
     matrix: $[ ${{ parameters.ServerMatrix }}]
   pool:
-    name: $(LINUXPOOL)
-    image: $(LINUXVMIMAGE)
+    name: $(Pool)
+    image: $(VMImage)
     os: linux
 
   steps:
@@ -30,7 +30,7 @@ jobs:
       echo "Listing $(ArtifactPath) contents:"
       ls -la "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/"
       echo ""
-      echo "Listing linux-x64 contents:"
+      echo "Listing $(Platform) contents:"
       ls -la "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/$(Platform)"
       echo ""
       echo "Listing dist contents:"
@@ -67,8 +67,8 @@ jobs:
 
       # Save image as .tar
       echo "Saving image"
-      docker save "$(DockerLocalTag)" -o "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
-      ls -lh "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
+      docker save "$(DockerLocalTag)" -o "$(Build.ArtifactStagingDirectory)/$(CliName)-$(Architecture)-image.tar"
+      ls -lh "$(Build.ArtifactStagingDirectory)/$(CliName)-$(Architecture)-image.tar"
     displayName: Capture image digest and save as .tar
 
   - task: 1ES.PublishPipelineArtifact@1

@@ -42,6 +42,14 @@ $additionalPlatforms = @(
         trimmed = $false
         specialPurpose = 'docker'
     }
+    @{
+        name = 'linux-musl-arm64-docker'
+        operatingSystem = 'linux'
+        architecture = 'musl-arm64'
+        native = $false
+        trimmed = $false
+        specialPurpose = 'docker'
+    }
 )
 
 if ($IncludeNative) {
@@ -593,23 +601,55 @@ function Get-ServerMatrix {
     Write-Host "Forming server matrix"
 
     $serverMatrix = [ordered]@{}
-    $platformName = "linux-musl-x64-docker"
+
+    # MCP Servers that should build ARM64 Docker images in addition to default AMD64
+    $arm64DockerServers = @("Azure.Mcp.Server")
+
+    # Docker architecture configurations
+    $dockerArchConfigs = @(
+        @{
+            Architecture = 'amd64'
+            PlatformName = 'linux-musl-x64-docker'
+            Pool = '$(LINUXPOOL)'
+            VMImage = '$(LINUXVMIMAGE)'
+        }
+        @{
+            Architecture = 'arm64'
+            PlatformName = 'linux-musl-arm64-docker'
+            Pool = '$(LINUXARMPOOL)'
+            VMImage = '$(LINUXARMVMIMAGE)'
+        }
+    )
 
     foreach ($server in $servers) {
-        $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
-        $executableExtension = $platform.extension
         $imageName = $server.dockerImageName
-        if (-not $platform.extension) { $executableExtension = '' }
         if (-not $server.dockerImageName) { $imageName = "microsoft/" + $server.cliName + "-mcp" }
-        $serverMatrix[$server.name] = [ordered]@{
-            ServerName = $server.name
-            CliName = $server.cliName
-            ArtifactPath = $server.artifactPath
-            Platform = $platformName
-            Version = $server.version
-            ImageName = $imageName
-            ExecutableName = $server.cliName + $executableExtension
-            DockerLocalTag = $imageName + ":" + $BuildId
+
+        foreach ($archConfig in $dockerArchConfigs) {
+            if ($archConfig.Architecture -eq 'arm64' -and $arm64DockerServers -notcontains $server.name) {
+                # Skip ARM64 for MCP servers not in the opt-in list
+                continue
+            }
+
+            $platform = $server.platforms | Where-Object { $_.name -eq $archConfig.PlatformName -and -not $_.native }
+            $executableExtension = $platform.extension ?? ''
+
+            $matrixKey = "$($server.name)_$($archConfig.Architecture)"
+
+            $serverMatrix[$matrixKey] = [ordered]@{
+                ServerName = $server.name
+                CliName = $server.cliName
+                ArtifactPath = $server.artifactPath
+                Version = $server.version
+                ImageName = $imageName
+                ExecutableName = $server.cliName + $executableExtension
+                DockerLocalTag = $imageName + ":" + $BuildId
+                # Docker build configuration
+                Platform = $archConfig.PlatformName
+                Architecture = $archConfig.Architecture
+                Pool = $archConfig.Pool
+                VMImage = $archConfig.VMImage
+            }
         }
     }
 
