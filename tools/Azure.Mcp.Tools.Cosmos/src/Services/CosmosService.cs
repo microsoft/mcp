@@ -32,13 +32,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string subscription,
         string accountName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync())
+        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
             if (account.Data.Name == accountName)
             {
@@ -74,7 +75,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         switch (authMethod)
         {
             case AuthMethod.Key:
-                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant);
+                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new CosmosClient(
                     string.Format(CosmosBaseUri, accountName),
