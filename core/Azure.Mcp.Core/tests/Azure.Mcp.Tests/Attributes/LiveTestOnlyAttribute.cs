@@ -15,6 +15,35 @@ namespace Azure.Mcp.Tests.Client.Attributes;
 /// This is used for tests that cannot be recorded due to technical limitations (e.g., WebSocket connections, 
 /// direct TCP connections, or client inheritance bugs).
 /// </summary>
+/// <remarks>
+/// <para>
+/// Use this attribute on test methods that inherit from <see cref="RecordedCommandTestsBase"/> when those
+/// tests cannot be recorded due to technical limitations such as:
+/// </para>
+/// <list type="bullet">
+/// <item>Tests using WebSocket connections (not supported by the test proxy)</item>
+/// <item>Tests using direct TCP connections (e.g., PostgreSQL, MySQL)</item>
+/// <item>Tests with client inheritance bugs that prevent proper recording</item>
+/// </list>
+/// <para>
+/// When the test mode is Playback, tests marked with this attribute will be skipped automatically.
+/// Tests will still run in Live and Record modes.
+/// </para>
+/// <example>
+/// <code>
+/// public class MyCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+/// {
+///     [LiveTestOnly]
+///     [Fact]
+///     public async Task TestWebSocketConnection()
+///     {
+///         // This test uses WebSocket which cannot be recorded
+///         // It will be skipped in Playback mode
+///     }
+/// }
+/// </code>
+/// </example>
+/// </remarks>
 public sealed class LiveTestOnlyAttribute : BeforeAfterTestAttribute
 {
     public override void Before(MethodInfo methodUnderTest, IXunitTest xunitTest)
