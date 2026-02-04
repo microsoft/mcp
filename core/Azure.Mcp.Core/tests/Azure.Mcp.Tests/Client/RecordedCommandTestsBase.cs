@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Text;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;

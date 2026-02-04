@@ -219,8 +219,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         _httpServerProcess = Process.Start(processStartInfo);
-
-        await WaitForServerReadinessAsync();
     }
 
     private Dictionary<string, string?> GetEnvironmentVariables(TestProxyFixture? proxy)
@@ -269,26 +267,28 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         {
             try
             {
-                var request = new
-                {
-                    jsonrpc = "2.0",
-                    method = "tools/list",
-                    @params = new { },
-                    id = Guid.NewGuid().ToString()
-                };
-
-                var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
-                {
-                    Content = content
-                };
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-                using var resp = await _http!.SendAsync(requestMessage);
-                if (resp.IsSuccessStatusCode)
-                {
-                    return;
-                }
+                await Client.ListToolsAsync(cancellationToken: CancellationToken.None);
+                return;
+                //var request = new
+                //{
+                //    jsonrpc = "2.0",
+                //    method = "tools/list",
+                //    @params = new { },
+                //    id = Guid.NewGuid().ToString()
+                //};
+                //
+                //var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+                //using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
+                //{
+                //    Content = content
+                //};
+                //requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                //requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+                //using var resp = await _http!.SendAsync(requestMessage);
+                //if (resp.IsSuccessStatusCode)
+                //{
+                //    return;
+                //}
             }
             catch
             {
@@ -341,9 +341,16 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         if (UseHttp)
         {
-            await CreateHttpClientAsync(proxy);
             await StartHttpServerProcessAsync(proxy, executablePath, arguments);
+            var transport = new HttpClientTransport(new()
+            {
+                Endpoint = new Uri(_baseUrl!),
+                TransportMode = HttpTransportMode.StreamableHttp
+            });
+            Client = await McpClient.CreateAsync(transport);
+            await WaitForServerReadinessAsync();
             Output.WriteLine($"HTTP test client initialized at {_baseUrl}");
+            
             return;
         }
 
@@ -355,8 +362,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
     protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
     {
-        if (UseHttp && _http != null)
-            return CallToolOverHttpAsync(command, parameters);
         return CallToolAsync(command, parameters, Client);
     }
 
