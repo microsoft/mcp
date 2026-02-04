@@ -68,7 +68,7 @@ public sealed class InsertDocumentCommand(ILogger<InsertDocumentCommand> logger)
                 throw new ArgumentException("Invalid document format");
             }
 
-            var result = await service.InsertDocumentAsync(options.DbName!, options.CollectionName!, document);
+            var result = await service.InsertDocumentAsync(options.DbName!, options.CollectionName!, document, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

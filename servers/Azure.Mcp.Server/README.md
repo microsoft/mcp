@@ -851,6 +851,18 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 
 * "List my Advisor recommendations"
 
+### 🗄️ Azure Cosmos DB for MongoDB (vCore)
+
+* "Connect to my DocumentDB instance"
+* "List all databases in DocumentDB"
+* "Show me collections in database 'mydb'"
+* "Find documents in collection 'users' where status is active"
+* "Count documents in collection 'orders'"
+* "Insert a document into collection 'products'"
+* "Update documents in collection 'inventory'"
+* "Create an index on collection 'customers'"
+* "Get statistics for database 'analytics'"
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -1042,6 +1054,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
+- 🗄️ **Azure Cosmos DB for MongoDB (vCore)** - MongoDB vCore database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management

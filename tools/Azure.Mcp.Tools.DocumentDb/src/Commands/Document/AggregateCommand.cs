@@ -71,7 +71,7 @@ public sealed class AggregateCommand(ILogger<AggregateCommand> logger)
                 throw new ArgumentException("Invalid pipeline format or empty pipeline");
             }
 
-            var result = await service.AggregateAsync(options.DbName!, options.CollectionName!, pipeline, options.AllowDiskUse);
+            var result = await service.AggregateAsync(options.DbName!, options.CollectionName!, pipeline, options.AllowDiskUse, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

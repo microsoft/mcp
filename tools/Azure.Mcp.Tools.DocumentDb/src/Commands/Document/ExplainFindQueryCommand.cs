@@ -67,7 +67,7 @@ public sealed class ExplainFindQueryCommand(ILogger<ExplainFindQueryCommand> log
             var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
             var queryOptions = string.IsNullOrWhiteSpace(options.Options) ? null : DocumentDbResponseHelper.DeserializeFromJson<object>(options.Options);
 
-            var result = await service.ExplainFindQueryAsync(options.DbName!, options.CollectionName!, query, queryOptions);
+            var result = await service.ExplainFindQueryAsync(options.DbName!, options.CollectionName!, query, queryOptions, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

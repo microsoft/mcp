@@ -69,7 +69,7 @@ public sealed class ExplainAggregateQueryCommand(ILogger<ExplainAggregateQueryCo
                 throw new ArgumentException("Invalid pipeline format or empty pipeline");
             }
 
-            var result = await service.ExplainAggregateQueryAsync(options.DbName!, options.CollectionName!, pipeline);
+            var result = await service.ExplainAggregateQueryAsync(options.DbName!, options.CollectionName!, pipeline, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

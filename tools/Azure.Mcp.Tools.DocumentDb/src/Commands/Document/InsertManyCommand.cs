@@ -71,7 +71,7 @@ public sealed class InsertManyCommand(ILogger<InsertManyCommand> logger)
                 throw new ArgumentException("Invalid documents format or empty list");
             }
 
-            var result = await service.InsertManyAsync(options.DbName!, options.CollectionName!, documents);
+            var result = await service.InsertManyAsync(options.DbName!, options.CollectionName!, documents, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

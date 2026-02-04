@@ -32,8 +32,21 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DocumentDbOptionDefinitions.DbName);
-        command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+
+        var dbNameOption = new Option<string>("--db-name")
+        {
+            Description = "Database name",
+            Required = true
+        };
+        command.Options.Add(dbNameOption);
+
+        var collectionNameOption = new Option<string>("--collection-name")
+        {
+            Description = "Collection name",
+            Required = true
+        };
+        command.Options.Add(collectionNameOption);
+
         command.Options.Add(DocumentDbOptionDefinitions.Query);
         command.Options.Add(DocumentDbOptionDefinitions.Options);
     }
@@ -67,7 +80,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
             var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
             var queryOptions = string.IsNullOrWhiteSpace(options.Options) ? null : DocumentDbResponseHelper.DeserializeFromJson<object>(options.Options);
 
-            var result = await service.FindDocumentsAsync(options.DbName!, options.CollectionName!, query, queryOptions);
+            var result = await service.FindDocumentsAsync(options.DbName!, options.CollectionName!, query, queryOptions, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

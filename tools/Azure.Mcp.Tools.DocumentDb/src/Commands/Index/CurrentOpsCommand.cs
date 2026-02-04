@@ -60,7 +60,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
 
             var filter = DocumentDbHelpers.ParseBsonDocument(options.Ops);
 
-            var result = await service.GetCurrentOpsAsync(filter);
+            var result = await service.GetCurrentOpsAsync(filter, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbHelpers.SerializeBsonToJson(result));

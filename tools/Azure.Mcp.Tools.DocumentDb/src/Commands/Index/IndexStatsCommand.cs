@@ -60,7 +60,7 @@ public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetIndexStatsAsync(options.DbName!, options.CollectionName!);
+            var result = await service.GetIndexStatsAsync(options.DbName!, options.CollectionName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result.Select(doc => DocumentDbHelpers.SerializeBsonToJson(doc))));

@@ -58,7 +58,7 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetDatabaseStatsAsync(options.DbName!);
+            var result = await service.GetDatabaseStatsAsync(options.DbName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbHelpers.SerializeBsonToJson(result));

@@ -77,7 +77,7 @@ public sealed class FindAndModifyCommand(ILogger<FindAndModifyCommand> logger)
                 throw new ArgumentException("Invalid query or update format");
             }
 
-            var result = await service.FindAndModifyAsync(options.DbName!, options.CollectionName!, query, update, options.Upsert);
+            var result = await service.FindAndModifyAsync(options.DbName!, options.CollectionName!, query, update, options.Upsert, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

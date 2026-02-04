@@ -60,7 +60,7 @@ public sealed class DropCollectionCommand(ILogger<DropCollectionCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.DropCollectionAsync(options.DbName!, options.CollectionName!);
+            var result = await service.DropCollectionAsync(options.DbName!, options.CollectionName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

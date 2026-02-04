@@ -60,7 +60,7 @@ public sealed class ConnectDocumentDbCommand(ILogger<ConnectDocumentDbCommand> l
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.ConnectAsync(options.ConnectionString!, options.TestConnection);
+            var result = await service.ConnectAsync(options.ConnectionString!, options.TestConnection, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

@@ -60,7 +60,7 @@ public sealed class CollectionStatsCommand(ILogger<CollectionStatsCommand> logge
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetCollectionStatsAsync(options.DbName!, options.CollectionName!);
+            var result = await service.GetCollectionStatsAsync(options.DbName!, options.CollectionName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbHelpers.SerializeBsonToJson(result));

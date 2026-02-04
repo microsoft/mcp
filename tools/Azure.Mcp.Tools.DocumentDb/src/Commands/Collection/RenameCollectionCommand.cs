@@ -62,7 +62,7 @@ public sealed class RenameCollectionCommand(ILogger<RenameCollectionCommand> log
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.RenameCollectionAsync(options.DbName!, options.CollectionName!, options.NewCollectionName!);
+            var result = await service.RenameCollectionAsync(options.DbName!, options.CollectionName!, options.NewCollectionName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

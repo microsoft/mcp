@@ -58,7 +58,7 @@ public sealed class GetDbInfoCommand(ILogger<GetDbInfoCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetDatabaseInfoAsync(options.DbName!);
+            var result = await service.GetDatabaseInfoAsync(options.DbName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

@@ -64,7 +64,7 @@ public sealed class ExplainCountQueryCommand(ILogger<ExplainCountQueryCommand> l
 
             var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
 
-            var result = await service.ExplainCountQueryAsync(options.DbName!, options.CollectionName!, query);
+            var result = await service.ExplainCountQueryAsync(options.DbName!, options.CollectionName!, query, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

@@ -72,7 +72,7 @@ public sealed class CreateIndexCommand(ILogger<CreateIndexCommand> logger)
 
             var indexOptions = DocumentDbHelpers.ParseBsonDocument(options.Options);
 
-            var result = await service.CreateIndexAsync(options.DbName!, options.CollectionName!, keys, indexOptions);
+            var result = await service.CreateIndexAsync(options.DbName!, options.CollectionName!, keys, indexOptions, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

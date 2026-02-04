@@ -32,8 +32,20 @@ public sealed class ListIndexesCommand(ILogger<ListIndexesCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DocumentDbOptionDefinitions.DbName);
-        command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+
+        var dbNameOption = new Option<string>("--db-name")
+        {
+            Description = "Database name",
+            Required = true
+        };
+        command.Options.Add(dbNameOption);
+
+        var collectionNameOption = new Option<string>("--collection-name")
+        {
+            Description = "Collection name",
+            Required = true
+        };
+        command.Options.Add(collectionNameOption);
     }
 
     protected override ListIndexesOptions BindOptions(ParseResult parseResult)
@@ -60,7 +72,7 @@ public sealed class ListIndexesCommand(ILogger<ListIndexesCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.ListIndexesAsync(options.DbName!, options.CollectionName!);
+            var result = await service.ListIndexesAsync(options.DbName!, options.CollectionName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

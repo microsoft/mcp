@@ -62,7 +62,7 @@ public sealed class DropIndexCommand(ILogger<DropIndexCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.DropIndexAsync(options.DbName!, options.CollectionName!, options.IndexName!);
+            var result = await service.DropIndexAsync(options.DbName!, options.CollectionName!, options.IndexName!, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

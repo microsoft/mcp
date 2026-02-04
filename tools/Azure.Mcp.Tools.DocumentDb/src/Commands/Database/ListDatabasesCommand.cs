@@ -45,7 +45,7 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.ListDatabasesAsync();
+            var result = await service.ListDatabasesAsync(cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

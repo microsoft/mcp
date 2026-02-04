@@ -72,7 +72,7 @@ public sealed class DeleteManyCommand(ILogger<DeleteManyCommand> logger)
                 throw new ArgumentException("Invalid filter format");
             }
 
-            var result = await service.DeleteManyAsync(options.DbName!, options.CollectionName!, filter);
+            var result = await service.DeleteManyAsync(options.DbName!, options.CollectionName!, filter, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

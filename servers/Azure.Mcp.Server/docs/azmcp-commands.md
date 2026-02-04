@@ -257,6 +257,51 @@ azmcp server info
 azmcp advisor recommendations list --subscription <subscription>
 ```
 
+### Azure Cosmos DB for MongoDB (vCore) Operations
+
+```bash
+# Connection Management
+azmcp documentdb connect --connection-string <connection-string>
+azmcp documentdb disconnect
+azmcp documentdb connection status
+
+# Database Operations
+azmcp documentdb database list
+azmcp documentdb database stats --db-name <database-name>
+azmcp documentdb database info --db-name <database-name>
+azmcp documentdb database drop --db-name <database-name>
+
+# Collection Operations
+azmcp documentdb collection stats --db-name <database-name> --collection-name <collection-name>
+azmcp documentdb collection rename --db-name <database-name> --collection-name <old-name> --new-collection-name <new-name>
+azmcp documentdb collection drop --db-name <database-name> --collection-name <collection-name>
+azmcp documentdb collection sample --db-name <database-name> --collection-name <collection-name> --sample-size 10
+
+# Document Operations
+azmcp documentdb find documents --db-name <database-name> --collection-name <collection-name> --query '{"status": "active"}'
+azmcp documentdb count documents --db-name <database-name> --collection-name <collection-name> --query '{}'
+azmcp documentdb insert document --db-name <database-name> --collection-name <collection-name> --document '{"name": "example"}'
+azmcp documentdb insert many --db-name <database-name> --collection-name <collection-name> --documents '[{"name": "doc1"}, {"name": "doc2"}]'
+azmcp documentdb update document --db-name <database-name> --collection-name <collection-name> --filter '{"_id": "123"}' --update '{"$set": {"status": "updated"}}'
+azmcp documentdb update many --db-name <database-name> --collection-name <collection-name> --filter '{"status": "pending"}' --update '{"$set": {"status": "processed"}}'
+azmcp documentdb delete document --db-name <database-name> --collection-name <collection-name> --filter '{"_id": "123"}'
+azmcp documentdb delete many --db-name <database-name> --collection-name <collection-name> --filter '{"status": "archived"}'
+azmcp documentdb aggregate --db-name <database-name> --collection-name <collection-name> --pipeline '[{"$group": {"_id": "$status", "count": {"$sum": 1}}}]'
+azmcp documentdb find and modify --db-name <database-name> --collection-name <collection-name> --query '{"_id": "123"}' --update '{"$set": {"modified": true}}'
+
+# Query Explanation
+azmcp documentdb explain find --db-name <database-name> --collection-name <collection-name> --query '{}'
+azmcp documentdb explain count --db-name <database-name> --collection-name <collection-name> --query '{}'
+azmcp documentdb explain aggregate --db-name <database-name> --collection-name <collection-name> --pipeline '[{"$match": {"status": "active"}}]'
+
+# Index Operations
+azmcp documentdb index create --db-name <database-name> --collection-name <collection-name> --keys '{"fieldName": 1}'
+azmcp documentdb index list --db-name <database-name> --collection-name <collection-name>
+azmcp documentdb index drop --db-name <database-name> --collection-name <collection-name> --index-name <index-name>
+azmcp documentdb index stats --db-name <database-name> --collection-name <collection-name>
+azmcp documentdb current ops
+```
+
 ### Azure AI Search Operations
 
 ```bash

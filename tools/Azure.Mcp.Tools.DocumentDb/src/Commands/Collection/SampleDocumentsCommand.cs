@@ -32,8 +32,21 @@ public sealed class SampleDocumentsCommand(ILogger<SampleDocumentsCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DocumentDbOptionDefinitions.DbName);
-        command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+
+        var dbNameOption = new Option<string>("--db-name")
+        {
+            Description = "Database name",
+            Required = true
+        };
+        command.Options.Add(dbNameOption);
+
+        var collectionNameOption = new Option<string>("--collection-name")
+        {
+            Description = "Collection name",
+            Required = true
+        };
+        command.Options.Add(collectionNameOption);
+
         command.Options.Add(DocumentDbOptionDefinitions.SampleSize);
     }
 
@@ -62,7 +75,7 @@ public sealed class SampleDocumentsCommand(ILogger<SampleDocumentsCommand> logge
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.SampleDocumentsAsync(options.DbName!, options.CollectionName!, options.SampleSize);
+            var result = await service.SampleDocumentsAsync(options.DbName!, options.CollectionName!, options.SampleSize, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result.Select(doc => DocumentDbHelpers.SerializeBsonToJson(doc))));

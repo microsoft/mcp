@@ -37,7 +37,7 @@ public class DocumentDbService : IDocumentDbService
 
     #region Connection Management
 
-    public async Task<object> ConnectAsync(string connectionString, bool testConnection = true)
+    public async Task<object> ConnectAsync(string connectionString, bool testConnection = true, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -54,7 +54,7 @@ public class DocumentDbService : IDocumentDbService
             // Disconnect any existing connection
             if (_client != null)
             {
-                await DisconnectAsync();
+                await DisconnectAsync(cancellationToken);
             }
 
             _connectionString = connectionString;
@@ -65,7 +65,7 @@ public class DocumentDbService : IDocumentDbService
             if (testConnection)
             {
                 // Test the connection by listing databases
-                var databases = await _client.ListDatabaseNames().ToListAsync();
+                var databases = await _client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
                 _logger.LogInformation("Successfully connected to DocumentDB. Found {Count} databases", databases.Count);
 
                 return new Dictionary<string, object?>
@@ -101,7 +101,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public Task<object> DisconnectAsync()
+    public Task<object> DisconnectAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -186,12 +186,12 @@ public class DocumentDbService : IDocumentDbService
 
     #region Database Operations
 
-    public async Task<List<string>> ListDatabasesAsync()
+    public async Task<List<string>> ListDatabasesAsync(CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         try
         {
-            var databases = await _client!.ListDatabaseNames().ToListAsync();
+            var databases = await _client!.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
             return databases;
         }
         catch (Exception ex)
@@ -201,7 +201,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<BsonDocument> GetDatabaseStatsAsync(string databaseName)
+    public async Task<BsonDocument> GetDatabaseStatsAsync(string databaseName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -210,7 +210,7 @@ public class DocumentDbService : IDocumentDbService
         {
             var database = _client!.GetDatabase(databaseName);
             var command = new BsonDocument { { "dbStats", 1 } };
-            var stats = await database.RunCommandAsync<BsonDocument>(command);
+            var stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
             return stats;
         }
         catch (Exception ex)
@@ -220,7 +220,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> GetDatabaseInfoAsync(string databaseName)
+    public async Task<object> GetDatabaseInfoAsync(string databaseName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -228,7 +228,7 @@ public class DocumentDbService : IDocumentDbService
         try
         {
             var database = _client!.GetDatabase(databaseName);
-            var collections = await database.ListCollectionNames().ToListAsync();
+            var collections = await database.ListCollectionNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
 
             var collectionInfos = new List<Dictionary<string, object?>>();
             foreach (var collectionName in collections)
@@ -236,7 +236,7 @@ public class DocumentDbService : IDocumentDbService
                 try
                 {
                     var collection = database.GetCollection<BsonDocument>(collectionName);
-                    var count = await collection.CountDocumentsAsync(new BsonDocument());
+                    var count = await collection.CountDocumentsAsync(new BsonDocument(), cancellationToken: cancellationToken);
                     collectionInfos.Add(new Dictionary<string, object?>
                     {
                         ["name"] = collectionName,
@@ -266,14 +266,14 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> DropDatabaseAsync(string databaseName)
+    public async Task<object> DropDatabaseAsync(string databaseName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
 
         try
         {
-            await _client!.DropDatabaseAsync(databaseName);
+            await _client!.DropDatabaseAsync(databaseName, cancellationToken);
             _logger.LogWarning("Dropped database {DatabaseName}", databaseName);
             return new Dictionary<string, object?>
             {
@@ -301,7 +301,7 @@ public class DocumentDbService : IDocumentDbService
 
     #region Collection Operations
 
-    public async Task<BsonDocument> GetCollectionStatsAsync(string databaseName, string collectionName)
+    public async Task<BsonDocument> GetCollectionStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -311,7 +311,7 @@ public class DocumentDbService : IDocumentDbService
         {
             var database = _client!.GetDatabase(databaseName);
             var command = new BsonDocument { { "collStats", collectionName } };
-            var stats = await database.RunCommandAsync<BsonDocument>(command);
+            var stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
             return stats;
         }
         catch (Exception ex)
@@ -321,7 +321,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> RenameCollectionAsync(string databaseName, string oldName, string newName)
+    public async Task<object> RenameCollectionAsync(string databaseName, string oldName, string newName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -331,7 +331,7 @@ public class DocumentDbService : IDocumentDbService
         try
         {
             var database = _client!.GetDatabase(databaseName);
-            await database.RenameCollectionAsync(oldName, newName);
+            await database.RenameCollectionAsync(oldName, newName, cancellationToken: cancellationToken);
             _logger.LogInformation("Renamed collection {OldName} to {NewName} in database {DatabaseName}", oldName, newName, databaseName);
             return new Dictionary<string, object?>
             {
@@ -350,7 +350,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> DropCollectionAsync(string databaseName, string collectionName)
+    public async Task<object> DropCollectionAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -359,7 +359,7 @@ public class DocumentDbService : IDocumentDbService
         try
         {
             var database = _client!.GetDatabase(databaseName);
-            await database.DropCollectionAsync(collectionName);
+            await database.DropCollectionAsync(collectionName, cancellationToken);
             _logger.LogWarning("Dropped collection {CollectionName} from database {DatabaseName}", collectionName, databaseName);
             return new Dictionary<string, object?>
             {
@@ -378,7 +378,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<List<BsonDocument>> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10)
+    public async Task<List<BsonDocument>> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -394,7 +394,7 @@ public class DocumentDbService : IDocumentDbService
                 new BsonDocument("$sample", new BsonDocument("size", sampleSize))
             };
 
-            var documents = await collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
+            var documents = await collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
             return documents;
         }
         catch (Exception ex)
@@ -408,7 +408,7 @@ public class DocumentDbService : IDocumentDbService
 
     #region Document Operations
 
-    public async Task<object> FindDocumentsAsync(string databaseName, string collectionName, BsonDocument? query = null, object? options = null)
+    public async Task<object> FindDocumentsAsync(string databaseName, string collectionName, BsonDocument? query = null, object? options = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -456,8 +456,8 @@ public class DocumentDbService : IDocumentDbService
             if (projection != null)
                 cursor = cursor.Project<BsonDocument>(projection);
 
-            var documents = await cursor.ToListAsync();
-            var totalCount = await collection.CountDocumentsAsync(filter);
+            var documents = await cursor.ToListAsync(cancellationToken);
+            var totalCount = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -482,7 +482,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> CountDocumentsAsync(string databaseName, string collectionName, BsonDocument? query = null)
+    public async Task<object> CountDocumentsAsync(string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -494,7 +494,7 @@ public class DocumentDbService : IDocumentDbService
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
             var filter = query ?? new BsonDocument();
-            var count = await collection.CountDocumentsAsync(filter);
+            var count = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -509,7 +509,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> InsertDocumentAsync(string databaseName, string collectionName, BsonDocument document)
+    public async Task<object> InsertDocumentAsync(string databaseName, string collectionName, BsonDocument document, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -521,7 +521,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            await collection.InsertOneAsync(document);
+            await collection.InsertOneAsync(document, cancellationToken: cancellationToken);
             var insertedId = document["_id"].ToString();
 
             _logger.LogInformation("Inserted document with ID {Id} into {DatabaseName}.{CollectionName}", insertedId, databaseName, collectionName);
@@ -540,7 +540,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> InsertManyAsync(string databaseName, string collectionName, List<BsonDocument> documents)
+    public async Task<object> InsertManyAsync(string databaseName, string collectionName, List<BsonDocument> documents, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -562,7 +562,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            await collection.InsertManyAsync(documents);
+            await collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
             var insertedIds = documents.Select(d => d["_id"].ToString()).ToList();
 
             _logger.LogInformation("Inserted {Count} documents into {DatabaseName}.{CollectionName}", documents.Count, databaseName, collectionName);
@@ -581,7 +581,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> UpdateDocumentAsync(string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false)
+    public async Task<object> UpdateDocumentAsync(string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -595,7 +595,7 @@ public class DocumentDbService : IDocumentDbService
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
             var options = new UpdateOptions { IsUpsert = upsert };
-            var result = await collection.UpdateOneAsync(filter, update, options);
+            var result = await collection.UpdateOneAsync(filter, update, options, cancellationToken);
 
             _logger.LogInformation("Updated document in {DatabaseName}.{CollectionName}. Matched: {Matched}, Modified: {Modified}",
                 databaseName, collectionName, result.MatchedCount, result.ModifiedCount);
@@ -615,7 +615,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> UpdateManyAsync(string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false)
+    public async Task<object> UpdateManyAsync(string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -629,7 +629,7 @@ public class DocumentDbService : IDocumentDbService
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
             var options = new UpdateOptions { IsUpsert = upsert };
-            var result = await collection.UpdateManyAsync(filter, update, options);
+            var result = await collection.UpdateManyAsync(filter, update, options, cancellationToken);
 
             _logger.LogInformation("Updated documents in {DatabaseName}.{CollectionName}. Matched: {Matched}, Modified: {Modified}",
                 databaseName, collectionName, result.MatchedCount, result.ModifiedCount);
@@ -649,7 +649,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> DeleteDocumentAsync(string databaseName, string collectionName, BsonDocument filter)
+    public async Task<object> DeleteDocumentAsync(string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -661,7 +661,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            var result = await collection.DeleteOneAsync(filter);
+            var result = await collection.DeleteOneAsync(filter, cancellationToken);
 
             _logger.LogInformation("Deleted {Count} document from {DatabaseName}.{CollectionName}",
                 result.DeletedCount, databaseName, collectionName);
@@ -679,7 +679,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> DeleteManyAsync(string databaseName, string collectionName, BsonDocument filter)
+    public async Task<object> DeleteManyAsync(string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -691,7 +691,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            var result = await collection.DeleteManyAsync(filter);
+            var result = await collection.DeleteManyAsync(filter, cancellationToken);
 
             _logger.LogInformation("Deleted {Count} documents from {DatabaseName}.{CollectionName}",
                 result.DeletedCount, databaseName, collectionName);
@@ -709,7 +709,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> AggregateAsync(string databaseName, string collectionName, List<BsonDocument> pipeline, bool allowDiskUse = false)
+    public async Task<object> AggregateAsync(string databaseName, string collectionName, List<BsonDocument> pipeline, bool allowDiskUse = false, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -722,7 +722,7 @@ public class DocumentDbService : IDocumentDbService
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
             var options = new AggregateOptions { AllowDiskUse = allowDiskUse };
-            var results = await collection.Aggregate<BsonDocument>(pipeline, options).ToListAsync();
+            var results = await collection.Aggregate<BsonDocument>(pipeline, options, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -737,7 +737,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> FindAndModifyAsync(string databaseName, string collectionName, BsonDocument query, BsonDocument update, bool upsert = false)
+    public async Task<object> FindAndModifyAsync(string databaseName, string collectionName, BsonDocument query, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -756,7 +756,7 @@ public class DocumentDbService : IDocumentDbService
                 ReturnDocument = ReturnDocument.Before
             };
 
-            var result = await collection.FindOneAndUpdateAsync(query, update, options);
+            var result = await collection.FindOneAndUpdateAsync(query, update, options, cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -775,7 +775,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> ExplainFindQueryAsync(string databaseName, string collectionName, BsonDocument? query = null, object? options = null)
+    public async Task<object> ExplainFindQueryAsync(string databaseName, string collectionName, BsonDocument? query = null, object? options = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -829,7 +829,7 @@ public class DocumentDbService : IDocumentDbService
                 { "verbosity", "executionStats" }
             };
 
-            var explain = await database.RunCommandAsync<BsonDocument>(command);
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -850,7 +850,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> ExplainCountQueryAsync(string databaseName, string collectionName, BsonDocument? query = null)
+    public async Task<object> ExplainCountQueryAsync(string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -872,7 +872,7 @@ public class DocumentDbService : IDocumentDbService
                 { "verbosity", "executionStats" }
             };
 
-            var explain = await database.RunCommandAsync<BsonDocument>(command);
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
             return new Dictionary<string, object?>
             {
                 ["explain"] = BsonDocumentToJson(explain)
@@ -885,7 +885,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> ExplainAggregateQueryAsync(string databaseName, string collectionName, List<BsonDocument> pipeline)
+    public async Task<object> ExplainAggregateQueryAsync(string databaseName, string collectionName, List<BsonDocument> pipeline, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -908,7 +908,7 @@ public class DocumentDbService : IDocumentDbService
                 { "verbosity", "executionStats" }
             };
 
-            var explain = await database.RunCommandAsync<BsonDocument>(command);
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
             return new Dictionary<string, object?>
             {
                 ["explain"] = BsonDocumentToJson(explain)
@@ -925,7 +925,7 @@ public class DocumentDbService : IDocumentDbService
 
     #region Index Operations
 
-    public async Task<object> CreateIndexAsync(string databaseName, string collectionName, BsonDocument keys, BsonDocument? options = null)
+    public async Task<object> CreateIndexAsync(string databaseName, string collectionName, BsonDocument keys, BsonDocument? options = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -953,7 +953,7 @@ public class DocumentDbService : IDocumentDbService
             }
 
             var model = new CreateIndexModel<BsonDocument>(indexKeysDefinition, createIndexOptions);
-            var indexName = await collection.Indexes.CreateOneAsync(model);
+            var indexName = await collection.Indexes.CreateOneAsync(model, cancellationToken: cancellationToken);
 
             _logger.LogInformation("Created index {IndexName} on {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
 
@@ -971,7 +971,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> ListIndexesAsync(string databaseName, string collectionName)
+    public async Task<object> ListIndexesAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -982,7 +982,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            var indexes = await collection.Indexes.List().ToListAsync();
+            var indexes = await collection.Indexes.List(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
 
             return new Dictionary<string, object?>
             {
@@ -997,7 +997,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<object> DropIndexAsync(string databaseName, string collectionName, string indexName)
+    public async Task<object> DropIndexAsync(string databaseName, string collectionName, string indexName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -1009,7 +1009,7 @@ public class DocumentDbService : IDocumentDbService
             var database = _client!.GetDatabase(databaseName);
             var collection = database.GetCollection<BsonDocument>(collectionName);
 
-            await collection.Indexes.DropOneAsync(indexName);
+            await collection.Indexes.DropOneAsync(indexName, cancellationToken);
 
             _logger.LogWarning("Dropped index {IndexName} from {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
 
@@ -1035,7 +1035,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<List<BsonDocument>> GetIndexStatsAsync(string databaseName, string collectionName)
+    public async Task<List<BsonDocument>> GetIndexStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
         ValidateParameter(databaseName, nameof(databaseName));
@@ -1051,7 +1051,7 @@ public class DocumentDbService : IDocumentDbService
                 new BsonDocument("$indexStats", new BsonDocument())
             };
 
-            var stats = await collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
+            var stats = await collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
             return stats;
         }
         catch (Exception ex)
@@ -1061,7 +1061,7 @@ public class DocumentDbService : IDocumentDbService
         }
     }
 
-    public async Task<BsonDocument> GetCurrentOpsAsync(BsonDocument? filter = null)
+    public async Task<BsonDocument> GetCurrentOpsAsync(BsonDocument? filter = null, CancellationToken cancellationToken = default)
     {
         EnsureConnected();
 
@@ -1078,7 +1078,7 @@ public class DocumentDbService : IDocumentDbService
                 }
             }
 
-            var result = await adminDb.RunCommandAsync<BsonDocument>(command);
+            var result = await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
             return result;
         }
         catch (Exception ex)

@@ -74,7 +74,7 @@ public sealed class UpdateDocumentCommand(ILogger<UpdateDocumentCommand> logger)
                 throw new ArgumentException("Invalid filter or update format");
             }
 
-            var result = await service.UpdateDocumentAsync(options.DbName!, options.CollectionName!, filter, update, options.Upsert);
+            var result = await service.UpdateDocumentAsync(options.DbName!, options.CollectionName!, filter, update, options.Upsert, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

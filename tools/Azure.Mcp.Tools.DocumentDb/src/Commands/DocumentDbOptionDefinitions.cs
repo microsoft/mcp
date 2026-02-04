@@ -9,7 +9,8 @@ internal static class DocumentDbOptionDefinitions
 {
     public static readonly Option<string> ConnectionString = new("--connection-string")
     {
-        Description = "DocumentDB connection string"
+        Description = "DocumentDB connection string",
+        Required = true
     };
 
     public static readonly Option<bool> TestConnection = new("--test-connection")

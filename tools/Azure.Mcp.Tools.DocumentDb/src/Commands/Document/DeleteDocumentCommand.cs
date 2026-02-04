@@ -72,7 +72,7 @@ public sealed class DeleteDocumentCommand(ILogger<DeleteDocumentCommand> logger)
                 throw new ArgumentException("Invalid filter format");
             }
 
-            var result = await service.DeleteDocumentAsync(options.DbName!, options.CollectionName!, filter);
+            var result = await service.DeleteDocumentAsync(options.DbName!, options.CollectionName!, filter, cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));

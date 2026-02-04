@@ -45,7 +45,7 @@ public sealed class DisconnectDocumentDbCommand(ILogger<DisconnectDocumentDbComm
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.DisconnectAsync();
+            var result = await service.DisconnectAsync(cancellationToken);
 
             context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
                 DocumentDbResponseHelper.SerializeToJson(result));
