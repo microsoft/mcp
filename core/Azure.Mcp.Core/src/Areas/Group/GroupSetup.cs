@@ -14,6 +14,8 @@ public sealed class GroupSetup : IAreaSetup
 
     public string Title => "Azure Resource Groups";
 
+    public CommandCategory Category => CommandCategory.SubscriptionManagement;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<GroupListCommand>();
