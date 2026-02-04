@@ -18,20 +18,22 @@ public static class DeploymentPlanTemplateUtil
     /// <param name="projectName">The name of the project. Can be null or empty.</param>
     /// <param name="targetAppService">The target Azure service.</param>
     /// <param name="provisioningTool">The provisioning tool.</param>
-    /// <param name="azdIacOptions">The Infrastructure as Code options for AZD.</param>
+    /// <param name="iacOptions">The Infrastructure as Code options for AZD.</param>
     /// <returns>A formatted deployment plan template string.</returns>
-    public static string GetPlanTemplate(string projectName, string targetAppService, string provisioningTool, string? azdIacOptions = "")
+    public static string GetPlanTemplate(string projectName, string targetAppService, string provisioningTool, string sourceType, string deployOption, string? iacOptions, string? subscriptionId, string? resourceGroupName)
     {
         // Default values for optional parameters
-        if (provisioningTool == "azd" && string.IsNullOrWhiteSpace(azdIacOptions))
+        if (provisioningTool == "azd" && string.IsNullOrWhiteSpace(iacOptions))
         {
-            azdIacOptions = "bicep";
+            iacOptions = "bicep";
         }
 
-        DeploymentPlanTemplateParameters parameters = CreateTemplateParameters(projectName, targetAppService, provisioningTool, azdIacOptions);
+        DeploymentPlanTemplateParameters parameters = CreateTemplateParameters(projectName, targetAppService, provisioningTool, sourceType, deployOption, iacOptions, subscriptionId, resourceGroupName);
+        var resourceInfo = GenerateResourceInfo(parameters);
         var executionSteps = GenerateExecutionSteps(parameters);
 
         parameters.ExecutionSteps = executionSteps;
+        parameters.ResourceInfo = resourceInfo;
 
         return TemplateService.ProcessTemplate("Plan/deployment-plan-base", parameters.ToDictionary());
     }
@@ -43,12 +45,53 @@ public static class DeploymentPlanTemplateUtil
         string projectName,
         string targetAppService,
         string provisioningTool,
-        string? azdIacOptions)
+        string sourceType,
+        string deployOption,
+        string? iacOptions,
+        string? subscriptionId,
+        string? resourceGroupName)
     {
         var azureComputeHost = GetAzureComputeHost(targetAppService);
         var title = string.IsNullOrWhiteSpace(projectName)
             ? "Azure Deployment Plan"
             : $"Azure Deployment Plan for {projectName} Project";
+
+        if (deployOption == DeployOption.DeployOnly)
+        {
+            provisioningTool = DeploymentTool.AzCli;
+            sourceType = SourceType.FromAzure;
+        }
+
+        if (deployOption == DeployOption.ProvisionOnly)
+        {
+            provisioningTool = DeploymentTool.AzCli;
+        }
+
+        var fallbackIaCTypeDescription = "";
+        if (string.IsNullOrEmpty(iacOptions) && (deployOption == DeployOption.ProvisionOnly || deployOption == DeployOption.ProvisionAndDeploy))
+        {
+            iacOptions = targetAppService.ToLowerInvariant() == "aks" ? IacType.Terraform : IacType.Bicep;
+            fallbackIaCTypeDescription = $" Since the IaC option is not specified, we will use ${iacOptions} as the IaC option based on the target app services.";
+        }
+
+        var goal = sourceType == SourceType.FromAzure ?
+            $"Based on the project to provide a plan to deploy the project to Azure ${targetAppService} in resource group ${resourceGroupName ?? "YOUR RG"} and subscription ${subscriptionId ?? "YOUR SUBSCRIPTION"} with tool ${provisioningTool.ToUpperInvariant()}.${fallbackIaCTypeDescription}" :
+            $"Based on the project to provide a plan to deploy the project to Azure using ${provisioningTool.ToUpperInvariant()}.${fallbackIaCTypeDescription}";
+
+        if (deployOption == DeployOption.ProvisionOnly)
+        {
+            goal = $"Provide a plan to provision Azure resources for the project with ${provisioningTool.ToUpperInvariant()}${(string.IsNullOrEmpty(iacOptions) ? "" : " and " + iacOptions)}.${fallbackIaCTypeDescription}";
+        }
+
+        var sampleMermaid = "";
+        if (targetAppService.ToLowerInvariant() == "aks")
+        {
+            sampleMermaid = TemplateService.LoadTemplate("Plan/sample-aks-mermaid");
+        }
+        else
+        {
+            sampleMermaid = TemplateService.LoadTemplate("Plan/sample-app-mermaid");
+        }
 
         return new DeploymentPlanTemplateParameters
         {
@@ -56,8 +99,12 @@ public static class DeploymentPlanTemplateUtil
             ProjectName = projectName,
             TargetAppService = targetAppService,
             ProvisioningTool = provisioningTool,
-            IacType = azdIacOptions ?? "bicep",
+            IacType = iacOptions ?? "",
             AzureComputeHost = azureComputeHost,
+            SourceType = sourceType,
+            DeployOption = deployOption,
+            Goal = goal,
+            SampleMermaid = sampleMermaid
         };
     }
 
@@ -136,39 +183,78 @@ public static class DeploymentPlanTemplateUtil
     private static List<string> GenerateAzCliSteps(DeploymentPlanTemplateParameters parameters, bool isAks)
     {
         var steps = new List<string>();
-
-        steps.Add(TemplateService.LoadTemplate("Plan/azcli-steps"));
-
         if (isAks)
         {
-            steps.Add(TemplateService.LoadTemplate("Plan/aks-steps"));
-        }
-        else
-        {
-            var isContainerApp = parameters.TargetAppService.ToLowerInvariant() == "containerapp";
-            if (isContainerApp)
+            if (parameters.DeployOption == DeployOption.DeployOnly)
             {
-                var containerAppReplacements = new Dictionary<string, string>
-                {
-                    { "AzureComputeHost", parameters.AzureComputeHost }
-                };
-                steps.Add(TemplateService.ProcessTemplate("Plan/containerapp-steps", containerAppReplacements));
+                steps.Add(TemplateService.LoadTemplate("Plan/aks-deploy-only-steps"));
             }
             else
             {
-                // For other app services, generate basic deployment steps
-                var basicSteps = $"""
-                2. Build and Deploy the Application:
-                    1. Deploy to {parameters.AzureComputeHost}: Use Azure CLI command to deploy the application
-                3. Validation:
-                    1. Verify command output to ensure the application is deployed successfully
-                """;
-                steps.Add(basicSteps);
+                steps.Add(TemplateService.LoadTemplate("Plan/aks-provision-steps"));
+                if (parameters.DeployOption == DeployOption.ProvisionAndDeploy)
+                {
+                    steps.Add(TemplateService.LoadTemplate("Plan/aks-deployment-steps"));
+                }
+            }
+        }
+        else
+        {
+            var cliDeploymentSteps = "";
+            if (parameters.TargetAppService.ToLowerInvariant() == "containerapp" && parameters.DeployOption != DeployOption.ProvisionOnly)
+            {
+                steps.Add(TemplateService.LoadTemplate("Plan/containerization-steps"));
+                cliDeploymentSteps = "1. Create deploy script (build + push image to ACR, deploy to Azure Container App).\n2. Run the script and fix it until it works.";
+            }
+            else
+            {
+                cliDeploymentSteps = "1. Create deploy script to deploy the application with Azure CLI.";
+            }
+
+            var cliParameters = new CLIExecutionStepsTemplateParameters
+            {
+                IaCType = parameters.IacType.ToLowerInvariant(),
+                AzureComputeHost = parameters.AzureComputeHost,
+                TargetAppCommandTitle = parameters.TargetAppService,
+                DeploymentSteps = cliDeploymentSteps,
+                ACRDependencyCheck = parameters.TargetAppService.ToLowerInvariant() == "containerapp"
+                    ? "- Check Azure Container Registry:\n- login server: <>. Check with \'az acr show -o json\'."
+                    : ""
+            };
+
+            if (parameters.DeployOption == DeployOption.DeployOnly)
+            {
+                steps.Add(TemplateService.ProcessTemplate("Plan/azcli-deploy-only-steps", cliParameters.ToDictionary()));
+            }
+            else
+            {
+                steps.Add(TemplateService.ProcessTemplate("Plan/azcli-provision-steps", cliParameters.ToDictionary()));
+                if (parameters.DeployOption == DeployOption.ProvisionAndDeploy)
+                {
+                    steps.Add(TemplateService.ProcessTemplate("Plan/azcli-deployment-steps", cliParameters.ToDictionary()));
+                }
             }
         }
 
-        steps.Add(TemplateService.ProcessTemplate("Plan/summary-steps", new Dictionary<string, string> { { "StepNumber", "4" } }));
+        steps.Add(TemplateService.LoadTemplate("Plan/summary-steps"));
 
         return steps;
+
+    }
+
+    private static string GenerateResourceInfo(DeploymentPlanTemplateParameters parameters)
+    {
+        if (parameters.DeployOption == DeployOption.DeployOnly)
+        {
+            return TemplateService.LoadTemplate("Plan/existing-resource-info");
+        }
+        else
+        {
+            return TemplateService.ProcessTemplate("Plan/provision-info", new Dictionary<string, string>
+            {
+                { "ProjectName", parameters.ProjectName },
+                { "AzureComputeHost", parameters.AzureComputeHost }
+            });
+        }
     }
 }

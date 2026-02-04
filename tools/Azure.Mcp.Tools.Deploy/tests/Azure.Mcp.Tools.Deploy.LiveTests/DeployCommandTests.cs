@@ -31,7 +31,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "project-name", "django" },
                 { "target-app-service", "ContainerApp" },
                 { "provisioning-tool", "AZD" },
-                { "azd-iac-options", "bicep" }
+                { "iac-options", "bicep" }
             });
         // assert
         Assert.StartsWith("# Azure Deployment Plan for django Project", result);
