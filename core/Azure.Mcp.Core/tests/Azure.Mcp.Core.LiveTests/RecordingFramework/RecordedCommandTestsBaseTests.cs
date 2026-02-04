@@ -308,15 +308,15 @@ public sealed class LiveTestOnlyAttributeTest
         // We need to test the GetTestMode logic more directly since the attribute
         // relies on LiveTestSettings.TryLoadTestSettings which searches up from AppContext.BaseDirectory.
         // In this test, we'll verify that the attribute creates the skip when explicitly in Playback mode.
-        
+
         // Since we can't easily override the test settings discovery in a unit test,
         // we'll instead verify that the attribute logic is correct by checking its behavior
         // when the settings file does exist in the expected location.
-        
+
         // For now, we'll verify the attribute exists and can be instantiated
         var attribute = new LiveTestOnlyAttribute();
         Assert.NotNull(attribute);
-        
+
         // The actual behavior will be verified through integration tests where
         // test classes that inherit from RecordedCommandTestsBase and use the
         // [LiveTestOnly] attribute are skipped in Playback mode.
@@ -328,7 +328,7 @@ public sealed class LiveTestOnlyAttributeTest
         // Verify that the attribute can be applied to test methods
         var methodInfo = typeof(LiveTestOnlyAttributeTest).GetMethod(nameof(SampleTestWithAttribute), BindingFlags.NonPublic | BindingFlags.Instance)
             ?? throw new InvalidOperationException("Unable to locate test method.");
-        
+
         var attribute = methodInfo.GetCustomAttribute<LiveTestOnlyAttribute>();
         Assert.NotNull(attribute);
     }
