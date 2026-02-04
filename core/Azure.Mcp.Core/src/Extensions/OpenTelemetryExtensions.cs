@@ -49,13 +49,6 @@ public static class OpenTelemetryExtensions
         EnableAzureMonitor(services);
     }
 
-    public static void ConfigureOpenTelemetryLogger(this ILoggingBuilder builder)
-    {
-        // Intentionally left empty. OpenTelemetry logging is configured as part of EnableAzureMonitor
-        // when a telemetry destination (for example, a user-provided Application Insights instance)
-        // is enabled. This method does not perform any logging configuration itself.
-    }
-
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
 #if DEBUG
@@ -125,6 +118,7 @@ public static class OpenTelemetryExtensions
     /// <param name="appInsightsConnectionString">The Application Insights connection string for Microsoft's telemetry instance.</param>
     private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString)
     {
+        // We don't configure logging for Microsoft telemetry to avoid sending potentially sensitive log data to Microsoft.
         otelBuilder.WithMetrics(metrics =>
         {
             metrics.AddAzureMonitorMetricExporter(options =>
