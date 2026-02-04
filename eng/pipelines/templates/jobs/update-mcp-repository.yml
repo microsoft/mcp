@@ -25,6 +25,20 @@ jobs:
     displayName: Download build_info
     artifact: build_info
 
+  - download: current
+    displayName: Download signed MCPB packages
+    artifact: packages_mcpb_signed
+
+  - task: Powershell@2
+    displayName: 'Update server.json with MCPB SHA256 hashes'
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Update-ServerJsonMcpbHashes.ps1
+      arguments: >
+        -ServerName '${{ parameters.ServerName }}'
+        -McpbPath '$(Pipeline.Workspace)/packages_mcpb_signed/${{ parameters.ServerName }}'
+        -ServerJsonPath '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
+
   - task: Powershell@2
     displayName: 'Verify Nuget package was published'
     inputs:
