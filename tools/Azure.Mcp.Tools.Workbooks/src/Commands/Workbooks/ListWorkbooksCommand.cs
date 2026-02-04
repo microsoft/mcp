@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : SubscriptionCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : GlobalCommand<ListWorkbooksOptions>
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
@@ -25,9 +25,18 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
 
     public override string Description =>
         """
-        List all workbooks in a specific resource group. This command retrieves all workbooks available
-        in the specified resource group within the given subscription. Resource group is required.
-        Optionally filter by kind (shared/user), category (workbook/sentinel/etc), or source resource ID.
+        Search Azure Workbooks using Resource Graph (fast metadata query).
+
+        USE FOR: Discovery, filtering, counting workbooks across scopes.
+        RETURNS: Workbook metadata (id, name, location, category, timestamps).
+        DOES NOT RETURN: Full workbook content (serializedData) by default - use 'show' for that or set --output-format=full.
+
+        SCOPE: Omit --subscription and --resource-group to search ALL accessible workbooks across tenants.
+        TOTAL COUNT: Returns server-side total count by default (not just returned items).
+        MAX RESULTS: Default 50, max 1000. Use --max-results to adjust.
+        OUTPUT FORMAT: Use --output-format=summary for minimal tokens, --output-format=full for serializedData.
+
+        FILTERS: --name-contains, --category, --kind, --source-id, --modified-after for semantic filtering.
         """;
 
     public override string Title => CommandTitle;
@@ -45,19 +54,48 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.Subscription.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(WorkbooksOptionDefinitions.Kind);
         command.Options.Add(WorkbooksOptionDefinitions.Category);
         command.Options.Add(WorkbooksOptionDefinitions.SourceIdFilter);
+        command.Options.Add(WorkbooksOptionDefinitions.NameContains);
+        command.Options.Add(WorkbooksOptionDefinitions.ModifiedAfter);
+        command.Options.Add(WorkbooksOptionDefinitions.OutputFormat);
+        command.Options.Add(WorkbooksOptionDefinitions.MaxResults);
+        command.Options.Add(WorkbooksOptionDefinitions.IncludeTotalCount);
     }
 
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+
+        var subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
+        options.Subscriptions = string.IsNullOrEmpty(subscription) ? null : [subscription];
+
+        var resourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceGroups = string.IsNullOrEmpty(resourceGroup) ? null : [resourceGroup];
+
         options.Kind = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Kind.Name);
         options.Category = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Category.Name);
         options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceIdFilter.Name);
+        options.NameContains = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.NameContains.Name);
+
+        var modifiedAfterStr = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.ModifiedAfter.Name);
+        if (!string.IsNullOrEmpty(modifiedAfterStr) && DateTimeOffset.TryParse(modifiedAfterStr, out var modifiedAfter))
+        {
+            options.ModifiedAfter = modifiedAfter;
+        }
+
+        var outputFormatStr = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.OutputFormat.Name);
+        options.OutputFormat = ParseOutputFormat(outputFormatStr);
+
+        var maxResults = parseResult.GetValueOrDefault<int>(WorkbooksOptionDefinitions.MaxResults.Name);
+        options.MaxResults = maxResults > 0 ? Math.Min(maxResults, 1000) : 50;
+
+        var includeTotalCount = parseResult.GetValueOrDefault<bool?>(WorkbooksOptionDefinitions.IncludeTotalCount.Name);
+        options.IncludeTotalCount = includeTotalCount ?? true;
+
         return options;
     }
 
@@ -74,24 +112,40 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         {
             var workbooksService = context.GetService<IWorkbooksService>();
             var filters = options.ToFilters();
-            var workbooks = await workbooksService.ListWorkbooks(
-                options.Subscription!,
-                options.ResourceGroup!,
+
+            var result = await workbooksService.ListWorkbooksAsync(
+                options.Subscriptions,
+                options.ResourceGroups,
                 filters,
+                options.MaxResults,
+                options.IncludeTotalCount,
+                options.OutputFormat,
                 options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(workbooks ?? []), WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new ListWorkbooksCommandResult(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count),
+                WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing workbooks for subscription: {Subscription}", options.Subscription);
+            _logger.LogError(ex, "Error listing workbooks");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks);
+    private static OutputFormat ParseOutputFormat(string? format)
+    {
+        return format?.ToLowerInvariant() switch
+        {
+            "summary" => OutputFormat.Summary,
+            "full" => OutputFormat.Full,
+            _ => OutputFormat.Standard
+        };
+    }
+
+    internal record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
 }

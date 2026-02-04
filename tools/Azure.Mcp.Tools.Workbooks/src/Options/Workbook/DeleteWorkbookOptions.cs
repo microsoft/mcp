@@ -8,6 +8,6 @@ namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
 public class DeleteWorkbookOptions : GlobalOptions
 {
-    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdText)]
-    public string? WorkbookId { get; set; }
+    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdsText)]
+    public string[]? WorkbookIds { get; set; }
 }

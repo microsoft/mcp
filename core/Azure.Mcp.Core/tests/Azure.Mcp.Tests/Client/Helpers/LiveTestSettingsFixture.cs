@@ -14,6 +14,16 @@ namespace Azure.Mcp.Tests.Client.Helpers
 
         public virtual async ValueTask InitializeAsync()
         {
+            // Try to load settings from file first
+            if (LiveTestSettings.TryLoadTestSettings(out var settings))
+            {
+                Settings = settings;
+            }
+            else
+            {
+                throw new FileNotFoundException($"Test settings file '{LiveTestSettings.TestSettingsFileName}' not found in the assembly directory or its parent directories.");
+            }
+
             // If the TestMode is Playback, skip loading other settings. Skipping will match behaviors in CI when resources aren't deployed,
             // as content is recorded.
             if (Settings.TestMode == Tests.Helpers.TestMode.Playback)
@@ -21,19 +31,11 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 return;
             }
 
-            if (LiveTestSettings.TryLoadTestSettings(out var settings))
+            foreach ((string key, string value) in Settings.EnvironmentVariables)
             {
-                Settings = settings;
-                foreach ((string key, string value) in Settings.EnvironmentVariables)
-                {
-                    Environment.SetEnvironmentVariable(key, value);
-                }
-                await SetPrincipalSettingsAsync();
+                Environment.SetEnvironmentVariable(key, value);
             }
-            else
-            {
-                throw new FileNotFoundException($"Test settings file '{LiveTestSettings.TestSettingsFileName}' not found in the assembly directory or its parent directories.");
-            }
+            await SetPrincipalSettingsAsync();
         }
 
         private async Task SetPrincipalSettingsAsync()
