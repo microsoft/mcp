@@ -9,9 +9,6 @@
     This script wraps the 'mcpb verify' command to verify signatures on MCPB files.
     It supports verifying single files, multiple files, or all .mcpb files in a directory.
 
-    It assumes the 'mcpb' CLI is installed and available in PATH. The 'mcpb' CLI can be
-    installed using the command: 'dotnet tool install --global Mcpb.Cli'.
-
 .PARAMETER McpbPath
     Path to an MCPB file or directory containing MCPB files.
 

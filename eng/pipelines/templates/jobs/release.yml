@@ -7,6 +7,8 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackageMCPB
+  type: boolean
 - name: IsTestPipeline
   type: boolean
 
@@ -72,6 +74,12 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/release-mcpb.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      DependsOn: TagRepository
+
 - ${{ if parameters.PackageDocker }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
@@ -86,6 +94,7 @@ jobs:
     DependsOn:
     - PublishNugetPackage
     - PublishNpm
+    - PublishMcpb
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"

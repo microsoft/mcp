@@ -1,8 +1,7 @@
 # Install-Module -Name Pester -Force -SkipPublisherCheck
-# Invoke-Pester -Passthru eng/scripts/Convert-P7sToMcpbSignature.tests.ps1
+# Invoke-Pester -Passthru eng/scripts/Apply-McpbSignatures.tests.ps1
 
 BeforeAll {
-    $ScriptPath = "$PSScriptRoot/Convert-P7sToMcpbSignature.ps1"
     $TestFolder = "$PSScriptRoot/.testruns-mcpb"
     
     # MCPB signature markers
@@ -14,6 +13,9 @@ BeforeAll {
         Remove-Item -Recurse -Force $TestFolder
     }
     New-Item -ItemType Directory -Path $TestFolder | Out-Null
+    
+    # Dot-source the script to get access to the Convert-P7sToMcpbSignature function
+    . "$PSScriptRoot/Apply-McpbSignatures.ps1"
 }
 
 AfterAll {
@@ -24,7 +26,7 @@ AfterAll {
     }
 }
 
-Describe "Convert-P7sToMcpbSignature.ps1" {
+Describe "Apply-McpbSignatures.ps1 - Convert-P7sToMcpbSignature function" {
     
     BeforeEach {
         # Create fresh test files for each test
@@ -44,8 +46,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..50)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Verify output exists
             Test-Path $TestOutputPath | Should -Be $true
@@ -65,8 +67,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..50)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output and verify end marker
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -84,8 +86,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](0xAA, 0xBB, 0xCC, 0xDD)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Verify structure
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -109,8 +111,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..50)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -139,8 +141,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             for ($i = 0; $i -lt 1896; $i++) { $signatureContent[$i] = [byte]($i % 256) }
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -169,8 +171,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             for ($i = 0; $i -lt 65535; $i++) { $signatureContent[$i] = [byte]($i % 256) }
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -196,8 +198,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..100)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output and verify original content
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -215,8 +217,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](0xCA, 0xFE, 0xBA, 0xBE, 0xDE, 0xAD, 0xBE, 0xEF)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
+            # Run the conversion function
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath
             
             # Read output
             $outputBytes = [System.IO.File]::ReadAllBytes($TestOutputPath)
@@ -240,8 +242,8 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..50)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            # Run the conversion with same input/output (in-place)
-            & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestMcpbPath
+            # Run the conversion function with same input/output (in-place)
+            Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestMcpbPath
             
             # Verify file was modified
             $outputBytes = [System.IO.File]::ReadAllBytes($TestMcpbPath)
@@ -258,7 +260,7 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $mcpbContent = [byte[]](1..10)
             [System.IO.File]::WriteAllBytes($TestMcpbPath, $mcpbContent)
             
-            { & $ScriptPath -P7sFile "nonexistent.p7s" -McpbFile $TestMcpbPath -OutputFile $TestOutputPath } | 
+            { Convert-P7sToMcpbSignature -P7sFile "nonexistent.p7s" -McpbFile $TestMcpbPath -OutputFile $TestOutputPath } | 
                 Should -Throw "*not found*"
         }
         
@@ -266,7 +268,7 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..10)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            { & $ScriptPath -P7sFile $TestP7sPath -McpbFile "nonexistent.mcpb" -OutputFile $TestOutputPath } | 
+            { Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile "nonexistent.mcpb" -OutputFile $TestOutputPath } | 
                 Should -Throw "*not found*"
         }
         
@@ -278,7 +280,7 @@ Describe "Convert-P7sToMcpbSignature.ps1" {
             $signatureContent = [byte[]](1..10)
             [System.IO.File]::WriteAllBytes($TestP7sPath, $signatureContent)
             
-            { & $ScriptPath -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath } | 
+            { Convert-P7sToMcpbSignature -P7sFile $TestP7sPath -McpbFile $TestMcpbPath -OutputFile $TestOutputPath } | 
                 Should -Throw "*already*signed*"
         }
     }

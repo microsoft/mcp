@@ -1,0 +1,54 @@
+# Pipeline template for releasing signed MCPB bundles
+#
+# This template:
+# 1. Downloads signed MCPB bundles
+# 2. Uploads them to the GitHub Release created by TagRepository job
+#
+# Prerequisites:
+# - packages_mcpb_signed artifact must exist
+# - build_info.json must exist with server and version information
+# - GitHub Release must already be created (by TagRepository job)
+
+parameters:
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+
+jobs:
+- deployment: PublishMcpb
+  displayName: "Publish MCPB to GitHub Release"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  templateContext:
+    type: releaseJob
+    isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: packages_mcpb_signed
+      targetPath: $(Pipeline.Workspace)/mcpb
+    - input: pipelineArtifact
+      artifactName: build_info
+      targetPath: $(Pipeline.Workspace)/build_info
+  environment: package-publish
+  pool:
+    name: azsdk-pool
+    image: ubuntu-24.04
+    os: linux
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - checkout: self
+
+        - task: Powershell@2
+          displayName: "Upload MCPB to GitHub Release"
+          inputs:
+            pwsh: true
+            filePath: $(Build.SourcesDirectory)/eng/scripts/Publish-McpbToGitHub.ps1
+            arguments: >
+              -ServerName '${{ parameters.ServerName }}'
+              -McpbPath '$(Pipeline.Workspace)/mcpb'
+              -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+          env:
+            GH_TOKEN: $(azuresdk-github-pat)

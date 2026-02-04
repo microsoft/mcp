@@ -5,6 +5,8 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackageMCPB
+  type: boolean
 
 jobs:
 - job: Sign
@@ -120,6 +122,11 @@ jobs:
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+    parameters:
+      DependsOn: Sign
+
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml
     parameters:
       DependsOn: Sign
 
