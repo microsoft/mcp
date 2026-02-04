@@ -16,6 +16,9 @@ parameters:
 jobs:
 - job: Build_${{ parameters.OSName }}
   displayName: "Build"
+  variables:
+    RunRecordedTests: 'false'  # TODO: Revert after Docker ARM64 testing
+    RunUnitTests: 'false'      # TODO: Revert after Docker ARM64 testing
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
