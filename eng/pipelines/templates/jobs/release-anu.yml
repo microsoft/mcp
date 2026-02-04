@@ -1,0 +1,23 @@
+# Temporary release pipeline for Docker ARM64 testing
+# Only runs Docker release to azuresdkimages.azurecr.io/anu/...
+# DELETE THIS FILE after testing is complete
+
+parameters:
+- name: ServerName
+  type: string
+- name: IncludeNative
+  type: boolean
+- name: PackageDocker
+  type: boolean
+- name: PackageVSIX
+  type: boolean
+- name: IsTestPipeline
+  type: boolean
+
+jobs:
+- ${{ if parameters.PackageDocker }}:
+  - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
+    parameters:
+      ContainerRegistry: 'azuresdkimages'
+      DeploymentEnvironment: 'anu'  # TODO: Revert to 'public' after Docker ARM64 testing
+      ServerName: ${{ parameters.ServerName }}
