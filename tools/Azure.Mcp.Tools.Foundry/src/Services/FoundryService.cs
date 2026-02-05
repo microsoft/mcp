@@ -64,7 +64,11 @@ public class FoundryService(
 
         try
         {
-            var parsedUri = new Uri(endpoint);
+
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
+            {
+                throw new ArgumentException("Invalid Uri");
+            }
 
             // Example: https://{foundry-resource-name}.services.ai.azure.com/api/projects/{project-name}
 
@@ -75,12 +79,12 @@ public class FoundryService(
 
             const string knownSuffix = ".services.ai.azure.com";
             var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix))
+            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Host must end with Foundry service suffix");
             }
 
-            var foundryResourceName = host.Substring(0, host.IndexOf(knownSuffix));
+            var foundryResourceName = host.Substring(0, host.Length - knownSuffix.Length);
 
             // Validate foundryResourceName: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
             if (foundryResourceName.Length < 2 || foundryResourceName.Length > 64)
@@ -126,7 +130,6 @@ public class FoundryService(
             {
                 throw new ArgumentException("Project name must contain only lowercase letters, numbers, and hyphens");
             }
-
         }
         catch (Exception ex)
         {
@@ -145,7 +148,10 @@ public class FoundryService(
 
         try
         {
-            var parsedUri = new Uri(endpoint);
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
+            {
+                throw new ArgumentException("Invalid Uri");
+            }
 
             // Example: https://{Azure-OpenAI-resource-name}.openai.azure.com/
 
@@ -156,12 +162,12 @@ public class FoundryService(
 
             const string knownSuffix = ".openai.azure.com";
             var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix))
+            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Host must end with Azure OpenAI service suffix");
             }
 
-            var azureOpenAIResourceName = host.Substring(0, host.IndexOf(knownSuffix));
+            var azureOpenAIResourceName = host.Substring(0, host.Length - knownSuffix.Length);
 
             // Validate Azure OpenAI resource name: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
             if (azureOpenAIResourceName.Length < 2 || azureOpenAIResourceName.Length > 64)
