@@ -573,10 +573,6 @@ function Get-BuildMatrices {
 
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
-            # TODO: Revert after Docker ARM64 testing
-            $runUnitTests = $false
-            $runRecordedTests = $false
-
             $buildMatrix[$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
                 Pool = $pool
