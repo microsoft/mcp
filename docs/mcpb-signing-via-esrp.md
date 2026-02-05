@@ -202,23 +202,30 @@ Location: `eng/scripts/New-McpbPackage.ps1`
 5. Validate with `mcpb validate`
 6. Package with `mcpb pack`
 
-#### 3. PowerShell Module: `Sign-McpbWithEsrp.ps1`
+#### 3. Modular Pipeline Scripts
 
-Location: `eng/scripts/Sign-McpbWithEsrp.ps1`
+The pipeline uses separate scripts for each signing phase, enabling better maintainability and testability:
 
-**Parameters:**
-- `-McpbFile`: Path to the unsigned .mcpb file
-- `-OutputFile`: Path for the signed .mcpb file (optional, defaults to in-place)
-- `-SignatureFile`: Path to the .p7s file from ESRP (if already signed)
-- `-EsrpConfig`: ESRP configuration file path (for pipeline integration)
-- `-SkipVerification`: Skip mcpb verify after signing
+**`Stage-McpbForSigning.ps1`** - Location: `eng/scripts/Stage-McpbForSigning.ps1`
+- Creates copies of `.mcpb` files with `.signature.p7s` extension for ESRP processing
+- Preserves original `.mcpb` files intact
+- Parameters: `-ArtifactsPath`, `-StagingPath`
 
-**Functions:**
-- `Stage-McpbForSigning`: Creates a copy with `.signature.p7s` extension for ESRP processing
-- `Invoke-EsrpSigning`: Submits to ESRP using Pkcs7DetachedSign operation and retrieves .p7s
-- `Convert-P7sToMcpbSig`: Wraps .p7s in MCPB signature format
-- `Merge-McpbSignature`: Appends signature block to .mcpb
-- `Test-McpbSignature`: Verifies using mcpb verify
+**`Apply-McpbSignatures.ps1`** - Location: `eng/scripts/Apply-McpbSignatures.ps1`
+- Applies ESRP-generated `.p7s` signatures to MCPB files
+- Contains internal `Convert-P7sToMcpbSignature` function for signature format conversion
+- Wraps .p7s in MCPB signature format (MCPB_SIG_V1 + length + sig + MCPB_SIG_END)
+- Parameters: `-ArtifactsPath`, `-OutputPath`
+
+**`Verify-McpbSignatures.ps1`** - Location: `eng/scripts/Verify-McpbSignatures.ps1`
+- Verifies all signed MCPB files using `mcpb verify`
+- Fails pipeline if any signature verification fails
+- Parameters: `-ArtifactsPath`
+
+**`Publish-McpbToGitHub.ps1`** - Location: `eng/scripts/Publish-McpbToGitHub.ps1`
+- Uploads signed MCPB files to GitHub Release
+- Supports glob patterns for batch uploads
+- Parameters: `-ArtifactsPath`, `-ReleaseTag`, `-GitHubToken`
 
 #### 4. Signature Conversion Logic
 
@@ -239,23 +246,20 @@ Algorithm:
 
 #### 5. Pipeline Integration
 
-Location: `eng/pipelines/templates/pack-and-sign-mcpb.yml`
+Location: `eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml`
 
 **Template parameters:**
-- `serverName`: Name of the server (e.g., Azure.Mcp.Server)
-- `publishArtifact`: Name of artifact containing trimmed binaries
-- `platforms`: List of platforms (win-x64, linux-x64, osx-x64, osx-arm64)
+- `DependsOn`: Jobs that must complete before packaging (typically `Sign`)
 
 **Steps:**
 1. Install MCPB CLI tool
-2. Download trimmed binaries artifact
-3. For each platform:
-   - Prepare MCPB directory structure
-   - Validate and pack with MCPB CLI
-4. Submit to ESRP for signing
-5. Apply signatures to .mcpb files
-6. Verify with `mcpb verify`
-7. Publish signed .mcpb artifacts
+2. Download signed binaries and build_info.json
+3. Package all servers for all platforms using `Pack-Mcpb.ps1`
+4. Stage files for ESRP signing using `Stage-McpbForSigning.ps1`
+5. Submit to ESRP using Pkcs7DetachedSign operation
+6. Apply signatures using `Apply-McpbSignatures.ps1`
+7. Verify using `Verify-McpbSignatures.ps1`
+8. Publish signed .mcpb artifacts using `Publish-McpbToGitHub.ps1`
 
 ---
 
@@ -266,20 +270,27 @@ Location: `eng/pipelines/templates/pack-and-sign-mcpb.yml`
 ```
 eng/
 ├── scripts/
-│   ├── Pack-Mcpb.ps1                   # MCPB packaging script (uses build_info.json)
-│   ├── Sign-McpbWithEsrp.ps1           # Main signing script
-│   ├── Convert-P7sToMcpbSignature.ps1  # Signature conversion utility
-│   └── Test-McpbSignature.ps1          # Verification wrapper
+│   ├── Pack-Mcpb.ps1                         # MCPB packaging script (uses build_info.json)
+│   ├── Stage-McpbForSigning.ps1              # Stage files for ESRP signing
+│   ├── Apply-McpbSignatures.ps1              # Apply .p7s signatures to MCPB files
+│   ├── Apply-McpbSignatures.tests.ps1        # Pester unit tests for signature conversion
+│   ├── Verify-McpbSignatures.ps1             # Verify signatures using mcpb CLI
+│   ├── Publish-McpbToGitHub.ps1              # Upload MCPB to GitHub Release
+│   └── Update-ServerJsonMcpbHashes.ps1       # Compute SHA256 for MCP Registry
 ├── pipelines/
 │   └── templates/
-│       └── pack-and-sign-mcpb.yml      # Pipeline template
-└── docs/
-    └── mcpb-packaging.md               # Documentation
+│       └── jobs/
+│           └── mcpb/
+│               ├── pack-and-sign-mcpb.yml    # Pack and sign pipeline template
+│               └── release-mcpb.yml          # Release pipeline template
+docs/
+└── mcpb-signing-via-esrp.md                  # This design document
 servers/
 └── {ServerName}/
-    └ mcpb/
-      ├── manifest.json                 # MCPB manifest (pre-created)
-      └── servericon.png                # Server icon
+    ├── mcpb/
+    │   ├── manifest.json                     # MCPB manifest (pre-created)
+    │   └── servericon.png                    # Server icon
+    └── server.json                           # MCP Registry config with MCPB entries
 ```
 
 ### Integration with Build Info
@@ -315,46 +326,9 @@ The `Pack-Mcpb.ps1` script automatically adds the platform-specific extension (`
 
 ### Script: `Pack-Mcpb.ps1`
 
+Location: [`eng/scripts/Pack-Mcpb.ps1`](../eng/scripts/Pack-Mcpb.ps1)
+
 This is the main packaging script that follows the same patterns as `Pack-Npm.ps1`, `Pack-Vsix.ps1`, etc.
-
-```powershell
-<#
-.SYNOPSIS
-    Creates MCPB (MCP Bundle) packages from trimmed server binaries.
-
-.DESCRIPTION
-    This script packages MCP servers into the MCPB format using the official MCPB CLI tool.
-    It reads server and platform information from build_info.json and creates unsigned .mcpb
-    files for each platform. The packages can then be signed using ESRP in a separate step.
-
-.PARAMETER ArtifactsPath
-    Path to the build artifacts directory containing the trimmed server binaries.
-    Defaults to ".work/build" in the repo root.
-
-.PARAMETER BuildInfoPath
-    Path to the build_info.json file containing server and platform details.
-    Defaults to ".work/build_info.json" in the repo root.
-
-.PARAMETER OutputPath
-    Output directory for the .mcpb files.
-    Defaults to ".work/packages_mcpb" in the repo root.
-
-.EXAMPLE
-    # Package all servers for all platforms (uses build_info.json)
-    ./Pack-Mcpb.ps1
-
-.EXAMPLE
-    # Specify custom paths
-    ./Pack-Mcpb.ps1 -ArtifactsPath ".work/build" -OutputPath ".work/packages_mcpb"
-#>
-param(
-    [string] $ArtifactsPath,
-    [string] $BuildInfoPath,
-    [string] $OutputPath
-)
-
-# ... (see eng/scripts/Pack-Mcpb.ps1 for full implementation)
-```
 
 **Key behaviors:**
 - Reads server list and platform definitions from `build_info.json`
@@ -363,202 +337,36 @@ param(
 - Validates manifest with `mcpb validate` before packaging
 - Copies LICENSE and NOTICE.txt into each bundle
 
-### Script: `Sign-McpbWithEsrp.ps1`
+### Script: `Apply-McpbSignatures.ps1`
 
-```powershell
-<#
-.SYNOPSIS
-    Signs an MCPB file using ESRP detached PKCS#7 signing.
+Location: [`eng/scripts/Apply-McpbSignatures.ps1`](../eng/scripts/Apply-McpbSignatures.ps1)
 
-.DESCRIPTION
-    This script enables signing of MCPB files using ESRP's Pkcs7DetachedSign
-    operation. It submits the MCPB file for signing and converts the resulting
-    .p7s signature to MCPB's embedded signature format.
+This script applies ESRP-generated `.p7s` signatures to MCPB files. It contains the `Convert-P7sToMcpbSignature` function internally for signature format conversion.
 
-.PARAMETER McpbFile
-    Path to the unsigned .mcpb file.
-
-.PARAMETER OutputFile
-    Path for the signed output file. Defaults to replacing the input file.
-
-.PARAMETER SignatureFile
-    Path to an existing .p7s signature file (skips ESRP submission).
-
-.EXAMPLE
-    ./Sign-McpbWithEsrp.ps1 -McpbFile ./Azure.Mcp.Server.mcpb
-    
-.EXAMPLE
-    ./Sign-McpbWithEsrp.ps1 -McpbFile ./Azure.Mcp.Server.mcpb -SignatureFile ./signature.p7s
-#>
-```
-
-### Signature Block Creation (PowerShell)
-
-```powershell
-function Convert-P7sToMcpbSignature {
-    param(
-        [Parameter(Mandatory)]
-        [string]$P7sFile,
-        
-        [Parameter(Mandatory)]
-        [string]$McpbFile,
-        
-        [Parameter(Mandatory)]
-        [string]$OutputFile
-    )
-    
-    # Read signature bytes
-    $signatureBytes = [System.IO.File]::ReadAllBytes($P7sFile)
-    
-    # Create length prefix (4-byte little-endian)
-    $lengthBytes = [BitConverter]::GetBytes([uint32]$signatureBytes.Length)
-    
-    # Create markers
-    $sigV1Marker = [System.Text.Encoding]::ASCII.GetBytes("MCPB_SIG_V1")
-    $sigEndMarker = [System.Text.Encoding]::ASCII.GetBytes("MCPB_SIG_END")
-    
-    # Read original MCPB content
-    $mcpbContent = [System.IO.File]::ReadAllBytes($McpbFile)
-    
-    # Combine: MCPB + MCPB_SIG_V1 + length + signature + MCPB_SIG_END
-    $signedContent = $mcpbContent + $sigV1Marker + $lengthBytes + $signatureBytes + $sigEndMarker
-    
-    # Write signed file
-    [System.IO.File]::WriteAllBytes($OutputFile, $signedContent)
-}
-```
+**Key behaviors:**
+- Finds all `.mcpb` files and their corresponding `.signature.p7s` files
+- Converts PKCS#7 signatures to MCPB embedded format
+- Preserves directory structure in output
+- Reports success/failure counts
 
 ### Pipeline Template: `pack-and-sign-mcpb.yml`
 
-```yaml
-parameters:
-  - name: buildInfoArtifact
-    type: string
-    default: 'build-info'
-  - name: publishArtifact
-    type: string
-    default: 'publish-trimmed'
+Location: [`eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml`](../eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml)
 
-jobs:
-  - job: PackMcpb
-    displayName: 'Package MCPB'
-    pool:
-      vmImage: 'windows-latest'
-    steps:
-      # Install MCPB CLI
-      - task: DotNetCoreCLI@2
-        displayName: 'Install MCPB CLI'
-        inputs:
-          command: 'custom'
-          custom: 'tool'
-          arguments: 'install --global Mcpb.Cli'
-      
-      # Download build info
-      - download: current
-        artifact: ${{ parameters.buildInfoArtifact }}
-        displayName: 'Download build info'
-      
-      # Download trimmed binaries
-      - download: current
-        artifact: ${{ parameters.publishArtifact }}
-        displayName: 'Download trimmed binaries'
-      
-      # Package all servers for all platforms using build_info.json
-      - pwsh: |
-          ./eng/scripts/Pack-Mcpb.ps1 `
-            -ArtifactsPath '$(Pipeline.Workspace)/${{ parameters.publishArtifact }}' `
-            -BuildInfoPath '$(Pipeline.Workspace)/${{ parameters.buildInfoArtifact }}/build_info.json' `
-            -OutputPath '$(Build.ArtifactStagingDirectory)/mcpb'
-        displayName: 'Package MCPB bundles'
-      
-      # Publish unsigned MCPB artifacts
-      - publish: '$(Build.ArtifactStagingDirectory)/mcpb'
-        artifact: 'mcpb-unsigned'
-        displayName: 'Publish unsigned MCPB artifacts'
+This template orchestrates the packaging and signing workflow:
 
-  - job: SignMcpb
-    displayName: 'Sign MCPB'
-    dependsOn: PackMcpb
-    pool:
-      vmImage: 'windows-latest'
-    steps:
-      # Install MCPB CLI for verification
-      - task: DotNetCoreCLI@2
-        displayName: 'Install MCPB CLI'
-        inputs:
-          command: 'custom'
-          custom: 'tool'
-          arguments: 'install --global Mcpb.Cli'
-      
-      # Download unsigned MCPB artifacts
-      - download: current
-        artifact: 'mcpb-unsigned'
-        displayName: 'Download unsigned MCPB artifacts'
-      
-      # Stage files for ESRP signing (copy with .signature.p7s extension)
-      - pwsh: |
-          $mcpbFiles = Get-ChildItem -Path "$(Pipeline.Workspace)/mcpb-unsigned" -Filter "*.mcpb"
-          foreach ($mcpb in $mcpbFiles) {
-              $stagePath = $mcpb.FullName -replace '\.mcpb$', '.signature.p7s'
-              Copy-Item $mcpb.FullName $stagePath
-              Write-Host "Staged: $($mcpb.Name) -> $(Split-Path $stagePath -Leaf)"
-          }
-        displayName: 'Stage MCPB files for signing'
-      
-      # Sign with ESRP using Pkcs7DetachedSign
-      - task: EsrpCodeSigning@5
-        displayName: 'Sign MCPB files'
-        inputs:
-          ConnectedServiceName: 'ESRP CodeSigning'
-          FolderPath: '$(Pipeline.Workspace)/mcpb-unsigned'
-          Pattern: '*.signature.p7s'
-          signConfigType: 'inlineSignParams'
-          inlineOperation: |
-            [
-              {
-                "KeyCode": "CP-230012",
-                "OperationCode": "Pkcs7DetachedSign",
-                "Parameters": {},
-                "ToolName": "sign",
-                "ToolVersion": "1.0"
-              }
-            ]
-      
-      # Apply signatures to MCPB files
-      - pwsh: |
-          $mcpbFiles = Get-ChildItem -Path "$(Pipeline.Workspace)/mcpb-unsigned" -Filter "*.mcpb"
-          foreach ($mcpb in $mcpbFiles) {
-              $p7s = $mcpb.FullName -replace '\.mcpb$', '.signature.p7s'
-              if (Test-Path $p7s) {
-                  Write-Host "Applying signature to $($mcpb.Name)..."
-                  ./eng/scripts/Sign-McpbWithEsrp.ps1 `
-                      -McpbFile $mcpb.FullName `
-                      -SignatureFile $p7s `
-                      -OutputFile $mcpb.FullName
-              } else {
-                  Write-Warning "No signature found for $($mcpb.Name)"
-              }
-          }
-        displayName: 'Apply MCPB signatures'
-      
-      # Verify signatures
-      - pwsh: |
-          $mcpbFiles = Get-ChildItem -Path "$(Pipeline.Workspace)/mcpb-unsigned" -Filter "*.mcpb"
-          foreach ($mcpb in $mcpbFiles) {
-              Write-Host "Verifying: $($mcpb.Name)"
-              mcpb verify $mcpb.FullName
-              if ($LASTEXITCODE -ne 0) {
-                  throw "Signature verification failed for $($mcpb.Name)"
-              }
-              Write-Host "✓ $($mcpb.Name) verified successfully"
-          }
-        displayName: 'Verify MCPB signatures'
-      
-      # Publish signed MCPB artifacts
-      - publish: '$(Pipeline.Workspace)/mcpb-unsigned'
-        artifact: 'mcpb-signed'
-        displayName: 'Publish signed MCPB artifacts'
-```
+1. **PackMcpb job**: Installs MCPB CLI, downloads trimmed binaries, packages all servers
+2. **SignMcpb job**: Stages files, submits to ESRP, applies signatures, verifies with `mcpb verify`
+
+**Pipeline artifacts:**
+- `mcpb-unsigned`: Unsigned MCPB packages (intermediate)
+- `mcpb-signed`: Signed MCPB packages (final output)
+
+### Pipeline Template: `release-mcpb.yml`
+
+Location: [`eng/pipelines/templates/jobs/mcpb/release-mcpb.yml`](../eng/pipelines/templates/jobs/mcpb/release-mcpb.yml)
+
+This template handles publishing signed MCPB packages to GitHub Release using `Publish-McpbToGitHub.ps1`.
 
 ---
 
@@ -631,26 +439,86 @@ The signing script will auto-discover servers based on the `servers/` directory 
 
 ### Phase 1: Core Scripts and Templates (Week 1)
 - [x] Implement `Pack-Mcpb.ps1` for packaging (integrated with build_info.json)
-- [x] Implement `Sign-McpbWithEsrp.ps1` for signing
-- [x] Implement `Convert-P7sToMcpbSignature.ps1` for signature conversion
-- [x] Implement `Test-McpbSignature.ps1` for verification
+- [x] Implement modular pipeline scripts:
+  - [x] `Stage-McpbForSigning.ps1` - Stage files for ESRP
+  - [x] `Apply-McpbSignatures.ps1` - Apply .p7s signatures (includes `Convert-P7sToMcpbSignature` function)
+  - [x] `Verify-McpbSignatures.ps1` - Verify using mcpb CLI
+  - [x] `Publish-McpbToGitHub.ps1` - Upload to GitHub Release
 - [x] Verify manifest.json for Azure.Mcp.Server (uses manifest_version 0.3)
-- [x] Add unit tests for signature conversion
+- [x] Add unit tests for signature conversion (`Apply-McpbSignatures.tests.ps1`)
 - [x] Document local usage
 - [x] Validate MCPB bundle works in Claude Desktop
 
 ### Phase 2: Pipeline Integration (Week 2)
-- [ ] Create `pack-and-sign-mcpb.yml` pipeline template
-- [ ] Integrate with existing release pipeline
-- [ ] Test end-to-end with Azure.Mcp.Server
-- [ ] Verify signatures with `mcpb verify`
+- [x] Create `pack-and-sign-mcpb.yml` pipeline template
+- [x] Create `release-mcpb.yml` pipeline template
+- [x] Integrate with existing release pipeline (`common.yml`, `sign-and-pack.yml`, `release.yml`)
+- [x] Enable MCPB packaging for Azure.Mcp.Server (`build.yml`)
+- [ ] Test end-to-end with Azure.Mcp.Server (requires pipeline run)
+- [ ] Verify signatures with `mcpb verify` (requires pipeline run)
 
-### Phase 3: Multi-Server Support (Week 3)
+### Phase 3: Multi-Server Support and MCP Registry (Week 3)
+- [x] Add MCPB package entries to `server.json` with platform-specific URLs and SHA256 placeholders
+- [x] Update `New-ServerJson.ps1` to populate MCPB package URLs from GitHub Release
+- [x] Create `Update-ServerJsonMcpbHashes.ps1` to compute SHA256 hashes after signing
+- [x] Update `update-mcp-repository.yml` to compute hashes before publishing to MCP Registry
 - [ ] Create manifest.json for Fabric.Mcp.Server
 - [ ] Create manifest.json for Template.Mcp.Server
-- [ ] Add server auto-discovery for CI/CD
+- [ ] Test MCP Registry publishing end-to-end (requires pipeline run)
 - [ ] Create release documentation
-- [ ] Publish to MCPB distribution channels
+
+---
+
+## MCP Registry Publishing
+
+The MCP Registry requires MCPB packages to include:
+1. A GitHub Release URL (`identifier`) pointing to the `.mcpb` file
+2. A SHA256 hash (`fileSha256`) for file integrity verification
+
+### server.json MCPB Entries
+
+Each platform has its own MCPB package entry in `server.json`:
+
+```json
+{
+    "registryType": "mcpb",
+    "identifier": "https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-1.0.0/Azure.Mcp.Server-win-x64.mcpb",
+    "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+    "transport": {
+        "type": "stdio"
+    },
+    "runtime": {
+        "os": ["windows"],
+        "arch": ["x86_64"]
+    }
+}
+```
+
+### SHA256 Hash Computation
+
+The `Update-ServerJsonMcpbHashes.ps1` script computes SHA256 hashes for signed MCPB files:
+
+```powershell
+# Compute hash using PowerShell
+(Get-FileHash -Path "Azure.Mcp.Server-win-x64.mcpb" -Algorithm SHA256).Hash.ToLower()
+
+# Or using openssl
+openssl dgst -sha256 Azure.Mcp.Server-win-x64.mcpb
+```
+
+### Pipeline Flow
+
+```
+PackMcpb → SignMcpb → PublishMcpb (GitHub Release) → UpdateMcpRepository
+                                                            ↓
+                                                    Download MCPB artifacts
+                                                            ↓
+                                                    Compute SHA256 hashes
+                                                            ↓
+                                                    Update server.json
+                                                            ↓
+                                                    Publish to MCP Registry
+```
 
 ---
 
@@ -730,5 +598,5 @@ mcpb verify .work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb
 ---
 
 **Author:** Azure MCP Team  
-**Date:** February 2, 2026  
-**Status:** Draft - Validated with ESRP Pkcs7DetachedSign
+**Date:** February 4, 2026  
+**Status:** Draft - Scripts modularized and consolidated
