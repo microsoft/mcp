@@ -157,11 +157,15 @@ function CheckVariable($name) {
 }
 
 $windowsPool = CheckVariable 'WINDOWSPOOL'
+$windowsArm64Pool = CheckVariable 'WINDOWSARM64POOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
+$linuxArm64Pool = CheckVariable 'LINUXARM64POOL'
 $macPool = CheckVariable 'MACPOOL'
 
 $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
+$windowsArm64VmImage = CheckVariable 'WINDOWSARM64VMIMAGE'
 $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
+$linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
@@ -548,19 +552,22 @@ function Get-BuildMatrices {
             }
 
             $pool = switch($os) {
-                'windows' { $windowsPool }
-                'linux' { $linuxPool }
+                'windows' { if ($arch -eq 'arm64') { $windowsArm64Pool } else { $windowsPool } }
+                'linux' { if ($arch -eq 'arm64') { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
-                'windows' { $windowsVmImage }
-                'linux' { $linuxVmImage }
+                'windows' { if ($arch -eq 'arm64') { $windowsArm64VmImage } else { $windowsVmImage } }
+                'linux' { if ($arch -eq 'arm64') { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
-            $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
-
+            # we do not currently have a method to get an arm64 mac agent at this time, so we will have to skip $runUnitTests for that platform
+            $runUnitTests = !$platform.native `
+                -and !$platform.specialPurpose `
+                -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
+                -and !($os -eq 'macos' -and $arch -eq 'arm64')
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
             $buildMatrix[$legName] = [ordered]@{
