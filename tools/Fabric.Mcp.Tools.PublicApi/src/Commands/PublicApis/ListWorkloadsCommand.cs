@@ -12,22 +12,18 @@ namespace Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 
 public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
 {
-    private const string CommandTitle = "List Available Fabric Workloads";
+    private const string CommandTitle = "List Fabric API Workloads";
 
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+    
     public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
 
-    public override string Name => "list";
+    public override string Name => "list_fabric_api_workloads";
 
     public override string Description =>
         """
-        List all Microsoft Fabric workload types that have public API specifications available.
-        Returns workload names like 'notebook', 'report', 'platform', etc. that can be used 
-        with other commands to retrieve their specific API documentation.
-        """;
-
-    public override string Title => CommandTitle;
+        Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.
+        """;    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
