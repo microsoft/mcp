@@ -75,13 +75,12 @@ function Get-DockerTarFiles {
     $tarPattern = Join-Path $TarDirectory "$CliName-*-image.tar"
     $tarFiles = Get-ChildItem -Path $tarPattern -ErrorAction SilentlyContinue
     
-    # Strict check for exactly 2 tar files. We expect amd64 + arm64 from upstream
-    # Docker build jobs. This catches early CI failures or misconfigurations.
+    # Strict check for exactly 2 tar files (amd64 + arm64). Upstream stages validate
+    # this, but we verify here as a defensive measure.
     if (-not $tarFiles -or $tarFiles.Count -ne 2) {
-        Write-Host "ERROR: Expected exactly 2 Docker image tar files (amd64 + arm64), found $($tarFiles.Count)" -ForegroundColor Red
-        Write-Host "Directory contents:"
+        Write-Host "Directory contents:" -ForegroundColor Yellow
         Get-ChildItem -Path $TarDirectory | ForEach-Object { Write-Host "  $_" }
-        exit 1
+        Write-Error "Expected exactly 2 Docker image tar files (amd64 + arm64), found $($tarFiles.Count)"
     }
 
     Write-Host "Found tar files:"
@@ -161,9 +160,9 @@ function Import-ArchitectureImage {
     Write-Host ""
     
     return @{
-         # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-arm64
+        # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-arm64
         ArchTag = $archTag
-         # E.g., azure-sdk/azure-mcp:99999
+        # E.g., azure-sdk/azure-mcp:99999
         LocalImage = $localImage
         # E.g., arm64
         Architecture = $arch
@@ -177,7 +176,8 @@ function New-MultiArchManifest {
     )
     
     Write-Host "Creating multi-arch manifest for $ManifestTag..."
-    Invoke-DockerCommand -Arguments (@('manifest', 'create', $ManifestTag) + $ArchTags)
+    # --amend allows updating existing local manifests, useful for retries and local dev
+    Invoke-DockerCommand -Arguments (@('manifest', 'create', '--amend', $ManifestTag) + $ArchTags)
     Invoke-DockerCommand -Arguments @('manifest', 'push', $ManifestTag)
 }
 
