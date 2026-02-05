@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -50,7 +52,6 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 });
                 _mcpClient = await McpClient.CreateAsync(transport);
                 output?.WriteLine($"HTTP test client initialized at {_baseUrl}");
-                await WaitForServerReadinessAsync();
             }
             else
             {
@@ -95,8 +96,49 @@ public sealed class LiveServerFixture() : IAsyncLifetime
         }
 
         _httpServerProcess = Process.Start(processStartInfo);
+        await WaitForServerReadinessAsync(_baseUrl);
     }
 
+    private async Task WaitForServerReadinessAsync(string? uri, int timeoutSeconds = 30, int pollIntervalMs = 500)
+    {
+        using var httpClient = new HttpClient();
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var stopwatch = Stopwatch.StartNew();
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            try
+            {
+                var request = new
+                {
+                    jsonrpc = "2.0",
+                    method = "tools/list",
+                    @params = new { },
+                    id = Guid.NewGuid().ToString()
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
+                {
+                    Content = content
+                };
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+                using var resp = await httpClient!.SendAsync(requestMessage);
+                if (resp.IsSuccessStatusCode)
+                {
+                    return;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                // Server not yet available, continue polling
+            }
+            await Task.Delay(pollIntervalMs);
+        }
+
+        throw new TimeoutException($"Server at {uri} did not become ready within {timeoutSeconds} seconds");
+    }
     private async Task WaitForServerReadinessAsync(int timeoutSeconds = 60, int pollIntervalMs = 500)
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
