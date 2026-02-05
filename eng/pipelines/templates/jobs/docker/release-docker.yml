@@ -19,6 +19,9 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
+      artifactName: docker_staging
+      targetPath: $(Pipeline.Workspace)/docker_staging
+    - input: pipelineArtifact
       artifactName: docker_output_amd64
       targetPath: $(Pipeline.Workspace)/docker_output
     - input: pipelineArtifact
@@ -36,8 +39,6 @@ jobs:
     runOnce:
       deploy:
         steps:
-        - checkout: self
-
         - task: AzureCLI@2
           displayName: Login to ${{ parameters.ContainerRegistry }}
           inputs:
@@ -72,7 +73,7 @@ jobs:
           displayName: Load, tag, and push Docker images
           inputs:
             pwsh: true
-            filePath: $(Build.SourcesDirectory)/eng/scripts/Publish-DockerImages.ps1
+            filePath: $(Pipeline.Workspace)/docker_staging/Publish-DockerImages.ps1
             arguments: >
               -CliName '$(SetReleaseVariables.CliName)'
               -Version '$(SetReleaseVariables.DockerImageVersion)'

@@ -91,6 +91,11 @@ try {
             Copy-Item -Path $dockerFile -Destination $platformOutputPath -Force
         }
     }
+
+    # Copy the Publish-DockerImages.ps1 script to the output directory for use in release
+    $publishScript = "$PSScriptRoot/Publish-DockerImages.ps1"
+    Write-Host "`nCopying Publish-DockerImages.ps1 to $OutputPath"
+    Copy-Item -Path $publishScript -Destination $OutputPath -Force
 }
 finally {
     Pop-Location
