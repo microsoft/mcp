@@ -1105,7 +1105,7 @@ public class FoundryService(
         List<ThreadItem> threads = [];
         try
         {
-            await foreach (var thread in threadsIterator)
+            await foreach (var thread in threadsIterator.WithCancellation(cancellationToken))
             {
                 threads.Add(new()
                 {
@@ -1172,7 +1172,7 @@ public class FoundryService(
         {
             List<PersistentThreadMessage> messages = [];
             var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
-            await foreach (var message in messagesIterator)
+            await foreach (var message in messagesIterator.WithCancellation(cancellationToken))
             {
                 messages.Add(message);
             }
@@ -1499,7 +1499,7 @@ public class FoundryService(
                 // List all AI resources in the subscription
                 await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
                 {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
                     resources.Add(resourceInfo);
                 }
             }
@@ -1510,7 +1510,7 @@ public class FoundryService(
                 {
                     if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
                     {
-                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
                         resources.Add(resourceInfo);
                     }
                 }
@@ -1554,7 +1554,7 @@ public class FoundryService(
                 throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
             }
 
-            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName);
+            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -1596,7 +1596,8 @@ public class FoundryService(
 
     private async Task<AiResourceInformation> BuildResourceInformation(
         CognitiveServicesAccountResource account,
-        string subscriptionName)
+        string subscriptionName,
+        CancellationToken cancellationToken)
     {
         var resourceInfo = new AiResourceInformation
         {
@@ -1613,7 +1614,7 @@ public class FoundryService(
         // Get deployments for this resource
         try
         {
-            await foreach (var deployment in account.GetCognitiveServicesAccountDeployments())
+            await foreach (var deployment in account.GetCognitiveServicesAccountDeployments().WithCancellation(cancellationToken))
             {
                 var deploymentInfo = new DeploymentInformation
                 {

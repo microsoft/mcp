@@ -61,7 +61,7 @@ public sealed class StorageSyncService(
                 }
 
                 var collection = resourceGroupResource.GetStorageSyncServices();
-                await foreach (var serviceResource in collection)
+                await foreach (var serviceResource in collection.WithCancellation(cancellationToken))
                 {
                     services.Add(StorageSyncServiceDataSchema.FromResource(serviceResource));
                 }
@@ -307,7 +307,7 @@ public sealed class StorageSyncService(
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
             var syncGroups = new List<SyncGroupDataSchema>();
-            await foreach (var syncGroupResource in serviceResource.Value.GetStorageSyncGroups())
+            await foreach (var syncGroupResource in serviceResource.Value.GetStorageSyncGroups().WithCancellation(cancellationToken))
             {
                 syncGroups.Add(SyncGroupDataSchema.FromResource(syncGroupResource));
             }
@@ -460,7 +460,7 @@ public sealed class StorageSyncService(
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
             var endpoints = new List<CloudEndpointDataSchema>();
-            await foreach (var endpointResource in syncGroupResource.Value.GetCloudEndpoints())
+            await foreach (var endpointResource in syncGroupResource.Value.GetCloudEndpoints().WithCancellation(cancellationToken))
             {
                 endpoints.Add(CloudEndpointDataSchema.FromResource(endpointResource));
             }
@@ -710,7 +710,7 @@ public sealed class StorageSyncService(
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
             var endpoints = new List<ServerEndpointDataSchema>();
-            await foreach (var endpointResource in syncGroupResource.Value.GetStorageSyncServerEndpoints())
+            await foreach (var endpointResource in syncGroupResource.Value.GetStorageSyncServerEndpoints().WithCancellation(cancellationToken))
             {
                 endpoints.Add(ServerEndpointDataSchema.FromResource(endpointResource));
             }
@@ -962,7 +962,7 @@ public sealed class StorageSyncService(
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
             var servers = new List<RegisteredServerDataSchema>();
-            await foreach (var serverResource in serviceResource.Value.GetStorageSyncRegisteredServers())
+            await foreach (var serverResource in serviceResource.Value.GetStorageSyncRegisteredServers().WithCancellation(cancellationToken))
             {
                 servers.Add(RegisteredServerDataSchema.FromResource(serverResource));
             }

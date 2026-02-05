@@ -188,7 +188,7 @@ public class LoadTestingService(
         }
 
         var testRuns = new List<TestRun>();
-        await foreach (var binaryData in loadTestRunResponse)
+        await foreach (var binaryData in loadTestRunResponse.WithCancellation(cancellationToken))
         {
             var testRun = JsonSerializer.Deserialize(binaryData.ToString(), LoadTestJsonContext.Default.TestRun);
             if (testRun != null)

@@ -59,7 +59,7 @@ public sealed class FileSharesService(
                 }
 
                 var collection = resourceGroupResource.GetFileShares();
-                await foreach (var fileShareResource in collection)
+                await foreach (var fileShareResource in collection.WithCancellation(cancellationToken))
                 {
                     fileShares.Add(FileShareInfo.FromResource(fileShareResource));
                 }
@@ -488,7 +488,7 @@ public sealed class FileSharesService(
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
             var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
-            await foreach (var snapshotResource in snapshotCollection)
+            await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
             {
                 if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
                     snapshotResource.Data.Id.ToString().Contains(snapshotId, StringComparison.OrdinalIgnoreCase))
@@ -539,7 +539,7 @@ public sealed class FileSharesService(
             var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
             var snapshots = new List<FileShareSnapshotInfo>();
-            await foreach (var snapshotResource in snapshotCollection)
+            await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
             {
                 snapshots.Add(FileShareSnapshotInfo.FromResource(snapshotResource));
             }

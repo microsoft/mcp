@@ -58,7 +58,7 @@ public sealed class SignalRService(
                 if (string.IsNullOrEmpty(resourceGroup))
                 {
                     var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources)
+                    await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
                     {
                         runtimes.Add(ConvertToRuntimeModel(runtime));
                     }
@@ -72,7 +72,7 @@ public sealed class SignalRService(
                     }
 
                     var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources)
+                    await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
                     {
                         runtimes.Add(ConvertToRuntimeModel(runtime));
                     }

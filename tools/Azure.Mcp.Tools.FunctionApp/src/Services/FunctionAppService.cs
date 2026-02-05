@@ -141,7 +141,7 @@ public sealed class FunctionAppService(
             {
                 if (string.IsNullOrEmpty(resourceGroup))
                 {
-                    await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps);
+                    await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps, cancellationToken);
                 }
                 else
                 {
@@ -151,7 +151,7 @@ public sealed class FunctionAppService(
                         throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                     }
 
-                    await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps);
+                    await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps, cancellationToken);
                 }
 
                 await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
@@ -198,9 +198,9 @@ public sealed class FunctionAppService(
         return functionApps;
     }
 
-    private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps)
+    private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps, CancellationToken cancellationToken)
     {
-        await foreach (var site in sites)
+        await foreach (var site in sites.WithCancellation(cancellationToken))
         {
             if (site?.Data is { } data && IsFunctionApp(data))
             {

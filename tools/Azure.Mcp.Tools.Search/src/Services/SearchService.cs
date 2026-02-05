@@ -147,7 +147,7 @@ public sealed class SearchService(
 
             var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
-            return await ProcessSearchResults(searchResponse);
+            return await ProcessSearchResults(searchResponse, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -393,10 +393,10 @@ public sealed class SearchService(
         }
     }
 
-    private static async Task<List<JsonElement>> ProcessSearchResults(Response<SearchResults<JsonElement>> searchResponse)
+    private static async Task<List<JsonElement>> ProcessSearchResults(Response<SearchResults<JsonElement>> searchResponse, CancellationToken cancellationToken)
     {
         var results = new List<JsonElement>();
-        await foreach (var result in searchResponse.Value.GetResultsAsync())
+        await foreach (var result in searchResponse.Value.GetResultsAsync().WithCancellation(cancellationToken))
         {
             results.Add(result.Document);
         }

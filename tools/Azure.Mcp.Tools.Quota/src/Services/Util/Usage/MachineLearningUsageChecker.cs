@@ -17,7 +17,7 @@ public class MachineLearningUsageChecker(TokenCredential credential, string subs
             var usages = subscription.GetMachineLearningUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (var item in usages)
+            await foreach (var item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,

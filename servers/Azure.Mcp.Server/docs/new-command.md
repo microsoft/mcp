@@ -911,9 +911,27 @@ public interface IMyService
 **Service Implementation Requirements:**
 - Pass the `CancellationToken` parameter to all async method calls
 - Use `cancellationToken: cancellationToken` when calling Azure SDK methods
+- Use `.WithCancellation(cancellationToken)` when iterating over async enumerables with `await foreach`
 - Always include `CancellationToken cancellationToken` as the final parameter (only use a default value if and only if other parameters have default values)
 - Force callers to explicitly provide a CancellationToken
 - Never pass `CancellationToken.None` or `default` as a value to a `CancellationToken` method parameter
+
+**Example - Async Enumerable Pattern:**
+```csharp
+// ✅ Correct: Use .WithCancellation() for async enumerables
+var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+await foreach (var resourceGroup in subscription.GetResourceGroups().WithCancellation(cancellationToken))
+{
+    return resourceGroup.Data.Name;
+}
+
+// ❌ Wrong: Missing .WithCancellation()
+var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+await foreach (var resourceGroup in subscription.GetResourceGroups())
+{
+    return resourceGroup.Data.Name;
+}
+```
 
 **Unit Testing Requirements:**
 - **Mock setup**: Use `Arg.Any<CancellationToken>()` for CancellationToken parameters in mock setups
