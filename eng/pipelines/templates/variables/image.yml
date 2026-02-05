@@ -9,9 +9,9 @@ variables:
     value: Azure Pipelines
 
   - name: LINUXARM64POOL
-    value: azsdk-pool
+    value: azsdk-pool-arm64
   - name: WINDOWSARM64POOL
-    value: azsdk-pool
+    value: azsdk-pool-arm64
 
   - name: LINUXVMIMAGE
     value: ubuntu-24.04
