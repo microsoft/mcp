@@ -14,7 +14,7 @@ using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
@@ -162,9 +162,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         // start recording/playback session
         await StartRecordOrPlayback();
-
-        // Ensure HTTP client has the recording ID if we are using HTTP transport
-        SetHttpRecordingId(RecordingId);
 
         // apply custom matcher if test has attribute
         await ApplyAttributeMatcherSettings(methodInfo);
