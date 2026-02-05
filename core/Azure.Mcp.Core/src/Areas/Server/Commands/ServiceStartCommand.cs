@@ -685,19 +685,19 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 if (isDevelopment && serverOptions.DangerouslyDisableHttpIncomingAuth)
                 {
                     policy.SetIsOriginAllowed(origin =>
-                          {
-                              if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-                              {
-                                  // Allow localhost and 127.0.0.1 with any port
-                                  return uri.Host == "localhost" ||
-                                         uri.Host == "127.0.0.1" ||
-                                         uri.Host == "[::1]"; // IPv6 loopback
-                              }
-                              return false;
-                          })
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials(); // Required when using SetIsOriginAllowed
+                    {
+                        if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                        {
+                            // Allow localhost and 127.0.0.1 with any port
+                            return uri.Host == "localhost" ||
+                                    uri.Host == "127.0.0.1" ||
+                                    uri.Host == "[::1]"; // IPv6 loopback
+                        }
+                        return false;
+                    })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials(); // Required when using SetIsOriginAllowed
                 }
                 // In production or authenticated development mode, allow all origins by default
                 // This is safe because:
@@ -894,10 +894,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         return Sdk.CreateTracerProviderBuilder()
             .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation(o =>
-            o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
-            .AddAzureMonitorTraceExporter(exporterOptions =>
-            exporterOptions.ConnectionString = connectionString)
+            .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
+            .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
             .Build();
     }
 
