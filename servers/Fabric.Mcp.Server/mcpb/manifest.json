@@ -1,0 +1,36 @@
+{
+  "manifest_version": "0.3",
+  "name": "Fabric.Mcp.Server",
+  "display_name": "Microsoft Fabric MCP Server",
+  "version": "0.0.0-beta.7",
+  "description": "Provides Model Context Protocol (MCP) integration and tooling for Microsoft Fabric.",
+  "long_description": "A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/mcp.git"
+  },
+  "homepage": "https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server",
+  "documentation": "https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server#readme",
+  "support": "https://github.com/microsoft/mcp/issues",
+  "icon": "./servericon.png",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/fabmcp",
+    "mcp_config": {
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}/server/fabmcp.exe",
+          "args": []
+        }
+      },
+      "command": "${__dirname}/server/fabmcp",
+      "args": [ "server", "start" ],
+      "env": {}
+    }
+  },
+  "tools": []
+}
