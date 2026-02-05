@@ -10,7 +10,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.LiveTests;
 
-public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+[Collection("LiveServer")]
+public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     // Use Settings.ResourceBaseName with suffixes (following SQL pattern)
     private string VmName => $"{Settings.ResourceBaseName}-vm";

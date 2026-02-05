@@ -10,7 +10,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
-public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+[Collection("LiveServer")]
+public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     #region SpeechToText Tests
 

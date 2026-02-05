@@ -9,7 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.LiveTests;
 
-public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+[Collection("LiveServer")]
+public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_list_datadog_monitored_resources()

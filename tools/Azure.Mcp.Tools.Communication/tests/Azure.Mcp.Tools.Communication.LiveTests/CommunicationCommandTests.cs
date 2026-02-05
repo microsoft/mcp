@@ -10,7 +10,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+[Collection("LiveServer")]
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? endpointRecorded;

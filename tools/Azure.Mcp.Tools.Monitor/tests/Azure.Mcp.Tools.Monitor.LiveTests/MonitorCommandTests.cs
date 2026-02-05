@@ -22,6 +22,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
+[Collection("LiveServer")]
 public sealed class MonitorCommandTests : RecordedCommandTestsBase
 {
     private LogAnalyticsHelper? _logHelper;
@@ -35,8 +36,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     private string? _appInsightsName;
     private string? _bingWebTestName;
 
-    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-        : base(output, fixture)
+    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+        : base(output, fixture, liveServerFixture)
     {
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         var cacheService = new SingleUserCliCacheService(_memoryCache);
