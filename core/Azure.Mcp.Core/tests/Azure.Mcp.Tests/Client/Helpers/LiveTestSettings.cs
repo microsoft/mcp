@@ -53,16 +53,26 @@ public class LiveTestSettings
         {
             var json = File.ReadAllText(path);
 
-            settings = JsonSerializer.Deserialize<LiveTestSettings>(json, new JsonSerializerOptions()
+            try
             {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            });
+                settings = JsonSerializer.Deserialize<LiveTestSettings>(json, new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter() }
+                });
 
-            if (settings != null)
+                if (settings != null)
+                {
+                    settings.SettingsDirectory = Path.GetDirectoryName(path) ?? string.Empty;
+                    return true;
+                }
+            }
+            catch (JsonException ex) when (ex.Message.Contains("TestMode"))
             {
-                settings.SettingsDirectory = Path.GetDirectoryName(path) ?? string.Empty;
-                return true;
+                var validValues = string.Join(", ", Enum.GetNames<TestMode>());
+                throw new InvalidOperationException(
+                    $"Invalid TestMode value in {TestSettingsFileName}. Valid values are: {validValues}. " +
+                    $"Error details: {ex.Message}", ex);
             }
         }
 
