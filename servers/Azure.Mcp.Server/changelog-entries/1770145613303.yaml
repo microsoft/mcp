@@ -1,4 +1,0 @@
-pr: 1638
-changes:
-  - section: "Features Added"
-    description: "Add log telemetry support for customer-owned AppInsights"

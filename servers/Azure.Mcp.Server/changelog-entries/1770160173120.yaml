@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added support for dangerous persistent logging configuration in VSIX extension, allowing users to specify a directory for detailed debug logs via the azureMcp.dangerouslyWriteSupportLogsToDir setting"
