@@ -2,15 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.17 (Unreleased)
+## 2.0.0-beta.17 (2026-02-05)
 
 ### Features Added
 
-### Breaking Changes
+- Added log telemetry support for customer-owned AppInsights. [[#1638](https://github.com/microsoft/mcp/pull/1638)]
+- Added support for dangerous persistent logging configuration in VSIX extension, allowing users to specify a directory for detailed debug logs via the azureMcp.dangerouslyWriteSupportLogsToDir setting. [[#1639](https://github.com/microsoft/mcp/pull/1639)]
 
 ### Bugs Fixed
 
+- Improved input validation in ResourceHealth and Kusto tools: [[#1634](https://github.com/microsoft/mcp/pull/1634)]
+  - ResourceHealth: Added resource ID validation using Azure.Core.ResourceIdentifier.Parse()
+  - Kusto: Added cluster URI validation with domain suffix and hostname allowlist
+
 ### Other Changes
+
+- Added cancellation token support so deploy operations can be cancelled cleanly and consistently. [[#1627](https://github.com/microsoft/mcp/pull/1627)]
+- Improved cancellation behavior for async enumerators by adding support for `CancellationToken`, making it easier to correctly stop long-running or streaming async iteration. [[#1649](https://github.com/microsoft/mcp/pull/1649)]
 
 ## 2.0.0-beta.16 (2026-02-03)
 
