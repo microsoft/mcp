@@ -40,3 +40,9 @@ public class ActivityName
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
 }
+
+public class AppInsightsInstanceType
+{
+    public const string Microsoft = "Microsoft";
+    public const string UserProvided = "UserProvided";
+}

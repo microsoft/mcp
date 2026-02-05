@@ -405,7 +405,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
 
                 if (serverOptions.Debug)
@@ -451,7 +450,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
@@ -629,7 +627,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
