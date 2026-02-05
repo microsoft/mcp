@@ -182,7 +182,7 @@ public static class DeployOptionDefinitions
             )
         {
             Description = "The type of IaC file used for deployment. Valid values: bicep, terraform. Leave empty ONLY if user wants to use AzCli command script and no IaC file.",
-            Required = true
+            Required = false
         };
 
         public static readonly Option<string> ResourceTypes = new(

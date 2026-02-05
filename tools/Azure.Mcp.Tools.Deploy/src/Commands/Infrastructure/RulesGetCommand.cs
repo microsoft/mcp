@@ -33,7 +33,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Description =>
         """
-        This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with the azd tool and adhere to best practices.
+        This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure as well as general Azure Resource Rules. The guidelines outline rules to improve the quality of Infrastructure as Code files and resource configurations, ensuring they are compatible with the azd tool or az cli and adhere to best practices.
         """;
 
     protected override void RegisterOptions(Command command)
@@ -70,7 +70,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
                 .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
-                .Select(rt => rt.Trim())
+                .Select(rt => rt.Trim().ToLowerInvariant())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToArray();
 
