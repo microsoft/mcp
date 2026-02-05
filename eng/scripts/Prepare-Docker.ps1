@@ -55,39 +55,41 @@ Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -Pro
 Push-Location $RepoRoot
 try {
     $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-    $platformName = "linux-musl-x64-docker"
+    $dockerPlatforms = @("linux-musl-x64-docker", "linux-musl-arm64-docker")
 
     foreach($server in $buildInfo.servers) {
-        $platform = $server.platforms | Where-Object { $_.name -eq $platformName }
-        if(-not $platform) {
-            LogError "Server $($server.name) does not have a platform named $platformName in build_info.json"
-            $exitCode = 1
-            continue
-        }
-
-        $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
-
-        New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-
-        $platformArtifactPath = "$ArtifactsPath/$($platform.artifactPath)"
-        if(!(Test-Path $platformArtifactPath)) {
-            if ($ignoreMissingArtifacts) {
-                LogWarning "Artifact path $platformArtifactPath does not exist. Skipping $($server.name)."
-                LogWarning "To build, run 'eng/scripts/Build-Code.ps1 -ServerName $($server.name) -OS linux -Architecture x64'"
-            } else {
-                LogError "Artifact path $platformArtifactPath does not exist."
-                $exitCode = 1
+        foreach($platformName in $dockerPlatforms) {
+            $platform = $server.platforms | Where-Object { $_.name -eq $platformName }
+            if(-not $platform) {
+                # Server may not have all docker platforms (e.g., ARM64 is opt-in)
+                Write-Host "Server $($server.name) does not have platform $platformName - skipping"
+                continue
             }
-            continue
+
+            $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
+
+            New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
+
+            $platformArtifactPath = "$ArtifactsPath/$($platform.artifactPath)"
+            if(!(Test-Path $platformArtifactPath)) {
+                if ($ignoreMissingArtifacts) {
+                    LogWarning "Artifact path $platformArtifactPath does not exist. Skipping $($server.name) $platformName."
+                    LogWarning "To build, run 'eng/scripts/Build-Code.ps1 -ServerName $($server.name) -OS linux -Architecture x64'"
+                } else {
+                    LogError "Artifact path $platformArtifactPath does not exist."
+                    $exitCode = 1
+                }
+                continue
+            }
+
+            # Copy the server artifact to the output path
+            Write-Host "`nCopying $platformName artifact from $platformArtifactPath to $platformOutputPath/dist"
+            Copy-Item -Path $platformArtifactPath -Destination "$platformOutputPath/dist" -Recurse -Force
+
+            # Copy the Dockerfile to the output path
+            Write-Host "Copying Dockerfile to $platformOutputPath"
+            Copy-Item -Path $dockerFile -Destination $platformOutputPath -Force
         }
-
-        # Copy the server artifact to the output path
-        Write-Host "`nCopying $platformName artifact from $platformArtifactPath to $platformOutputPath/dist"
-        Copy-Item -Path $platformArtifactPath -Destination "$platformOutputPath/dist" -Recurse -Force
-
-        # Copy the Dockerfile to the output path
-        Write-Host "Copying Dockerfile to $platformOutputPath"
-        Copy-Item -Path $dockerFile -Destination $platformOutputPath -Force
     }
 }
 finally {
