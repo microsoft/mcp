@@ -259,7 +259,7 @@ Location: `eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml`
 5. Submit to ESRP using Pkcs7DetachedSign operation
 6. Apply signatures using `Apply-McpbSignatures.ps1`
 7. Verify using `Verify-McpbSignatures.ps1`
-8. Publish signed .mcpb artifacts using `Publish-McpbToGitHub.ps1`
+8. Publish signed .mcpb artifacts to GitHub using inline PowerShell in `release-mcpb.yml`
 
 ---
 
@@ -275,7 +275,6 @@ eng/
 │   ├── Apply-McpbSignatures.ps1              # Apply .p7s signatures to MCPB files
 │   ├── Apply-McpbSignatures.tests.ps1        # Pester unit tests for signature conversion
 │   ├── Verify-McpbSignatures.ps1             # Verify signatures using mcpb CLI
-│   ├── Publish-McpbToGitHub.ps1              # Upload MCPB to GitHub Release
 │   └── Update-ServerJsonMcpbHashes.ps1       # Compute SHA256 for MCP Registry
 ├── pipelines/
 │   └── templates/
@@ -366,7 +365,7 @@ This template orchestrates the packaging and signing workflow:
 
 Location: [`eng/pipelines/templates/jobs/mcpb/release-mcpb.yml`](../eng/pipelines/templates/jobs/mcpb/release-mcpb.yml)
 
-This template handles publishing signed MCPB packages to GitHub Release using `Publish-McpbToGitHub.ps1`.
+This template handles publishing signed MCPB packages to GitHub Release. The upload logic is inlined directly in the YAML because 1ES release jobs (`templateContext.type: releaseJob`) do not allow `checkout` steps.
 
 ---
 
