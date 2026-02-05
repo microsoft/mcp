@@ -154,6 +154,58 @@ public class FoundryServiceEndpointValidationTests
         Assert.Contains("Invalid Foundry project endpoint", exception.Message);
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidProjectEndpoints))]
+    public async Task ListKnowledgeIndexes_RejectsInvalidProjectEndpoints(string invalidEndpoint)
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.ListKnowledgeIndexes(
+                invalidEndpoint,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidProjectEndpoints))]
+    public async Task GetKnowledgeIndexSchema_RejectsInvalidProjectEndpoints(string invalidEndpoint)
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.GetKnowledgeIndexSchema(
+                invalidEndpoint,
+                "test-index",
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidProjectEndpoints))]
+    public async Task ListAgents_RejectsInvalidProjectEndpoints(string invalidEndpoint)
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.ListAgents(
+                invalidEndpoint,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidProjectEndpoints))]
+    public async Task CreateThread_RejectsInvalidProjectEndpoints(string invalidEndpoint)
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateThread(
+                invalidEndpoint,
+                "test message",
+                null,
+                null,
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
+    }
+
     #endregion
 
     #region Azure OpenAI Endpoint Validation Tests
