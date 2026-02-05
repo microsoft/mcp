@@ -661,24 +661,28 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     /// <summary>
     /// Configures CORS policy based on environment and configuration.
-    /// In development mode (unauthenticated), restricts to localhost for security.
+    /// In development environment with authentication disabled, restricts to localhost for security.
     /// In production (authenticated), allows all origins (safe due to authentication requirement).
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
     /// <param name="serverOptions">The server configuration options.</param>
     private static void ConfigureCors(IServiceCollection services, ServiceStartOptions serverOptions)
     {
+        // Check if running in development environment
+        string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        bool isDevelopment = string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase);
+
         services.AddCors(options =>
         {
             options.AddPolicy("McpCorsPolicy", policy =>
             {
-                // In unauthenticated mode (development), restrict to localhost by default
+                // In development environment with authentication disabled, restrict to localhost for security
                 // Allows localhost with any port to support various development scenarios:
                 // - Port 1031: Default HTTP mode (launchSettings.json)
                 // - Port 5008: SSE mode default
                 // - Port 5173: MCP Inspector tool
                 // - Custom ports: User-specified via ASPNETCORE_URLS
-                if (serverOptions.DangerouslyDisableHttpIncomingAuth)
+                if (isDevelopment && serverOptions.DangerouslyDisableHttpIncomingAuth)
                 {
                     policy.SetIsOriginAllowed(origin =>
                           {
@@ -695,7 +699,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                           .AllowAnyHeader()
                           .AllowCredentials(); // Required when using SetIsOriginAllowed
                 }
-                // In authenticated mode (production), allow all origins by default
+                // In production or authenticated development mode, allow all origins by default
                 // This is safe because:
                 // 1. Authentication (JWT Bearer) validates all requests regardless of origin
                 // 2. CORS is a browser security mechanism, not a server security feature
@@ -868,6 +872,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         {
             return null;
         }
+        
 
         // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
         // to telemetry endpoints. Support logging captures debug-level information that may contain
