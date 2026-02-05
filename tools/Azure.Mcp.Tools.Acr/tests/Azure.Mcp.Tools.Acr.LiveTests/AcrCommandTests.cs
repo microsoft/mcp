@@ -11,7 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.LiveTests;
 
-public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+[Collection("LiveServer")]
+public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<string> DisabledDefaultSanitizers =>
     [

@@ -8,7 +8,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.LiveTests;
 
-public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+[Collection("LiveServer")]
+public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     [Fact]
     public async Task Should_append_entry_successfully()

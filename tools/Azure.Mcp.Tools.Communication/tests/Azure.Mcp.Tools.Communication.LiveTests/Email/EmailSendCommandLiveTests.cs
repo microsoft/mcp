@@ -12,7 +12,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.Communication.LiveTests.Email;
 
 [Trait("Command", "EmailSendCommand")]
-public class EmailSendCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+[Collection("LiveServer")]
+public class EmailSendCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? endpointRecorded;
