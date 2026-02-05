@@ -608,10 +608,9 @@ function Get-ServerMatrix {
 
     $serverMatrix = [ordered]@{}
 
-    # MCP Servers that should build ARM64 Docker images in addition to default AMD64
-    $arm64DockerServers = @("Azure.Mcp.Server")
-
     # Docker architecture configurations
+    # linux/amd64 + linux/arm64 is the most common multi-arch combo in Docker today, covers almost all
+    # production use cases, so most official images publish exactly these two.
     $dockerArchConfigs = @(
         @{
             Architecture = 'amd64'
@@ -632,11 +631,6 @@ function Get-ServerMatrix {
         if (-not $server.dockerImageName) { $imageName = "microsoft/" + $server.cliName + "-mcp" }
 
         foreach ($archConfig in $dockerArchConfigs) {
-            if ($archConfig.Architecture -eq 'arm64' -and $arm64DockerServers -notcontains $server.name) {
-                # Skip ARM64 for MCP servers not in the opt-in list
-                continue
-            }
-
             $platform = $server.platforms | Where-Object { $_.name -eq $archConfig.PlatformName -and -not $_.native }
             $executableExtension = $platform.extension ?? ''
 

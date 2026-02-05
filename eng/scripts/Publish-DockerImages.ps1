@@ -1,11 +1,10 @@
 <#
 .SYNOPSIS
-    Publishes Docker images to a container registry with multi-architecture manifest support.
+    Publishes multi-architecture Docker images to a container registry.
 
 .DESCRIPTION
     This script loads Docker images from tar files, tags them with architecture suffixes,
-    pushes them to a container registry, and creates multi-arch manifests when multiple
-    architectures are present.
+    pushes them to a container registry, and creates multi-arch manifests.
 
 .PARAMETER CliName
     The CLI name used to identify tar files (e.g., 'azmcp' matches 'azmcp-amd64-image.tar').
@@ -71,18 +70,20 @@ function Get-DockerTarFiles {
         [string]$TarDirectory,
         [string]$CliName
     )
-    
+
     Write-Host "Discovering tar files..."
     $tarPattern = Join-Path $TarDirectory "$CliName-*-image.tar"
     $tarFiles = Get-ChildItem -Path $tarPattern -ErrorAction SilentlyContinue
     
-    if (-not $tarFiles -or $tarFiles.Count -eq 0) {
-        Write-Host "ERROR: No tar files found matching pattern $tarPattern" -ForegroundColor Red
+    # Strict check for exactly 2 tar files. We expect amd64 + arm64 from upstream
+    # Docker build jobs. This catches early CI failures or misconfigurations.
+    if (-not $tarFiles -or $tarFiles.Count -ne 2) {
+        Write-Host "ERROR: Expected exactly 2 Docker image tar files (amd64 + arm64), found $($tarFiles.Count)" -ForegroundColor Red
         Write-Host "Directory contents:"
         Get-ChildItem -Path $TarDirectory | ForEach-Object { Write-Host "  $_" }
         exit 1
     }
-    
+
     Write-Host "Found tar files:"
     $tarFiles | ForEach-Object { Write-Host "  $($_.FullName)" }
     
@@ -169,21 +170,6 @@ function Import-ArchitectureImage {
     }
 }
 
-# Tags and pushes a single-arch image to the registry.
-# E.g., for "Fabric.Mcp.Server", given LocalImage "fabric/fabric-mcp:99999",
-# tags and pushes as "azuresdkimages.azurecr.io/public/fabric/fabric-mcp:2.0.0"
-function Publish-SingleArchImage {
-    param(
-        [string]$LocalImage,
-        [string]$TargetTag
-    )
-    
-    Write-Host "Tagging $LocalImage as $TargetTag..."
-    Invoke-DockerCommand -Arguments @('tag', $LocalImage, $TargetTag)
-    Write-Host "Pushing $TargetTag..."
-    Invoke-DockerCommand -Arguments @('push', $TargetTag)
-}
-
 function New-MultiArchManifest {
     param(
         [string]$ManifestTag,
@@ -221,39 +207,23 @@ $versionedTag = "${BaseRepo}:${Version}"
 # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:latest
 $latestTag = "${BaseRepo}:latest"
 
-if ($imageInfos.Count -gt 1) {
-    # Multi-arch: push arch-specific tags, then create manifests
-    #
-    $archTags = @()
-    foreach ($info in $imageInfos) {
-        Write-Host "Pushing $($info.ArchTag)..."
-        Invoke-DockerCommand -Arguments @('push', $info.ArchTag)
-        $archTags += $info.ArchTag
-    }
-    
-    Write-Host ""
-    New-MultiArchManifest -ManifestTag $versionedTag -ArchTags $archTags
-    New-MultiArchManifest -ManifestTag $latestTag -ArchTags $archTags
-    
-    Write-Host "Publish complete" -ForegroundColor Green
-    Write-Host "Published tags:"
-    Write-Host "  - $versionedTag (manifest)"
-    Write-Host "  - $latestTag (manifest)"
-    foreach ($tag in $archTags) {
-        Write-Host "  - $tag"
-    }
+# Push arch-specific tags
+$archTags = @()
+foreach ($info in $imageInfos) {
+    Write-Host "Pushing $($info.ArchTag)..."
+    Invoke-DockerCommand -Arguments @('push', $info.ArchTag)
+    $archTags += $info.ArchTag
 }
-else {
-    # Single arch: just tag and push versioned/latest directly (no arch-specific tag published)
-    #
-    Write-Host "Single architecture - publishing directly..."
-    $localImage = $imageInfos[0].LocalImage
-    
-    Publish-SingleArchImage -LocalImage $localImage -TargetTag $versionedTag
-    Publish-SingleArchImage -LocalImage $localImage -TargetTag $latestTag
-    
-    Write-Host "Publish complete" -ForegroundColor Green
-    Write-Host "Published tags:"
-    Write-Host "  - $versionedTag"
-    Write-Host "  - $latestTag"
+
+# Create and push multi-arch manifests
+Write-Host ""
+New-MultiArchManifest -ManifestTag $versionedTag -ArchTags $archTags
+New-MultiArchManifest -ManifestTag $latestTag -ArchTags $archTags
+
+Write-Host "Publish complete" -ForegroundColor Green
+Write-Host "Published tags:"
+Write-Host "  - $versionedTag (manifest)"
+Write-Host "  - $latestTag (manifest)"
+foreach ($tag in $archTags) {
+    Write-Host "  - $tag"
 }

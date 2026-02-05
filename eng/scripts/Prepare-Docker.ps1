@@ -61,8 +61,8 @@ try {
         foreach($platformName in $dockerPlatforms) {
             $platform = $server.platforms | Where-Object { $_.name -eq $platformName }
             if(-not $platform) {
-                # Server may not have all docker platforms (e.g., ARM64 is opt-in)
-                Write-Host "Server $($server.name) does not have platform $platformName - skipping"
+                LogError "Server $($server.name) does not have required platform $platformName in build_info.json"
+                $exitCode = 1
                 continue
             }
 
@@ -92,7 +92,8 @@ try {
         }
     }
 
-    # Copy the Publish-DockerImages.ps1 script to the output directory for use in release
+    # Copy Publish-DockerImages.ps1 to staging - 1ES release templates don't allow checkout,
+    # so scripts needed at release time must be staged with artifacts
     $publishScript = "$PSScriptRoot/Publish-DockerImages.ps1"
     Write-Host "`nCopying Publish-DockerImages.ps1 to $OutputPath"
     Copy-Item -Path $publishScript -Destination $OutputPath -Force
