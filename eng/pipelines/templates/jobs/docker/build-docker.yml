@@ -75,4 +75,4 @@ jobs:
     displayName: Publish Docker artifacts
     inputs:
       path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_output
+      artifact: docker_output_$(Architecture)

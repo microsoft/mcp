@@ -19,7 +19,10 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: docker_output
+      artifactName: docker_output_amd64
+      targetPath: $(Pipeline.Workspace)/docker_output
+    - input: pipelineArtifact
+      artifactName: docker_output_arm64
       targetPath: $(Pipeline.Workspace)/docker_output
     - input: pipelineArtifact
       artifactName: build_info
