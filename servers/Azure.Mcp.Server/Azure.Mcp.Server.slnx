@@ -98,6 +98,13 @@
     <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/tests/Azure.Mcp.Tools.AzureIsv.LiveTests/Azure.Mcp.Tools.AzureIsv.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/tests/Azure.Mcp.Tools.AzureIsv.UnitTests/Azure.Mcp.Tools.AzureIsv.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/src/Azure.Mcp.Tools.AzureMigrate.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.UnitTests/Azure.Mcp.Tools.AzureMigrate.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/Azure.Mcp.Tools.AzureTerraformBestPractices.csproj" />
@@ -126,6 +133,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Communication/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.LiveTests/Azure.Mcp.Tools.Communication.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.UnitTests/Azure.Mcp.Tools.Communication.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/src/Azure.Mcp.Tools.Compute.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Compute/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.LiveTests/Azure.Mcp.Tools.Compute.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.UnitTests/Azure.Mcp.Tools.Compute.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/src/">
@@ -275,6 +290,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Postgres/tests/Azure.Mcp.Tools.Postgres.LiveTests/Azure.Mcp.Tools.Postgres.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Postgres/tests/Azure.Mcp.Tools.Postgres.UnitTests/Azure.Mcp.Tools.Postgres.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Pricing/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Pricing/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/src/Azure.Mcp.Tools.Pricing.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Pricing/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.LiveTests/Azure.Mcp.Tools.Pricing.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.UnitTests/Azure.Mcp.Tools.Pricing.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/src/">
