@@ -226,5 +226,22 @@ public class FoundryServiceEndpointValidationTests
         Assert.Contains("Invalid Azure OpenAI endpoint", exception.Message);
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidAzureOpenAiEndpoints))]
+    public async Task EvaluateAgent_RejectsInvalidAzureOpenAIEndpoints(string invalidEndpoint)
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.EvaluateAgent(
+                "coherence",
+                "[]",
+                "[]",
+                invalidEndpoint,
+                "gpt-4",
+                null,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Invalid Azure OpenAI endpoint", exception.Message);
+    }
+
     #endregion
 }
