@@ -32,5 +32,29 @@
       "env": {}
     }
   },
-  "tools": []
+  "tools": [],
+  "tools_generated": false,
+  "keywords": [
+    "fabric",
+    "mcp",
+    "model context protocol",
+    "server",
+    "microsoft",
+    "ai",
+    "artificial intelligence",
+    "openapi",
+    "onelake"
+  ],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://www.microsoft.com/privacy/privacystatement"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.8.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  }
 }

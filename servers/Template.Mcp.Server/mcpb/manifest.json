@@ -32,5 +32,19 @@
       "env": {}
     }
   },
-  "tools": []
+  "tools": [],
+  "tools_generated": false,
+  "keywords": [],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://www.microsoft.com/privacy/privacystatement"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.8.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  }
 }
