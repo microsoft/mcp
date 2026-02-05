@@ -89,6 +89,11 @@ export function activate(context: vscode.ExtensionContext) {
                     args.push('--read-only');
                 }
 
+                // Support logging directory (dangerous option)
+                const supportLogsDir = config.get<string>('dangerouslyWriteSupportLogsToDir');
+                if (supportLogsDir && supportLogsDir.trim() !== '') {
+                    args.push('--dangerously-write-support-logs-to-dir', supportLogsDir);
+                }
 
                 // Honor VS Code telemetry settings
                 // Only set AZURE_MCP_COLLECT_TELEMETRY if telemetry is disabled
@@ -120,7 +125,8 @@ export function activate(context: vscode.ExtensionContext) {
             if (
                 event.affectsConfiguration('azureMcp.enabledServices') ||
                 event.affectsConfiguration('azureMcp.serverMode') ||
-                event.affectsConfiguration('azureMcp.readOnly')
+                event.affectsConfiguration('azureMcp.readOnly') ||
+                event.affectsConfiguration('azureMcp.dangerouslyWriteSupportLogsToDir')
             ) {
                 // Check if MCP autostart is enabled
                 if (!isMcpAutoStartEnabled()) {

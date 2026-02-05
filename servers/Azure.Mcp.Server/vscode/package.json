@@ -145,6 +145,11 @@
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+                },
+                "azureMcp.dangerouslyWriteSupportLogsToDir": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "**DANGER:** Enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). **This may include sensitive information in logs.** Use with extreme caution and only when requested by support. Leave empty to disable. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
                 }
             }
         }
