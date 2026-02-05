@@ -311,7 +311,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
                 return new Uri($"https://{vaultName}.vault.azure.net");
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
                 return new Uri($"https://{vaultName}.vault.azure.cn");
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
                 return new Uri($"https://{vaultName}.vault.usgovcloudapi.net");
             default:
                 return new Uri($"https://{vaultName}.vault.azure.net");
@@ -327,7 +327,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
                 return new Uri($"https://{vaultName}.managedhsm.azure.net");
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
                 return new Uri($"https://{vaultName}.managedhsm.azure.cn");
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
                 return new Uri($"https://{vaultName}.managedhsm.usgovcloudapi.net");
             default:
                 return new Uri($"https://{vaultName}.managedhsm.azure.net");

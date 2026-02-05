@@ -136,7 +136,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
                 return new Uri("https://data.healthmodels.azure.com/");
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
                 return new Uri("https://data.healthmodels.azure.cn/");
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
                 return new Uri("https://data.healthmodels.azure.us/");
             default:
                 return new Uri("https://data.healthmodels.azure.com/");

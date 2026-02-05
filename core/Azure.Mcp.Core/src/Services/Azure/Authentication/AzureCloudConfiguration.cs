@@ -19,7 +19,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     {
         AzurePublicCloud,
         AzureChinaCloud,
-        AzureUSGovernment,
+        AzureUSGovernmentCloud,
     }
 
     private const string DefaultAuthorityHost = "https://login.microsoftonline.com";
@@ -85,7 +85,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
             "azurechinacloud" or "china" =>
                 (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
-                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernment),
+                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
             _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud) // Default to public cloud if unknown
         };
     }

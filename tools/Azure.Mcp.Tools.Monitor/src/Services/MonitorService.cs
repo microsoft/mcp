@@ -537,7 +537,7 @@ public class MonitorService(
                 return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
                 return new Uri("https://management.chinacloudapi.cn/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernment:
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
                 return new Uri("https://management.usgovcloudapi.net/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
             default:
                 return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
