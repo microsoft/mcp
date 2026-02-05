@@ -166,10 +166,12 @@ function CheckVariable($name) {
 
 $windowsPool = CheckVariable 'WINDOWSPOOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
+$linuxArmPool = CheckVariable 'LINUXARMPOOL'
 $macPool = CheckVariable 'MACPOOL'
 
 $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
 $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
+$linuxArmVmImage = CheckVariable 'LINUXARMVMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
@@ -610,14 +612,14 @@ function Get-ServerMatrix {
         @{
             Architecture = 'amd64'
             PlatformName = 'linux-musl-x64-docker'
-            Pool = '$(LINUXPOOL)'
-            VMImage = '$(LINUXVMIMAGE)'
+            Pool = $linuxPool
+            VMImage = $linuxVmImage
         }
         @{
             Architecture = 'arm64'
             PlatformName = 'linux-musl-arm64-docker'
-            Pool = '$(LINUXARMPOOL)'
-            VMImage = '$(LINUXARMVMIMAGE)'
+            Pool = $linuxArmPool
+            VMImage = $linuxArmVmImage
         }
     )
 
