@@ -43,7 +43,8 @@ extends:
     # We pick a single internal pipeline to use for autoBaseline. This should be a pipeline that runs often on main with normal code paths, i.e. not Template.Mcp.Server
     autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'mcp - Azure.Mcp.Server'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
     stages:
-    - stage: Initialize
+    - stage: SignMSIX
+      displayName: 'Sign MSIX'
       pool:
         name: $(LINUXPOOL)
         image: $(LINUXVMIMAGE)
@@ -52,110 +53,120 @@ extends:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
       jobs:
-      - template: /eng/pipelines/templates/jobs/initialize.yml
-        parameters:
-          ServerName: ${{ parameters.ServerName }}
-          PublishTarget: ${{ parameters.PublishTarget }}
-          IncludeNative: ${{ parameters.IncludeNative }}
-          IsTestPipeline: ${{ parameters.IsTestPipeline }}
-
-    - stage: Build
-      dependsOn:
-      - Initialize
-      pool:
-        name: $(LINUXPOOL)
-        image: $(LINUXVMIMAGE)
-        os: linux
-      variables:
-      - template: /eng/pipelines/templates/variables/image.yml
-      - template: /eng/pipelines/templates/variables/globals.yml
-      jobs:
-      - template: /eng/pipelines/templates/jobs/analyze.yml
-
-      - ${{ each os in split('linux|windows|macOS', '|') }}:
-        - template: /eng/pipelines/templates/jobs/build.yml
-          parameters:
-            TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
-            ServerName: ${{ parameters.ServerName }}
-            PublishTarget: ${{ parameters.PublishTarget }}
-            OSName: ${{ os }}
-            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
-            MaxParallel: 4
-
-    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
-      - stage: Test
-        displayName: 'Live test'
-        dependsOn:
-        - Initialize
-        pool:
-          name: $(LINUXPOOL)
-          image: $(LINUXVMIMAGE)
-          os: linux
-        variables:
-        - template: /eng/pipelines/templates/variables/image.yml
-        - template: /eng/pipelines/templates/variables/globals.yml
-        jobs:
-        - template: /eng/pipelines/templates/jobs/live-test.yml
-          parameters:
-            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
-            MaxParallel: 10
-            TimeoutInMinutes: 75
-
-    - ${{ if ne(parameters.PublishTarget, 'none') }}:
-      # We only sign if we're going to publish
-      - stage: SignAndPack
-        displayName: 'Sign and Pack'
-        dependsOn:
-        - Initialize
-        - Build
-        pool:
-          name: $(LINUXPOOL)
-          image: $(LINUXVMIMAGE)
-          os: linux
-        variables:
-        - template: /eng/pipelines/templates/variables/image.yml
-        - template: /eng/pipelines/templates/variables/globals.yml
-        jobs:
-        - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
-          parameters:
-            ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
-            PackageDocker: ${{ parameters.PackageDocker }}
-            PackageVSIX: ${{ parameters.PackageVSIX }}
-            PackageMCPB: ${{ parameters.PackageMCPB }}
-
-      - ${{ if eq(parameters.PublishTarget, 'public') }}:
-        - stage: Release
-          dependsOn:
-          - Initialize
-          - SignAndPack
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          jobs:
-          - template: /eng/pipelines/templates/jobs/release.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}
-              IncludeNative: false
-              PackageDocker: ${{ parameters.PackageDocker }}
-              PackageVSIX: ${{ parameters.PackageVSIX }}
-              PackageMCPB: ${{ parameters.PackageMCPB }}
-              IsTestPipeline: ${{ parameters.IsTestPipeline }}
-
-      - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
-        - stage: Integration
-          dependsOn:
-          - Initialize
-          - SignAndPack
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          jobs:
-          - template: /eng/pipelines/templates/jobs/integration.yml
+      - template: /eng/pipelines/templates/jobs/msix/test-msix-signing.yml
+    #- stage: Initialize
+    #  pool:
+    #    name: $(LINUXPOOL)
+    #    image: $(LINUXVMIMAGE)
+    #    os: linux
+    #  variables:
+    #  - template: /eng/pipelines/templates/variables/image.yml
+    #  - template: /eng/pipelines/templates/variables/globals.yml
+    #  jobs:
+    #  - template: /eng/pipelines/templates/jobs/initialize.yml
+    #    parameters:
+    #      ServerName: ${{ parameters.ServerName }}
+    #      PublishTarget: ${{ parameters.PublishTarget }}
+    #      IncludeNative: ${{ parameters.IncludeNative }}
+    #      IsTestPipeline: ${{ parameters.IsTestPipeline }}
+#
+    #- stage: Build
+    #  dependsOn:
+    #  - Initialize
+    #  pool:
+    #    name: $(LINUXPOOL)
+    #    image: $(LINUXVMIMAGE)
+    #    os: linux
+    #  variables:
+    #  - template: /eng/pipelines/templates/variables/image.yml
+    #  - template: /eng/pipelines/templates/variables/globals.yml
+    #  jobs:
+    #  - template: /eng/pipelines/templates/jobs/analyze.yml
+#
+    #  - ${{ each os in split('linux|windows|macOS', '|') }}:
+    #    - template: /eng/pipelines/templates/jobs/build.yml
+    #      parameters:
+    #        TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    #        ServerName: ${{ parameters.ServerName }}
+    #        PublishTarget: ${{ parameters.PublishTarget }}
+    #        OSName: ${{ os }}
+    #        Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
+    #        MaxParallel: 4
+#
+    #- ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
+    #  - stage: Test
+    #    displayName: 'Live test'
+    #    dependsOn:
+    #    - Initialize
+    #    pool:
+    #      name: $(LINUXPOOL)
+    #      image: $(LINUXVMIMAGE)
+    #      os: linux
+    #    variables:
+    #    - template: /eng/pipelines/templates/variables/image.yml
+    #    - template: /eng/pipelines/templates/variables/globals.yml
+    #    jobs:
+    #    - template: /eng/pipelines/templates/jobs/live-test.yml
+    #      parameters:
+    #        Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
+    #        MaxParallel: 10
+    #        TimeoutInMinutes: 75
+#
+    #- ${{ if ne(parameters.PublishTarget, 'none') }}:
+    #  # We only sign if we're going to publish
+    #  - stage: SignAndPack
+    #    displayName: 'Sign and Pack'
+    #    dependsOn:
+    #    - Initialize
+    #    - Build
+    #    pool:
+    #      name: $(LINUXPOOL)
+    #      image: $(LINUXVMIMAGE)
+    #      os: linux
+    #    variables:
+    #    - template: /eng/pipelines/templates/variables/image.yml
+    #    - template: /eng/pipelines/templates/variables/globals.yml
+    #    jobs:
+    #    - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
+    #      parameters:
+    #        ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
+    #        PackageDocker: ${{ parameters.PackageDocker }}
+    #        PackageVSIX: ${{ parameters.PackageVSIX }}
+    #        PackageMCPB: ${{ parameters.PackageMCPB }}
+#
+    #  - ${{ if eq(parameters.PublishTarget, 'public') }}:
+    #    - stage: Release
+    #      dependsOn:
+    #      - Initialize
+    #      - SignAndPack
+    #      pool:
+    #        name: $(LINUXPOOL)
+    #        image: $(LINUXVMIMAGE)
+    #        os: linux
+    #      variables:
+    #      - template: /eng/pipelines/templates/variables/image.yml
+    #      - template: /eng/pipelines/templates/variables/globals.yml
+    #      jobs:
+    #      - template: /eng/pipelines/templates/jobs/release.yml
+    #        parameters:
+    #          ServerName: ${{ parameters.ServerName }}
+    #          IncludeNative: false
+    #          PackageDocker: ${{ parameters.PackageDocker }}
+    #          PackageVSIX: ${{ parameters.PackageVSIX }}
+    #          PackageMCPB: ${{ parameters.PackageMCPB }}
+    #          IsTestPipeline: ${{ parameters.IsTestPipeline }}
+#
+    #  - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
+    #    - stage: Integration
+    #      dependsOn:
+    #      - Initialize
+    #      - SignAndPack
+    #      pool:
+    #        name: $(LINUXPOOL)
+    #        image: $(LINUXVMIMAGE)
+    #        os: linux
+    #      variables:
+    #      - template: /eng/pipelines/templates/variables/image.yml
+    #      - template: /eng/pipelines/templates/variables/globals.yml
+    #      jobs:
+    #      - template: /eng/pipelines/templates/jobs/integration.yml

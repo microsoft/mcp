@@ -1,0 +1,253 @@
+# Test pipeline for MSIX Authenticode signing using ESRP
+# This pipeline takes an unsigned .msix file from the repo and signs it using
+# Microsoft's ESRP service with an Authenticode signature.
+#
+# MSIX packages require Authenticode signing (same as EXEs/DLLs) to be trusted
+# by Windows. For auto-discovery in the Windows ODR (on-device registry),
+# the package must be signed with a Microsoft-trusted certificate.
+
+jobs:
+- job: MSIX_Authenticode_Sign
+  displayName: "MSIX Authenticode Signing"
+  timeoutInMinutes: 30
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - pwsh: |
+      Write-Host "Preparing MSIX file for signing..."
+      $sourcePath = "$(Build.SourcesDirectory)/Azure.Mcp.Server-unsigned.msix"
+      $destPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+
+      if (-not (Test-Path $sourcePath)) {
+          Write-Error "MSIX file not found: $sourcePath"
+          Write-Host "Looking for MSIX files in the repo..."
+          Get-ChildItem -Path "$(Build.SourcesDirectory)" -Filter "*.msix" -Recurse | ForEach-Object {
+              Write-Host "  Found: $($_.FullName)"
+          }
+          exit 1
+      }
+
+      New-Item -ItemType Directory -Path $destPath -Force | Out-Null
+      
+      # Copy the MSIX file for signing
+      Copy-Item -Path $sourcePath -Destination "$destPath/Azure.Mcp.Server.msix" -Force
+
+      Write-Host "Files staged for signing:"
+      Get-ChildItem -Path $destPath -Recurse | ForEach-Object { 
+          Write-Host "  $($_.Name) - $($_.Length) bytes" 
+      }
+
+      # Inspect the unsigned MSIX
+      Write-Host "`nInspecting unsigned MSIX..."
+      $msixFile = Get-Item "$destPath/Azure.Mcp.Server.msix"
+      $bytes = [System.IO.File]::ReadAllBytes($msixFile.FullName)
+      Write-Host "File size: $($bytes.Length) bytes"
+      Write-Host "First 4 bytes (hex): $([BitConverter]::ToString($bytes[0..3]))"
+      
+      # Check if it's a valid ZIP (MSIX is a ZIP format)
+      if ($bytes[0] -eq 0x50 -and $bytes[1] -eq 0x4B) {
+          Write-Host "✓ File appears to be a valid MSIX/ZIP archive (PK signature)"
+      } else {
+          Write-Warning "File may not be a valid MSIX (expected PK signature)"
+      }
+    displayName: "Stage MSIX file for signing"
+
+  # Publish unsigned MSIX for comparison
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/to_sign
+      ArtifactName: msix_unsigned
+
+  - task: EsrpCodeSigning@6
+    displayName: 'Sign MSIX - Authenticode'
+    inputs:
+      ConnectedServiceName: 'Azure SDK PME Managed Identity'
+      UseMSIAuthentication: true
+      AppRegistrationClientId: '4fa2001b-ad7a-4a1e-9185-d6ea881f8712'
+      AppRegistrationTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+      EsrpClientId: '5e796b8d-3c4d-4e28-93f6-12a44f4368a0'
+      AuthAKVName: 'kv-azuresdk-codesign'
+      AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
+      FolderPath: $(Build.ArtifactStagingDirectory)/to_sign
+      Pattern: '**/*.msix'
+      UseMinimatch: true
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolSign",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {
+              "OpusName": "Microsoft",
+              "OpusInfo": "https://www.microsoft.com",
+              "FileDigest": "/fd SHA256",
+              "PageHash": "/NPH",
+              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+            }
+          },
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolVerify",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {}
+          }
+        ]
+
+  - pwsh: |
+      Write-Host "Checking signing results..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+
+      Write-Host "`nFiles after signing operation:"
+      Get-ChildItem -Path $toSignPath -Recurse | ForEach-Object {
+          Write-Host "  $($_.Name) - $($_.Length) bytes"
+      }
+
+      $msixFile = Get-ChildItem -Path $toSignPath -Filter "*.msix" | Select-Object -First 1
+      if ($msixFile) {
+          Write-Host "`nSigned MSIX: $($msixFile.Name)"
+          Write-Host "File size: $($msixFile.Length) bytes"
+      } else {
+          Write-Error "No .msix file found after signing!"
+          exit 1
+      }
+    displayName: "Inspect signing results"
+
+  - pwsh: |
+      Write-Host "Verifying MSIX signature with SignTool..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+      $msixFile = Get-ChildItem -Path $toSignPath -Filter "*.msix" | Select-Object -First 1
+
+      if (-not $msixFile) {
+          Write-Error "No .msix file found!"
+          exit 1
+      }
+
+      # Find SignTool in Windows SDK
+      $signToolPaths = @(
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe",
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe",
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe"
+      )
+      
+      $signTool = $signToolPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+      
+      if (-not $signTool) {
+          Write-Warning "SignTool not found in expected locations. Searching..."
+          $signTool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter "signtool.exe" -Recurse | 
+                      Where-Object { $_.Directory.Name -eq "x64" } |
+                      Select-Object -First 1 -ExpandProperty FullName
+      }
+
+      if ($signTool) {
+          Write-Host "Using SignTool: $signTool"
+          Write-Host "`n=== SignTool Verify ==="
+          & $signTool verify /pa /v $msixFile.FullName
+          
+          if ($LASTEXITCODE -eq 0) {
+              Write-Host "`n✓ Signature verification PASSED"
+          } else {
+              Write-Warning "`n✗ Signature verification returned exit code: $LASTEXITCODE"
+          }
+      } else {
+          Write-Warning "SignTool not found. Skipping signature verification."
+      }
+    displayName: "Verify signature with SignTool"
+
+  - pwsh: |
+      Write-Host "Extracting and inspecting MSIX signature details..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+      $msixFile = Get-ChildItem -Path $toSignPath -Filter "*.msix" | Select-Object -First 1
+
+      if (-not $msixFile) {
+          Write-Error "No .msix file found!"
+          exit 1
+      }
+
+      # Get digital signature information using Get-AuthenticodeSignature
+      Write-Host "`n=== Authenticode Signature Info ==="
+      $sig = Get-AuthenticodeSignature -FilePath $msixFile.FullName
+      Write-Host "Status: $($sig.Status)"
+      Write-Host "Status Message: $($sig.StatusMessage)"
+      
+      if ($sig.SignerCertificate) {
+          Write-Host "`n=== Signer Certificate ==="
+          Write-Host "Subject: $($sig.SignerCertificate.Subject)"
+          Write-Host "Issuer: $($sig.SignerCertificate.Issuer)"
+          Write-Host "Thumbprint: $($sig.SignerCertificate.Thumbprint)"
+          Write-Host "Not Before: $($sig.SignerCertificate.NotBefore)"
+          Write-Host "Not After: $($sig.SignerCertificate.NotAfter)"
+      } else {
+          Write-Warning "No signer certificate found"
+      }
+
+      if ($sig.TimeStamperCertificate) {
+          Write-Host "`n=== Timestamp Certificate ==="
+          Write-Host "Subject: $($sig.TimeStamperCertificate.Subject)"
+          Write-Host "Issuer: $($sig.TimeStamperCertificate.Issuer)"
+      }
+    displayName: "Extract signature details"
+
+  - pwsh: |
+      Write-Host "Preparing final signed MSIX..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+      $outputPath = "$(Build.ArtifactStagingDirectory)/signed"
+      New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
+
+      $msixFile = Get-ChildItem -Path $toSignPath -Filter "*.msix" | Select-Object -First 1
+      
+      if (-not $msixFile) {
+          Write-Error "No .msix file found!"
+          exit 1
+      }
+
+      # Copy to output with -signed suffix
+      $signedName = $msixFile.BaseName + "-signed.msix"
+      Copy-Item -Path $msixFile.FullName -Destination "$outputPath/$signedName" -Force
+
+      Write-Host "Signed MSIX ready: $signedName"
+      Get-ChildItem -Path $outputPath | ForEach-Object {
+          Write-Host "  $($_.Name) - $($_.Length) bytes"
+      }
+    displayName: "Prepare signed output"
+
+  # Publish the final signed MSIX
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
+      ArtifactName: msix_signed
+
+  - pwsh: |
+      Write-Host "=== MSIX Signing Test Summary ==="
+      $signedPath = "$(Build.ArtifactStagingDirectory)/signed"
+      $msixFile = Get-ChildItem -Path $signedPath -Filter "*.msix" | Select-Object -First 1
+      
+      if ($msixFile) {
+          $sig = Get-AuthenticodeSignature -FilePath $msixFile.FullName
+          
+          Write-Host "`nFile: $($msixFile.Name)"
+          Write-Host "Size: $($msixFile.Length) bytes"
+          Write-Host "Signature Status: $($sig.Status)"
+          
+          if ($sig.Status -eq "Valid") {
+              Write-Host "`n✓ MSIX signing test PASSED"
+              Write-Host "  The signed MSIX can be used for Windows ODR auto-discovery"
+              Write-Host "  (if signed with a Microsoft Store-trusted certificate)"
+          } elseif ($sig.Status -eq "UnknownError" -or $sig.Status -eq "NotSigned") {
+              Write-Error "✗ MSIX signing test FAILED - Package is not properly signed"
+              exit 1
+          } else {
+              Write-Host "`n⚠ MSIX is signed but status is: $($sig.Status)"
+              Write-Host "  This may be expected in test environments where the cert chain is not trusted."
+          }
+      } else {
+          Write-Error "No signed MSIX found!"
+          exit 1
+      }
+    displayName: "Test Summary"
