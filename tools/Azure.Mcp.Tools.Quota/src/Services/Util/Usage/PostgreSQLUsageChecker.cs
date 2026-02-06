@@ -10,6 +10,9 @@ namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
 public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory) : AzureUsageChecker(credential, subscriptionId, logger)
 {
+    private const string CoresMagicString = "cores";
+    private const int MinimumCoresRequired = 2;
+
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
@@ -21,7 +24,26 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {
-                return [];
+                return CreateEmptyQuotaInfo();
+            }
+
+            foreach (var item in valueElement.EnumerateArray())
+            {
+                if (item.TryGetProperty("name", out var nameElement) &&
+                    nameElement.TryGetProperty("value", out var nameValue) &&
+                    nameValue.GetStringSafe() == CoresMagicString)
+                {
+                    var limit = item.TryGetProperty("limit", out var limitElement) ? limitElement.GetInt32() : 0;
+                    var used = item.TryGetProperty("currentValue", out var usedElement) ? usedElement.GetInt32() : 0;
+
+                    if (limit - used < MinimumCoresRequired)
+                    {
+                        Logger.LogWarning("Insufficient cores quota for PostgreSQL in location: {Location}", location);
+                        return CreateEmptyQuotaInfo();
+                    }
+
+                    break;
+                }
             }
 
             var result = new List<UsageInfo>();
@@ -52,16 +74,56 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
                     unit = unitElement.GetStringSafe();
                 }
 
-                result.Add(new UsageInfo(name, limit, used, unit));
+                // Format name with SKU details
+                var displayName = GetSkuDetail(name, limit - used);
+                result.Add(new UsageInfo(displayName, limit, used, unit));
             }
 
             return result;
         }
         catch (Exception error)
         {
-            throw new InvalidOperationException("Failed to fetch PostgreSQL quotas. Please check your subscription permissions and network connectivity.", error);
+            Logger.LogError(error, "Error fetching PostgreSQL quotas");
+            return [];
         }
     }
+
+    // Microsoft.DBforPostgreSQL/flexibleServers: cores, standardBSFamily, standardDADSv5Family, standardDDSv4Family, standardDDSv5Family, standardDSv3Family, standardEADSv5Family, standardEDSv4Family, standardEDSv5Family, standardESv3Family
+    private static string GetSkuDetail(string name, int remainingQuota)
+    {
+        if (name.StartsWith("standardB", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{name} (Burstable tier)";
+        }
+
+        if (name.StartsWith("standardD", StringComparison.OrdinalIgnoreCase))
+        {
+            var skuParts = name[9..].Split("Family")[0];
+            var prefix = skuParts[..^2].ToLowerInvariant();
+            var suffix = skuParts[^2..];
+            return $"{name} (GeneralPurpose tier, e.g. Standard_D2{prefix}_{suffix})";
+        }
+
+        if (name.StartsWith("standardE", StringComparison.OrdinalIgnoreCase))
+        {
+            var skuParts = name[9..].Split("Family")[0];
+            var prefix = skuParts[..^2].ToLowerInvariant();
+            var suffix = skuParts[^2..];
+            return $"{name} (MemoryOptimized tier, e.g. Standard_E2{prefix}_{suffix})";
+        }
+
+        if (string.Equals(name, CoresMagicString, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{name} (remaining quota: {remainingQuota})";
+        }
+
+        return name;
+    }
+
+    private static List<UsageInfo> CreateEmptyQuotaInfo() =>
+    [
+        new UsageInfo(Name: "No SKU available", Limit: 0, Used: 0)
+    ];
 
     protected async Task<JsonDocument?> GetQuotaByUrlAsync(string requestUrl, CancellationToken cancellationToken = default)
     {
