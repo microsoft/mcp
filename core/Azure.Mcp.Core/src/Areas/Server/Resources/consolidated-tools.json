@@ -711,6 +711,72 @@
       ]
     },
     {
+      "name": "list_azure_advisor_recommendations",
+      "description": "Get Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_list"
+      ]
+    },
+    {
+      "name": "get_azure_retail_pricing",
+      "description": "Get Azure retail pricing information for services, SKUs, and regions. Returns pricing data including pay-as-you-go rates, reservation pricing, and savings plan information for Azure resources like Virtual Machines, Storage, SQL Database, and other services.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "pricing_get"
+      ]
+    },
+    {
       "name": "generate_azure_cli_commands",
       "description": "Generate Azure CLI commands from natural language descriptions to help answer questions about Azure environments and operations",
       "toolMetadata": {
@@ -1469,6 +1535,7 @@
         "managedlustre_fs_sku_get",
         "managedlustre_fs_blob_autoexport_get",
         "managedlustre_fs_blob_autoimport_get",
+        "managedlustre_fs_blob_import_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1511,7 +1578,8 @@
         "storage_blob_container_create",
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
-        "managedlustre_fs_blob_autoimport_create"
+        "managedlustre_fs_blob_autoimport_create",
+        "managedlustre_fs_blob_import_create"
       ]
     },
     {
@@ -1549,7 +1617,7 @@
     },
     {
       "name": "manage_azure_managed_lustre_sync_jobs",
-      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport and autoexport jobs that sync data between Lustre filesystems and Azure Blob Storage.",
+      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport, autoexport, and one-time import jobs that sync data between Lustre filesystems and Azure Blob Storage.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1580,7 +1648,9 @@
         "managedlustre_fs_blob_autoexport_cancel",
         "managedlustre_fs_blob_autoexport_delete",
         "managedlustre_fs_blob_autoimport_cancel",
-        "managedlustre_fs_blob_autoimport_delete"
+        "managedlustre_fs_blob_autoimport_delete",
+        "managedlustre_fs_blob_import_cancel",
+        "managedlustre_fs_blob_import_delete"
       ]
     },
     {
@@ -2207,6 +2277,40 @@
         "acr_registry_repository_list",
         "aks_cluster_get",
         "aks_nodepool_get"
+      ]
+    },
+    {
+      "name": "get_azure_compute_resources",
+      "description": "Get details about Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_get",
+        "compute_vmss_get"
       ]
     },
     {
@@ -3035,6 +3139,72 @@
       },
       "mappedToolList": [
         "storagesync_cloudendpoint_changedetection"
+      ]
+    },
+    {
+      "name": "generate_azure_platform_landing_zones",
+      "description": "Generate and download Azure platform landing zone configurations for Azure Migrate projects. Collect parameters, checks if a landing zone exists, generate new landing zones following Azure Landing Zone architecture patterns, and download the generated infrastructure code.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azuremigrate_platformlandingzone_request"
+      ]
+    },
+    {
+      "name": "get_azure_landing_zone_modification_guidance",
+      "description": "Get scenario-based guidance for Azure Landing Zone configurations. Provides guidance for 15 scenarios including service configuration, policy management, resource naming, network topology, and identity governance. Supports policy search by name and listing all policies organized by archetype.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azuremigrate_platformlandingzone_getguidance"
       ]
     }
   ]

@@ -1,4 +1,6 @@
-using Azure.Core;
+using Azure.Monitor.Query;
+using Azure.Monitor.Query.Logs;
+using Azure.ResourceManager;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
@@ -9,20 +11,22 @@ public static class AzdResourceLogService
     private const string AzureYamlFileName = "azure.yaml";
 
     public static async Task<string> GetAzdResourceLogsAsync(
-        TokenCredential credential,
+        ArmClient armClient,
+        LogsQueryClient logsQueryClient,
         string workspaceFolder,
         string azdEnvName,
         string subscriptionId,
-        int? limit = null)
+        int? limit = null,
+        CancellationToken cancellationToken = default)
     {
         var toolErrorLogs = new List<string>();
         var appLogs = new List<string>();
 
         try
         {
-            var azdAppLogRetriever = new AzdAppLogRetriever(credential, subscriptionId, azdEnvName);
-            await azdAppLogRetriever.InitializeAsync();
-            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync();
+            var azdAppLogRetriever = new AzdAppLogRetriever(armClient, logsQueryClient, subscriptionId, azdEnvName);
+            await azdAppLogRetriever.InitializeAsync(cancellationToken);
+            await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync(cancellationToken);
 
             var services = GetServicesFromAzureYaml(workspaceFolder);
 
@@ -33,7 +37,7 @@ public static class AzdResourceLogService
                     if (service.Host != null)
                     {
                         var resourceType = ResourceTypeExtensions.GetResourceTypeFromHost(service.Host);
-                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit);
+                        var logs = await azdAppLogRetriever.QueryAppLogsAsync(resourceType, serviceName, limit, cancellationToken);
                         appLogs.Add(logs);
                     }
                 }

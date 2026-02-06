@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Models;
 namespace Azure.Mcp.Tools.Acr.Services;
 
 public interface IAcrService
 {
-    Task<List<AcrRegistryInfo>> ListRegistries(
+    Task<ResourceQueryResults<AcrRegistryInfo>> ListRegistries(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,

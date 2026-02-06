@@ -60,7 +60,10 @@ public class AutoexportJobGetCommandTests
         {
             Name = _jobName,
             Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/{_jobName}",
-            ProvisioningState = "Succeeded"
+            Properties = new Models.AutoexportJobProperties
+            {
+                ProvisioningState = "Succeeded"
+            }
         };
 
         _managedLustreService.GetAutoexportJobAsync(
@@ -180,8 +183,8 @@ public class AutoexportJobGetCommandTests
         // Arrange
         var expectedJobs = new List<Models.AutoexportJob>
         {
-            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job1", ProvisioningState = "Succeeded" },
-            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job2", ProvisioningState = "Running" }
+            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job1", Properties = new Models.AutoexportJobProperties { ProvisioningState = "Succeeded" } },
+            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job2", Properties = new Models.AutoexportJobProperties { ProvisioningState = "Running" } }
         };
 
         _managedLustreService.ListAutoexportJobsAsync(

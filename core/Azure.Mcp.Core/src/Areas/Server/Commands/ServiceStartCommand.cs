@@ -84,6 +84,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.Cloud);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -160,7 +161,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
-            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name)
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
+            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
         };
         return options;
     }
@@ -403,7 +405,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
 
                 if (serverOptions.Debug)
@@ -449,7 +450,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
@@ -627,7 +627,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);

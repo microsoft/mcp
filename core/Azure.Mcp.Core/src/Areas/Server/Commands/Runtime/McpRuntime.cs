@@ -110,19 +110,6 @@ public sealed class McpRuntime : IMcpRuntime
 
             activity?.SetStatus(ActivityStatusCode.Error);
 
-            // In the error case, try to get some details about the error.
-            // Typically all the error information is stored in the first
-            // content block and is of type TextContentBlock.
-            var textContent = callTool.Content
-                .Where(x => x is TextContentBlock)
-                .Cast<TextContentBlock>()
-                .FirstOrDefault();
-
-            if (textContent != default)
-            {
-                activity?.SetTag(TagName.ErrorDetails, textContent.Text);
-            }
-
             return callTool;
         }
         // Catches scenarios where child MCP clients are unable to be created

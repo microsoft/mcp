@@ -59,6 +59,12 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-Advisor
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Advisor
+# ServiceOwners:                       @ankiga-MSFT
+
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp
 
@@ -71,6 +77,11 @@
 # ServiceLabel: %tools-AppService
 # ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft
 
+# PRLabel: %tools-AzureMigrate
+/tools/Azure.Mcp.Tools.AzureMigrate/      @akshayrohilla @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AzureMigrate
+# ServiceOwners:                       @akshayrohilla @yeddlapurishivasai @mentaltraffic @andynski
 
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @XiaofuHuang @microsoft/azure-mcp
@@ -95,6 +106,13 @@
 
 # ServiceLabel: %tools-Communication
 # ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
+
+# PRLabel: %tools-Compute
+/tools/Azure.Mcp.Tools.Compute/         @g2vinay @haagha @audreytoney @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Compute
+# ServiceOwners:                       @haagha @audreytoney @saakpan
+
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
@@ -287,6 +305,12 @@
 
 # ServiceLabel: %tools-ResourceHealth
 # ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
+
+# PRLabel: %tools-Price
+/tools/Azure.Mcp.Tools.Pricing/      @anannya03 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Price
+# ServiceOwners:                     @anannya03
 
 ##################
 # Fabric MCP

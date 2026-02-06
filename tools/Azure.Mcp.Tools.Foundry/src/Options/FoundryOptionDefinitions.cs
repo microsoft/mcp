@@ -55,7 +55,7 @@ public static class FoundryOptionDefinitions
         $"--{Endpoint}"
     )
     {
-        Description = "The endpoint URL for the Microsoft Foundry project/service.",
+        Description = "The endpoint URL for the Microsoft Foundry project/service. The endpoint follows this pattern https://<foundry-resource-name>.services.ai.azure.com/api/projects/<project-name>.",
         Required = true
     };
 

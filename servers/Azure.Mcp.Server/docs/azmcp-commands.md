@@ -250,6 +250,13 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
+### Azure Advisor Operations
+
+```bash
+# List Advisor recommendations in a subscription
+azmcp advisor recommendations list --subscription <subscription>
+```
+
 ### Azure AI Search Operations
 
 ```bash
@@ -550,6 +557,113 @@ azmcp extension cli generate --cli-type <cli-type>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp extension cli install --cli-type <cli-type>
 ```
+
+### Azure Compute Operations
+
+#### Virtual Machines
+
+```bash
+# Get Virtual Machine(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription <subscription> \
+                     [--resource-group <resource-group>] \
+                     [--vm-name <vm-name>] \
+                     [--instance-view]
+
+# Examples:
+
+# List all VMs in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription"
+
+# List all VMs in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg"
+
+# Get specific VM details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm"
+
+# Get specific VM with instance view (runtime status)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm" \
+                     --instance-view
+```
+
+**Command Behavior:**
+- **With `--vm-name`**: Gets detailed information about a specific VM (requires `--resource-group`). Optionally include `--instance-view` for runtime status.
+- **With `--resource-group` only**: Lists all VMs in the specified resource group.
+- **With neither**: Lists all VMs in the subscription.
+
+**Returns:**
+- VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
+- When `--instance-view` is specified: Also includes power state, provisioning state, VM agent status, disk status, and extension status.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vm-name`) |
+| `--vm-name`, `--name` | No | Name of the virtual machine |
+| `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
+
+#### Virtual Machine Scale Sets
+
+```bash
+# Get Virtual Machine Scale Set(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription <subscription> \
+                       [--resource-group <resource-group>] \
+                       [--vmss-name <vmss-name>] \
+                       [--instance-id <instance-id>]
+
+# Examples:
+
+# List all VMSS in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription"
+
+# List all VMSS in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg"
+
+# Get specific VMSS details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss"
+
+# Get specific VM instance in a VMSS
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss" \
+                       --instance-id "0"
+```
+
+**Command Behavior:**
+- **With `--instance-id`**: Gets detailed information about a specific VM instance in the scale set (requires `--vmss-name` and `--resource-group`).
+- **With `--vmss-name`**: Gets detailed information about a specific VMSS (requires `--resource-group`).
+- **With `--resource-group` only**: Lists all VMSS in the specified resource group.
+- **With neither**: Lists all VMSS in the subscription.
+
+**Returns:**
+- VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, overprovision setting, zones, and tags.
+- When `--instance-id` is specified: Returns VM instance information including instance ID, name, location, VM size, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vmss-name`) |
+| `--vmss-name` | No | Name of the virtual machine scale set |
+| `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
 
 ### Azure Communication Services Operations
 
@@ -1774,7 +1888,162 @@ azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
                                               --resource-group <resource-group> \
                                               --filesystem-name <filesystem-name> \
                                               --job-name <job-name>
+
+# Create a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import create --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         [--job-name <job-name>] \
+                                         [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                         [--import-prefixes <prefix1> --import-prefixes <prefix2> ...] \
+                                         [--maximum-errors <number>]
+
+# Get details of one-time import jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import get --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --filesystem-name <filesystem-name> \
+                                      [--job-name <job-name>]
+
+# Cancel a running one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import cancel --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
+
+# Delete a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import delete --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
 ```
+
+### Azure Migrate Operations
+
+#### Platform Landing Zone Modification Guidance
+
+```bash
+# Fetch official Azure Landing Zone modification guidance for a specific scenario
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario <scenario> \
+                                                   [--policy-name <policy-name>] \
+                                                   [--list-policies <true|false>]
+```
+
+**Available Scenarios:**
+
+| Scenario | Description |
+|----------|-------------|
+| `resource-names` | Update resource naming prefixes and suffixes |
+| `management-groups` | Customize management group names and IDs |
+| `ddos` | Enable or disable DDoS protection plan |
+| `bastion` | Turn off Bastion host |
+| `dns` | Turn off Private DNS zones and resolvers |
+| `gateways` | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
+| `regions` | Add or remove secondary regions |
+| `ip-addresses` | Adjust CIDR ranges and IP address space |
+| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce |
+| `policy-assignment` | Remove or disable a policy assignment |
+| `ama` | Turn off Azure Monitoring Agent |
+| `amba` | Deploy Azure Monitoring Baseline Alerts |
+| `defender` | Turn off Defender Plans |
+| `zero-trust` | Implement Zero Trust Networking |
+| `slz` | Implement Sovereign Landing Zone controls |
+
+**Policy-related Options:**
+- `--policy-name`: Search for a specific policy by partial or full name
+- `--list-policies`: Set to `true` to list ALL policies organized by archetype
+
+**Examples:**
+```bash
+# Get guidance for enabling DDoS protection
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario ddos
+
+# Search for policies related to DDoS
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-enforcement \
+                                                   --policy-name ddos
+
+# List all available policies by archetype
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-assignment \
+                                                   --list-policies true
+```
+
+#### Platform Landing Zone Management
+
+```bash
+# Generate, download, and manage Azure Platform Landing Zones
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --migrate-project-name <migrate-project-name> \
+                                               --action <action> \
+                                               [action-specific-parameters]
+```
+
+**Actions:**
+
+1. **Check Existing** (`--action check`)
+   ```bash
+   # Check if a platform landing zone already exists
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action check
+   ```
+
+2. **Update Parameters** (`--action update`)
+   ```bash
+   # Cache all parameters for generation of the platform landing zone
+   # Defaults are applied automatically if not specified
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action update \
+                                                  [--region-type <single|multi>] \
+                                                  [--firewall-type <azurefirewall|nva>] \
+                                                  [--network-architecture <hubspoke|vwan>] \
+                                                  [--version-control-system <local|github|azuredevops>] \
+                                                  [--regions <comma-separated-regions>] \
+                                                  [--environment-name <environment-name>] \
+                                                  [--organization-name <organization-name>] \
+                                                  [--identity-subscription-id <subscription-id>] \
+                                                  [--management-subscription-id <subscription-id>] \
+                                                  [--connectivity-subscription-id <subscription-id>]
+   ```
+
+3. **Generate Landing Zone** (`--action generate`)
+   ```bash
+   # Generate the platform landing zone
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action generate
+   ```
+
+4. **Download Landing Zone** (`--action download`)
+   ```bash
+   # Download generated landing zone files to local workspace
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action download
+   ```
+
+5. **View Status** (`--action status`)
+   ```bash
+   # View cached parameters
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action status
+   ```
 
 ### Azure Native ISV Operations
 
@@ -1824,6 +2093,35 @@ azmcp quota usage check --subscription <subscription> \
 azmcp policy assignment list --subscription <subscription> \
                              --scope <scope>
 ```
+
+### Azure Pricing Operations
+
+```bash
+# Get Azure retail pricing information
+# Requires at least one filter: --sku, --service, --region, --service-family, --price-type, or --filter
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp pricing get [--sku <sku>] \
+                  [--service <service>] \
+                  [--region <region>] \
+                  [--service-family <service-family>] \
+                  [--price-type <price-type>] \
+                  [--currency <currency>] \
+                  [--include-savings-plan] \
+                  [--filter <odata-filter>]
+```
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--sku` | No* | - | ARM SKU name (e.g., Standard_D4s_v5) |
+| `--service` | No* | - | Azure service name (e.g., Virtual Machines, Storage) |
+| `--region` | No* | - | Azure region (e.g., eastus, westeurope) |
+| `--service-family` | No* | - | Service family (e.g., Compute, Storage, Databases) |
+| `--price-type` | No* | - | Price type (Consumption, Reservation, DevTestConsumption) |
+| `--currency` | No | USD | Currency code (e.g., USD, EUR) |
+| `--include-savings-plan` | No | false | Include savings plan pricing (uses preview API) |
+| `--filter` | No* | - | Raw OData filter for advanced queries |
+
+\* At least one filter option is required.
 
 ### Azure RBAC Operations
 

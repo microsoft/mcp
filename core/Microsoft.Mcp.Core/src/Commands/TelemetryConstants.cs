@@ -30,6 +30,7 @@ public class TagName
     public const string Tool = "Tool";
     public const string VSCodeConversationId = "VSCodeConversationId";
     public const string VSCodeRequestId = "VSCodeRequestId";
+    public const string Host = "Host";
 }
 
 public class ActivityName
@@ -38,4 +39,10 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
+}
+
+public class AppInsightsInstanceType
+{
+    public const string Microsoft = "Microsoft";
+    public const string UserProvided = "UserProvided";
 }

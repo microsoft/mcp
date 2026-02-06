@@ -1,17 +1,45 @@
 {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-    "name": "com.microsoft/fabric-mcp",
-    "description": "<<INSERT_SERVER_DESCRIPTION>>",
-    "version": "<<PLACEHOLDER_VERSION>>",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "<<McpRepositoryName>>",
+    "description": "MCP tools for interacting with Microsoft Fabric",
+    "version": "<<Version>>",
     "title": "Microsoft Fabric MCP Server",
     "packages": [
         {
             "registryType": "nuget",
-            "identifier": "<<INSERT_PACKAGE_NAME>>",
-            "version": "<<PLACEHOLDER_VERSION>>",
+            "identifier": "<<DnxPackageId>>",
+            "version": "<<Version>>",
             "transport": {
                 "type": "stdio"
-            }
+            },
+            "packageArguments": [
+                {
+                    "type": "positional",
+                    "value": "server"
+                },
+                {
+                    "type": "positional",
+                    "value": "start"
+                }
+            ]
+        },
+        {
+            "registryType": "npm",
+            "identifier": "<<NpmPackageName>>",
+            "version": "<<Version>>",
+            "transport": {
+                "type": "stdio"
+            },
+            "packageArguments": [
+                {
+                    "type": "positional",
+                    "value": "server"
+                },
+                {
+                    "type": "positional",
+                    "value": "start"
+                }
+            ]
         }
     ],
     "repository": {
