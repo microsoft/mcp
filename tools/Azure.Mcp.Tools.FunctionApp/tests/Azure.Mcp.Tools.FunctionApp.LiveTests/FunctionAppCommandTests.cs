@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.LiveTests;
 
-[Collection("LiveServer")]
 public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>

@@ -12,7 +12,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.LiveTests;
 
-[Collection("LiveServer")]
 public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private static readonly string[] _sanitizedHeaders =

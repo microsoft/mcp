@@ -13,8 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-[Collection("LiveServer")]
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 

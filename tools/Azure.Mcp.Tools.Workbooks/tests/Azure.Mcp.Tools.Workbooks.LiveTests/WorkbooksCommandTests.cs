@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.LiveTests;
 
-[Collection("LiveServer")]
 public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";

@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
 
-[Collection("LiveServer")]
 public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private string _subscriptionId = default!;

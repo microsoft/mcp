@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
 
-[Collection("LiveServer")]
 public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     /// <summary>

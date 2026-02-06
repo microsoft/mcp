@@ -13,7 +13,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
-[Collection("LiveServer")]
 public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];

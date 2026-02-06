@@ -21,7 +21,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-[Collection("LiveServer")]
 public class AppConfigCommandTests : RecordedCommandTestsBase
 {
     private const string AccountsKey = "accounts";

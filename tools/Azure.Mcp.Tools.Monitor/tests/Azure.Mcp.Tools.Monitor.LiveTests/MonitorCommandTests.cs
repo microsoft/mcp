@@ -22,7 +22,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
-[Collection("LiveServer")]
 public sealed class MonitorCommandTests : RecordedCommandTestsBase
 {
     private LogAnalyticsHelper? _logHelper;

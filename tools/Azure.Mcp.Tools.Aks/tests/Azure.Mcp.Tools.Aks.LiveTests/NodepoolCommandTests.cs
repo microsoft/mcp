@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-[Collection("LiveServer")]
 public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]

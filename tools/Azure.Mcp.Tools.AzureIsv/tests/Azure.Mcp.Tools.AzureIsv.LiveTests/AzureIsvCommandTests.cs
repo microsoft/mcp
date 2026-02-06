@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.LiveTests;
 
-[Collection("LiveServer")]
 public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]

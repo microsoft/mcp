@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
-[Collection("LiveServer")]
 public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     /// <summary>

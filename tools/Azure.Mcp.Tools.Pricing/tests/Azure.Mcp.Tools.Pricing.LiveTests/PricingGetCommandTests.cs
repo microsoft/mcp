@@ -14,7 +14,6 @@ namespace Azure.Mcp.Tools.Pricing.LiveTests;
 /// These tests call the real Azure Retail Prices API (https://prices.azure.com).
 /// The API is public and does not require authentication.
 /// </summary>
-[Collection("LiveServer")]
 public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string PricesKey = "prices";

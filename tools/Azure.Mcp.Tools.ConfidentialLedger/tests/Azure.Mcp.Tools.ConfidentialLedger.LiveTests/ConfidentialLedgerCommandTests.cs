@@ -8,7 +8,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.LiveTests;
 
-[Collection("LiveServer")]
 public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     [Fact]

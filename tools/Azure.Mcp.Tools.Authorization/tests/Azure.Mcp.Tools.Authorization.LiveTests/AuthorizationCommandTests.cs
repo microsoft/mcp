@@ -10,7 +10,6 @@ using Xunit;
 namespace Azure.Mcp.Tools.Authorization.LiveTests;
 
 
-[Collection("LiveServer")]
 public class AuthorizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
