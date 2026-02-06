@@ -63,52 +63,33 @@ function Invoke-DockerCommand {
     }
 }
 
-# E.g., When publishing "Azure.Mcp.Server", given TarDirectory "docker_output" and
-# CliName "azmcp", finds docker tar files: azmcp-amd64-image.tar, azmcp-arm64-image.tar
 function Get-DockerTarFiles {
     param(
         [string]$TarDirectory,
         [string]$CliName
     )
 
-    Write-Host "Discovering tar files..."
+    Write-Host "Discovering Docker image tar files..."
     $tarPattern = Join-Path $TarDirectory "$CliName-*-image.tar"
-    $tarFiles = Get-ChildItem -Path $tarPattern -ErrorAction SilentlyContinue
-    
-    # Strict check for exactly 2 tar files (amd64 + arm64). Upstream stages validate
-    # this, but we verify here as a defensive measure.
-    if (-not $tarFiles -or $tarFiles.Count -ne 2) {
+    $tarFiles = Get-ChildItem -Path $tarPattern
+
+    if (-not $tarFiles) {
         Write-Host "Directory contents:" -ForegroundColor Yellow
         Get-ChildItem -Path $TarDirectory | ForEach-Object { Write-Host "  $_" }
-        Write-Error "Expected exactly 2 Docker image tar files (amd64 + arm64), found $($tarFiles.Count)"
+        Write-Error "No Docker image tar files found matching pattern: $tarPattern"
     }
 
     Write-Host "Found tar files:"
+    # E.g., azmcp-amd64-image.tar, azmcp-arm64-image.tar
     $tarFiles | ForEach-Object { Write-Host "  $($_.FullName)" }
     
     return $tarFiles
 }
 
-# E.g., Given TarPath "docker_output/azmcp-arm64-image.tar" and CliName "azmcp",
-# returns the architecture suffix "arm64"
-function Get-ArchitectureFromTarFile {
-    param([string]$TarPath, [string]$CliName)
-    
-    $fileName = [System.IO.Path]::GetFileName($TarPath)
-    # Using the pattern '{CliName}-{arch}-image.tar' capture {arch}
-    $pattern = "^$([regex]::Escape($CliName))-(.+)-image\.tar$"
-    if ($fileName -match $pattern) {
-        return $Matches[1]
-    }
-    Write-Error "Could not extract architecture from tar file name: $fileName"
-}
-
-# Loads Docker image from tar file and returns the image name.
-# E.g., Given TarPath "docker_output/azmcp-arm64-image.tar", loads the image and
-# returns the image name "azure-sdk/azure-mcp:99999" (DockerLocalTag from build stage)
 function Load-DockerImage {
     param([string]$TarPath)
     
+    # E.g., "Loading docker_output/azmcp-arm64-image.tar..."
     Write-Host "Loading $TarPath..."
     $output = Invoke-DockerCommand -Arguments @('load', '-i', $TarPath) -CaptureOutput
     
@@ -117,6 +98,7 @@ function Load-DockerImage {
         if ($line -match 'Loaded image:\s*(.+)$') {
             $imageName = $Matches[1].Trim()
             Write-Host "Loaded image: $imageName"
+            # E.g., "azure-sdk/azure-mcp:99999"
             return $imageName
         }
     }
@@ -124,18 +106,6 @@ function Load-DockerImage {
     Write-Error "Could not parse loaded image name from docker load output: $output"
 }
 
-# Checks if an image exists in the local Docker daemon.
-function Test-DockerImageExists {
-    param([string]$ImageName)
-    
-    $null = docker image inspect $ImageName 2>&1
-    return $LASTEXITCODE -eq 0
-}
-
-# Loads a Docker image from tar, verifies it exists, and tags it with architecture suffix.
-# E.g., for "Azure.Mcp.Server", given TarPath "docker_output/azmcp-arm64-image.tar" 
-# creates tag: azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-arm64
-# Returns a hashtable with ArchTag, LoadedImage, and Architecture.
 function Import-ArchitectureImage {
     param(
         [string]$TarPath,
@@ -144,15 +114,20 @@ function Import-ArchitectureImage {
         [string]$Version
     )
     
-    $arch = Get-ArchitectureFromTarFile -TarPath $TarPath -CliName $CliName
+    # Extract architecture from tar filename pattern: {CliName}-{arch}-image.tar
+    # E.g., from "azmcp-arm64-image.tar" extract "arm64"
+    $fileName = [System.IO.Path]::GetFileName($TarPath)
+    $pattern = "^$([regex]::Escape($CliName))-(.+)-image\.tar$"
+    if ($fileName -notmatch $pattern) {
+        Write-Error "Could not extract architecture from tar file name: $fileName"
+    }
+    $arch = $Matches[1]
+    
     Write-Host "Processing $arch" -ForegroundColor Yellow
     
     $localImage = Load-DockerImage -TarPath $TarPath
-
-    if (-not (Test-DockerImageExists -ImageName $localImage)) {
-        Write-Error "Loaded image '$localImage' not found after load"
-    }
     
+    # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-arm64
     $archTag = "${BaseRepo}:${Version}-${arch}"
     Write-Host "Tagging as: $archTag"
     Invoke-DockerCommand -Arguments @('tag', $localImage, $archTag)
@@ -160,11 +135,8 @@ function Import-ArchitectureImage {
     Write-Host ""
     
     return @{
-        # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-arm64
         ArchTag = $archTag
-        # E.g., azure-sdk/azure-mcp:99999
         LocalImage = $localImage
-        # E.g., arm64
         Architecture = $arch
     }
 }
@@ -176,7 +148,6 @@ function New-MultiArchManifest {
     )
     
     Write-Host "Creating multi-arch manifest for $ManifestTag..."
-    # --amend allows updating existing local manifests, useful for retries and local dev
     Invoke-DockerCommand -Arguments (@('manifest', 'create', '--amend', $ManifestTag) + $ArchTags)
     Invoke-DockerCommand -Arguments @('manifest', 'push', $ManifestTag)
 }
@@ -188,11 +159,9 @@ Write-Host "Version: $Version"
 Write-Host "Base Repo: $BaseRepo"
 Write-Host "Tar Directory: $TarDirectory"
 
-# Discover Docker image tar files
 Write-Host ""
 $tarFiles = Get-DockerTarFiles -TarDirectory $TarDirectory -CliName $CliName
 
-# Load and tag each Docker image tar file
 $imageInfos = @()
 foreach ($tar in $tarFiles) {
     $info = Import-ArchitectureImage -TarPath $tar.FullName -CliName $CliName -BaseRepo $BaseRepo -Version $Version
