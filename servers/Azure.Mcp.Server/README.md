@@ -902,8 +902,11 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Send an email from my communication service endpoint with custom sender name and multiple recipients"
 * "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
-### � Azure Compute
+### 🖥️ Azure Compute
 
+* "List all my managed disks in subscription 'my-subscription'"
+* "Show me all disks in resource group 'my-resource-group'"
+* "Get details of disk 'my-disk' in resource group 'my-resource-group'"
 * "List all virtual machines in my subscription"
 * "Show me all VMs in resource group 'my-resource-group'"
 * "Get details for virtual machine 'my-vm' in resource group 'my-resource-group'"
@@ -1047,7 +1050,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
-- � **Azure Compute** - Virtual Machine and Virtual Machine Scale Set management
+- � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
 - �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management

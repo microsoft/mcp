@@ -3,6 +3,10 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="**\Resources\*.txt" />
+    <EmbeddedResource Include="**\Resources\*.json" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

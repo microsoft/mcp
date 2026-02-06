@@ -17,6 +17,7 @@ Write-Host "Compute test resources deployed successfully" -ForegroundColor Green
 Write-Host "  VM Name: $($DeploymentOutputs['VMNAME'].Value)" -ForegroundColor Cyan
 Write-Host "  VMSS Name: $($DeploymentOutputs['VMSSNAME'].Value)" -ForegroundColor Cyan
 Write-Host "  Resource Group: $($DeploymentOutputs['RESOURCEGROUPNAME'].Value)" -ForegroundColor Cyan
+Write-Host "  Disk Name: $($DeploymentOutputs['diskName'].Value)" -ForegroundColor Cyan
 
 # Wait for VM to be fully provisioned and running
 Write-Host "Waiting for VM to be fully provisioned..." -ForegroundColor Yellow
