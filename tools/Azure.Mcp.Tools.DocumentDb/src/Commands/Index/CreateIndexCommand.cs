@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -74,8 +75,7 @@ public sealed class CreateIndexCommand(ILogger<CreateIndexCommand> logger)
 
             var result = await service.CreateIndexAsync(options.DbName!, options.CollectionName!, keys, indexOptions, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

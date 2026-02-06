@@ -21,17 +21,20 @@ internal static class DocumentDbOptionDefinitions
 
     public static readonly Option<string> DbName = new("--db-name")
     {
-        Description = "Database name"
+        Description = "Database name",
+        Required = true
     };
 
     public static readonly Option<string> CollectionName = new("--collection-name")
     {
-        Description = "Collection name"
+        Description = "Collection name",
+        Required = true
     };
 
     public static readonly Option<string> NewCollectionName = new("--new-collection-name")
     {
-        Description = "New collection name"
+        Description = "New collection name",
+        Required = true
     };
 
     public static readonly Option<int> SampleSize = new("--sample-size")
@@ -52,22 +55,26 @@ internal static class DocumentDbOptionDefinitions
 
     public static readonly Option<string> Document = new("--document")
     {
-        Description = "Document to insert"
+        Description = "Document to insert",
+        Required = true
     };
 
     public static readonly Option<string> Documents = new("--documents")
     {
-        Description = "Documents to insert"
+        Description = "Documents to insert",
+        Required = true
     };
 
     public static readonly Option<string> Filter = new("--filter")
     {
-        Description = "Filter for update/delete"
+        Description = "Filter for update/delete",
+        Required = true
     };
 
     public static readonly Option<string> Update = new("--update")
     {
-        Description = "Update operations"
+        Description = "Update operations",
+        Required = true
     };
 
     public static readonly Option<bool> Upsert = new("--upsert")
@@ -78,7 +85,8 @@ internal static class DocumentDbOptionDefinitions
 
     public static readonly Option<string> Pipeline = new("--pipeline")
     {
-        Description = "Aggregation pipeline"
+        Description = "Aggregation pipeline",
+        Required = true
     };
 
     public static readonly Option<bool> AllowDiskUse = new("--allow-disk-use")
@@ -89,12 +97,14 @@ internal static class DocumentDbOptionDefinitions
 
     public static readonly Option<string> Keys = new("--keys")
     {
-        Description = "Index keys"
+        Description = "Index keys",
+        Required = true
     };
 
     public static readonly Option<string> IndexName = new("--index-name")
     {
-        Description = "Index name"
+        Description = "Index name",
+        Required = true
     };
 
     public static readonly Option<string> Ops = new("--ops")

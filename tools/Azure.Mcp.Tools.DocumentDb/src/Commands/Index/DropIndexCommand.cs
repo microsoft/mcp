@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -64,8 +65,7 @@ public sealed class DropIndexCommand(ILogger<DropIndexCommand> logger)
 
             var result = await service.DropIndexAsync(options.DbName!, options.CollectionName!, options.IndexName!, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

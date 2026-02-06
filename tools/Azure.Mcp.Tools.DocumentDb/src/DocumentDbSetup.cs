@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.DocumentDb;
 public class DocumentDbSetup : IAreaSetup
 {
     public string Name => "documentdb";
-    public string Title => "Azure Cosmos DB for MongoDB (vCore)";
+    public string Title => "Azure DocumentDB (with MongoDB compatibility)";
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -67,7 +67,7 @@ public class DocumentDbSetup : IAreaSetup
         // Create DocumentDB root command group
         var documentDb = new CommandGroup(
             Name,
-            "Azure Cosmos DB for MongoDB (vCore) operations - Manage databases, collections, and documents in MongoDB-compatible Azure Cosmos DB.",
+            "Azure DocumentDB operations - Manage databases, collections, and documents in Azure DocumentDB (with MongoDB compatibility).",
             Title);
 
         // Connection subgroup

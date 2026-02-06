@@ -42,7 +42,16 @@ public class ListDatabasesCommandTests
         // Arrange
         var expectedDatabases = new List<string> { "database1", "database2", "admin" };
         _documentDbService.ListDatabasesAsync(Arg.Any<CancellationToken>())
-            .Returns(expectedDatabases);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = "Databases retrieved successfully",
+                ["data"] = new Dictionary<string, object?>
+                {
+                    ["databases"] = expectedDatabases
+                }
+            });
 
         var args = _commandDefinition.Parse([]);
 
@@ -63,7 +72,16 @@ public class ListDatabasesCommandTests
     {
         // Arrange
         _documentDbService.ListDatabasesAsync(Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = "Databases retrieved successfully",
+                ["data"] = new Dictionary<string, object?>
+                {
+                    ["databases"] = new List<string>()
+                }
+            });
 
         var args = _commandDefinition.Parse([]);
 
@@ -80,13 +98,19 @@ public class ListDatabasesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceReturnsError()
     {
         // Arrange
-        var expectedError = "Failed to connect to DocumentDB";
+        var expectedError = "Failed to list databases: Failed to connect to DocumentDB";
 
         _documentDbService.ListDatabasesAsync(Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.InternalServerError,
+                ["message"] = expectedError,
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([]);
 
@@ -96,26 +120,6 @@ public class ListDatabasesCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsTimeoutException()
-    {
-        // Arrange
-        var expectedError = "Connection timeout";
-
-        _documentDbService.ListDatabasesAsync(Arg.Any<CancellationToken>())
-            .ThrowsAsync(new TimeoutException(expectedError));
-
-        var args = _commandDefinition.Parse([]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Contains("Failed to list databases", response.Message);
     }
 }

@@ -3,6 +3,7 @@
 
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
+using Azure.Mcp.Tools.DocumentDb.Models;
 
 namespace Azure.Mcp.Tools.DocumentDb.Commands;
 
@@ -69,5 +70,41 @@ internal static class DocumentDbResponseHelper
         }
 
         throw new NotSupportedException($"Type {typeof(T).Name} is not supported. Only 'object' type is AOT-compatible.");
+    }
+
+    /// <summary>
+    /// Processes a DocumentDb service response and applies it to the command context.
+    /// </summary>
+    /// <param name="context">The command context to update.</param>
+    /// <param name="serviceResult">The service result object.</param>
+    public static void ProcessResponse(Microsoft.Mcp.Core.Models.Command.CommandContext context, object? serviceResult)
+    {
+        var response = DocumentDbResponse.FromDictionary(serviceResult);
+        if (response == null)
+        {
+            return;
+        }
+
+        context.Response.Status = response.StatusCode;
+
+        if (response.Success)
+        {
+            if (response.Data != null)
+            {
+                context.Response.Results = CreateFromJson(SerializeToJson(response.Data));
+            }
+            else
+            {
+                // For success with no data, create an empty result with the message
+                context.Response.Results = CreateFromJson(SerializeToJson(new Dictionary<string, object?>
+                {
+                    ["message"] = response.Message
+                }));
+            }
+        }
+        else
+        {
+            context.Response.Message = response.Message ?? "Unknown error";
+        }
     }
 }

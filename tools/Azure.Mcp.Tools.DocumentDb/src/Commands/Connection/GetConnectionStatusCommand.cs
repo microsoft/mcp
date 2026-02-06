@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -45,12 +46,12 @@ public sealed class GetConnectionStatusCommand(ILogger<GetConnectionStatusComman
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = service.GetConnectionStatus();
+            var result = await service.GetConnectionStatusAsync(cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
-            return await Task.FromResult(context.Response);
+            return context.Response;
         }
         catch (Exception ex)
         {

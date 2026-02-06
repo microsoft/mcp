@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using MongoDB.Bson;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DocumentDb.UnitTests.Collection;
@@ -55,7 +54,13 @@ public class SampleDocumentsCommandTests
             Arg.Is(collectionName),
             Arg.Is(sampleSize),
             Arg.Any<CancellationToken>())
-            .Returns(expectedDocuments);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = $"Retrieved {expectedDocuments.Count} sample documents successfully",
+                ["data"] = expectedDocuments
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -78,13 +83,20 @@ public class SampleDocumentsCommandTests
         // Arrange
         var dbName = "testdb";
         var collectionName = "emptycollection";
+        var emptyList = new List<BsonDocument>();
 
         _documentDbService.SampleDocumentsAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<int>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = "Retrieved 0 sample documents successfully",
+                ["data"] = emptyList
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -107,13 +119,20 @@ public class SampleDocumentsCommandTests
         var dbName = "testdb";
         var collectionName = "testcollection";
         var defaultSampleSize = 10;
+        var emptyList = new List<BsonDocument>();
 
         _documentDbService.SampleDocumentsAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Is(defaultSampleSize),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = "Retrieved 0 sample documents successfully",
+                ["data"] = emptyList
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -134,19 +153,24 @@ public class SampleDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenCollectionNotFound()
+    public async Task ExecuteAsync_Returns400_WhenCollectionNotFound()
     {
         // Arrange
         var dbName = "testdb";
         var collectionName = "nonexistent";
-        var expectedError = "Collection not found";
 
         _documentDbService.SampleDocumentsAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<int>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.BadRequest,
+                ["message"] = $"Collection '{collectionName}' not found in database '{dbName}'",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -158,24 +182,29 @@ public class SampleDocumentsCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not found", response.Message.ToLower());
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenDatabaseNotFound()
+    public async Task ExecuteAsync_Returns400_WhenDatabaseNotFound()
     {
         // Arrange
         var dbName = "nonexistentdb";
         var collectionName = "testcollection";
-        var expectedError = "Database not found";
 
         _documentDbService.SampleDocumentsAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<int>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.BadRequest,
+                ["message"] = $"Database '{dbName}' not found",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -187,8 +216,8 @@ public class SampleDocumentsCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not found", response.Message.ToLower());
     }
 
     [Theory]
@@ -213,13 +242,20 @@ public class SampleDocumentsCommandTests
         // Arrange
         var dbName = "testdb";
         var collectionName = "testcollection";
+        var emptyList = new List<BsonDocument>();
 
         _documentDbService.SampleDocumentsAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Is(sampleSize),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["statusCode"] = HttpStatusCode.OK,
+                ["message"] = "Retrieved 0 sample documents successfully",
+                ["data"] = emptyList
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,

@@ -11,19 +11,19 @@ public interface IDocumentDbService : IDisposable
     // Connection Management
     Task<object> ConnectAsync(string connectionString, bool testConnection = true, CancellationToken cancellationToken = default);
     Task<object> DisconnectAsync(CancellationToken cancellationToken = default);
-    object GetConnectionStatus();
+    Task<object> GetConnectionStatusAsync(CancellationToken cancellationToken = default);
 
     // Database Operations
-    Task<List<string>> ListDatabasesAsync(CancellationToken cancellationToken = default);
-    Task<BsonDocument> GetDatabaseStatsAsync(string databaseName, CancellationToken cancellationToken = default);
+    Task<object> ListDatabasesAsync(CancellationToken cancellationToken = default);
+    Task<object> GetDatabaseStatsAsync(string databaseName, CancellationToken cancellationToken = default);
     Task<object> GetDatabaseInfoAsync(string databaseName, CancellationToken cancellationToken = default);
     Task<object> DropDatabaseAsync(string databaseName, CancellationToken cancellationToken = default);
 
     // Collection Operations
-    Task<BsonDocument> GetCollectionStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<object> GetCollectionStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
     Task<object> RenameCollectionAsync(string databaseName, string oldName, string newName, CancellationToken cancellationToken = default);
     Task<object> DropCollectionAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
-    Task<List<BsonDocument>> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default);
+    Task<object> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default);
 
     // Document Operations
     Task<object> FindDocumentsAsync(string databaseName, string collectionName, BsonDocument? query = null, object? options = null, CancellationToken cancellationToken = default);
@@ -44,6 +44,6 @@ public interface IDocumentDbService : IDisposable
     Task<object> CreateIndexAsync(string databaseName, string collectionName, BsonDocument keys, BsonDocument? options = null, CancellationToken cancellationToken = default);
     Task<object> ListIndexesAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
     Task<object> DropIndexAsync(string databaseName, string collectionName, string indexName, CancellationToken cancellationToken = default);
-    Task<List<BsonDocument>> GetIndexStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
-    Task<BsonDocument> GetCurrentOpsAsync(BsonDocument? filter = null, CancellationToken cancellationToken = default);
+    Task<object> GetIndexStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<object> GetCurrentOpsAsync(BsonDocument? filter = null, CancellationToken cancellationToken = default);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -62,8 +63,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
 
             var result = await service.GetCurrentOpsAsync(filter, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbHelpers.SerializeBsonToJson(result));
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

@@ -3,14 +3,12 @@
 
 using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.DocumentDb.Commands.Index;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DocumentDb.UnitTests.Index;
@@ -44,12 +42,18 @@ public class ListIndexesCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["indexes"] = new List<string>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Indexes retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
-                "{\"name\":\"status_1\",\"key\":{\"status\":1}}"
-            },
-            ["count"] = 2
+                ["indexes"] = new List<string>
+                {
+                    "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
+                    "{\"name\":\"status_1\",\"key\":{\"status\":1}}"
+                },
+                ["count"] = 2
+            }
         };
 
         _documentDbService.ListIndexesAsync(
@@ -80,11 +84,17 @@ public class ListIndexesCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["indexes"] = new List<string>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Indexes retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                "{\"name\":\"_id_\",\"key\":{\"_id\":1}}"
-            },
-            ["count"] = 1
+                ["indexes"] = new List<string>
+                {
+                    "{\"name\":\"_id_\",\"key\":{\"_id\":1}}"
+                },
+                ["count"] = 1
+            }
         };
 
         _documentDbService.ListIndexesAsync(
@@ -108,18 +118,23 @@ public class ListIndexesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenCollectionNotFound()
+    public async Task ExecuteAsync_Returns400_WhenCollectionNotFound()
     {
         // Arrange
         var dbName = "testdb";
         var collectionName = "nonexistent";
-        var expectedError = "Collection not found";
 
         _documentDbService.ListIndexesAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.BadRequest,
+                ["message"] = "Collection 'nonexistent' not found",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -131,23 +146,28 @@ public class ListIndexesCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not found", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenDatabaseNotFound()
+    public async Task ExecuteAsync_Returns400_WhenDatabaseNotFound()
     {
         // Arrange
         var dbName = "nonexistentdb";
         var collectionName = "testcollection";
-        var expectedError = "Database not found";
 
         _documentDbService.ListIndexesAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.BadRequest,
+                ["message"] = "Database 'nonexistentdb' not found",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -159,8 +179,8 @@ public class ListIndexesCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not found", response.Message);
     }
 
     [Theory]
@@ -184,12 +204,18 @@ public class ListIndexesCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["indexes"] = new List<string>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Indexes retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
-                "{\"name\":\"name_1_age_1\",\"key\":{\"name\":1,\"age\":1}}"
-            },
-            ["count"] = 2
+                ["indexes"] = new List<string>
+                {
+                    "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
+                    "{\"name\":\"name_1_age_1\",\"key\":{\"name\":1,\"age\":1}}"
+                },
+                ["count"] = 2
+            }
         };
 
         _documentDbService.ListIndexesAsync(
@@ -220,12 +246,18 @@ public class ListIndexesCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["indexes"] = new List<string>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Indexes retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
-                "{\"name\":\"description_text\",\"key\":{\"description\":\"text\"}}"
-            },
-            ["count"] = 2
+                ["indexes"] = new List<string>
+                {
+                    "{\"name\":\"_id_\",\"key\":{\"_id\":1}}",
+                    "{\"name\":\"description_text\",\"key\":{\"description\":\"text\"}}"
+                },
+                ["count"] = 2
+            }
         };
 
         _documentDbService.ListIndexesAsync(
@@ -249,18 +281,23 @@ public class ListIndexesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsUnauthorizedException()
+    public async Task ExecuteAsync_Returns401_WhenServiceThrowsUnauthorizedException()
     {
         // Arrange
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var expectedError = "Unauthorized access";
 
         _documentDbService.ListIndexesAsync(
             Arg.Is(dbName),
             Arg.Is(collectionName),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new UnauthorizedAccessException(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.Unauthorized,
+                ["message"] = "Unauthorized access",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -272,7 +309,7 @@ public class ListIndexesCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("Unauthorized access", response.Message);
     }
 }

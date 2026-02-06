@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -47,8 +48,8 @@ public sealed class DisconnectDocumentDbCommand(ILogger<DisconnectDocumentDbComm
 
             var result = await service.DisconnectAsync(cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

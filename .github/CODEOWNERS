@@ -66,10 +66,10 @@
 # ServiceOwners:                       @ankiga-MSFT
 
 # PRLabel: %tools-DocumentDb
-/tools/Azure.Mcp.Tools.DocumentDb/     @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.DocumentDb/     @xingfan-git @microsoft/azure-mcp
 
 # ServiceLabel: %tools-DocumentDb
-# ServiceOwners:                       @microsoft/azure-mcp
+# ServiceOwners:                       @xingfan-git
 
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp

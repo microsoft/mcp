@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -9,6 +10,7 @@ using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Commands;
+using MongoDB.Bson;
 
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
@@ -77,8 +79,8 @@ public sealed class SampleDocumentsCommand(ILogger<SampleDocumentsCommand> logge
 
             var result = await service.SampleDocumentsAsync(options.DbName!, options.CollectionName!, options.SampleSize, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result.Select(doc => DocumentDbHelpers.SerializeBsonToJson(doc))));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

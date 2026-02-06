@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -70,8 +71,8 @@ public sealed class InsertDocumentCommand(ILogger<InsertDocumentCommand> logger)
 
             var result = await service.InsertDocumentAsync(options.DbName!, options.CollectionName!, document, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -60,8 +61,8 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
 
             var result = await service.GetDatabaseStatsAsync(options.DbName!, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbHelpers.SerializeBsonToJson(result));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }

@@ -46,17 +46,23 @@ public class FindDocumentsCommandTests
         var query = "{\"status\": \"active\"}";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["documents"] = new List<string> { "{\"_id\":\"1\",\"status\":\"active\"}" },
-            ["total_count"] = 1L,
-            ["returned_count"] = 1,
-            ["has_more"] = false,
-            ["query"] = "{\"status\":\"active\"}",
-            ["applied_options"] = new Dictionary<string, object?>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Documents retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                ["limit"] = 100,
-                ["skip"] = 0,
-                ["sort"] = null,
-                ["projection"] = null
+                ["documents"] = new List<string> { "{\"_id\":\"1\",\"status\":\"active\"}" },
+                ["total_count"] = 1L,
+                ["returned_count"] = 1,
+                ["has_more"] = false,
+                ["query"] = "{\"status\":\"active\"}",
+                ["applied_options"] = new Dictionary<string, object?>
+                {
+                    ["limit"] = 100,
+                    ["skip"] = 0,
+                    ["sort"] = null,
+                    ["projection"] = null
+                }
             }
         };
 
@@ -91,17 +97,23 @@ public class FindDocumentsCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["documents"] = new List<string> { "{\"_id\":\"1\"}", "{\"_id\":\"2\"}" },
-            ["total_count"] = 2L,
-            ["returned_count"] = 2,
-            ["has_more"] = false,
-            ["query"] = "{}",
-            ["applied_options"] = new Dictionary<string, object?>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Documents retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                ["limit"] = 100,
-                ["skip"] = 0,
-                ["sort"] = null,
-                ["projection"] = null
+                ["documents"] = new List<string> { "{\"_id\":\"1\"}", "{\"_id\":\"2\"}" },
+                ["total_count"] = 2L,
+                ["returned_count"] = 2,
+                ["has_more"] = false,
+                ["query"] = "{}",
+                ["applied_options"] = new Dictionary<string, object?>
+                {
+                    ["limit"] = 100,
+                    ["skip"] = 0,
+                    ["sort"] = null,
+                    ["projection"] = null
+                }
             }
         };
 
@@ -137,17 +149,23 @@ public class FindDocumentsCommandTests
         var options = "{\"limit\": 10, \"skip\": 5}";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["documents"] = new List<string> { "{\"_id\":\"1\"}" },
-            ["total_count"] = 15L,
-            ["returned_count"] = 1,
-            ["has_more"] = true,
-            ["query"] = "{\"status\":\"active\"}",
-            ["applied_options"] = new Dictionary<string, object?>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Documents retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                ["limit"] = 10,
-                ["skip"] = 5,
-                ["sort"] = null,
-                ["projection"] = null
+                ["documents"] = new List<string> { "{\"_id\":\"1\"}" },
+                ["total_count"] = 15L,
+                ["returned_count"] = 1,
+                ["has_more"] = true,
+                ["query"] = "{\"status\":\"active\"}",
+                ["applied_options"] = new Dictionary<string, object?>
+                {
+                    ["limit"] = 10,
+                    ["skip"] = 5,
+                    ["sort"] = null,
+                    ["projection"] = null
+                }
             }
         };
 
@@ -182,7 +200,6 @@ public class FindDocumentsCommandTests
         var dbName = "testdb";
         var collectionName = "testcollection";
         var invalidQuery = "{invalid json}";
-        var expectedError = "Invalid JSON in query";
 
         _documentDbService.FindDocumentsAsync(
             Arg.Is(dbName),
@@ -190,7 +207,13 @@ public class FindDocumentsCommandTests
             Arg.Any<BsonDocument?>(),
             Arg.Any<object?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.InternalServerError,
+                ["message"] = "Invalid JSON in query",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -204,16 +227,15 @@ public class FindDocumentsCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.StartsWith("Invalid JSON in query", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenCollectionNotFound()
+    public async Task ExecuteAsync_Returns400_WhenCollectionNotFound()
     {
         // Arrange
         var dbName = "testdb";
         var collectionName = "nonexistent";
-        var expectedError = "Collection not found";
 
         _documentDbService.FindDocumentsAsync(
             Arg.Is(dbName),
@@ -221,7 +243,13 @@ public class FindDocumentsCommandTests
             Arg.Any<BsonDocument?>(),
             Arg.Any<object?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
+            .Returns(new Dictionary<string, object?>
+            {
+                ["success"] = false,
+                ["statusCode"] = HttpStatusCode.BadRequest,
+                ["message"] = "Collection 'nonexistent' not found",
+                ["data"] = null
+            });
 
         var args = _commandDefinition.Parse([
             "--db-name", dbName,
@@ -233,8 +261,8 @@ public class FindDocumentsCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not found", response.Message);
     }
 
     [Fact]
@@ -246,17 +274,23 @@ public class FindDocumentsCommandTests
         var query = "{\"status\": \"nonexistent\"}";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["documents"] = new List<string>(),
-            ["total_count"] = 0L,
-            ["returned_count"] = 0,
-            ["has_more"] = false,
-            ["query"] = "{\"status\":\"nonexistent\"}",
-            ["applied_options"] = new Dictionary<string, object?>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Documents retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                ["limit"] = 100,
-                ["skip"] = 0,
-                ["sort"] = null,
-                ["projection"] = null
+                ["documents"] = new List<string>(),
+                ["total_count"] = 0L,
+                ["returned_count"] = 0,
+                ["has_more"] = false,
+                ["query"] = "{\"status\":\"nonexistent\"}",
+                ["applied_options"] = new Dictionary<string, object?>
+                {
+                    ["limit"] = 100,
+                    ["skip"] = 0,
+                    ["sort"] = null,
+                    ["projection"] = null
+                }
             }
         };
 
@@ -307,17 +341,23 @@ public class FindDocumentsCommandTests
         var collectionName = "testcollection";
         var expectedResult = new Dictionary<string, object?>
         {
-            ["documents"] = new List<string>(),
-            ["total_count"] = 0L,
-            ["returned_count"] = 0,
-            ["has_more"] = false,
-            ["query"] = query,
-            ["applied_options"] = new Dictionary<string, object?>
+            ["success"] = true,
+            ["statusCode"] = HttpStatusCode.OK,
+            ["message"] = "Documents retrieved successfully",
+            ["data"] = new Dictionary<string, object?>
             {
-                ["limit"] = 100,
-                ["skip"] = 0,
-                ["sort"] = null,
-                ["projection"] = null
+                ["documents"] = new List<string>(),
+                ["total_count"] = 0L,
+                ["returned_count"] = 0,
+                ["has_more"] = false,
+                ["query"] = query,
+                ["applied_options"] = new Dictionary<string, object?>
+                {
+                    ["limit"] = 100,
+                    ["skip"] = 0,
+                    ["sort"] = null,
+                    ["projection"] = null
+                }
             }
         };
 

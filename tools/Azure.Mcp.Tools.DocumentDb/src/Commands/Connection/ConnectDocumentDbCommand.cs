@@ -62,8 +62,8 @@ public sealed class ConnectDocumentDbCommand(ILogger<ConnectDocumentDbCommand> l
 
             var result = await service.ConnectAsync(options.ConnectionString!, options.TestConnection, cancellationToken);
 
-            context.Response.Results = DocumentDbResponseHelper.CreateFromJson(
-                DocumentDbResponseHelper.SerializeToJson(result));
+            // Process response using unified DocumentDbResponse type
+            DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }
