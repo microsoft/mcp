@@ -43,6 +43,12 @@ jobs:
 
   - checkout: self
 
+  - task: UseNode@1
+    displayName: "Use Node.js 24.x"
+    condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
+    inputs:
+      version: '24.x'
+
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
