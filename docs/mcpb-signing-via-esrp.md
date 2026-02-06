@@ -222,11 +222,6 @@ The pipeline uses separate scripts for each signing phase, enabling better maint
 - Fails pipeline if any signature verification fails
 - Parameters: `-ArtifactsPath`
 
-**`Publish-McpbToGitHub.ps1`** - Location: `eng/scripts/Publish-McpbToGitHub.ps1`
-- Uploads signed MCPB files to GitHub Release
-- Supports glob patterns for batch uploads
-- Parameters: `-ArtifactsPath`, `-ReleaseTag`, `-GitHubToken`
-
 #### 4. Signature Conversion Logic
 
 ```
@@ -321,11 +316,11 @@ The `Pack-Mcpb.ps1` script automatically adds the platform-specific extension (`
 
 **Important Manifest Version:** The manifest must use `"manifest_version": "0.3"` or higher to support the `_meta` field that `mcpb pack --update` adds. Using `0.2` will cause Claude Desktop to reject the bundle with "Unrecognized key(s) in object: '_meta'".
 
-**Example:** See [servers/Azure.Mcp.Server/manifest.json](../servers/Azure.Mcp.Server/manifest.json) for a complete manifest.
+**Example:** See [servers/Azure.Mcp.Server/mcpb/manifest.json](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/servers/Azure.Mcp.Server/mcpb/manifest.json) for a complete manifest.
 
 ### Script: `Pack-Mcpb.ps1`
 
-Location: [`eng/scripts/Pack-Mcpb.ps1`](../eng/scripts/Pack-Mcpb.ps1)
+Location: [`eng/scripts/Pack-Mcpb.ps1`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/scripts/Pack-Mcpb.ps1)
 
 This is the main packaging script that follows the same patterns as `Pack-Npm.ps1`, `Pack-Vsix.ps1`, etc.
 
@@ -338,7 +333,7 @@ This is the main packaging script that follows the same patterns as `Pack-Npm.ps
 
 ### Script: `Apply-McpbSignatures.ps1`
 
-Location: [`eng/scripts/Apply-McpbSignatures.ps1`](../eng/scripts/Apply-McpbSignatures.ps1)
+Location: [`eng/scripts/Apply-McpbSignatures.ps1`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/scripts/Apply-McpbSignatures.ps1)
 
 This script applies ESRP-generated `.p7s` signatures to MCPB files. It contains the `Convert-P7sToMcpbSignature` function internally for signature format conversion.
 
@@ -350,7 +345,7 @@ This script applies ESRP-generated `.p7s` signatures to MCPB files. It contains 
 
 ### Pipeline Template: `pack-and-sign-mcpb.yml`
 
-Location: [`eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml`](../eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml)
+Location: [`eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml)
 
 This template orchestrates the packaging and signing workflow:
 
@@ -363,7 +358,7 @@ This template orchestrates the packaging and signing workflow:
 
 ### Pipeline Template: `release-mcpb.yml`
 
-Location: [`eng/pipelines/templates/jobs/mcpb/release-mcpb.yml`](../eng/pipelines/templates/jobs/mcpb/release-mcpb.yml)
+Location: [`eng/pipelines/templates/jobs/mcpb/release-mcpb.yml`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/pipelines/templates/jobs/mcpb/release-mcpb.yml)
 
 This template handles publishing signed MCPB packages to GitHub Release. The upload logic is inlined directly in the YAML because 1ES release jobs (`templateContext.type: releaseJob`) do not allow `checkout` steps.
 
@@ -442,7 +437,6 @@ The signing script will auto-discover servers based on the `servers/` directory 
   - [x] `Stage-McpbForSigning.ps1` - Stage files for ESRP
   - [x] `Apply-McpbSignatures.ps1` - Apply .p7s signatures (includes `Convert-P7sToMcpbSignature` function)
   - [x] `Verify-McpbSignatures.ps1` - Verify using mcpb CLI
-  - [x] `Publish-McpbToGitHub.ps1` - Upload to GitHub Release
 - [x] Verify manifest.json for Azure.Mcp.Server (uses manifest_version 0.3)
 - [x] Add unit tests for signature conversion (`Apply-McpbSignatures.tests.ps1`)
 - [x] Document local usage
