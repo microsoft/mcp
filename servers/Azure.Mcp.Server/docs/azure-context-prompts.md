@@ -17,7 +17,7 @@ Use these prompt templates to set **Microsoft Entra ID tenant** and **Azure subs
 ## 3. Override Context for a Single Request
 
 > For this request only, use:  
-> **Tenant:** `<TENANT_ID>`  
+> **Tenant:** `<TENANT_ID>` (or `<TENANT_DOMAIN>`)  
 > **Subscription:** `<SUBSCRIPTION_ID>`  
 > Do not change the default context for future requests.  
 > **Request:** [Insert request]
