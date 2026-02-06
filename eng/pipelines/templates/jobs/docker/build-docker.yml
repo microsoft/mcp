@@ -5,8 +5,8 @@ parameters:
   type: string
 
 jobs:
-- job: BuildDockerImages
-  displayName: "Build Docker Images"
+- job: BuildDockerImage
+  displayName: "Build Docker Image"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(${{ parameters.ServerMatrix }}, '{}'))
   strategy:
