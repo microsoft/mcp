@@ -163,6 +163,7 @@ Each server needs an `AppxManifest.xml` that:
   </Properties>
 
   <Dependencies>
+    <!-- MinVersion 10.0.26100.0 - MCP ODR and TrustedLaunch require Windows 11 24H2+ -->
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26100.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
@@ -313,8 +314,7 @@ Location: `eng/pipelines/templates/jobs/msix/pack-and-sign-msix.yml`
 ```
 eng/
 ├── scripts/
-│   ├── Pack-Msix.ps1                         # MSIX packaging script
-│   └── New-MsixManifest.ps1                  # Generate AppxManifest.xml
+│   └── Pack-Msix.ps1                         # MSIX packaging script (reuses MCPB manifest)
 ├── pipelines/
 │   └── templates/
 │       └── jobs/
@@ -323,31 +323,51 @@ eng/
 │               └── release-msix.yml          # Release pipeline
 servers/
 └── {ServerName}/
+    ├── mcpb/
+    │   └── manifest.json                     # Shared MCP manifest (source of truth)
     └── msix/
-        ├── AppxManifest.template.xml         # Template manifest
-        ├── manifest.json                     # MCP manifest with static_responses
-        └── Assets/
-            ├── StoreLogo.png                 # 50x50
-            ├── Square44x44Logo.png           # 44x44
-            ├── Square150x150Logo.png         # 150x150
-            └── Wide310x150Logo.png           # 310x150
+        ├── AppxManifest.template.xml         # MSIX-specific package manifest template
+        └── Assets/                           # Optional MSIX-specific assets (falls back to mcpb/)
+            └── *.png                         # Logo files (if different from mcpb/)
 ```
+
+### MCP Manifest Reuse
+
+The `Pack-Msix.ps1` script **reuses the MCPB `manifest.json`** as the base and transforms it for Windows:
+
+1. **Removes** `platform_overrides` (MSIX is Windows-only)
+2. **Updates** `compatibility.platforms` to `["win32"]`
+3. **Removes** `claude_desktop` requirement
+4. **Adds** `_meta.com.microsoft.windows.static_responses` section for ODR containment
+5. **Updates** paths (removes `${__dirname}` prefix)
 
 ### Static Responses Generation
 
-The `_meta.com.microsoft.windows.static_responses` must match what the server returns at runtime. We have two options:
+The `_meta.com.microsoft.windows.static_responses` section is **generated at pack time** by `Pack-Msix.ps1`:
 
-**Option A: Manual Maintenance**
-- Manually maintain the `tools/list` response in manifest.json
-- Pros: Simple, no build-time generation
-- Cons: Can get out of sync with actual server
+```powershell
+# Added dynamically to MCPB manifest during MSIX packaging
+$mcpManifest._meta = @{
+    'com.microsoft.windows' = @{
+        'static_responses' = @{
+            'initialize' = @{
+                'protocolVersion' = '2024-11-05'
+                'capabilities' = @{
+                    'logging' = @{}
+                    'tools' = @{ 'listChanged' = $true }
+                }
+                'serverInfo' = @{
+                    'name' = $mcpManifest.display_name
+                    'version' = $server.version
+                }
+            }
+            'tools/list' = @{ 'tools' = @() }
+        }
+    }
+}
+```
 
-**Option B: Build-Time Generation** (Recommended)
-- Generate static responses by querying the server during build
-- Run `azmcp server start` → send `initialize` and `tools/list` requests → capture responses
-- Inject responses into manifest.json
-- Pros: Always in sync
-- Cons: Requires running server during build
+**Note**: The `tools/list` response is empty by default. For full containment support, this should be populated with the actual tool list at build time by querying the server.
 
 ### Signing Requirements
 
@@ -400,6 +420,59 @@ For ESRP, use:
 
 ---
 
+## TrustedLaunch Requirements
+
+**TrustedLaunch is REQUIRED for MCP server apps** to prevent identity spoofing and ensure secure agent execution.
+
+### What TrustedLaunch Does
+
+TrustedLaunch restricts which executables can run under an MSIX package's identity to **only** those explicitly covered by the package's `CodeIntegrity.cat` catalog. This:
+
+- Prevents package identity spoofing
+- Ensures agent/MCP processes cannot be impersonated
+- Makes identity-bearing execution cryptographically enforceable
+
+### Required Manifest Elements
+
+Both elements are **MANDATORY** in `<Package><Properties>`:
+
+```xml
+<Package xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+         xmlns:trustedlaunch="http://schemas.microsoft.com/appx/manifest/trustedlaunch/windows10">
+  <Properties>
+    <trustedlaunch:TrustedLaunch>true</trustedlaunch:TrustedLaunch>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on" />
+    </uap10:PackageIntegrity>
+  </Properties>
+</Package>
+```
+
+If either is missing, TrustedLaunch is **not active**.
+
+### Signing Requirements
+
+TrustedLaunch relies on **AppxSip-based signing** to:
+- Generate `CodeIntegrity.cat` containing hashes of all package executables
+- Embed `PackageFullName` into the catalog
+- Define which binaries are considered "inside" the package
+
+Standard MSIX signing (including ESRP) is compatible as long as AppxSip is used.
+
+### Enforcement
+
+At process creation time, Windows Code Integrity verifies:
+- The EXE hash exists in `CodeIntegrity.cat`
+- The process can run under the package identity
+
+Any EXE not covered will fail to launch under the MSIX identity.
+
+### External Binaries (Not Applicable for Azure MCP Server)
+
+For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegrityExternal.cat` is required. Azure MCP Server includes all binaries inside the package, so this is not needed.
+
+---
+
 ## Open Questions
 
 1. **Should we generate static_responses at build time or maintain manually?**
@@ -422,11 +495,14 @@ For ESRP, use:
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure (Week 1-2)
-- [ ] Create `Pack-Msix.ps1` packaging script
-- [ ] Create `AppxManifest.template.xml` for Azure.Mcp.Server
-- [ ] Generate `manifest.json` with static_responses from server
-- [ ] Create asset images (logos)
-- [ ] Test local packaging with MakeAppx.exe
+- [x] Create `Pack-Msix.ps1` packaging script (reuses MCPB manifest)
+- [x] Create `AppxManifest.template.xml` for Azure.Mcp.Server
+- [x] Implement dynamic `_meta.com.microsoft.windows.static_responses` generation
+- [x] Asset fallback to MCPB servericon.png
+- [x] Test local packaging with MakeAppx.exe/WinAppCli (SDK 10.0.26100.0)
+- [ ] Test ODR registration with `odr.exe mcp list`
+  - Need to investigate proper schema/namespace for TrustedLaunch property
+  - May require using WinAppCli (`winget install Microsoft.WinAppCli`) instead of direct MakeAppx.exe
 - [ ] Test local signing with self-signed certificate
 - [ ] Validate registration with Windows ODR
 

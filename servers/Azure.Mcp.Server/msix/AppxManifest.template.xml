@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppxManifest.xml Template for Azure MCP Server MSIX Package
+
+  This template is processed by Pack-Msix.ps1 which replaces the following placeholders:
+    {{VERSION}}      - Windows version (X.Y.Z.W format, e.g., 2.0.0.0)
+    {{DISPLAY_NAME}} - Assembly title from build_info.json
+    {{DESCRIPTION}}  - Description from build_info.json
+    {{CLI_NAME}}     - CLI executable name (e.g., azmcp)
+    {{SERVER_NAME}}  - Server name (e.g., Azure.Mcp.Server)
+
+  The package registers with Windows ODR (on-device registry) via the uap3:AppExtension
+  with Name="com.microsoft.windows.ai.mcpServer" - this is a fixed identifier that Windows
+  uses to discover MCP servers.
+
+  TrustedLaunch is REQUIRED for MCP server apps to prevent identity spoofing. It ensures
+  only executables covered by the CodeIntegrity.cat catalog can run under the package identity.
+-->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+         xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+         xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         xmlns:trustedlaunch="http://schemas.microsoft.com/appx/manifest/trustedlaunch/windows10"
+         IgnorableNamespaces="uap uap3 uap5 uap10 rescap trustedlaunch">
+
+  <Identity Name="Microsoft.Azure.Mcp.Server"
+            Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+            Version="{{VERSION}}"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>{{DISPLAY_NAME}}</DisplayName>
+    <PublisherDisplayName>Microsoft Corporation</PublisherDisplayName>
+    <Description>{{DESCRIPTION}}</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+
+    <!--
+      TrustedLaunch: Required for MCP server apps
+      
+      Ensures only executables whose hashes appear in CodeIntegrity.cat can run
+      under the package identity. This prevents identity spoofing and is enforced
+      by Windows Code Integrity at process creation time.
+      
+      Both elements are MANDATORY for TrustedLaunch to be active:
+      - trustedlaunch:TrustedLaunch = opt-in to TrustedLaunch enforcement
+      - uap10:PackageIntegrity = enables Code Integrity catalog validation
+    -->
+    <trustedlaunch:TrustedLaunch>true</trustedlaunch:TrustedLaunch>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on" />
+    </uap10:PackageIntegrity>
+  </Properties>
+
+  <Dependencies>
+    <!-- 
+      MinVersion 10.0.26100.0 (Windows 11 24H2) - MCP ODR and TrustedLaunch require latest Windows
+      MCP server registration via ODR is only available on Windows 11 24H2+ (Canary/Dev builds)
+    -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26100.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="AzureMcpServer" 
+                 Executable="server\{{CLI_NAME}}.exe" 
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="{{DISPLAY_NAME}}"
+                          Description="{{DESCRIPTION}}"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- 
+          MCP Server Registration with Windows ODR
+          
+          Name="com.microsoft.windows.ai.mcpServer" is the FIXED identifier that Windows uses
+          to discover MCP servers. This cannot be changed - it's defined by the Windows platform.
+          
+          PublicFolder="Assets" points to the folder containing manifest.json, which describes
+          the server capabilities and static responses for secure containment.
+        -->
+        <uap3:Extension Category="windows.appExtension">
+          <uap3:AppExtension Name="com.microsoft.windows.ai.mcpServer"
+                             Id="AzureMcpServer"
+                             DisplayName="{{DISPLAY_NAME}}"
+                             PublicFolder="Assets">
+            <uap3:Properties>
+              <Registration>manifest.json</Registration>
+            </uap3:Properties>
+          </uap3:AppExtension>
+        </uap3:Extension>
+
+        <!-- 
+          Execution Alias
+          
+          Allows users to run the server from the command line using the CLI name.
+          Example: azmcp server start
+        -->
+        <uap5:Extension Category="windows.appExecutionAlias">
+          <uap5:AppExecutionAlias>
+            <uap5:ExecutionAlias Alias="{{CLI_NAME}}.exe" />
+          </uap5:AppExecutionAlias>
+        </uap5:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Internet access for Azure service communication -->
+    <Capability Name="internetClient" />
+    
+    <!-- Full trust required for CLI server execution -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
