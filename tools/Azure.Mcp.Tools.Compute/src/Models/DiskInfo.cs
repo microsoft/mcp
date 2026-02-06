@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.Compute.Models;
 /// <summary>
 /// Represents an Azure Managed Disk.
 /// </summary>
-public class Disk
+public class DiskInfo
 {
     /// <summary>
     /// Gets or sets the name of the disk.

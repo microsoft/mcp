@@ -42,7 +42,7 @@ public class DiskGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(new List<Models.Disk>());
+            .ReturnsForAnyArgs(new List<Models.DiskInfo>());
 
         var collection = new ServiceCollection().AddSingleton(_computeService);
 
@@ -71,7 +71,7 @@ public class DiskGetCommandTests
         // Arrange
         var subscription = "test-sub";
 
-        var mockDisks = new List<Models.Disk>
+        var mockDisks = new List<Models.DiskInfo>
         {
             new()
             {
@@ -130,7 +130,7 @@ public class DiskGetCommandTests
         var subscription = "test-sub";
         var resourceGroup = "testrg";
 
-        var mockDisks = new List<Models.Disk>
+        var mockDisks = new List<Models.DiskInfo>
         {
             new()
             {
@@ -180,7 +180,7 @@ public class DiskGetCommandTests
         var diskName = "testdisk";
         var resourceGroup = "testrg";
 
-        var mockDisk = new Models.Disk
+        var mockDisk = new Models.DiskInfo
         {
             Name = diskName,
             Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
@@ -231,7 +231,7 @@ public class DiskGetCommandTests
         var diskName = "testdisk";
         var resourceGroup = "testrg";
 
-        var mockDisk = new Models.Disk
+        var mockDisk = new Models.DiskInfo
         {
             Name = diskName,
             Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
@@ -278,7 +278,7 @@ public class DiskGetCommandTests
         var subscription = "test-sub";
         var diskPattern = "win_OsDisk*";
 
-        var mockDisks = new List<Models.Disk>
+        var mockDisks = new List<Models.DiskInfo>
         {
             new()
             {
@@ -346,7 +346,7 @@ public class DiskGetCommandTests
         var resourceGroup = "testrg";
         var diskPattern = "data*";
 
-        var mockDisks = new List<Models.Disk>
+        var mockDisks = new List<Models.DiskInfo>
         {
             new()
             {
@@ -413,7 +413,7 @@ public class DiskGetCommandTests
         var subscription = "test-sub";
         var diskName = "exactdisk";
 
-        var mockDisks = new List<Models.Disk>
+        var mockDisks = new List<Models.DiskInfo>
         {
             new()
             {

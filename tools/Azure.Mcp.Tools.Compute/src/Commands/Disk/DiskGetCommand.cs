@@ -169,5 +169,5 @@ public sealed class DiskGetCommand(
     /// <summary>
     /// Result record for the disk get command.
     /// </summary>
-    public record DiskGetCommandResult(List<Models.Disk> Disks);
+    public record DiskGetCommandResult(List<Models.DiskInfo> Disks);
 }
