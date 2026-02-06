@@ -9,14 +9,17 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tenantService), ICosmosService, IDisposable
+public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger)
+    : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CosmosBaseUri = "https://{0}.documents.azure.com:443/";
     private const string CacheGroup = "cosmos";
     private const string CosmosClientsCacheKeyPrefix = "clients_";
@@ -64,6 +67,8 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             clientOptions.MaxRetryAttemptsOnRateLimitedRequests = retryPolicy.MaxRetries;
             clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
         }
+
+        clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
 
         CosmosClient cosmosClient;
         switch (authMethod)
@@ -338,32 +343,47 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
     }
 
-    protected virtual async void Dispose(bool disposing)
+    private async ValueTask DisposeAsyncCore()
     {
-        if (!_disposed)
+        IEnumerable<string> keys;
+        try
         {
-            if (disposing)
+            // Get all cached client keys
+            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve cached CosmosClient keys during disposal");
+            return;
+        }
+
+        // Filter for client keys only (those that start with the client prefix)
+        var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
+
+        // Retrieve and dispose each client
+        foreach (var key in clientKeys)
+        {
+            try
             {
-                // Get all cached client keys
-                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
-
-                // Filter for client keys only (those that start with the client prefix)
-                var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
-
-                // Retrieve and dispose each client
-                foreach (var key in clientKeys)
-                {
-                    var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
-                    client?.Dispose();
-                }
-                _disposed = true;
+                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
+                client?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispose CosmosClient for cache key {CacheKey}", key);
             }
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(disposing: true);
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        await DisposeAsyncCore();
         GC.SuppressFinalize(this);
     }
 

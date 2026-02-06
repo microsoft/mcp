@@ -4,13 +4,28 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Options;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands;
 
-/// <summary>
-/// Base command for all Compute commands.
-/// </summary>
 public abstract class BaseComputeCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseComputeOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
+    : SubscriptionCommand<T>
+    where T : BaseComputeOptions, new()
+{
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+    }
+
+    protected override T BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
+    }
+}

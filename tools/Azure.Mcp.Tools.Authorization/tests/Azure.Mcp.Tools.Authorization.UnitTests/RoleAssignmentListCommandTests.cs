@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
@@ -41,8 +42,8 @@ public class RoleAssignmentListCommandTests
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
         var id1 = "00000000-0000-0000-0000-000000000001";
         var id2 = "00000000-0000-0000-0000-000000000002";
-        var expectedRoleAssignments = new List<RoleAssignment>
-        {
+        var expectedRoleAssignments = new ResourceQueryResults<RoleAssignment>(
+        [
             new() {
                 Id = $"/subscriptions/{subscriptionId}/resourcegroups/azure-mcp/providers/Microsoft.Authorization/roleAssignments/{id1}",
                 Name = "Test role definition 1",
@@ -65,7 +66,7 @@ public class RoleAssignmentListCommandTests
                 DelegatedManagedIdentityResourceId = string.Empty,
                 Condition = "ActionMatches{'Microsoft.Authorization/roleAssignments/write'}"
             }
-        };
+        ], false);
         _authorizationService.ListRoleAssignmentsAsync(
                 Arg.Is(subscriptionId),
                 Arg.Is(scope),
@@ -91,7 +92,7 @@ public class RoleAssignmentListCommandTests
         var result = JsonSerializer.Deserialize(json, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedRoleAssignments, result.Assignments);
+        Assert.Equal(expectedRoleAssignments.Results, result.Assignments);
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public class RoleAssignmentListCommandTests
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
         _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
-            .Returns([]);
+            .Returns(new ResourceQueryResults<RoleAssignment>([], false));
 
         var command = new RoleAssignmentListCommand(_logger);
         var args = command.GetCommand().Parse([

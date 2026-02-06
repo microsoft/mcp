@@ -9,6 +9,8 @@
     <TrimMode>full</TrimMode>
     <!-- Suppress SYSLIB0020 for generated System.Text.Json code that uses obsolete IgnoreNullValues -->
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
+    <!-- Suppress MCPEXP001 for experimental features in MCP -->
+    <NoWarn>$(NoWarn);MCPEXP001</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
     <!-- Identify Server Projects -->
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>

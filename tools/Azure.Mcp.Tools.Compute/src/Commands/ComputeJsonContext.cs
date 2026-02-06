@@ -3,6 +3,8 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.Vm;
+using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 
 namespace Azure.Mcp.Tools.Compute.Commands;
@@ -11,7 +13,19 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 /// JSON serialization context for Compute commands.
 /// </summary>
 [JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
-[JsonSerializable(typeof(Models.Disk))]
-[JsonSerializable(typeof(List<Models.Disk>))]
+[JsonSerializable(typeof(Models.DiskInfo))]
+[JsonSerializable(typeof(List<Models.DiskInfo>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-public partial class ComputeJsonContext : JsonSerializerContext;
+[JsonSerializable(typeof(VmGetCommand.VmGetSingleResult))]
+[JsonSerializable(typeof(VmGetCommand.VmGetListResult))]
+[JsonSerializable(typeof(VmssGetCommand.VmssGetSingleResult))]
+[JsonSerializable(typeof(VmssGetCommand.VmssGetListResult))]
+[JsonSerializable(typeof(VmssGetCommand.VmssGetVmInstanceResult))]
+[JsonSerializable(typeof(VmInfo))]
+[JsonSerializable(typeof(VmInstanceView))]
+[JsonSerializable(typeof(VmssInfo))]
+[JsonSerializable(typeof(VmssVmInfo))]
+[JsonSerializable(typeof(List<VmInfo>))]
+[JsonSerializable(typeof(List<VmssInfo>))]
+[JsonSerializable(typeof(List<VmssVmInfo>))]
+internal sealed partial class ComputeJsonContext : JsonSerializerContext;

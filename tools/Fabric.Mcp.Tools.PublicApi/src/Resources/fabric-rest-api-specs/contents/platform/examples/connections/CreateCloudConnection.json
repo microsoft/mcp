@@ -7,7 +7,7 @@
                 "type": "SQL",
                 "creationMethod": "SQL",
                 "parameters": [
-                    { 
+                    {
                         "dataType": "Text",
                         "name": "server",
                         "value": "contoso.database.windows.net"
@@ -27,7 +27,10 @@
                 "credentials": {
                     "credentialType": "Basic",
                     "username": "admin",
-                    "password": "********"
+                    "passwordReference": {
+                        "connectionId": "4399ab2c-7551-4c0e-8aa7-18fc2f217626",
+                        "secretName": "some-secret"
+                    }
                 }
             }
         }
@@ -38,7 +41,7 @@
                 "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
                 "displayName": "ContosoCloudConnection",
                 "connectivityType": "ShareableCloud",
-                "connectionDetails":{
+                "connectionDetails": {
                     "type": "SQL",
                     "path": "contoso.database.windows.net;sales"
                 },
