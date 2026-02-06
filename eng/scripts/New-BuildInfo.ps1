@@ -573,10 +573,6 @@ function Get-BuildMatrices {
 
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
 
-            # TODO: Revert after Docker ARM64 testing
-            $runUnitTests = $false
-            $runRecordedTests = $false
-
             $buildMatrix[$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
                 Pool = $pool
@@ -609,8 +605,8 @@ function Get-ServerMatrix {
     $serverMatrix = [ordered]@{}
 
     # Docker architecture configurations
-    # linux/amd64 + linux/arm64 is the most common multi-arch combo in Docker today, covers almost all
-    # production use cases, so most official images publish exactly these two.
+    # {linux/amd64, linux/arm64} is the most common multi-arch combo in Docker, covers almost all
+    # production use cases, so most official images publish these two.
     $dockerArchConfigs = @(
         @{
             Architecture = 'amd64'
