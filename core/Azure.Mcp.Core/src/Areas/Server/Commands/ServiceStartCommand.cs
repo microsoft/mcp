@@ -526,7 +526,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // By default in development mode, we restrict to localhost origins for security.
         // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        ConfigureCors(services, serverOptions);
+        ConfigureCors(services, builder.Environment, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -635,7 +635,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // By default in development mode, we restrict to localhost origins for security.
         // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        ConfigureCors(services, serverOptions);
+        ConfigureCors(services, builder.Environment, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -665,12 +665,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// In production (authenticated), allows all origins (safe due to authentication requirement).
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
+    /// <param name="environment">The web host environment.</param>
     /// <param name="serverOptions">The server configuration options.</param>
-    private static void ConfigureCors(IServiceCollection services, ServiceStartOptions serverOptions)
+    private static void ConfigureCors(IServiceCollection services, IWebHostEnvironment environment, ServiceStartOptions serverOptions)
     {
         // Check if running in development environment
-        string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        bool isDevelopment = string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase);
+        bool isDevelopment = environment.IsDevelopment();
 
         services.AddCors(options =>
         {
@@ -872,7 +872,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         {
             return null;
         }
-        
 
         // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
         // to telemetry endpoints. Support logging captures debug-level information that may contain
