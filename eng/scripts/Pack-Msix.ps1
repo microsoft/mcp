@@ -138,9 +138,9 @@ if (Get-Command winapp -ErrorAction SilentlyContinue) {
     Write-Host "Using MakeAppx.exe from: $makeAppxPath"
 }
 
-# Check for signing certificate if provided (only needed when not using winapp's built-in signing)
+# Always use SignTool for signing (WinAppCli has issues with complex Publisher DNs)
 $signToolPath = $null
-if ($CertificatePath -and -not $useWinAppCli) {
+if ($CertificatePath) {
     $signToolPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe"
 
     if (-not (Test-Path $signToolPath)) {
@@ -441,14 +441,8 @@ Processing MSIX packaging:
     
     if ($useWinAppCli) {
         # Use WinAppCli for packaging (handles TrustedLaunch and other modern requirements)
+        # Note: We don't use WinAppCli's built-in signing because it has issues with complex Publisher DNs
         $winappArgs = @("pack", $stagingDir, "--output", $msixFilePath, "--manifest", "$stagingDir/AppxManifest.xml")
-        
-        if ($CertificatePath) {
-            $winappArgs += @("--cert", $CertificatePath)
-            if ($CertificatePassword) {
-                $winappArgs += @("--cert-password", $CertificatePassword)
-            }
-        }
         
         & winapp @winappArgs
         if ($LASTEXITCODE -ne 0) {
@@ -464,24 +458,26 @@ Processing MSIX packaging:
             $exitCode = 1
             continue
         }
+    }
 
-        # Sign if certificate is provided (only for MakeAppx path, winapp handles it internally)
-        if ($CertificatePath -and $signToolPath) {
-            Write-Host "Signing MSIX with certificate..."
-            $signArgs = @("sign", "/fd", "SHA256", "/a", "/f", $CertificatePath)
-            if ($CertificatePassword) {
-                $signArgs += @("/p", $CertificatePassword)
-            }
-            $signArgs += $msixFilePath
-
-            & $signToolPath @signArgs
-            if ($LASTEXITCODE -ne 0) {
-                LogError "MSIX signing failed for $($server.name)"
-                $exitCode = 1
-                continue
-            }
-            Write-Host "MSIX signed successfully" -ForegroundColor Green
+    # Sign with SignTool if certificate is provided
+    # We always use SignTool (not WinAppCli's built-in signing) because WinAppCli
+    # has issues with complex Publisher DNs that include O=, L=, S=, C= components
+    if ($CertificatePath -and $signToolPath) {
+        Write-Host "Signing MSIX with certificate..."
+        $signArgs = @("sign", "/fd", "SHA256", "/a", "/f", $CertificatePath)
+        if ($CertificatePassword) {
+            $signArgs += @("/p", $CertificatePassword)
         }
+        $signArgs += $msixFilePath
+
+        & $signToolPath @signArgs
+        if ($LASTEXITCODE -ne 0) {
+            LogError "MSIX signing failed for $($server.name)"
+            $exitCode = 1
+            continue
+        }
+        Write-Host "MSIX signed successfully" -ForegroundColor Green
     }
 
     # Get file size for reporting

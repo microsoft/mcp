@@ -498,10 +498,10 @@ For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegri
 - [x] Implement dynamic `_meta.com.microsoft.windows.static_responses` generation
 - [x] Asset fallback to MCPB servericon.png
 - [x] Test local packaging with MakeAppx.exe/WinAppCli (SDK 10.0.26100.0)
+- [x] Test local signing with self-signed certificate
+  - WinAppCli has issues with complex Publisher DNs (O=, L=, S=, C= components)
+  - Solution: Use SignTool.exe for signing instead of WinAppCli's built-in signing
 - [ ] Test ODR registration with `odr.exe mcp list`
-  - Need to investigate proper schema/namespace for TrustedLaunch property
-  - May require using WinAppCli (`winget install Microsoft.WinAppCli`) instead of direct MakeAppx.exe
-- [ ] Test local signing with self-signed certificate
 - [ ] Validate registration with Windows ODR
 
 ### Phase 2: Pipeline Integration (Week 2-3)
@@ -526,7 +526,8 @@ For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegri
 
 - **Windows build 26220.7262+** (Insider Preview with ODR support)
 - **Node.js** - `winget install OpenJS.NodeJS`
-- **Windows SDK** (for SignTool/MakeAppx) - `winget install Microsoft.WindowsSDK.10.0.26100`
+- **Windows SDK 10.0.26100.0** (for SignTool/MakeAppx) - `winget install Microsoft.WindowsSDK.10.0.26100`
+- **WinAppCli** (optional, preferred for TrustedLaunch) - `winget install Microsoft.WinAppCli`
 
 ### Step 1: Create and Install MSIX Package
 
@@ -534,24 +535,38 @@ For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegri
 # 1. Build server (self-contained for Windows x64)
 dotnet publish servers/Azure.Mcp.Server/src -c Release -r win-x64 --self-contained
 
-# 2. Create MSIX package
-./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"
+# 2. Build MCPB first to get _meta with all tools
+./eng/scripts/Pack-Mcpb.ps1 -ServerName "Azure.Mcp.Server" -KeepStagingDirectory
 
 # 3. Create test certificate (first time only)
+# NOTE: Subject must match Publisher DN in AppxManifest.template.xml exactly
+$certSubject = "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
 $cert = New-SelfSignedCertificate -Type Custom `
-  -Subject "CN=Azure MCP Test, O=Microsoft Corporation, C=US" `
+  -Subject $certSubject `
   -KeyUsage DigitalSignature `
   -FriendlyName "Azure MCP Test Certificate" `
   -CertStoreLocation "Cert:\CurrentUser\My" `
-  -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+  -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
 
-# 4. Sign package with test certificate
-SignTool.exe sign /fd SHA256 /a /f "TestCert.pfx" /p "password" `
-  ".work/packages_msix/Azure.Mcp.Server.msix"
+# Export to PFX
+$password = ConvertTo-SecureString -String "<test-password>" -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath ".work/test-cert.pfx" -Password $password
 
-# 5. Install the MSIX package (sideload)
-Add-AppxPackage -Path ".work/packages_msix/Azure.Mcp.Server.msix"
+# 4. Create signed MSIX package (uses MCPB staging for _meta with tools)
+./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server" `
+  -McpbStagingPath ".work/temp_mcpb" `
+  -CertificatePath ".work/test-cert.pfx" `
+  -CertificatePassword "<test-password>"
+
+# 5. Install the MSIX package (sideload - requires Developer Mode or trusted cert)
+Add-AppxPackage -Path ".work/packages_msix/Azure.Mcp.Server/Azure.Mcp.Server-x64.msix"
 ```
+
+> **Note**: For sideloading to work, either enable Developer Mode in Windows Settings, or
+> install the test certificate to the Trusted People store:
+> ```powershell
+> Import-PfxCertificate -FilePath ".work/test-cert.pfx" -Password $password -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+> ```
 
 ### Step 2: Verify Windows ODR Registration
 
@@ -561,7 +576,7 @@ odr.exe mcp list
 
 # Expected output should include:
 # - Azure MCP Server
-# - Package: Microsoft.Azure.Mcp.Server_1.0.0.0_x64__...
+# - Package: Microsoft.Azure.Mcp.Server_2.0.0.0_x64__...
 ```
 
 If the server appears in this list, registration succeeded.
