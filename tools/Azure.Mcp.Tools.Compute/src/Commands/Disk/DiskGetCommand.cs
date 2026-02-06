@@ -57,7 +57,6 @@ public sealed class DiskGetCommand(
     {
         base.RegisterOptions(command);
         command.Options.Add(ComputeOptionDefinitions.Disk.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     /// <inheritdoc/>

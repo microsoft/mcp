@@ -229,18 +229,18 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.Single(diskList);
 
         JsonElement disk = diskList[0];
-        Assert.Equal(diskName, disk.AssertProperty("name").GetString());
-        Assert.Equal(resourceGroup, disk.AssertProperty("resourceGroup").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString());
-        Assert.True(disk.AssertProperty("diskSizeGB").GetInt32() > 0);
+        Assert.Equal(diskName, disk.AssertProperty("Name").GetString());
+        Assert.Equal(resourceGroup, disk.AssertProperty("ResourceGroup").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString());
+        Assert.True(disk.AssertProperty("DiskSizeGB").GetInt32() > 0);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
@@ -284,12 +284,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.NotEmpty(diskList);
-        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("resourceGroup").GetString()));
+        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("ResourceGroup").GetString()));
     }
 
     [Fact]
@@ -364,10 +364,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Assert
         // When disk name is provided without resource group, it searches across the entire subscription
         Assert.NotNull(result);
-        var disks = result.Value.AssertProperty("disks");
+        var disks = result.Value.AssertProperty("Disks");
         Assert.NotEmpty(disks.EnumerateArray());
 
         var disk = disks.EnumerateArray().First();
-        Assert.Equal(diskName, disk.GetProperty("name").GetString());
+        Assert.Equal(diskName, disk.GetProperty("Name").GetString());
     }
 }

@@ -20,7 +20,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_A2_v2'
+param vmSize string = 'Standard_B2s'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {

@@ -15,7 +15,6 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
 [JsonSerializable(typeof(Models.DiskInfo))]
 [JsonSerializable(typeof(List<Models.DiskInfo>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(VmGetCommand.VmGetSingleResult))]
 [JsonSerializable(typeof(VmGetCommand.VmGetListResult))]
 [JsonSerializable(typeof(VmssGetCommand.VmssGetSingleResult))]
