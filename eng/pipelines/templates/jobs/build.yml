@@ -27,6 +27,7 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
+    hostArchitecture: $(HostArchitecture)
 
   # Only run codeql on linux internal build jobs to reduce overall time on pipeline
   ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:
