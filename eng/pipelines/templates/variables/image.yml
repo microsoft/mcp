@@ -16,7 +16,7 @@ variables:
   - name: LINUXVMIMAGE
     value: ubuntu-24.04
   - name: LINUXARM64VMIMAGE
-    value: azsdk-pool-mms-mariner-2-arm-1espt
+    value: azsdk-azure-linux3-arm64-1espt
   - name: WINDOWSVMIMAGE
     value: windows-2022
   - name: WINDOWSARM64VMIMAGE
