@@ -338,36 +338,34 @@ The `Pack-Msix.ps1` script **reuses the MCPB `manifest.json`** as the base and t
 1. **Removes** `platform_overrides` (MSIX is Windows-only)
 2. **Updates** `compatibility.platforms` to `["win32"]`
 3. **Removes** `claude_desktop` requirement
-4. **Adds** `_meta.com.microsoft.windows.static_responses` section for ODR containment
+4. **Preserves or Adds** `_meta.com.microsoft.windows.static_responses` section for ODR containment
 5. **Updates** paths (removes `${__dirname}` prefix)
 
-### Static Responses Generation
+### Static Responses: Best Practice
 
-The `_meta.com.microsoft.windows.static_responses` section is **generated at pack time** by `Pack-Msix.ps1`:
+**Recommended workflow**: Run `Pack-Mcpb.ps1 -KeepStagingDirectory` first, then `Pack-Msix.ps1 -McpbStagingPath`:
 
 ```powershell
-# Added dynamically to MCPB manifest during MSIX packaging
-$mcpManifest._meta = @{
-    'com.microsoft.windows' = @{
-        'static_responses' = @{
-            'initialize' = @{
-                'protocolVersion' = '2024-11-05'
-                'capabilities' = @{
-                    'logging' = @{}
-                    'tools' = @{ 'listChanged' = $true }
-                }
-                'serverInfo' = @{
-                    'name' = $mcpManifest.display_name
-                    'version' = $server.version
-                }
-            }
-            'tools/list' = @{ 'tools' = @() }
-        }
-    }
-}
+# Step 1: Run MCPB packaging with --update to auto-discover tools
+./eng/scripts/Pack-Mcpb.ps1 -ServerName "Azure.Mcp.Server" -KeepStagingDirectory
+
+# Step 2: Run MSIX packaging using MCPB staging (inherits _meta with all tools)
+./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server" -McpbStagingPath ".work/temp_mcpb"
 ```
 
-**Note**: The `tools/list` response is empty by default. For full containment support, this should be populated with the actual tool list at build time by querying the server.
+This approach reuses the `_meta.com.microsoft.windows.static_responses` section that `mcpb pack --update` auto-generates by:
+1. Running the MCP server with `tools/list` request
+2. Capturing all 50+ tools with their full `inputSchema`
+3. Embedding this in the manifest for Windows ODR containment validation
+
+**Alternative**: If MCPB staging is not available, you can use an existing `.mcpb` package:
+
+```powershell
+# Use existing .mcpb package (will be unpacked to extract manifest)
+./eng/scripts/Pack-Msix.ps1 -McpbPackagePath ".work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb"
+```
+
+**Fallback**: If neither MCPB staging nor package is provided, the script falls back to the source manifest and generates a minimal `_meta` section with an empty tools list. This is not recommended for production as it limits Windows ODR validation capabilities.
 
 ### Signing Requirements
 
@@ -610,10 +608,13 @@ odr.exe mcp list
 
 ### Quick Reference
 
-| Test | Command |
+| Task | Command |
 |------|---------|
 | Test server standalone | `npx @modelcontextprotocol/inspector .\azmcp.exe server start` |
-| Create MSIX | `./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"` |
+| Create MCPB (with tools discovery) | `./eng/scripts/Pack-Mcpb.ps1 -ServerName "Azure.Mcp.Server" -KeepStagingDirectory` |
+| Create MSIX (using MCPB staging) | `./eng/scripts/Pack-Msix.ps1 -McpbStagingPath ".work/temp_mcpb"` |
+| Create MSIX (from .mcpb file) | `./eng/scripts/Pack-Msix.ps1 -McpbPackagePath ".work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb"` |
+| Create MSIX (minimal, no tools) | `./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"` |
 | Install MSIX | `Add-AppxPackage -Path ".\Azure.Mcp.Server.msix"` |
 | Verify registration | `odr.exe mcp list` |
 | Uninstall | `Remove-AppxPackage -Package "Microsoft.Azure.Mcp.Server_..."` |

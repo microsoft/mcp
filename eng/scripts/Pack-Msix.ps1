@@ -43,6 +43,17 @@
 .PARAMETER KeepStagingDirectory
     If specified, keeps the staging directory after packaging for debugging purposes.
 
+.PARAMETER McpbStagingPath
+    Path to the MCPB staging directory (output from Pack-Mcpb.ps1 -KeepStagingDirectory).
+    If specified, MSIX packaging will use the manifest.json from this directory which
+    already contains the _meta.com.microsoft.windows.static_responses section with
+    all tools auto-discovered by 'mcpb pack --update'.
+
+.PARAMETER McpbPackagePath
+    Path to an existing .mcpb package file. If specified, the package will be unpacked
+    and its manifest.json will be used for MSIX packaging. This is an alternative to
+    -McpbStagingPath when the staging directory is not available.
+
 .EXAMPLE
     ./Pack-Msix.ps1
 
@@ -51,6 +62,15 @@
 
 .EXAMPLE
     ./Pack-Msix.ps1 -CertificatePath "test.pfx" -CertificatePassword "password"
+
+.EXAMPLE
+    # Use MCPB staging directory (recommended - avoids regenerating manifest)
+    ./Pack-Mcpb.ps1 -KeepStagingDirectory
+    ./Pack-Msix.ps1 -McpbStagingPath ".work/temp_mcpb"
+
+.EXAMPLE
+    # Use existing .mcpb package
+    ./Pack-Msix.ps1 -McpbPackagePath ".work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb"
 #>
 
 [CmdletBinding()]
@@ -61,6 +81,8 @@ param(
     [string] $ServerName,
     [string] $CertificatePath,
     [string] $CertificatePassword,
+    [string] $McpbStagingPath,
+    [string] $McpbPackagePath,
     [switch] $KeepStagingDirectory
 )
 
@@ -155,22 +177,65 @@ foreach ($server in $buildInfo.servers) {
     $mcpbDirectory = "$RepoRoot/servers/$($server.name)/mcpb"
     $manifestTemplatePath = "$msixDirectory/AppxManifest.template.xml"
     
-    # Use MCPB manifest as base - it's the same format, we just add Windows-specific sections
-    $mcpManifestPath = "$mcpbDirectory/manifest.json"
+    # Determine the source for MCP manifest.json
+    # Priority: 1) MCPB staging dir, 2) Unpacked .mcpb, 3) Source mcpb/manifest.json
+    # MCPB staging/packed manifests include _meta.com.microsoft.windows.static_responses with all tools
+    $mcpManifestPath = $null
+    $mcpManifestSource = $null
+    
+    # Option 1: Use MCPB staging directory if provided
+    if ($McpbStagingPath) {
+        # Platform naming in MCPB staging is "windows-x64", not "win-x64"
+        $stagingManifestPath = "$McpbStagingPath/$($server.name)/windows-x64/manifest.json"
+        if (Test-Path $stagingManifestPath) {
+            $mcpManifestPath = $stagingManifestPath
+            $mcpManifestSource = "MCPB staging directory"
+        }
+    }
+    
+    # Option 2: Unpack existing .mcpb package if provided
+    if (-not $mcpManifestPath -and $McpbPackagePath) {
+        # The McpbPackagePath could be a template with server name, or direct path
+        $actualMcpbPath = $McpbPackagePath -replace '\{SERVER_NAME\}', $server.name
+        if (Test-Path $actualMcpbPath) {
+            $unpackDir = "$tempPath/unpacked_mcpb/$($server.name)"
+            Remove-Item -Path $unpackDir -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $unpackDir | Out-Null
+            
+            Write-Host "Unpacking MCPB from $actualMcpbPath..."
+            & mcpb unpack $actualMcpbPath --output $unpackDir 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0 -and (Test-Path "$unpackDir/manifest.json")) {
+                $mcpManifestPath = "$unpackDir/manifest.json"
+                $mcpManifestSource = "unpacked .mcpb file"
+            } else {
+                LogWarning "Failed to unpack MCPB from $actualMcpbPath"
+            }
+        }
+    }
+    
+    # Option 3: Fall back to source manifest (will need to regenerate _meta)
+    if (-not $mcpManifestPath) {
+        $sourceManifestPath = "$mcpbDirectory/manifest.json"
+        if (Test-Path $sourceManifestPath) {
+            $mcpManifestPath = $sourceManifestPath
+            $mcpManifestSource = "source manifest (no _meta, will generate empty tools list)"
+        }
+    }
 
     if (!(Test-Path $manifestTemplatePath)) {
         LogWarning "MSIX manifest template not found at $manifestTemplatePath. Skipping server $($server.name)."
         continue
     }
 
-    if (!(Test-Path $mcpManifestPath)) {
-        LogWarning "MCPB manifest not found at $mcpManifestPath. Skipping server $($server.name)."
+    if (-not $mcpManifestPath) {
+        LogWarning "No MCP manifest found for $($server.name). Skipping."
         continue
     }
 
     Write-Host "`n========================================" -ForegroundColor Cyan
     Write-Host "Packing MSIX for server: $($server.name)" -ForegroundColor Cyan
     Write-Host "Version: $($server.version)" -ForegroundColor Cyan
+    Write-Host "MCP Manifest: $mcpManifestSource" -ForegroundColor Cyan
     Write-Host "========================================`n" -ForegroundColor Cyan
 
     # Filter platforms: only Windows x64 for now (MSIX is Windows-only)
@@ -273,30 +338,46 @@ Processing MSIX packaging:
         }
     }
 
-    # Add _meta.com.microsoft.windows.static_responses section for Windows ODR containment
+    # Handle _meta.com.microsoft.windows.static_responses section for Windows ODR containment
     # This allows Windows to validate server responses without launching the server
-    if (-not ($mcpManifest.PSObject.Properties.Name -contains '_meta')) {
-        $mcpManifest | Add-Member -NotePropertyName '_meta' -NotePropertyValue @{}
+    # If manifest already has _meta with tools (from MCPB staging), preserve it; otherwise generate minimal
+    $hasExistingMeta = $false
+    if ($mcpManifest.PSObject.Properties.Name -contains '_meta') {
+        $meta = $mcpManifest._meta
+        if ($meta.'com.microsoft.windows'.static_responses.'tools/list'.tools.Count -gt 0) {
+            $hasExistingMeta = $true
+            $toolCount = $meta.'com.microsoft.windows'.static_responses.'tools/list'.tools.Count
+            Write-Host "Using existing _meta with $toolCount tools from $mcpManifestSource" -ForegroundColor Green
+            
+            # Just update the version in serverInfo to match package version
+            if ($meta.'com.microsoft.windows'.static_responses.initialize.serverInfo) {
+                $mcpManifest._meta.'com.microsoft.windows'.static_responses.initialize.serverInfo.version = $server.version
+            }
+        }
     }
     
-    $mcpManifest._meta = @{
-        'com.microsoft.windows' = @{
-            'static_responses' = @{
-                'initialize' = @{
-                    'protocolVersion' = '2024-11-05'
-                    'capabilities' = @{
-                        'logging' = @{}
-                        'tools' = @{
-                            'listChanged' = $true
+    if (-not $hasExistingMeta) {
+        Write-Host "Generating minimal _meta (no tools discovered - consider using -McpbStagingPath)" -ForegroundColor Yellow
+        $mcpManifest | Add-Member -NotePropertyName '_meta' -NotePropertyValue @{} -Force
+        $mcpManifest._meta = @{
+            'com.microsoft.windows' = @{
+                'static_responses' = @{
+                    'initialize' = @{
+                        'protocolVersion' = '2024-11-05'
+                        'capabilities' = @{
+                            'logging' = @{}
+                            'tools' = @{
+                                'listChanged' = $true
+                            }
+                        }
+                        'serverInfo' = @{
+                            'name' = $mcpManifest.display_name
+                            'version' = $server.version
                         }
                     }
-                    'serverInfo' = @{
-                        'name' = $mcpManifest.display_name
-                        'version' = $server.version
+                    'tools/list' = @{
+                        'tools' = @()
                     }
-                }
-                'tools/list' = @{
-                    'tools' = @()
                 }
             }
         }
