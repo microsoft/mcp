@@ -569,6 +569,7 @@ function Get-BuildMatrices {
                 -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
                 -and !($os -eq 'macos' -and $arch -eq 'arm64')
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+            $publishCoverage = $runUnitTests -and $arch -ne 'arm64'
 
             $buildMatrix[$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
@@ -576,6 +577,7 @@ function Get-BuildMatrices {
                 OSVmImage = $vmImage
                 RunUnitTests = $runUnitTests
                 RunRecordedTests = $runRecordedTests
+                PublishCoverage = $publishCoverage
             }
 
             if($runUnitTests) {

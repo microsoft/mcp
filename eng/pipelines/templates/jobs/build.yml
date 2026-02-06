@@ -144,7 +144,7 @@ jobs:
 
   - task: PublishCodeCoverageResults@2
     displayName: "Publish Code Coverage Reports"
-    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq(variables['PublishCoverage'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
     inputs:
       summaryFileLocation: $(CoverageFile)
 
