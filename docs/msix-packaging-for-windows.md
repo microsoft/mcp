@@ -410,11 +410,12 @@ For ESRP, use:
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Static responses out of sync | High | Generate at build time from server |
+| Static responses out of sync | High | ✅ Resolved: Reuse MCPB staging with `mcpb pack --update` |
 | Windows version too new | Medium | Document requirements; provide MCPB fallback |
 | Certificate Publisher mismatch | High | Validate Publisher DN matches manifest |
 | Large package size | Low | Use trimmed binaries; single architecture |
 | Store submission complexity | Medium | Start with sideloading; Store is future phase |
+| **Auto-discovery blocked with dev cert** | **High** | **ESRP Store signing required for production** |
 
 ---
 
@@ -471,19 +472,76 @@ For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegri
 
 ---
 
+## Auto-Discovery Limitations (Important)
+
+### Current State (Windows Preview)
+
+**MSIX auto-discovery by Windows ODR is restricted to Microsoft-trusted publishers.**
+
+This is a **security gate**, not a bug in our implementation. The behavior is:
+
+| Signing Type | MSIX Installs | Auto-Discovery | Secure Containment |
+|--------------|---------------|----------------|--------------------|
+| Microsoft Store cert | ✅ | ✅ | ✅ |
+| Enterprise trusted cert | ✅ | ✅ | ✅ |
+| Developer/self-signed cert | ✅ | ❌ | ❌ |
+| Unsigned | ❌ | ❌ | ❌ |
+
+### Why This Happens
+
+From [MCP Containment docs](https://learn.microsoft.com/en-us/windows/ai/mcp/servers/mcp-containment):
+
+> MSIX-discovered servers are **auto-contained and auto-launched** in an agent session.
+> That path is **locked down** to avoid arbitrary code execution via developer-signed MSIX packages.
+
+The `MsixMcpCatalog` only auto-loads MCP servers from MSIX packages that Windows considers *trusted agent connectors*, which currently means:
+- Inbox Windows packages (`cw5n1h2txyewy`)
+- Microsoft-signed packages using Store/production cert chains
+
+### Two Registration Paths
+
+| Aspect | MSIX Auto-Discovery | `odr mcp add` |
+|--------|---------------------|---------------|
+| Source | Package identity + AppExtension | Explicit user registration |
+| Registration | Automatic on install | Manual command |
+| Execution | **Contained** agent session | **Not contained** |
+| TrustedLaunch | Enforced | Not enforced |
+| Visibility | All MCP hosts automatically | Hosts that accept user-registered servers |
+| Signing | **Microsoft-trusted required** | Any (manifest path only) |
+
+### Implications for Development
+
+1. **Local Testing**: Use `odr mcp add <manifest.json>` to register for development
+2. **Production**: Requires Store signing (via ESRP) for auto-discovery
+3. **`odr mcp run --proxy`**: Only works for auto-discovered (contained) servers
+
+### Testing Manually-Registered Servers
+
+Since `odr mcp run` doesn't work for `user_registered` servers, test using:
+
+```powershell
+# Option 1: MCP Inspector (direct spawn)
+npx @modelcontextprotocol/inspector ./server/azmcp.exe server start
+
+# Option 2: MCP host that enumerates and spawns
+# See: https://learn.microsoft.com/en-us/windows/ai/mcp/quickstart-mcp-host
+```
+
+---
+
 ## Open Questions
 
-1. **Should we generate static_responses at build time or maintain manually?**
-   - Recommendation: Build-time generation for accuracy
+1. ~~**Should we generate static_responses at build time or maintain manually?**~~
+   - ✅ Resolved: Reuse MCPB staging which uses `mcpb pack --update` for build-time generation
 
 2. **Do we need ARM64 MSIX packages?**
    - Recommendation: Start with x64 only; add ARM64 based on demand
 
-3. **Should we pursue Microsoft Store distribution?**
-   - Recommendation: Phase 2 - start with GitHub Release and sideloading
+3. ~~**Should we pursue Microsoft Store distribution?**~~
+   - ✅ Resolved: **Required** for auto-discovery; ESRP signing planned for pipeline
 
-4. **How do we handle tool discovery for 100+ Azure tools?**
-   - Recommendation: Generate tools/list from server at build time
+4. ~~**How do we handle tool discovery for 100+ Azure tools?**~~
+   - ✅ Resolved: `mcpb pack --update` auto-discovers and embeds all tools
 
 5. **Should MSIX include all tools or allow namespace filtering?**
    - Recommendation: Full server; namespace filtering via runtime args
@@ -501,15 +559,21 @@ For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegri
 - [x] Test local signing with self-signed certificate
   - WinAppCli has issues with complex Publisher DNs (O=, L=, S=, C= components)
   - Solution: Use SignTool.exe for signing instead of WinAppCli's built-in signing
-- [ ] Test ODR registration with `odr.exe mcp list`
-- [ ] Validate registration with Windows ODR
+- [x] Test ODR registration
+  - ✅ MSIX installs successfully with Developer cert
+  - ✅ Manual registration via `odr mcp add` works
+  - ❌ Auto-discovery blocked (requires Microsoft-trusted cert - see "Auto-Discovery Limitations" section)
+- [x] Document dev workflow for local testing
 
 ### Phase 2: Pipeline Integration (Week 2-3)
 - [ ] Create `pack-and-sign-msix.yml` pipeline template
-- [ ] Integrate ESRP Authenticode signing
+- [ ] Integrate ESRP Authenticode signing (**Critical for auto-discovery**)
+  - Must use Microsoft Store or enterprise-trusted certificate
+  - Developer certs will NOT enable auto-discovery
 - [ ] Add MSIX to GitHub Release artifacts
 - [ ] Update `common.yml` with PackageMSIX parameter
-- [ ] Test end-to-end pipeline
+- [ ] Test end-to-end pipeline with Store-signed package
+- [ ] Verify auto-discovery works with production signing
 
 ### Phase 3: Multi-Server and Store (Week 3-4)
 - [ ] Add MSIX support for Fabric.Mcp.Server
@@ -568,22 +632,42 @@ Add-AppxPackage -Path ".work/packages_msix/Azure.Mcp.Server/Azure.Mcp.Server-x64
 > Import-PfxCertificate -FilePath ".work/test-cert.pfx" -Password $password -CertStoreLocation Cert:\LocalMachine\TrustedPeople
 > ```
 
-### Step 2: Verify Windows ODR Registration
+### Step 2: Register and Verify (Developer Workflow)
+
+> **Important**: With a developer-signed certificate, the MSIX will **not** appear in auto-discovery.
+> You must manually register using `odr mcp add`. See "Auto-Discovery Limitations" section above.
 
 ```powershell
-# List all registered MCP servers
+# Verify the MSIX is installed
+Get-AppxPackage -Name "Microsoft.Azure.Mcp.Server" | Format-List Name, Version, InstallLocation, Status
+
+# For auto-discovery (won't work with developer certs, but try anyway):
 odr.exe mcp list
 
-# Expected output should include:
-# - Azure MCP Server
-# - Package: Microsoft.Azure.Mcp.Server_2.0.0.0_x64__...
+# For developer workflow - manually register the manifest:
+odr.exe mcp add "C:\Program Files\WindowsApps\Microsoft.Azure.Mcp.Server_2.0.0.0_x64__8wekyb3d8bbwe\Assets\manifest.json"
+
+# Expected output:
+# "message": "Server registered successfully."
+# Added server azure.mcp.server-2.0.0-alpha.99999 to catalog EncryptedFile
 ```
 
-If the server appears in this list, registration succeeded.
+> **Note**: The manually-registered server will NOT work with `odr mcp run --proxy` because it's
+> not a contained server. Test it directly using the methods in Step 3.
 
-### Step 3: Test with MCP Client
+### Step 3: Test the MCP Server
 
-Use Microsoft's JavaScript client to test the registered server:
+Since developer-signed servers can't use `odr mcp run`, test directly:
+
+**Option A: MCP Inspector (Recommended for quick testing)**
+```powershell
+# Test the installed server directly
+npx @modelcontextprotocol/inspector "C:\Program Files\WindowsApps\Microsoft.Azure.Mcp.Server_2.0.0.0_x64__8wekyb3d8bbwe\server\azmcp.exe" server start
+```
+
+**Option B: Use Microsoft's MCP host sample**
+
+See the [Quickstart: MCP host on Windows](https://learn.microsoft.com/en-us/windows/ai/mcp/quickstart-mcp-host) documentation.
 
 ```powershell
 # Clone the samples repo
@@ -595,18 +679,18 @@ npm install
 npm start
 ```
 
-The client will:
-1. List all registered MCP servers on Windows
-2. Allow you to select a server and invoke tools
-3. Display responses for verification
+### Step 4: Test Secure Containment (Production Only)
 
-### Step 4: Test Secure Containment
+> **Note**: Secure containment only works with Microsoft-trusted (Store-signed) packages.
+> Developer-signed packages cannot run in contained agent sessions.
 
-Verify the server runs in the contained agent session:
+Once the package is signed with ESRP/Store certs:
 
-1. Invoke a tool that requires file access (e.g., storage blob operations)
-2. Verify the server runs with limited privileges
-3. Check that declared capabilities (e.g., `internetClient`) are respected
+1. Verify the server appears in `odr.exe mcp list` (auto-discovered)
+2. Test with `odr.exe mcp run --proxy <server-id>`
+3. Invoke a tool that requires file access (e.g., storage blob operations)
+4. Verify the server runs with limited privileges
+5. Check that declared capabilities (e.g., `internetClient`) are respected
 
 ### Step 5: Uninstall and Verify Cleanup
 
@@ -628,11 +712,15 @@ odr.exe mcp list
 | Test server standalone | `npx @modelcontextprotocol/inspector .\azmcp.exe server start` |
 | Create MCPB (with tools discovery) | `./eng/scripts/Pack-Mcpb.ps1 -ServerName "Azure.Mcp.Server" -KeepStagingDirectory` |
 | Create MSIX (using MCPB staging) | `./eng/scripts/Pack-Msix.ps1 -McpbStagingPath ".work/temp_mcpb"` |
-| Create MSIX (from .mcpb file) | `./eng/scripts/Pack-Msix.ps1 -McpbPackagePath ".work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb"` |
-| Create MSIX (minimal, no tools) | `./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"` |
-| Install MSIX | `Add-AppxPackage -Path ".\Azure.Mcp.Server.msix"` |
-| Verify registration | `odr.exe mcp list` |
+| Create signed MSIX | `./eng/scripts/Pack-Msix.ps1 -McpbStagingPath ".work/temp_mcpb" -CertificatePath ".work/test-cert.pfx" -CertificatePassword "<pw>"` |
+| Install MSIX | `Add-AppxPackage -Path ".work/packages_msix/Azure.Mcp.Server/Azure.Mcp.Server-x64.msix"` |
+| Verify MSIX installed | `Get-AppxPackage -Name "Microsoft.Azure.Mcp.Server"` |
+| **Manual registration (dev)** | `odr.exe mcp add "<InstallLocation>\Assets\manifest.json"` |
+| List auto-discovered servers | `odr.exe mcp list` |
+| Test via MCP Inspector | `npx @modelcontextprotocol/inspector "<InstallLocation>\server\azmcp.exe" server start` |
 | Uninstall | `Remove-AppxPackage -Package "Microsoft.Azure.Mcp.Server_..."` |
+
+> **Dev Workflow Note**: With developer certs, MSIX won't auto-discover. Use `odr mcp add` for testing. |
 
 ### Reference Samples
 
@@ -648,6 +736,8 @@ odr.exe mcp list
 - [MCP servers on Windows overview](https://learn.microsoft.com/en-us/windows/ai/mcp/servers/mcp-server-overview)
 - [Register an MCP server from an app with package identity](https://learn.microsoft.com/en-us/windows/ai/mcp/servers/mcp-windows-identity)
 - [Securely containing MCP servers on Windows](https://learn.microsoft.com/en-us/windows/ai/mcp/servers/mcp-containment)
+- [ODR Tool Reference](https://learn.microsoft.com/en-us/windows/ai/mcp/odr-tool)
+- [Quickstart: MCP host on Windows](https://learn.microsoft.com/en-us/windows/ai/mcp/quickstart-mcp-host)
 - [MCP on Windows Samples](https://github.com/microsoft/mcp-on-windows-samples)
 - [What is MSIX?](https://learn.microsoft.com/en-us/windows/msix/overview)
 - [Package Identity Overview](https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/package-identity-overview)
