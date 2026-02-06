@@ -32,7 +32,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {
-                return [];
+                return CreateEmptyQuotaInfo();
             }
 
             // Check if ServerQuota is available
@@ -115,7 +115,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
         catch (Exception error)
         {
             Logger.LogError(error, "Error fetching SQL quotas");
-            return [];
+            throw new InvalidOperationException($"Failed to fetch SQL quotas. {error.Message}", error);
         }
     }
 

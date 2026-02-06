@@ -140,7 +140,7 @@ public partial class ComputeUsageChecker(TokenCredential credential, string subs
         catch (Exception error)
         {
             Logger.LogError(error, "Error fetching compute quotas");
-            return [];
+            throw new InvalidOperationException($"Failed to fetch Compute quotas. {error.Message}", error);
         }
     }
 
