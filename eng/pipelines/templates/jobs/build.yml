@@ -78,7 +78,7 @@ jobs:
         throw "pwsh.exe was not found after installation."
       }
     displayName: "Install pwsh on windows-arm64 if needed"
-    condition: and(succeeded(), eq("$(OSVmImage)", "$(WINDOWSARM64VMIMAGE)"))
+    condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
 
   - task: Powershell@2
     displayName: "Build code"
