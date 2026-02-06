@@ -87,7 +87,7 @@ Deploying$($AsJob ? ' in background job' : ''):
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
@@ -98,7 +98,7 @@ Deploying$($AsJob ? ' in background job' : ''):
                 -UseHttpTransport:$UseHttpTransport `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `

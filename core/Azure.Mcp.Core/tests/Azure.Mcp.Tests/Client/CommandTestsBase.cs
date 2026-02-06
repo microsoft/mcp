@@ -13,8 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-[Collection("LiveServer")]
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -127,10 +126,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             : ["server", "start", "--mode", "all"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
-        LiveServerFixture.environmentVariables = GetEnvironmentVariables(proxy);
-        LiveServerFixture.arguments = arguments;
-        LiveServerFixture.output = Output;
-        LiveServerFixture.settings = Settings;
+        LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
+        LiveServerFixture.Arguments = arguments;
+        LiveServerFixture.Output = Output;
+        LiveServerFixture.Settings = Settings;
 
         await LiveServerFixture.EnsureStartedAsync();
         Client = LiveServerFixture.GetMcpClient();
@@ -211,6 +210,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     }
 
     // subclasses should override this method to dispose resources
+    // subclasses should override this method to dispose InitializeAsyncresources
     // overrides should still call base.Dispose(disposing)
     protected virtual void Dispose(bool disposing)
     {
@@ -230,8 +230,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
-    protected virtual async ValueTask DisposeAsyncCore()
+    protected virtual ValueTask DisposeAsyncCore()
     {
-
+        return ValueTask.CompletedTask;
     }
 }

@@ -14,7 +14,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-[Collection("LiveServer")]
 public class KustoCommandTests : RecordedCommandTestsBase
 {
     private const string TestDatabaseName = "ToDoLists";

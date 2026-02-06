@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tests.Client.Helpers;
@@ -13,20 +15,18 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private Process? _httpServerProcess;
     private McpClient? _mcpClient;
-    private string? _baseUrl;
+    private string? _serverUrl;
     private bool _started;
 
-    public Dictionary<string, string?> environmentVariables = new();
-    public List<string> arguments = new();
-    public ITestOutputHelper? output = null;
-    public LiveTestSettings? settings = null;
+    public Dictionary<string, string?> EnvironmentVariables { get; set; } = new();
+    public List<string> Arguments { get; set; } = new();
+    public ITestOutputHelper? Output { get; set; }
+    public LiveTestSettings? Settings { get; set; }
 
-    public async ValueTask InitializeAsync()
-    {
-    }
+    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
     public async Task EnsureStartedAsync()
-    { 
+    {
         if (_started)
         {
             return;
@@ -40,25 +40,27 @@ public sealed class LiveServerFixture() : IAsyncLifetime
             }
             string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
             bool useHttp = string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase);
-            _baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5000";
+            var port = GetAvailablePort();
+            _serverUrl = $"http://localhost:{port}";
+            EnvironmentVariables["ASPNETCORE_URLS"] = _serverUrl;
 
             if (useHttp)
             {
-                await StartHttpServerProcessAsync(executablePath, arguments);
+                await StartHttpServerProcessAsync(executablePath, Arguments);
                 var transport = new HttpClientTransport(new()
                 {
-                    Endpoint = new Uri(_baseUrl),
+                    Endpoint = new Uri(_serverUrl),
                     TransportMode = HttpTransportMode.StreamableHttp
                 });
                 _mcpClient = await McpClient.CreateAsync(transport);
-                output?.WriteLine($"HTTP test client initialized at {_baseUrl}");
+                Output?.WriteLine($"HTTP test client initialized at {_serverUrl}");
             }
             else
             {
-                var clientTransport = await CreateStdioTransportAsync(executablePath, arguments);
-                output?.WriteLine("Attempting to start MCP Client");
+                var clientTransport = await CreateStdioTransportAsync(executablePath, Arguments);
+                Output?.WriteLine("Attempting to start MCP Client");
                 _mcpClient = await McpClient.CreateAsync(clientTransport);
-                output?.WriteLine("MCP client initialized successfully");
+                Output?.WriteLine("MCP client initialized successfully");
             }
             _started = true;
         }
@@ -77,17 +79,26 @@ public sealed class LiveServerFixture() : IAsyncLifetime
         return _mcpClient;
     }
 
-    private async Task StartHttpServerProcessAsync(string executablePath, List<string> arguments)
+    private static int GetAvailablePort()
     {
-        arguments.AddRange(new[] { "--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity", "--dangerously-disable-http-incoming-auth" });
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
 
-        var processStartInfo = new ProcessStartInfo(executablePath, string.Join(" ", arguments.ToArray()))
+    private async Task StartHttpServerProcessAsync(string executablePath, List<string> processArguments)
+    {
+        processArguments.AddRange(new[] { "--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity", "--dangerously-disable-http-incoming-auth" });
+
+        var processStartInfo = new ProcessStartInfo(executablePath, string.Join(" ", processArguments.ToArray()))
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
 
-        foreach (var kvp in environmentVariables)
+        foreach (var kvp in EnvironmentVariables)
         {
             if (kvp.Value != null)
             {
@@ -96,10 +107,34 @@ public sealed class LiveServerFixture() : IAsyncLifetime
         }
 
         _httpServerProcess = Process.Start(processStartInfo);
-        await WaitForServerReadinessAsync(_baseUrl);
+
+        if (_httpServerProcess == null)
+        {
+            throw new InvalidOperationException("Failed to start HTTP server process.");
+        }
+
+        _httpServerProcess.OutputDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                Output?.WriteLine($"[HTTP Server stdout] {e.Data}");
+            }
+        };
+        _httpServerProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                Output?.WriteLine($"[HTTP Server stderr] {e.Data}");
+            }
+        };
+
+        _httpServerProcess.BeginOutputReadLine();
+        _httpServerProcess.BeginErrorReadLine();
+
+        await WaitForServerReadinessAsync();
     }
 
-    private async Task WaitForServerReadinessAsync(string? uri, int timeoutSeconds = 30, int pollIntervalMs = 500)
+    private async Task WaitForServerReadinessAsync(int timeoutSeconds = 30, int pollIntervalMs = 500)
     {
         using var httpClient = new HttpClient();
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
@@ -118,7 +153,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _baseUrl)
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _serverUrl)
                 {
                     Content = content
                 };
@@ -137,38 +172,12 @@ public sealed class LiveServerFixture() : IAsyncLifetime
             await Task.Delay(pollIntervalMs);
         }
 
-        throw new TimeoutException($"Server at {uri} did not become ready within {timeoutSeconds} seconds");
-    }
-    private async Task WaitForServerReadinessAsync(int timeoutSeconds = 60, int pollIntervalMs = 500)
-    {
-        if (string.IsNullOrWhiteSpace(_baseUrl))
-        {
-            throw new ArgumentException("Base URL is not set (ASPNETCORE_URLS).");
-        }
-
-        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
-
-        while (DateTime.UtcNow < deadline)
-        {
-            try
-            {
-                await _mcpClient!.ListToolsAsync(cancellationToken: CancellationToken.None);
-                return;
-            }
-            catch
-            {
-                // swallow and retry
-            }
-
-            await Task.Delay(pollIntervalMs);
-        }
-
-        throw new TimeoutException($"MCP server at {_baseUrl} did not become ready within {timeoutSeconds} seconds.");
+        throw new TimeoutException($"Server at {_serverUrl} did not become ready within {timeoutSeconds} seconds");
     }
 
-    private async Task<IClientTransport> CreateStdioTransportAsync(string executablePath, List<string> arguments)
+    private async Task<IClientTransport> CreateStdioTransportAsync(string executablePath, List<string> stdioArguments)
     {
-        string[] args = arguments.ToArray();
+        string[] args = stdioArguments.ToArray();
 
         StdioClientTransportOptions transportOptions = new()
         {
@@ -176,15 +185,15 @@ public sealed class LiveServerFixture() : IAsyncLifetime
             Command = executablePath,
             Arguments = args,
             // Direct stderr to test output helper as required by task
-            StandardErrorLines = line => output?.WriteLine($"[MCP Server] {line}"),
-            EnvironmentVariables = environmentVariables
+            StandardErrorLines = line => Output?.WriteLine($"[MCP Server] {line}"),
+            EnvironmentVariables = EnvironmentVariables
         };
 
-        if (!string.IsNullOrEmpty(settings!.TestPackage))
+        if (!string.IsNullOrEmpty(Settings!.TestPackage))
         {
-            Environment.CurrentDirectory = settings!.SettingsDirectory;
+            Environment.CurrentDirectory = Settings!.SettingsDirectory;
             transportOptions.Command = "npx";
-            transportOptions.Arguments = ["-y", settings!.TestPackage, .. args];
+            transportOptions.Arguments = ["-y", Settings!.TestPackage, .. args];
         }
 
         return await Task.FromResult(new StdioClientTransport(transportOptions));
@@ -222,11 +231,9 @@ public sealed class LiveServerFixture() : IAsyncLifetime
             {
                 // swallow; ensure handle is released
             }
-            finally
-            {
-                _httpServerProcess.Dispose();
-                _httpServerProcess = null;
-            }
+
+            _httpServerProcess.Dispose();
+            _httpServerProcess = null;
         }
     }
 }

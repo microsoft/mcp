@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.LiveTests;
 
-[Collection("LiveServer")]
 public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     protected override RecordingOptions? RecordingOptions => new()

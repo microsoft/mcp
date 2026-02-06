@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-[Collection("LiveServer")]
 public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string ProductKey = "product";

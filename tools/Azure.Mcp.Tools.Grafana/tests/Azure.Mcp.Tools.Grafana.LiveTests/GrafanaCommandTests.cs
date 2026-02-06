@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.LiveTests;
 
-[Collection("LiveServer")]
 public class GrafanaCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]

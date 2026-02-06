@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Search.LiveTests;
 
-[Collection("LiveServer")]
 public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string IndexName = "products";

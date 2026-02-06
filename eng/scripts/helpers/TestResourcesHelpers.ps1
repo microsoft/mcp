@@ -62,7 +62,6 @@ function New-TestSettings {
 
     if ($UseHttpTransport) {
         $testSettings.EnvironmentVariables["MCP_TEST_TRANSPORT"] = "http"
-        $testSettings.EnvironmentVariables["ASPNETCORE_URLS"] = "http://localhost:1031"
     }
 
     # Add DeploymentOutputs if provided

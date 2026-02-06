@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-[Collection("LiveServer")]
 public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture)
     : CommandTestsBase(output, liveServerFixture)
 {
