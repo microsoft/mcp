@@ -448,34 +448,106 @@ For ESRP, use:
 
 ## Testing Strategy
 
-### Local Testing
+### Prerequisites
+
+- **Windows build 26220.7262+** (Insider Preview with ODR support)
+- **Node.js** - `winget install OpenJS.NodeJS`
+- **Windows SDK** (for SignTool/MakeAppx) - `winget install Microsoft.WindowsSDK.10.0.26100`
+
+### Step 1: Create and Install MSIX Package
 
 ```powershell
-# 1. Build server
-./eng/scripts/Build-Code.ps1 -ServerName "Azure.Mcp.Server" -SelfContained -Trimmed
+# 1. Build server (self-contained for Windows x64)
+dotnet publish servers/Azure.Mcp.Server/src -c Release -r win-x64 --self-contained
 
 # 2. Create MSIX package
 ./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"
 
-# 3. Sign with test certificate
-# (Script will create self-signed cert if needed)
+# 3. Create test certificate (first time only)
+$cert = New-SelfSignedCertificate -Type Custom `
+  -Subject "CN=Azure MCP Test, O=Microsoft Corporation, C=US" `
+  -KeyUsage DigitalSignature `
+  -FriendlyName "Azure MCP Test Certificate" `
+  -CertStoreLocation "Cert:\CurrentUser\My" `
+  -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
-# 4. Install package
+# 4. Sign package with test certificate
+SignTool.exe sign /fd SHA256 /a /f "TestCert.pfx" /p "password" `
+  ".work/packages_msix/Azure.Mcp.Server.msix"
+
+# 5. Install the MSIX package (sideload)
 Add-AppxPackage -Path ".work/packages_msix/Azure.Mcp.Server.msix"
-
-# 5. Verify registration
-# Use Windows Settings > System > AI components > Agent connectors
-# Or use the MCP client from mcp-on-windows-samples
 ```
 
-### Integration Testing
+### Step 2: Verify Windows ODR Registration
 
-1. Install MSIX package
-2. Verify server appears in Windows ODR
-3. Connect via MCP client (from samples repo)
-4. Invoke tools and verify responses
-5. Verify containment (server runs in agent session)
-6. Uninstall and verify deregistration
+```powershell
+# List all registered MCP servers
+odr.exe mcp list
+
+# Expected output should include:
+# - Azure MCP Server
+# - Package: Microsoft.Azure.Mcp.Server_1.0.0.0_x64__...
+```
+
+If the server appears in this list, registration succeeded.
+
+### Step 3: Test with MCP Client
+
+Use Microsoft's JavaScript client to test the registered server:
+
+```powershell
+# Clone the samples repo
+git clone https://github.com/microsoft/mcp-on-windows-samples.git
+cd mcp-on-windows-samples/mcp-client-js
+
+# Install dependencies and run
+npm install
+npm start
+```
+
+The client will:
+1. List all registered MCP servers on Windows
+2. Allow you to select a server and invoke tools
+3. Display responses for verification
+
+### Step 4: Test Secure Containment
+
+Verify the server runs in the contained agent session:
+
+1. Invoke a tool that requires file access (e.g., storage blob operations)
+2. Verify the server runs with limited privileges
+3. Check that declared capabilities (e.g., `internetClient`) are respected
+
+### Step 5: Uninstall and Verify Cleanup
+
+```powershell
+# Get full package name
+Get-AppxPackage -Name "Microsoft.Azure.Mcp.Server"
+
+# Uninstall
+Remove-AppxPackage -Package "Microsoft.Azure.Mcp.Server_1.0.0.0_x64__..."
+
+# Verify server is no longer registered
+odr.exe mcp list
+```
+
+### Quick Reference
+
+| Test | Command |
+|------|---------|
+| Test server standalone | `npx @modelcontextprotocol/inspector .\azmcp.exe server start` |
+| Create MSIX | `./eng/scripts/Pack-Msix.ps1 -ServerName "Azure.Mcp.Server"` |
+| Install MSIX | `Add-AppxPackage -Path ".\Azure.Mcp.Server.msix"` |
+| Verify registration | `odr.exe mcp list` |
+| Uninstall | `Remove-AppxPackage -Package "Microsoft.Azure.Mcp.Server_..."` |
+
+### Reference Samples
+
+- **[mcp-on-windows-samples](https://github.com/microsoft/mcp-on-windows-samples)**:
+  - `mcp-client-js` - JavaScript client to test registered servers
+  - `mcp-server-csharp` - C# server example (MSIX or MCPB)
+  - `msix-app-with-server` - WinUI 3 app with embedded MCP server
 
 ---
 
