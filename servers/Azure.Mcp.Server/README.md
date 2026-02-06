@@ -1093,7 +1093,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 
 - See our [official documentation on learn.microsoft.com](https://learn.microsoft.com/azure/developer/azure-mcp-server/) to learn how to use the Azure MCP Server to interact with Azure resources through natural language commands from AI agents and other types of clients.
 - For additional command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
-- For prompt templates to set Entra tenant + subscription context, see [Azure MCP Context Prompts](docs/azure-context-prompts.md). 
+- For prompt templates to set Microsoft Entra ID tenant + subscription context, see [Azure MCP Context Prompts](docs/azure-context-prompts.md).
 
 ## Feedback and Support
 
