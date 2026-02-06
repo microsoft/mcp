@@ -56,6 +56,30 @@ jobs:
       packageType: sdk
       version: 9.0.x
 
+  - powershell: |
+      $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+      if ($pwsh) {
+        Write-Host "pwsh already available at $($pwsh.Source)"
+        exit 0
+      }
+
+      $version = "7.4.1"
+      $msiName = "PowerShell-$version-win-arm64.msi"
+      $msiUrl = "https://github.com/PowerShell/PowerShell/releases/download/v$version/$msiName"
+      $msiPath = Join-Path $env:TEMP $msiName
+
+      Write-Host "Downloading $msiUrl"
+      Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
+
+      Write-Host "Installing PowerShell $version"
+      Start-Process msiexec.exe -ArgumentList @('/i', $msiPath, '/qn', '/norestart', 'ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=0', 'ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=0', 'ENABLE_PSREMOTING=0') -Wait -NoNewWindow
+
+      if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
+        throw "pwsh.exe was not found after installation."
+      }
+    displayName: "Install pwsh on windows-arm64 if needed"
+    condition: and(succeeded(), eq("$(OSVmImage)", "$(WINDOWSARM64VMIMAGE)"))
+
   - task: Powershell@2
     displayName: "Build code"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
