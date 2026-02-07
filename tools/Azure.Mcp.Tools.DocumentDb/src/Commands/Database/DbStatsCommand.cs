@@ -20,7 +20,7 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
 
     public override string Name => "db_stats";
 
-    public override string Description => "Get detailed statistics about a database's size and storage usage";
+    public override string Description => "Show statistics (stats) for a DocumentDB database, including size and storage usage details";
 
     public override string Title => "Database Statistics";
 

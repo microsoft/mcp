@@ -10,70 +10,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendations_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendations_list | List all Advisor recommendations in the subscription <subscription> |
 
-## Azure Cosmos DB for MongoDB (vCore)
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| documentdb_connect | Connect to DocumentDB with connection string <connection-string> |
-| documentdb_connect | Connect to my DocumentDB instance using <connection-string> |
-| documentdb_disconnect | Disconnect from DocumentDB |
-| documentdb_disconnect | Close the DocumentDB connection |
-| documentdb_connection_status | Show me the DocumentDB connection status |
-| documentdb_connection_status | Is DocumentDB connected? |
-| documentdb_database_list | List all databases in DocumentDB |
-| documentdb_database_list | Show me all DocumentDB databases |
-| documentdb_database_stats | Get statistics for database <db-name> |
-| documentdb_database_stats | Show me stats for DocumentDB database <db-name> |
-| documentdb_database_info | Get information about database <db-name> |
-| documentdb_database_info | Show me details of database <db-name> |
-| documentdb_database_drop | Drop database <db-name> |
-| documentdb_database_drop | Delete the database <db-name> from DocumentDB |
-| documentdb_collection_stats | Get statistics for collection <collection-name> in database <db-name> |
-| documentdb_collection_stats | Show me stats for collection <collection-name> in <db-name> |
-| documentdb_collection_rename | Rename collection <old-name> to <new-name> in database <db-name> |
-| documentdb_collection_rename | Rename collection <old-name> to <new-name> in DocumentDB database <db-name> |
-| documentdb_collection_drop | Drop collection <collection-name> from database <db-name> |
-| documentdb_collection_drop | Delete collection <collection-name> from database <db-name> |
-| documentdb_collection_sample | Sample 10 documents from collection <collection-name> in database <db-name> |
-| documentdb_collection_sample | Show me sample documents from collection <collection-name> in database <db-name> |
-| documentdb_find_documents | Find all documents in collection <collection-name> in database <db-name> |
-| documentdb_find_documents | Find documents where status equals active in collection <collection-name> in database <db-name> |
-| documentdb_find_documents | Query collection <collection-name> in database <db-name> for documents |
-| documentdb_count_documents | Count all documents in collection <collection-name> in database <db-name> |
-| documentdb_count_documents | How many documents are in collection <collection-name> in database <db-name> |
-| documentdb_insert_document | Insert a document into collection <collection-name> in database <db-name> |
-| documentdb_insert_document | Add a new document to collection <collection-name> in database <db-name> |
-| documentdb_insert_many | Insert multiple documents into collection <collection-name> in database <db-name> |
-| documentdb_insert_many | Bulk insert documents into collection <collection-name> in database <db-name> |
-| documentdb_update_document | Update a document in collection <collection-name> in database <db-name> |
-| documentdb_update_document | Update documents where id equals <id> in collection <collection-name> in database <db-name> |
-| documentdb_update_many | Update multiple documents in collection <collection-name> in database <db-name> |
-| documentdb_update_many | Bulk update documents in collection <collection-name> in database <db-name> |
-| documentdb_delete_document | Delete a document from collection <collection-name> in database <db-name> |
-| documentdb_delete_document | Remove document where id equals <id> from collection <collection-name> in database <db-name> |
-| documentdb_delete_many | Delete multiple documents from collection <collection-name> in database <db-name> |
-| documentdb_delete_many | Remove all documents where status equals inactive from collection <collection-name> in database <db-name> |
-| documentdb_aggregate | Run an aggregation pipeline on collection <collection-name> in database <db-name> |
-| documentdb_aggregate | Aggregate documents in collection <collection-name> in database <db-name> |
-| documentdb_find_and_modify | Find and modify a document in collection <collection-name> in database <db-name> |
-| documentdb_find_and_modify | Update and return a document from collection <collection-name> in database <db-name> |
-| documentdb_explain_find | Explain the query plan for finding documents in collection <collection-name> in database <db-name> |
-| documentdb_explain_find | Show me the execution plan for a find query on collection <collection-name> in database <db-name> |
-| documentdb_explain_count | Explain the query plan for counting documents in collection <collection-name> in database <db-name> |
-| documentdb_explain_count | Show me how the count query executes on collection <collection-name> in database <db-name> |
-| documentdb_explain_aggregate | Explain the aggregation pipeline on collection <collection-name> in database <db-name> |
-| documentdb_explain_aggregate | Show me the execution plan for aggregation on collection <collection-name> in database <db-name> |
-| documentdb_index_create | Create an index on collection <collection-name> in database <db-name> |
-| documentdb_index_create | Add a new index to collection <collection-name> in database <db-name> |
-| documentdb_index_list | List all indexes on collection <collection-name> in database <db-name> |
-| documentdb_index_list | Show me indexes for collection <collection-name> in database <db-name> |
-| documentdb_index_drop | Drop index <index-name> from collection <collection-name> in database <db-name> |
-| documentdb_index_drop | Delete index <index-name> from collection <collection-name> in database <db-name> |
-| documentdb_index_stats | Get index statistics for collection <collection-name> in database <db-name> |
-| documentdb_index_stats | Show me index stats for collection <collection-name> in database <db-name> |
-| documentdb_current_ops | Show current operations running in DocumentDB |
-| documentdb_current_ops | What operations are currently running in DocumentDB |
-
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
@@ -309,6 +245,70 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deploy_iac_rules_get | Show me the rules to generate bicep scripts  |
 | deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | deploy_plan_get | Create a plan to deploy this application to azure |
+
+## Azure DocumentDB (with MongoDB compatibility)
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| documentdb_connection_connect | Connect to DocumentDB with connection string <connection-string> |
+| documentdb_connection_connect | Connect to my DocumentDB instance using <connection-string> |
+| documentdb_connection_disconnect | Disconnect from DocumentDB |
+| documentdb_connection_disconnect | Close the DocumentDB connection |
+| documentdb_connection_get_connection_status | Show me the DocumentDB connection status |
+| documentdb_connection_get_connection_status | Is DocumentDB connected? |
+| documentdb_database_list_databases | List all databases in DocumentDB |
+| documentdb_database_list_databases | Show me all DocumentDB databases |
+| documentdb_database_db_stats | Get statistics for database <db-name> |
+| documentdb_database_db_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_database_get_db_info | Get information about database <db-name> |
+| documentdb_database_get_db_info | Show me details of database <db-name> |
+| documentdb_database_drop_database | Drop database <db-name> |
+| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
+| documentdb_collection_collection_stats | Get statistics for collection <collection-name> in database <db-name> |
+| documentdb_collection_collection_stats | Show me stats for collection <collection-name> in <db-name> |
+| documentdb_collection_rename_collection | Rename collection <old-name> to <new-name> in database <db-name> |
+| documentdb_collection_rename_collection | Rename collection <old-name> to <new-name> in DocumentDB database <db-name> |
+| documentdb_collection_drop_collection | Drop collection <collection-name> from database <db-name> |
+| documentdb_collection_drop_collection | Delete collection <collection-name> from database <db-name> |
+| documentdb_collection_sample_documents | Sample 10 documents from collection <collection-name> in database <db-name> |
+| documentdb_collection_sample_documents | Show me sample documents from collection <collection-name> in database <db-name> |
+| documentdb_document_find_documents | Find all documents in collection <collection-name> in database <db-name> |
+| documentdb_document_find_documents | Find documents where status equals active in collection <collection-name> in database <db-name> |
+| documentdb_document_find_documents | Query collection <collection-name> in database <db-name> for documents |
+| documentdb_document_count_documents | Count all documents in collection <collection-name> in database <db-name> |
+| documentdb_document_count_documents | How many documents are in collection <collection-name> in database <db-name> |
+| documentdb_document_insert_document | Insert a document into collection <collection-name> in database <db-name> |
+| documentdb_document_insert_document | Add a new document to collection <collection-name> in database <db-name> |
+| documentdb_document_insert_many | Insert multiple documents into collection <collection-name> in database <db-name> |
+| documentdb_document_insert_many | Bulk insert documents into collection <collection-name> in database <db-name> |
+| documentdb_document_update_document | Update a document in collection <collection-name> in database <db-name> |
+| documentdb_document_update_document | Update documents where id equals <id> in collection <collection-name> in database <db-name> |
+| documentdb_document_update_many | Update multiple documents in collection <collection-name> in database <db-name> |
+| documentdb_document_update_many | Bulk update documents in collection <collection-name> in database <db-name> |
+| documentdb_document_delete_document | Delete a document from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_document | Remove document where id equals <id> from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_many | Delete multiple documents from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_many | Remove all documents where status equals inactive from collection <collection-name> in database <db-name> |
+| documentdb_document_aggregate | Run an aggregation pipeline on collection <collection-name> in database <db-name> |
+| documentdb_document_aggregate | Aggregate documents in collection <collection-name> in database <db-name> |
+| documentdb_document_find_and_modify | Find and modify a document in collection <collection-name> in database <db-name> |
+| documentdb_document_find_and_modify | Find and Update and return a document from collection <collection-name> in database <db-name> |
+| documentdb_document_explain_find_query | Explain the query plan for finding documents in collection <collection-name> in database <db-name> |
+| documentdb_document_explain_find_query | Show me the execution plan for a find query on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_count_query | Explain the query plan for counting documents in collection <collection-name> in database <db-name> |
+| documentdb_document_explain_count_query | Show me how the count query executes on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_aggregate_query | Explain the aggregation pipeline on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_aggregate_query | Show me the execution plan for aggregation on collection <collection-name> in database <db-name> |
+| documentdb_index_create_index | Create an index on collection <collection-name> in database <db-name> |
+| documentdb_index_create_index | Add a new index to collection <collection-name> in database <db-name> |
+| documentdb_index_list_indexes | List all indexes on collection <collection-name> in database <db-name> |
+| documentdb_index_list_indexes | Show me indexes for collection <collection-name> in database <db-name> |
+| documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in database <db-name> |
+| documentdb_index_drop_index | Delete index <index-name> from collection <collection-name> in database <db-name> |
+| documentdb_index_index_stats | Get index statistics for collection <collection-name> in database <db-name> |
+| documentdb_index_index_stats | Show me index stats for collection <collection-name> in database <db-name> |
+| documentdb_index_current_ops | Show current operations running in DocumentDB |
+| documentdb_index_current_ops | What operations are currently running in DocumentDB |
 
 ## Azure Event Grid
 

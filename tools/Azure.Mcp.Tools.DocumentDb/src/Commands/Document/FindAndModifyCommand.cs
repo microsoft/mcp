@@ -23,7 +23,7 @@ public sealed class FindAndModifyCommand(ILogger<FindAndModifyCommand> logger)
 
     public override string Name => "find_and_modify";
 
-    public override string Description => "Find one document by filter and apply update; returns the document BEFORE modification (or null if it doesn't exist)";
+    public override string Description => "Find and modify (update) a document atomically, returning the document before modification. Use this for atomic find-update-return operations in a single step";
 
     public override string Title => "Find And Modify Document";
 

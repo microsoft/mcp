@@ -20,7 +20,7 @@ public sealed class DropDatabaseCommand(ILogger<DropDatabaseCommand> logger)
 
     public override string Name => "drop_database";
 
-    public override string Description => "Drop a database and all its collections";
+    public override string Description => "Delete (drop) a database from DocumentDB, removing all its collections and data";
 
     public override string Title => "Drop Database";
 

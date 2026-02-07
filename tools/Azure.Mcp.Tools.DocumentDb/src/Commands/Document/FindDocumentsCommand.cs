@@ -20,7 +20,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
 
     public override string Name => "find_documents";
 
-    public override string Description => "Find documents in a collection. Supports consolidated \"options\" object (limit, skip, sort, projection)";
+    public override string Description => "Find and retrieve all documents (or filter by query) in a collection. Supports options for limit, skip, sort, and projection";
 
     public override string Title => "Find Documents";
 
