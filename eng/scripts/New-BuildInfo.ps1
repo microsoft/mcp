@@ -42,6 +42,14 @@ $additionalPlatforms = @(
         trimmed = $false
         specialPurpose = 'docker'
     }
+    @{
+        name = 'linux-musl-arm64-docker'
+        operatingSystem = 'linux'
+        architecture = 'musl-arm64'
+        native = $false
+        trimmed = $false
+        specialPurpose = 'docker'
+    }
 )
 
 if ($IncludeNative) {
@@ -606,23 +614,49 @@ function Get-ServerMatrix {
     Write-Host "Forming server matrix"
 
     $serverMatrix = [ordered]@{}
-    $platformName = "linux-musl-x64-docker"
+
+    # Docker architecture configurations
+    # {linux/amd64, linux/arm64} is the most common multi-arch combo in Docker, covers almost all
+    # production use cases, so most official images publish these two.
+    $dockerArchConfigs = @(
+        @{
+            Architecture = 'amd64'
+            PlatformName = 'linux-musl-x64-docker'
+            Pool = $linuxPool
+            VMImage = $linuxVmImage
+        }
+        @{
+            Architecture = 'arm64'
+            PlatformName = 'linux-musl-arm64-docker'
+            Pool = $linuxArm64Pool
+            VMImage = $linuxArm64VmImage
+        }
+    )
 
     foreach ($server in $servers) {
-        $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
-        $executableExtension = $platform.extension
         $imageName = $server.dockerImageName
-        if (-not $platform.extension) { $executableExtension = '' }
         if (-not $server.dockerImageName) { $imageName = "microsoft/" + $server.cliName + "-mcp" }
-        $serverMatrix[$server.name] = [ordered]@{
-            ServerName = $server.name
-            CliName = $server.cliName
-            ArtifactPath = $server.artifactPath
-            Platform = $platformName
-            Version = $server.version
-            ImageName = $imageName
-            ExecutableName = $server.cliName + $executableExtension
-            DockerLocalTag = $imageName + ":" + $BuildId
+
+        foreach ($archConfig in $dockerArchConfigs) {
+            $platform = $server.platforms | Where-Object { $_.name -eq $archConfig.PlatformName -and -not $_.native }
+            $executableExtension = $platform.extension ?? ''
+
+            $matrixKey = "$($server.name)_$($archConfig.Architecture)"
+
+            $serverMatrix[$matrixKey] = [ordered]@{
+                ServerName = $server.name
+                CliName = $server.cliName
+                ArtifactPath = $server.artifactPath
+                Version = $server.version
+                ImageName = $imageName
+                ExecutableName = $server.cliName + $executableExtension
+                DockerLocalTag = $imageName + ":" + $BuildId
+                # Docker build configuration
+                Platform = $archConfig.PlatformName
+                Architecture = $archConfig.Architecture
+                Pool = $archConfig.Pool
+                VMImage = $archConfig.VMImage
+            }
         }
     }
 

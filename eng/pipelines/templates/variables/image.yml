@@ -3,6 +3,8 @@
 variables:
   - name: LINUXPOOL
     value: azsdk-pool
+  - name: LINUXARMPOOL
+    value: azsdk-pool-arm64
   - name: WINDOWSPOOL
     value: azsdk-pool
   - name: MACPOOL
