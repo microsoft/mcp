@@ -38,6 +38,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/../common/scripts/common.ps1"
 
 # MCPB signature markers (ASCII)
 $SIG_V1_MARKER = "MCPB_SIG_V1"
@@ -115,90 +116,85 @@ function Convert-P7sToMcpbSignature {
     [System.IO.File]::WriteAllBytes($OutputFile, $signedContent)
 }
 
-# Only run main script logic when executed directly, not when dot-sourced
-if ($MyInvocation.InvocationName -ne '.') {
-    . "$PSScriptRoot/../common/scripts/common.ps1"
+# Validate required parameters when running as script
+if (-not $ArtifactsPath) {
+    LogError "ArtifactsPath is required"
+    exit 1
+}
+if (-not $OutputPath) {
+    LogError "OutputPath is required"
+    exit 1
+}
 
-    # Validate required parameters when running as script
-    if (-not $ArtifactsPath) {
-        LogError "ArtifactsPath is required"
-        exit 1
+# Main script logic
+if (!(Test-Path $ArtifactsPath)) {
+    LogError "Staging directory not found: $ArtifactsPath"
+    exit 1
+}
+
+New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
+
+LogInfo "Applying signatures to MCPB files..."
+
+# Find all .mcpb files
+$mcpbFiles = Get-ChildItem -Path $ArtifactsPath -Filter "*.mcpb" -Recurse
+
+if ($mcpbFiles.Count -eq 0) {
+    LogError "No .mcpb files found in $ArtifactsPath"
+    exit 1
+}
+
+$signedCount = 0
+$failedCount = 0
+
+foreach ($mcpb in $mcpbFiles) {
+    $sigFile = Join-Path $mcpb.Directory.FullName ($mcpb.BaseName + ".signature.p7s")
+    
+    if (-not (Test-Path $sigFile)) {
+        LogWarning "No signature file found for $($mcpb.Name)"
+        $failedCount++
+        continue
     }
-    if (-not $OutputPath) {
-        LogError "OutputPath is required"
-        exit 1
+    
+    # Preserve directory structure in output
+    $relativePath = $mcpb.Directory.FullName.Substring((Resolve-Path $ArtifactsPath).Path.Length).TrimStart('\', '/')
+    $targetDir = Join-Path $OutputPath $relativePath
+    
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
     }
-
-    # Main script logic
-    if (!(Test-Path $ArtifactsPath)) {
-        LogError "Staging directory not found: $ArtifactsPath"
-        exit 1
+    
+    $outputFile = Join-Path $targetDir $mcpb.Name
+    
+    LogInfo "  Signing: $($mcpb.Name)"
+    
+    try {
+        Convert-P7sToMcpbSignature -P7sFile $sigFile -McpbFile $mcpb.FullName -OutputFile $outputFile
     }
-
-    New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
-
-    LogInfo "Applying signatures to MCPB files..."
-
-    # Find all .mcpb files
-    $mcpbFiles = Get-ChildItem -Path $ArtifactsPath -Filter "*.mcpb" -Recurse
-
-    if ($mcpbFiles.Count -eq 0) {
-        LogError "No .mcpb files found in $ArtifactsPath"
-        exit 1
+    catch {
+        LogError "Failed to sign $($mcpb.Name): $_"
+        $failedCount++
+        continue
     }
-
-    $signedCount = 0
-    $failedCount = 0
-
-    foreach ($mcpb in $mcpbFiles) {
-        $sigFile = Join-Path $mcpb.Directory.FullName ($mcpb.BaseName + ".signature.p7s")
-        
-        if (-not (Test-Path $sigFile)) {
-            LogWarning "No signature file found for $($mcpb.Name)"
-            $failedCount++
-            continue
-        }
-        
-        # Preserve directory structure in output
-        $relativePath = $mcpb.Directory.FullName.Substring((Resolve-Path $ArtifactsPath).Path.Length).TrimStart('\', '/')
-        $targetDir = Join-Path $OutputPath $relativePath
-        
-        if (-not (Test-Path $targetDir)) {
-            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-        }
-        
-        $outputFile = Join-Path $targetDir $mcpb.Name
-        
-        LogInfo "  Signing: $($mcpb.Name)"
-        
-        try {
-            Convert-P7sToMcpbSignature -P7sFile $sigFile -McpbFile $mcpb.FullName -OutputFile $outputFile
-        }
-        catch {
-            LogError "Failed to sign $($mcpb.Name): $_"
-            $failedCount++
-            continue
-        }
-        
-        if (-not (Test-Path $outputFile)) {
-            LogError "Failed to create signed MCPB: $outputFile"
-            $failedCount++
-            continue
-        }
-        
-        $signedCount++
+    
+    if (-not (Test-Path $outputFile)) {
+        LogError "Failed to create signed MCPB: $outputFile"
+        $failedCount++
+        continue
     }
+    
+    $signedCount++
+}
 
-    LogInfo "`nSigned MCPB files:"
-    Get-ChildItem -Path $OutputPath -Filter "*.mcpb" -Recurse | ForEach-Object {
-        $rel = $_.FullName.Substring((Resolve-Path $OutputPath).Path.Length).TrimStart('\', '/')
-        LogInfo "  $rel ($($_.Length) bytes)"
-    }
+LogInfo "`nSigned MCPB files:"
+Get-ChildItem -Path $OutputPath -Filter "*.mcpb" -Recurse | ForEach-Object {
+    $rel = $_.FullName.Substring((Resolve-Path $OutputPath).Path.Length).TrimStart('\', '/')
+    LogInfo "  $rel ($($_.Length) bytes)"
+}
 
-    LogInfo "`nSigning complete: $signedCount succeeded, $failedCount failed"
+LogInfo "`nSigning complete: $signedCount succeeded, $failedCount failed"
 
-    if ($failedCount -gt 0) {
-        LogError "Some MCPB files failed to sign"
-        exit 1
-    }
+if ($failedCount -gt 0) {
+    LogError "Some MCPB files failed to sign"
+    exit 1
 }
