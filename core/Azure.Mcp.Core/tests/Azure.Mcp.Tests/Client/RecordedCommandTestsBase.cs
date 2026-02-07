@@ -6,14 +6,13 @@ using System.ClientModel.Primitives;
 using System.Text;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 

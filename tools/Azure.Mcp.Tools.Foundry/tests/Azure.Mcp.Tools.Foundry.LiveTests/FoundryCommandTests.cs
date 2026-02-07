@@ -11,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-public class FoundryCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture)
 {
     [Fact]
     public async Task Should_list_foundry_models()

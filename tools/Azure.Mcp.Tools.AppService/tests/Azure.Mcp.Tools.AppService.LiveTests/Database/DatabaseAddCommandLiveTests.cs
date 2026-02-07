@@ -10,7 +10,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
 
 [Trait("Command", "DatabaseAddCommand")]
-public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
