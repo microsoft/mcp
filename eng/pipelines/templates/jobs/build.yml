@@ -27,6 +27,7 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
+    hostArchitecture: $(HostArchitecture)
 
   # Only run codeql on linux internal build jobs to reduce overall time on pipeline
   ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:
@@ -43,6 +44,12 @@ jobs:
 
   - checkout: self
 
+  - task: UseNode@1
+    displayName: "Use Node.js 24.x"
+    condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
+    inputs:
+      version: '24.x'
+
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
@@ -55,6 +62,30 @@ jobs:
     inputs:
       packageType: sdk
       version: 9.0.x
+
+  - powershell: |
+      $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+      if ($pwsh) {
+        Write-Host "pwsh already available at $($pwsh.Source)"
+        exit 0
+      }
+
+      $version = "7.4.1"
+      $msiName = "PowerShell-$version-win-arm64.msi"
+      $msiUrl = "https://github.com/PowerShell/PowerShell/releases/download/v$version/$msiName"
+      $msiPath = Join-Path $env:TEMP $msiName
+
+      Write-Host "Downloading $msiUrl"
+      Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
+
+      Write-Host "Installing PowerShell $version"
+      Start-Process msiexec.exe -ArgumentList @('/i', $msiPath, '/qn', '/norestart', 'ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=0', 'ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=0', 'ENABLE_PSREMOTING=0') -Wait -NoNewWindow
+
+      if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
+        throw "pwsh.exe was not found after installation."
+      }
+    displayName: "Install pwsh on windows-arm64 if needed"
+    condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
 
   - task: Powershell@2
     displayName: "Build code"
@@ -120,7 +151,7 @@ jobs:
 
   - task: PublishCodeCoverageResults@2
     displayName: "Publish Code Coverage Reports"
-    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq(variables['PublishCoverage'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
     inputs:
       summaryFileLocation: $(CoverageFile)
 
