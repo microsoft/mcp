@@ -31,7 +31,7 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "project-name", "django" },
                 { "target-app-service", "ContainerApp" },
                 { "provisioning-tool", "AZD" },
-                { "azd-iac-options", "bicep" }
+                { "iac-options", "bicep" }
             });
         // assert
         Assert.StartsWith("# Azure Deployment Plan for django Project", result);
@@ -79,7 +79,7 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             new()
             {
                 { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", true }
+                { "is-azd-project", true }
             });
 
         // assert
@@ -95,7 +95,7 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             new()
             {
                 { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", false },
+                { "is-azd-project", false },
                 { "organization-name", "test-org" },
                 { "repository-name", "test-repo" },
                 { "github-environment-name", "production" }

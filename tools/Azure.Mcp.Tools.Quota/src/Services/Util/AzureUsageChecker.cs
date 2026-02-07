@@ -27,7 +27,8 @@ public enum ResourceProvider
     PostgreSQL,
     HDInsight,
     Search,
-    ContainerInstance
+    ContainerInstance,
+    SQL,
 }
 
 public record UsageInfo(
@@ -78,6 +79,7 @@ public static class UsageCheckerFactory
         { "Microsoft.DBforPostgreSQL", ResourceProvider.PostgreSQL },
         { "Microsoft.HDInsight", ResourceProvider.HDInsight },
         { "Microsoft.Search", ResourceProvider.Search },
+        { "Microsoft.Sql", ResourceProvider.SQL },
         { "Microsoft.ContainerInstance", ResourceProvider.ContainerInstance }
     };
 
@@ -100,6 +102,7 @@ public static class UsageCheckerFactory
             ResourceProvider.HDInsight => new HDInsightUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>()),
             ResourceProvider.Search => new SearchUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>()),
             ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>()),
+            ResourceProvider.SQL => new SQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SQLUsageChecker>(), httpClientFactory),
             _ => throw new ArgumentException($"No implementation for provider: {provider}")
         };
     }

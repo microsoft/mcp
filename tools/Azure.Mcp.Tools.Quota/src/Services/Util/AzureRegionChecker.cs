@@ -6,8 +6,13 @@ using Azure.Mcp.Tools.Quota.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
+using Azure.ResourceManager.Compute;
+using Azure.ResourceManager.MySql.FlexibleServers;
+using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers.Models;
+using Azure.ResourceManager.CosmosDB;
+using Azure.ResourceManager.Sql;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util;
@@ -148,7 +153,7 @@ public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId,
             .Select(location => location.Replace(" ", "").ToLowerInvariant())
             .ToList() ?? new List<string>();
 
-        var tasks = regions.Select(async region =>
+            var tasks = regions.Select(async region =>
         {
             try
             {
@@ -170,6 +175,154 @@ public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId,
 
         var results = await Task.WhenAll(tasks);
         return results.Where(region => region != null).ToList()!;
+    }
+}
+
+
+public class SQLRegionChecker(ArmClient armClient, string subscriptionId, ILogger<SQLRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
+{
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
+    {
+        var parts = resourceType.Split('/');
+        var providerNamespace = parts[0];
+        var resourceTypeName = parts[1];
+
+        var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
+        var provider = await subscription.GetResourceProviderAsync(providerNamespace, cancellationToken: cancellationToken);
+        var regions = provider?.Value?.Data?.ResourceTypes?
+            .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
+            ?.Locations?
+            .Select(location => location.Replace(" ", "").ToLowerInvariant())
+            .ToList() ?? [];
+
+        var tasks = regions.Select(async region =>
+        {
+            try
+            {
+                var location = new AzureLocation(region);
+                var capabilities = await subscription.GetCapabilitiesByLocationAsync(location, cancellationToken: cancellationToken);
+
+                if (capabilities?.Value?.SupportedServerVersions?.Any() == true)
+                {
+                    return region;
+                }
+            }
+            catch (Exception error)
+            {
+                Logger.LogWarning("Error checking SQL capabilities for region {Region}: {Error}", region, error.Message);
+            }
+            return null;
+        });
+
+        var results = await Task.WhenAll(tasks);
+        return results.Where(region => region != null).ToList()!;
+    }
+}
+
+
+public class MySQLRegionChecker(ArmClient armClient, string subscriptionId, ILogger<MySQLRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
+{
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
+    {
+        var parts = resourceType.Split('/');
+        var providerNamespace = parts[0];
+        var resourceTypeName = parts[1];
+
+        var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
+        var provider = await subscription.GetResourceProviderAsync(providerNamespace, cancellationToken: cancellationToken);
+        var regions = provider?.Value?.Data?.ResourceTypes?
+            .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
+            ?.Locations?
+            .Select(location => location.Replace(" ", "").ToLowerInvariant())
+            .ToList() ?? [];
+
+        var tasks = regions.Select(async region =>
+        {
+            try
+            {
+                var location = new AzureLocation(region);
+                AsyncPageable<MySqlFlexibleServerCapabilityProperties> result = subscription.GetLocationBasedCapabilitiesAsync(location, cancellationToken: cancellationToken);
+                await foreach (var capability in result)
+                {
+                    // Check if the capability has supported flexible server editions
+                    if (capability.SupportedFlexibleServerEditions?.Any() == true)
+                    {
+                        return region;
+                    }
+                }
+            }
+            catch (Exception error)
+            {
+                Logger.LogWarning("Error checking MySQL capabilities for region {Region}: {Error}", region, error.Message);
+            }
+            return null;
+        });
+
+        var results = await Task.WhenAll(tasks);
+        return results.Where(region => region != null).ToList()!;
+    }
+}
+
+public class DocumentDBRegionChecker(ArmClient armClient, string subscriptionId, ILogger<DocumentDBRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
+{
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
+    {
+        var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
+        var regions = new List<string>();
+
+        try
+        {
+            var locationsCollection = subscription.GetCosmosDBLocations();
+            await foreach (var location in locationsCollection.GetAllAsync(cancellationToken))
+            {
+                if (location?.Data?.Properties?.IsSubscriptionRegionAccessAllowedForRegular == true)
+                {
+                    var regionName = location.Data.Name?.Replace(" ", "").ToLowerInvariant();
+                    if (!string.IsNullOrEmpty(regionName))
+                    {
+                        regions.Add(regionName);
+                    }
+                }
+            }
+        }
+        catch (Exception error)
+        {
+            Logger.LogWarning("Error checking DocumentDB locations: {Error}", error.Message);
+        }
+
+        return regions;
+    }
+}
+
+public class ComputeRegionChecker(ArmClient armClient, string subscriptionId, ILogger<ComputeRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
+{
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
+    {
+        var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
+        var availableRegions = new HashSet<string>();
+
+        try
+        {
+            await foreach (var sku in subscription.GetComputeResourceSkusAsync(cancellationToken: cancellationToken))
+            {
+                if (sku?.Locations == null)
+                {
+                    continue;
+                }
+
+                foreach (var location in sku.Locations)
+                {
+                    var normalizedLocation = location.Name.Replace(" ", "").ToLowerInvariant();
+                    availableRegions.Add(normalizedLocation);
+                }
+            }
+        }
+        catch (Exception error)
+        {
+            Logger.LogWarning("Error fetching compute regions for resource type {ResourceType}: {Error}", resourceType, error.Message);
+        }
+
+        return [.. availableRegions.Order()];
     }
 }
 
@@ -197,6 +350,22 @@ public static class RegionCheckerFactory
                 armClient,
                 subscriptionId,
                 loggerFactory.CreateLogger<PostgreSqlRegionChecker>()),
+            "microsoft.sql" => new SQLRegionChecker(
+                armClient,
+                subscriptionId,
+                loggerFactory.CreateLogger<SQLRegionChecker>()),
+            "microsoft.dbformysql" => new MySQLRegionChecker(
+                armClient,
+                subscriptionId,
+                loggerFactory.CreateLogger<MySQLRegionChecker>()),
+            "microsoft.documentdb" => new DocumentDBRegionChecker(
+                armClient,
+                subscriptionId,
+                loggerFactory.CreateLogger<DocumentDBRegionChecker>()),
+            "microsoft.compute" => new ComputeRegionChecker(
+                armClient,
+                subscriptionId,
+                loggerFactory.CreateLogger<ComputeRegionChecker>()),
             _ => new DefaultRegionChecker(
                 armClient,
                 subscriptionId,

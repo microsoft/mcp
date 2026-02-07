@@ -43,6 +43,32 @@ public sealed class DeploymentPlanTemplateParameters
     /// </summary>
     public string ExecutionSteps { get; set; } = string.Empty;
 
+
+    /// <summary>
+    /// The source of the plan to generate from.
+    /// </summary>
+    public string SourceType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The deploy option selected.
+    /// </summary>
+    public string DeployOption { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The deployment goal of the plan
+    /// </summary>
+    public string Goal { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The recommended resources or the existing(missing) resources
+    /// </summary>
+    public string ResourceInfo { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The sample mermaid diagram for the deployment plan.
+    /// </summary>
+    public string SampleMermaid { get; set; } = string.Empty;
+
     /// <summary>
     /// Converts the parameters to a dictionary for template processing.
     /// </summary>
@@ -58,6 +84,11 @@ public sealed class DeploymentPlanTemplateParameters
             { nameof(IacType), IacType },
             { nameof(AzureComputeHost), AzureComputeHost },
             { nameof(ExecutionSteps), ExecutionSteps },
+            { nameof(SourceType), SourceType },
+            { nameof(DeployOption), DeployOption },
+            { nameof(Goal), Goal },
+            { nameof(ResourceInfo), ResourceInfo },
+            { nameof(SampleMermaid), SampleMermaid }
         };
     }
 }
