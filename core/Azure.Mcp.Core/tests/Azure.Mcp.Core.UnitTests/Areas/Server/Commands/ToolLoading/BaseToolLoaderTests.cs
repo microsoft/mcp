@@ -303,6 +303,163 @@ public class BaseToolLoaderTests
             await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task HandleSecretElicitation_WhenElicitationDisabled_ProceedsWithoutConsent()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: true, logger, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result); // Should proceed
+        logger.Received(1).Log(
+            LogLevel.Warning,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("elicitation is disabled")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenClientDoesNotSupportElicitation_RejectsOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("does not support elicitation", result.Content[0].Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserAccepts_ProceedsWithOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result); // Should proceed
+        await mockServer.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(req => req.Method == "elicitation/create"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserDeclines_RejectsOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", result.Content[0].Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_UsesEmptySchemaWithNoProperties()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        
+        JsonRpcRequest? capturedRequest = null;
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+        
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(callInfo =>
+                  {
+                      capturedRequest = callInfo.Arg<JsonRpcRequest>();
+                      return Task.FromResult(mockResponse);
+                  });
+
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert - verify the schema has no properties (empty dictionary)
+        Assert.NotNull(capturedRequest);
+        var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params!.ToString()!);
+        Assert.NotNull(elicitParams);
+        Assert.NotNull(elicitParams.RequestedSchema);
+        Assert.NotNull(elicitParams.RequestedSchema.Properties);
+        Assert.Empty(elicitParams.RequestedSchema.Properties); // Key assertion: no form fields
+        Assert.NotNull(elicitParams.RequestedSchema.Required);
+        Assert.Empty(elicitParams.RequestedSchema.Required);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenExceptionOccurs_ReturnsErrorResult()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns<JsonRpcResponse>(_ => throw new InvalidOperationException("Elicitation failed"));
+
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
+            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("Elicitation failed", result.Content[0].Text);
+    }
+
     internal sealed class TestableBaseToolLoader : BaseToolLoader
     {
         public TestableBaseToolLoader(ILogger logger)
@@ -313,6 +470,16 @@ public class BaseToolLoaderTests
         public McpClientOptions CreateClientOptionsPublic(McpServer server)
         {
             return CreateClientOptions(server);
+        }
+
+        public static Task<CallToolResult?> HandleSecretElicitationAsyncPublic(
+            RequestContext<CallToolRequestParams> request,
+            string toolName,
+            bool dangerouslyDisableElicitation,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            return HandleSecretElicitationAsync(request, toolName, dangerouslyDisableElicitation, logger, cancellationToken);
         }
 
         public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
