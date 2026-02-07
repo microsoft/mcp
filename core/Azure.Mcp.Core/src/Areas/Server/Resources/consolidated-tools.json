@@ -155,6 +155,163 @@
       ]
     },
     {
+      "name": "manage_documentdb_connections",
+      "description": "Manage DocumentDB connections, including connect and disconnect operations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_connection_connect",
+        "documentdb_connection_disconnect"
+      ]
+    },
+    {
+      "name": "get_documentdb_details",
+      "description": "Get DocumentDB details including connection status, database and collection stats, document queries, and index metadata.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_connection_get_connection_status",
+        "documentdb_database_list_databases",
+        "documentdb_database_db_stats",
+        "documentdb_database_get_db_info",
+        "documentdb_collection_collection_stats",
+        "documentdb_collection_sample_documents",
+        "documentdb_document_find_documents",
+        "documentdb_document_count_documents",
+        "documentdb_document_aggregate",
+        "documentdb_document_explain_find_query",
+        "documentdb_document_explain_count_query",
+        "documentdb_document_explain_aggregate_query",
+        "documentdb_index_list_indexes",
+        "documentdb_index_index_stats",
+        "documentdb_index_current_ops"
+      ]
+    },
+    {
+      "name": "create_documentdb_documents_and_indexes",
+      "description": "Create DocumentDB documents and indexes by inserting documents and creating indexes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_document_insert_document",
+        "documentdb_document_insert_many",
+        "documentdb_index_create_index"
+      ]
+    },
+    {
+      "name": "edit_documentdb_documents_and_schema",
+      "description": "Update or delete DocumentDB data, collections, databases, and indexes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_database_drop_database",
+        "documentdb_collection_drop_collection",
+        "documentdb_collection_rename_collection",
+        "documentdb_document_delete_document",
+        "documentdb_document_delete_many",
+        "documentdb_document_update_document",
+        "documentdb_document_update_many",
+        "documentdb_document_find_and_modify",
+        "documentdb_index_drop_index"
+      ]
+    },
+    {
       "name": "create_azure_sql_databases_and_servers",
       "description": "Create new Azure SQL databases and SQL servers with configurable performance tiers and settings.",
       "toolMetadata": {

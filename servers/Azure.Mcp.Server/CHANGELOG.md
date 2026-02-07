@@ -6,6 +6,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added 29 DocumentDB tools for managing Azure DocumentDB (with MongoDB compatibility) databases, collections, documents, and indexes: [[#1632](https://github.com/microsoft/mcp/pull/1632)]
+  - **Connection** tools (3): Connect, Disconnect, GetConnectionStatus
+  - **Database** tools (4): ListDatabases, DbStats, GetDbInfo, DropDatabase
+  - **Collection** tools (4): CollectionStats, RenameCollection, DropCollection, SampleDocuments
+  - **Document** tools (13): FindDocuments, CountDocuments, InsertDocument, InsertMany, UpdateDocument, UpdateMany, DeleteDocument, DeleteMany, Aggregate, FindAndModify, ExplainFindQuery, ExplainCountQuery, ExplainAggregateQuery
+  - **Index** tools (5): CreateIndex, ListIndexes, DropIndex, IndexStats, CurrentOps
+
 ### Breaking Changes
 
 ### Bugs Fixed

@@ -1073,6 +1073,185 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure DocumentDB (with MongoDB compatibility) Operations
+
+```bash
+# Connection Management
+
+# Connect to an Azure Cosmos DB for MongoDB (vCore) instance with a connection string
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb connection connect --connection-string <connection-string> \
+                                    [--test-connection <true|false>]
+
+# Disconnect from the current DocumentDB instance
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb connection disconnect
+
+# Get the current DocumentDB connection status and details
+azmcp documentdb connection status
+
+# Database Operations
+
+# List all databases in the DocumentDB instance
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database list databases
+
+# Get detailed statistics about a database's size and storage usage
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database db stats --db-name <database-name>
+
+# Get database information including all collections and their document counts
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database get db info --db-name <database-name>
+
+# Drop a database and all its collections
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database drop database --db-name <database-name>
+
+# Collection Operations
+
+# Get detailed statistics about a collection's size and storage usage
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection collection stats --db-name <database-name> \
+                                             --collection-name <collection-name>
+
+# Rename a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection rename collection --db-name <database-name> \
+                                              --collection-name <old-name> \
+                                              --new-collection-name <new-name>
+
+# Drop a collection from a database
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection drop collection --db-name <database-name> \
+                                            --collection-name <collection-name>
+
+# Retrieve sample documents from a specific collection. Useful for understanding data schema and query generation
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection sample documents --db-name <database-name> \
+                                             --collection-name <collection-name> \
+                                             [--sample-size <number>]
+
+# Document Operations
+
+# Find documents in a collection. Supports consolidated "options" object (limit, skip, sort, projection)
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document find documents --db-name <database-name> \
+                                         --collection-name <collection-name> \
+                                         [--query <query-filter-json>] \
+                                         [--options <query-options-json>]
+
+# Count documents in a collection matching a query
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document count documents --db-name <database-name> \
+                                          --collection-name <collection-name> \
+                                          [--query <query-filter-json>]
+
+# Insert a single document into a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document insert document --db-name <database-name> \
+                                          --collection-name <collection-name> \
+                                          --document <document-json>
+
+# Insert multiple documents into a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document insert many --db-name <database-name> \
+                                      --collection-name <collection-name> \
+                                      --documents <documents-json-array>
+
+# Update a document in a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document update document --db-name <database-name> \
+                                          --collection-name <collection-name> \
+                                          --filter <filter-json> \
+                                          --update <update-json> \
+                                          [--upsert <true|false>]
+
+# Update multiple documents in a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document update many --db-name <database-name> \
+                                      --collection-name <collection-name> \
+                                      --filter <filter-json> \
+                                      --update <update-json> \
+                                      [--upsert <true|false>]
+
+# Delete a document from a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document delete document --db-name <database-name> \
+                                          --collection-name <collection-name> \
+                                          --filter <filter-json>
+
+# Delete multiple documents from a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document delete many --db-name <database-name> \
+                                      --collection-name <collection-name> \
+                                      --filter <filter-json>
+
+# Run an aggregation pipeline on a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document aggregate --db-name <database-name> \
+                                    --collection-name <collection-name> \
+                                    --pipeline <pipeline-json-array> \
+                                    [--allow-disk-use <true|false>]
+
+# Find one document by filter and apply update; returns the document BEFORE modification (or null if it doesn't exist)
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document find and modify --db-name <database-name> \
+                                          --collection-name <collection-name> \
+                                          [--query <query-filter-json>] \
+                                          --update <update-json> \
+                                          [--upsert <true|false>]
+
+# Explain the execution plan with execution stats for a find query using consolidated options (sort, projection, limit, skip)
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document explain find query --db-name <database-name> \
+                                             --collection-name <collection-name> \
+                                             [--query <query-filter-json>] \
+                                             [--options <query-options-json>]
+
+# Explain the execution plan with execution stats for count query on a given collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document explain count query --db-name <database-name> \
+                                              --collection-name <collection-name> \
+                                              [--query <query-filter-json>]
+
+# Explain the execution plan with execution stats for an aggregation query on a given collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document explain aggregate query --db-name <database-name> \
+                                                  --collection-name <collection-name> \
+                                                  --pipeline <pipeline-json-array> \
+                                                  [--allow-disk-use <true|false>]
+
+# Index Operations
+
+# Create an index on a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index create index --db-name <database-name> \
+                                    --collection-name <collection-name> \
+                                    --keys <index-keys-json> \
+                                    [--options <index-options-json>]
+
+# List all indexes on a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index list indexes --db-name <database-name> \
+                                    --collection-name <collection-name>
+
+# Drop an index from a collection
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index drop index --db-name <database-name> \
+                                  --collection-name <collection-name> \
+                                  --index-name <index-name>
+
+# Get statistics for indexes on a collection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index index stats --db-name <database-name> \
+                                   --collection-name <collection-name>
+
+# Get information about current DocumentDB operations
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index current ops [--ops <filter-json>]
+```
+
 ### Azure Event Grid Operations
 
 ```bash
