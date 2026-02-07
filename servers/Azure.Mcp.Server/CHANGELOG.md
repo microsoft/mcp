@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.16 (Unreleased)
+## 2.0.0-beta.18 (Unreleased)
 
 ### Features Added
 
@@ -19,12 +19,53 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+## 2.0.0-beta.17 (2026-02-05)
+
+### Features Added
+
+- Added log telemetry support for customer-owned AppInsights. [[#1638](https://github.com/microsoft/mcp/pull/1638)]
+- Added support for dangerous persistent logging configuration in VSIX extension, allowing users to specify a directory for detailed debug logs via the azureMcp.dangerouslyWriteSupportLogsToDir setting. [[#1639](https://github.com/microsoft/mcp/pull/1639)]
+
+### Bugs Fixed
+
+- Improved input validation in ResourceHealth and Kusto tools: [[#1634](https://github.com/microsoft/mcp/pull/1634)]
+  - ResourceHealth: Added resource ID validation using Azure.Core.ResourceIdentifier.Parse()
+  - Kusto: Added cluster URI validation with domain suffix and hostname allowlist
+
+### Other Changes
+
+- Added cancellation token support so deploy operations can be cancelled cleanly and consistently. [[#1627](https://github.com/microsoft/mcp/pull/1627)]
+- Improved cancellation behavior for async enumerators by adding support for `CancellationToken`, making it easier to correctly stop long-running or streaming async iteration. [[#1649](https://github.com/microsoft/mcp/pull/1649)]
+
+## 2.0.0-beta.16 (2026-02-03)
+
+### Features Added
+
+- Added Azure Compute VM operations with flexible compute vm get command that supports listing all VMs in a subscription, listing VMs in a resource group, getting specific VM details, and retrieving VM instance view with runtime status: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vm_get`
+- Added Virtual Machine Scale Set (VMSS) get operations to retrieve VMSS information including listing across subscriptions or resource groups, getting specific VMSS details, and retrieving individual VM instances within a scale set: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vmss_get`
+- Added Azure Retail Pricing MCP tool for querying Azure service pricing information: [[#1621](https://github.com/microsoft/mcp/pull/1621)]
+  - `pricing_get`
+
+### Bugs Fixed
+
+- Added support for new versions of Azure AI Search knowledge bases and those set to 'minimal' reasoning effort. [[#1422](https://github.com/microsoft/mcp/pull/1422)]
+
+### Other Changes
+
+- Removed ErrorDetails from telemetry. [[#1625](https://github.com/microsoft/mcp/pull/1625)]
+- Updated bestpractices tool description to ask LLM to use azure skills. [[#1622](https://github.com/microsoft/mcp/pull/1622)]
+- Updated swa app deployment instructions in bestpractices tool. [[#1637](https://github.com/microsoft/mcp/pull/1637)]
+
 ## 2.0.0-beta.15 (2026-01-29)
 
 ### Features Added
+
 - Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
 
 ### Bugs Fixed
+
 - Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
 - Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
 
@@ -36,6 +77,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.14 (2026-01-27)
 
 ### Features Added
+
 - Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`. [[#1519](https://github.com/microsoft/mcp/pull/1519)]
 - Added new Azure Managed Lustre fileshare blob import management tools: [[#1492](https://github.com/microsoft/mcp/pull/1492)]
   - `managedlustre_fs_blob_import_create`
@@ -63,6 +105,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.12 (2026-01-20)
 
 ### Bugs Fixed
+
 - Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
 
 ## 2.0.0-beta.11 (2026-01-16)
