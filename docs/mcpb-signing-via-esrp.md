@@ -91,6 +91,8 @@ MCPB_SIG_V1
 MCPB_SIG_END
 ```
 
+> **Note on documentation vs implementation**: The official CLI.md documentation shows a simplified format with Base64-encoded signatures and no length prefix. However, we verified the actual source code for both the [NPM/TypeScript implementation](https://github.com/modelcontextprotocol/mcpb/blob/main/src/node/sign.ts) and the [C#/.NET implementation](https://github.com/asklar/mcpb/blob/user/asklar/dotnet/dotnet/mcpb/Commands/SignCommand.cs) - both use **DER-encoded (raw binary) signatures with a 4-byte little-endian length prefix**, not Base64. In TypeScript, `createSignatureBlock` writes `writeUInt32LE(pkcs7Signature.length)` and `extractSignatureBlock` reads with `readUInt32LE`. In C#, `CreateSignatureBlock` uses `BitConverter.GetBytes(pkcs7.Length)` and `ExtractSignatureBlock` reads with `BitConverter.ToInt32`. This length prefix is essential for unambiguous parsing, as raw DER bytes could otherwise contain sequences that match the `MCPB_SIG_END` marker.
+
 This approach allows:
 - Backward compatibility (unsigned MCPB files are valid ZIP files)
 - Easy signature verification and removal
