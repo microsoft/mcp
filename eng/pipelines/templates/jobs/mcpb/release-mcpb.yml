@@ -84,7 +84,9 @@ jobs:
             foreach ($mcpb in $mcpbFiles) {
                 Write-Host "  Uploading: $($mcpb.Name) ($($mcpb.Length) bytes)"
                 
-                & gh release upload $tag $mcpb.FullName --clobber
+                # Note: --repo is required because checkout is not allowed in release jobs,
+                # so gh cannot determine the repository from the git context
+                & gh release upload $tag $mcpb.FullName --repo microsoft/mcp --clobber
                 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Error "Failed to upload $($mcpb.Name)"
