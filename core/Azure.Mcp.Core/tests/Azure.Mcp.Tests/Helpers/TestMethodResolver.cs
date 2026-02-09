@@ -8,8 +8,8 @@ namespace Azure.Mcp.Tests.Helpers;
 
 /// <summary>
 /// Resolves the current test method's <see cref="MethodInfo"/> via reflection on xUnit internals.
-/// This helper exists so that the reflection walk happens at most once per test, regardless of
-/// how many attribute checks need the result.
+/// Each call performs the necessary reflection; callers that need the value multiple times within a
+/// single test should cache the returned <see cref="MethodInfo"/> themselves.
 /// </summary>
 internal static class TestMethodResolver
 {
