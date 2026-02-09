@@ -47,10 +47,6 @@
       "fileSha256": "<<McpbSha256WinX64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["windows"],
-        "arch": ["x86_64"]
       }
     },
     {
@@ -59,10 +55,6 @@
       "fileSha256": "<<McpbSha256WinArm64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["windows"],
-        "arch": ["arm64"]
       }
     },
     {
@@ -71,10 +63,6 @@
       "fileSha256": "<<McpbSha256LinuxX64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["linux"],
-        "arch": ["x86_64"]
       }
     },
     {
@@ -83,10 +71,6 @@
       "fileSha256": "<<McpbSha256LinuxArm64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["linux"],
-        "arch": ["arm64"]
       }
     },
     {
@@ -95,10 +79,6 @@
       "fileSha256": "<<McpbSha256OsxX64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["macos"],
-        "arch": ["x86_64"]
       }
     },
     {
@@ -107,10 +87,6 @@
       "fileSha256": "<<McpbSha256OsxArm64>>",
       "transport": {
         "type": "stdio"
-      },
-      "runtime": {
-        "os": ["macos"],
-        "arch": ["arm64"]
       }
     }
   ],
