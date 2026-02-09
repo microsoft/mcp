@@ -1326,7 +1326,6 @@ azmcp keyvault certificate import --subscription <subscription> \
                                   [--password <pfx-password>]
 
 # Lists certificates in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate list --subscription <subscription> \
                                 --vault <vault-name>
 ```
@@ -1348,7 +1347,6 @@ azmcp keyvault key get --subscription <subscription> \
                        --key <key-name>
 
 # Lists keys in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
                         --include-managed <true/false>
@@ -1383,7 +1381,6 @@ azmcp keyvault secret get --subscription <subscription> \
                           --secret <secret-name>
 
 # Lists secrets in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault secret list --subscription <subscription> \
                            --vault <vault-name>
 ```
