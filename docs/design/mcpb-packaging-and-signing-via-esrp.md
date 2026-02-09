@@ -283,7 +283,7 @@ eng/
 │               ├── pack-and-sign-mcpb.yml    # Pack and sign pipeline template
 │               └── release-mcpb.yml          # Release pipeline template
 docs/
-└── mcpb-signing-via-esrp.md                  # This design document
+└── mcpb-packaging-and-signing-via-esrp.md    # This design document
 servers/
 ├── Azure.Mcp.Server/
 │   ├── mcpb/
