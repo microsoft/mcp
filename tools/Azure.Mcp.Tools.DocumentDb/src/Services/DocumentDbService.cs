@@ -1384,10 +1384,8 @@ public class DocumentDbService : IDocumentDbService
         try
         {
             var database = _client!.GetDatabase(databaseName);
-            var collection = database.GetCollection<BsonDocument>(collectionName);
 
             var filter = query ?? new BsonDocument();
-            var findOptions = new FindOptions<BsonDocument>();
 
             // Parse options
             BsonDocument? sort = null;

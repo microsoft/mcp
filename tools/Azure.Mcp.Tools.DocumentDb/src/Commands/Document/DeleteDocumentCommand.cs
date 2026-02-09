@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class DeleteDocumentCommand(ILogger<DeleteDocumentCommand> logger)
-    : BaseDocumentDbCommand<DeleteDocumentOptions>(logger)
+    : BaseDocumentDbCommand<DeleteDocumentOptions>()
 {
+    private readonly ILogger<DeleteDocumentCommand> _logger = logger;
+
     public override string Id => "f8a9b0c1-d2e3-4f8a-5b6c-7d8e9f0a1b2c";
 
     public override string Name => "delete_document";

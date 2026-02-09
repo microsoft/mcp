@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
 
 public sealed class GetDbInfoCommand(ILogger<GetDbInfoCommand> logger)
-    : BaseDocumentDbCommand<GetDbInfoOptions>(logger)
+    : BaseDocumentDbCommand<GetDbInfoOptions>()
 {
+    private readonly ILogger<GetDbInfoCommand> _logger = logger;
+
     public override string Id => "f6a7b8c9-d0e1-4f6a-3b4c-5d6e7f8a9b0c";
 
     public override string Name => "get_db_info";

@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
 
 public sealed class DropIndexCommand(ILogger<DropIndexCommand> logger)
-    : BaseDocumentDbCommand<DropIndexOptions>(logger)
+    : BaseDocumentDbCommand<DropIndexOptions>()
 {
+    private readonly ILogger<DropIndexCommand> _logger = logger;
+
     public override string Id => "c7d8e9f0-a1b2-4c7d-4e5f-6a7b8c9d0e1f";
 
     public override string Name => "drop_index";

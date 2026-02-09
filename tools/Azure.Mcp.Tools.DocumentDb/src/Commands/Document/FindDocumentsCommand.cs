@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
-    : BaseDocumentDbCommand<FindDocumentsOptions>(logger)
+    : BaseDocumentDbCommand<FindDocumentsOptions>()
 {
+    private readonly ILogger<FindDocumentsCommand> _logger = logger;
+
     public override string Id => "f2a3b4c5-d6e7-4f2a-9b0c-1d2e3f4a5b6c";
 
     public override string Name => "find_documents";

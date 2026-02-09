@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
 
 public sealed class CreateIndexCommand(ILogger<CreateIndexCommand> logger)
-    : BaseDocumentDbCommand<CreateIndexOptions>(logger)
+    : BaseDocumentDbCommand<CreateIndexOptions>()
 {
+    private readonly ILogger<CreateIndexCommand> _logger = logger;
+
     public override string Id => "a5b6c7d8-e9f0-4a5b-2c3d-4e5f6a7b8c9d";
 
     public override string Name => "create_index";

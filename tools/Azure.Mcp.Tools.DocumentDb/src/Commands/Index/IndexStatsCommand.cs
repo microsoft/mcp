@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
 
 public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
-    : BaseDocumentDbCommand<IndexStatsOptions>(logger)
+    : BaseDocumentDbCommand<IndexStatsOptions>()
 {
+    private readonly ILogger<IndexStatsCommand> _logger = logger;
+
     public override string Id => "d8e9f0a1-b2c3-4d8e-5f6a-7b8c9d0e1f2a";
 
     public override string Name => "index_stats";

@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
 
 public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
-    : BaseDocumentDbCommand<ListDatabasesOptions>(logger)
+    : BaseDocumentDbCommand<ListDatabasesOptions>()
 {
+    private readonly ILogger<ListDatabasesCommand> _logger = logger;
+
     public override string Id => "d4e5f6a7-b8c9-4d4e-1f2a-3b4c5d6e7f8a";
 
     public override string Name => "list_databases";
@@ -35,7 +37,7 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
+        BindOptions(parseResult);
 
         try
         {

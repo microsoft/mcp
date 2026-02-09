@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class ExplainFindQueryCommand(ILogger<ExplainFindQueryCommand> logger)
-    : BaseDocumentDbCommand<ExplainFindQueryOptions>(logger)
+    : BaseDocumentDbCommand<ExplainFindQueryOptions>()
 {
+    private readonly ILogger<ExplainFindQueryCommand> _logger = logger;
+
     public override string Id => "d2e3f4a5-b6c7-4d2e-9f0a-1b2c3d4e5f6a";
 
     public override string Name => "explain_find_query";

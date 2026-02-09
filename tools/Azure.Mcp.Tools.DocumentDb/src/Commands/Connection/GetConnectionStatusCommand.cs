@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Connection;
 
 public sealed class GetConnectionStatusCommand(ILogger<GetConnectionStatusCommand> logger)
-    : BaseDocumentDbCommand<GetConnectionStatusOptions>(logger)
+    : BaseDocumentDbCommand<GetConnectionStatusOptions>()
 {
+    private readonly ILogger<GetConnectionStatusCommand> _logger = logger;
+
     public override string Id => "c3d4e5f6-a7b8-4c3d-0e1f-2a3b4c5d6e7f";
 
     public override string Name => "get_connection_status";
@@ -35,7 +37,7 @@ public sealed class GetConnectionStatusCommand(ILogger<GetConnectionStatusComman
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
+        BindOptions(parseResult);
 
         try
         {

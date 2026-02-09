@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class DeleteManyCommand(ILogger<DeleteManyCommand> logger)
-    : BaseDocumentDbCommand<DeleteManyOptions>(logger)
+    : BaseDocumentDbCommand<DeleteManyOptions>()
 {
+    private readonly ILogger<DeleteManyCommand> _logger = logger;
+
     public override string Id => "a9b0c1d2-e3f4-4a9b-6c7d-8e9f0a1b2c3d";
 
     public override string Name => "delete_many";

@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class ExplainAggregateQueryCommand(ILogger<ExplainAggregateQueryCommand> logger)
-    : BaseDocumentDbCommand<ExplainAggregateQueryOptions>(logger)
+    : BaseDocumentDbCommand<ExplainAggregateQueryOptions>()
 {
+    private readonly ILogger<ExplainAggregateQueryCommand> _logger = logger;
+
     public override string Id => "f4a5b6c7-d8e9-4f4a-1b2c-3d4e5f6a7b8c";
 
     public override string Name => "explain_aggregate_query";

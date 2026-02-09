@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class UpdateDocumentCommand(ILogger<UpdateDocumentCommand> logger)
-    : BaseDocumentDbCommand<UpdateDocumentOptions>(logger)
+    : BaseDocumentDbCommand<UpdateDocumentOptions>()
 {
+    private readonly ILogger<UpdateDocumentCommand> _logger = logger;
+
     public override string Id => "d6e7f8a9-b0c1-4d6e-3f4a-5b6c7d8e9f0a";
 
     public override string Name => "update_document";

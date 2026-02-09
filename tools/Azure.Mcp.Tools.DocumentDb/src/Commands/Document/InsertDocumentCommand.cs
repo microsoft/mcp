@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class InsertDocumentCommand(ILogger<InsertDocumentCommand> logger)
-    : BaseDocumentDbCommand<InsertDocumentOptions>(logger)
+    : BaseDocumentDbCommand<InsertDocumentOptions>()
 {
+    private readonly ILogger<InsertDocumentCommand> _logger = logger;
+
     public override string Id => "b4c5d6e7-f8a9-4b4c-1d2e-3f4a5b6c7d8e";
 
     public override string Name => "insert_document";

@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
-    : BaseDocumentDbCommand<CountDocumentsOptions>(logger)
+    : BaseDocumentDbCommand<CountDocumentsOptions>()
 {
+    private readonly ILogger<CountDocumentsCommand> _logger = logger;
+
     public override string Id => "a3b4c5d6-e7f8-4a3b-0c1d-2e3f4a5b6c7d";
 
     public override string Name => "count_documents";

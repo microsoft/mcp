@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class AggregateCommand(ILogger<AggregateCommand> logger)
-    : BaseDocumentDbCommand<AggregateOptions>(logger)
+    : BaseDocumentDbCommand<AggregateOptions>()
 {
+    private readonly ILogger<AggregateCommand> _logger = logger;
+
     public override string Id => "b0c1d2e3-f4a5-4b0c-7d8e-9f0a1b2c3d4e";
 
     public override string Name => "aggregate";

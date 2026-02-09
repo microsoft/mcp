@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
 
 public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
-    : BaseDocumentDbCommand<CurrentOpsOptions>(logger)
+    : BaseDocumentDbCommand<CurrentOpsOptions>()
 {
+    private readonly ILogger<CurrentOpsCommand> _logger = logger;
+
     public override string Id => "e9f0a1b2-c3d4-4e9f-6a7b-8c9d0e1f2a3b";
 
     public override string Name => "current_ops";

@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
 
 public sealed class ListIndexesCommand(ILogger<ListIndexesCommand> logger)
-    : BaseDocumentDbCommand<ListIndexesOptions>(logger)
+    : BaseDocumentDbCommand<ListIndexesOptions>()
 {
+    private readonly ILogger<ListIndexesCommand> _logger = logger;
+
     public override string Id => "b6c7d8e9-f0a1-4b6c-3d4e-5f6a7b8c9d0e";
 
     public override string Name => "list_indexes";

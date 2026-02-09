@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
 
 public sealed class DropDatabaseCommand(ILogger<DropDatabaseCommand> logger)
-    : BaseDocumentDbCommand<DropDatabaseOptions>(logger)
+    : BaseDocumentDbCommand<DropDatabaseOptions>()
 {
+    private readonly ILogger<DropDatabaseCommand> _logger = logger;
+
     public override string Id => "a7b8c9d0-e1f2-4a7b-4c5d-6e7f8a9b0c1d";
 
     public override string Name => "drop_database";

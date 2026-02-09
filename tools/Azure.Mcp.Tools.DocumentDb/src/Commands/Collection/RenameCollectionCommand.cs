@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
 public sealed class RenameCollectionCommand(ILogger<RenameCollectionCommand> logger)
-    : BaseDocumentDbCommand<RenameCollectionOptions>(logger)
+    : BaseDocumentDbCommand<RenameCollectionOptions>()
 {
+    private readonly ILogger<RenameCollectionCommand> _logger = logger;
+
     public override string Id => "c9d0e1f2-a3b4-4c9d-6e7f-8a9b0c1d2e3f";
 
     public override string Name => "rename_collection";

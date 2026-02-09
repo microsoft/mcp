@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class FindAndModifyCommand(ILogger<FindAndModifyCommand> logger)
-    : BaseDocumentDbCommand<FindAndModifyOptions>(logger)
+    : BaseDocumentDbCommand<FindAndModifyOptions>()
 {
+    private readonly ILogger<FindAndModifyCommand> _logger = logger;
+
     public override string Id => "c1d2e3f4-a5b6-4c1d-8e9f-0a1b2c3d4e5f";
 
     public override string Name => "find_and_modify";

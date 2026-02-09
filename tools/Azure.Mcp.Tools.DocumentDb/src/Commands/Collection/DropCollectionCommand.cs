@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
 public sealed class DropCollectionCommand(ILogger<DropCollectionCommand> logger)
-    : BaseDocumentDbCommand<DropCollectionOptions>(logger)
+    : BaseDocumentDbCommand<DropCollectionOptions>()
 {
+    private readonly ILogger<DropCollectionCommand> _logger = logger;
+
     public override string Id => "d0e1f2a3-b4c5-4d0e-7f8a-9b0c1d2e3f4a";
 
     public override string Name => "drop_collection";

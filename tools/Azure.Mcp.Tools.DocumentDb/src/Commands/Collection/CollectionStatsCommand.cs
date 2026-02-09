@@ -15,8 +15,10 @@ using MongoDB.Bson;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
 public sealed class CollectionStatsCommand(ILogger<CollectionStatsCommand> logger)
-    : BaseDocumentDbCommand<CollectionStatsOptions>(logger)
+    : BaseDocumentDbCommand<CollectionStatsOptions>()
 {
+    private readonly ILogger<CollectionStatsCommand> _logger = logger;
+
     public override string Id => "b8c9d0e1-f2a3-4b8c-5d6e-7f8a9b0c1d2e";
 
     public override string Name => "collection_stats";

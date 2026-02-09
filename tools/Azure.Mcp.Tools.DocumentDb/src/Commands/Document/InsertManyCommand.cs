@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class InsertManyCommand(ILogger<InsertManyCommand> logger)
-    : BaseDocumentDbCommand<InsertManyOptions>(logger)
+    : BaseDocumentDbCommand<InsertManyOptions>()
 {
+    private readonly ILogger<InsertManyCommand> _logger = logger;
+
     public override string Id => "c5d6e7f8-a9b0-4c5d-2e3f-4a5b6c7d8e9f";
 
     public override string Name => "insert_many";

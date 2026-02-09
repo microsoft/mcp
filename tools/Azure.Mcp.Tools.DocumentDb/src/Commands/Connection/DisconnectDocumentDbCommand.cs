@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Connection;
 
 public sealed class DisconnectDocumentDbCommand(ILogger<DisconnectDocumentDbCommand> logger)
-    : BaseDocumentDbCommand<DisconnectDocumentDbOptions>(logger)
+    : BaseDocumentDbCommand<DisconnectDocumentDbOptions>()
 {
+    private readonly ILogger<DisconnectDocumentDbCommand> _logger = logger;
+
     public override string Id => "b2c3d4e5-f6a7-4b2c-9d0e-1f2a3b4c5d6e";
 
     public override string Name => "disconnect";
@@ -35,7 +37,7 @@ public sealed class DisconnectDocumentDbCommand(ILogger<DisconnectDocumentDbComm
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
+        BindOptions(parseResult);
 
         try
         {

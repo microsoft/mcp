@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class ExplainCountQueryCommand(ILogger<ExplainCountQueryCommand> logger)
-    : BaseDocumentDbCommand<ExplainCountQueryOptions>(logger)
+    : BaseDocumentDbCommand<ExplainCountQueryOptions>()
 {
+    private readonly ILogger<ExplainCountQueryCommand> _logger = logger;
+
     public override string Id => "e3f4a5b6-c7d8-4e3f-0a1b-2c3d4e5f6a7b";
 
     public override string Name => "explain_count_query";

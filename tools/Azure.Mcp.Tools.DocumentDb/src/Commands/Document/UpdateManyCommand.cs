@@ -17,8 +17,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class UpdateManyCommand(ILogger<UpdateManyCommand> logger)
-    : BaseDocumentDbCommand<UpdateManyOptions>(logger)
+    : BaseDocumentDbCommand<UpdateManyOptions>()
 {
+    private readonly ILogger<UpdateManyCommand> _logger = logger;
+
     public override string Id => "e7f8a9b0-c1d2-4e7f-4a5b-6c7d8e9f0a1b";
 
     public override string Name => "update_many";

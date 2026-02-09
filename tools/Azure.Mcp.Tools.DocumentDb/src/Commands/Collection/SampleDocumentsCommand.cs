@@ -15,8 +15,10 @@ using MongoDB.Bson;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
 public sealed class SampleDocumentsCommand(ILogger<SampleDocumentsCommand> logger)
-    : BaseDocumentDbCommand<SampleDocumentsOptions>(logger)
+    : BaseDocumentDbCommand<SampleDocumentsOptions>()
 {
+    private readonly ILogger<SampleDocumentsCommand> _logger = logger;
+
     public override string Id => "e1f2a3b4-c5d6-4e1f-8a9b-0c1d2e3f4a5b";
 
     public override string Name => "sample_documents";

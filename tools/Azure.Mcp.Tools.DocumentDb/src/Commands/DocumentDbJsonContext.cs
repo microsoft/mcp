@@ -89,18 +89,12 @@ internal static class DocumentDbResponseHelper
 
         if (response.Success)
         {
-            if (response.Data != null)
+            // For success with no data, create an empty result with the message
+            var dataToSerialize = response.Data ?? new Dictionary<string, object?>
             {
-                context.Response.Results = CreateFromJson(SerializeToJson(response.Data));
-            }
-            else
-            {
-                // For success with no data, create an empty result with the message
-                context.Response.Results = CreateFromJson(SerializeToJson(new Dictionary<string, object?>
-                {
-                    ["message"] = response.Message
-                }));
-            }
+                ["message"] = response.Message
+            };
+            context.Response.Results = CreateFromJson(SerializeToJson(dataToSerialize));
         }
         else
         {

@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
 
 public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
-    : BaseDocumentDbCommand<DbStatsOptions>(logger)
+    : BaseDocumentDbCommand<DbStatsOptions>()
 {
+    private readonly ILogger<DbStatsCommand> _logger = logger;
+
     public override string Id => "e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b";
 
     public override string Name => "db_stats";

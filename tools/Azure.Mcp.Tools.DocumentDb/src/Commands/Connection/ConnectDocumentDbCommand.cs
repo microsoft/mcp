@@ -13,8 +13,10 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Connection;
 
 public sealed class ConnectDocumentDbCommand(ILogger<ConnectDocumentDbCommand> logger)
-    : BaseDocumentDbCommand<ConnectDocumentDbOptions>(logger)
+    : BaseDocumentDbCommand<ConnectDocumentDbOptions>()
 {
+    private readonly ILogger<ConnectDocumentDbCommand> _logger = logger;
+
     public override string Id => "a1b2c3d4-e5f6-4a1b-8c9d-0e1f2a3b4c5d";
 
     public override string Name => "connect";
