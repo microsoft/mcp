@@ -56,7 +56,9 @@ if (!(Test-Path $McpbPath)) {
 # Map platform names to their placeholder suffixes
 $platformToPlaceholder = @{
     'win-x64' = 'WinX64'
+    'win-arm64' = 'WinArm64'
     'linux-x64' = 'LinuxX64'
+    'linux-arm64' = 'LinuxArm64'
     'osx-x64' = 'OsxX64'
     'osx-arm64' = 'OsxArm64'
 }

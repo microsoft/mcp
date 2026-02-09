@@ -64,7 +64,9 @@ ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'name' -NewValue $s
 ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue $server.version
 
 foreach ($package in $jsonHashTable.packages) {
-    ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    if ($package.ContainsKey('version')) {
+        ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    }
 
     switch ($package.registryType) {
         'nuget' {
@@ -88,7 +90,9 @@ foreach ($package in $jsonHashTable.packages) {
                 # Map placeholder suffix to MCPB filename convention
                 $platformMap = @{
                     'WinX64' = 'win-x64'
+                    'WinArm64' = 'win-arm64'
                     'LinuxX64' = 'linux-x64'
+                    'LinuxArm64' = 'linux-arm64'
                     'OsxX64' = 'osx-x64'
                     'OsxArm64' = 'osx-arm64'
                 }
