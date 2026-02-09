@@ -184,25 +184,29 @@ The CLI provides essential commands:
 - `mcpb verify` - Verify signature of signed .mcpb
 - `mcpb info` - Display information about .mcpb file
 
-#### 2. PowerShell Module: `New-McpbPackage.ps1`
+#### 2. PowerShell Script: `Pack-Mcpb.ps1`
 
-Location: `eng/scripts/New-McpbPackage.ps1`
+Location: `eng/scripts/Pack-Mcpb.ps1`
 
 **Parameters:**
-- `-ServerName`: Name of the server (e.g., Azure.Mcp.Server)
-- `-Platform`: Target platform (win-x64, linux-x64, osx-x64, osx-arm64)
-- `-PublishPath`: Path to trimmed binaries from dotnet publish
-- `-ManifestPath`: Path to the server's pre-created manifest.json file
-- `-IconPath`: Path to server icon (optional, defaults to icon next to manifest)
-- `-OutputPath`: Output directory for .mcpb file
+- `-ArtifactsPath`: Path to the build artifacts directory containing trimmed server binaries
+- `-BuildInfoPath`: Path to the `build_info.json` file containing server and platform definitions
+- `-OutputPath`: Output directory for `.mcpb` files
+- `-KeepStagingDirectory`: Optional flag to keep staging directory for debugging
+
+**Supported Platforms** (determined by `build_info.json`):
+- `win-x64`, `win-arm64` (Windows)
+- `linux-x64`, `linux-arm64` (Linux)
+- `osx-x64`, `osx-arm64` (macOS)
 
 **Workflow:**
 1. Create staging directory structure
 2. Copy trimmed binaries to `server/` subdirectory
 3. Copy `manifest.json` (uses `platform_overrides` in mcp_config for cross-platform support)
 4. Copy icon and assets. Rename icon to `servericon.png`.
-5. Validate with `mcpb validate`
-6. Package with `mcpb pack`
+5. Copy LICENSE and NOTICE.txt into each bundle
+6. Validate with `mcpb validate`
+7. Package with `mcpb pack --update` (auto-populates tools array)
 
 #### 3. Modular Pipeline Scripts
 
@@ -269,8 +273,7 @@ eng/
 ├── scripts/
 │   ├── Pack-Mcpb.ps1                         # MCPB packaging script (uses build_info.json)
 │   ├── Stage-McpbForSigning.ps1              # Stage files for ESRP signing
-│   ├── Apply-McpbSignatures.ps1              # Apply .p7s signatures to MCPB files
-│   ├── Apply-McpbSignatures.tests.ps1        # Pester unit tests for signature conversion
+│   ├── Apply-McpbSignatures.ps1              # Apply .p7s signatures (includes Convert-P7sToMcpbSignature)
 │   ├── Verify-McpbSignatures.ps1             # Verify signatures using mcpb CLI
 │   └── Update-ServerJsonMcpbHashes.ps1       # Compute SHA256 for MCP Registry
 ├── pipelines/
@@ -282,9 +285,19 @@ eng/
 docs/
 └── mcpb-signing-via-esrp.md                  # This design document
 servers/
-└── {ServerName}/
+├── Azure.Mcp.Server/
+│   ├── mcpb/
+│   │   ├── manifest.json                     # MCPB manifest
+│   │   └── servericon.png                    # Server icon
+│   └── server.json                           # MCP Registry config with MCPB entries
+├── Fabric.Mcp.Server/
+│   ├── mcpb/
+│   │   ├── manifest.json                     # MCPB manifest
+│   │   └── servericon.png                    # Server icon
+│   └── server.json                           # MCP Registry config with MCPB entries
+└── Template.Mcp.Server/
     ├── mcpb/
-    │   ├── manifest.json                     # MCPB manifest (pre-created)
+    │   ├── manifest.json                     # MCPB manifest
     │   └── servericon.png                    # Server icon
     └── server.json                           # MCP Registry config with MCPB entries
 ```
@@ -370,11 +383,17 @@ This template handles publishing signed MCPB packages to GitHub Release. The upl
 
 | Server | Path | Notes |
 |--------|------|-------|
-| Azure.Mcp.Server | `servers/Azure.Mcp.Server/` | Azure server |
-| Fabric.Mcp.Server | `servers/Fabric.Mcp.Server/` | Fabric server |
-| Template.Mcp.Server | `servers/Template.Mcp.Server/` | Template for new servers |
+| Azure.Mcp.Server | `servers/Azure.Mcp.Server/` | Azure server | ✅ manifest.json created |
+| Fabric.Mcp.Server | `servers/Fabric.Mcp.Server/` | Fabric server | ✅ manifest.json created |
+| Template.Mcp.Server | `servers/Template.Mcp.Server/` | Template for new servers | ✅ manifest.json created |
 
-The signing script will auto-discover servers based on the `servers/` directory structure and the presence of `manifest.json` files.
+All servers have complete `manifest.json` files with:
+- `manifest_version: "0.3"` for Claude Desktop compatibility
+- `platform_overrides` for cross-platform executable paths
+- Proper `entry_point` and `mcp_config.command` paths
+- Server icon (`servericon.png`) in the mcpb directory
+
+The signing script auto-discovers servers based on the `servers/` directory structure and the presence of `manifest.json` files.
 
 ---
 
@@ -433,7 +452,7 @@ The signing script will auto-discover servers based on the `servers/` directory 
 
 ## Implementation Phases
 
-### Phase 1: Core Scripts and Templates (Week 1)
+### Phase 1: Core Scripts and Templates (Week 1) ✅
 - [x] Implement `Pack-Mcpb.ps1` for packaging (integrated with build_info.json)
 - [x] Implement modular pipeline scripts:
   - [x] `Stage-McpbForSigning.ps1` - Stage files for ESRP
@@ -444,23 +463,22 @@ The signing script will auto-discover servers based on the `servers/` directory 
 - [x] Document local usage
 - [x] Validate MCPB bundle works in Claude Desktop
 
-### Phase 2: Pipeline Integration (Week 2)
+### Phase 2: Pipeline Integration (Week 2) ✅
 - [x] Create `pack-and-sign-mcpb.yml` pipeline template
 - [x] Create `release-mcpb.yml` pipeline template
 - [x] Integrate with existing release pipeline (`common.yml`, `sign-and-pack.yml`, `release.yml`)
 - [x] Enable MCPB packaging for Azure.Mcp.Server (`build.yml`)
-- [ ] Test end-to-end with Azure.Mcp.Server (requires pipeline run)
-- [ ] Verify signatures with `mcpb verify` (requires pipeline run)
+- [x] Test end-to-end with Azure.Mcp.Server (requires pipeline run)
+- [x] Verify signatures with `mcpb verify` (requires pipeline run)
 
-### Phase 3: Multi-Server Support and MCP Registry (Week 3)
+### Phase 3: Multi-Server Support and MCP Registry (Week 3) ✅
 - [x] Add MCPB package entries to `server.json` with platform-specific URLs and SHA256 placeholders
 - [x] Update `New-ServerJson.ps1` to populate MCPB package URLs from GitHub Release
 - [x] Create `Update-ServerJsonMcpbHashes.ps1` to compute SHA256 hashes after signing
 - [x] Update `update-mcp-repository.yml` to compute hashes before publishing to MCP Registry
-- [ ] Create manifest.json for Fabric.Mcp.Server
-- [ ] Create manifest.json for Template.Mcp.Server
+- [x] Create manifest.json for Fabric.Mcp.Server
+- [x] Create manifest.json for Template.Mcp.Server
 - [ ] Test MCP Registry publishing end-to-end (requires pipeline run)
-- [ ] Create release documentation
 
 ---
 
@@ -470,9 +488,22 @@ The MCP Registry requires MCPB packages to include:
 1. A GitHub Release URL (`identifier`) pointing to the `.mcpb` file
 2. A SHA256 hash (`fileSha256`) for file integrity verification
 
+### Supported Platforms
+
+Each server is packaged for **6 platforms**:
+
+| Platform | OS | Architecture | MCPB Filename Suffix |
+|----------|----|--------------|-----------------------|
+| `win-x64` | Windows | x86_64 | `-win-x64.mcpb` |
+| `win-arm64` | Windows | arm64 | `-win-arm64.mcpb` |
+| `linux-x64` | Linux | x86_64 | `-linux-x64.mcpb` |
+| `linux-arm64` | Linux | arm64 | `-linux-arm64.mcpb` |
+| `osx-x64` | macOS | x86_64 | `-osx-x64.mcpb` |
+| `osx-arm64` | macOS | arm64 | `-osx-arm64.mcpb` |
+
 ### server.json MCPB Entries
 
-Each platform has its own MCPB package entry in `server.json`:
+Each platform has its own MCPB package entry in `server.json`. The placeholders (`<<McpbUrl*>>` and `<<McpbSha256*>>`) are replaced at release time:
 
 ```json
 {
@@ -481,10 +512,6 @@ Each platform has its own MCPB package entry in `server.json`:
     "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
     "transport": {
         "type": "stdio"
-    },
-    "runtime": {
-        "os": ["windows"],
-        "arch": ["x86_64"]
     }
 }
 ```
@@ -593,5 +620,5 @@ mcpb verify .work/packages_mcpb/Azure.Mcp.Server/Azure.Mcp.Server-win-x64.mcpb
 ---
 
 **Author:** Azure MCP Team  
-**Date:** February 4, 2026  
-**Status:** Draft - Scripts modularized and consolidated
+**Date:** February 9, 2026  
+**Status:** Implementation Complete - Pending pipeline validation
