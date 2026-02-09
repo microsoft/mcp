@@ -28,6 +28,10 @@ extends:
       ${{ if parameters.AutoBaseline }}:
         featureFlags:
           autoBaseline: true
+    featureFlags:
+      golang:
+        internalModuleProxy:
+          enabled: true
     sdl:
       ${{ if parameters.AutoBaseline }}:
         autoBaseline:
