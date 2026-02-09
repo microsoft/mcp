@@ -41,6 +41,10 @@ jobs:
         -IncludeNative:$${{ parameters.IncludeNative }}
         -TestPipeline:$${{ parameters.IsTestPipeline }}
 
+  - pwsh: |
+      Get-Content '$(Build.ArtifactStagingDirectory)/build_info.json' | Write-Host
+    displayName: Display Build Info
+
   - ${{ if ne(parameters.PublishTarget, 'none') }}:
       # We only create server.json if we're going to publish
     - task: Powershell@2
