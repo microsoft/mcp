@@ -939,10 +939,8 @@
       },
       "mappedToolList": [
         "keyvault_certificate_get",
-        "keyvault_certificate_list",
         "keyvault_key_get",
-        "keyvault_key_list",
-        "keyvault_secret_list",
+        "keyvault_secret_get",
         "keyvault_admin_settings_get"
       ]
     },
