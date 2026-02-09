@@ -24,7 +24,7 @@ public sealed class DiskGetCommand(
     : BaseComputeCommand<DiskGetOptions>
 {
     private const string CommandTitle = "Get Disk Details";
-    private const string CommandDescription = "Retrieves detailed information about Azure managed disks. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
+    private const string CommandDescription = "Retrieves detailed information about Azure managed disks. Can list all disks under a subscription, resrouce group, or details about a specific disk. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));

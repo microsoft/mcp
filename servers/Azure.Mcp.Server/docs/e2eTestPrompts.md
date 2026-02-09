@@ -206,7 +206,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_get | List all managed disks in my subscription |
 | compute_disk_get | Show me all disks in resource group <resource-group> |
 | compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
-| compute_disk_get | How many disks do I have in my subscription? |
 | compute_disk_get | Show me the disk sizes in resource group <resource-group> |
 | compute_disk_get | What managed disks are available? |
 | compute_disk_get | Get information about disk <disk-name> |
