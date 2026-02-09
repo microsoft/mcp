@@ -51,9 +51,6 @@ jobs:
   - pwsh: |
       Write-Host "Installing MCPB CLI (.NET global tool)..."
       dotnet tool install --global Mcpb.Cli
-      
-      # Add .NET tools to PATH for this session so we can use the 'mcpb' command directly
-      $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
       mcpb --version
     displayName: "Install MCPB CLI"
 

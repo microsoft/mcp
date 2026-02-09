@@ -91,10 +91,12 @@ jobs:
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
     DependsOn:
     - PublishNugetPackage
     - PublishNpm
-    - PublishMcpb
+    - ${{ if parameters.PackageMCPB }}:
+      - PublishMcpb
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"

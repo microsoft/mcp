@@ -82,10 +82,15 @@ function Convert-P7sToMcpbSignature {
     # Read original MCPB content
     $mcpbContent = [System.IO.File]::ReadAllBytes($McpbFile)
 
-    # Check if the MCPB is already signed (contains MCPB_SIG_V1 marker)
-    $mcpbString = [System.Text.Encoding]::ASCII.GetString($mcpbContent)
-    if ($mcpbString.Contains($SIG_V1_MARKER)) {
-        throw "MCPB file appears to already be signed. Use 'mcpb unsign' to remove existing signature first."
+    # Check if the MCPB is already signed by looking for the MCPB_SIG_END marker at the
+    # end of the file. This is always the last bytes of a signed MCPB, so we only need
+    # to read a small fixed-size tail rather than scanning the entire binary.
+    if ($mcpbContent.Length -ge $sigEndMarkerBytes.Length) {
+        $tailStart = $mcpbContent.Length - $sigEndMarkerBytes.Length
+        $tailString = [System.Text.Encoding]::ASCII.GetString($mcpbContent, $tailStart, $sigEndMarkerBytes.Length)
+        if ($tailString -eq $SIG_END_MARKER) {
+            throw "MCPB file appears to already be signed. Use 'mcpb unsign' to remove existing signature first."
+        }
     }
 
     # Combine: MCPB + MCPB_SIG_V1 + length + signature + MCPB_SIG_END
