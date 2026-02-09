@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using MongoDB.Bson;
 using Azure.Mcp.Tools.DocumentDb.Models;
+using MongoDB.Bson;
 
 namespace Azure.Mcp.Tools.DocumentDb.Commands;
 
