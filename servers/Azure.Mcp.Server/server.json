@@ -42,6 +42,24 @@
             ]
         },
         {
+            "registryType": "pypi",
+            "identifier": "<<PypiPackageName>>",
+            "version": "<<Version>>",
+            "transport": {
+                "type": "stdio"
+            },
+            "packageArguments": [
+                {
+                    "type": "positional",
+                    "value": "server"
+                },
+                {
+                    "type": "positional",
+                    "value": "start"
+                }
+            ]
+        },
+        {
             "registryType": "mcpb",
             "identifier": "<<McpbUrlWinX64>>",
             "fileSha256": "<<McpbSha256WinX64>>",

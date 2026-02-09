@@ -146,6 +146,6 @@ jobs:
         - PackNpm
         - PackNuget
         - ${{ if parameters.PackageDocker }}:
-          - BuildDockerImages
+          - BuildDockerImage
       TestTimeoutInMinutes: 10
       PackageDocker: ${{ parameters.PackageDocker }}

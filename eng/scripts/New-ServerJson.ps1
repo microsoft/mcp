@@ -78,6 +78,9 @@ foreach ($package in $jsonHashTable.packages) {
         'docker' {
             ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.dockerImageName
         }
+        'pypi' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.pypiPackageName
+        }
         'mcpb' {
             # MCPB packages need an identifier (GitHub release URL) and fileSha256
             # The identifier placeholder encodes the platform: <<McpbUrlWinX64>>, <<McpbUrlLinuxX64>>, etc.

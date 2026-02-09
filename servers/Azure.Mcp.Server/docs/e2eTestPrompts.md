@@ -649,6 +649,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | policy_assignment_list | List Azure Policies in the subscription <subscription_id> |
 
+## Azure Pricing
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| pricing_get | What is the price of Standard_D4s_v5 VMs? |
+| pricing_get | What's the price difference between Premium_LRS and Standard_LRS storage? |
+| pricing_get | Get consumption price for Standard_E8s_v5 in brazil |
+| pricing_get | What is the price for Virtual Machines? |
+| pricing_get | How much does a Standard_D4s_v5 VM cost per hour? |
+| pricing_get | Which is cheaper- Standard_D4s_v5 in eastus vs westeurope |
+| pricing_get | Get pricing where productName contains 'Premium' |
+| pricing_get | How much does Hot access tier storage cost per GB in westeurope? |
+| pricing_get | Show savings plan prices for Standard_E4s_v5 Linux VMs |
+| pricing_get | Here's my Bicep template. Can you estimate the monthly cost of this deployment? <bicep_template> |
 
 ## Azure Service Bus
 

@@ -55,40 +55,46 @@ Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -Pro
 Push-Location $RepoRoot
 try {
     $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-    $platformName = "linux-musl-x64-docker"
 
     foreach($server in $buildInfo.servers) {
-        $platform = $server.platforms | Where-Object { $_.name -eq $platformName }
-        if(-not $platform) {
-            LogError "Server $($server.name) does not have a platform named $platformName in build_info.json"
-            $exitCode = 1
+        $dockerPlatforms = $server.platforms | Where-Object { $_.specialPurpose -eq "docker" }
+        if (-not $dockerPlatforms) {
+            LogWarning "No Docker platforms found for $($server.name). Check that platforms with specialPurpose='docker' exist in build_info.json."
             continue
         }
+        foreach($platform in $dockerPlatforms) {
+            $platformName = $platform.name
+            $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
 
-        $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
+            New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 
-        New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-
-        $platformArtifactPath = "$ArtifactsPath/$($platform.artifactPath)"
-        if(!(Test-Path $platformArtifactPath)) {
-            if ($ignoreMissingArtifacts) {
-                LogWarning "Artifact path $platformArtifactPath does not exist. Skipping $($server.name)."
-                LogWarning "To build, run 'eng/scripts/Build-Code.ps1 -ServerName $($server.name) -OS linux -Architecture x64'"
-            } else {
-                LogError "Artifact path $platformArtifactPath does not exist."
-                $exitCode = 1
+            $platformArtifactPath = "$ArtifactsPath/$($platform.artifactPath)"
+            if(!(Test-Path $platformArtifactPath)) {
+                if ($ignoreMissingArtifacts) {
+                    LogWarning "Artifact path $platformArtifactPath does not exist. Skipping $($server.name) $platformName."
+                    LogWarning "To build, run 'eng/scripts/Build-Code.ps1 -ServerName $($server.name) -OS linux -Architecture x64'"
+                } else {
+                    LogError "Artifact path $platformArtifactPath does not exist."
+                    $exitCode = 1
+                }
+                continue
             }
-            continue
+
+            # Copy the server artifact to the output path
+            Write-Host "`nCopying $platformName artifact from $platformArtifactPath to $platformOutputPath/dist"
+            Copy-Item -Path $platformArtifactPath -Destination "$platformOutputPath/dist" -Recurse -Force
+
+            # Copy the Dockerfile to the output path
+            Write-Host "Copying Dockerfile to $platformOutputPath"
+            Copy-Item -Path $dockerFile -Destination $platformOutputPath -Force
         }
-
-        # Copy the server artifact to the output path
-        Write-Host "`nCopying $platformName artifact from $platformArtifactPath to $platformOutputPath/dist"
-        Copy-Item -Path $platformArtifactPath -Destination "$platformOutputPath/dist" -Recurse -Force
-
-        # Copy the Dockerfile to the output path
-        Write-Host "Copying Dockerfile to $platformOutputPath"
-        Copy-Item -Path $dockerFile -Destination $platformOutputPath -Force
     }
+
+    # Copy Publish-DockerImages.ps1 to staging - 1ES release templates don't allow checkout,
+    # so scripts needed at release time must be staged with artifacts
+    $publishScript = "$PSScriptRoot/Publish-DockerImages.ps1"
+    Write-Host "`nCopying Publish-DockerImages.ps1 to $OutputPath"
+    Copy-Item -Path $publishScript -Destination $OutputPath -Force
 }
 finally {
     Pop-Location
