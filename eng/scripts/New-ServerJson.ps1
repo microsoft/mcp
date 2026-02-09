@@ -76,6 +76,9 @@ foreach ($package in $jsonHashTable.packages) {
         'docker' {
             ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.dockerImageName
         }
+        'pypi' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.pypiPackageName
+        }
         Default {
             LogWarning "Unknown package registry type '$($package.registryType)' in server.json."
         }
