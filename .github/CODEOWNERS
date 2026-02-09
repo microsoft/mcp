@@ -256,11 +256,11 @@
 # ServiceOwners:                       @vurhanau
 
 # PRLabel: %tools-Deploy
-/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xiaofanzhou @microsoft/azure-mcp
-/tools/Azure.Mcp.Tools.Quota/          @qianwens @xiaofanzhou @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Quota/          @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Deploy
-# ServiceOwners:                       @qianwens @xiaofanzhou
+# ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # PRLabel: %tools-LoadTesting
 /tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
