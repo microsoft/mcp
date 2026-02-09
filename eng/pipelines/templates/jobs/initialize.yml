@@ -42,7 +42,7 @@ jobs:
         -TestPipeline:$${{ parameters.IsTestPipeline }}
 
   - pwsh: |
-      Get-Content '$(Build.ArtifactStagingDirectory)/build_info.json' | Write-Host
+      Get-Content '$(Build.ArtifactStagingDirectory)/build_info.json' | Out-Host
     displayName: Display Build Info
 
   - ${{ if ne(parameters.PublishTarget, 'none') }}:
