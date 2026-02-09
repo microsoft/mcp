@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tests.Helpers;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Helpers;
@@ -11,56 +10,150 @@ namespace Azure.Mcp.Core.UnitTests.Helpers;
 public class LiveTestSettingsTests
 {
     [Fact]
-    public void JsonDeserialization_WithInvalidTestMode_ThrowsJsonException()
+    public void TryLoadTestSettings_WithInvalidTestMode_ReturnsFalseAndWritesErrorToConsole()
     {
-        // Arrange - Create JSON with an invalid TestMode value
-        var json = """{"TestMode": "InvalidMode", "TenantId": "test-tenant"}""";
+        // Arrange - Create .testsettings.json in AppContext.BaseDirectory with invalid TestMode
+        var testSettingsPath = Path.Combine(AppContext.BaseDirectory, LiveTestSettings.TestSettingsFileName);
+        var backupPath = testSettingsPath + ".backup";
 
-        // Act & Assert - Verify JsonException is thrown
-        var exception = Assert.Throws<JsonException>(() =>
-            JsonSerializer.Deserialize<LiveTestSettingsProxy>(json, new JsonSerializerOptions()
+        // Backup existing file if present
+        if (File.Exists(testSettingsPath))
+        {
+            File.Move(testSettingsPath, backupPath);
+        }
+
+        try
+        {
+            var invalidSettings = new
             {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            }));
+                TestMode = "InvalidMode",
+                TenantId = "test-tenant",
+                SubscriptionId = "test-subscription"
+            };
+            File.WriteAllText(testSettingsPath, JsonSerializer.Serialize(invalidSettings));
 
-        // Verify the error message mentions TestMode
-        Assert.Contains("TestMode", exception.Message);
+            // Redirect Console.Error to capture the error message
+            var originalError = Console.Error;
+            using var errorWriter = new StringWriter();
+            Console.SetError(errorWriter);
+
+            try
+            {
+                // Act
+                var result = LiveTestSettings.TryLoadTestSettings(out var settings);
+
+                // Assert
+                Assert.False(result);
+                Assert.Null(settings);
+
+                // Verify the error message was written to Console.Error
+                var errorOutput = errorWriter.ToString();
+                Assert.Contains("Invalid TestMode value", errorOutput);
+                Assert.Contains(".testsettings.json", errorOutput);
+                Assert.Contains("Live", errorOutput);
+                Assert.Contains("Record", errorOutput);
+                Assert.Contains("Playback", errorOutput);
+            }
+            finally
+            {
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            // Cleanup - remove test file and restore backup if it existed
+            if (File.Exists(testSettingsPath))
+            {
+                File.Delete(testSettingsPath);
+            }
+            if (File.Exists(backupPath))
+            {
+                File.Move(backupPath, testSettingsPath);
+            }
+        }
     }
 
     [Theory]
-    [InlineData("Live", TestMode.Live)]
-    [InlineData("Record", TestMode.Record)]
-    [InlineData("Playback", TestMode.Playback)]
-    [InlineData("live", TestMode.Live)]  // Test case-insensitive
-    [InlineData("record", TestMode.Record)]
-    [InlineData("playback", TestMode.Playback)]
-    public void JsonDeserialization_WithValidTestMode_LoadsSuccessfully(string testModeValue, TestMode expectedMode)
+    [InlineData("Live")]
+    [InlineData("Record")]
+    [InlineData("Playback")]
+    [InlineData("live")]  // Test case-insensitive
+    [InlineData("record")]
+    [InlineData("playback")]
+    public void TryLoadTestSettings_WithValidTestMode_LoadsSuccessfully(string testModeValue)
     {
-        // Arrange - Create JSON with valid TestMode value
-        var json = $$$"""{"TestMode": "{{{testModeValue}}}", "TenantId": "test-tenant", "SubscriptionId": "test-subscription"}""";
+        // Arrange - Create .testsettings.json in AppContext.BaseDirectory with valid TestMode
+        var testSettingsPath = Path.Combine(AppContext.BaseDirectory, LiveTestSettings.TestSettingsFileName);
+        var backupPath = testSettingsPath + ".backup";
 
-        // Act - Deserialize the JSON
-        var settings = JsonSerializer.Deserialize<LiveTestSettingsProxy>(json, new JsonSerializerOptions()
+        // Backup existing file if present
+        if (File.Exists(testSettingsPath))
         {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() }
-        });
+            File.Move(testSettingsPath, backupPath);
+        }
 
-        // Assert - Verify the settings were loaded correctly
-        Assert.NotNull(settings);
-        Assert.Equal(expectedMode, settings.TestMode);
-        Assert.Equal("test-tenant", settings.TenantId);
-        Assert.Equal("test-subscription", settings.SubscriptionId);
+        try
+        {
+            var validSettings = new
+            {
+                TestMode = testModeValue,
+                TenantId = "test-tenant",
+                SubscriptionId = "test-subscription"
+            };
+            File.WriteAllText(testSettingsPath, JsonSerializer.Serialize(validSettings));
+
+            // Act
+            var result = LiveTestSettings.TryLoadTestSettings(out var settings);
+
+            // Assert
+            Assert.True(result);
+            Assert.NotNull(settings);
+            Assert.Equal("test-tenant", settings.TenantId);
+            Assert.Equal("test-subscription", settings.SubscriptionId);
+        }
+        finally
+        {
+            // Cleanup - remove test file and restore backup if it existed
+            if (File.Exists(testSettingsPath))
+            {
+                File.Delete(testSettingsPath);
+            }
+            if (File.Exists(backupPath))
+            {
+                File.Move(backupPath, testSettingsPath);
+            }
+        }
     }
 
-    /// <summary>
-    /// Proxy class for testing LiveTestSettings JSON deserialization without file I/O
-    /// </summary>
-    private class LiveTestSettingsProxy
+    [Fact]
+    public void TryLoadTestSettings_WhenFileNotFound_ReturnsFalse()
     {
-        public TestMode TestMode { get; set; } = TestMode.Live;
-        public string TenantId { get; set; } = string.Empty;
-        public string SubscriptionId { get; set; } = string.Empty;
+        // Arrange - Ensure no .testsettings.json exists
+        var testSettingsPath = Path.Combine(AppContext.BaseDirectory, LiveTestSettings.TestSettingsFileName);
+        var backupPath = testSettingsPath + ".backup";
+
+        // Backup and remove existing file if present
+        if (File.Exists(testSettingsPath))
+        {
+            File.Move(testSettingsPath, backupPath);
+        }
+
+        try
+        {
+            // Act
+            var result = LiveTestSettings.TryLoadTestSettings(out var settings);
+
+            // Assert
+            Assert.False(result);
+            Assert.Null(settings);
+        }
+        finally
+        {
+            // Restore backup if it existed
+            if (File.Exists(backupPath))
+            {
+                File.Move(backupPath, testSettingsPath);
+            }
+        }
     }
 }

@@ -67,12 +67,14 @@ public class LiveTestSettings
                     return true;
                 }
             }
-            catch (JsonException ex) when (ex.Message.Contains("TestMode"))
+            catch (JsonException ex) when (ex.Path?.Contains(nameof(TestMode), StringComparison.OrdinalIgnoreCase) == true)
             {
                 var validValues = string.Join(", ", Enum.GetNames<TestMode>());
-                throw new InvalidOperationException(
+                Console.Error.WriteLine(
                     $"Invalid TestMode value in {TestSettingsFileName}. Valid values are: {validValues}. " +
-                    $"Error details: {ex.Message}", ex);
+                    $"Error details: {ex.Message}");
+                settings = null;
+                return false;
             }
         }
 
