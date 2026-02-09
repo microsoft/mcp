@@ -558,6 +558,106 @@ azmcp extension cli generate --cli-type <cli-type>
 azmcp extension cli install --cli-type <cli-type>
 ```
 
+### Azure Communication Services Operations
+
+#### Email
+
+```bash
+# Send email using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint <endpoint> \
+                               --from <sender-email> \
+                               --to <recipient-email> \
+                               --subject <email-subject> \
+                               --message <email-content> \
+                               [--is-html] \
+                               [--sender-name <sender-display-name>] \
+                               [--cc <cc-recipient-email>] \
+                               [--bcc <bcc-recipient-email>] \
+                               [--reply-to <reply-to-email>]
+
+# Examples:
+# Send plain text email
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --to "recipient@example.com" \
+                               --subject "Important message" \
+                               --message "Hello from Azure Communication Services!"
+
+# Send HTML-formatted email with CC and sender name
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --sender-name "Support Team" \
+                               --to "recipient@example.com" \
+                               --cc "manager@example.com" \
+                               --subject "Monthly Report" \
+                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+                               --is-html
+
+# Send to multiple recipients with BCC and reply-to
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "notifications@verified-domain.com" \
+                               --to "recipient1@example.com,recipient2@example.com" \
+                               --bcc "archive@example.com" \
+                               --reply-to "support@example.com" \
+                               --subject "System Notification" \
+                               --message "This is an automated notification."
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
+#### SMS
+
+```bash
+# SMS message using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint <endpoint> \
+                             --from <sender-phone-number> \
+                             --to <recipient-phone-number> \
+                             --message <message-text> \
+                             [--enable-delivery-report] \
+                             [--tag <custom-tag>]
+
+# Examples:
+# Send SMS to single recipient
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
+                             --from "+1234567890" \
+                             --to "+1234567891" \
+                             --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
+                             --from "+1234567890" \
+                             --to "+1234567891,+1234567892" \
+                             --message "Broadcast message" \
+                             --enable-delivery-report \
+                             --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
 ### Azure Compute Operations
 
 #### Virtual Machines
@@ -665,129 +765,7 @@ azmcp compute vmss get --subscription "my-subscription" \
 | `--vmss-name` | No | Name of the virtual machine scale set |
 | `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
 
-### Azure Communication Services Operations
-
-#### Email
-
-```bash
-# Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint <endpoint> \
-                               --from <sender-email> \
-                               --to <recipient-email> \
-                               --subject <email-subject> \
-                               --message <email-content> \
-                               [--is-html] \
-                               [--sender-name <sender-display-name>] \
-                               [--cc <cc-recipient-email>] \
-                               [--bcc <bcc-recipient-email>] \
-                               [--reply-to <reply-to-email>]
-
-# Examples:
-# Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "sender@verified-domain.com" \
-                               --to "recipient@example.com" \
-                               --subject "Important message" \
-                               --message "Hello from Azure Communication Services!"
-
-# Send HTML-formatted email with CC and sender name
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "sender@verified-domain.com" \
-                               --sender-name "Support Team" \
-                               --to "recipient@example.com" \
-                               --cc "manager@example.com" \
-                               --subject "Monthly Report" \
-                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
-                               --is-html
-
-# Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "notifications@verified-domain.com" \
-                               --to "recipient1@example.com,recipient2@example.com" \
-                               --bcc "archive@example.com" \
-                               --reply-to "support@example.com" \
-                               --subject "System Notification" \
-                               --message "This is an automated notification."
-```
-
-**Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--sender`: Email address to send from, must be from a verified domain (required)
--   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
--   `--subject`: Email subject line (required)
--   `--message`: Email content body (required)
--   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
--   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
-
-#### SMS
-
-```bash
-# SMS message using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint <endpoint> \
-                             --from <sender-phone-number> \
-                             --to <recipient-phone-number> \
-                             --message <message-text> \
-                             [--enable-delivery-report] \
-                             [--tag <custom-tag>]
-
-# Examples:
-# Send SMS to single recipient
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
-                             --from "+1234567890" \
-                             --to "+1234567891" \
-                             --message "Hello from Azure Communication Services!"
-
-# Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
-                             --from "+1234567890" \
-                             --to "+1234567891,+1234567892" \
-                             --message "Broadcast message" \
-                             --enable-delivery-report \
-                             --tag "marketing-campaign"
-```
-
-**Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--from`: SMS-enabled phone number in E.164 format (required)
--   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
--   `--message`: SMS message content (required)
--   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
--   `--tag`: Custom tag for message tracking (optional)
-
-
-### Azure Confidential Ledger Operations
-
-```bash
-# Append a tamper-proof entry to a Confidential Ledger
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp confidentialledger entries append --ledger <ledger-name> \
-                                        --content <json-or-text-data> \
-                                        [--collection-id <collection-id>]
-
-# Retrieve a Confidential Ledger entry with verification proof
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp confidentialledger entries get --ledger <ledger-name> \
-                                     --transaction-id <transaction-id> \
-                                     [--collection-id <collection-id>]
-```
-
-**Options:**
--   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required for the append command)
--   `--collection-id`: Collection ID to store the data with (optional)
--   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
-
-### Azure Compute Operations
+#### Disks
 
 ```bash
 # List all managed disks in a subscription
@@ -810,6 +788,28 @@ azmcp compute disk get --subscription <subscription> \
 -   `--disk`: The name of the managed disk (optional - if not provided, lists all disks)
 -   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
 -   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+
+# Retrieve a Confidential Ledger entry with verification proof
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp confidentialledger entries get --ledger <ledger-name> \
+                                     --transaction-id <transaction-id> \
+                                     [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
+-   `--collection-id`: Collection ID to store the data with (optional)
+-   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Registry (ACR) Operations
 
