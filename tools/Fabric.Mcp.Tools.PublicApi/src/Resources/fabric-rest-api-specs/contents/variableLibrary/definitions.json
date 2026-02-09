@@ -161,6 +161,10 @@
                     "readOnly": false
                 }
             }
+        },
+        "VariableReference": {
+            "description": "A variable reference string that specifies the Variable Library and the variable name inside it. Format: `$(/**/_VarLibrary_/_VarName_)` for a Variable Library named VarLibrary and a variable named VarName.",
+            "type": "string"
         }
     }
 }

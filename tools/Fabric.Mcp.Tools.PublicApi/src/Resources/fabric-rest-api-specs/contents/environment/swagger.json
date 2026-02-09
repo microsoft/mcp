@@ -17,7 +17,7 @@
         ],
         "summary": "Get environment staging spark compute.",
         "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `beta` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "Staging_Get_Spark_Compute_(preview)",
+        "operationId": "Staging_Get_Spark_Compute_(beta)",
         "produces": [
           "application/json"
         ],
@@ -59,6 +59,19 @@
               "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -78,7 +91,7 @@
         ],
         "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
         "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/update-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Request and response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "Staging_Update_Spark_Compute_(preview)",
+        "operationId": "Staging_Update_Spark_Compute_(beta)",
         "consumes": [
           "application/json"
         ],
@@ -132,6 +145,19 @@
               "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -153,7 +179,7 @@
         ],
         "summary": "Get environment spark compute.",
         "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "Published_Get_Spark_Compute_(preview)",
+        "operationId": "Published_Get_Spark_Compute_(beta)",
         "produces": [
           "application/json"
         ],
@@ -193,6 +219,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -256,6 +295,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -331,6 +383,19 @@
               "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -397,6 +462,19 @@
               "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -436,6 +514,21 @@
           },
           {
             "in": "query",
+            "name": "recursive",
+            "description": "Lists items in a folder and its nested folders, or just a folder only. True - All items in the folder and its nested folders are listed, False - Only items in the folder are listed. The default value is true.",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "rootFolderId",
+            "description": "This parameter allows users to filter items based on a specific root folder. If not provided, the workspace is used as the root folder.",
+            "type": "string",
+            "format": "uuid",
+            "required": false
+          },
+          {
+            "in": "query",
             "name": "continuationToken",
             "description": "A token for retrieving the next page of results.",
             "type": "string",
@@ -447,6 +540,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/Environments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -520,6 +626,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used\n\n* CorruptedPayload - The provided payload is corrupted.\n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
             "schema": {
@@ -571,6 +690,19 @@
             "description": "Request completed successfully. Returns Environment object.",
             "schema": {
               "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -633,6 +765,19 @@
               "$ref": "./definitions.json#/definitions/Environment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request",
             "schema": {
@@ -677,6 +822,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
@@ -752,6 +910,19 @@
                 "type": "integer",
                 "description": "The number of seconds to wait before retrying the request."
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -836,6 +1007,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
             "schema": {
@@ -910,6 +1094,19 @@
               "$ref": "./definitions.json#/definitions/Libraries"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging libraries.",
             "schema": {
@@ -931,7 +1128,7 @@
         "tags": [
           "Staging"
         ],
-        "operationId": "Staging_Upload_Custom_Library_(preview)",
+        "operationId": "Staging_Upload_Custom_Library_(beta)",
         "consumes": [
           "multipart/form-data"
         ],
@@ -960,6 +1157,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
             "schema": {
@@ -982,7 +1192,7 @@
         "produces": [
           "application/json"
         ],
-        "operationId": "Staging_Delete_Custom_Library_(preview)",
+        "operationId": "Staging_Delete_Custom_Library_(beta)",
         "parameters": [
           {
             "name": "workspaceId",
@@ -1012,6 +1222,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library name with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
             "schema": {
@@ -1033,7 +1256,7 @@
         "tags": [
           "Staging"
         ],
-        "operationId": "Staging_List_Libraries_(preview)",
+        "operationId": "Staging_List_Libraries_(beta)",
         "produces": [
           "application/json"
         ],
@@ -1073,6 +1296,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1132,6 +1368,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz.",
             "schema": {
@@ -1183,6 +1432,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a name of a valid library.",
@@ -1243,6 +1505,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid request",
             "schema": {
@@ -1293,6 +1568,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid environment.yml.",
             "schema": {
@@ -1339,6 +1627,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging external libraries.",
@@ -1414,6 +1715,19 @@
               "$ref": "./definitions.json#/definitions/Libraries"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
             "schema": {
@@ -1435,7 +1749,7 @@
         "tags": [
           "Published"
         ],
-        "operationId": "Published_List_Libraries_(preview)",
+        "operationId": "Published_List_Libraries_(beta)",
         "produces": [
           "application/json"
         ],
@@ -1475,6 +1789,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1523,6 +1850,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published external libraries.",
@@ -1606,6 +1946,19 @@
               "$ref": "./definitions.json#/definitions/EnvironmentProperties"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InvalidEnvironmentPublish - Environment publish operation for version <*GUID* of the failed publish operation> failed due to error: Code = EnvironmentAnotherOngoingPublishProcess.",
             "schema": {
@@ -1627,7 +1980,7 @@
         "tags": [
           "Items"
         ],
-        "operationId": "Items_Publish_Environment_(preview)",
+        "operationId": "Items_Publish_Environment_(beta)",
         "produces": [
           "application/json"
         ],
@@ -1667,6 +2020,19 @@
             "description": "Publish operation request has been submitted successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1717,6 +2083,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {

@@ -48,6 +48,19 @@
               "$ref": "./definitions/platform.json#/definitions/Workspace"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* InsufficientPermissionsToDomain - User permission to the domain is not sufficient to perform the operation\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -102,6 +115,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/Workspaces"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -162,6 +188,19 @@
               "$ref": "./definitions/platform.json#/definitions/WorkspaceInfo"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -217,6 +256,19 @@
               "$ref": "./definitions/platform.json#/definitions/Workspace"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -253,6 +305,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -314,6 +379,19 @@
               "$ref": "./definitions/platform.json#/definitions/WorkspaceRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -362,6 +440,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/WorkspaceRoleAssignments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -413,6 +504,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -471,6 +575,19 @@
               "$ref": "./definitions/platform.json#/definitions/WorkspaceRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -517,6 +634,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/WorkspaceRoleAssignment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -591,6 +721,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/Items"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -679,6 +822,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid.\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used.\n\n* CorruptedPayload - The provided payload is corrupted.\n\n* FolderNotFound - Could not find the requested folder.\n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
             "schema": {
@@ -730,6 +886,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -792,6 +961,19 @@
               "$ref": "../common/definitions.json#/definitions/Item"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InvalidRequest - Invalid update request.",
             "schema": {
@@ -836,6 +1018,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
@@ -911,6 +1106,19 @@
                 "type": "integer",
                 "description": "The number of seconds to wait before retrying the request."
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -995,6 +1203,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.\n\n* CorruptedPayload - The provided payload is corrupted.",
             "schema": {
@@ -1060,6 +1281,19 @@
             "description": "Successfully retrieved all item schedules.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/ItemSchedules"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1132,6 +1366,19 @@
               "$ref": "./definitions/platform.json#/definitions/ItemSchedule"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item\n\n* ItemNotFound - Requested item id not found\n\n* ScheduleExceedsLimit - The number of created schedules for the item exceeds the limit",
             "schema": {
@@ -1195,6 +1442,19 @@
             "description": "Successfully get the schedule.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/ItemSchedule"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1269,6 +1529,19 @@
               "$ref": "./definitions/platform.json#/definitions/ItemSchedule"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item\n\n* ItemNotFound - Requested item id not found",
             "schema": {
@@ -1329,6 +1602,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item\n\n* ItemNotFound - Requested item ID not found",
             "schema": {
@@ -1385,6 +1671,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/ItemJobInstance"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1445,6 +1744,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/ItemJobInstances"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1523,6 +1835,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to run job instance.\n\n* InvalidJobType - The requested job type is invalid.\n\n* TooManyRequestsForJobs - The caller requests too many on-demand job requests.\n\n* ItemNotFound - Requested item ID not found.",
             "schema": {
@@ -1591,6 +1916,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to cancel job instance.\n\n* ItemNotFound - Requested item id not found.\n\n* JobAlreadyCompleted - Requested cancellation can not take be processed as job instance run has completed.",
             "schema": {
@@ -1642,6 +1980,19 @@
           "202": {
             "description": "Request accepted, assignment is in progress."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -1683,6 +2034,19 @@
         "responses": {
           "202": {
             "description": "Request accepted, unassignment is in progress."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -1735,6 +2099,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* WorkspaceNotFound - The provided workspace was not found\n\n* InsufficientPermissionsToDomain - Caller doesn't have enough permissions to the domain to perform the operation\n\n* InsufficientWorkspaceRole - Caller doesn't have enough permissions to the workspace to perform the operation\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -1773,6 +2150,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* WorkspaceNotFound - The provided workspace was not found\n\n* InsufficientWorkspaceRole - Caller doesn't have enough permissions to the workspace to perform the operation\n\n* UnknownError - An error occurred.",
@@ -1814,6 +2204,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/gitIntegration.json#/definitions/GitConnection"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -1870,6 +2273,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* WorkspaceAlreadyConnectedToGit - Workspace is already connected to git.\n\n* WorkspaceHasNoCapacityAssigned - No capacity assigned to workspace.\n\n* InsufficientPrivileges - Caller has insufficient workspace permissions.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -1920,6 +2336,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.\n\n* InsufficientPrivileges - Caller has insufficient workspace permissions.",
@@ -1993,6 +2422,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.\n\n* WorkspaceHasNoCapacityAssigned - No capacity assigned to Workspace.\n\n* MissingInitializationPolicy - Initialization policy is missing.\n\n* InsufficientPrivileges - The caller does not have sufficient permissions on the workspace.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -2063,6 +2505,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.\n\n* WorkspaceHasNoCapacityAssigned -  No capacity assigned to workspace.\n\n* WorkspaceHeadMismatch - Head in the request doesn't match the head in the system.\n\n* WorkspacePreviousOperationInProgress - Previous operation is still in progress.\n\n* MissingDependency - A dependency is missing in the update operation.\n\n* PotentialDuplicateDisplayNameAndType - Update operation will create a duplicate display name and type.\n\n* DependencyDeletionFailed - Update operation will delete hard dependency.\n\n* InsufficientPrivileges - The caller does not have sufficient workspace permissions.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -2080,7 +2535,7 @@
     "/workspaces/{workspaceId}/git/status": {
       "get": {
         "summary": "Returns the `Git status` of items in the workspace, that can be committed to Git.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe status indicates changes to items since the last workspace and remote branch sync. If the remote and workspace items were both modified, the API flags a conflict.\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All or Workspace.GitCommit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe status indicates changes to items since the last workspace and remote branch sync. If the remote and workspace items were both modified, the API flags a conflict. \n The API should not be called while [Update From Git](/rest/api/fabric/core/git/update-from-git) operation is executing.\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All or Workspace.GitCommit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -2122,6 +2577,19 @@
                 "type": "integer",
                 "description": "The number of seconds to wait before retrying the request."
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -2200,6 +2668,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.\n\n* WorkspaceHasNoCapacityAssigned - No capacity assinged to workspace.\n\n* WorkspaceHeadMismatch - Head in the request doesn't match the head in the system.\n\n* WorkspacePreviousOperationInProgress - Previous operation is still in progress.\n\n* InsufficientPrivileges - The caller does not have sufficient workspace permissions.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -2243,6 +2724,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/gitIntegration.json#/definitions/GitCredentialsConfigurationResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -2303,6 +2797,19 @@
               "$ref": "./definitions/gitIntegration.json#/definitions/GitCredentialsConfigurationResponse"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* InsufficientPrivileges - Caller has insufficient workspace permissions.\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.\n\n* ConnectionNotFound - The specified connection was not found.\n\n* ConnectionMismatch - The connection does not match the Git provider details.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -2351,6 +2858,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/Capacities"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -2414,6 +2934,19 @@
               "$ref": "./definitions/platform.json#/definitions/OperationState"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -2459,6 +2992,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "type": "file"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -2577,6 +3123,19 @@
               "$ref": "./definitions/platform.json#/definitions/BulkCreateShortcutResponse"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -2642,6 +3201,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/Shortcuts"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -2763,6 +3335,19 @@
               "$ref": "./definitions/platform.json#/definitions/Shortcut"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -2851,6 +3436,19 @@
               "$ref": "./definitions/platform.json#/definitions/Shortcut"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -2928,6 +3526,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -2970,6 +3581,19 @@
             "description": "The request was successful.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/Tags"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3019,6 +3643,19 @@
               "$ref": "./definitions/platform.json#/definitions/Domains"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -3062,6 +3699,19 @@
             "description": "The request was successful.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/Domain"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3122,6 +3772,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -3163,6 +3826,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref":  "./definitions/platform.json#/definitions/GetOneLakeSettingsResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3244,6 +3920,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred. \n\n* WorkspaceNotFound - Source Workspace not found. \n\n * UserNotAuthorizedSourceWorkspace - User is not authorized for the source workspace.\n\n * UserNotAuthorizedDestinationItem - User is not authorized for the destination workspace.\n\n * DestinationWorkspaceNotFound - Destination Workspace not found.\n\n * DestinationItemNotFound -Destination item not found.\n\n * WorkspaceNotInSameCapacity - Source and destination workspace not in same capacity.\n\n * SettingsNotAllowedOnWorkspace - Diagnostic setting not allowed on workspace.\n\n * RequiredDestination - Destination is required when enabling diagnostics for first time.",
             "schema": {
@@ -3305,6 +3994,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UserNotAuthorized - User must be an admin of the workspace to enable diagnostics settings.\n\n* WorkspaceNotFound - Workspace not found.\n\n* RetentionDaysReductionNotAllowed - Retention days cannot be reduced than what is already set.\n\n* WorkspaceNotSupported - Workspace is not supported for setting diagnostic immutability policy.\n\n* InternalServerError - Other Internal Errors.",
             "schema": {
@@ -3350,6 +4052,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelines"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3399,6 +4114,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -3440,6 +4168,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3494,6 +4235,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -3531,6 +4285,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
@@ -3583,6 +4350,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineRoleAssignments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3640,6 +4420,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -3693,6 +4486,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
@@ -3750,6 +4556,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperations"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -3802,6 +4621,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperationExtendedInfo"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3857,6 +4689,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStages"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -3909,6 +4754,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStage"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -3971,6 +4829,19 @@
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStage"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -4030,6 +4901,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStageItems"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -4113,6 +4997,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* PrincipalTypeNotSupported - Caller identity type is not supported.",
             "schema": {
@@ -4175,6 +5072,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
             "schema": {
@@ -4222,6 +5132,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred",
@@ -4283,6 +5206,19 @@
               "Etag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -4375,6 +5311,19 @@
               "Etag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -4496,6 +5445,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* PreconditionFailed - Indicates that the current resource ETag doesn't match the value specified in the If-Match header.\n\n* Conflict - There are conflicting role assignments and the conflict policy is set to Abort.",
             "schema": {
@@ -4573,6 +5535,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* RoleNotFound - Indicates that the specified role was not found.\n\n* PreconditionFailed - Indicates that the current resource ETag doesn't match the value specified in the If-Match header.",
             "schema": {
@@ -4624,6 +5599,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item.\n\n* RoleNotFound - Indicates that the specified role was not found.",
@@ -4686,6 +5674,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -4742,6 +5743,19 @@
                 "type": "integer",
                 "description": "The number of seconds to wait before retrying the request."
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -4812,6 +5826,19 @@
               "$ref": "./definitions/externaldatasharing.json#/definitions/ExternalDataShare"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -4876,6 +5903,19 @@
               "$ref": "./definitions/externaldatasharing.json#/definitions/ExternalDataShares"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -4934,6 +5974,19 @@
               "$ref": "./definitions/externaldatasharing.json#/definitions/ExternalDataShare"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -4986,6 +6039,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -5042,6 +6108,19 @@
           "200": {
             "description": "Request completed successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -5090,6 +6169,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/externaldatasharing.json#/definitions/ExternalDataShareInvitationDetails"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5144,6 +6236,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/externaldatasharing.json#/definitions/AcceptExternalDataShareInvitationResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5204,6 +6309,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/connections.json#/definitions/ItemConnections"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5268,6 +6386,19 @@
           "200": {
             "description": "Tags were applied successfully."
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item \n\n* EntityNotFound - Tag ID does not exist \n\n* InvalidInputs - Invalid input was provided",
             "schema": {
@@ -5323,6 +6454,19 @@
         "responses": {
           "200": {
             "description": "Tags were unapplied successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - Indicates that the server cannot find the requested item \n\n* EntityNotFound - Tag ID does not exist \n\n* InvalidInputs - Invalid input was provided",
@@ -5391,6 +6535,19 @@
               "$ref": "./definitions/platform.json#/definitions/Folders"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* FolderNotFound - Could not find the requested folder.",
             "schema": {
@@ -5452,6 +6609,19 @@
               "$ref": "../common/definitions.json#/definitions/Folder"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* FolderDisplayNameAlreadyInUse - Folder display name is already used.\n\n* FolderNotFound - The requested folder was not found in the workspace.\n\n* InvalidFolderDisplayName - The provided folder display name is invalid.\n\n* FolderDepthOutOfRange - The parent folder has achieved max depth, can't create a new subfolder.\n\n* WorkspaceNotSupported - The specified workspace type doesn't support Folder\n\n.* TooManyFolders - The specified workspace has reached the max count of folders, can't create any more.",
             "schema": {
@@ -5503,6 +6673,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/Folder"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5565,6 +6748,19 @@
               "$ref": "../common/definitions.json#/definitions/Folder"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* FolderNotFound - The requested folder was not found in the workspace.\n\n* FolderDisplayNameAlreadyInUse - Folder display name is already used.\n\n* InvalidFolderDisplayName - The provided folder name is invalid, such as including invalid chars.",
             "schema": {
@@ -5609,6 +6805,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* FolderNotFound - The requested folder was not found in the workspace.\n\n* FolderNotEmpty - The requested folder was not empty.",
@@ -5672,6 +6881,19 @@
               "$ref": "../common/definitions.json#/definitions/Folder"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* FolderNotFound - Could not find the requested folder.\n\n* FolderDepthOutOfRange - The parent folder has achieved max depth, can't create a new subfolder.\n\n* InfiniteFolderHierarchyLoop - The folder can't be moved into any of its descents.\n\n* FolderDisplayNameAlreadyInUse - Folder display name is already used.",
             "schema": {
@@ -5727,6 +6949,19 @@
             "description": "Request completed successfully and all the items are moved.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/MovedItems"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5794,6 +7029,19 @@
               "$ref": "./definitions/platform.json#/definitions/MovedItems"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* FolderNotFound - Could not find the requested folder.\n\n* CannotMoveChildOnly - Child item can't be moved without its parent item.",
             "schema": {
@@ -5847,6 +7095,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/managedPrivateEndpoint.json#/definitions/ManagedPrivateEndpoints"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -5910,6 +7171,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -5956,6 +7230,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -6005,6 +7292,19 @@
               "$ref": "./definitions/managedPrivateEndpoint.json#/definitions/ManagedPrivateEndpoint"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -6049,6 +7349,19 @@
               "$ref": "./definitions/connections.json#/definitions/ListConnectionsResponse"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -6091,6 +7404,19 @@
             "description": "Created. The operation was successful.",
             "schema": {
               "$ref": "./definitions/connections.json#/definitions/Connection"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6142,6 +7468,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/connections.json#/definitions/Connection"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6196,6 +7535,19 @@
               "$ref": "./definitions/connections.json#/definitions/Connection"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageConnection - The caller has insufficient permissions to manage this connection.\n\n* DuplicateConnectionName - The connection name is already in use.\n\n* IncorrectCredentials - Failed to establish connection using the Credentials input.\n\n* UpdateGatewayConnectionFailed - Failed to update gateway connection.",
             "schema": {
@@ -6244,6 +7596,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageConnection - The caller has insufficient permissions to manage this connection.",
@@ -6304,6 +7669,19 @@
               "$ref": "./definitions/connections.json#/definitions/ListSupportedConnectionTypesResponse"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -6346,6 +7724,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/gateways.json#/definitions/ListGatewaysResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6392,6 +7783,19 @@
               "$ref": "./definitions/gateways.json#/definitions/Gateway"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* DuplicateGatewayName - The gateway name is already in use.\n\n* InvalidCapacityState - The Capacity's state is invalid.\n\n* InvalidCapacitySKU - The Capacity's SKU is invalid.\n\n* PowerPlatformVirtualNetworkSubnetNotConfiguredForDelegation - The Power Platform virtual network is not configured for delegation.",
             "schema": {
@@ -6432,6 +7836,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/gateways.json#/definitions/Gateway"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6486,6 +7903,19 @@
               "$ref": "./definitions/gateways.json#/definitions/Gateway"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -6525,6 +7955,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.",
@@ -6566,6 +8009,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/gateways.json#/definitions/ListGatewayMembersResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6630,6 +8086,19 @@
               "$ref": "./definitions/gateways.json#/definitions/OnPremisesGatewayMember"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.",
             "schema": {
@@ -6674,6 +8143,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.\n\n* CannotDeletePrimaryGatewayIfClusterMemberExists - Cannot delete the primary gateway while another member gateway exists.",
@@ -6725,6 +8207,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/gateways.json#/definitions/GatewayRoleAssignments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6788,6 +8283,19 @@
               "$ref": "./definitions/gateways.json#/definitions/GatewayRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* BadRequest - Missing required parameter.",
             "schema": {
@@ -6839,6 +8347,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/gateways.json#/definitions/GatewayRoleAssignment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -6901,6 +8422,19 @@
               "$ref": "./definitions/gateways.json#/definitions/GatewayRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -6945,6 +8479,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -6996,6 +8543,19 @@
             "description": "OK. The operation was successful.",
             "schema": {
               "$ref": "./definitions/connections.json#/definitions/ConnectionRoleAssignments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7059,6 +8619,19 @@
               "$ref": "./definitions/connections.json#/definitions/ConnectionRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* BadRequest - Missing required parameter.",
             "schema": {
@@ -7110,6 +8683,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions/connections.json#/definitions/ConnectionRoleAssignment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7172,6 +8758,19 @@
               "$ref": "./definitions/connections.json#/definitions/ConnectionRoleAssignment"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -7216,6 +8815,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -7262,6 +8874,19 @@
               "ETag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7322,6 +8947,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -7367,6 +9005,19 @@
               "ETag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7420,6 +9071,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -7465,6 +9129,19 @@
               "ETag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7518,6 +9195,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -7563,6 +9253,19 @@
               "ETag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -7621,6 +9324,19 @@
               "ETag": {
                 "type": "string"
               }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {

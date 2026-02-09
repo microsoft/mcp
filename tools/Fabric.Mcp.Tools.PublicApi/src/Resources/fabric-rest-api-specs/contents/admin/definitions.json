@@ -995,25 +995,106 @@
             "description": "An ID in UUID format.",
             "format": "uuid"
 
-          },
-          "type": {
-            "description": "The item type.",
-            "$ref": "../common/definitions.json#/definitions/ItemType"
+        },
+        "type": {
+          "description": "The item type.",
+          "$ref": "../common/definitions.json#/definitions/ItemType"
+        }
+      }
+    },
+    "RestoreWorkspaceRequest": {
+      "description": "The request to restore a deleted workspace.",
+      "properties": {
+        "newWorkspaceName": {
+          "type": "string",
+          "description": "The name of the workspace. Mandatory if the restore request is for *My workspace*."
+        },
+        "newWorkspaceAdminPrincipal": {
+          "description": "The workspace's admin.",
+          "$ref": "../common/definitions.json#/definitions/Principal"
+        }
+      }
+    },
+    "NetworkCommunicationPolicies": {
+      "description": "Network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection.",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "Network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection.",
+          "items": {
+            "$ref": "#/definitions/NetworkCommunicationPolicyDetails"
           }
         }
       },
-      "RestoreWorkspaceRequest": {
-        "description": "The request to restore a deleted workspace.",
-        "properties": {
-          "newWorkspaceName": {
-            "type": "string",
-            "description": "The name of the workspace. Mandatory if the restore request is for *My workspace*."
-          },
-          "newWorkspaceAdminPrincipal": {
-            "description": "The workspace's admin.",
-            "$ref": "../common/definitions.json#/definitions/Principal"
-          }
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "NetworkCommunicationPolicyDetails": {
+      "type": "object",
+      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "required": [
+        "workspaceId",
+        "inbound",
+        "outbound"
+      ],
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "description": "The workspace ID.",
+          "format": "uuid"
+        },
+        "inbound": {
+          "description": "Defines the Inbound access protection settings.",
+          "$ref": "#/definitions/NetworkCommunicationPolicyInboundDetails"
+        },
+        "outbound": {
+          "description": "Defines the Outbound access protection settings.",
+          "$ref": "#/definitions/NetworkCommunicationPolicyOutboundDetails"
+        }
+      }
+    },
+    "NetworkCommunicationPolicyInboundDetails": {
+      "type": "object",
+      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "required": [
+        "publicAccessRules"
+      ],
+      "properties": {
+        "publicAccessRules": {
+          "description": "The policy for all inbound communications to a workspace",
+          "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+        }
+      }
+    },
+    "NetworkCommunicationPolicyOutboundDetails": {
+      "type": "object",
+      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "required": [
+        "publicAccessRules",
+        "connections",
+        "gateways"
+      ],
+      "properties": {
+        "publicAccessRules": {
+          "description": "The policy for all outbound communications to a workspace",
+          "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+        },
+        "connections": {
+          "description": "Represents the complete set of outbound access protection cloud connection rules configured for a workspace as part of its networking communication policy. \nThis object defines the connection rules that govern which external endpoints and workspaces are permitted or denied for outbound communication",
+          "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundConnections"
+        },
+        "gateways": {
+          "description": "Represents the complete set of gateway outbound access protection rules configured for a workspace as part of its networking communication policy. \nThis object defines the gateway rules that govern outbound communication",
+          "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundGateways"
+        },
+        "git": {
+          "description": "Represents the Git Outbound policy for the specified as part of its networking communication policy.",
+          "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
         }
       }
     }
+  }
 }
