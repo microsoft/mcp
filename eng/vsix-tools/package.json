@@ -1,0 +1,5 @@
+{
+    "devDependencies": {
+        "@vscode/vsce": "~3"
+    }
+}

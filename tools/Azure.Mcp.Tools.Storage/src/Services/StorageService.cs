@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Models;
@@ -27,7 +28,7 @@ public class StorageService(
 {
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<StorageAccountInfo>> GetAccountDetails(
+    public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
         string? tenant = null,
@@ -75,15 +76,13 @@ public class StorageService(
                     throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
                 }
 
-                accounts.Add(storageAccount);
+                return new ResourceQueryResults<StorageAccountInfo>([storageAccount], false);
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
             }
         }
-
-        return accounts;
     }
 
     public async Task<StorageAccountResult> CreateStorageAccount(
@@ -125,7 +124,8 @@ public class StorageService(
                     AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                     EnableHttpsTrafficOnly = true,
                     AllowBlobPublicAccess = false,
-                    IsHnsEnabled = enableHierarchicalNamespace ?? false
+                    IsHnsEnabled = enableHierarchicalNamespace ?? false,
+                    MinimumTlsVersion = "TLS1_2"
                 }
             };
 
@@ -462,7 +462,7 @@ public class StorageService(
 
     private static StorageAccountInfo ConvertToAccountInfoModel(JsonElement item)
     {
-        Models.StorageAccountData? storageAccount = Models.StorageAccountData.FromJson(item);
+        StorageAccountData? storageAccount = StorageAccountData.FromJson(item);
         if (storageAccount == null)
             throw new InvalidOperationException("Failed to parse storage account data");
 
@@ -477,5 +477,51 @@ public class StorageService(
             CreatedOn: storageAccount.Properties?.CreatedOn,
             AllowBlobPublicAccess: storageAccount.Properties?.AllowBlobPublicAccess,
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
+    }
+
+    protected async Task<TableServiceClient> CreateTableServiceClient(
+        string? account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var defaultUri = $"https://{account}.table.core.windows.net";
+        return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
+    }
+
+    public async Task<List<string>> ListTables(
+        string account,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+
+        var tables = new List<string>();
+
+        try
+        {
+            // First attempt with requested auth method
+            var tableServiceClient = await CreateTableServiceClient(
+                account,
+                subscription,
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            await foreach (var table in tableServiceClient.QueryAsync(cancellationToken: cancellationToken))
+            {
+                tables.Add(table.Name);
+            }
+            return tables;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error listing tables: {ex.Message}", ex);
+        }
     }
 }

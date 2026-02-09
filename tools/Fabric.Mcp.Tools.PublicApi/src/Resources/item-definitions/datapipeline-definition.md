@@ -1,13 +1,3 @@
----
-title: DataPipeline definition
-description: Learn how to structure a data pipeline item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric data pipeline item definition
-author: rnandurimsft
-ms.author: rnanduri
-ms.service: fabric
-ms.date: 02/19/2025
----
-
 # DataPipeline definition
 
 This article provides a breakdown of the definition structure for data pipeline items.

@@ -1,13 +1,3 @@
----
-title: SemanticModel definition
-description: Learn how to structure a semantic model item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric semantic model item definition
-author: billmath
-ms.author: billmath
-ms.service: fabric
-ms.date: 05/17/2024
----
-
 # SemanticModel definition
 
 This article provides a breakdown of the definition structure for semantic model items.

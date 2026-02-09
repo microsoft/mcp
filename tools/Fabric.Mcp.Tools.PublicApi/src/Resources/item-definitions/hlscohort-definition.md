@@ -1,13 +1,3 @@
----
-title: HLSCohort definition
-description: Learn how to create a HLSCohort item definition when using the Microsoft Fabric REST API.
-ms.title: Microsoft Fabric HLSCohort item definition
-author: IshanHasan
-ms.author: ishanhasan
-ms.service: fabric
-ms.date: 04/08/2024
----
-
 # HLSCohort definition
 
 This article provides a breakdown of the definition structure for HLSCohort items.

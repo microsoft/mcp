@@ -37,7 +37,6 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -79,6 +78,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
             new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
+            new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
         ];
     }
 
@@ -154,6 +154,7 @@ internal class Program
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
+        services.AddHttpClientServices();
         services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
 

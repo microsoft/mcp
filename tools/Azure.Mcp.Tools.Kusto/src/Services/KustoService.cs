@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Kusto.Models;
 using Microsoft.Extensions.Logging;
 
@@ -18,11 +17,11 @@ public sealed class KustoService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ICacheService cacheService,
-    IHttpClientService httpClientService,
+    IHttpClientFactory httpClientFactory,
     ILogger<KustoService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IKustoService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<KustoService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "kusto";
@@ -31,10 +30,13 @@ public sealed class KustoService(
     private static readonly TimeSpan s_providerCacheDuration = TimeSpan.FromHours(2);
 
     // Provider cache key generator
-    private static string GetProviderCacheKey(string clusterUri)
-        => $"{clusterUri}";
+    private static string GetProviderCacheKey(string clusterUri, string? tenant)
+    {
+        var tenantKey = string.IsNullOrEmpty(tenant) ? "default" : tenant;
+        return $"{tenantKey}:{clusterUri}";
+    }
 
-    public async Task<List<string>> ListClustersAsync(
+    public async Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscriptionId,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -320,12 +322,12 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateKustoClientAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri) + "_command";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_command";
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
-            var tokenCredential = await GetCredential(cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientService);
+            var tokenCredential = await GetCredential(tenant, cancellationToken);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -334,12 +336,12 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateCslQueryProviderAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri) + "_query";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_query";
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
-            var tokenCredential = await GetCredential(cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientService);
+            var tokenCredential = await GetCredential(tenant, cancellationToken);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 

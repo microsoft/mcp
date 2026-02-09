@@ -124,8 +124,8 @@ public class FastTranscriptionRecognizer(
                 };
 
                 // Make the request using HttpClient from factory
-                using var httpClient = _httpClientFactory.CreateClient();
-                var response = await httpClient.SendAsync(requestMessage, cancellationToken);
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)

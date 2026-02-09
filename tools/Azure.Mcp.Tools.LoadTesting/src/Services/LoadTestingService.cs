@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Developer.LoadTesting;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -22,7 +23,7 @@ public class LoadTestingService(
     ITenantService tenantService)
     : BaseAzureService(tenantService), ILoadTestingService
 {
-    ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(
         string subscription,
         string? resourceGroup = null,
@@ -34,9 +35,7 @@ public class LoadTestingService(
         ValidateRequiredParameters((nameof(subscription), subscription));
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
-        var credential = await GetCredential(cancellationToken);
-
-        var client = new ArmClient(credential);
+        var client = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         if (!string.IsNullOrEmpty(testResourceName))
         {
             var resourceId = LoadTestingResource.CreateResourceIdentifier(subscriptionId, resourceGroup, testResourceName);
@@ -94,15 +93,13 @@ public class LoadTestingService(
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
-        var credential = await GetCredential(cancellationToken);
-
-        var client = new ArmClient(credential);
+        var client = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgResource = client.GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroup));
         if (testResourceName == null)
         {
-            testResourceName = $"estRun_{DateTime.UtcNow:dd-MM-yyyy_HH:mm:ss tt}";
+            testResourceName = $"TestRun_{DateTime.UtcNow:dd-MM-yyyy_HH:mm:ss tt}";
         }
-        var location = rgResource.Get(cancellationToken).Value.Data.Location;
+        var location = (await rgResource.GetAsync(cancellationToken)).Value.Data.Location;
         var response = await rgResource.GetLoadTestingResources().CreateOrUpdateAsync(
             WaitUntil.Completed,
             testResourceName,
@@ -146,8 +143,8 @@ public class LoadTestingService(
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential);
+        var credential = await GetCredential(tenant, cancellationToken);
+        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
         var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId);
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
@@ -181,8 +178,8 @@ public class LoadTestingService(
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential);
+        var credential = await GetCredential(tenant, cancellationToken);
+        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
         var loadTestRunResponse = loadTestClient.GetTestRunsAsync(testId: testId);
         if (loadTestRunResponse == null)
@@ -191,7 +188,7 @@ public class LoadTestingService(
         }
 
         var testRuns = new List<TestRun>();
-        await foreach (var binaryData in loadTestRunResponse)
+        await foreach (var binaryData in loadTestRunResponse.WithCancellation(cancellationToken))
         {
             var testRun = JsonSerializer.Deserialize(binaryData.ToString(), LoadTestJsonContext.Default.TestRun);
             if (testRun != null)
@@ -235,8 +232,8 @@ public class LoadTestingService(
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential);
+        var credential = await GetCredential(tenant, cancellationToken);
+        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
         TestRunRequest requestBody = new TestRunRequest
         {
@@ -247,13 +244,21 @@ public class LoadTestingService(
             RequestDataLevel = debugMode == true ? RequestDataLevel.ERRORS : RequestDataLevel.NONE,
         };
 
-        var loadTestRunResponse = await loadTestClient.BeginTestRunAsync(0, testRunId, RequestContent.Create(JsonSerializer.Serialize(requestBody, LoadTestJsonContext.Default.TestRunRequest)), oldTestRunId: oldTestRunId);
+        using var requestContent = RequestContent.Create(JsonSerializer.Serialize(requestBody, LoadTestJsonContext.Default.TestRunRequest));
+
+        var loadTestRunResponse = await loadTestClient.BeginTestRunAsync(
+            0,
+            testRunId,
+            requestContent,
+            oldTestRunId: oldTestRunId);
+
         if (loadTestRunResponse == null)
         {
             throw new Exception($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
         }
 
-        var loadTestRun = loadTestRunResponse.WaitForCompletionAsync(cancellationToken).Result.Value.ToString();
+        var loadTestRunOperation = await loadTestRunResponse.WaitForCompletionAsync(cancellationToken);
+        var loadTestRun = loadTestRunOperation.Value.ToString();
         return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new TestRun();
     }
 
@@ -279,8 +284,8 @@ public class LoadTestingService(
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential);
+        var credential = await GetCredential(tenant, cancellationToken);
+        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
         var loadTestResponse = await loadTestClient.GetTestAsync(testId);
         if (loadTestResponse == null || loadTestResponse.IsError)
@@ -320,8 +325,8 @@ public class LoadTestingService(
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential);
+        var credential = await GetCredential(tenant, cancellationToken);
+        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
         OptionalLoadTestConfig optionalLoadTestConfig = new OptionalLoadTestConfig
         {
             Duration = (duration ?? 20) * 60, // Convert minutes to seconds
@@ -349,5 +354,12 @@ public class LoadTestingService(
 
         var loadTest = loadTestResponse.Content.ToString();
         return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new Test();
+    }
+
+    private LoadTestingClientOptions CreateLoadTestingClientOptions(RetryPolicyOptions? retryPolicy)
+    {
+        var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new LoadTestingClientOptions()), retryPolicy);
+        clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+        return clientOptions;
     }
 }

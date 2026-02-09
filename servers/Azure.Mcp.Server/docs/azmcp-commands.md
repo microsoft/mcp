@@ -24,6 +24,52 @@ The following options are available for all commands:
 
 The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools:
 
+#### Using azmcp locally vs in container images
+
+The commands in this document assume you are running the **`azmcp` CLI locally**
+for example as a .NET global tool. In that case the executable is called
+`azmcp` and commands such as:
+
+```bash
+azmcp server start --mode namespace --transport=stdio
+```
+
+are valid.
+
+When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
+the image already contains an entrypoint that starts the MCP server process.
+The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
+- Do **not** override the container command / entrypoint with `azmcp ...` when
+  deploying the image. Doing so will cause the container to fail to start.
+- Leave the command / entrypoint blank in Azure Container Apps so the default
+  image entrypoint is used.
+- If you need to customize the startup command or add extra arguments, build
+  your own image based on the Azure MCP Server and set the ENTRYPOINT and/or
+  CMD values in your Dockerfile there. That way you control exactly how the
+  server starts without replacing the upstream image entrypoint at runtime.
+
+> [!NOTE]
+> ENTRYPOINT defines the executable that always runs; CMD provides
+> default arguments to that executable. Overriding the container command in
+> many PaaS providers replaces the image's ENTRYPOINT/CMD behavior, which can
+> break startup. The Azure MCP Server image ENTRYPOINT in the repository is:
+
+```text
+ENTRYPOINT ["./server-binary", "server", "start"]
+```
+
+Because the image sets a fixed entrypoint, passing a container command such
+as `azmcp ...` will replace or conflict with that entrypoint. If you must
+change startup behavior, create a small derived Dockerfile that modifies the
+ENTRYPOINT/CMD as needed and deploy your custom image instead of overriding
+the command in the PaaS UI.
+
+For the exact Dockerfile used to build the image see:
+https://github.com/microsoft/mcp/blob/main/Dockerfile
+
+The remaining sections describe the different server modes that apply to both
+the CLI and the container image entrypoint.
+
 #### Default Mode (Namespace)
 
 Exposes Azure tools grouped by service namespace. Each Azure service appears as a single namespace-level tool that routes to individual operations internally. This is the default mode to reduce tool count and prevent VS Code from hitting the 128 tool limit.
@@ -181,9 +227,9 @@ The `azmcp server start` command supports the following options:
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
-| `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
+| `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
 
-> **⚠️ Security Warning for `--insecure-disable-elicitation`:**
+> **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
 > This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
@@ -194,7 +240,7 @@ The `azmcp server start` command supports the following options:
 > **Example usage (use with caution):**
 > ```bash
 > # For automated scenarios only - bypasses security prompts
-> azmcp server start --insecure-disable-elicitation
+> azmcp server start --dangerously-disable-elicitation
 > ```
 
 #### Server Info
@@ -202,6 +248,13 @@ The `azmcp server start` command supports the following options:
 ```bash
 # Get information about the MCP server, which includes the server's name and version.
 azmcp server info
+```
+
+### Azure Advisor Operations
+
+```bash
+# List Advisor recommendations in a subscription
+azmcp advisor recommendations list --subscription <subscription>
 ```
 
 ### Azure AI Search Operations
@@ -504,6 +557,113 @@ azmcp extension cli generate --cli-type <cli-type>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp extension cli install --cli-type <cli-type>
 ```
+
+### Azure Compute Operations
+
+#### Virtual Machines
+
+```bash
+# Get Virtual Machine(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription <subscription> \
+                     [--resource-group <resource-group>] \
+                     [--vm-name <vm-name>] \
+                     [--instance-view]
+
+# Examples:
+
+# List all VMs in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription"
+
+# List all VMs in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg"
+
+# Get specific VM details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm"
+
+# Get specific VM with instance view (runtime status)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm get --subscription "my-subscription" \
+                     --resource-group "my-rg" \
+                     --vm-name "my-vm" \
+                     --instance-view
+```
+
+**Command Behavior:**
+- **With `--vm-name`**: Gets detailed information about a specific VM (requires `--resource-group`). Optionally include `--instance-view` for runtime status.
+- **With `--resource-group` only**: Lists all VMs in the specified resource group.
+- **With neither**: Lists all VMs in the subscription.
+
+**Returns:**
+- VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
+- When `--instance-view` is specified: Also includes power state, provisioning state, VM agent status, disk status, and extension status.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vm-name`) |
+| `--vm-name`, `--name` | No | Name of the virtual machine |
+| `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
+
+#### Virtual Machine Scale Sets
+
+```bash
+# Get Virtual Machine Scale Set(s) - behavior depends on provided parameters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription <subscription> \
+                       [--resource-group <resource-group>] \
+                       [--vmss-name <vmss-name>] \
+                       [--instance-id <instance-id>]
+
+# Examples:
+
+# List all VMSS in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription"
+
+# List all VMSS in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg"
+
+# Get specific VMSS details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss"
+
+# Get specific VM instance in a VMSS
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss get --subscription "my-subscription" \
+                       --resource-group "my-rg" \
+                       --vmss-name "my-vmss" \
+                       --instance-id "0"
+```
+
+**Command Behavior:**
+- **With `--instance-id`**: Gets detailed information about a specific VM instance in the scale set (requires `--vmss-name` and `--resource-group`).
+- **With `--vmss-name`**: Gets detailed information about a specific VMSS (requires `--resource-group`).
+- **With `--resource-group` only**: Lists all VMSS in the specified resource group.
+- **With neither**: Lists all VMSS in the subscription.
+
+**Returns:**
+- VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, overprovision setting, zones, and tags.
+- When `--instance-id` is specified: Returns VM instance information including instance ID, name, location, VM size, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vmss-name`) |
+| `--vmss-name` | No | Name of the virtual machine scale set |
+| `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
 
 ### Azure Communication Services Operations
 
@@ -1022,6 +1182,105 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--tags <json-tags>]
 ```
 
+### Azure File Shares Operations
+
+```bash
+# Get a specific File Share or list all File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --name <file-share-name>
+
+# Create a new File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name> \
+                                  --location <azure-region> \
+                                  [--mount-name <mount-name>] \
+                                  [--media-tier <SSD|HDD>] \
+                                  [--redundancy <Local|Zone>] \
+                                  [--protocol <NFS>] \
+                                  [--provisioned-storage-in-gib <size>] \
+                                  [--provisioned-io-per-sec <iops>] \
+                                  [--provisioned-throughput-mib-per-sec <throughput>] \
+                                  [--public-network-access <Enabled|Disabled>] \
+                                  [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--allowed-subnets <comma-separated-subnet-ids>] \
+                                  [--tags <json-tags>]
+
+# Update an existing File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare update --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name> \
+                                  [--provisioned-storage-in-gib <size>] \
+                                  [--provisioned-io-per-sec <iops>] \
+                                  [--provisioned-throughput-mib-per-sec <throughput>] \
+                                  [--public-network-access <Enabled|Disabled>] \
+                                  [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--allowed-subnets <comma-separated-subnet-ids>] \
+                                  [--tags <json-tags>]
+
+# Delete a File Share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --name <file-share-name>
+
+# Check File Share name availability
+azmcp fileshares fileshare checkname --subscription <subscription> \
+                                     --name <file-share-name>
+```
+
+```bash
+# Get a specific File Share snapshot
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot get --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --file-share-name <file-share-name> \
+                                        --snapshot-name <snapshot-name>
+
+# Create a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot create --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name>
+
+# Update a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name> \
+                                           --snapshot-name <snapshot-name> \
+                                           [--tags <json-tags>]
+
+# Delete a File Share snapshot
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare snapshot delete --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --file-share-name <file-share-name> \
+                                           --snapshot-name <snapshot-name>
+```
+
+```bash
+# Get File Shares limits and quotas for a region
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares limits --subscription <subscription> \
+                        --location <azure-region>
+
+# Get provisioning recommendations for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares rec --subscription <subscription> \
+                     --location <azure-region> \
+                     --provisioned-storage-in-gib <size>
+
+# Get usage data and metrics for File Shares
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares usage --subscription <subscription> \
+                       --location <azure-region>
+```
+
 ### Azure Function App Operations
 
 ```bash
@@ -1107,7 +1366,7 @@ Tools that handle sensitive data such as secrets require user consent before exe
 > - Certificate private keys
 > - Other confidential data
 >
-> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--insecure-disable-elicitation` server start option, but this should only be used in trusted environments.
+> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--dangerously-disable-elicitation` server start option, but this should only be used in trusted environments.
 
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
@@ -1258,7 +1517,7 @@ azmcp marketplace product get --subscription <subscription> \
 ```bash
 # Get best practices for secure, production-grade Azure usage
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp get bestpractices get --resource <resource> --action <action>
+azmcp get azure bestpractices get --resource <resource> --action <action>
 
 # Resource options:
 #   general        - General Azure best practices
@@ -1273,7 +1532,7 @@ azmcp get bestpractices get --resource <resource> --action <action>
 # Get best practices for building AI applications, workflows and agents in Azure
 # Call this before generating code for any AI application, building with Microsoft Foundry models,
 # working with Microsoft Agent Framework, or implementing AI solutions in Azure.
-azmcp get bestpractices ai_app
+azmcp get azure bestpractices ai_app
 
 # AI App Development:
 #   ai_app - Comprehensive guidance for AI applications including:
@@ -1564,8 +1823,228 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
-                               --location <location>
+                                            --location <location>
+
+# Create an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--autoexport-prefix <prefix>] \
+                                             [--admin-status <Enable|Disable>]
+
+# Cancel an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport cancel --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             --job-name <job-name>
+
+# Get details of autoexport jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport get --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --filesystem-name <filesystem-name> \
+                                          [--job-name <job-name>]
+
+# Delete an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoexport delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             --job-name <job-name>
+
+# Get details of autoimport jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport get --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --filesystem-name <filesystem-name> \
+                                           [--job-name <job-name>]
+
+# Create an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                             [--autoimport-prefixes <prefix1> --autoimport-prefixes <prefix2> ...] \
+                                             [--admin-status <Enable|Disable>] \
+                                             [--enable-deletions <true|false>] \
+                                             [--maximum-errors <number>]
+
+# Cancel an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport cancel --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --filesystem-name <filesystem-name> \
+                                              --job-name <job-name>
+
+# Delete an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --filesystem-name <filesystem-name> \
+                                              --job-name <job-name>
+
+# Create a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import create --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         [--job-name <job-name>] \
+                                         [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                         [--import-prefixes <prefix1> --import-prefixes <prefix2> ...] \
+                                         [--maximum-errors <number>]
+
+# Get details of one-time import jobs for an Azure Managed Lustre filesystem
+# Returns a specific job if job-name is provided, or lists all jobs if omitted
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import get --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --filesystem-name <filesystem-name> \
+                                      [--job-name <job-name>]
+
+# Cancel a running one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import cancel --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
+
+# Delete a one-time import job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs blob import delete --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --filesystem-name <filesystem-name> \
+                                         --job-name <job-name>
 ```
+
+### Azure Migrate Operations
+
+#### Platform Landing Zone Modification Guidance
+
+```bash
+# Fetch official Azure Landing Zone modification guidance for a specific scenario
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario <scenario> \
+                                                   [--policy-name <policy-name>] \
+                                                   [--list-policies <true|false>]
+```
+
+**Available Scenarios:**
+
+| Scenario | Description |
+|----------|-------------|
+| `resource-names` | Update resource naming prefixes and suffixes |
+| `management-groups` | Customize management group names and IDs |
+| `ddos` | Enable or disable DDoS protection plan |
+| `bastion` | Turn off Bastion host |
+| `dns` | Turn off Private DNS zones and resolvers |
+| `gateways` | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
+| `regions` | Add or remove secondary regions |
+| `ip-addresses` | Adjust CIDR ranges and IP address space |
+| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce |
+| `policy-assignment` | Remove or disable a policy assignment |
+| `ama` | Turn off Azure Monitoring Agent |
+| `amba` | Deploy Azure Monitoring Baseline Alerts |
+| `defender` | Turn off Defender Plans |
+| `zero-trust` | Implement Zero Trust Networking |
+| `slz` | Implement Sovereign Landing Zone controls |
+
+**Policy-related Options:**
+- `--policy-name`: Search for a specific policy by partial or full name
+- `--list-policies`: Set to `true` to list ALL policies organized by archetype
+
+**Examples:**
+```bash
+# Get guidance for enabling DDoS protection
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario ddos
+
+# Search for policies related to DDoS
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-enforcement \
+                                                   --policy-name ddos
+
+# List all available policies by archetype
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone getguidance --scenario policy-assignment \
+                                                   --list-policies true
+```
+
+#### Platform Landing Zone Management
+
+```bash
+# Generate, download, and manage Azure Platform Landing Zones
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --migrate-project-name <migrate-project-name> \
+                                               --action <action> \
+                                               [action-specific-parameters]
+```
+
+**Actions:**
+
+1. **Check Existing** (`--action check`)
+   ```bash
+   # Check if a platform landing zone already exists
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action check
+   ```
+
+2. **Update Parameters** (`--action update`)
+   ```bash
+   # Cache all parameters for generation of the platform landing zone
+   # Defaults are applied automatically if not specified
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action update \
+                                                  [--region-type <single|multi>] \
+                                                  [--firewall-type <azurefirewall|nva>] \
+                                                  [--network-architecture <hubspoke|vwan>] \
+                                                  [--version-control-system <local|github|azuredevops>] \
+                                                  [--regions <comma-separated-regions>] \
+                                                  [--environment-name <environment-name>] \
+                                                  [--organization-name <organization-name>] \
+                                                  [--identity-subscription-id <subscription-id>] \
+                                                  [--management-subscription-id <subscription-id>] \
+                                                  [--connectivity-subscription-id <subscription-id>]
+   ```
+
+3. **Generate Landing Zone** (`--action generate`)
+   ```bash
+   # Generate the platform landing zone
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action generate
+   ```
+
+4. **Download Landing Zone** (`--action download`)
+   ```bash
+   # Download generated landing zone files to local workspace
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action download
+   ```
+
+5. **View Status** (`--action status`)
+   ```bash
+   # View cached parameters
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action status
+   ```
 
 ### Azure Native ISV Operations
 
@@ -1607,6 +2086,43 @@ azmcp quota usage check --subscription <subscription> \
                         --region <region> \
                         --resource-types <resource-types>
 ```
+
+### Azure Policy Operations
+```bash
+# List Azure Policy Assignments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp policy assignment list --subscription <subscription> \
+                             --scope <scope>
+```
+
+### Azure Pricing Operations
+
+```bash
+# Get Azure retail pricing information
+# Requires at least one filter: --sku, --service, --region, --service-family, --price-type, or --filter
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp pricing get [--sku <sku>] \
+                  [--service <service>] \
+                  [--region <region>] \
+                  [--service-family <service-family>] \
+                  [--price-type <price-type>] \
+                  [--currency <currency>] \
+                  [--include-savings-plan] \
+                  [--filter <odata-filter>]
+```
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--sku` | No* | - | ARM SKU name (e.g., Standard_D4s_v5) |
+| `--service` | No* | - | Azure service name (e.g., Virtual Machines, Storage) |
+| `--region` | No* | - | Azure region (e.g., eastus, westeurope) |
+| `--service-family` | No* | - | Service family (e.g., Compute, Storage, Databases) |
+| `--price-type` | No* | - | Price type (Consumption, Reservation, DevTestConsumption) |
+| `--currency` | No | USD | Currency code (e.g., USD, EUR) |
+| `--include-savings-plan` | No | false | Include savings plan pricing (uses preview API) |
+| `--filter` | No* | - | Raw OData filter for advanced queries |
+
+\* At least one filter option is required.
 
 ### Azure RBAC Operations
 
@@ -1883,6 +2399,180 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+#### Table Storage
+
+```bash
+# List tables in an Azure Storage account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage table list --subscription <subscription> \
+                         --account <account>
+```
+
+### Azure Storage Sync Operations
+
+#### Storage Sync Service
+
+```bash
+# Create a new Storage Sync Service for cloud file share synchronization
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service create --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 --location <location>
+
+# Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name>
+
+# Get a specific Storage Sync Service or list all services. If --name is provided, returns a specific service; otherwise, lists all services.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service get --subscription <subscription> \
+                              [--resource-group <resource-group>] \
+                              [--name <service-name>]
+
+# Update an existing Storage Sync Service configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 [--tags <tag-key=tag-value>]
+```
+
+#### Sync Group
+
+```bash
+# Create a new Sync Group within a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup create --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Delete a Sync Group (idempotent – succeeds even if the group does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup delete --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Get a specific Sync Group or list all sync groups. If --name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync Service.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --service <service-name> \
+                                [--name <syncgroup-name>]
+```
+
+#### Cloud Endpoint
+
+```bash
+# Create a new Cloud Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name> \
+                                       --storage-account <storage-account-name> \
+                                       --share <share-name>
+
+# Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name>
+
+# Get a specific Cloud Endpoint or list all cloud endpoints. If --name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the Sync Group.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint get --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --service <service-name> \
+                                    --syncgroup <syncgroup-name> \
+                                    [--name <endpoint-name>]
+
+# Trigger change detection on a Cloud Endpoint
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --service <service-name> \
+                                                --syncgroup <syncgroup-name> \
+                                                --name <endpoint-name> \
+                                                --directory-path <path> \
+                                                [--change-detection-mode <mode>] \
+                                                [--paths <path1> <path2> ...]
+```
+
+#### Registered Server
+
+```bash
+# Get a specific Registered Server or list all registered servers. If --server is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       [--server <server-name>]
+
+# Unregister a server from a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver unregister --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --service <service-name> \
+                                              --server <server-name>
+
+# Update a Registered Server configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver update --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --service <service-name> \
+                                          --server <server-name> \
+                                          [--certificate <certificate-path>]
+```
+
+#### Server Endpoint
+
+```bash
+# Create a new Server Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --server <server-name> \
+                                        --name <endpoint-name> \
+                                        --server-local-path <local-path>
+
+# Delete a Server Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name>
+
+# Get a specific Server Endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --service <service-name> \
+                                     --syncgroup <syncgroup-name> \
+                                     [--name <endpoint-name>]
+
+# Update a Server Endpoint configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint update --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name> \
+                                        [--cloud-tiering <Enabled|Disabled>] \
+                                        [--tiering-policy-days <days>] \
+                                        [--tiering-policy-volume-free-percent <percent>]
 ```
 
 ### Azure Subscription Management

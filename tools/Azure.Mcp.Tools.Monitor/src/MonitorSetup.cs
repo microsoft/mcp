@@ -23,12 +23,10 @@ public class MonitorSetup : IAreaSetup
     public string Title => "Azure Monitor";
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClient<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
-        services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();

@@ -24,12 +24,13 @@ public class TagName
     public const string IsReadOnly = "IsReadOnly";
     public const string Namespace = "Namespace";
     public const string ToolCount = "ToolCount";
-    public const string InsecureDisableElicitation = "InsecureDisableElicitation";
+    public const string DangerouslyDisableElicitation = "DangerouslyDisableElicitation";
     public const string IsDebug = "IsDebug";
     public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
     public const string Tool = "Tool";
     public const string VSCodeConversationId = "VSCodeConversationId";
     public const string VSCodeRequestId = "VSCodeRequestId";
+    public const string Host = "Host";
 }
 
 public class ActivityName
@@ -38,4 +39,10 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
+}
+
+public class AppInsightsInstanceType
+{
+    public const string Microsoft = "Microsoft";
+    public const string UserProvided = "UserProvided";
 }

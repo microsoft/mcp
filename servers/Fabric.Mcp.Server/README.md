@@ -197,6 +197,8 @@ Use one of the following options to configure your `mcp.json`:
 
 ### 📝 Best Practices & Examples
 
+* "Show me best practices for handling API throttling in Fabric"
+* "How should I implement retry logic for Fabric API rate limits?"
 * "List recommended retry/backoff behavior for Fabric APIs when rate-limited"
 * "Show me best practices for authenticating with Fabric APIs"
 * "Get example request/response payloads for creating a Notebook"
@@ -225,6 +227,27 @@ The Fabric MCP Server exposes the following tools for AI agents:
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
+
+## OneLake (`onelake`)
+
+| Command | Purpose |
+|---|---|
+| `onelake download file` | Download a OneLake file to disk. |
+| `onelake upload file` | Upload a local file into OneLake. |
+| `onelake directory create` | Create a directory via the DFS endpoint. |
+| `onelake directory delete` | Delete a directory (optionally recursive). |
+| `onelake file list` | List files using the hierarchical file-list endpoint. |
+| `onelake file delete` | Remove individual files from OneLake storage. |
+| `onelake item list` | List workspace items and high-level metadata. |
+| `onelake item list-data` | List Fabric items via the DFS endpoint. |
+| `onelake item create` | Provision new Fabric items (lakehouse, notebook, etc.). |
+| `onelake table config get` | Retrieve table API configuration for a workspace item. |
+| `onelake table namespace list` | Enumerate table namespaces (schemas) exposed through the table API. |
+| `onelake table namespace get` | Inspect metadata for a specific namespace. |
+| `onelake table list` | List tables published within a namespace. |
+| `onelake table get` | Retrieve the definition for a specific table. |
+
+All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Table commands also accept the schema via `--namespace` or its alias `--schema`. Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 
 # Support and Reference
 
@@ -264,7 +287,6 @@ Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/
 * 🔄 Making pull requests
 
 ## Code of Conduct
-
 This project has adopted the
 [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information, see the

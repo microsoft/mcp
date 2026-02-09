@@ -18,10 +18,7 @@ public sealed class QuotaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClientServices();
-
         services.AddTransient<IQuotaService, QuotaService>();
-
         services.AddTransient<CheckCommand>();
         services.AddTransient<AvailabilityListCommand>();
     }

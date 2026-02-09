@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -9,6 +9,8 @@
     <TrimMode>full</TrimMode>
     <!-- Suppress SYSLIB0020 for generated System.Text.Json code that uses obsolete IgnoreNullValues -->
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
+    <!-- Suppress MCPEXP001 for experimental features in MCP -->
+    <NoWarn>$(NoWarn);MCPEXP001</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
     <!-- Identify Server Projects -->
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
@@ -44,10 +46,6 @@
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <CopyOutputSymbolsToPublishDirectory>true</CopyOutputSymbolsToPublishDirectory>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <McpServerJsonTemplateFile>$(RepoRoot)eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(BuildNative)' == 'true'">

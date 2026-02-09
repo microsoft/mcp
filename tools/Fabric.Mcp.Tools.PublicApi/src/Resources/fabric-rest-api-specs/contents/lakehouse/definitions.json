@@ -1,16 +1,14 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "title": "Lakehouse data types",
-        "version": "v1"
-    },
-    "paths": {},
+  "swagger": "2.0",
+  "info": {
+    "title": "Lakehouse data types",
+    "version": "v1"
+  },
+  "paths": {},
   "definitions": {
     "Lakehouses": {
       "description": "A list of lakehouses.",
-      "required": [
-        "value"
-      ],
+      "required": ["value"],
       "type": "object",
       "properties": {
         "value": {
@@ -30,9 +28,7 @@
     "Lakehouse": {
       "description": "A lakehouse item.",
       "type": "object",
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "allOf": [
         {
           "$ref": "../common/definitions.json#/definitions/Item"
@@ -46,10 +42,7 @@
       }
     },
     "LakehouseProperties": {
-      "required": [
-        "oneLakeTablesPath",
-        "oneLakeFilesPath"
-      ],
+      "required": ["oneLakeTablesPath", "oneLakeFilesPath"],
       "description": "The lakehouse properties.",
       "type": "object",
       "properties": {
@@ -72,9 +65,7 @@
       }
     },
     "SqlEndpointProperties": {
-      "required": [
-        "provisioningStatus"
-      ],
+      "required": ["provisioningStatus"],
       "description": "An object containing the properties of the SQL endpoint.",
       "type": "object",
       "properties": {
@@ -95,11 +86,7 @@
     "SqlEndpointProvisioningStatus": {
       "type": "string",
       "description": "The SQL endpoint provisioning status type. Additional `SqlEndpointProvisioningStatus` types may be added over time.",
-      "enum": [
-        "InProgress",
-        "Success",
-        "Failed"
-      ],
+      "enum": ["InProgress", "Success", "Failed"],
       "x-ms-enum": {
         "name": "SqlEndpointProvisioningStatus",
         "modelAsString": true,
@@ -121,9 +108,8 @@
     },
     "CreateLakehouseRequest": {
       "description": "Create lakehouse request payload.",
-      "required": [
-        "displayName"
-      ],
+      "type": "object",
+      "required": ["displayName"],
       "properties": {
         "displayName": {
           "description": "The lakehouse display name. The display name must follow naming rules according to item type.",
@@ -145,13 +131,18 @@
           "description": "The lakehouse creation payload.",
           "$ref": "#/definitions/LakehouseCreationPayload",
           "readOnly": false
+        },
+        "definition": {
+          "description": "The lakehouse public definition.",
+          "$ref": "#/definitions/LakehouseDefinition",
+          "readOnly": false
         }
       }
     },
     "LakehouseRefreshMaterializedLakeViewsSchedule": {
       "description": "Lakehouse refresh materialized lake views schedule.",
       "type": "object",
-      "required": [ "id", "enabled" ],
+      "required": ["id", "enabled"],
       "allOf": [
         {
           "$ref": "../platform/definitions/platform.json#/definitions/ItemSchedule"
@@ -161,7 +152,7 @@
     "CreateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Create lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
-      "required": [ "enabled", "configuration" ],
+      "required": ["enabled", "configuration"],
       "allOf": [
         {
           "$ref": "../platform/definitions/platform.json#/definitions/CreateScheduleRequest"
@@ -171,7 +162,7 @@
     "UpdateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Update lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
-      "required": [ "enabled", "configuration" ],
+      "required": ["enabled", "configuration"],
       "allOf": [
         {
           "$ref": "../platform/definitions/platform.json#/definitions/UpdateScheduleRequest"
@@ -180,9 +171,7 @@
     },
     "UpdateLakehouseDefinitionRequest": {
       "description": "Update Lakehouse public definition request payload.",
-      "required": [
-        "definition"
-      ],
+      "required": ["definition"],
       "properties": {
         "definition": {
           "$ref": "#/definitions/LakehouseDefinition"
@@ -191,9 +180,7 @@
     },
     "LakehouseDefinitionResponse": {
       "description": "Lakehouse public definition response.",
-      "required": [
-        "definition"
-      ],
+      "required": ["definition"],
       "properties": {
         "definition": {
           "$ref": "#/definitions/LakehouseDefinition",
@@ -202,11 +189,9 @@
       }
     },
     "LakehouseDefinition": {
-      "description": "Lakehouse public definition object.",
+      "description": "Lakehouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/lakehouse-definition) for more details on how to craft a lakehouse definition.",
       "type": "object",
-      "required": [
-        "parts"
-      ],
+      "required": ["parts"],
       "properties": {
         "format": {
           "description": "The format of the item definition.",
@@ -262,9 +247,7 @@
     "LakehouseCreationPayload": {
       "description": "**(Preview)** Lakehouse item payload. This property is currently required due to the schema enabled lakehouse being in preview. It might become redundant upon General Availability (GA).",
       "type": "object",
-      "required": [
-        "enableSchemas"
-      ],
+      "required": ["enableSchemas"],
       "properties": {
         "enableSchemas": {
           "description": "Create a schema enabled lakehouse when set to true. Only 'true' is allowed.",
@@ -273,9 +256,7 @@
       }
     },
     "Tables": {
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "description": "A paginated list of tables.",
       "type": "object",
       "properties": {
@@ -297,12 +278,7 @@
       }
     },
     "Table": {
-      "required": [
-        "type",
-        "name",
-        "location",
-        "format"
-      ],
+      "required": ["type", "name", "location", "format"],
       "description": "Table information.",
       "type": "object",
       "properties": {
@@ -327,10 +303,7 @@
     "TableType": {
       "type": "string",
       "description": "The table type. Additional `TableType` types may be added over time.",
-      "enum": [
-        "Managed",
-        "External"
-      ],
+      "enum": ["Managed", "External"],
       "x-ms-enum": {
         "name": "TableType",
         "modelAsString": true,
@@ -349,10 +322,7 @@
     "LoadTableRequest": {
       "type": "object",
       "description": "Represents a load table operation request.",
-      "required": [
-        "relativePath",
-        "pathType"
-      ],
+      "required": ["relativePath", "pathType"],
       "properties": {
         "relativePath": {
           "pattern": "^Files(\\/[\\p{L}\\w]{1}([ \\p{L}\\w\\.-]*[\\p{L}\\w\\.-]{1})*)*$",
@@ -362,10 +332,7 @@
         "pathType": {
           "type": "string",
           "description": "The type of `relativePath`, either file or folder. Additional `PathType` types may be added over time.",
-          "enum": [
-            "File",
-            "Folder"
-          ],
+          "enum": ["File", "Folder"],
           "x-ms-enum": {
             "name": "PathType",
             "modelAsString": true,
@@ -389,10 +356,7 @@
         "mode": {
           "type": "string",
           "description": "The load table operation mode, overwrite or append. Additional mode types may be added over time.",
-          "enum": [
-            "Overwrite",
-            "Append"
-          ],
+          "enum": ["Overwrite", "Append"],
           "x-ms-enum": {
             "name": "ModeType",
             "modelAsString": true,
@@ -421,17 +385,12 @@
       "type": "object",
       "description": "Abstract type of data file format options.",
       "discriminator": "format",
-      "required": [
-        "format"
-      ],
+      "required": ["format"],
       "properties": {
         "format": {
           "type": "string",
           "description": "Data file format name. Additional file format types may be added over time.",
-          "enum": [
-            "Csv",
-            "Parquet"
-          ],
+          "enum": ["Csv", "Parquet"],
           "x-ms-enum": {
             "name": "FileFormat",
             "modelAsString": true,
@@ -483,9 +442,7 @@
     "RunOnDemandTableMaintenanceRequest": {
       "description": "Run on demand lakehouse table maintenance instance payload",
       "type": "object",
-      "required": [
-        "executionData"
-      ],
+      "required": ["executionData"],
       "properties": {
         "executionData": {
           "description": "Execution data to configure the [table maintenance](/fabric/data-engineering/lakehouse-table-maintenance) job.",
@@ -496,9 +453,7 @@
     "TableMaintenanceExecutionData": {
       "type": "object",
       "description": "Run on demand lakehouse table maintenance instance payload",
-      "required": [
-        "tableName"
-      ],
+      "required": ["tableName"],
       "properties": {
         "tableName": {
           "type": "string",

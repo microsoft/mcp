@@ -19,8 +19,10 @@
     Name of the Azure Key Vault containing the credentials for MCP registry login.
 .PARAMETER KeyVaultKeyName
     Name of the Key Vault key to use for MCP registry login.
+.PARAMETER BuildOnly
+    If specified, only builds the MCP publisher tool without deploying the server.json.
 .EXAMPLE
-    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -ReleaseType "production" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
+    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -ServerJsonPath "./.work/Azure.Mcp.Server/server.json" -BuildInfoPath ".work/build_info.json" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
     Updates the server.json for the Azure.Mcp.Server to the production MCP registry using credentials from the specified Key Vault.
 #>
 [CmdletBinding(DefaultParameterSetName='default')]
@@ -31,10 +33,11 @@ param(
     [string] $ServerName,
     [string] $BuildInfoPath,
     [string] $KeyVaultName,
-    [string] $KeyVaultKeyName
+    [string] $KeyVaultKeyName,
+    [switch] $BuildOnly
 )
 
-$ErrorActionPreference = "Stop" 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
@@ -61,7 +64,7 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 $publishTarget = $buildInfo.publishTarget
-$matchingServer = $buildInfo.servers | Where-Object { $_.name -eq $ServerName }
+$matchingServer = @($buildInfo.servers | Where-Object { $_.name -eq $ServerName })
 
 if ($matchingServer.Count -eq 0) {
     LogError "No server found with name '$ServerName' in build info."
@@ -102,7 +105,9 @@ if (!(Test-Path $goInstallScriptPath)) {
 $env:GOEXPERIMENT = "systemcrypto"
 
 # Clone and build the publisher tool
-git clone --branch "v1.3.7" https://github.com/modelcontextprotocol/registry
+# FYI for EngSys or server.json schema changes. This publisher should be updated any time we update the manifest schema
+# version $schema in any server.json file: https://github.com/modelcontextprotocol/registry/releases/
+git clone --branch "v1.4.0" https://github.com/modelcontextprotocol/registry
 
 Set-Location registry
 
@@ -125,7 +130,7 @@ try {
         Write-Host "$($serverInfo.name): Deploying server.json to production instance."
         & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
         & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
-    } elseif ($publishTarget -eq $PublishTargetInternal) { 
+    } elseif ($publishTarget -eq $PublishTargetInternal) {
         LogInfo "$($serverInfo.name): Internal publish target specified. Skipping deployment to public MCP registry."
     } else {
         LogError "$($serverInfo.name): Unsupported publish target: $publishTarget"

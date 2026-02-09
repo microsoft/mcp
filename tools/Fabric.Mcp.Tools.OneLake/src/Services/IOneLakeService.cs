@@ -1,0 +1,49 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Fabric.Mcp.Tools.OneLake.Models;
+
+namespace Fabric.Mcp.Tools.OneLake.Services;
+
+/// <summary>
+/// Service interface for OneLake operations in Microsoft Fabric.
+/// </summary>
+public interface IOneLakeService
+{
+    // Workspace Operations
+    Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<string> ListOneLakeWorkspacesXmlAsync(string? continuationToken = null, CancellationToken cancellationToken = default);
+
+    // Item Operations
+    Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<string> ListOneLakeItemsDfsJsonAsync(string workspaceId, bool recursive = true, string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<OneLakeItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
+    Task<string> ResolveItemIdentifierAsync(string workspaceId, string itemIdentifier, CancellationToken cancellationToken = default);
+
+    // Data Operations (OneLake Data Plane)
+    Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OneLakeFileInfo>> ListBlobsIntelligentAsync(string workspaceId, string itemId, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<List<FileSystemItem>> ListPathIntelligentAsync(string workspaceId, string itemId, bool recursive = false, CancellationToken cancellationToken = default);
+
+    // Raw Response Methods for Debug/Analysis
+    Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<BlobGetResult> ReadFileAsync(string workspaceId, string itemId, string filePath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default);
+    Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
+    Task<BlobPutResult> PutBlobAsync(string workspaceId, string itemId, string blobPath, Stream content, long contentLength, string? contentType = null, bool overwrite = false, CancellationToken cancellationToken = default);
+    Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default);
+    Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default);
+    Task CreateDirectoryAsync(string workspaceId, string itemId, string directoryPath, CancellationToken cancellationToken = default);
+    Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
+    Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default);
+
+    // Table Operations
+    Task<TableConfigurationResult> GetTableConfigurationAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default);
+    Task<TableNamespaceListResult> ListTableNamespacesAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default);
+    Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
+    Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
+    Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default);
+}

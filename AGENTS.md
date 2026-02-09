@@ -94,7 +94,7 @@ dotnet build
 ### Ask first
 - Installing new packages or dependencies
 - Running project-wide builds or tests
-- Modifying `.csproj`, `.sln`, or configuration files
+- Modifying `.csproj`, `.slnx`, or configuration files
 - Deploying test resources (`Deploy-TestResources.ps1`)
 - Making breaking changes to public APIs
 - Adding new toolsets to the solution
@@ -431,7 +431,7 @@ Choose the appropriate base class based on operations:
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
-    public async Task<List<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
+    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
@@ -537,7 +537,7 @@ mcp.json configuration for local development:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net9.0/azmcp.exe",
+      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net10.0/azmcp.exe",
       "args": ["server", "start"]
     }
   }

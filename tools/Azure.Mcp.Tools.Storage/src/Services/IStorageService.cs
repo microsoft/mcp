@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
 public interface IStorageService
 {
-    Task<List<StorageAccountInfo>> GetAccountDetails(
+    Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
         string? tenant = null,
@@ -57,6 +58,13 @@ public interface IStorageService
         string container,
         string blob,
         string localFilePath,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<string>> ListTables(
+        string account,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

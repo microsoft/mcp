@@ -48,19 +48,18 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
-    private async Task<string> _getClient()
+    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
     {
         if (_cachedExecutable != null)
         {
             return _cachedExecutable;
         }
 
-        await s_downloadLock.WaitAsync();
-        FileStream? lockStream = null;
+        await s_downloadLock.WaitAsync().ConfigureAwait(false);
         try
         {
             var proxyDir = GetProxyDirectory();
-            lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
+            using var lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
 
             if (_cachedExecutable != null)
             {
@@ -75,57 +74,126 @@ public sealed class TestProxy(bool debug = false) : IDisposable
                 return _cachedExecutable;
             }
 
-            var assetName = GetAssetNameForPlatform();
-            var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
-            var downloadPath = Path.Combine(proxyDir, assetName);
-            if (!File.Exists(downloadPath))
-            {
-                using var client = new HttpClient();
-                byte[] bytes;
-                var attempt = 0;
-
-                while (true)
-                {
-                    try
-                    {
-                        bytes = await client.GetByteArrayAsync(url);
-                        break;
-                    }
-                    catch when (attempt < DownloadRetryDelays.Length)
-                    {
-                        var delay = DownloadRetryDelays[attempt];
-                        await Task.Delay(delay);
-                        attempt++;
-                    }
-                }
-
-                await File.WriteAllBytesAsync(downloadPath, bytes);
-                // record the downloaded version right here so we don't need to parse anything other than what
-                // is in this folder later
-                await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
-            }
-
-            // if we've gotten to here then we need to decompress
-            if (assetName.EndsWith(".tar.gz"))
-            {
-                await using var compressedStream = File.OpenRead(downloadPath);
-                using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
-                TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
-            }
-            else
-            {
-                ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
-            }
+            await DownloadProxyAsync(proxyDir, version);
 
             _cachedExecutable = FindExecutableInDirectory(proxyDir);
+
+            if (string.IsNullOrWhiteSpace(_cachedExecutable))
+            {
+                throw new InvalidOperationException("Unable to locate freshly downloaded test-proxy executable.");
+            }
+        }
+        finally
+        {
+            s_downloadLock.Release();
+        }
+
+        return _cachedExecutable;
+    }
+
+    private async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath)
+    {
+        await s_downloadLock.WaitAsync().ConfigureAwait(false);
+        FileStream? lockStream = null;
+        try
+        {
+            var proxyDir = GetProxyDirectory();
+            lockStream = await AcquireDownloadLockAsync(proxyDir).ConfigureAwait(false);
+
+            await RestoreAssetsAsync(proxyExe, assetsJsonPath, repositoryRoot).ConfigureAwait(false);
         }
         finally
         {
             lockStream?.Dispose();
             s_downloadLock.Release();
         }
+    }
 
-        return _cachedExecutable;
+    private async Task DownloadProxyAsync(string proxyDirectory, string version)
+    {
+        var assetName = GetAssetNameForPlatform();
+        var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
+        var downloadPath = Path.Combine(proxyDirectory, assetName);
+
+        if (File.Exists(downloadPath))
+        {
+            File.Delete(downloadPath);
+        }
+
+        using var client = new HttpClient();
+        byte[] bytes = await DownloadWithRetryAsync(client, url).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(downloadPath, bytes).ConfigureAwait(false);
+
+        var toolDirectory = Path.Combine(proxyDirectory, "Azure.Sdk.Tools.TestProxy");
+        if (Directory.Exists(toolDirectory))
+        {
+            Directory.Delete(toolDirectory, recursive: true);
+        }
+
+        if (assetName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+        {
+            await using var compressedStream = File.OpenRead(downloadPath);
+            using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
+            TarFile.ExtractToDirectory(gzipStream, proxyDirectory, overwriteFiles: true);
+        }
+        else
+        {
+            ZipFile.ExtractToDirectory(downloadPath, proxyDirectory, overwriteFiles: true);
+        }
+
+        await File.WriteAllTextAsync(Path.Combine(proxyDirectory, "version.txt"), version).ConfigureAwait(false);
+    }
+
+    private static async Task<byte[]> DownloadWithRetryAsync(HttpClient client, string url)
+    {
+        var attempt = 0;
+        while (true)
+        {
+            try
+            {
+                return await client.GetByteArrayAsync(url).ConfigureAwait(false);
+            }
+            catch when (attempt < DownloadRetryDelays.Length)
+            {
+                var delay = DownloadRetryDelays[attempt];
+                await Task.Delay(delay).ConfigureAwait(false);
+                attempt++;
+            }
+        }
+    }
+
+    private static async Task RestoreAssetsAsync(string proxyExe, string assetsJsonPath, string repositoryRoot)
+    {
+        var resolvedAssetsPath = Path.IsPathRooted(assetsJsonPath)
+            ? assetsJsonPath
+            : Path.GetFullPath(assetsJsonPath, repositoryRoot);
+
+        if (!File.Exists(resolvedAssetsPath))
+        {
+            throw new FileNotFoundException($"Assets file not found: {resolvedAssetsPath}");
+        }
+
+        var psi = new ProcessStartInfo(proxyExe, $"restore -a \"{resolvedAssetsPath}\" --storage-location=\"{repositoryRoot}\"")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            WorkingDirectory = repositoryRoot,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy restore process.");
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        var stdout = await stdoutTask.ConfigureAwait(false);
+        var stderr = await stderrTask.ConfigureAwait(false);
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"Test proxy restore failed with exit code {process.ExitCode}. StdOut: {stdout}. StdErr: {stderr}");
+        }
     }
 
     /// <summary>
@@ -257,35 +325,15 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return proxyDirectory;
     }
 
-    private string? GetExecutableFromAssetsDirectory()
-    {
-        var proxyDir = GetProxyDirectory();
-        var toolDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy");
-
-        if (!Directory.Exists(toolDir))
-            return null;
-
-        var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "test-proxy.exe" : "test-proxy";
-        foreach (var file in Directory.EnumerateFiles(toolDir, exeName, SearchOption.AllDirectories))
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                EnsureExecutable(file);
-            }
-            return file;
-        }
-
-        return null;
-    }
-
-    public async Task Start(string repositoryRoot)
+    public async Task Start(string repositoryRoot, string assetsJsonPath)
     {
         if (_process != null)
         {
             return;
         }
 
-        var proxyExe = GetExecutableFromAssetsDirectory() ?? await _getClient();
+        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
@@ -317,7 +365,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         else
         {
-            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(15));
+            var secondsToWait = 30;
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD")))
+            {
+                secondsToWait = 90;
+            }
+            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(secondsToWait));
         }
 
         if (_httpPort is null)
@@ -333,7 +386,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     {
         try
         {
-            while (!ct.IsCancellationRequested && !reader.EndOfStream)
+            while (!ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
                 if (line == null)

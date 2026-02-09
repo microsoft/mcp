@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -36,7 +37,7 @@ public class RegistryToolLoaderTests
         };
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IReadOnlyDictionary<string, JsonElement>? arguments = null)
+    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
@@ -502,5 +503,157 @@ public class RegistryToolLoaderTests
         // Assert - This tests that the semaphore is disposed
         // If the semaphore wasn't disposed properly, subsequent operations might have issues
         // but this is mainly for coverage and resource cleanup verification
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleServers_InitializesConcurrently()
+    {
+        // Arrange - Create multiple servers with controlled async initialization
+        var tcs1 = new TaskCompletionSource<bool>();
+        var tcs2 = new TaskCompletionSource<bool>();
+        var tcs3 = new TaskCompletionSource<bool>();
+
+        var client1Builder = new MockMcpClientBuilder()
+            .AddTool("tool-1", "Tool from server 1", "Response 1");
+        var client2Builder = new MockMcpClientBuilder()
+            .AddTool("tool-2", "Tool from server 2", "Response 2");
+        var client3Builder = new MockMcpClientBuilder()
+            .AddTool("tool-3", "Tool from server 3", "Response 3");
+
+        // Create a mock discovery strategy that delays client creation
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+
+        var server1 = Substitute.For<IMcpServerProvider>();
+        server1.CreateMetadata().Returns(new McpServerMetadata("server-1", "server-1", "Server 1"));
+        var server2 = Substitute.For<IMcpServerProvider>();
+        server2.CreateMetadata().Returns(new McpServerMetadata("server-2", "server-2", "Server 2"));
+        var server3 = Substitute.For<IMcpServerProvider>();
+        server3.CreateMetadata().Returns(new McpServerMetadata("server-3", "server-3", "Server 3"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server1, server2, server3]));
+
+        // Set up GetOrCreateClientAsync to wait on TaskCompletionSource to simulate concurrent operations
+        var client1 = client1Builder.Build();
+        var client2 = client2Builder.Build();
+        var client3 = client3Builder.Build();
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs1.Task; // Wait for signal
+                return client1;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs2.Task; // Wait for signal
+                return client2;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs3.Task; // Wait for signal
+                return client3;
+            });
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act - Start initialization (it will block on TaskCompletionSources)
+        var listToolsTask = toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Give time for all GetOrCreateClientAsync calls to be invoked concurrently
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+
+        // Verify all three GetOrCreateClientAsync were called (proving concurrent execution)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+
+        // Release all servers concurrently in reverse order to test proper synchronization
+        tcs3.SetResult(true);
+        tcs1.SetResult(true);
+        tcs2.SetResult(true);
+
+        // Wait for initialization to complete
+        var result = await listToolsTask;
+
+        // Assert - All tools should be loaded successfully
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(3, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "tool-1");
+        Assert.Contains(result.Tools, t => t.Name == "tool-2");
+        Assert.Contains(result.Tools, t => t.Name == "tool-3");
+
+        // Verify no race conditions - calling again should use cached results without re-initialization
+        var cachedRequest = CreateListToolsRequest();
+        var cachedResult = await toolLoader.ListToolsHandler(cachedRequest, TestContext.Current.CancellationToken);
+        Assert.Equal(3, cachedResult.Tools.Count);
+
+        // Verify GetOrCreateClientAsync was NOT called again (proves caching works)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WhenCancellationOccursDuringInitialization_AllowsRetry()
+    {
+        // Arrange - Create a server with controlled cancellation
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("test-tool", "Test Tool", "Response");
+
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var server = Substitute.For<IMcpServerProvider>();
+        server.CreateMetadata().Returns(new McpServerMetadata("test-server", "test-server", "Test Server"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server]));
+
+        // First call: throw OperationCanceledException
+        var firstCall = true;
+        mockDiscoveryStrategy.GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                if (firstCall)
+                {
+                    firstCall = false;
+                    throw new OperationCanceledException("Initialization canceled");
+                }
+                return Task.FromResult(clientBuilder.Build());
+            });
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act & Assert - First call should throw OperationCanceledException
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken));
+
+        // Act & Assert - Second call should succeed (proving initialization wasn't marked complete)
+        var retryRequest = CreateListToolsRequest();
+        var result = await toolLoader.ListToolsHandler(retryRequest, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Single(result.Tools);
+        Assert.Equal("test-tool", result.Tools.First().Name);
+
+        // Verify GetOrCreateClientAsync was called twice (once failed, once succeeded)
+        _ = mockDiscoveryStrategy.Received(2).GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
     }
 }

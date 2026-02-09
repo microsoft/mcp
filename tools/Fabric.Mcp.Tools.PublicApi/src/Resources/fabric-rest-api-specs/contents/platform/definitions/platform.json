@@ -636,11 +636,13 @@
         "applicationId": {
           "description": "The application ID.",
           "type": "string",
+          "format": "uuid",
           "readOnly": true
         },
         "servicePrincipalId": {
           "description": "The service principal ID.",
           "type": "string",
+          "format": "uuid",
           "readOnly": true
         }
       },
@@ -797,13 +799,28 @@
           "description": "A list of roles that are used to manage data access security and ensure that only authorized users can view certain data. A role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be a Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/DataAccessRole"
+            "$ref": "#/definitions/DataAccessRoleListItem"
           }
         }
       },
       "allOf": [
         {
           "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DataAccessRoleListItem": {
+      "description": "Data access role object returned by list operations. Includes the entity tag (ETag) used for concurrency control.",
+      "allOf": [
+        { "$ref": "#/definitions/DataAccessRole" },
+        {
+          "type": "object",
+          "properties": {
+            "eTag": {
+              "description": "Entity tag for the role, used for concurrency control.",
+              "type": "string"
+            }
+          }
         }
       ]
     },
@@ -820,17 +837,11 @@
         }
       }
     },
-    "DataAccessRole": {
-      "description": "A Data access role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Data access roles are used to manage data access security and ensure that only authorized users can view, edit, or delete certain data. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be an Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
+    "DataAccessRoleBase": {
+      "description": "Base data access role object used for single-role operations (does not include id). Represents a set of permissions and permission scopes that define allowed actions for scoped data.",
       "type": "object",
       "required": [ "name", "decisionRules" ],
       "properties": {
-        "id": {
-          "description": "The unique id for the Data access role.",
-          "type": "string",
-          "format": "uuid",
-          "readOnly": true
-        },
         "name": {
           "description": "The name of the Data access role.",
           "type": "string"
@@ -846,6 +857,37 @@
           "description": "The members object which contains the members of the role as arrays of different member types.",
           "type": "object",
           "$ref": "#/definitions/Members"
+        }
+      }
+    },
+    "DataAccessRole": {
+      "description": "Full data access role object including server-assigned id.",
+      "allOf": [
+        { "$ref": "#/definitions/DataAccessRoleBase" },
+        {
+          "type": "object",
+          "description": "Extends base data access role with server-assigned read-only id property.",
+          "properties": {
+            "id": {
+              "description": "The unique id for the Data access role.",
+              "type": "string",
+              "format": "uuid",
+              "readOnly": true
+            }
+          }
+        }
+      ]
+    },
+    "CreateOrUpdateSingleDataAccessRoleRequest": {
+      "description": "Wrapper object for creating or updating a single data access role (without id).",
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A single data access role definition (id is not included).",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/definitions/DataAccessRoleBase" }
         }
       }
     },
@@ -1127,7 +1169,7 @@
           "type": "string"
         },
         "target": {
-          "description": "An object that contains the target datasource, and it must specify exactly one of the supported destinations: OneLake, Amazon S3, ADLS Gen2, Google Cloud Storage, S3 compatible, Dataverse or Azure Blob storage.",
+          "description": "An object that contains the target datasource, and it must specify exactly one of the supported destinations: OneLake, Amazon S3, ADLS Gen2, Google Cloud Storage, S3 compatible, Dataverse, Azure Blob storage or OneDrive SharePoint.",
           "type": "object",
           "$ref": "#/definitions/CreatableShortcutTarget"
         }
@@ -1325,6 +1367,11 @@
           "description": "An object containing the properties of the target Azure Blob Storage data source.",
           "type": "object",
           "$ref": "#/definitions/AzureBlobStorage"
+        },
+        "oneDriveSharePoint": {
+          "description": "An object containing the properties of the target OneDrive for Business & SharePoint Online data source.",
+          "type": "object",
+          "$ref": "#/definitions/OneDriveSharePoint"
         }
       }
     },
@@ -1336,7 +1383,7 @@
         "type": {
           "description": "The type object contains properties like target shortcut account type. Additional types may be added over time.",
           "type": "string",
-          "enum": [ "OneLake", "AmazonS3", "AdlsGen2", "GoogleCloudStorage", "S3Compatible", "Dataverse", "ExternalDataShare", "AzureBlobStorage" ],
+          "enum": [ "OneLake", "AmazonS3", "AdlsGen2", "GoogleCloudStorage", "S3Compatible", "Dataverse", "ExternalDataShare", "AzureBlobStorage", "OneDriveSharePoint" ],
           "x-ms-enum": {
             "name": "Type",
             "modelAsString": true,
@@ -1372,6 +1419,10 @@
               {
                 "value": "AzureBlobStorage",
                 "description": "AzureBlobStorage"
+              },
+              {
+                "value": "OneDriveSharePoint",
+                "description": "OneDriveSharePoint"
               }
             ]
           }
@@ -1415,6 +1466,11 @@
           "description": "An object containing the properties of the target Azure Blob Storage data source.",
           "type": "object",
           "$ref": "#/definitions/AzureBlobStorage"
+        },
+        "oneDriveSharePoint": {
+          "description": "An object containing the properties of the target OneDrive for Business & SharePoint Online data source.",
+          "type": "object",
+          "$ref": "#/definitions/OneDriveSharePoint"
         }
       }
     },
@@ -1573,6 +1629,27 @@
         },
         "connectionId": {
           "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the Azure Blob Storage data location. Open the cloud connection's settings view and copy the GUID that is the connection ID.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "OneDriveSharePoint": {
+      "description": "An object containing the properties of the target OneDrive for Business or SharePoint Online data source.",
+      "type": "object",
+      "required": [ "location", "subpath", "connectionId" ],
+      "properties": {
+        "location": {
+          "description": "Specifies the location of the target OneDrive SharePoint container. The URI must be in the format `https://microsoft.sharepoint.com` which is the path of the target OneDrive SharePoint account.",
+          "type": "string",
+          "format": "uri"
+        },
+        "subpath": {
+          "description": "Specifies the container and subfolder within the OneDrive SharePoint account where the target folder is located. Must be of the format [container]/[subfolder]. [Container] is the name of the container that holds the files and folders. [Subfolder] is the name of the subfolder within the container and is optional. For example: /mycontainer/mysubfolder",
+          "type": "string"
+        },
+        "connectionId": {
+          "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the OneDrive SharePoint data location. Open the cloud connection's settings view and copy the GUID that is the connection ID.",
           "type": "string",
           "format": "uuid"
         }
@@ -1759,7 +1836,8 @@
         },
         "rootActivityId": {
           "description": "Root activity id to trace requests across services",
-          "type": "string"
+          "type": "string",
+          "format": "uuid"
         },
         "startTimeUtc": {
           "description": "Job start time in UTC",
@@ -2397,6 +2475,13 @@
       "properties": {
         "diagnostics": {
           "$ref": "#/definitions/OneLakeDiagnosticSettings"
+        },
+        "immutabilityPolicies": {
+          "description": "Immutability settings of the workspace.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ImmutabilityPolicy"
+          }
         }
       }
     },
@@ -2456,6 +2541,55 @@
           "$ref": "../../common/definitions.json#/definitions/ItemReference",
           "readOnly": false
         }
+      }
+    },
+    "ImmutabilityPolicyRequest": {
+      "description": "Immutability policy request object.",
+      "type": "object",
+      "required": [ "scope", "retentionDays" ],
+      "properties": {
+        "scope": {
+          "description": "Scope of the current immutability setting.",
+          "$ref": "#/definitions/ImmutabilityScope"
+        },
+        "retentionDays": {
+          "description": "Retention Days for the action.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ImmutabilityPolicy": {
+      "description": "Immutability policy object.",
+      "type": "object",
+      "required": [ "scope", "retentionDays" ],
+      "properties": {
+        "scope": {
+          "description": "Scope of the immutability policy.",
+          "$ref": "#/definitions/ImmutabilityScope"
+        },
+        "retentionDays": {
+          "description": "Value of the retention days configured.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ImmutabilityScope": {
+      "description": "The scope of immutability policy. Additional Immutability Scope types may be added over time. ",
+      "type": "string",
+      "enum": [
+        "DiagnosticLogs"
+      ],
+      "x-ms-enum": { 
+        "name": "ImmutabilityScope",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "DiagnosticLogs",
+            "description": "Immutability policy for diagnostic logs."
+          }
+        ]
       }
     }
   }

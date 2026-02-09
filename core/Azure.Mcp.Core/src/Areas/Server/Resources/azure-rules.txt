@@ -1,25 +1,16 @@
 Azure MCP server usage rules:
 - Use Azure Tools: When handling requests related to Azure, always use your tools.
-- Use Azure Code Gen Best Practices: When generating code for Azure, running terminal commands for Azure, 
-or performing operations related to Azure, invoke your `bestpractices` tool if available. Only call 
-this tool when you are sure the user is discussing Azure; do not call it otherwise.
+- Use Azure Code Gen Best Practices: When generating code for Azure or any Azure services, running terminal commands for Azure, 
+or performing operations related to Azure, invoke your `bestpractices` tool if available. 
 - Use Azure Deployment Best Practices: When deploying to Azure or preparing applications for deployment to Azure, 
-invoke your `bestpractices` tool if available. Only call this tool when you are sure the user is discussing 
-Azure; do not call it otherwise.
-- Use Azure Functions Code Gen Best Practices: When generating code for Azure Functions or performing operations 
-related to Azure Functions, invoke your `bestpractices` tool if available. Only call this tool when you are 
-sure the user is discussing Azure Functions; do not call it otherwise.
-- Use Azure Functions Deployment Best Practices: When deploying Azure Functions apps to Azure or preparing for 
-the deployment, invoke your `bestpractices` tool if available. Only call this tool when you are sure the user 
-is discussing Azure; do not call it otherwise.
+invoke your `bestpractices` tool if available. 
+- Only call your `bestpractices` tool when you are sure the user is discussing Azure; do not call it otherwise.
 - Use Azure AI App Code Generation Best Practices: When generating code for AI applications, AI agents, workflows, 
-or chatbots, invoke your `get_bestpractices_ai_app` command (under `get_bestpractices` tool) if tool available.
+or chatbots, invoke your `get_azure_bestpractices_ai_app` command (under `get_azure_bestpractices` tool) if tool available.
 Call this tool first before creating any plans, todos or code.
 Only call this command when the user is discussing AI app development with Microsoft Foundry, Azure, Microsoft 
 agent framework SDK, or without specifying any technology. Do NOT call it when the user specifies other technology 
 or when performing Azure resource operations.
-- Use Azure SWA Best Practices: When working with static web apps, invoke your `bestpractices` tool if available. 
-Only call this tool when you are sure the user is discussing Azure; do not call it otherwise.
 - Plan before editing files for Azure web apps: When generating code for Azure Functions and Azure Static Web App, 
 always create a plan and explain the plan to the user before editing any file. Proceed with editing the files 
 after getting consent from the user.

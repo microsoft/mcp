@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0.0-beta.8</Version>
+    <Version>2.0.0-beta.18</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
-    <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+    <PackageIcon>$(MSBuildThisFileDirectory)../images/azureicon.png</PackageIcon>
 
     <!-- Official MCP repository settings -->
     <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
@@ -23,6 +23,10 @@
     <DnxPackageId>Azure.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>azure,mcp</DnxPackageTags>
+
+    <!-- pypi settings -->
+    <PypiPackageName>msmcp-azure</PypiPackageName>
+    <PypiPackageKeywords>azure,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
   </PropertyGroup>
 
   <PropertyGroup>

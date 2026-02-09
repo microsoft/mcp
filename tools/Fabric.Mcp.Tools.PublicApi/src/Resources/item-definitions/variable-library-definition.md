@@ -1,13 +1,3 @@
----
-title: Variable library definition
-description: Learn how to create a Variable library item definition when using the Microsoft Fabric REST API.
-ms.title: Variable library item definition
-author: kkorablov
-ms.author: kkorablov
-ms.service: fabric
-ms.date: 01/14/2025
----
-  
 # Variable library definition
   
 This article provides a breakdown of the definition structure for variable library items.
@@ -60,6 +50,7 @@ List of supported variable types.
 | Number      | NumberVariable          |  1.1      |
 | Integer     | IntegerVariable          |  1      |
 | String     | StringVariable          |  "Some string"      |
+| ItemReference     | ItemReferenceVariable          |  <br> { <br> &nbsp;&nbsp;"workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb", <br> &nbsp;&nbsp;"itemId": "bbbbbbbb-1111-2222-3333-cccccccccccc" <br> }      |
 
 
 ### Variables.json example <!-- an example of an ExecutionDetails JSON -->

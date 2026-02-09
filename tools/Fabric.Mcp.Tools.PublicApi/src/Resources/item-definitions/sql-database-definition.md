@@ -1,13 +1,3 @@
----
-title: SQL database definition
-description: Learn how to create a SQL database item definition when using the Microsoft Fabric REST API.
-ms.title: SQL database item definition
-author: yadongyaly
-ms.author: yaly
-ms.reviewer: drskwier
-ms.service: fabric
-ms.date: 10/07/2025
----
   
 # SQL database definition
   
@@ -38,12 +28,12 @@ A `dacpac` file can be created using SQL projects in Visual Studio Code, the Sql
     "parts": [
       {
         "path": "sqldb.dacpac",
-        "payload": "ew0KICAiJHNjaGVtYSI6ICJodHRwczovL2RldmVsb3Blci5taWNyb3NvZnQuY29tL2pzb24tc2NoZW1hcy9mYWJyaWMvaXRlbS9tYXAvZGVmaW5pdGlvbi8xLjAuMC9zY2hlbWEuanNvbiIsDQogICJiYXNlbWFwIjogew0KICAgICJvcHRpb25zIjogbnVsbCwNCiAgICAiY29udHJvbHMiOiBudWxsLA0KICAgICJiYWNrZ3JvdW5kQ29sb3IiOiBudWxsLA0KICAgICJ0aGVtZSI6IG51bGwNCiAgfSwNCiAgImRhdGFTb3VyY2VzIjogew0KICAgICJsYWtlaG91c2VzIjogW10sDQogICAgImtxbERhdGFCYXNlcyI6IFtdDQogIH0sDQogICJsYXllclNvdXJjZXMiOiBbXSwNCiAgImxheWVyU2V0dGluZ3MiOiBbXQ0KfQ==",
+        "payload": "<base64 encoded string>",
         "payloadType": "InlineBase64"
       },
       {
         "path": ".platform",
-        "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIk1hcCIsCiAgICAiZGlzcGxheU5hbWUiOiAiTWFwXzEyMzQ1NjciLAogICAgImRlc2NyaXB0aW9uIjogImRlc2NyIgogIH0sCiAgImNvbmZpZyI6IHsKICAgICJ2ZXJzaW9uIjogIjIuMCIsCiAgICAibG9naWNhbElkIjogIjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIKICB9Cn0=",
+        "payload": "<base64 encoded string>",
         "payloadType": "InlineBase64"
       }
     ]
