@@ -308,7 +308,12 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -331,7 +336,12 @@ public class BaseToolLoaderTests
         // Arrange
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -341,7 +351,7 @@ public class BaseToolLoaderTests
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        Assert.Contains("does not support elicitation", result.Content[0].Text);
+        Assert.Contains("does not support elicitation", ((TextContentBlock)result.Content[0]).Text);
     }
 
     [Fact]
@@ -349,7 +359,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
-        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
@@ -358,7 +368,12 @@ public class BaseToolLoaderTests
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns(Task.FromResult(mockResponse));
 
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -377,7 +392,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
-        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
@@ -386,7 +401,12 @@ public class BaseToolLoaderTests
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns(Task.FromResult(mockResponse));
 
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -396,7 +416,7 @@ public class BaseToolLoaderTests
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        Assert.Contains("cancelled by user", result.Content[0].Text);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
     }
 
     [Fact]
@@ -404,15 +424,15 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
-        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
-        
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+
         JsonRpcRequest? capturedRequest = null;
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
             Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
         };
-        
+
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns(callInfo =>
                   {
@@ -420,7 +440,12 @@ public class BaseToolLoaderTests
                       return Task.FromResult(mockResponse);
                   });
 
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -429,7 +454,8 @@ public class BaseToolLoaderTests
 
         // Assert - verify the schema has no properties (empty dictionary)
         Assert.NotNull(capturedRequest);
-        var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params!.ToString()!);
+        Assert.NotNull(capturedRequest.Params);
+        var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params.ToJsonString());
         Assert.NotNull(elicitParams);
         Assert.NotNull(elicitParams.RequestedSchema);
         Assert.NotNull(elicitParams.RequestedSchema.Properties);
@@ -443,11 +469,16 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
-        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() });
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns<JsonRpcResponse>(_ => throw new InvalidOperationException("Elicitation failed"));
 
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new CallToolRequestParams { Name = "test-tool" });
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -457,7 +488,7 @@ public class BaseToolLoaderTests
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        Assert.Contains("Elicitation failed", result.Content[0].Text);
+        Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
     }
 
     internal sealed class TestableBaseToolLoader : BaseToolLoader
