@@ -219,7 +219,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 
     private static CustomMatcherAttribute? GetActiveMatcher()
     {
-        var method = typeof(CustomMatcherAttribute).GetMethod("GetActive", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = typeof(CustomMatcherAttribute).GetMethod("GetActive", BindingFlags.NonPublic | BindingFlags.Static, Type.EmptyTypes);
         return (CustomMatcherAttribute?)method?.Invoke(null, null);
     }
 
