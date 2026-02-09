@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Elicitation;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -193,22 +193,28 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         {
             logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
 
-            // Create the elicitation request using our custom model
-            var elicitationRequest = new ElicitationRequestParams
+            // Create the elicitation request with empty schema (required by MCP SDK 0.8.0-preview.1+)
+            // No form fields - pure accept/decline prompt
+            var protocolRequest = new ModelContextProtocol.Protocol.ElicitRequestParams
             {
-                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?"
+                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                RequestedSchema = new()
+                {
+                    Properties = new Dictionary<string, ModelContextProtocol.Protocol.ElicitRequestParams.PrimitiveSchemaDefinition>(),
+                    Required = []
+                }
             };
 
-            // Use our extension method to handle the elicitation
-            var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+            // Send the elicitation request directly through the MCP server
+            var protocolResponse = await request.Server.ElicitAsync(protocolRequest, cancellationToken);
 
-            if (elicitationResponse.Action != ElicitationAction.Accept)
+            if (protocolResponse.Action != "accept")
             {
                 logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
-                    elicitationResponse.Action.ToString().ToLower(), toolName);
+                    protocolResponse.Action, toolName);
                 return new CallToolResult
                 {
-                    Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                    Content = [new TextContentBlock { Text = $"Operation cancelled by user ({protocolResponse.Action})." }],
                     IsError = true
                 };
             }
