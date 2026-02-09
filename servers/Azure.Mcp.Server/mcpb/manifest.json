@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "Azure.Mcp.Server",
   "display_name": "Azure MCP Server",
-  "version": "2.0.0-beta.15",
+  "version": "2.0.0-beta.17",
   "description": "Provides Model Context Protocol (MCP) integration and tooling for Microsoft Azure.",
   "long_description": "All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.",
   "author": {
