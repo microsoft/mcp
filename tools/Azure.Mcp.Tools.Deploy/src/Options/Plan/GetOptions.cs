@@ -6,7 +6,7 @@ using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Deploy.Options.Plan;
 
-public sealed class GetOptions: SubscriptionOptions
+public sealed class GetOptions : SubscriptionOptions
 {
     [JsonPropertyName("workspaceFolder")]
     public string WorkspaceFolder { get; set; } = string.Empty;

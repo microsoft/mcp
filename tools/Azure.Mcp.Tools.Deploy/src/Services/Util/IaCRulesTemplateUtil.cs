@@ -214,18 +214,18 @@ public static class IaCRulesTemplateUtil
     private static string GenerateMySqlRules(IaCRulesTemplateParameters parameters)
     {
         var databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
-        return TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", databaseCommonRules} });
+        return TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", databaseCommonRules } });
     }
 
     private static string GenerateCosmosDbRules(IaCRulesTemplateParameters parameters)
     {
-        return TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, null)} });
+        return TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, null) } });
     }
 
     private static string GenerateStorageRules(IaCRulesTemplateParameters parameters)
     {
         var tfRules = "- Add `storage_use_azuread = true` in azurerm provider.";
-        return TemplateService.ProcessTemplate("IaCRules/storage-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, tfRules, null)} });
+        return TemplateService.ProcessTemplate("IaCRules/storage-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, tfRules, null) } });
     }
 
     private static string GenerateKeyVaultRules(IaCRulesTemplateParameters parameters)
@@ -233,8 +233,8 @@ public static class IaCRulesTemplateUtil
         var bicepRules = "- Allow public access from all networks(set publicNetworkAccess = Enabled).";
         var tfRules = "- Assign role 'Key Vault Secrets Officer (b86a8fe4-44ce-4948-aee5-eccb2c155cd7)' to current user.This is the dependency for key vault secret creation.";
         var cliRules = "- IMPORTANT: Assign Key Vault Secrets Officer to current user. Add delay after RBAC role assignment to allow propagation before creating secrets.";
-        
-        return TemplateService.ProcessTemplate("IaCRules/key-vault-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, cliRules)} });
+
+        return TemplateService.ProcessTemplate("IaCRules/key-vault-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, cliRules) } });
     }
 
     /// <summary>

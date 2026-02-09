@@ -7,11 +7,11 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
 using Azure.ResourceManager.Compute;
+using Azure.ResourceManager.CosmosDB;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers.Models;
-using Azure.ResourceManager.CosmosDB;
 using Azure.ResourceManager.Sql;
 using Microsoft.Extensions.Logging;
 
@@ -153,7 +153,7 @@ public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId,
             .Select(location => location.Replace(" ", "").ToLowerInvariant())
             .ToList() ?? new List<string>();
 
-            var tasks = regions.Select(async region =>
+        var tasks = regions.Select(async region =>
         {
             try
             {

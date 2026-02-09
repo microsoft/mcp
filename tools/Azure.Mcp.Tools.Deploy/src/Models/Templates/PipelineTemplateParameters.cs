@@ -20,8 +20,7 @@ public sealed class PipelineTemplateParameters
 
     public string AzureAuthConfigPrompt { get; set; } = string.Empty;
 
-    public string EnvironmentSetupPrompt {  get; set; } = string.Empty;
-
+    public string EnvironmentSetupPrompt { get; set; } = string.Empty;
 
     /// <summary>
     /// Converts the parameters to a dictionary for template processing.
@@ -35,7 +34,7 @@ public sealed class PipelineTemplateParameters
             { nameof(PipelinePlatform), PipelinePlatform },
             { nameof(PrerequisiteChecksPrompt), PrerequisiteChecksPrompt },
             { nameof(PipelineFilePrompt), PipelineFilePrompt },
-            { nameof(SetupMethodPrompt), SetupMethodPrompt},
+            { nameof(SetupMethodPrompt), SetupMethodPrompt },
             { nameof(AzureAuthConfigPrompt), AzureAuthConfigPrompt },
             { nameof(EnvironmentSetupPrompt), EnvironmentSetupPrompt }
         };

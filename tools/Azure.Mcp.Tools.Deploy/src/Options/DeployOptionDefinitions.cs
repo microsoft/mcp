@@ -89,7 +89,7 @@ public static class DeployOptionDefinitions
         };
     }
 
-    public class PlanGet: SubscriptionOptions
+    public class PlanGet : SubscriptionOptions
     {
         public const string WorkspaceFolderName = "workspace-folder";
         public const string ProjectNameName = "project-name";
