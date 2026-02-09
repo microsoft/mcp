@@ -83,7 +83,7 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             });
 
         // assert
-        Assert.Contains("Run `azd pipeline config` to help the user create a deployment pipeline.", result);
+        Assert.Contains("Use 'azd deploy --no-prompt' to skip provisioning in CD pipeline.", result);
     }
 
     [Fact]
@@ -96,13 +96,12 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             {
                 { "subscription", _subscriptionId },
                 { "is-azd-project", false },
-                { "organization-name", "test-org" },
-                { "repository-name", "test-repo" },
-                { "github-environment-name", "production" }
+                { "pipeline-platform", "github-actions" },
+                { "deploy-option", "deploy-only" }
             });
 
         // assert
-        Assert.StartsWith("Help the user to set up a CI/CD pipeline", result ?? string.Empty);
+        Assert.Contains("When user confirms that Azure resources are ready for deployment, you need to know at least two things", result ?? string.Empty);
     }
 
     // skip as this test need local files
