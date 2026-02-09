@@ -23,4 +23,16 @@ public sealed record WorkloadConfiguration(
     [property: JsonPropertyName("suggestedVmSize")] string SuggestedVmSize,
     [property: JsonPropertyName("suggestedOsDiskType")] string SuggestedOsDiskType,
     [property: JsonPropertyName("suggestedOsDiskSizeGb")] int SuggestedOsDiskSizeGb,
-    [property: JsonPropertyName("description")] string Description);
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("requirements")] string? Requirements = null);
+
+/// <summary>
+/// Requirements for Windows VMs:
+/// - Computer name cannot be more than 15 characters long
+/// - Computer name cannot be entirely numeric
+/// - Computer name cannot contain the following characters: ` ~ ! @ # $ % ^ &amp; * ( ) = + _ [ ] { } \ | ; : . ' " , &lt; &gt; / ?
+/// </summary>
+public static class VmRequirements
+{
+    public const string WindowsComputerName = "Windows computer name cannot be more than 15 characters long, be entirely numeric, or contain special characters (` ~ ! @ # $ % ^ & * ( ) = + _ [ ] { } \\ | ; : . ' \" , < > / ?).";
+}

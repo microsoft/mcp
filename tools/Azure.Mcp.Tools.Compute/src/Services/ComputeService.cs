@@ -32,43 +32,50 @@ public sealed class ComputeService(
             SuggestedVmSize: "Standard_B2s",
             SuggestedOsDiskType: "StandardSSD_LRS",
             SuggestedOsDiskSizeGb: 64,
-            Description: "Cost-effective burstable VM for development and testing workloads"),
+            Description: "Cost-effective burstable VM for development and testing workloads",
+            Requirements: VmRequirements.WindowsComputerName),
         ["web"] = new WorkloadConfiguration(
             WorkloadType: "web",
             SuggestedVmSize: "Standard_D2s_v3",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 128,
-            Description: "General purpose VM optimized for web servers and small to medium applications"),
+            Description: "General purpose VM optimized for web servers and small to medium applications",
+            Requirements: VmRequirements.WindowsComputerName),
         ["database"] = new WorkloadConfiguration(
             WorkloadType: "database",
             SuggestedVmSize: "Standard_E4s_v3",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 256,
-            Description: "Memory-optimized VM for database workloads with high memory-to-CPU ratio"),
+            Description: "Memory-optimized VM for database workloads with high memory-to-CPU ratio",
+            Requirements: VmRequirements.WindowsComputerName),
         ["compute"] = new WorkloadConfiguration(
             WorkloadType: "compute",
             SuggestedVmSize: "Standard_F4s_v2",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 128,
-            Description: "Compute-optimized VM for CPU-intensive workloads like batch processing and analytics"),
+            Description: "Compute-optimized VM for CPU-intensive workloads like batch processing and analytics",
+            Requirements: VmRequirements.WindowsComputerName),
         ["memory"] = new WorkloadConfiguration(
             WorkloadType: "memory",
             SuggestedVmSize: "Standard_E8s_v3",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 256,
-            Description: "High-memory VM for in-memory databases, caching, and memory-intensive applications"),
+            Description: "High-memory VM for in-memory databases, caching, and memory-intensive applications",
+            Requirements: VmRequirements.WindowsComputerName),
         ["gpu"] = new WorkloadConfiguration(
             WorkloadType: "gpu",
             SuggestedVmSize: "Standard_NC6s_v3",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 256,
-            Description: "GPU-enabled VM for machine learning, rendering, and GPU-accelerated workloads"),
+            Description: "GPU-enabled VM for machine learning, rendering, and GPU-accelerated workloads",
+            Requirements: VmRequirements.WindowsComputerName),
         ["general"] = new WorkloadConfiguration(
             WorkloadType: "general",
             SuggestedVmSize: "Standard_D2s_v3",
             SuggestedOsDiskType: "StandardSSD_LRS",
             SuggestedOsDiskSizeGb: 128,
-            Description: "General purpose VM balanced for compute, memory, and storage")
+            Description: "General purpose VM balanced for compute, memory, and storage",
+            Requirements: VmRequirements.WindowsComputerName)
     };
 
     private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
@@ -137,7 +144,8 @@ public sealed class ComputeService(
 
         // Determine disk settings
         var effectiveOsDiskType = osDiskType ?? workloadConfig.SuggestedOsDiskType;
-        var effectiveOsDiskSizeGb = osDiskSizeGb ?? workloadConfig.SuggestedOsDiskSizeGb;
+        // Only use explicit disk size if provided; otherwise let Azure use image's default size
+        var effectiveOsDiskSizeGb = osDiskSizeGb;
 
         // Parse image
         var (publisher, offer, sku, version) = ParseImage(image);
@@ -211,23 +219,36 @@ public sealed class ComputeService(
         }
         else
         {
+            // Resolve SSH key - try to auto-discover from ~/.ssh/ if not provided
+            var resolvedSshKey = ResolveOrDiscoverSshKey(sshPublicKey);
+
             vmData.OSProfile.LinuxConfiguration = new LinuxConfiguration
             {
-                DisablePasswordAuthentication = !string.IsNullOrEmpty(sshPublicKey)
+                DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword) && !string.IsNullOrEmpty(resolvedSshKey)
             };
 
-            if (!string.IsNullOrEmpty(sshPublicKey))
+            if (!string.IsNullOrEmpty(resolvedSshKey))
             {
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new SshPublicKeyConfiguration
                 {
                     Path = $"/home/{adminUsername}/.ssh/authorized_keys",
-                    KeyData = sshPublicKey
+                    KeyData = resolvedSshKey
                 });
             }
-            else if (!string.IsNullOrEmpty(adminPassword))
+
+            if (!string.IsNullOrEmpty(adminPassword))
             {
                 vmData.OSProfile.AdminPassword = adminPassword;
                 vmData.OSProfile.LinuxConfiguration.DisablePasswordAuthentication = false;
+            }
+
+            // If neither SSH key (provided or discovered) nor password is available, require password
+            if (string.IsNullOrEmpty(resolvedSshKey) && string.IsNullOrEmpty(adminPassword))
+            {
+                throw new ArgumentException(
+                    "Linux VMs require either --ssh-public-key or --admin-password. " +
+                    "No SSH key was found in ~/.ssh/ (checked id_rsa.pub, id_ed25519.pub, id_ecdsa.pub). " +
+                    "Please provide an SSH key, password, or generate one with 'ssh-keygen'.");
             }
         }
 
@@ -806,5 +827,51 @@ public sealed class ComputeService(
             Zones: data.Zones?.ToList(),
             Tags: data.Tags as IReadOnlyDictionary<string, string>
         );
+    }
+
+    /// <summary>
+    /// Resolves SSH public key from the provided value or discovers from ~/.ssh/ directory.
+    /// Similar to Azure CLI's behavior with --generate-ssh-keys.
+    /// </summary>
+    private static string? ResolveOrDiscoverSshKey(string? sshPublicKey)
+    {
+        // If key is provided, use it (could be content or file path)
+        if (!string.IsNullOrEmpty(sshPublicKey))
+        {
+            // Check if it's a file path
+            if (File.Exists(sshPublicKey))
+            {
+                return File.ReadAllText(sshPublicKey).Trim();
+            }
+
+            // Otherwise assume it's the key content
+            return sshPublicKey;
+        }
+
+        // Try to discover SSH keys from ~/.ssh/ directory (like Azure CLI does)
+        var sshDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh");
+
+        if (!Directory.Exists(sshDir))
+        {
+            return null;
+        }
+
+        // Check common public key files in order of preference
+        string[] keyFiles = ["id_rsa.pub", "id_ed25519.pub", "id_ecdsa.pub"];
+
+        foreach (var keyFile in keyFiles)
+        {
+            var keyPath = Path.Combine(sshDir, keyFile);
+            if (File.Exists(keyPath))
+            {
+                var keyContent = File.ReadAllText(keyPath).Trim();
+                if (keyContent.StartsWith("ssh-", StringComparison.OrdinalIgnoreCase))
+                {
+                    return keyContent;
+                }
+            }
+        }
+
+        return null;
     }
 }

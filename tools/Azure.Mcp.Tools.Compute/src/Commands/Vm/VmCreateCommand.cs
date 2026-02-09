@@ -49,7 +49,9 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         - --location: Azure region
         - --admin-username: Admin username
 
-        Either --admin-password or --ssh-public-key is required for authentication.
+        Authentication options:
+        - For Windows VMs: --admin-password is required
+        - For Linux VMs: --admin-password or --ssh-public-key (optional - auto-discovers SSH keys from ~/.ssh/)
         """;
 
     public override string Title => CommandTitle;
@@ -149,14 +151,17 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
             return context.Response;
         }
 
-        // Custom validation: For Linux VMs, either password or SSH key is required
-        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.AdminPassword) && string.IsNullOrEmpty(options.SshPublicKey))
+        // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
+        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && options.VmName!.Length > 15)
         {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "Either --admin-password or --ssh-public-key is required for Linux VMs.";
-            return context.Response;
+            throw new CommandValidationException(
+                VmRequirements.WindowsComputerName,
+                HttpStatusCode.BadRequest);
         }
+
+        // Note: For Linux VMs, if neither password nor SSH key is provided,
+        // the VM will be created without direct authentication.
+        // Users can then use Azure AD SSH login (az ssh vm) to access the VM.
 
         var computeService = context.GetService<IComputeService>();
 

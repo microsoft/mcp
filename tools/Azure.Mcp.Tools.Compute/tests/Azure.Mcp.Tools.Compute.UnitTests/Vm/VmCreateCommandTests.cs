@@ -60,7 +60,7 @@ public class VmCreateCommandTests
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", true)] // All required + password
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --ssh-public-key ssh-rsa-key", true)] // All required + ssh key
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123! --workload development", true)] // With workload
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", false)] // Missing auth (password or ssh key)
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", true)] // No auth - allowed for Linux (AAD SSH login)
     [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing vm-name
     [InlineData("--vm-name test-vm --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing resource-group
     [InlineData("--vm-name test-vm --resource-group test-rg --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing subscription
