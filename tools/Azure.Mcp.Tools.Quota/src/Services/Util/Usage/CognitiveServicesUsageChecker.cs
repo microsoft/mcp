@@ -19,7 +19,7 @@ public class CognitiveServicesUsageChecker(TokenCredential credential, string su
             var usages = subscription.GetUsagesAsync(location, cancellationToken: cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (ServiceAccountUsage item in usages)
+            await foreach (ServiceAccountUsage item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,

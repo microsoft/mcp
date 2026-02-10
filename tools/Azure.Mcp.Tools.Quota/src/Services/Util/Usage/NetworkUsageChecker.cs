@@ -18,7 +18,7 @@ public class NetworkUsageChecker(TokenCredential credential, string subscription
             var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (var item in usages)
+            await foreach (var item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,

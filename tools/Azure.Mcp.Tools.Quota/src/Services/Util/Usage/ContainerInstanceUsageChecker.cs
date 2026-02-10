@@ -19,7 +19,7 @@ public class ContainerInstanceUsageChecker(TokenCredential credential, string su
             var usages = subscription.GetUsagesWithLocationAsync(location, cancellationToken);
 
             var result = new List<UsageInfo>();
-            await foreach (ContainerInstanceUsage item in usages)
+            await foreach (ContainerInstanceUsage item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,

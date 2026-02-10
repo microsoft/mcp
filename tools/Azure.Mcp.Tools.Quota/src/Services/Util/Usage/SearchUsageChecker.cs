@@ -19,7 +19,7 @@ public class SearchUsageChecker(TokenCredential credential, string subscriptionI
             var usages = subscription.GetUsagesBySubscriptionAsync(location, cancellationToken: cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (QuotaUsageResult item in usages)
+            await foreach (QuotaUsageResult item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,

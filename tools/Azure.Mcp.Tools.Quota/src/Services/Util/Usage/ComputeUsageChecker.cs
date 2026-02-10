@@ -19,7 +19,7 @@ public class ComputeUsageChecker(TokenCredential credential, string subscription
             var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (ComputeUsage item in usages)
+            await foreach (ComputeUsage item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,

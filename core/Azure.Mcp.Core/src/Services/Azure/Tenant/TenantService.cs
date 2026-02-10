@@ -53,7 +53,7 @@ public class TenantService : BaseAzureService, ITenantService
         options.Environment = CloudConfiguration.ArmEnvironment;
         var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
-        await foreach (var tenant in client.GetTenants())
+        await foreach (var tenant in client.GetTenants().WithCancellation(cancellationToken))
         {
             results.Add(tenant);
         }

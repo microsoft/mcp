@@ -44,7 +44,6 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -120,8 +119,10 @@ internal class Program
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
+            new Azure.Mcp.Tools.Pricing.PricingSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
+            new Azure.Mcp.Tools.Compute.ComputeSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),

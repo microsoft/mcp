@@ -19,7 +19,7 @@ public class HDInsightUsageChecker(TokenCredential credential, string subscripti
             var usages = subscription.GetHDInsightUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (HDInsightUsage item in usages)
+            await foreach (HDInsightUsage item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                      Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,

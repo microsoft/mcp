@@ -1,0 +1,9 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Added OneLake table API commands for configuration, namespace management, and table metadata retrieval:
+      - onelake table config get
+      - onelake table namespace list
+      - onelake table namespace get
+      - onelake table list
+      - onelake table get
