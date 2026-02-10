@@ -47,7 +47,7 @@ internal class TelemetryService : ITelemetryService
             new(TagName.ServerMode, serverOptions.Value.Mode),
             new(TagName.Transport, serverOptions.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),
-            new(TagName.CpuArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
+            new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);

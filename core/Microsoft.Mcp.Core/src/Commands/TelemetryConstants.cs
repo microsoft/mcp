@@ -31,7 +31,7 @@ public class TagName
     public const string VSCodeConversationId = "VSCodeConversationId";
     public const string VSCodeRequestId = "VSCodeRequestId";
     public const string Host = "Host";
-    public const string CpuArchitecture = "CpuArchitecture";
+    public const string ProcessorArchitecture = "ProcessorArchitecture";
 }
 
 public class ActivityName
