@@ -8,9 +8,7 @@ using Xunit.v3;
 namespace Azure.Mcp.Tests.Helpers;
 
 /// <summary>
-/// Resolves the current test method's <see cref="MethodInfo"/> via reflection on xUnit internals.
-/// Each call performs the necessary reflection; callers that need the value multiple times within a
-/// single test should cache the returned <see cref="MethodInfo"/> themselves.
+/// Resolves the current test method's <see cref="MethodInfo"/> via access of current xunit context.
 /// </summary>
 internal static class TestMethodResolver
 {
