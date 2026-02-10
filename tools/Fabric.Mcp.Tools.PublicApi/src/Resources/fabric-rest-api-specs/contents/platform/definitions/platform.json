@@ -636,11 +636,13 @@
         "applicationId": {
           "description": "The application ID.",
           "type": "string",
+          "format": "uuid",
           "readOnly": true
         },
         "servicePrincipalId": {
           "description": "The service principal ID.",
           "type": "string",
+          "format": "uuid",
           "readOnly": true
         }
       },
@@ -1834,7 +1836,8 @@
         },
         "rootActivityId": {
           "description": "Root activity id to trace requests across services",
-          "type": "string"
+          "type": "string",
+          "format": "uuid"
         },
         "startTimeUtc": {
           "description": "Job start time in UTC",

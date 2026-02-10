@@ -38,6 +38,19 @@
               "$ref": "./definitions.json#/definitions/WorkspaceSparkSettings"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -88,6 +101,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/WorkspaceSparkSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -144,6 +170,19 @@
             "description": "Request completed successfully.",
             "schema": {
               "$ref": "./definitions.json#/definitions/CustomPools"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           },
           "default": {
@@ -207,6 +246,19 @@
               }
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -257,6 +309,19 @@
               "$ref": "./definitions.json#/definitions/CustomPool"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -301,6 +366,19 @@
         "responses": {
           "200": {
             "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
           },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -362,6 +440,19 @@
               "$ref": "./definitions.json#/definitions/CustomPool"
             }
           },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
           "default": {
             "description": "Common error codes:\n\n* UnknownError - An error occurred.",
             "schema": {
@@ -396,7 +487,8 @@
                   "name": "workspaceId",
                   "description": "The workspace identifier.",
                   "required": true,
-                  "type": "string"
+                  "type": "string",
+                  "format": "uuid"
               },
               {
                   "in": "query",
@@ -412,6 +504,19 @@
                   "schema": {
                       "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
                   }
+              },
+              "429": {
+                "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+                "x-ms-error-response": true,
+                "headers": {
+                  "Retry-After": {
+                    "type": "integer",
+                    "description": "The number of seconds to wait before retrying the request."
+                  }
+                },
+                "schema": {
+                  "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                }
               },
               "default": {
                   "description": "Common error codes:\n\n* UnknownError - An error occurred.",
@@ -502,6 +607,19 @@
                   "schema": {
                       "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
                   }
+              },
+              "429": {
+                "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+                "x-ms-error-response": true,
+                "headers": {
+                  "Retry-After": {
+                    "type": "integer",
+                    "description": "The number of seconds to wait before retrying the request."
+                  }
+                },
+                "schema": {
+                  "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                }
               },
               "default": {
                   "description": "Common error codes:\n\n* UnknownError - An error occurred.",

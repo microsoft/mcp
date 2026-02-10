@@ -19,23 +19,23 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     private readonly ArmClient _armClient = armClient ?? throw new ArgumentNullException(nameof(armClient));
     private readonly LogsQueryClient _queryClient = logsQueryClient ?? throw new ArgumentNullException(nameof(logsQueryClient));
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        _resourceGroupName = await GetResourceGroupNameAsync();
+        _resourceGroupName = await GetResourceGroupNameAsync(cancellationToken);
         if (string.IsNullOrEmpty(_resourceGroupName))
         {
             throw new InvalidOperationException($"No resource group with tag {{\"azd-env-name\": {_azdEnvName}}} found.");
         }
     }
 
-    public async Task GetLogAnalyticsWorkspacesInfoAsync()
+    public async Task GetLogAnalyticsWorkspacesInfoAsync(CancellationToken cancellationToken)
     {
         var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
-        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
+        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName, cancellationToken);
 
         var filter = "resourceType eq 'Microsoft.OperationalInsights/workspaces'";
 
-        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync(filter: filter))
+        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync(filter: filter, cancellationToken: cancellationToken))
         {
             _logAnalyticsWorkspaceIds.Add(resource.Id.ToString());
         }
@@ -46,15 +46,15 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
         }
     }
 
-    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string serviceName)
+    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string serviceName, CancellationToken cancellationToken)
     {
         var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
-        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
+        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName, cancellationToken);
 
         var filter = $"tagName eq 'azd-service-name' and tagValue eq '{serviceName}'";
         var apps = new List<GenericResource>();
 
-        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync(filter: filter))
+        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync(filter: filter, cancellationToken: cancellationToken))
         {
             var resourceTypeString = resourceType.GetResourceTypeString();
             var parts = resourceTypeString.Split('|');
@@ -86,9 +86,9 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
         $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
-    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null)
+    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null, CancellationToken cancellationToken = default)
     {
-        var app = await RegisterAppAsync(resourceType, serviceName);
+        var app = await RegisterAppAsync(resourceType, serviceName, cancellationToken);
         var getLogErrors = new List<string>();
         var getLogSuccess = false;
         var logSearchQuery = string.Empty;
@@ -104,11 +104,11 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
                 logSearchQuery = GetContainerAppLogsQuery(app.Data.Name, actualLimit);
                 // Get last deployment time for container apps
                 var containerAppResource = _armClient.GetContainerAppResource(app.Id);
-                var containerApp = await containerAppResource.GetAsync();
+                var containerApp = await containerAppResource.GetAsync(cancellationToken);
 
-                await foreach (var revision in containerApp.Value.GetContainerAppRevisions())
+                await foreach (var revision in containerApp.Value.GetContainerAppRevisions().WithCancellation(cancellationToken))
                 {
-                    var revisionData = await revision.GetAsync();
+                    var revisionData = await revision.GetAsync(cancellationToken);
                     if (revisionData.Value.Data.IsActive == true)
                     {
                         lastDeploymentTime = revisionData.Value.Data.CreatedOn;
@@ -121,9 +121,9 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
             case ResourceType.FunctionApp:
                 var webSiteResource = _armClient.GetWebSiteResource(app.Id);
 
-                await foreach (var deployment in webSiteResource.GetSiteDeployments())
+                await foreach (var deployment in webSiteResource.GetSiteDeployments().WithCancellation(cancellationToken))
                 {
-                    var deploymentData = await deployment.GetAsync();
+                    var deploymentData = await deployment.GetAsync(cancellationToken);
                     if (deploymentData.Value.Data.IsActive == true)
                     {
                         lastDeploymentTime = deploymentData.Value.Data.StartOn;
@@ -152,7 +152,7 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
             try
             {
                 var timeRange = new LogsQueryTimeRange(startTime, endTime);
-                var response = await _queryClient.QueryResourceAsync(new(logAnalyticsId), logSearchQuery, timeRange);
+                var response = await _queryClient.QueryResourceAsync(new(logAnalyticsId), logSearchQuery, timeRange, cancellationToken: cancellationToken);
 
                 if (response.Value.Status == LogsQueryResultStatus.Success)
                 {
@@ -181,11 +181,11 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
         return $"Console Logs for {serviceName} with resource ID {app.Id} between {startTime} and {endTime}:\n{_logs[app.Id.ToString()]}";
     }
 
-    private async Task<string> GetResourceGroupNameAsync()
+    private async Task<string> GetResourceGroupNameAsync(CancellationToken cancellationToken)
     {
         var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
 
-        await foreach (var resourceGroup in subscription.GetResourceGroups())
+        await foreach (var resourceGroup in subscription.GetResourceGroups().WithCancellation(cancellationToken))
         {
             if (resourceGroup.Data.Tags.TryGetValue("azd-env-name", out var envName) && envName == _azdEnvName)
             {

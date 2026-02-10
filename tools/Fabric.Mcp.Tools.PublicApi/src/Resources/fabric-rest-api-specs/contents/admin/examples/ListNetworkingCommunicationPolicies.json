@@ -1,0 +1,64 @@
+{
+  "parameters": {},
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "workspaceId": "fa9ad228-3e6b-44d4-b5f4-e275f337afa9",
+            "inbound": {
+              "publicAccessRules": {
+                "defaultAction": "Deny"
+              }
+            },
+            "outbound": {
+              "publicAccessRules": {
+                "defaultAction": "Deny"
+              },
+              "connections": {
+                "defaultAction": "Deny",
+                "rules": [
+                  {
+                    "connectionType": "SQL",
+                    "defaultAction": "Deny",
+                    "allowedEndpoints": [
+                      {
+                        "hostNamePattern": "*.microsoft.com"
+                      }
+                    ]
+                  },
+                  {
+                    "connectionType": "lakehouse",
+                    "defaultAction": "Deny",
+                    "allowedWorkspaces": [
+                      {
+                        "workspaceId": "91c5ae74-e82d-4dd3-bfeb-6b1814030123"
+                      }
+                    ]
+                  },
+                  {
+                    "connectionType": "Maria DB",
+                    "defaultAction": "Allow"
+                  }
+                ]
+              },
+              "gateways": {
+                "defaultAction": "Deny",
+                "allowedGateways": [
+                  {
+                    "id": "17d8929d-ab32-46d1-858b-fdea74e93bf2"
+                  }
+                ]
+              },
+              "git": {
+                "defaultAction": "Deny"
+              }
+            }
+          }
+        ],
+        "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces/networking/communicationpolicies?continuationToken=eyJMYXN0U2VlbkNvbm5lY3Rpb25JZCI6NX0=",
+        "continuationToken": "eyJMYXN0U2VlbkNvbm5lY3Rpb25JZCI6NX0="
+      }
+    }
+  }
+}

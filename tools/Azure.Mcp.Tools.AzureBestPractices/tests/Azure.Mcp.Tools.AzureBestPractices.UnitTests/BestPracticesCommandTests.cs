@@ -125,9 +125,9 @@ public class BestPracticesCommandTests
         var result = JsonSerializer.Deserialize<string[]>(json);
 
         Assert.NotNull(result);
-        Assert.Contains("Static Web Apps CLI", result[0]);
-        Assert.Contains("npx swa init --yes", result[0]);
-        Assert.Contains("npx swa build", result[0]);
+        Assert.Contains("Deployment Path Selection", result[0]);
+        Assert.Contains("**PREFERRED PATH: Azure Developer CLI (azd)**", result[0]);
+        Assert.Contains("**ALTERNATIVE PATH: SWA CLI**", result[0]);
         Assert.Contains("npx swa deploy --env production", result[0]);
     }
 

@@ -200,40 +200,6 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
     }
 
-    // OneLake Shortcuts Operations  
-    public async Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        var result = await JsonSerializer.DeserializeAsync<ShortcutsResponse>(response, OneLakeJsonContext.Default.ShortcutsResponse, cancellationToken);
-        return result?.Value ?? [];
-    }
-
-    public async Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
-    }
-
-    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, string path, CreateShortcutRequest request, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
-        var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateShortcutRequest);
-        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
-    }
-
-    public async Task DeleteShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
-        await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
-    }
-
     // Data Operations (OneLake Data Plane)
     public async Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
@@ -351,6 +317,205 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         return allFiles.OrderBy(f => f.IsDirectory ? 0 : 1).ThenBy(f => f.Name);
+    }
+
+    public async Task<TableConfigurationResult> GetTableConfigurationAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, _, warehouseQueryValue) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/config?warehouse={warehouseQueryValue}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table configuration response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var configuration = document.RootElement.Clone();
+
+        return new TableConfigurationResult(normalizedWorkspaceId, normalizedItemIdentifier, configuration, rawResponse);
+    }
+
+    public async Task<TableNamespaceListResult> ListTableNamespacesAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table namespace response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var namespaces = document.RootElement.Clone();
+
+        return new TableNamespaceListResult(normalizedWorkspaceId, normalizedItemIdentifier, namespaces, rawResponse);
+    }
+
+    public async Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table namespace response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var definition = document.RootElement.Clone();
+
+        return new TableNamespaceGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, definition, rawResponse);
+    }
+
+    public async Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table list response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var tables = document.RootElement.Clone();
+
+        return new TableListResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, tables, rawResponse);
+    }
+
+    public async Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        if (string.IsNullOrWhiteSpace(tableName))
+        {
+            throw new ArgumentException("Table name is required.", nameof(tableName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        var trimmedTableName = tableName.Trim();
+
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        if (string.IsNullOrEmpty(trimmedTableName))
+        {
+            throw new ArgumentException("Table name cannot be empty.", nameof(tableName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var encodedTable = Uri.EscapeDataString(trimmedTableName);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables/{encodedTable}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var tableDefinition = document.RootElement.Clone();
+
+        return new TableGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, trimmedTableName, tableDefinition, rawResponse);
     }
 
     private List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
@@ -1628,5 +1793,39 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public void Dispose()
     {
         // DefaultAzureCredential doesn't need disposal
+    }
+
+    private static string ExtractWarehouseQueryValue(string warehousePrefix)
+    {
+        const string WarehousePrefixRoot = "warehouse/";
+        if (warehousePrefix.StartsWith(WarehousePrefixRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            return warehousePrefix[WarehousePrefixRoot.Length..];
+        }
+
+        return warehousePrefix;
+    }
+
+    private async Task<(string WorkspaceId, string ItemIdentifier, string WarehousePrefix, string WarehouseQueryValue)> GetWarehousePrefixAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken)
+    {
+        var normalizedWorkspaceId = NormalizeWorkspaceIdentifier(workspaceIdentifier);
+        var normalizedItemIdentifier = itemIdentifier?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(normalizedItemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (Guid.TryParse(normalizedWorkspaceId, out _))
+        {
+            normalizedItemIdentifier = await ResolveItemIdentifierAsync(normalizedWorkspaceId, normalizedItemIdentifier, cancellationToken);
+        }
+
+        var workspaceSegment = Uri.EscapeDataString(normalizedWorkspaceId.TrimEnd('/'));
+        var itemSegment = Uri.EscapeDataString(normalizedItemIdentifier.TrimStart('/'));
+        var warehousePrefix = $"{workspaceSegment}/{itemSegment}";
+        var warehouseQueryValue = warehousePrefix;
+
+        return (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, warehouseQueryValue);
     }
 }

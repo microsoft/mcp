@@ -174,7 +174,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             try
             {
                 var accessPolicyAssignmentCollection = acrResource.GetRedisCacheAccessPolicyAssignments();
-                await foreach (var accessPolicyAssignmentResource in accessPolicyAssignmentCollection)
+                await foreach (var accessPolicyAssignmentResource in accessPolicyAssignmentCollection.WithCancellation(cancellationToken))
                 {
                     if (string.IsNullOrWhiteSpace(accessPolicyAssignmentResource?.Id.ToString())
                         || string.IsNullOrWhiteSpace(accessPolicyAssignmentResource.Data.Name))
@@ -278,7 +278,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             try
             {
                 var databaseCollection = amrResource.GetRedisEnterpriseDatabases();
-                await foreach (var databaseResource in databaseCollection)
+                await foreach (var databaseResource in databaseCollection.WithCancellation(cancellationToken))
                 {
                     if (string.IsNullOrWhiteSpace(databaseResource?.Id.ToString())
                         || string.IsNullOrWhiteSpace(databaseResource.Data.Name))
