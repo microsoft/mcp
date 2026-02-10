@@ -24,13 +24,13 @@ public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> opti
     /// <inheritdoc/>
     public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
-        if (registryRoot == null)
+        if (registryRoot?.Servers == null)
         {
             return [];
         }
 
         return registryRoot
-            .Servers!
+            .Servers
             .Where(s => _options.Value.Namespace == null ||
                        _options.Value.Namespace.Length == 0 ||
                        _options.Value.Namespace.Contains(s.Key, StringComparer.OrdinalIgnoreCase))

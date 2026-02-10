@@ -21,6 +21,8 @@ public static class RegistryServerServiceCollectionExtensions
         var registry = RegistryServerHelper.GetRegistryRoot();
         if (registry?.Servers is null)
         {
+            // Add an empty RegistryRoot
+            services.AddSingleton<IRegistryRoot>(new RegistryRoot());
             return services;
         }
 
