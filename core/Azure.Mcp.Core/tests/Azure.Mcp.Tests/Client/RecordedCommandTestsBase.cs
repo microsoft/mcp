@@ -3,6 +3,7 @@
 
 using System.ClientModel;
 using System.ClientModel.Primitives;
+using System.Reflection;
 using System.Text;
 using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
@@ -10,6 +11,7 @@ using Azure.Mcp.Tests.Generated;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Xunit;
+using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -141,6 +143,15 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // load settings first to determine test mode
         await LoadSettingsAsync();
 
+        // resolve the current test method once for all attribute checks
+        var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
+
+        // skip tests marked [LiveTestOnly] when not in Live mode
+        if (TestMode != TestMode.Live && HasLiveTestOnlyAttribute(methodInfo))
+        {
+            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
+        }
+
         if (fixture.Proxy == null)
         {
             // start the proxy if needed
@@ -154,7 +165,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeMatcherSettings();
+        await ApplyAttributeMatcherSettings(methodInfo);
 
         SetRecordingOptions(RecordingOptions);
     }
@@ -169,14 +180,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         Proxy.AdminClient.SetRecordingOptions(options, RecordingId);
     }
 
-    private async Task ApplyAttributeMatcherSettings()
+    private async Task ApplyAttributeMatcherSettings(MethodInfo? methodInfo)
     {
         if (Proxy == null || TestMode != TestMode.Playback)
         {
             return;
         }
 
-        var attr = CustomMatcherAttribute.GetActive();
+        var attr = CustomMatcherAttribute.GetActive(methodInfo);
         if (attr == null)
         {
             return;
@@ -189,6 +200,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         };
 
         await SetMatcher(matcher, RecordingId);
+    }
+
+    private static bool HasLiveTestOnlyAttribute(MethodInfo? methodInfo)
+    {
+        return methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null;
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)
