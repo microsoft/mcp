@@ -40,12 +40,12 @@ public sealed class LiveServerFixture() : IAsyncLifetime
             }
             string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
             bool useHttp = string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase);
-            var port = GetAvailablePort();
-            _serverUrl = $"http://localhost:{port}";
-            EnvironmentVariables["ASPNETCORE_URLS"] = _serverUrl;
 
             if (useHttp)
             {
+                var port = GetAvailablePort();
+                _serverUrl = $"http://localhost:{port}";
+                EnvironmentVariables["ASPNETCORE_URLS"] = _serverUrl;
                 await StartHttpServerProcessAsync(executablePath, Arguments);
                 var transport = new HttpClientTransport(new()
                 {
