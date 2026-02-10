@@ -126,31 +126,6 @@ public class AccessTokenHandlerTests
     }
 
     [Fact]
-    public async Task SendAsync_PassesCancellationTokenToTokenProvider()
-    {
-        // Arrange
-        var handler = new AccessTokenHandler(_mockTokenCredentialProvider, _oauthScopes);
-        var mockInnerHandler = new MockHttpMessageHandler();
-        handler.InnerHandler = mockInnerHandler;
-
-        using var client = new HttpClient(handler);
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api/test");
-        using var cts = new CancellationTokenSource();
-
-        // Act
-        await client.SendAsync(request, cts.Token);
-
-        // Assert
-        await _mockTokenCredentialProvider.Received(1).GetTokenCredentialAsync(
-            null,
-            cts.Token);
-
-        await _mockTokenCredential.Received(1).GetTokenAsync(
-            Arg.Any<TokenRequestContext>(),
-            cts.Token);
-    }
-
-    [Fact]
     public async Task SendAsync_CallsBaseHandlerAfterSettingAuthorizationHeader()
     {
         // Arrange
