@@ -19,7 +19,13 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: docker_output
+      artifactName: docker_staging
+      targetPath: $(Pipeline.Workspace)/docker_staging
+    - input: pipelineArtifact
+      artifactName: docker_output_amd64
+      targetPath: $(Pipeline.Workspace)/docker_output
+    - input: pipelineArtifact
+      artifactName: docker_output_arm64
       targetPath: $(Pipeline.Workspace)/docker_output
     - input: pipelineArtifact
       artifactName: build_info
@@ -63,45 +69,13 @@ jobs:
             Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
           name: SetReleaseVariables
 
-        - script: |
-            set -euo pipefail
-            
-            # Load image from tar
-            echo "Loading image tar for ${{ parameters.ServerName }}"
-            LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/$(SetReleaseVariables.CliName)-image.tar | grep -oP 'Loaded image: \K.*')
-            echo "Loaded image: $LOADED_IMAGE"
-
-            # Verify the loaded image exists
-            docker image inspect "$LOADED_IMAGE" >/dev/null 2>&1 || { 
-              echo "ERROR: Loaded image $LOADED_IMAGE not found after load"; 
-              exit 1; 
-            }
-
-            # Prepare tags
-            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName)"
-            VERSIONED_TAG="$BASE_REPO:$(SetReleaseVariables.DockerImageVersion)"
-            LATEST_TAG="$BASE_REPO:latest"
-            
-            echo "Tagging $LOADED_IMAGE as:"
-            echo "  Versioned tag: $VERSIONED_TAG"
-            echo "  Latest tag:    $LATEST_TAG"
-            
-            # Tag the images
-            docker tag "$LOADED_IMAGE" "$VERSIONED_TAG"
-            docker tag "$LOADED_IMAGE" "$LATEST_TAG"
-            
-            # Verify tags exist before pushing
-            docker image inspect "$VERSIONED_TAG" >/dev/null 2>&1 || { 
-              echo "ERROR: Versioned tag $VERSIONED_TAG not found after tagging"; 
-              exit 1; 
-            }
-            docker image inspect "$LATEST_TAG" >/dev/null 2>&1 || { 
-              echo "ERROR: Latest tag $LATEST_TAG not found after tagging"; 
-              exit 1; 
-            }
-            
-            # Push both tags
-            echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
-            echo "Pushing latest tag...";   docker push "$LATEST_TAG"
-            echo "Publish complete for ${{ parameters.ServerName }}"
-          displayName: Load, tag, and push image
+        - task: PowerShell@2
+          displayName: Load, tag, and push Docker images
+          inputs:
+            pwsh: true
+            filePath: $(Pipeline.Workspace)/docker_staging/Publish-DockerImages.ps1
+            arguments: >
+              -CliName '$(SetReleaseVariables.CliName)'
+              -Version '$(SetReleaseVariables.DockerImageVersion)'
+              -BaseRepo '${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName)'
+              -TarDirectory '$(Pipeline.Workspace)/docker_output'

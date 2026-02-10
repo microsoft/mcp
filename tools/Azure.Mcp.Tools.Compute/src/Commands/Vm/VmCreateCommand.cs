@@ -49,9 +49,15 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         - --location: Azure region
         - --admin-username: Admin username
 
-        Authentication options:
+        Authentication requirements:
         - For Windows VMs: --admin-password is required
-        - For Linux VMs: --admin-password or --ssh-public-key (optional - auto-discovers SSH keys from ~/.ssh/)
+        - For Linux VMs: Either --ssh-public-key OR --admin-password is required
+
+        IMPORTANT for Linux VMs with SSH authentication:
+        Before calling this tool, you must first read the user's SSH public key file (typically ~/.ssh/id_rsa.pub,
+        ~/.ssh/id_ed25519.pub, or similar) and pass the full key content to --ssh-public-key.
+        The SSH public key is safe to share - it contains no secrets.
+        Example: --ssh-public-key "ssh-ed25519 AAAAC3... user@host"
         """;
 
     public override string Title => CommandTitle;
@@ -159,9 +165,17 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
                 HttpStatusCode.BadRequest);
         }
 
-        // Note: For Linux VMs, if neither password nor SSH key is provided,
-        // the VM will be created without direct authentication.
-        // Users can then use Azure AD SSH login (az ssh vm) to access the VM.
+        // Custom validation: For Linux VMs, either SSH key or password must be provided
+        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrEmpty(options.SshPublicKey) &&
+            string.IsNullOrEmpty(options.AdminPassword))
+        {
+            throw new CommandValidationException(
+                "Linux VMs require authentication. Please provide either --ssh-public-key or --admin-password. " +
+                "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
+                "and pass the full key content to --ssh-public-key.",
+                HttpStatusCode.BadRequest);
+        }
 
         var computeService = context.GetService<IComputeService>();
 

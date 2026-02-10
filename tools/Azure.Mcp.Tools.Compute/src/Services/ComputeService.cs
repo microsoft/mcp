@@ -219,16 +219,20 @@ public sealed class ComputeService(
         }
         else
         {
-            // Resolve SSH key - try to auto-discover from ~/.ssh/ if not provided
-            var resolvedSshKey = ResolveOrDiscoverSshKey(sshPublicKey);
-
+            // For Linux VMs, configure SSH key if provided, otherwise allow Azure AD SSH login
             vmData.OSProfile.LinuxConfiguration = new LinuxConfiguration
             {
-                DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword) && !string.IsNullOrEmpty(resolvedSshKey)
+                DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword)
             };
 
-            if (!string.IsNullOrEmpty(resolvedSshKey))
+            // Only add SSH key if explicitly provided
+            if (!string.IsNullOrEmpty(sshPublicKey))
             {
+                // Check if it's a file path
+                var resolvedSshKey = File.Exists(sshPublicKey)
+                    ? File.ReadAllText(sshPublicKey).Trim()
+                    : sshPublicKey;
+
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new SshPublicKeyConfiguration
                 {
                     Path = $"/home/{adminUsername}/.ssh/authorized_keys",
@@ -242,14 +246,8 @@ public sealed class ComputeService(
                 vmData.OSProfile.LinuxConfiguration.DisablePasswordAuthentication = false;
             }
 
-            // If neither SSH key (provided or discovered) nor password is available, require password
-            if (string.IsNullOrEmpty(resolvedSshKey) && string.IsNullOrEmpty(adminPassword))
-            {
-                throw new ArgumentException(
-                    "Linux VMs require either --ssh-public-key or --admin-password. " +
-                    "No SSH key was found in ~/.ssh/ (checked id_rsa.pub, id_ed25519.pub, id_ecdsa.pub). " +
-                    "Please provide an SSH key, password, or generate one with 'ssh-keygen'.");
-            }
+            // Note: If neither SSH key nor password is provided, the VM will be created
+            // and can be accessed via Azure AD SSH login: az ssh vm --resource-group <rg> --vm-name <name>
         }
 
         // Add availability zone if specified
@@ -829,49 +827,4 @@ public sealed class ComputeService(
         );
     }
 
-    /// <summary>
-    /// Resolves SSH public key from the provided value or discovers from ~/.ssh/ directory.
-    /// Similar to Azure CLI's behavior with --generate-ssh-keys.
-    /// </summary>
-    private static string? ResolveOrDiscoverSshKey(string? sshPublicKey)
-    {
-        // If key is provided, use it (could be content or file path)
-        if (!string.IsNullOrEmpty(sshPublicKey))
-        {
-            // Check if it's a file path
-            if (File.Exists(sshPublicKey))
-            {
-                return File.ReadAllText(sshPublicKey).Trim();
-            }
-
-            // Otherwise assume it's the key content
-            return sshPublicKey;
-        }
-
-        // Try to discover SSH keys from ~/.ssh/ directory (like Azure CLI does)
-        var sshDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh");
-
-        if (!Directory.Exists(sshDir))
-        {
-            return null;
-        }
-
-        // Check common public key files in order of preference
-        string[] keyFiles = ["id_rsa.pub", "id_ed25519.pub", "id_ecdsa.pub"];
-
-        foreach (var keyFile in keyFiles)
-        {
-            var keyPath = Path.Combine(sshDir, keyFile);
-            if (File.Exists(keyPath))
-            {
-                var keyContent = File.ReadAllText(keyPath).Trim();
-                if (keyContent.StartsWith("ssh-", StringComparison.OrdinalIgnoreCase))
-                {
-                    return keyContent;
-                }
-            }
-        }
-
-        return null;
-    }
 }

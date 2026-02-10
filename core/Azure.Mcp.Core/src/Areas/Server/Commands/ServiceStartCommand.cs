@@ -84,6 +84,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.Cloud);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -160,7 +161,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
-            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name)
+            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
+            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
         };
         return options;
     }
@@ -403,7 +405,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
 
                 if (serverOptions.Debug)
@@ -449,7 +450,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
@@ -521,18 +521,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         services.AddHealthChecks();
 
         // Configure CORS
-        // We're allowing all origins, methods, and headers to support any web
-        // browser clients.
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", policy =>
-            {
-                policy.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
+        ConfigureCors(services, builder.Environment, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -543,7 +535,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         UseHttpsRedirectionIfEnabled(app);
 
         // Configure middleware pipeline
-        app.UseCors("AllowAll");
+        app.UseCors("McpCorsPolicy");
         app.UseRouting();
 
         // Add OAuth protected resource metadata middleware
@@ -627,7 +619,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Configure logging
         builder.Logging.ClearProviders();
-        builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
@@ -638,18 +629,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         services.AddSingleIdentityTokenCredentialProvider();
 
         // Configure CORS
-        // We're allowing all origins, methods, and headers to support any web
-        // browser clients.
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
         // Non-browser clients are unaffected by CORS.
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", policy =>
-            {
-                policy.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
+        ConfigureCors(services, builder.Environment, serverOptions);
 
         // Configure services
         ConfigureServices(services); // Our static callback hook
@@ -666,11 +649,67 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         UseHttpsRedirectionIfEnabled(app);
 
         // Configure middleware pipeline
-        app.UseCors("AllowAll");
+        app.UseCors("McpCorsPolicy");
         app.UseRouting();
         app.MapMcp();
 
         return app;
+    }
+
+    /// <summary>
+    /// Configures CORS policy based on environment and configuration.
+    /// In development environment with authentication disabled, restricts to localhost for security.
+    /// In production (authenticated), allows all origins (safe due to authentication requirement).
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="environment">The web host environment.</param>
+    /// <param name="serverOptions">The server configuration options.</param>
+    private static void ConfigureCors(IServiceCollection services, IWebHostEnvironment environment, ServiceStartOptions serverOptions)
+    {
+        // Check if running in development environment
+        bool isDevelopment = environment.IsDevelopment();
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("McpCorsPolicy", policy =>
+            {
+                // In development environment with authentication disabled, restrict to localhost for security
+                // Allows localhost with any port to support various development scenarios:
+                // - Port 1031: Default HTTP mode (launchSettings.json)
+                // - Port 5008: SSE mode default
+                // - Port 5173: MCP Inspector tool
+                // - Custom ports: User-specified via ASPNETCORE_URLS
+                if (isDevelopment && serverOptions.DangerouslyDisableHttpIncomingAuth)
+                {
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                        {
+                            // Allow localhost and 127.0.0.1 with any port
+                            return uri.Host == "localhost" ||
+                                    uri.Host == "127.0.0.1" ||
+                                    uri.Host == "[::1]"; // IPv6 loopback
+                        }
+                        return false;
+                    })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials(); // Required when using SetIsOriginAllowed
+                }
+                // In production or authenticated development mode, allow all origins by default
+                // This is safe because:
+                // 1. Authentication (JWT Bearer) validates all requests regardless of origin
+                // 2. CORS is a browser security mechanism, not a server security feature
+                // 3. MCP clients (GitHub Copilot in VS Code/Codespaces) need to connect from various origins
+                // 4. The server still enforces authentication and authorization on every request
+                else
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                }
+            });
+        });
     }
 
     /// <summary>
@@ -850,9 +889,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return Sdk.CreateTracerProviderBuilder()
-            // captures incoming HTTP requests
             .AddAspNetCoreInstrumentation()
-            // captures outgoing HTTP requests with filtering
             .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
             .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
             .Build();

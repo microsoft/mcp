@@ -401,7 +401,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of SQL databases on the specified server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
-    public async Task<List<SqlDatabase>> ListDatabasesAsync(
+    public async Task<ResourceQueryResults<SqlDatabase>> ListDatabasesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
@@ -496,7 +496,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of elastic pools configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
-    public async Task<List<SqlElasticPool>> GetElasticPoolsAsync(
+    public async Task<ResourceQueryResults<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
         string resourceGroup,
         string subscription,

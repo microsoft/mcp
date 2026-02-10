@@ -55,7 +55,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations ?? []), AdvisorJsonContext.Default.RecommendationListResult);
+            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
+                AdvisorJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)
         {
@@ -78,5 +79,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationListResult(List<Models.Recommendation> Recommendations);
+    internal record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
 }

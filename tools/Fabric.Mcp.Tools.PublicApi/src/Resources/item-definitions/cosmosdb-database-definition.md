@@ -1,4 +1,3 @@
-  
 # Cosmos DB Database definition
   
 This article provides a breakdown of the structure for Cosmos DB Database definition item.
@@ -25,7 +24,7 @@ Describes the Cosmos DB Database item.
 
 | Name | Type | Required | Description |
 |--|--|--|--|
-| `$schema` | String | true | URI of the JSON schema. Example: https://github.com/microsoft/json-schemas/blob/main/fabric/item/CosmosDB/definition/CosmosDB/1.0.0/schema.json |
+| `$schema` | String | true | URI of the JSON schema. Example: https://developer.microsoft.com/json-schemas/fabric/item/CosmosDB/definition/CosmosDB/2.0.0/schema.json |
 | `containers` | [ContainerMetadata[]](#containermetadata) | true | List of the Cosmos DB container metadata. |
 
 
@@ -260,7 +259,7 @@ Describes the Cosmos DB Database item.
 
 ```json
 {
-  "$schema": "https://github.com/microsoft/json-schemas/blob/main/fabric/item/CosmosDB/definition/CosmosDB/1.0.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/CosmosDB/definition/CosmosDB/2.0.0/schema.json",
   "containers": [
     {
       "options": {

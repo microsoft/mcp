@@ -5,41 +5,100 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests.Email;
 
 [Trait("Command", "EmailSendCommand")]
-public class EmailSendCommandLiveTests : CommandTestsBase
+public class EmailSendCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
-    public EmailSendCommandLiveTests(ITestOutputHelper output) : base(output)
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    private string? endpointRecorded;
+    private string? fromEmail;
+    private string? toEmail;
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    public override async ValueTask InitializeAsync()
     {
+        await LoadSettingsAsync();
+        if (TestMode == Tests.Helpers.TestMode.Playback)
+        {
+            endpointRecorded = "https://sanitized.communication.azure.com";
+            fromEmail = "DoNotReply@domain.com";
+            toEmail = "placeholder@microsoft.com";
+        }
+        else
+        {
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_SENDER_EMAIL", out fromEmail);
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TEST_EMAIL", out toEmail);
+        }
+
+        await base.InitializeAsync();
     }
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        ..base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = endpointRecorded,
+            Value = "https://sanitized.communication.azure.com",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = fromEmail,
+            Value = "DoNotReply@domain.com",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = toEmail,
+            Value = "placeholder@microsoft.com",
+        }),
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        ..base.HeaderRegexSanitizers,
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Operation-Id")
+        {
+            Value = EmptyGuid
+        })
+    ];
 
     [Fact]
     public async Task Should_SendEmail_WithValidParameters()
     {
-        // Get configuration from DeploymentOutputs in Settings
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out var endpoint);
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_SENDER_EMAIL", out var senderEmail);
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TEST_EMAIL", out var testEmail);
-
         // Output the values for debugging
-        Output.WriteLine($"Endpoint: {endpoint ?? "null"}");
-        Output.WriteLine($"Sender Email: {senderEmail ?? "null"}");
-        Output.WriteLine($"Test Email: {testEmail ?? "null"}");
+        Output.WriteLine($"Endpoint: {endpointRecorded ?? "null"}");
+        Output.WriteLine($"Sender Email: {fromEmail ?? "null"}");
+        Output.WriteLine($"Test Email: {toEmail ?? "null"}");
 
-        Assert.SkipWhen(string.IsNullOrEmpty(endpoint), "Communication Services endpoint not configured for live testing");
-        Assert.SkipWhen(string.IsNullOrEmpty(senderEmail), "Sender email not configured for live testing");
-        Assert.SkipWhen(string.IsNullOrEmpty(testEmail), "Test recipient email not configured for live testing");
-
+        if (TestMode != Tests.Helpers.TestMode.Playback)
+        {
+            Assert.SkipWhen(string.IsNullOrEmpty(endpointRecorded), "Communication Services endpoint not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(fromEmail), "Sender email not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(toEmail), "Test recipient email not configured for live testing");
+        }
         var result = await CallToolAsync(
             "communication_email_send",
             new()
             {
-                { "endpoint", endpoint },
-                { "from", senderEmail },
-                { "to", new[] { testEmail } },
+                { "endpoint", endpointRecorded },
+                { "from", fromEmail },
+                { "to", new[] { toEmail } },
                 { "subject", "Test Email from Azure MCP Live Test" },
                 { "message", "This is a test email sent from Azure MCP Live Test." },
                 { "is-html", false }

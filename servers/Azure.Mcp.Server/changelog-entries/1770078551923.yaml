@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added CORS policy to restrict cross-origin requests to localhost when running in unauthenticated development environment"
