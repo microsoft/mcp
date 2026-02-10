@@ -49,12 +49,6 @@ public static class TenantServiceCollectionExtensions
         // running as a remote HTTP MCP service.
         services.AddSingleIdentityTokenCredentialProvider();
 
-        services.AddHttpClient();
-        if (addUserAgentClient)
-        {
-            services.ConfigureDefaultHttpClient();
-        }
-
         services.TryAddSingleton<ITenantService, TenantService>();
         return services;
     }
