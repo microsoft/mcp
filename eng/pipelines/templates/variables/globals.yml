@@ -3,4 +3,4 @@ variables:
   skipComponentGovernanceDetection: true
   nugetMultiFeedWarnLevel: 'none'
   GDN_SUPPRESS_FORKED_BUILD_WARNING: true  
-  GOPROXY: 'http://localhost:5000'
+  GOPROXY: 'http://localhost:5020'
