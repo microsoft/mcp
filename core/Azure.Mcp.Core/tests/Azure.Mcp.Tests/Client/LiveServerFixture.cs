@@ -117,14 +117,28 @@ public sealed class LiveServerFixture() : IAsyncLifetime
         {
             if (e.Data != null)
             {
-                Output?.WriteLine($"[HTTP Server stdout] {e.Data}");
+                try
+                {
+                    Output?.WriteLine($"[HTTP Server stdout] {e.Data}");
+                }
+                catch (InvalidOperationException)
+                {
+                    // Test has completed; ignore output
+                }
             }
         };
         _httpServerProcess.ErrorDataReceived += (sender, e) =>
         {
             if (e.Data != null)
             {
-                Output?.WriteLine($"[HTTP Server stderr] {e.Data}");
+                try
+                {
+                    Output?.WriteLine($"[HTTP Server stderr] {e.Data}");
+                }
+                catch (InvalidOperationException)
+                {
+                    // Test has completed; ignore output
+                }
             }
         };
 
