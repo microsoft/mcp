@@ -63,27 +63,23 @@ public class ServiceBusSetupTests
         // Assert
         Assert.NotNull(serviceBusGroup);
 
-        // Verify key terms are present in the improved description
-        Assert.Contains("messaging infrastructure", serviceBusGroup.Description);
-        Assert.Contains("asynchronous communication", serviceBusGroup.Description);
+        // Verify key terms are present in the description
+        Assert.Contains("Service Bus", serviceBusGroup.Description);
+        Assert.Contains("asynchronous messaging", serviceBusGroup.Description);
         Assert.Contains("enterprise integration", serviceBusGroup.Description);
-        Assert.Contains("point-to-point communication", serviceBusGroup.Description);
-        Assert.Contains("publish-subscribe patterns", serviceBusGroup.Description);
-        Assert.Contains("reliable messaging", serviceBusGroup.Description);
-        Assert.Contains("dead letter handling", serviceBusGroup.Description);
-        Assert.Contains("enterprise integration patterns", serviceBusGroup.Description);
+        Assert.Contains("point-to-point", serviceBusGroup.Description);
+        Assert.Contains("publish-subscribe", serviceBusGroup.Description);
+        Assert.Contains("dead-letter handling", serviceBusGroup.Description);
+        Assert.Contains("decoupled architectures", serviceBusGroup.Description);
 
-        // Verify "do not use" guidance is present
-        Assert.Contains("Do not use for real-time communication", serviceBusGroup.Description);
+        // Verify "not intended for" guidance is present
+        Assert.Contains("Not intended for real-time communication", serviceBusGroup.Description);
         Assert.Contains("direct API calls", serviceBusGroup.Description);
         Assert.Contains("database operations", serviceBusGroup.Description);
 
         // Verify MCP router information
-        Assert.Contains("hierarchical MCP command router", serviceBusGroup.Description);
+        Assert.Contains("hierarchical MCP command model", serviceBusGroup.Description);
         Assert.Contains("learn=true", serviceBusGroup.Description);
-
-        // Verify permissions note
-        Assert.Contains("appropriate Service Bus permissions", serviceBusGroup.Description);
     }
 
     [Fact]

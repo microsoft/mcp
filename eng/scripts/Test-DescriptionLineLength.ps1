@@ -101,7 +101,7 @@ foreach ($file in $setupFiles) {
         $allMatches += @{ Match = $match; IsRawString = $true } 
     }
     foreach ($match in $regularMatches) {
-        # Skip if this match overlaps with a raw string match asraw strings also contain ""
+        # Skip if this match overlaps with a raw string match as raw strings also contain ""
         $skip = $false
         foreach ($rawMatch in $rawMatches) {
             if ($match.Index -ge $rawMatch.Index -and $match.Index -lt ($rawMatch.Index + $rawMatch.Length)) {
@@ -174,6 +174,13 @@ foreach ($file in $setupFiles) {
         $fixedFiles += $relativePath
     }
 }
+
+$result = [PSCustomObject]@{
+    MaxAllowed     = $MaxLineLength
+    ViolationCount = $violations.Count
+}
+
+$result
 
 Write-Host "RESULTS"
 if ($violations.Count -eq 0) {
