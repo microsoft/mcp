@@ -810,36 +810,47 @@ public class FoundryService(
         CancellationToken cancellationToken = default)
     {
         var credential = await GetCredential(tenant, cancellationToken);
+        var transport = CreateTransport();
 
-        // Configure AIProjectClientOptions with HttpClient transport for test proxy support
-        var httpClient = _httpClientFactory.CreateClient();
         var clientOptions = new AIProjectClientOptions
         {
-            Transport = new HttpClientTransport(httpClient)
+            Transport = transport
         };
-
-        // Debug logging to trace test proxy configuration
-        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        Console.WriteLine($"[DEBUG] TEST_PROXY_URL: '{testProxyUrl ?? "NOT SET"}'");
-        Console.WriteLine($"[DEBUG] HttpClient BaseAddress: {httpClient.BaseAddress}");
-        Console.WriteLine($"[DEBUG] Transport type: {clientOptions.Transport.GetType().Name}");
-
-        // Check if RecordingRedirectHandler type is loaded (only exists in DEBUG builds)
-        var recordingHandlerType = Type.GetType("Azure.Mcp.Core.Testing.RecordingRedirectHandler, Azure.Mcp.Core");
-        Console.WriteLine($"[DEBUG] RecordingRedirectHandler type found: {recordingHandlerType != null}");
-        Console.WriteLine($"[DEBUG] Is DEBUG build: {IsDebugBuild()}");
 
         return new AIProjectClient(new Uri(endpoint), credential, clientOptions);
     }
 
-    [System.Diagnostics.Conditional("DEBUG")]
-    private static void IsDebugCondition() { }
-
-    private static bool IsDebugBuild()
+    private async Task<(AIProjectClient ProjectClient, PersistentAgentsClient AgentsClient)> CreateAIProjectAndPersistentAgentsClientsAsync(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
     {
-        bool isDebug = false;
-        IsDebugCondition();
-        return isDebug;
+        var credential = await GetCredential(tenant, cancellationToken);
+        var transport = CreateTransport();
+
+        var projectClientOptions = new AIProjectClientOptions
+        {
+            Transport = transport
+        };
+
+        var projectClient = new AIProjectClient(new Uri(endpoint), credential, projectClientOptions);
+
+        var agentsClientOptions = new PersistentAgentsAdministrationClientOptions
+        {
+            Transport = transport
+        };
+
+        var agentsClient = new PersistentAgentsClient(endpoint, credential, agentsClientOptions);
+
+        return (projectClient, agentsClient);
+    }
+
+    private HttpClientTransport CreateTransport()
+    {
+        var httpClient = _httpClientFactory.CreateClient();
+        var transport = new HttpClientTransport(httpClient);
+
+        return transport;
     }
 
     public async Task<List<PersistentAgent>> ListAgents(
@@ -852,8 +863,7 @@ public class FoundryService(
 
         try
         {
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var agentsClient = projectClient.GetPersistentAgentsClient();
+            var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(endpoint, tenantId, cancellationToken);
 
             var agents = new List<PersistentAgent>();
             await foreach (var agent in agentsClient.Administration.GetAgentsAsync(cancellationToken: cancellationToken))
@@ -886,7 +896,7 @@ public class FoundryService(
             (nameof(modelDeploymentName), modelDeploymentName),
             (nameof(agentName), agentName),
             (nameof(systemInstruction), systemInstruction));
-        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
+        var (projectClient, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
         // Validate if the model deployment exists
         var deploymentsClient = projectClient.GetDeploymentsClient();
@@ -898,8 +908,6 @@ public class FoundryService(
         {
             throw new Exception($"Unable to create agent. Get model deployment failed with: {ex.Message}", ex);
         }
-
-        var agentsClient = projectClient.GetPersistentAgentsClient();
         try
         {
             PersistentAgent agent = await agentsClient.Administration.CreateAgentAsync(modelDeploymentName, agentName, null, systemInstruction, cancellationToken: cancellationToken);
@@ -932,8 +940,7 @@ public class FoundryService(
                 (nameof(query), query),
                 (nameof(endpoint), endpoint));
 
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var agentsClient = projectClient.GetPersistentAgentsClient();
+            var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(endpoint, tenantId, cancellationToken);
 
             PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
                 [new ThreadMessageOptions(MessageRole.User, query)],
@@ -1053,7 +1060,7 @@ public class FoundryService(
             }
             var compositeEvaluator = new CompositeEvaluator(evaluators);
 
-            var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential);
+            var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential, _httpClientFactory);
 
             var evaluationResult = await compositeEvaluator.EvaluateAsync(
                 connectAgentResult.Query ?? [],
@@ -1115,7 +1122,7 @@ public class FoundryService(
 
             var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
 
-            var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential);
+            var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential, _httpClientFactory);
 
             var result = await evaluator.EvaluateAsync(
                 loadedQuery ?? [],
@@ -1145,8 +1152,7 @@ public class FoundryService(
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint));
 
-        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
-        var agentsClient = projectClient.GetPersistentAgentsClient();
+        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
         var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
         List<ThreadItem> threads = [];
@@ -1182,8 +1188,7 @@ public class FoundryService(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(userMessage), userMessage));
 
-        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
-        var agentsClient = projectClient.GetPersistentAgentsClient();
+        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
         try
         {
@@ -1215,8 +1220,7 @@ public class FoundryService(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(threadId), threadId));
 
-        var projectClient = await CreateAIProjectClientWithAuth(projectEndpoint, tenantId, cancellationToken);
-        var agentsClient = projectClient.GetPersistentAgentsClient();
+        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
         try
         {
@@ -1493,20 +1497,29 @@ public class FoundryService(
         return (result.ToString().Trim(), citations);
     }
 
-    private static IChatClient GetAzureOpenAIChatClient(string azureOpenAIEndpoint, string azureOpenAIDeployment, TokenCredential credential)
+    private IChatClient GetAzureOpenAIChatClient(string azureOpenAIEndpoint, string azureOpenAIDeployment, TokenCredential credential, IHttpClientFactory httpClientFactory)
     {
         var azureOpenAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+        // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
+        var httpClient = httpClientFactory.CreateClient();
+        var clientOptions = new AzureOpenAIClientOptions
+        {
+            Transport = new HttpClientPipelineTransport(httpClient)
+        };
 
         switch (azureOpenAIKey)
         {
             case null:
                 return new AzureOpenAIClient(
                 new Uri(azureOpenAIEndpoint),
-                credential).GetChatClient(azureOpenAIDeployment).AsIChatClient();
+                credential,
+                clientOptions).GetChatClient(azureOpenAIDeployment).AsIChatClient();
             default:
                 return new AzureOpenAIClient(
                 new Uri(azureOpenAIEndpoint),
-                new ApiKeyCredential(azureOpenAIKey)).GetChatClient(azureOpenAIDeployment).AsIChatClient();
+                new ApiKeyCredential(azureOpenAIKey),
+                clientOptions).GetChatClient(azureOpenAIDeployment).AsIChatClient();
         }
     }
 
