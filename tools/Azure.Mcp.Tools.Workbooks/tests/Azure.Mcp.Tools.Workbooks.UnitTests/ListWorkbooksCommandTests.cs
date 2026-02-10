@@ -1314,7 +1314,6 @@ public class ListWorkbooksCommandTests
     {
         // Arrange - Test combining all semantic filters together per optimization plan
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.operationalinsights/workspaces/workspace1";
-        var modifiedAfterDate = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         var expectedWorkbooks = new List<WorkbookInfo>
         {
