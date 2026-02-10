@@ -52,7 +52,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_keys()
     {
         var result = await CallToolAsync(
-            "keyvault_key_list",
+            "keyvault_key_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -115,7 +115,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_secrets()
     {
         var result = await CallToolAsync(
-            "keyvault_secret_list",
+            "keyvault_secret_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -154,7 +154,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_certificates()
     {
         var result = await CallToolAsync(
-            "keyvault_certificate_list",
+            "keyvault_certificate_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
