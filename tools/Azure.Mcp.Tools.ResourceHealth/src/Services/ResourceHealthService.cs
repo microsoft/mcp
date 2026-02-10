@@ -32,7 +32,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         try
         {
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
-            
+
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext([$"{managementEndpoint}/.default"]),

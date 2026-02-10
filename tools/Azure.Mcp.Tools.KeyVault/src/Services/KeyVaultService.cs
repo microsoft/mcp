@@ -318,7 +318,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
     }
 
-    
+
     private Uri GetHsmUri(string vaultName)
     {
         switch (_tenantService.CloudConfiguration.CloudType)

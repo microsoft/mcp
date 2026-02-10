@@ -4,10 +4,12 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 
@@ -15,6 +17,7 @@ namespace Azure.Mcp.Tools.MySql.Services;
 
 public class MySqlService(IResourceGroupService resourceGroupService, ITenantService tenantService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ILogger<MySqlService> _logger = logger;
 
@@ -66,18 +69,44 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
+
+        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSEndpoint().ToString()]);
         TokenCredential tokenCredential = await GetCredential(cancellationToken);
         AccessToken accessToken = await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
         return accessToken.Token;
     }
 
-    private static string NormalizeServerName(string server)
+    private Uri GetOpenSourceRDBMSEndpoint()
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri("https://ossrdbms-aad.database.windows.net/.default");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return new Uri("https://ossrdbms-aad.database.usgovcloudapi.net/.default");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri("https://ossrdbms-aad.database.chinacloudapi.cn/.default");
+            default:
+                return new Uri("https://ossrdbms-aad.database.windows.net/.default");
+        }
+    }
+
+    private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
         {
-            return server + ".mysql.database.azure.com";
+            switch (_tenantService.CloudConfiguration.CloudType)
+            {
+                case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                    return server + ".mysql.database.azure.com";
+                case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                    return server + ".mysql.database.usgovcloudapi.net";
+                case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                    return server + ".mysql.database.chinacloudapi.cn";
+                default:
+                    return server + ".mysql.database.azure.com";
+            }
         }
         return server;
     }
