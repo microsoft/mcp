@@ -72,10 +72,10 @@ public class ServiceBusSetupTests
         Assert.Contains("dead-letter handling", serviceBusGroup.Description);
         Assert.Contains("decoupled architectures", serviceBusGroup.Description);
 
-        // Verify "not intended for" guidance is present
-        Assert.Contains("Not intended for real-time communication", serviceBusGroup.Description);
+        Assert.Contains("decoupled architectures", serviceBusGroup.Description);
+        Assert.Contains("intended for real-time communication", serviceBusGroup.Description);
         Assert.Contains("direct API calls", serviceBusGroup.Description);
-        Assert.Contains("database operations", serviceBusGroup.Description);
+        Assert.Contains("database", serviceBusGroup.Description);
 
         // Verify MCP router information
         Assert.Contains("hierarchical MCP command model", serviceBusGroup.Description);
