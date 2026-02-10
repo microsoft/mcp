@@ -23,6 +23,6 @@ public interface IAzureCloudConfiguration
 
     /// <summary>
     /// Gets the type of Azure cloud environment.
-    /// /// </summary>
+    /// </summary>
     AzureCloudConfiguration.AzureCloud CloudType { get; }
 }
