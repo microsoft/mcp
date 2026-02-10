@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using Xunit;
+using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Helpers;
 
@@ -15,35 +16,10 @@ internal static class TestMethodResolver
 {
     public static MethodInfo? TryResolveCurrentMethodInfo()
     {
-        var test = TestContext.Current?.Test;
-        if (test == null)
-        {
-            return null;
-        }
-
-        var testCase = GetPropertyValue(test, "TestCase");
-        if (testCase == null)
-        {
-            return null;
-        }
-
-        var testMethod = GetPropertyValue(testCase, "TestMethod");
-        if (testMethod == null)
-        {
-            return null;
-        }
-
-        var method = GetPropertyValue(testMethod, "Method") as MethodInfo
-                     ?? GetPropertyValue(testMethod, "MethodInfo") as MethodInfo;
+        var method = TestContext.Current.Test?.TestCase.TestMethod is IXunitTestMethod testMethod
+            ? testMethod.Method
+            : null;
 
         return method;
-    }
-
-    private static object? GetPropertyValue(object instance, string propertyName)
-    {
-        return instance
-            .GetType()
-            .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?
-            .GetValue(instance);
     }
 }
