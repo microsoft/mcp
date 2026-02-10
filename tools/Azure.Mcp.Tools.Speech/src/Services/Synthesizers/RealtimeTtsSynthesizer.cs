@@ -278,18 +278,24 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         return SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
     }
 
-    private Uri GetCognitiveServicesEndpoint()
+    private string GetCognitiveServicesScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://cognitiveservices.azure.us/.default");
+                return "https://cognitiveservices.azure.us/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://cognitiveservices.azure.cn/.default");
+                return "https://cognitiveservices.azure.cn/.default";
             default:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
         }
+    }
+
+    [System.Obsolete("GetCognitiveServicesEndpoint returns an OAuth scope value. Use GetCognitiveServicesScope() for TokenRequestContext scopes.")]
+    private Uri GetCognitiveServicesEndpoint()
+    {
+        return new Uri(GetCognitiveServicesScope());
     }
 }
