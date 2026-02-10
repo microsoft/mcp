@@ -120,6 +120,10 @@ public class WorkbooksService(
             try
             {
                 var workbook = await GetSingleWorkbookAsync(id, retryPolicy, tenant, cancellationToken);
+                if (workbook is null)
+                {
+                    throw new InvalidOperationException($"Workbook with ID '{id}' was not found or returned null.");
+                }
                 return (Workbook: workbook, Error: (WorkbookError?)null);
             }
             catch (Exception ex)

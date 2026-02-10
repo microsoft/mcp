@@ -31,7 +31,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         RETURNS: Workbook metadata (id, name, location, category, timestamps).
         DOES NOT RETURN: Full workbook content (serializedData) by default - use 'show' for that or set --output-format=full.
 
-        SCOPE: Omit --subscription and --resource-group to search ALL accessible workbooks across tenants.
+        SCOPE: By default searches workbooks in your current Azure context (tenant/subscription). Use --subscription and --resource-group to explicitly control scope.
         TOTAL COUNT: Returns server-side total count by default (not just returned items).
         MAX RESULTS: Default 50, max 1000. Use --max-results to adjust.
         OUTPUT FORMAT: Use --output-format=summary for minimal tokens, --output-format=full for serializedData.

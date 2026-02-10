@@ -594,7 +594,7 @@ public class UpdateWorkbooksCommandTests
             Arg.Is(workbookId),
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
-            Arg.Is<RetryPolicyOptions?>(x => x != null && x.MaxRetries == 5 && x.DelaySeconds == 2.5),
+            Arg.Is<RetryPolicyOptions?>(x => x != null && x.MaxRetries == 5 && System.Math.Abs(x.DelaySeconds - 2.5) < 1e-6),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
