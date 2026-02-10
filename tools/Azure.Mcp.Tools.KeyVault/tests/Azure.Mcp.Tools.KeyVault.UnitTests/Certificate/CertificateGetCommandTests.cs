@@ -144,7 +144,7 @@ public class CertificateGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
-        var result = System.Text.Json.JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.CertificateGetCommandResult);
+        var result = System.Text.Json.JsonSerializer.Deserialize(json, Commands.KeyVaultJsonContext.Default.CertificateGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Certificates);
