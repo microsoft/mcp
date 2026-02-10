@@ -213,8 +213,8 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
     {
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
-        var tokenRequestContext = new TokenRequestContext([$"{managementEndpoint}/.default"]);
+        var defaultScope = _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope;
+        var tokenRequestContext = new TokenRequestContext([defaultScope]);
         var tokenCredential = await GetCredential(tenantId, cancellationToken);
         return await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
