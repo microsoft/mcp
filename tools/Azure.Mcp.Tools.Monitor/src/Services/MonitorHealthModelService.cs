@@ -107,7 +107,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     {
         TokenCredential credential = await GetCredential(cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{GetManagementEndpoint()}/.default"]),
+            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         return accessToken.Token;
