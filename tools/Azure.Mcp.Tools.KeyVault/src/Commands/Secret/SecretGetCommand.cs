@@ -102,7 +102,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
         }
         catch (Exception ex)
         {
-            if (options.SecretName is null)
+            if (string.IsNullOrEmpty(options.SecretName))
             {
                 _logger.LogError(ex, "Error listing secrets from vault {VaultName}", options.VaultName);
             }

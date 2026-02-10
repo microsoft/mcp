@@ -108,7 +108,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
         }
         catch (Exception ex)
         {
-            if (options.CertificateName is null)
+            if (string.IsNullOrEmpty(options.CertificateName))
             {
                 _logger.LogError(ex, "Error listing certificates from vault {VaultName}", options.VaultName);
             }

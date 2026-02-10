@@ -105,7 +105,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
         }
         catch (Exception ex)
         {
-            if (options.KeyName is null)
+            if (string.IsNullOrEmpty(options.KeyName))
             {
                 _logger.LogError(ex, "Error listing keys from vault {VaultName}", options.VaultName);
             }
