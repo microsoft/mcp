@@ -63,6 +63,12 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       IncludeNative: ${{ parameters.IncludeNative }}
       DependsOn: TagRepository
+- ${{ else }}:
+  - job: PublishPyPI
+    displayName: "Publish PyPI (skipped)"
+    steps:
+    - script: echo "PyPI publishing skipped"
+      displayName: "Skipped"
 
 - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
   parameters:
@@ -90,8 +96,7 @@ jobs:
     - PublishNugetPackage
     - PublishNpm
     - PublishPyPI
-    - PublishACR
-
+    
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
   condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
