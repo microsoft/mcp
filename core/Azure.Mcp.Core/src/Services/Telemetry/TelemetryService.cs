@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
@@ -45,7 +46,8 @@ internal class TelemetryService : ITelemetryService
             new(TagName.AzureMcpVersion, options.Value.Version),
             new(TagName.ServerMode, serverOptions.Value.Mode),
             new(TagName.Transport, serverOptions.Value.Transport),
-            new(TagName.Host, System.Runtime.InteropServices.RuntimeInformation.OSDescription)
+            new(TagName.Host, RuntimeInformation.OSDescription),
+            new(TagName.CpuArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
