@@ -150,13 +150,6 @@
 # ServiceLabel: %tools-Core
 # ServiceOwners:                       @alzimmermsft @anannya03 @anuchandy @g2vinay @xiangyan99 @microsoft/azure-mcp
 
-# PRLabel: %tools-Compute
-/tools/Azure.Mcp.Tools.Compute/         @g2vinay @haagha @audreytoney @microsoft/azure-mcp
-
-# ServiceLabel: %tools-Compute
-# ServiceOwners:                       @haagha @audreytoney @saakpan
-
-
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
 

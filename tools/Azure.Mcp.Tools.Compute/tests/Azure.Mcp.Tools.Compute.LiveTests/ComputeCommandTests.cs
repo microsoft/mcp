@@ -19,6 +19,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
+    // Enable --dangerously-disable-elicitation for commands with Secret = true (vm create)
+    public override async ValueTask InitializeAsync()
+    {
+        SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
+        await base.InitializeAsync();
+    }
+
     // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
@@ -47,6 +54,15 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         {
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000",
+        })
+    ];
+
+    // Sanitize admin password in request bodies
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..adminPassword")
+        {
+            Value = "REDACTED",
         })
     ];
 
@@ -210,6 +226,39 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     #region VM Update Tests
+
+    [Fact]
+    public async Task Should_create_vm_with_password_auth()
+    {
+        var createVmName = RegisterOrRetrieveVariable("createVmName", $"testvm{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", createVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "workload", "development" },
+                { "no-public-ip", true }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var vmSize = vm.GetProperty("vmSize");
+        Assert.Equal("Standard_B2s", vmSize.GetString());
+
+        var osType = vm.GetProperty("osType");
+        Assert.Equal("linux", osType.GetString());
+    }
 
     [Fact]
     public async Task Should_update_vm_tags()

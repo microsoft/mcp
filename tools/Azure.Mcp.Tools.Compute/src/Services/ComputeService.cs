@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
+using Azure.Mcp.Tools.Compute.Utilities;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
@@ -36,14 +37,14 @@ public sealed class ComputeService(
             Requirements: VmRequirements.WindowsComputerName),
         ["web"] = new WorkloadConfiguration(
             WorkloadType: "web",
-            SuggestedVmSize: "Standard_D2s_v3",
+            SuggestedVmSize: "Standard_D2s_v5",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 128,
             Description: "General purpose VM optimized for web servers and small to medium applications",
             Requirements: VmRequirements.WindowsComputerName),
         ["database"] = new WorkloadConfiguration(
             WorkloadType: "database",
-            SuggestedVmSize: "Standard_E4s_v3",
+            SuggestedVmSize: "Standard_E4s_v5",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 256,
             Description: "Memory-optimized VM for database workloads with high memory-to-CPU ratio",
@@ -57,7 +58,7 @@ public sealed class ComputeService(
             Requirements: VmRequirements.WindowsComputerName),
         ["memory"] = new WorkloadConfiguration(
             WorkloadType: "memory",
-            SuggestedVmSize: "Standard_E8s_v3",
+            SuggestedVmSize: "Standard_E8s_v5",
             SuggestedOsDiskType: "Premium_LRS",
             SuggestedOsDiskSizeGb: 256,
             Description: "High-memory VM for in-memory databases, caching, and memory-intensive applications",
@@ -71,7 +72,7 @@ public sealed class ComputeService(
             Requirements: VmRequirements.WindowsComputerName),
         ["general"] = new WorkloadConfiguration(
             WorkloadType: "general",
-            SuggestedVmSize: "Standard_D2s_v3",
+            SuggestedVmSize: "Standard_D4s_v5",
             SuggestedOsDiskType: "StandardSSD_LRS",
             SuggestedOsDiskSizeGb: 128,
             Description: "General purpose VM balanced for compute, memory, and storage",
@@ -137,7 +138,7 @@ public sealed class ComputeService(
         var workloadConfig = GetWorkloadConfiguration(workload);
 
         // Determine OS type
-        var effectiveOsType = DetermineOsType(osType, image);
+        var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
         // Determine VM size based on workload or explicit parameter
         var effectiveVmSize = vmSize ?? workloadConfig.SuggestedVmSize;
@@ -160,6 +161,7 @@ public sealed class ComputeService(
             publicIpAddress,
             networkSecurityGroup,
             noPublicIp ?? false,
+            effectiveOsType,
             cancellationToken);
 
         // Build VM data
@@ -286,25 +288,6 @@ public sealed class ComputeService(
             WorkloadConfiguration: workloadConfig);
     }
 
-    private static string DetermineOsType(string? osType, string? image)
-    {
-        if (!string.IsNullOrEmpty(osType))
-        {
-            return osType;
-        }
-
-        if (!string.IsNullOrEmpty(image))
-        {
-            var lowerImage = image.ToLowerInvariant();
-            if (lowerImage.Contains("win") || lowerImage.Contains("windows"))
-            {
-                return "windows";
-            }
-        }
-
-        return "linux";
-    }
-
     private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
     {
         // Default to Ubuntu 24.04 LTS
@@ -339,6 +322,7 @@ public sealed class ComputeService(
         string? publicIpAddress,
         string? networkSecurityGroup,
         bool noPublicIp,
+        string osType,
         CancellationToken cancellationToken)
     {
         var vnetName = virtualNetwork ?? $"{vmName}-vnet";
@@ -362,33 +346,43 @@ public sealed class ComputeService(
                 Location = new AzureLocation(location)
             };
 
-            // Add default SSH rule for Linux
-            nsgData.SecurityRules.Add(new SecurityRuleData
-            {
-                Name = "AllowSSH",
-                Priority = 1000,
-                Access = SecurityRuleAccess.Allow,
-                Direction = SecurityRuleDirection.Inbound,
-                Protocol = SecurityRuleProtocol.Tcp,
-                SourceAddressPrefix = "*",
-                SourcePortRange = "*",
-                DestinationAddressPrefix = "*",
-                DestinationPortRange = "22"
-            });
+            // Add appropriate security rule based on OS type
+            // WARNING: These rules allow access from any source IP for quick-start scenarios.
+            // For production use, restrict SourceAddressPrefix to specific IP ranges.
+            var isWindows = osType.Equals("Windows", StringComparison.OrdinalIgnoreCase);
 
-            // Add default RDP rule for Windows
-            nsgData.SecurityRules.Add(new SecurityRuleData
+            if (isWindows)
             {
-                Name = "AllowRDP",
-                Priority = 1001,
-                Access = SecurityRuleAccess.Allow,
-                Direction = SecurityRuleDirection.Inbound,
-                Protocol = SecurityRuleProtocol.Tcp,
-                SourceAddressPrefix = "*",
-                SourcePortRange = "*",
-                DestinationAddressPrefix = "*",
-                DestinationPortRange = "3389"
-            });
+                _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range.");
+                nsgData.SecurityRules.Add(new SecurityRuleData
+                {
+                    Name = "AllowRDP",
+                    Priority = 1000,
+                    Access = SecurityRuleAccess.Allow,
+                    Direction = SecurityRuleDirection.Inbound,
+                    Protocol = SecurityRuleProtocol.Tcp,
+                    SourceAddressPrefix = "*",
+                    SourcePortRange = "*",
+                    DestinationAddressPrefix = "*",
+                    DestinationPortRange = "3389"
+                });
+            }
+            else
+            {
+                _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range.");
+                nsgData.SecurityRules.Add(new SecurityRuleData
+                {
+                    Name = "AllowSSH",
+                    Priority = 1000,
+                    Access = SecurityRuleAccess.Allow,
+                    Direction = SecurityRuleDirection.Inbound,
+                    Protocol = SecurityRuleProtocol.Tcp,
+                    SourceAddressPrefix = "*",
+                    SourcePortRange = "*",
+                    DestinationAddressPrefix = "*",
+                    DestinationPortRange = "22"
+                });
+            }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
                 Azure.WaitUntil.Completed,
@@ -768,7 +762,7 @@ public sealed class ComputeService(
         var workloadConfig = GetWorkloadConfiguration(workload);
 
         // Determine OS type
-        var effectiveOsType = DetermineOsType(osType, image);
+        var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
         // Determine VM size based on workload or explicit parameter
         var effectiveVmSize = vmSize ?? workloadConfig.SuggestedVmSize;

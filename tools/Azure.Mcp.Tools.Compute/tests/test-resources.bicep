@@ -210,6 +210,26 @@ resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-0
   }
 }
 
+// Network Contributor role for creating network resources (NSG, VNet, NIC, Public IP)
+resource networkContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Network Contributor role
+  // Lets you manage networks, but not access to them
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor
+  name: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+}
+
+// Assign Network Contributor role to test application for VM create tests
+resource appNetworkContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(networkContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: networkContributorRoleDefinition.id
+    description: 'Network Contributor for testApplicationOid - required for VM create tests'
+  }
+}
+
 // Output values for test consumption
 output vmName string = vm.name
 output vmssName string = vmss.name

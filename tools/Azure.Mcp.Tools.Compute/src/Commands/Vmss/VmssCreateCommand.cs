@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
+using Azure.Mcp.Tools.Compute.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -151,7 +152,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         var options = BindOptions(parseResult);
 
         // Determine OS type from image
-        var effectiveOsType = DetermineOsType(options.OsType, options.Image);
+        var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
 
         // Custom validation: For Windows VMSS, password is required
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
@@ -223,25 +224,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         }
 
         return context.Response;
-    }
-
-    private static string DetermineOsType(string? osType, string? image)
-    {
-        if (!string.IsNullOrEmpty(osType))
-        {
-            return osType;
-        }
-
-        if (!string.IsNullOrEmpty(image))
-        {
-            var lowerImage = image.ToLowerInvariant();
-            if (lowerImage.Contains("win") || lowerImage.Contains("windows"))
-            {
-                return "windows";
-            }
-        }
-
-        return "linux";
     }
 
     protected override string GetErrorMessage(Exception ex) => ex switch
