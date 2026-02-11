@@ -232,6 +232,7 @@ try {
     # If no location is specified use safe default locations for the given
     # environment. If no matching environment is found $Location remains an empty
     # string.
+    # TODO: We should parameterize location so it can be passed to the script
     if (!$Location) {
         $Location = @{
             'AzureCloud' = ($TestResourcesDirectory -like '*Compute*') ? 'eastus2' : 'westus';
