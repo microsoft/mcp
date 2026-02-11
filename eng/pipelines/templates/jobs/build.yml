@@ -17,7 +17,7 @@ parameters:
   default: ''
 
 jobs:
-- job: Build_${{ parameters.OSName }}
+- job: Build_${{ parameters.OSName }}_${{ parameters.HostArchitecture }}
   displayName: "Build"
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
