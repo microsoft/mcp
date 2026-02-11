@@ -42,6 +42,7 @@ using Azure.Mcp.Tools.Storage;
 using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using ModelContextProtocol.Protocol;
@@ -160,6 +161,7 @@ internal class CommandFactoryHelpers
 
         var builder = new ServiceCollection()
             .AddLogging()
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().AddEnvironmentVariables().Build())
             .AddSingleton<ITelemetryService, NoOpTelemetryService>();
 
         foreach (var area in areaSetups)
