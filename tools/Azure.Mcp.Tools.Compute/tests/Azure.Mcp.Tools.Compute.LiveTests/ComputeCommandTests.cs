@@ -208,4 +208,103 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var returnedInstanceId = vm.GetProperty("instanceId");
         Assert.Equal("0", returnedInstanceId.GetString());
     }
+
+    #region VM Update Tests
+
+    [Fact]
+    public async Task Should_update_vm_tags()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "tags", "testkey=testvalue,environment=livetests" }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        // Verify tags were applied
+        var tags = vm.GetProperty("tags");
+        Assert.Equal(JsonValueKind.Object, tags.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_update_vm_boot_diagnostics()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "boot-diagnostics", "true" }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+    }
+
+    #endregion
+
+    #region VMSS Update Tests
+
+    [Fact]
+    public async Task Should_update_vmss_tags()
+    {
+        var result = await CallToolAsync(
+            "compute_vmss_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", VmssName },
+                { "tags", "testkey=testvalue,environment=livetests" }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        // Verify tags were applied
+        var tags = vmss.GetProperty("tags");
+        Assert.Equal(JsonValueKind.Object, tags.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_update_vmss_upgrade_policy()
+    {
+        var result = await CallToolAsync(
+            "compute_vmss_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", VmssName },
+                { "upgrade-policy", "Manual" }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var upgradePolicy = vmss.GetProperty("upgradePolicy");
+        Assert.Equal("Manual", upgradePolicy.GetString());
+    }
+
+    #endregion
 }

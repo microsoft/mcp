@@ -60,7 +60,7 @@ public class VmCreateCommandTests
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", true)] // All required + password
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --ssh-public-key ssh-rsa-key", true)] // All required + ssh key
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123! --workload development", true)] // With workload
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", true)] // No auth - allowed for Linux (AAD SSH login)
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", false)] // Missing auth - Linux requires SSH key or password
     [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing vm-name
     [InlineData("--vm-name test-vm --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing resource-group
     [InlineData("--vm-name test-vm --resource-group test-rg --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing subscription
@@ -117,19 +117,27 @@ public class VmCreateCommandTests
 
         var parseResult = _commandDefinition.Parse(args);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        // Act & Assert
         if (shouldSucceed)
         {
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
         }
         else
         {
-            Assert.False(string.IsNullOrEmpty(response.Message));
+            // For validation failures, the command may throw CommandValidationException or return BadRequest
+            try
+            {
+                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+                Assert.False(string.IsNullOrEmpty(response.Message));
+            }
+            catch (Microsoft.Mcp.Core.Commands.CommandValidationException)
+            {
+                // Expected for validation failures
+            }
         }
     }
 

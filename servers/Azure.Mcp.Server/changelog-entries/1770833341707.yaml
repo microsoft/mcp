@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added compute VM and VMSS create/update commands with smart workload-based defaults, supporting VM create, VM update, VMSS create, and VMSS update operations"

@@ -2314,6 +2314,74 @@
       ]
     },
     {
+      "name": "create_azure_compute_resources",
+      "description": "Create Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Create VMs with smart workload-based defaults (development, web, database, compute, memory, gpu, general). Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates new resources which may incur costs."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may create duplicate resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates new Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive authentication information like passwords and SSH keys."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_create",
+        "compute_vmss_create"
+      ]
+    },
+    {
+      "name": "update_azure_compute_resources",
+      "description": "Update Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_update",
+        "compute_vmss_update"
+      ]
+    },
+    {
       "name": "get_azure_virtual_desktop_details",
       "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
       "toolMetadata": {
