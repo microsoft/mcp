@@ -64,7 +64,9 @@ ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'name' -NewValue $s
 ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue $server.version
 
 foreach ($package in $jsonHashTable.packages) {
-    ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    if ($package.ContainsKey('version')) {
+        ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    }
 
     switch ($package.registryType) {
         'nuget' {
@@ -78,6 +80,38 @@ foreach ($package in $jsonHashTable.packages) {
         }
         'pypi' {
             ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.pypiPackageName
+        }
+        'mcpb' {
+            # MCPB packages need an identifier (GitHub release URL) and fileSha256
+            # The identifier placeholder encodes the platform: <<McpbUrlWinX64>>, <<McpbUrlLinuxX64>>, etc.
+            $identifier = $package.identifier
+            
+            # Extract platform from placeholder (e.g., "WinX64" from "<<McpbUrlWinX64>>")
+            if ($identifier -match '<<McpbUrl(\w+)>>') {
+                $platformKey = $Matches[1]
+                
+                # Map placeholder suffix to MCPB filename convention
+                $platformMap = @{
+                    'WinX64' = 'win-x64'
+                    'WinArm64' = 'win-arm64'
+                    'LinuxX64' = 'linux-x64'
+                    'LinuxArm64' = 'linux-arm64'
+                    'OsxX64' = 'osx-x64'
+                    'OsxArm64' = 'osx-arm64'
+                }
+                
+                if ($platformMap.ContainsKey($platformKey)) {
+                    $platform = $platformMap[$platformKey]
+                    $mcpbFilename = "$($server.name)-$platform.mcpb"
+                    $mcpbUrl = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$mcpbFilename"
+                    ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $mcpbUrl
+                    # fileSha256 placeholder will be replaced by Update-ServerJsonMcpbHashes.ps1 after signing
+                } else {
+                    LogWarning "Unknown MCPB platform key '$platformKey' in server.json."
+                }
+            } else {
+                LogWarning "MCPB package identifier '$identifier' doesn't match expected placeholder pattern."
+            }
         }
         Default {
             LogWarning "Unknown package registry type '$($package.registryType)' in server.json."
