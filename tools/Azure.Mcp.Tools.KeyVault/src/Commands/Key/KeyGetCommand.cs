@@ -42,7 +42,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
         base.RegisterOptions(command);
         command.Options.Add(KeyVaultOptionDefinitions.VaultName);
         command.Options.Add(KeyVaultOptionDefinitions.KeyName.AsOptional());
-        command.Options.Add(KeyVaultOptionDefinitions.IncludeManagedKeys.AsOptional());
     }
 
     protected override KeyGetOptions BindOptions(ParseResult parseResult)
