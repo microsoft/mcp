@@ -31,12 +31,6 @@ resource sfCluster 'Microsoft.ServiceFabric/managedClusters@2024-04-01' = {
     adminPassword: adminPassword
     clientConnectionPort: 19000
     httpGatewayConnectionPort: 19080
-    clients: [
-      {
-        isAdmin: true
-        thumbprint: '0000000000000000000000000000000000000000'
-      }
-    ]
   }
 }
 
@@ -49,7 +43,10 @@ resource primaryNodeType 'Microsoft.ServiceFabric/managedClusters/nodeTypes@2024
     vmSize: 'Standard_D2s_v3'
     vmInstanceCount: 3
     dataDiskSizeGB: 128
-    dataDiskType: 'StandardSSD_LRS'
+    vmImagePublisher: 'MicrosoftWindowsServer'
+    vmImageOffer: 'WindowsServer'
+    vmImageSku: '2022-DataCenter'
+    vmImageVersion: 'latest'
   }
 }
 
