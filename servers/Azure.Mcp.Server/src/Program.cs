@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
@@ -225,6 +226,8 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        services.AddRegistryRoot();
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

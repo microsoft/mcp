@@ -15,17 +15,4 @@
     <ProjectReference Include="..\..\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Core" />
-    <PackageReference Include="Azure.Identity" />
-    <PackageReference Include="Azure.Identity.Broker" />
-    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
-    <PackageReference Include="Azure.ResourceManager" />
-    <PackageReference Include="Azure.ResourceManager.ResourceGraph" />
-    <PackageReference Include="Microsoft.Extensions.Azure" />
-    <PackageReference Include="Microsoft.Identity.Abstractions" />
-    <PackageReference Include="Microsoft.Identity.Web" />
-    <PackageReference Include="Microsoft.Identity.Web.Azure" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" />
-  </ItemGroup>
 </Project>
