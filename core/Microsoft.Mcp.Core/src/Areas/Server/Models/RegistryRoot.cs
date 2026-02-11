@@ -9,7 +9,7 @@ namespace Azure.Mcp.Core.Areas.Server.Models;
 /// Represents the root structure of the MCP server registry JSON file.
 /// Contains a collection of server configurations keyed by server name.
 /// </summary>
-public sealed class RegistryRoot
+public sealed class RegistryRoot : IRegistryRoot
 {
     /// <summary>
     /// Gets the dictionary of server configurations, keyed by server name.

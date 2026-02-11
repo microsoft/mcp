@@ -351,7 +351,7 @@ public class ToolAnalyzerTests : IDisposable
         // Act
         await analyzer.RunAsync(analysisTime, TestContext.Current.CancellationToken);
 
-         
+
         // Assert
         await _datastore.Received(1).AddToolEventsAsync(
             Arg.Is<List<McpToolEvent>>(events =>
