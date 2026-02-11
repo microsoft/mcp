@@ -3,24 +3,18 @@
 
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class RegistryDiscoveryStrategyTests
 {
-    private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions? options = null)
-    {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<RegistryDiscoveryStrategy>>();
-        return new RegistryDiscoveryStrategy(serviceOptions, logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCorrectly()
     {
         // Act
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Assert
         Assert.NotNull(strategy);
@@ -31,7 +25,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ReturnsNonNullResult()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -44,7 +38,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ReturnsExpectedProviders()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -66,7 +60,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_AllProvidersAreRegistryServerProviderType()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -80,7 +74,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_EachProviderHasValidMetadata()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -105,7 +99,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ProvidersHaveUniqueIds()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -120,7 +114,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_CanBeCalledMultipleTimes()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -144,7 +138,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ResultCountIsConsistent()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -161,7 +155,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_LoadsFromEmbeddedRegistryResource()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -179,7 +173,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_DocumentationServerHasExpectedProperties()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -203,7 +197,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ServerNamesMatchIds()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -223,7 +217,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_AllProvidersCanCreateMetadata()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -246,7 +240,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_RegistryServerProviderSupportsSSE()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -269,7 +263,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_RegistryServersHaveValidDescriptions()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -290,7 +284,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_InheritsFromBaseDiscoveryStrategy()
     {
         // Arrange
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
 
         // Act & Assert
         Assert.IsAssignableFrom<BaseDiscoveryStrategy>(strategy);
@@ -304,7 +298,7 @@ public class RegistryDiscoveryStrategyTests
     [Fact]
     public async Task ShouldDiscoverServers()
     {
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
@@ -312,7 +306,7 @@ public class RegistryDiscoveryStrategyTests
     [Fact]
     public async Task ShouldDiscoverServers_ReturnsExpectedProviders()
     {
-        var strategy = CreateStrategy();
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
         var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
         Assert.NotEmpty(result);
         // Should contain the 'documentation' server from registry.json
@@ -330,7 +324,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = null };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -347,7 +341,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = [] };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -364,7 +358,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = ["documentation"] };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -386,7 +380,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = ["nonexistent"] };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -401,7 +395,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = ["documentation", "another"] };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -424,7 +418,7 @@ public class RegistryDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { Namespace = ["DOCUMENTATION"] };
-        var strategy = CreateStrategy(options);
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
