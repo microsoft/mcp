@@ -1714,13 +1714,16 @@ azmcp monitor webtests get --subscription <subscription> \
 
 # Examples:
 # List all web tests in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription "my-subscription"
 
 # List all web tests in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription "my-subscription" \
                            --resource-group "my-rg"
 
 # Get specific web test details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription "my-subscription" \
                            --resource-group "my-rg" \
                            --webtest-resource "my-webtest"
@@ -1755,6 +1758,7 @@ azmcp monitor webtests createorupdate --subscription <subscription> \
 
 # Examples:
 # Create a new web test
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests createorupdate --subscription "my-subscription" \
                                       --resource-group "my-rg" \
                                       --webtest-resource "my-webtest" \
@@ -1765,6 +1769,7 @@ azmcp monitor webtests createorupdate --subscription "my-subscription" \
                                       --enabled true
 
 # Update an existing web test (only change frequency and timeout)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests createorupdate --subscription "my-subscription" \
                                       --resource-group "my-rg" \
                                       --webtest-resource "my-webtest" \

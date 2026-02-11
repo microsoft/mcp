@@ -333,7 +333,6 @@
         "monitor_table_list",
         "monitor_table_type_list",
         "monitor_webtests_get",
-        "monitor_webtests_list",
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
         "resourcehealth_availability-status_list",
@@ -341,41 +340,8 @@
       ]
     },
     {
-      "name": "create_azure_monitor_webtests",
-      "description": "Create Azure Monitor web tests for application availability monitoring.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "monitor_webtests_create"
-      ]
-    },
-    {
-      "name": "update_azure_monitor_webtests",
-      "description": "Update Azure Monitor web tests for application availability monitoring.",
+      "name": "create_or_update_azure_monitor_webtests",
+      "description": "Create or update Azure Monitor web tests for application availability monitoring.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -403,7 +369,7 @@
         }
       },
       "mappedToolList": [
-        "monitor_webtests_update"
+        "monitor_webtests_createorupdate"
       ]
     },
     {
