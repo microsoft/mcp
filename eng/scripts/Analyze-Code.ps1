@@ -64,9 +64,9 @@ try {
         Write-Host "$($result.Violations.Count) tool(s) with invalid characters found. Review the output below for details."
         
         foreach ($violation in $result.Violations) {
-            Write-Host "Tool Area: $($violation.ToolArea), Tool Name: $($violation.ToolName), File: $($violation.FileName)"
+            Write-Host "- Area: $($violation.ToolArea), Name: $($violation.ToolName) in $($violation.FileName) (line: $($violation.LineNumber))"
         }
-        
+
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool name character validation passed."
