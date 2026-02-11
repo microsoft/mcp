@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Models;
+using Azure.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -12,10 +13,13 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// </summary>
 /// <param name="id">The unique identifier for the server.</param>
 /// <param name="serverInfo">Configuration information for the server.</param>
-public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo) : IMcpServerProvider
+/// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
+/// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
+public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <summary>
     /// Creates metadata that describes this registry-based server.
@@ -37,7 +41,6 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     {
         Func<McpClientOptions, CancellationToken, Task<McpClient>>? clientFactory = null;
 
-        // Determine which factory function to use based on configuration
         if (!string.IsNullOrWhiteSpace(_serverInfo.Url))
         {
             clientFactory = CreateHttpClientAsync;
@@ -88,8 +91,24 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             Name = _id,
             Endpoint = new Uri(_serverInfo.Url!),
             TransportMode = HttpTransportMode.AutoDetect,
+            // HttpClientTransportOptions offers an OAuth property to configure client side OAuth parameters, such as RedirectUri and ClientId.
+            // When OAuth property is set, the MCP client will attempt to complete the Auth flow following the MCP protocol.
+            // However, there is a gap between what MCP protocol requires the OAuth provider to implement and what Entra supports. This MCP client will always send a resource parameter to the token endpoint because it is required by the MCP protocol but Entra doesn't support it. More details in issue #939 and related discussions in modelcontextprotocol/csharp-sdk GitHub repo.
         };
-        var clientTransport = new HttpClientTransport(transportOptions);
+
+        HttpClientTransport clientTransport;
+        if (_serverInfo.OAuthScopes is not null)
+        {
+            // Registry servers with OAuthScopes must create HttpClient with this key to create an HttpClient that knows how to fetch its access tokens.
+            // The HttpClients are registered in RegistryServerServiceCollectionExtensions.cs.
+            var client = _httpClientFactory.CreateClient(RegistryServerHelper.GetRegistryServerHttpClientName(_serverInfo.Name!));
+            clientTransport = new HttpClientTransport(transportOptions, client, ownsHttpClient: true);
+        }
+        else
+        {
+            clientTransport = new HttpClientTransport(transportOptions);
+        }
+
         return await McpClient.CreateAsync(clientTransport, clientOptions, cancellationToken: cancellationToken);
     }
 
