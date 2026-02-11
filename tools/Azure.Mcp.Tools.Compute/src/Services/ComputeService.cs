@@ -734,6 +734,505 @@ public sealed class ComputeService(
         return MapToVmssVmInfo(vmResource.Value.Data);
     }
 
+    public async Task<VmssCreateResult> CreateVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string adminUsername,
+        string? vmSize = null,
+        string? image = null,
+        string? adminPassword = null,
+        string? sshPublicKey = null,
+        string? workload = null,
+        string? osType = null,
+        string? virtualNetwork = null,
+        string? subnet = null,
+        int? instanceCount = null,
+        string? upgradePolicy = null,
+        string? zone = null,
+        int? osDiskSizeGb = null,
+        string? osDiskType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        // Get workload configuration
+        var workloadConfig = GetWorkloadConfiguration(workload);
+
+        // Determine OS type
+        var effectiveOsType = DetermineOsType(osType, image);
+
+        // Determine VM size based on workload or explicit parameter
+        var effectiveVmSize = vmSize ?? workloadConfig.SuggestedVmSize;
+
+        // Determine disk settings
+        var effectiveOsDiskType = osDiskType ?? workloadConfig.SuggestedOsDiskType;
+        var effectiveOsDiskSizeGb = osDiskSizeGb;
+        var effectiveInstanceCount = instanceCount ?? 2;
+        var effectiveUpgradePolicy = ParseUpgradePolicy(upgradePolicy);
+
+        // Parse image
+        var (publisher, offer, sku, version) = ParseImage(image);
+
+        // Create or get network resources for VMSS
+        var subnetId = await CreateOrGetVmssNetworkResourcesAsync(
+            resourceGroupResource,
+            vmssName,
+            location,
+            virtualNetwork,
+            subnet,
+            cancellationToken);
+
+        // Build VMSS data using Flexible orchestration mode (default since Nov 2023)
+        var vmssData = new VirtualMachineScaleSetData(new AzureLocation(location))
+        {
+            Sku = new ComputeSku
+            {
+                Name = effectiveVmSize,
+                Tier = "Standard",
+                Capacity = effectiveInstanceCount
+            },
+            UpgradePolicy = new VirtualMachineScaleSetUpgradePolicy
+            {
+                Mode = effectiveUpgradePolicy
+            },
+            Overprovision = false,
+            VirtualMachineProfile = new VirtualMachineScaleSetVmProfile
+            {
+                StorageProfile = new VirtualMachineScaleSetStorageProfile
+                {
+                    OSDisk = new VirtualMachineScaleSetOSDisk(DiskCreateOptionType.FromImage)
+                    {
+                        Caching = CachingType.ReadWrite,
+                        ManagedDisk = new VirtualMachineScaleSetManagedDisk
+                        {
+                            StorageAccountType = new StorageAccountType(effectiveOsDiskType)
+                        },
+                        DiskSizeGB = effectiveOsDiskSizeGb
+                    },
+                    ImageReference = new ImageReference
+                    {
+                        Publisher = publisher,
+                        Offer = offer,
+                        Sku = sku,
+                        Version = version
+                    }
+                },
+                OSProfile = new VirtualMachineScaleSetOSProfile
+                {
+                    // VMSS computer name prefix - Azure appends instance number
+                    ComputerNamePrefix = vmssName.Length > 9 ? vmssName[..9] : vmssName,
+                    AdminUsername = adminUsername
+                },
+                NetworkProfile = new VirtualMachineScaleSetNetworkProfile
+                {
+                    NetworkInterfaceConfigurations =
+                    {
+                        new VirtualMachineScaleSetNetworkConfiguration($"{vmssName}-nic")
+                        {
+                            Primary = true,
+                            IPConfigurations =
+                            {
+                                new VirtualMachineScaleSetIPConfiguration($"{vmssName}-ipconfig")
+                                {
+                                    Primary = true,
+                                    SubnetId = subnetId
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Configure authentication based on OS type
+        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase))
+        {
+            vmssData.VirtualMachineProfile.OSProfile.AdminPassword = adminPassword;
+            vmssData.VirtualMachineProfile.OSProfile.WindowsConfiguration = new WindowsConfiguration
+            {
+                ProvisionVmAgent = true,
+                EnableAutomaticUpdates = true
+            };
+        }
+        else
+        {
+            vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration = new LinuxConfiguration
+            {
+                DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword)
+            };
+
+            if (!string.IsNullOrEmpty(sshPublicKey))
+            {
+                var resolvedSshKey = File.Exists(sshPublicKey)
+                    ? File.ReadAllText(sshPublicKey).Trim()
+                    : sshPublicKey;
+
+                vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new SshPublicKeyConfiguration
+                {
+                    Path = $"/home/{adminUsername}/.ssh/authorized_keys",
+                    KeyData = resolvedSshKey
+                });
+            }
+
+            if (!string.IsNullOrEmpty(adminPassword))
+            {
+                vmssData.VirtualMachineProfile.OSProfile.AdminPassword = adminPassword;
+                vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.DisablePasswordAuthentication = false;
+            }
+        }
+
+        // Add availability zone if specified
+        if (!string.IsNullOrEmpty(zone))
+        {
+            vmssData.Zones.Add(zone);
+        }
+
+        // Create the VMSS
+        var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
+        var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
+            Azure.WaitUntil.Completed,
+            vmssName,
+            vmssData,
+            cancellationToken);
+
+        var createdVmss = vmssOperation.Value;
+
+        return new VmssCreateResult(
+            Name: createdVmss.Data.Name,
+            Id: createdVmss.Data.Id?.ToString(),
+            Location: createdVmss.Data.Location.Name,
+            VmSize: createdVmss.Data.Sku?.Name,
+            ProvisioningState: createdVmss.Data.ProvisioningState,
+            OsType: effectiveOsType,
+            Capacity: (int)(createdVmss.Data.Sku?.Capacity ?? effectiveInstanceCount),
+            UpgradePolicy: createdVmss.Data.UpgradePolicy?.Mode?.ToString(),
+            Zones: createdVmss.Data.Zones?.ToList(),
+            Tags: createdVmss.Data.Tags as IReadOnlyDictionary<string, string>,
+            WorkloadConfiguration: workloadConfig);
+    }
+
+    public async Task<VmssUpdateResult> UpdateVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        string? vmSize = null,
+        int? capacity = null,
+        string? upgradePolicy = null,
+        bool? overprovision = null,
+        bool? enableAutoOsUpgrade = null,
+        string? scaleInPolicy = null,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        // Get existing VMSS
+        var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
+        var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
+        var vmssResource = vmssResponse.Value;
+        var vmssData = vmssResource.Data;
+
+        // Apply updates using PATCH semantics - only update what's specified
+        var needsUpdate = false;
+
+        if (vmSize != null && vmssData.Sku != null)
+        {
+            vmssData.Sku.Name = vmSize;
+            needsUpdate = true;
+        }
+
+        if (capacity.HasValue && vmssData.Sku != null)
+        {
+            vmssData.Sku.Capacity = capacity.Value;
+            needsUpdate = true;
+        }
+
+        if (upgradePolicy != null)
+        {
+            vmssData.UpgradePolicy ??= new VirtualMachineScaleSetUpgradePolicy();
+            vmssData.UpgradePolicy.Mode = ParseUpgradePolicy(upgradePolicy);
+            needsUpdate = true;
+        }
+
+        if (overprovision.HasValue)
+        {
+            vmssData.Overprovision = overprovision.Value;
+            needsUpdate = true;
+        }
+
+        if (enableAutoOsUpgrade.HasValue)
+        {
+            vmssData.UpgradePolicy ??= new VirtualMachineScaleSetUpgradePolicy();
+            vmssData.UpgradePolicy.AutomaticOSUpgradePolicy ??= new AutomaticOSUpgradePolicy();
+            vmssData.UpgradePolicy.AutomaticOSUpgradePolicy.EnableAutomaticOSUpgrade = enableAutoOsUpgrade.Value;
+            needsUpdate = true;
+        }
+
+        if (scaleInPolicy != null)
+        {
+            vmssData.ScaleInPolicy ??= new ScaleInPolicy();
+            vmssData.ScaleInPolicy.Rules.Clear();
+            vmssData.ScaleInPolicy.Rules.Add(ParseScaleInPolicy(scaleInPolicy));
+            needsUpdate = true;
+        }
+
+        if (tags != null)
+        {
+            // Parse tags in key=value,key2=value2 format
+            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var pair in tagPairs)
+            {
+                var keyValue = pair.Split('=', 2);
+                if (keyValue.Length == 2)
+                {
+                    vmssData.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                }
+            }
+            needsUpdate = true;
+        }
+
+        if (needsUpdate)
+        {
+            var updateOperation = await vmssCollection.CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                vmssName,
+                vmssData,
+                cancellationToken);
+            vmssResource = updateOperation.Value;
+        }
+
+        return new VmssUpdateResult(
+            Name: vmssResource.Data.Name,
+            Id: vmssResource.Data.Id?.ToString(),
+            Location: vmssResource.Data.Location.Name,
+            VmSize: vmssResource.Data.Sku?.Name,
+            ProvisioningState: vmssResource.Data.ProvisioningState,
+            Capacity: (int?)(vmssResource.Data.Sku?.Capacity),
+            UpgradePolicy: vmssResource.Data.UpgradePolicy?.Mode?.ToString(),
+            Zones: vmssResource.Data.Zones?.ToList(),
+            Tags: vmssResource.Data.Tags as IReadOnlyDictionary<string, string>);
+    }
+
+    public async Task<VmUpdateResult> UpdateVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string? vmSize = null,
+        string? tags = null,
+        string? licenseType = null,
+        string? bootDiagnostics = null,
+        string? userData = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        // Get existing VM
+        var vmCollection = resourceGroupResource.GetVirtualMachines();
+        var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
+        var vmResource = vmResponse.Value;
+
+        // Build patch object - only update what's specified
+        var patch = new VirtualMachinePatch();
+        var needsUpdate = false;
+
+        if (vmSize != null)
+        {
+            patch.HardwareProfile = new VirtualMachineHardwareProfile { VmSize = new VirtualMachineSizeType(vmSize) };
+            needsUpdate = true;
+        }
+
+        if (licenseType != null)
+        {
+            patch.LicenseType = licenseType.Equals("None", StringComparison.OrdinalIgnoreCase) ? null : licenseType;
+            needsUpdate = true;
+        }
+
+        if (bootDiagnostics != null)
+        {
+            var enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                          bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase);
+            patch.BootDiagnostics = new BootDiagnostics { Enabled = enabled };
+            needsUpdate = true;
+        }
+
+        if (userData != null)
+        {
+            patch.UserData = userData;
+            needsUpdate = true;
+        }
+
+        if (tags != null)
+        {
+            // Parse tags in key=value,key2=value2 format
+            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var pair in tagPairs)
+            {
+                var keyValue = pair.Split('=', 2);
+                if (keyValue.Length == 2)
+                {
+                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                }
+            }
+            needsUpdate = true;
+        }
+
+        if (needsUpdate)
+        {
+            var updateOperation = await vmResource.UpdateAsync(
+                Azure.WaitUntil.Completed,
+                patch,
+                cancellationToken: cancellationToken);
+            vmResource = updateOperation.Value;
+        }
+
+        // Extract power state from instance view if available
+        string? powerState = null;
+        try
+        {
+            var instanceViewResponse = await vmResource.InstanceViewAsync(cancellationToken);
+            var instanceView = instanceViewResponse.Value;
+            powerState = instanceView.Statuses?
+                .FirstOrDefault(s => s.Code?.StartsWith("PowerState/", StringComparison.OrdinalIgnoreCase) == true)?
+                .DisplayStatus;
+        }
+        catch
+        {
+            // Instance view not always available
+        }
+
+        return new VmUpdateResult(
+            Name: vmResource.Data.Name,
+            Id: vmResource.Data.Id?.ToString(),
+            Location: vmResource.Data.Location.Name,
+            VmSize: vmResource.Data.HardwareProfile?.VmSize?.ToString(),
+            ProvisioningState: vmResource.Data.ProvisioningState,
+            PowerState: powerState,
+            OsType: vmResource.Data.StorageProfile?.OSDisk?.OSType?.ToString(),
+            LicenseType: vmResource.Data.LicenseType,
+            Zones: vmResource.Data.Zones?.ToList(),
+            Tags: vmResource.Data.Tags as IReadOnlyDictionary<string, string>);
+    }
+
+    private static VirtualMachineScaleSetScaleInRule ParseScaleInPolicy(string scaleInPolicy)
+    {
+        return scaleInPolicy.ToLowerInvariant() switch
+        {
+            "default" => VirtualMachineScaleSetScaleInRule.Default,
+            "oldestvm" => VirtualMachineScaleSetScaleInRule.OldestVm,
+            "newestvm" => VirtualMachineScaleSetScaleInRule.NewestVm,
+            _ => VirtualMachineScaleSetScaleInRule.Default
+        };
+    }
+
+    private static VirtualMachineScaleSetUpgradeMode ParseUpgradePolicy(string? upgradePolicy)
+    {
+        if (string.IsNullOrEmpty(upgradePolicy))
+        {
+            return VirtualMachineScaleSetUpgradeMode.Manual;
+        }
+
+        return upgradePolicy.ToLowerInvariant() switch
+        {
+            "automatic" => VirtualMachineScaleSetUpgradeMode.Automatic,
+            "rolling" => VirtualMachineScaleSetUpgradeMode.Rolling,
+            _ => VirtualMachineScaleSetUpgradeMode.Manual
+        };
+    }
+
+    private async Task<ResourceIdentifier> CreateOrGetVmssNetworkResourcesAsync(
+        ResourceGroupResource resourceGroup,
+        string vmssName,
+        string location,
+        string? virtualNetwork,
+        string? subnet,
+        CancellationToken cancellationToken)
+    {
+        var vnetName = virtualNetwork ?? $"{vmssName}-vnet";
+        var subnetName = subnet ?? "default";
+
+        // Create or get VNet
+        var vnetCollection = resourceGroup.GetVirtualNetworks();
+        VirtualNetworkResource vnetResource;
+
+        try
+        {
+            var existingVnet = await vnetCollection.GetAsync(vnetName, cancellationToken: cancellationToken);
+            vnetResource = existingVnet.Value;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            var vnetData = new VirtualNetworkData
+            {
+                Location = new AzureLocation(location),
+                AddressPrefixes = { "10.0.0.0/16" },
+                Subnets =
+                {
+                    new SubnetData
+                    {
+                        Name = subnetName,
+                        AddressPrefix = "10.0.0.0/24"
+                    }
+                }
+            };
+
+            var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                vnetName,
+                vnetData,
+                cancellationToken);
+            vnetResource = vnetOperation.Value;
+        }
+
+        // Get subnet
+        var subnetCollection = vnetResource.GetSubnets();
+        SubnetResource subnetResource;
+
+        try
+        {
+            var existingSubnet = await subnetCollection.GetAsync(subnetName, cancellationToken: cancellationToken);
+            subnetResource = existingSubnet.Value;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            var subnetData = new SubnetData
+            {
+                AddressPrefix = "10.0.1.0/24"
+            };
+
+            var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                subnetName,
+                subnetData,
+                cancellationToken);
+            subnetResource = subnetOperation.Value;
+        }
+
+        return subnetResource.Id;
+    }
+
     private static VmInfo MapToVmInfo(VirtualMachineData data)
     {
         return new VmInfo(

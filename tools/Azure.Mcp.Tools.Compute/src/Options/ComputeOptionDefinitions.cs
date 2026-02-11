@@ -144,4 +144,81 @@ public static class ComputeOptionDefinitions
         Description = "OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'. Defaults based on VM size",
         Required = false
     };
+
+    // VMSS-specific options
+    public const string InstanceCountName = "instance-count";
+    public const string UpgradePolicyName = "upgrade-policy";
+
+    public static readonly Option<int> InstanceCount = new($"--{InstanceCountName}")
+    {
+        Description = "Number of VM instances in the scale set. Default is 2",
+        Required = false
+    };
+
+    public static readonly Option<string> UpgradePolicy = new($"--{UpgradePolicyName}")
+    {
+        Description = "Upgrade policy mode: 'Automatic', 'Manual', or 'Rolling'. Default is 'Manual'",
+        Required = false
+    };
+
+    public const string CapacityName = "capacity";
+
+    public static readonly Option<int> Capacity = new($"--{CapacityName}")
+    {
+        Description = "Number of VM instances (capacity) in the scale set",
+        Required = false
+    };
+
+    // Additional VMSS update options
+    public const string OverprovisionName = "overprovision";
+    public const string EnableAutoOsUpgradeName = "enable-auto-os-upgrade";
+    public const string ScaleInPolicyName = "scale-in-policy";
+    public const string TagsName = "tags";
+
+    public static readonly Option<bool> Overprovision = new($"--{OverprovisionName}")
+    {
+        Description = "Enable or disable overprovisioning. When enabled, Azure provisions more VMs than requested and deletes extra VMs after deployment",
+        Required = false
+    };
+
+    public static readonly Option<bool> EnableAutoOsUpgrade = new($"--{EnableAutoOsUpgradeName}")
+    {
+        Description = "Enable automatic OS image upgrades. Requires health probes or Application Health extension",
+        Required = false
+    };
+
+    public static readonly Option<string> ScaleInPolicy = new($"--{ScaleInPolicyName}")
+    {
+        Description = "Scale-in policy to determine which VMs to remove: 'Default', 'NewestVM', or 'OldestVM'",
+        Required = false
+    };
+
+    public static readonly Option<string> Tags = new($"--{TagsName}")
+    {
+        Description = "Resource tags in format 'key1=value1,key2=value2'. Use empty string to clear all tags",
+        Required = false
+    };
+
+    // VM update options
+    public const string LicenseTypeName = "license-type";
+    public const string BootDiagnosticsName = "boot-diagnostics";
+    public const string UserDataName = "user-data";
+
+    public static readonly Option<string> LicenseType = new($"--{LicenseTypeName}")
+    {
+        Description = "License type for Azure Hybrid Benefit: 'Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS', or 'None' to disable",
+        Required = false
+    };
+
+    public static readonly Option<string> BootDiagnostics = new($"--{BootDiagnosticsName}")
+    {
+        Description = "Enable or disable boot diagnostics: 'true' or 'false'",
+        Required = false
+    };
+
+    public static readonly Option<string> UserData = new($"--{UserDataName}")
+    {
+        Description = "Base64-encoded user data for the VM. Use to update custom data scripts",
+        Required = false
+    };
 }
