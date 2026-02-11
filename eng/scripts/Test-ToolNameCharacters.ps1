@@ -30,6 +30,7 @@
         - ToolArea [string]: The name of the tool area directory where the violation was found
         - FileName [string]: Full path to the file containing the violation
         - ToolName [string]: The invalid tool name
+        - LineNumber [int]: The 1-based line number where the violation was found
 
     ErrorMessage [string]
         Description of the naming rule that was violated.
@@ -45,12 +46,12 @@
     PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools"
     PS> $result.HasViolations
     True
-    PS> $result.Violations | Format-Table ToolArea, ToolName, FileName
+    PS> $result.Violations | Format-Table ToolArea, ToolName, FileName, LineNumber
 
-    ToolArea                     ToolName          FileName
-    --------                     --------          --------
-    Azure.Mcp.Tools.Storage      -invalid-start    D:\git\mcp\tools\...\BlobCommand.cs
-    Azure.Mcp.Tools.KeyVault     ends-with-dash-   D:\git\mcp\tools\...\SecretCommand.cs
+    ToolArea                     ToolName          FileName                                  LineNumber
+    --------                     --------          --------                                  ----------
+    Azure.Mcp.Tools.Storage      -invalid-start    D:\git\mcp\tools\...\BlobCommand.cs              15
+    Azure.Mcp.Tools.KeyVault     ends-with-dash-   D:\git\mcp\tools\...\SecretCommand.cs            22
 
     Shows how to list all violations when invalid tool names are found.
 
@@ -58,9 +59,10 @@
     PS> $result = .\Test-ToolNameCharacters.ps1 -ToolsDirectory "D:\git\mcp\tools"
     PS> $result.Violations | Format-List *
 
-    ToolArea : Azure.Mcp.Tools.Storage
-    FileName : D:\git\mcp\tools\Azure.Mcp.Tools.Storage\src\Commands\BlobCommand.cs
-    ToolName : storage_blob_get
+    ToolArea   : Azure.Mcp.Tools.Storage
+    FileName   : D:\git\mcp\tools\Azure.Mcp.Tools.Storage\src\Commands\BlobCommand.cs
+    ToolName   : storage_blob_get
+    LineNumber : 15
 
     Detailed view of a violation. The tool name "storage_blob_get" is invalid because it 
     contains underscores instead of dashes.
@@ -79,11 +81,13 @@ class ToolNameViolation {
     [string]$ToolArea
     [string]$ToolName
     [string]$FileName
-    
-    ToolNameViolation([string]$ToolArea, [string]$FileName, [string]$ToolName) {
+    [int]$LineNumber
+
+    ToolNameViolation([string]$ToolArea, [string]$FileName, [string]$ToolName, [int]$LineNumber) {
         $this.ToolArea = $ToolArea
         $this.FileName = $FileName
         $this.ToolName = $ToolName
+        $this.LineNumber = $LineNumber
     }
 }
 
@@ -106,36 +110,44 @@ function Test-ToolAreaTools {
         LogDebug "Processing: $($file.FullName)"
         $content = Get-Content $file.FullName
 
+        $patterns = @()
         if ($file.Name -like '*Command.cs') {
-            $matchingPattern = 'public override string Name => "(.*)";'
+            $patterns += 'public override string Name => "(.*)";'
         } elseif ($file.Name -like '*Setup.cs') {
-            $matchingPattern = 'public string Name => "(.*)";'
+            $patterns += 'public string Name => "(.*)";'
+            # Matches: new CommandGroup("group-name", ...) - only string literals, not variables
+            # Matches: AddCommand("command-name", ...) - only string literals, not variables
+            $patterns += 'new CommandGroup\("([^"]+)",'
+            $patterns += 'AddCommand\("([^"]+)",'
         } else {
             throw "Unexpected file name: $($file.Name)"
         }
-        
-        foreach ($line in $content) {
-            if ($line -match $matchingPattern) {
-                $toolName = $matches[1]
 
-                # Validate tool name format:
-                # - Each group contains alphanumeric chars or dashes
-                # - Each group cannot start or end with a dash
-                # Pattern breakdown:
-                #   ^                           - Start of string
-                #   [a-zA-Z0-9]                 - First char must be alphanumeric
-                #   ([a-zA-Z0-9-]*[a-zA-Z0-9])? - Optional: middle chars (alphanumeric or dash) ending with alphanumeric
-                #   $                           - End of string
-                $isValid = $($ToolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$')
+        for ($i = 0; $i -lt $content.Count; $i++) {
+            $line = $content[$i]
+            foreach ($matchingPattern in $patterns) {
+                if ($line -match $matchingPattern) {
+                    $toolName = $matches[1]
 
-                if (-not $isValid) {
-                    $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName)
+                    # Validate tool name format:
+                    # - Each group contains alphanumeric chars or dashes
+                    # - Each group cannot start or end with a dash
+                    # Pattern breakdown:
+                    #   ^                           - Start of string
+                    #   [a-zA-Z0-9]                 - First char must be alphanumeric
+                    #   ([a-zA-Z0-9-]*[a-zA-Z0-9])? - Optional: middle chars (alphanumeric or dash) ending with alphanumeric
+                    #   $                           - End of string
+                    $isValid = $($ToolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$')
+
+                    if (-not $isValid) {
+                        $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName, $i + 1)
+                    }
                 }
             }
         }
-    }
 
-    return $toolViolationsForArea
+        return $toolViolationsForArea
+    }
 }
 
 $ErrorActionPreference = 'Stop'
@@ -162,8 +174,7 @@ LogDebug "Total violations found: $($overallViolations.Count)"
 
 foreach ($violation in $overallViolations) {
     LogDebug "Area: $($violation.ToolArea)"
-    LogDebug "  - ToolName: $($violation.ToolName)"
-    LogDebug "  - File: $($violation.FileName)"
+    LogDebug "  - ToolName: $($violation.ToolName) in $($violation.FileName) (line: $($violation.LineNumber))"
 }
 
 LogDebug "=================================================="
