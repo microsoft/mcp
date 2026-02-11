@@ -910,6 +910,12 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Get virtual machine 'my-vm' with instance view including power state and runtime status"
 * "Show me the power state and provisioning status of VM 'my-vm'"
 * "What is the current status of my virtual machine 'my-vm'?"
+* "Create a new VM named 'my-vm' in resource group 'my-rg' for web workloads"
+* "Create a Linux VM with Ubuntu 22.04 and SSH key authentication"
+* "Create a development VM with Standard_B2s size in East US"
+* "Update VM 'my-vm' tags to environment=production"
+* "Create a VMSS named 'my-vmss' with 3 instances for web workloads"
+* "Update VMSS 'my-vmss' capacity to 5 instances"
 
 ### �📦 Azure Container Apps
 

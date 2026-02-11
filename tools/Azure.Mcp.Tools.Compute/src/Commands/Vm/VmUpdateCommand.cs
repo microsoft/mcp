@@ -28,14 +28,14 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update an existing Azure Virtual Machine (VM) configuration.
-        Supports updating VM size, tags, license type, boot diagnostics, and user data.
+        Update, modify, or change an existing Azure Virtual Machine (VM) configuration.
+        Enable or disable features, resize VM, add or remove tags, and configure settings.
         Uses PATCH semantics - only specified properties are updated.
 
         Updatable properties:
-        - --vm-size: Change the VM SKU size (requires VM to be deallocated for most size changes)
-        - --tags: Add or update tags in key=value,key2=value2 format
-        - --license-type: Set Azure Hybrid Benefit license type
+        - --vm-size: Resize the VM, change SKU size (requires VM to be deallocated for most size changes)
+        - --tags: Add, update, or remove tags in key=value,key2=value2 format
+        - --license-type: Enable or disable Azure Hybrid Benefit license
         - --boot-diagnostics: Enable or disable boot diagnostics ('true' or 'false')
         - --user-data: Update base64-encoded user data
 
