@@ -75,24 +75,6 @@ param(
     [string]$ToolsDirectory
 )
 
-class ToolArea {
-    [string]$ToolArea
-    [ToolNameViolation[]]$Violations
-
-    ToolArea([string]$ToolArea) {
-        $this.ToolArea = $ToolArea
-        $this.Violations = @()
-    }
-
-    [void]AddViolation([ToolNameViolation]$violation) {
-        $this.Violations += $violation
-    }
-
-    [bool]HasViolations() {
-        return $this.Violations.Count -gt 0
-    }
-}
-
 class ToolNameViolation {
     [string]$ToolArea
     [string]$ToolName
@@ -121,7 +103,7 @@ function Test-ToolAreaTools {
     }
 
     foreach ($file in $areaTools) {
-        Write-Debug "Processing: $($file.FullName)"
+        LogDebug "Processing: $($file.FullName)"
         $content = Get-Content $file.FullName
 
         if ($file.Name -like '*Command.cs') {
@@ -157,14 +139,15 @@ function Test-ToolAreaTools {
 }
 
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/../common/scripts/common.ps1"
 
 $toolAreaDirectories = Get-ChildItem -Path $ToolsDirectory -Directory
 $overallViolations = @()
 
-Write-Debug "Starting tool name character validation for $ToolsDirectory"
+LogDebug "Starting tool name character validation for $ToolsDirectory"
 
 foreach ($toolAreaDir in $toolAreaDirectories) {
-    Write-Debug "Processing tool area: $($toolAreaDir.FullName)"
+    LogDebug "Processing tool area: $($toolAreaDir.FullName)"
     $toolAreaResult = Test-ToolAreaTools -ToolAreaDirectory $toolAreaDir.FullName
 
     if ($toolAreaResult.Count -gt 0) {
@@ -172,18 +155,18 @@ foreach ($toolAreaDir in $toolAreaDirectories) {
     }
 }
 
-Write-Debug "=================================================="
-Write-Debug "SUMMARY"
-Write-Debug "Tools Directory: $ToolsDirectory"
-Write-Debug "Total violations found: $($overallViolations.Count)"
+LogDebug "=================================================="
+LogDebug "SUMMARY"
+LogDebug "Tools Directory: $ToolsDirectory"
+LogDebug "Total violations found: $($overallViolations.Count)"
 
 foreach ($violation in $overallViolations) {
-    Write-Debug "Area: $($violation.ToolArea)"
-    Write-Debug "  - ToolName: $($violation.ToolName)"
-    Write-Debug "  - File: $($violation.FileName)"
+    LogDebug "Area: $($violation.ToolArea)"
+    LogDebug "  - ToolName: $($violation.ToolName)"
+    LogDebug "  - File: $($violation.FileName)"
 }
 
-Write-Debug "=================================================="
+LogDebug "=================================================="
 
 $result = [PSCustomObject]@{
     HasViolations = $overallViolations.Count -gt 0
