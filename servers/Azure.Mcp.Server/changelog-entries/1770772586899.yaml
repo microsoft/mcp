@@ -1,0 +1,7 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Consolidated KeyVault get/list commands:
+      - keyvault_key_get: Now supports both getting a specific key and listing all keys
+      - keyvault_secret_get: Now supports both getting a specific secret and listing all secrets
+      - keyvault_certificate_get: Now supports both getting a specific certificate and listing all certificates
