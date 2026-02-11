@@ -47,7 +47,7 @@ public class WebTestsCreateOrUpdateCommandTests
         Assert.Equal("createorupdate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Creates a new or updates an existing", command.Description);
+        Assert.Contains("Create or update", command.Description);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class WebTestsCreateOrUpdateCommandTests
     public void Description_ContainsRequiredInformation()
     {
         var description = _command.Description;
-        Assert.Contains("Creates a new or updates an existing", description);
+        Assert.Contains("Create or update", description);
         Assert.Contains("standard web test", description);
     }
 

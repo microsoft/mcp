@@ -26,8 +26,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
     public override string Description =>
          $"""
         Gets details for a specific web test or lists all web tests.
-        When webtest-name is provided, returns detailed information about a single web test.
-        When webtest-name is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
+        When --webtest-resource is provided, returns detailed information about a single web test.
+        When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
         """;
 
     public override string Title => CommandTitle;
@@ -57,7 +57,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
             if (!string.IsNullOrEmpty(webTestName) && string.IsNullOrEmpty(resourceGroup))
             {
-                commandResult.AddError("The resource-group option is required when webtest-name is specified.");
+                commandResult.AddError("The --resource-group option is required when --webtest-resource is specified.");
             }
         });
     }
@@ -82,7 +82,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         {
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
 
-            // If webtest-name is provided, get a specific web test
+            // If --webtest-resource is provided, get a specific web test
             if (!string.IsNullOrEmpty(options.WebTestName))
             {
                 var webTest = await monitorWebTestService.GetWebTest(

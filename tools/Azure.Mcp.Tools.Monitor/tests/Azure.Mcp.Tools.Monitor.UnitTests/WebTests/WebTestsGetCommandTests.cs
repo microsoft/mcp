@@ -67,8 +67,8 @@ public class WebTestsGetCommandTests
     {
         var description = _command.Description;
         Assert.Contains("specific web test or lists all web tests", description);
-        Assert.Contains("webtest-name is provided", description);
-        Assert.Contains("webtest-name is omitted", description);
+        Assert.Contains("--webtest-resource is provided", description);
+        Assert.Contains("--webtest-resource is omitted", description);
     }
 
     [Fact]

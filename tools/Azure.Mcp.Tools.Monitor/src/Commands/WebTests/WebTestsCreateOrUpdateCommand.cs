@@ -27,8 +27,9 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
 
     public override string Description =>
         """
-        Creates a new or updates an existing standard web test in Azure Monitor. Ping/Multstep web tests are deprecated and are not supported.
-        Returns the created or updated web test details.
+        Create or update a standard web test in Azure Monitor to monitor endpoint availability.
+        Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
+        Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
         """;
 
     public override string Title => CommandTitle;
