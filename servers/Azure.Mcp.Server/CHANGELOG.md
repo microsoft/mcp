@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.18 (Unreleased)
+## 2.0.0-beta.19 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.18 (2026-02-10)
+
+### Features Added
+
+- AMD64 and ARM64 Docker images of the Azure MCP Server are now available. [[#1651](https://github.com/microsoft/mcp/pull/1651)]
+
+### Bugs Fixed
+
+- Added CORS policy to restrict cross-origin requests to localhost when running in unauthenticated development environment. [[#1609](https://github.com/microsoft/mcp/pull/1609)]
+- Fixed elicitation prompts failing with 'Form mode elicitation requests require a requested schema' error by using simple accept/decline prompts instead of form-based schemas for sensitive tool confirmations. [[#1668](https://github.com/microsoft/mcp/pull/1668)]
 
 ## 2.0.0-beta.17 (2026-02-05)
 
