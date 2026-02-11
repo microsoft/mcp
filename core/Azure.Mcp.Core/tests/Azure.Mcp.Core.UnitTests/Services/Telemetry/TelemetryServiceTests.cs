@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -317,7 +318,8 @@ public class TelemetryServiceTests
 
         AssertTag(dictionary, TagName.DevDeviceId, TestDeviceId);
         AssertTag(dictionary, TagName.MacAddressHash, TestMacAddressHash);
-        AssertTag(dictionary, TagName.Host, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+        AssertTag(dictionary, TagName.Host, RuntimeInformation.OSDescription);
+        AssertTag(dictionary, TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString());
 
         if (expectedServiceOptions != null)
         {
