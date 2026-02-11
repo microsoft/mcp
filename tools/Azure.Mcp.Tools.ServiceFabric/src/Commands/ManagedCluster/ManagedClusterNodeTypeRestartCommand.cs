@@ -4,7 +4,6 @@
 using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
