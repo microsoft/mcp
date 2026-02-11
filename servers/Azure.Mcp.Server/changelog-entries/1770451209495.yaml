@@ -1,0 +1,10 @@
+pr: 1632
+changes:
+  - section: "Features Added"
+    description: |
+      Added Azure DocumentDB (with MongoDB compatibility) MCP tools with 29 commands across 5 categories:
+      - Connection management: connect, disconnect, get connection status
+      - Database operations: list databases, get database info and stats, drop database
+      - Collection operations: get collection stats, rename/drop collections, sample documents
+      - Document operations: find, count, insert, update, delete documents, run aggregations, explain query plans
+      - Index operations: create, list, drop indexes, get index stats, view current operations

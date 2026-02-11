@@ -98,6 +98,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.DocumentDb.DocumentDbSetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.Advisor.AdvisorSetup(),

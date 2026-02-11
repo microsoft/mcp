@@ -51,6 +51,12 @@
 # ServiceLabel: %tools-Advisor
 # ServiceOwners:                       @ankiga-MSFT
 
+# PRLabel: %tools-DocumentDb
+/tools/Azure.Mcp.Tools.DocumentDb/     @xingfan-git @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DocumentDb
+# ServiceOwners:                       @xingfan-git
+
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @anuchandy @feiskyer @gossion @jongio @microsoft/azure-mcp
 

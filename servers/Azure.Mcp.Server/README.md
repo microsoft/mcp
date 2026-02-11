@@ -937,6 +937,34 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
 
+### 🗄️ Azure DocumentDB (with MongoDB compatibility)
+
+* "Connect to my DocumentDB instance"
+* "Disconnect from DocumentDB"
+* "Show me the DocumentDB connection status"
+* "List all databases in DocumentDB"
+* "Get statistics for database 'mydb'"
+* "Show me database information for 'analytics'"
+* "Drop database 'testdb'"
+* "Show me collections in database 'mydb'"
+* "Get statistics for collection 'users'"
+* "Rename collection 'old-name' to 'new-name'"
+* "Sample documents from collection 'products'"
+* "Find documents in collection 'users' where status is active"
+* "Count documents in collection 'orders'"
+* "Insert a document into collection 'products'"
+* "Insert multiple documents into collection 'inventory'"
+* "Update documents in collection 'inventory' where quantity is low"
+* "Delete documents from collection 'logs' where date is old"
+* "Run an aggregation pipeline on collection 'sales'"
+* "Find and modify a document in collection 'users'"
+* "Explain query plan for finding documents"
+* "Create an index on collection 'customers'"
+* "List all indexes on collection 'products'"
+* "Drop index from collection 'users'"
+* "Get index statistics for collection 'orders'"
+* "Show current operations running in DocumentDB"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
@@ -1055,6 +1083,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- 🗄️ **Azure DocumentDB (with MongoDB compatibility)** - Azure DocumentDB operations
 - 📊 **Azure Event Grid** - Event routing and management
 - � **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
