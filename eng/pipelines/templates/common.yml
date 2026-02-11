@@ -18,7 +18,7 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
-- name: PackagePyPi
+- name: PackagePyPI
   type: boolean
   default: false
 - name: TestTimeoutInMinutes
@@ -121,7 +121,7 @@ extends:
             ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
             PackageDocker: ${{ parameters.PackageDocker }}
             PackageVSIX: ${{ parameters.PackageVSIX }}
-            PackagePyPi: ${{ parameters.PackagePyPi }}
+            PackagePyPI: ${{ parameters.PackagePyPI }}
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
@@ -142,7 +142,7 @@ extends:
               IncludeNative: false
               PackageDocker: ${{ parameters.PackageDocker }}
               PackageVSIX: ${{ parameters.PackageVSIX }}
-              PackagePyPi: ${{ parameters.PackagePyPi }}
+              PackagePyPI: ${{ parameters.PackagePyPI }}
               IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
       - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:

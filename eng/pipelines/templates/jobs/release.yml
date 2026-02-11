@@ -7,7 +7,7 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
-- name: PackagePyPi
+- name: PackagePyPI
   type: boolean
 - name: IsTestPipeline
   type: boolean
@@ -57,7 +57,7 @@ jobs:
     IncludeNative: ${{ parameters.IncludeNative }}
     DependsOn: TagRepository
 
-- ${{ if parameters.PackagePyPi }}:
+- ${{ if parameters.PackagePyPI }}:
   - template: /eng/pipelines/templates/jobs/pypi/release-pypi.yml
     parameters:
       ServerName: ${{ parameters.ServerName }}
