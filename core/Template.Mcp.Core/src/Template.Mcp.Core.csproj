@@ -5,6 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="..\..\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
   </ItemGroup>
 </Project>

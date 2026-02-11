@@ -168,7 +168,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
         try
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "Azure.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
+            var resourceName = "Microsoft.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
             using var stream = assembly.GetManifestResourceStream(resourceName);
             if (stream == null)
             {
