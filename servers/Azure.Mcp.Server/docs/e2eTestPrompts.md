@@ -672,6 +672,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
 
+## Azure Service Fabric
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| servicefabric_managedcluster_node_list | List all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name> |
+| servicefabric_managedcluster_node_list | Show me the nodes and their status for managed cluster <cluster_name> |
+| servicefabric_managedcluster_nodetype_restart | Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD |
+| servicefabric_managedcluster_nodetype_restart | Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name> |
+
 ## Azure SignalR
 
 | Tool Name | Test Prompt |
