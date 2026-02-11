@@ -325,7 +325,7 @@ public class WebTestsGetCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var results = GetListResult(response.Results);
         Assert.NotNull(results);
         Assert.Single(results);

@@ -107,7 +107,7 @@ public class WebTestsCreateOrUpdateCommandTests
         Assert.Contains("--enabled", options);
         Assert.Contains("--frequency", options);
         Assert.Contains("--timeout", options);
-        
+
         // Verify required options are marked as required
         var requiredOptions = command.Options.Where(o => o.Required).Select(o => o.Name).ToList();
         Assert.Contains("--resource-group", requiredOptions);
@@ -292,7 +292,7 @@ public class WebTestsCreateOrUpdateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var result = GetResult(response.Results);
         Assert.NotNull(result);
         Assert.Equal("existingwebtest", result.ResourceName);
