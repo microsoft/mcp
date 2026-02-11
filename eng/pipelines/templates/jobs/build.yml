@@ -12,6 +12,9 @@ parameters:
   type: string
 - name: MaxParallel
   type: number
+- name: HostArchitecture
+  type: string
+  default: ''
 
 jobs:
 - job: Build_${{ parameters.OSName }}
@@ -27,7 +30,10 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
-    hostArchitecture: $(HostArchitecture)
+    ${{ if eq(parameters.HostArchitecture, 'x64') }}:
+      hostArchitecture: ''
+    ${{ else }}:
+      hostArchitecture: ${{ parameters.HostArchitecture }}
 
   # Only run codeql on linux internal build jobs to reduce overall time on pipeline
   ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:

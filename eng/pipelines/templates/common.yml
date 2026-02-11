@@ -69,15 +69,17 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
 
-      - ${{ each os in split('linux|windows|macOS', '|') }}:
-        - template: /eng/pipelines/templates/jobs/build.yml
-          parameters:
-            TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
-            ServerName: ${{ parameters.ServerName }}
-            PublishTarget: ${{ parameters.PublishTarget }}
-            OSName: ${{ os }}
-            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
-            MaxParallel: 4
+      - ${{ each arch in split('x64|arm64', '|') }}:
+        - ${{ each os in split('linux|windows|macOS', '|') }}:
+          - template: /eng/pipelines/templates/jobs/build.yml
+            parameters:
+              TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+              ServerName: ${{ parameters.ServerName }}
+              PublishTarget: ${{ parameters.PublishTarget }}
+              OSName: ${{ os }}
+              Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrices.${{ arch }}']
+              MaxParallel: 4
+              HostArchitecture: ${{ arch }}
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test

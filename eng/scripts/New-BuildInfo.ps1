@@ -541,7 +541,7 @@ function Get-BuildMatrices {
     $matrices = [ordered]@{}
 
     foreach ($os in $operatingSystems.name) {
-        $buildMatrix = [ordered]@{}
+        $buildMatricesByArch = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
 
         $supportedPlatforms = $servers.platforms
@@ -560,14 +560,14 @@ function Get-BuildMatrices {
             }
 
             $pool = switch($os) {
-                'windows' { if ($arch -eq 'arm64') { $windowsArm64Pool } else { $windowsPool } }
-                'linux' { if ($arch -eq 'arm64') { $linuxArm64Pool } else { $linuxPool } }
+                'windows' { if ($arch -like '*arm64*') { $windowsArm64Pool } else { $windowsPool } }
+                'linux' { if ($arch -like '*arm64*') { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
-                'windows' { if ($arch -eq 'arm64') { $windowsArm64VmImage } else { $windowsVmImage } }
-                'linux' { if ($arch -eq 'arm64') { $linuxArm64VmImage } else { $linuxVmImage } }
+                'windows' { if ($arch -like '*arm64*') { $windowsArm64VmImage } else { $windowsVmImage } }
+                'linux' { if ($arch -like '*arm64*') { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
@@ -575,13 +575,18 @@ function Get-BuildMatrices {
             $runUnitTests = !$platform.native `
                 -and !$platform.specialPurpose `
                 -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
-                -and !($os -eq 'macos' -and $arch -eq 'arm64')
+                -and !($os -eq 'macos' -and $arch -like '*arm64*')
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
-            $publishCoverage = $runUnitTests -and $arch -ne 'arm64'
+            $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
-            $hostArchitecture = if ($arch -eq 'arm64') { 'Arm64' } else { '' }
+            $hostArchitecture = if ($arch -like '*arm64*') { 'Arm64' } else { '' }
 
-            $buildMatrix[$legName] = [ordered]@{
+            $architectureKey = if ($arch -like '*arm64*') { 'arm64' } else { 'x64' }
+            if (-not $buildMatricesByArch.Contains($architectureKey)) {
+                $buildMatricesByArch[$architectureKey] = [ordered]@{}
+            }
+
+            $buildMatricesByArch[$architectureKey][$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
@@ -601,7 +606,13 @@ function Get-BuildMatrices {
             }
         }
 
-        $matrices["${os}BuildMatrix"] = $buildMatrix
+        foreach ($requiredArch in @('x64', 'arm64')) {
+            if (-not $buildMatricesByArch.Contains($requiredArch)) {
+                $buildMatricesByArch[$requiredArch] = [ordered]@{}
+            }
+        }
+
+        $matrices["${os}BuildMatrices"] = $buildMatricesByArch
         $matrices["${os}SmokeTestMatrix"] = $smokeTestMatrix
     }
 
@@ -678,10 +689,26 @@ try {
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
             if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
-                $matrices[$key] = @{}
+                if ($key -match 'BuildMatrices$') {
+                    $emptyByArch = [ordered]@{}
+                    foreach($archKey in @('x64', 'arm64')) {
+                        $emptyByArch[$archKey] = @{}
+                    }
+                    $matrices[$key] = $emptyByArch
+                } else {
+                    $matrices[$key] = @{}
+                }
             }
 
-            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
+            $value = $matrices[$key]
+            if ($key -match 'BuildMatrices$' -and $value -is [System.Collections.IDictionary]) {
+                foreach($subKey in $value.Keys) {
+                    $subJson = $value[$subKey] | ConvertTo-Json -Compress
+                    Write-Host "##vso[task.setvariable variable=${key}.${subKey};isOutput=true]$subJson"
+                }
+            }
+
+            $matrixJson = $value | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
     }
