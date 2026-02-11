@@ -2,7 +2,7 @@ targetScope = 'resourceGroup'
 
 @minLength(3)
 @maxLength(23)
-@description('The base resource name. Service Fabric managed cluster names must be between 4 and 23 characters.')
+@description('The base resource name. Service Fabric managed cluster names must be between 3 and 23 characters.')
 param baseName string = resourceGroup().name
 
 @description('The client OID to grant access to test resources.')
@@ -50,7 +50,7 @@ resource primaryNodeType 'Microsoft.ServiceFabric/managedClusters/nodeTypes@2024
   }
 }
 
-// Service Fabric Managed Clusters Contributor role
+// Contributor role
 resource sfContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   // Contributor role - allows read/write on Service Fabric managed clusters

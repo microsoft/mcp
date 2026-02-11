@@ -59,14 +59,15 @@ public sealed class ServiceFabricService(
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            var listResponse = JsonSerializer.Deserialize(content, ServiceFabricJsonContext.Default.ListNodesResponse);
+            var listResponse = JsonSerializer.Deserialize(content, ServiceFabricJsonContext.Default.ListNodesResponse)
+                ?? throw new InvalidOperationException("Failed to deserialize the managed cluster nodes response.");
 
-            if (listResponse?.Value != null)
+            if (listResponse.Value != null)
             {
                 allNodes.AddRange(listResponse.Value);
             }
 
-            requestUrl = listResponse?.NextLink;
+            requestUrl = listResponse.NextLink;
         }
 
         return allNodes;
@@ -114,7 +115,7 @@ public sealed class ServiceFabricService(
             UpdateType = updateType
         };
 
-        var jsonContent = new StringContent(
+        using var jsonContent = new StringContent(
             JsonSerializer.Serialize(requestBody, ServiceFabricJsonContext.Default.RestartNodeRequest),
             Encoding.UTF8,
             "application/json");
