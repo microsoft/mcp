@@ -20,7 +20,7 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
         var clusterName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "azmcp_servicefabric_managedcluster_node_list",
+            "servicefabric_managedcluster_node_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -29,7 +29,7 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
             });
 
         // Assert
-        var nodes = result.AssertProperty("nodes");
+        var nodes = result.AssertProperty("Nodes");
         Assert.Equal(JsonValueKind.Array, nodes.ValueKind);
 
         foreach (var node in nodes.EnumerateArray())

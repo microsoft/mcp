@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Models;
@@ -93,9 +92,17 @@ public class ManagedClusterNodeProperties
     [JsonPropertyName("InfrastructurePlacementID")]
     public string? InfrastructurePlacementID { get; set; }
 
-    /// <summary> Additional properties not explicitly modeled. </summary>
-    [JsonExtensionData]
-    public JsonObject? AdditionalProperties { get; set; }
+    /// <summary> Node deactivation information. </summary>
+    [JsonPropertyName("NodeDeactivationInfo")]
+    public NodeDeactivationInfo? NodeDeactivationInfo { get; set; }
+
+    /// <summary> Whether the node is stopped. </summary>
+    [JsonPropertyName("IsStopped")]
+    public bool? IsStopped { get; set; }
+
+    /// <summary> Tags associated with the node. </summary>
+    [JsonPropertyName("NodeTags")]
+    public List<string>? NodeTags { get; set; }
 }
 
 /// <summary>
@@ -106,6 +113,52 @@ public class NodeIdentifier
     /// <summary> The node ID string. </summary>
     [JsonPropertyName("Id")]
     public string? Id { get; set; }
+}
+
+/// <summary>
+/// Represents node deactivation information.
+/// </summary>
+public class NodeDeactivationInfo
+{
+    /// <summary> The deactivation intent. </summary>
+    [JsonPropertyName("NodeDeactivationIntent")]
+    public int? NodeDeactivationIntent { get; set; }
+
+    /// <summary> The deactivation status. </summary>
+    [JsonPropertyName("NodeDeactivationStatus")]
+    public int? NodeDeactivationStatus { get; set; }
+
+    /// <summary> The deactivation tasks. </summary>
+    [JsonPropertyName("NodeDeactivationTask")]
+    public List<NodeDeactivationTask>? NodeDeactivationTask { get; set; }
+
+    /// <summary> Pending safety checks. </summary>
+    [JsonPropertyName("PendingSafetyChecks")]
+    public List<PendingSafetyCheck>? PendingSafetyChecks { get; set; }
+}
+
+/// <summary>
+/// Represents a node deactivation task.
+/// </summary>
+public class NodeDeactivationTask
+{
+    /// <summary> The task ID. </summary>
+    [JsonPropertyName("TaskId")]
+    public string? TaskId { get; set; }
+
+    /// <summary> The deactivation intent. </summary>
+    [JsonPropertyName("DeactivationIntent")]
+    public int? DeactivationIntent { get; set; }
+}
+
+/// <summary>
+/// Represents a pending safety check.
+/// </summary>
+public class PendingSafetyCheck
+{
+    /// <summary> The kind of safety check. </summary>
+    [JsonPropertyName("Kind")]
+    public string? Kind { get; set; }
 }
 
 /// <summary>
