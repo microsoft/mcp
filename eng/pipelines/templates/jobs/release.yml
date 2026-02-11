@@ -63,12 +63,6 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       IncludeNative: ${{ parameters.IncludeNative }}
       DependsOn: TagRepository
-- ${{ else }}:
-  - job: PublishPyPI
-    displayName: "Publish PyPI (skipped)"
-    steps:
-    - script: echo "PyPI publishing skipped"
-      displayName: "Skipped"
 
 - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
   parameters:
@@ -88,12 +82,6 @@ jobs:
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
-- ${{ else }}:
-  - job: PublishACR
-    displayName: "Publishing top ACR (skipped)"
-    steps:
-    - script: echo "ACR publishing skipped"
-      displayName: "Skipped"
 
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
@@ -101,8 +89,10 @@ jobs:
     DependsOn:
     - PublishNugetPackage
     - PublishNpm
-    - PublishPyPI
-    - PublishACR
+    - ${{ if parameters.PackageDocker }}:
+      - PublishACR
+    - ${{ if parameters.PackagePyPI }}:
+      - PublishPyPI
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
