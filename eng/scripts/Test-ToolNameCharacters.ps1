@@ -94,16 +94,17 @@ class ToolNameViolation {
 function Test-ToolAreaTools {
     param(
         [Parameter(Mandatory)]
-        [string]$ToolAreaDirectory
+        [string]$TestDirectory
     )
 
-    $name = $(Split-Path $ToolAreaDirectory -Leaf)
+    $name = $(Split-Path $TestDirectory -Leaf)
     $toolViolationsForArea = @()
 
-    $areaTools = Get-ChildItem $ToolAreaDirectory -Recurse | Where-Object { $_.Name.EndsWith("Command.cs") -or $_.Name.EndsWith("Setup.cs") } 
+    LogDebug "Processing tool area: $($TestDirectory)"
+    $areaTools = Get-ChildItem $TestDirectory -Recurse -Include '*Command.cs', '*Setup.cs'
 
     if ($areaTools.Count -eq 0) {
-        Write-Warning "No files with *Command.cs or *Setup.cs found in area: $ToolAreaDirectory"
+        Write-Warning "No files with *Command.cs or *Setup.cs found in area: $TestDirectory"
     }
 
     foreach ($file in $areaTools) {
@@ -145,9 +146,9 @@ function Test-ToolAreaTools {
                 }
             }
         }
+    }
 
         return $toolViolationsForArea
-    }
 }
 
 $ErrorActionPreference = 'Stop'
@@ -156,11 +157,10 @@ $ErrorActionPreference = 'Stop'
 $toolAreaDirectories = Get-ChildItem -Path $ToolsDirectory -Directory
 $overallViolations = @()
 
-LogDebug "Starting tool name character validation for $ToolsDirectory"
+LogDebug "Starting tool name character validation..."
 
 foreach ($toolAreaDir in $toolAreaDirectories) {
-    LogDebug "Processing tool area: $($toolAreaDir.FullName)"
-    $toolAreaResult = Test-ToolAreaTools -ToolAreaDirectory $toolAreaDir.FullName
+    $toolAreaResult = Test-ToolAreaTools -TestDirectory $toolAreaDir.FullName
 
     if ($toolAreaResult.Count -gt 0) {
         $overallViolations += $toolAreaResult
