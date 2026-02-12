@@ -523,7 +523,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public async Task Should_List_WebTests()
     {
         var result = await CallToolAsync(
-            "monitor_webtests_list",
+            "monitor_webtests_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -552,7 +552,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public async Task Should_List_WebTests_ByResourceGroup()
     {
         var result = await CallToolAsync(
-            "monitor_webtests_list",
+            "monitor_webtests_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -638,7 +638,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
 
         var result = await CallToolAsync(
-            "monitor_webtests_create",
+            "monitor_webtests_createorupdate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -676,7 +676,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var webTestName = _bingWebTestName;
 
         var result = await CallToolAsync(
-            "monitor_webtests_update",
+            "monitor_webtests_createorupdate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

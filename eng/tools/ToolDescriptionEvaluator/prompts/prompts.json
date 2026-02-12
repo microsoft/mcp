@@ -429,7 +429,13 @@
     "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
     "Get the certificate <certificate_name> from vault <key_vault_account_name>",
     "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
-    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>"
+    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>",
+    "List all certificates in the key vault <key_vault_account_name>",
+    "Show me the certificates in the key vault <key_vault_account_name>",
+    "What certificates are in the key vault <key_vault_account_name>?",
+    "List certificate names in vault <key_vault_account_name>",
+    "Enumerate certificates in key vault <key_vault_account_name>",
+    "Show certificate names in the key vault <key_vault_account_name>"
   ],
   "keyvault_certificate_import": [
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>",
@@ -438,14 +444,7 @@
     "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
     "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>"
   ],
-  "keyvault_certificate_list": [
-    "List all certificates in the key vault <key_vault_account_name>",
-    "Show me the certificates in the key vault <key_vault_account_name>",
-    "What certificates are in the key vault <key_vault_account_name>?",
-    "List certificate names in vault <key_vault_account_name>",
-    "Enumerate certificates in key vault <key_vault_account_name>",
-    "Show certificate names in the key vault <key_vault_account_name>"
-  ],
+
   "keyvault_key_create": [
     "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
     "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
@@ -458,9 +457,7 @@
     "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
     "Get the key <key_name> from vault <key_vault_account_name>",
     "Display the key details for <key_name> in vault <key_vault_account_name>",
-    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>"
-  ],
-  "keyvault_key_list": [
+    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>",
     "List all keys in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
     "What keys are in the key vault <key_vault_account_name>?",
@@ -480,9 +477,7 @@
     "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
     "Get the secret <secret_name> from vault <key_vault_account_name>",
     "Display the secret details for <secret_name> in vault <key_vault_account_name>",
-    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>"
-  ],
-  "keyvault_secret_list": [
+    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>",
     "List all secrets in the key vault <key_vault_account_name>",
     "Show me the secrets in the key vault <key_vault_account_name>",
     "What secrets are in the key vault <key_vault_account_name>?",
@@ -608,18 +603,18 @@
     "List all available table types in the Log Analytics workspace <workspace_name>",
     "Show me the available table types in the Log Analytics workspace <workspace_name>"
   ],
-  "monitor_webtests_create": [
-    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
-  ],
   "monitor_webtests_get": [
-    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>"
-  ],
-  "monitor_webtests_list": [
+    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
     "List all Web Test resources in my subscription",
-    "List all Web Test resources in my subscription in <resource_group>"
+    "List all Web Test resources in my subscription in <resource_group>",
+    "Show me all web tests in my subscription",
+    "Show me web tests in resource group <resource_group>"
   ],
-  "monitor_webtests_update": [
-    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  "monitor_webtests_createorupdate": [
+    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Create or update web test <webtest_resource_name> in resource group <resource_group>",
+    "Set up a web test named <webtest_resource_name> in <resource_group> for application insights <appinsights_component>"
   ],
   "monitor_workspace_list": [
     "List all Log Analytics workspaces in my subscription",
