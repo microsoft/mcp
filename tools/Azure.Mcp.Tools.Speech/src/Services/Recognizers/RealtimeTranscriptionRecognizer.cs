@@ -63,7 +63,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesEndpoint().ToString()]);
+                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope().ToString()]);
                 var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Configure Speech SDK with endpoint
@@ -499,7 +499,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         return nbestResults;
     }
 
-    private Uri GetCognitiveServicesEndpoint()
+    private Uri GetCognitiveServicesScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
