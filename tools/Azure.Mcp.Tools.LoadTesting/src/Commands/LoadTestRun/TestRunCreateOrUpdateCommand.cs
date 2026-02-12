@@ -9,29 +9,31 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
-    : BaseLoadTestingCommand<TestRunUpdateOptions>
+public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger)
+    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
 {
-    private const string _commandTitle = "Test Run Update";
-    private readonly ILogger<TestRunUpdateCommand> _logger = logger;
+    private const string _commandTitle = "Test Run Create or Update";
+    private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
     public override string Id => "0e3c8f2c-57ce-49c0-bff4-27c9573e7049";
-    public override string Name => "update";
+    public override string Name => "createorupdate";
     public override string Description =>
         $"""
-        Updates the metadata and display properties of a completed or in-progress load test run execution.
-        This command allows you to modify descriptive information for better organization, documentation, and identification of test runs without affecting the actual test execution or results. 
-        This will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
-        This will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.
+        Create or update a load test run execution.
+        Creates a new test run for a specified test in the load testing resource, or updates metadata and display properties of an existing test run.
+        When creating: Triggers a new test run execution based on the existing test configuration. Use testrun ID to specify the new run identifier. Create operations are NOT idempotent - each call starts a new test run with unique timestamps and execution state.
+        When updating: Modifies descriptive information (display name, description) of a completed or in-progress test run for better organization and documentation. Update operations are idempotent - repeated calls with same values produce the same result.
+        This does not modify the test plan configuration or create a new test/resource - only manages test run executions.
         """;
     public override string Title => _commandTitle;
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
@@ -43,17 +45,19 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
         base.RegisterOptions(command);
         command.Options.Add(LoadTestingOptionDefinitions.TestRun);
         command.Options.Add(LoadTestingOptionDefinitions.Test);
-        command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
-        command.Options.Add(LoadTestingOptionDefinitions.Description);
+        command.Options.Add(LoadTestingOptionDefinitions.DisplayName.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.Description.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.OldTestRunId.AsOptional());
     }
 
-    protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
+    protected override TestRunCreateOrUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.TestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
         options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
         options.DisplayName = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.DisplayName.Name);
         options.Description = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Description.Name);
+        options.OldTestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.OldTestRunId.Name);
         return options;
     }
 
@@ -76,7 +80,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.TestResourceName!,
                 options.TestId!,
                 options.TestRunId,
-                oldTestRunId: null,
+                options.OldTestRunId,
                 options.ResourceGroup,
                 options.Tenant,
                 options.DisplayName,
@@ -86,7 +90,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunCreateOrUpdateCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -98,5 +102,5 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
         }
         return context.Response;
     }
-    internal record TestRunUpdateCommandResult(TestRun TestRun);
+    internal record TestRunCreateOrUpdateCommandResult(TestRun TestRun);
 }

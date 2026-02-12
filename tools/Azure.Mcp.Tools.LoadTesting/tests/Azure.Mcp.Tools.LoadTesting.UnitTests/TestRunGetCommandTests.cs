@@ -76,8 +76,10 @@ public class TestRunGetCommandTests
         var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestRunGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(expected.TestId, result.TestRun.TestId);
-        Assert.Equal(expected.TestRunId, result.TestRun.TestRunId);
+        Assert.NotNull(result.TestRuns);
+        Assert.Single(result.TestRuns);
+        Assert.Equal(expected.TestId, result.TestRuns.First().TestId);
+        Assert.Equal(expected.TestRunId, result.TestRuns.First().TestRunId);
     }
 
     [Fact]
@@ -124,6 +126,76 @@ public class TestRunGetCommandTests
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
             "--testrun-id", "run1",
+            "--tenant", "tenant123"
+        ]);
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsLoadTestRuns_WhenTestIdProvided()
+    {
+        var expected = new List<TestRun>
+        {
+            new() { TestId = "testId1", TestRunId = "testRunId1" },
+            new() { TestId = "testId2", TestRunId = "testRunId2" }
+        };
+        _service.GetLoadTestRunsFromTestIdAsync(
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        var command = new TestRunGetCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "resourceGroup123",
+            "--test-resource-name", "testResourceName",
+            "--test-id", "testId",
+            "--tenant", "tenant123"
+        ]);
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestRunGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.TestRuns);
+        Assert.Equal(2, result.TestRuns.Count);
+        Assert.Equal(expected.First().TestId, result.TestRuns.First().TestId);
+        Assert.Equal(expected.First().TestRunId, result.TestRuns.First().TestRunId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesListServiceErrors()
+    {
+        _service.GetLoadTestRunsFromTestIdAsync(
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<List<TestRun>>(new Exception("Test error")));
+
+        var command = new TestRunGetCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "resourceGroup123",
+            "--test-resource-name", "testResourceName",
+            "--test-id", "testId",
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
