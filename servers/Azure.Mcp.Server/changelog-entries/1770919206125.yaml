@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Consolidated Load Testing tools: loadtesting_testrun_list merged into loadtesting_testrun_get, and loadtesting_testrun_update merged into loadtesting_testrun_createorupdate"
