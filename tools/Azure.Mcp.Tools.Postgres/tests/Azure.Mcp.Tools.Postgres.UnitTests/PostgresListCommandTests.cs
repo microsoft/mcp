@@ -157,7 +157,15 @@ public class PostgresListCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.PostgresListCommandResult);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Servers);
+        Assert.Empty(result.Servers);
+        Assert.Null(result.Databases);
+        Assert.Null(result.Tables);
     }
 
     [Fact]
@@ -186,7 +194,15 @@ public class PostgresListCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.PostgresListCommandResult);
+        Assert.NotNull(result);
+        Assert.Null(result.Servers);
+        Assert.NotNull(result.Databases);
+        Assert.Empty(result.Databases);
+        Assert.Null(result.Tables);
     }
 
     [Fact]
@@ -217,7 +233,15 @@ public class PostgresListCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.PostgresListCommandResult);
+        Assert.NotNull(result);
+        Assert.Null(result.Servers);
+        Assert.Null(result.Databases);
+        Assert.NotNull(result.Tables);
+        Assert.Empty(result.Tables);
     }
 
     [Fact]
