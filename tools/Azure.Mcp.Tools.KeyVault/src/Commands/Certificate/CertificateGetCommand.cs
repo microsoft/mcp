@@ -35,7 +35,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     };
 
     public override string Description =>
-        """Retrieve detailed information about Azure Key Vault certificates. If a specific certificate name is provided, returns full details for that certificate including key ID, secret ID, thumbprint, and policy information. If no certificate name is specified, returns a list of all certificate names in the vault.""";
+        """List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.""";
 
     protected override void RegisterOptions(Command command)
     {

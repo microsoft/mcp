@@ -35,7 +35,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
     };
 
     public override string Description =>
-        """Retrieve detailed information about Azure Key Vault keys. If a specific key name is provided, returns full details for that key including type, enabled status, and expiration dates. If no key name is specified, returns a list of all key names in the vault. Use --include-managed to include managed keys in the list.""";
+        """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""";
 
     protected override void RegisterOptions(Command command)
     {

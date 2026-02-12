@@ -35,7 +35,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     };
 
     public override string Description =>
-        """Retrieve detailed information about Azure Key Vault secrets. If a specific secret name is provided, returns full details for that secret including the secret value, enabled status, and expiration dates. If no secret name is specified, returns a list of all secret names in the vault (without values).""";
+        """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""";
 
     protected override void RegisterOptions(Command command)
     {
