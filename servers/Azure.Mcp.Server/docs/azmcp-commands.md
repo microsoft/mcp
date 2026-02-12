@@ -1335,11 +1335,11 @@ azmcp keyvault certificate create --subscription <subscription> \
                                   --vault <vault-name> \
                                   --name <certificate-name>
 
-# Gets a certificate in a key vault
+# Get a specific certificate or list all certificates. If --name is provided, returns a specific certificate; otherwise, lists all certificates in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate get --subscription <subscription> \
                                --vault <vault-name> \
-                               --name <certificate-name>
+                               [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -1348,11 +1348,6 @@ azmcp keyvault certificate import --subscription <subscription> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \
                                   [--password <pfx-password>]
-
-# Lists certificates in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate list --subscription <subscription> \
-                                --vault <vault-name>
 ```
 
 #### Keys
@@ -1365,17 +1360,12 @@ azmcp keyvault key create --subscription <subscription> \
                           --key <key-name> \
                           --key-type <key-type>
 
-# Get a key in a key vault
+# Get a specific key or list all keys. If --key is provided, returns a specific key; otherwise, lists all keys in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key get --subscription <subscription> \
                        --vault <vault-name> \
-                       --key <key-name>
-
-# Lists keys in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key list --subscription <subscription> \
-                        --vault <vault-name> \
-                        --include-managed <true/false>
+                       [--key <key-name>] \
+                       [--include-managed]
 ```
 
 #### Secrets
@@ -1400,16 +1390,11 @@ azmcp keyvault secret create --subscription <subscription> \
                              --name <secret-name> \
                              --value <secret-value>
 
-# Get a secret in a key vault (will prompt for user consent)
+# Get a specific secret or list all secrets. If --secret is provided, returns a specific secret with its value (requires user consent); otherwise, lists all secrets in the key vault (returns secret names and properties, not values).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp keyvault secret get --subscription <subscription> \
                           --vault <vault-name> \
-                          --secret <secret-name>
-
-# Lists secrets in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault secret list --subscription <subscription> \
-                           --vault <vault-name>
+                          [--secret <secret-name>]
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
@@ -1728,65 +1713,77 @@ azmcp monitor metrics query --subscription <subscription> \
 #### Web Tests (Availability Tests)
 
 ```bash
-# Create a new web test in Azure Monitor
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              --appinsights-component <component-name> \
-                              --location <location> \
-                              --webtest-locations <locations> \
-                              --request-url <url> \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
-
-# Get details for a specific web test
+# Get details for a specific web test or list all web tests
+# When --webtest-resource is provided: returns detailed information about a single web test
+# When --webtest-resource is omitted: returns a list of all web tests in the subscription (optionally filtered by resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --webtest-resource <webtest-resource-name>
+                           [--resource-group <resource-group>] \
+                           [--webtest-resource <webtest-resource-name>]
 
-# List all web tests in a subscription or optionally, within a resource group
+# Examples:
+# List all web tests in subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
+azmcp monitor webtests get --subscription "my-subscription"
 
-# Update an existing web test in Azure Monitor
+# List all web tests in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests get --subscription "my-subscription" \
+                           --resource-group "my-rg"
+
+# Get specific web test details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests get --subscription "my-subscription" \
+                           --resource-group "my-rg" \
+                           --webtest-resource "my-webtest"
+
+# Create a new or update an existing web test in Azure Monitor
+# Automatically detects whether to create or update based on resource existence
+# For create operations: location, appinsights-component, request-url, and webtest-locations are required
+# For update operations: all parameters are optional, only specified values will be updated
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests update --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              [--appinsights-component <component-name>] \
-                              [--location <location>] \
-                              [--webtest-locations <locations>] \
-                              [--request-url <url>] \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
+azmcp monitor webtests createorupdate --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --webtest-resource <webtest-resource-name> \
+                                      [--appinsights-component <component-resource-id>] \
+                                      [--location <location>] \
+                                      [--webtest-locations <locations>] \
+                                      [--request-url <url>] \
+                                      [--webtest <display-name>] \
+                                      [--description <description>] \
+                                      [--enabled <true|false>] \
+                                      [--expected-status-code <code>] \
+                                      [--follow-redirects <true|false>] \
+                                      [--frequency <seconds>] \
+                                      [--headers <key=value,key2=value2>] \
+                                      [--http-verb <get|post|..>] \
+                                      [--ignore-status-code <true|false>] \
+                                      [--parse-requests <true|false>] \
+                                      [--request-body <body>] \
+                                      [--retry-enabled <true|false>] \
+                                      [--ssl-check <true|false>] \
+                                      [--ssl-lifetime-check <days>] \
+                                      [--timeout <seconds>]
+
+# Examples:
+# Create a new web test
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests createorupdate --subscription "my-subscription" \
+                                      --resource-group "my-rg" \
+                                      --webtest-resource "my-webtest" \
+                                      --appinsights-component "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/components/myappinsights" \
+                                      --location "eastus" \
+                                      --webtest-locations "us-il-ch1-azr,us-ca-sjc-azr" \
+                                      --request-url "https://example.com" \
+                                      --enabled true
+
+# Update an existing web test (only change frequency and timeout)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests createorupdate --subscription "my-subscription" \
+                                      --resource-group "my-rg" \
+                                      --webtest-resource "my-webtest" \
+                                      --frequency 600 \
+                                      --timeout 90
 ```
 
 ### Azure Managed Lustre

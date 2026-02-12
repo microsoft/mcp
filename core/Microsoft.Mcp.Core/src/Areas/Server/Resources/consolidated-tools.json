@@ -333,7 +333,6 @@
         "monitor_table_list",
         "monitor_table_type_list",
         "monitor_webtests_get",
-        "monitor_webtests_list",
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
         "resourcehealth_availability-status_list",
@@ -341,41 +340,8 @@
       ]
     },
     {
-      "name": "create_azure_monitor_webtests",
-      "description": "Create Azure Monitor web tests for application availability monitoring.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "monitor_webtests_create"
-      ]
-    },
-    {
-      "name": "update_azure_monitor_webtests",
-      "description": "Update Azure Monitor web tests for application availability monitoring.",
+      "name": "create_or_update_azure_monitor_webtests",
+      "description": "Create or update Azure Monitor web tests for application availability monitoring.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -403,7 +369,7 @@
         }
       },
       "mappedToolList": [
-        "monitor_webtests_update"
+        "monitor_webtests_createorupdate"
       ]
     },
     {
@@ -939,16 +905,13 @@
       },
       "mappedToolList": [
         "keyvault_certificate_get",
-        "keyvault_certificate_list",
         "keyvault_key_get",
-        "keyvault_key_list",
-        "keyvault_secret_list",
         "keyvault_admin_settings_get"
       ]
     },
     {
       "name": "get_azure_key_vault_secret_values",
-      "description": "Retrieve the actual secret values from Azure Key Vault. Use this tool when you need to access the sensitive content of a secret, not just its metadata or properties.",
+      "description": "Retrieve the actual secret values or list secrets from Azure Key Vault. Use this tool when you need to access the sensitive content of a secret or properties of all secrets.",
       "toolMetadata": {
         "destructive": {
           "value": false,
