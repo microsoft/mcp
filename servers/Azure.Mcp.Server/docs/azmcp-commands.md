@@ -886,15 +886,17 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ### Azure Database for MySQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a MySQL server
+# Hierarchical list command for MySQL resources
+# Without parameters: lists all MySQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server>
+azmcp mysql list --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --user <user> \
+                 [--server <server>] \
+                 [--database <database>]
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -904,18 +906,6 @@ azmcp mysql database query --subscription <subscription> \
                            --server <server> \
                            --database <database> \
                            --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a MySQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table list --subscription <subscription> \
-                       --resource-group <resource-group> \
-                       --user <user> \
-                       --server <server> \
-                       --database <database>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -925,23 +915,13 @@ azmcp mysql table schema get --subscription <subscription> \
                              --server <server> \
                              --database <database> \
                              --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --user <user> \
                               --server <server>
-
-# List all MySQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql server list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --user <user>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -963,15 +943,17 @@ azmcp mysql server param set --subscription <subscription> \
 
 ### Azure Database for PostgreSQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a PostgreSQL server
+# Hierarchical list command for PostgreSQL resources
+# Without parameters: lists all PostgreSQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres database list --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
-                             --server <server>
+azmcp postgres list --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --user <user> \
+                    [--server <server>] \
+                    [--database <database>]
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -981,18 +963,6 @@ azmcp postgres database query --subscription <subscription> \
                               --server <server> \
                               --database <database> \
                               --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a PostgreSQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres table list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server> \
-                          --database <database>
 
 # Get the schema of a specific table in a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1002,23 +972,13 @@ azmcp postgres table schema get --subscription <subscription> \
                                 --server <server> \
                                 --database <database> \
                                 --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --user <user> \
                                  --server <server>
-
-# List all PostgreSQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres server list --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
