@@ -79,7 +79,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         {
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
-            
+
             // If TestRunId is provided, get a single test run
             if (!string.IsNullOrEmpty(options.TestRunId))
             {
