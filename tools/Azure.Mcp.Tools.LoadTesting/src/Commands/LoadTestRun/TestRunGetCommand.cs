@@ -55,6 +55,10 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
             {
                 commandResult.AddError("Either --testrun or --test must be provided.");
             }
+            else if (!string.IsNullOrEmpty(testRunId) && !string.IsNullOrEmpty(testId))
+            {
+                commandResult.AddError("Cannot specify both --testrun and --test. Use one or the other.");
+            }
         });
     }
 
