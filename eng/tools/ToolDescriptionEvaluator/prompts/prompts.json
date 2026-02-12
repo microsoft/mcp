@@ -514,17 +514,13 @@
   "loadtesting_testresource_list": [
     "List all load testing resources in the resource group <resource-group> in my subscription"
   ],
-  "loadtesting_testrun_create": [
-    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>"
-  ],
   "loadtesting_testrun_get": [
-    "Get the load test run with id <testrun-id> in the load test resource <test-resource> in resource group <resource-group>"
-  ],
-  "loadtesting_testrun_list": [
+    "Get the load test run with id <testrun-id> in the load test resource <test-resource> in resource group <resource-group>",
     "Get all the load test runs for the test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>"
   ],
-  "loadtesting_testrun_update": [
-    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
+  "loadtesting_testrun_createorupdate": [
+    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
+    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>"
   ],
   "grafana_list": [
     "List all Azure Managed Grafana in one subscription"
