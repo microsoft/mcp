@@ -63,6 +63,14 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                 return context.Response;
             }
 
+            // Validate that --server is provided when --database is specified
+            if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
+            {
+                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+                context.Response.Message = "The --server parameter is required when --database is specified.";
+                return context.Response;
+            }
+
             IPostgresService postgresService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
 
             // Route based on provided parameters

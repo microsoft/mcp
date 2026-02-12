@@ -58,6 +58,14 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
                 return context.Response;
             }
 
+            // Validate that --server is provided when --database is specified
+            if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
+            {
+                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+                context.Response.Message = "The --server parameter is required when --database is specified.";
+                return context.Response;
+            }
+
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
 
             // Route based on provided parameters

@@ -9,10 +9,7 @@ param location string = 'northeurope' // resourceGroup().location
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azure-sdk-internal-devops-connections
 
-@description('The principal name for the Entra ID admin')
-param testApplicationPrincipalName string = 'azure-sdk-internal-devops-connections'
-
-var testDbName = 'testdb'
+var testDbName string = 'testdb'
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-preview' = {
   name: '${baseName}-postgres'
@@ -61,7 +58,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
     name: testApplicationOid
     properties: {
       principalType: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'ServicePrincipal' : 'User'
-      principalName: testApplicationPrincipalName
+      principalName: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'azure-sdk-internal-devops-connections' :  deployer().userPrincipalName
       tenantId: tenant().tenantId
     }
     dependsOn: [
@@ -99,9 +96,9 @@ resource appPostgresRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-// Output values for tests (uppercase keys for test framework compatibility)
-output POSTGRESSERVERNAME string = postgresServer.name
-output POSTGRESSERVERFQDN string = postgresServer.properties.fullyQualifiedDomainName
-output TESTDATABASENAME string = testDbName
-output ENTRAIDADMINOBJECTID string = testApplicationOid
-output ADMINLOGIN string = testApplicationOid
+// Output values for tests
+output postgresServerName string = postgresServer.name
+output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
+output testDatabaseName string = testDbName
+output entraIdAdminObjectId string = testApplicationOid
+output adminLogin string = testApplicationOid

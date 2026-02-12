@@ -18,7 +18,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
     private string ServerFqdn => Settings.DeploymentOutputs["POSTGRESSERVERFQDN"];
-    private string AdminUsername => Settings.PrincipalName;
+    private string AdminUsername => Settings.PrincipalName ?? string.Empty;
 
     private static bool _testDataInitialized = false;
     private static readonly SemaphoreSlim _initLock = new(1, 1);
@@ -58,10 +58,15 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Output.WriteLine($"AdminUsername: {AdminUsername}");
         Output.WriteLine($"TestDatabaseName: {TestDatabaseName}");
 
-        // Get access token using DefaultAzureCredential
-        var credential = new DefaultAzureCredential();
-        var tokenRequestContext = new TokenRequestContext(new[] { "https://ossrdbms-aad.database.windows.net/.default" });
-        var accessToken = await credential.GetTokenAsync(tokenRequestContext);
+        // Get Entra ID access token for PostgreSQL
+        var options = new DefaultAzureCredentialOptions
+        {
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,  // We don't want to use ADO build server identity
+        };
+        var tokenCredential = new DefaultAzureCredential(options);
+        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
+        AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, TestContext.Current.CancellationToken);
 
         string connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
 
@@ -199,7 +204,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             "postgres_table_schema_get",
             new()
             {
-                { "subscription",Settings.SubscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
