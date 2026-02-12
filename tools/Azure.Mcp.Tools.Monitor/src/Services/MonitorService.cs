@@ -424,7 +424,7 @@ public class MonitorService(
     {
         var returnValue = new List<ActivityLogEventData>();
 
-        string endpoint = string.Format(GetLogActivityEndpoint().ToString(), subscriptionId);
+        string endpoint = string.Format(GetLogActivityEndpointString(), subscriptionId);
         var uriBuilder = new UriBuilder(endpoint);
 
         // Build the query parameters
@@ -529,18 +529,18 @@ public class MonitorService(
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
     }
 
-    private Uri GetLogActivityEndpoint()
+    private string GetLogActivityEndpointString()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+                return "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://management.chinacloudapi.cn/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+                return "https://management.chinacloudapi.cn/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://management.usgovcloudapi.net/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+                return "https://management.usgovcloudapi.net/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
             default:
-                return new Uri("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values");
+                return "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
         }
     }
 }
