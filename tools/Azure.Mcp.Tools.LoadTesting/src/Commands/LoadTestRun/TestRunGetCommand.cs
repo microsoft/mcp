@@ -92,9 +92,9 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
-                context.Response.Results = result != null ?
-                    ResponseResult.Create(new TestRunGetCommandResult([result]), LoadTestJsonContext.Default.TestRunGetCommandResult) :
-                    null;
+                context.Response.Results = result != null
+                    ? ResponseResult.Create(new TestRunGetCommandResult([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
+                    : null;
             }
             // Otherwise if TestId is provided, list all test runs for that test
             else if (!string.IsNullOrEmpty(options.TestId))
