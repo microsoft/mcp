@@ -57,9 +57,12 @@ public abstract class AzureUsageChecker : IUsageChecker
     {
         SubscriptionId = subscriptionId;
         Credential = credential ?? throw new ArgumentNullException(nameof(credential));
-        ResourceClient = new ArmClient(credential, subscriptionId);
-        Logger = logger;
         TenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+        Logger = logger;
+        ResourceClient = new ArmClient(
+            credential,
+            tenantService.CloudConfiguration.ArmEnvironment,
+            subscriptionId);
     }
 
     protected Uri GetManagementEndpoint()
