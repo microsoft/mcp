@@ -905,16 +905,13 @@
       },
       "mappedToolList": [
         "keyvault_certificate_get",
-        "keyvault_certificate_list",
         "keyvault_key_get",
-        "keyvault_key_list",
-        "keyvault_secret_list",
         "keyvault_admin_settings_get"
       ]
     },
     {
       "name": "get_azure_key_vault_secret_values",
-      "description": "Retrieve the actual secret values from Azure Key Vault. Use this tool when you need to access the sensitive content of a secret, not just its metadata or properties.",
+      "description": "Retrieve the actual secret values or list secrets from Azure Key Vault. Use this tool when you need to access the sensitive content of a secret or properties of all secrets.",
       "toolMetadata": {
         "destructive": {
           "value": false,

@@ -326,7 +326,7 @@ The tool reads from `../../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` w
 | Tool Name | Test Prompt |
 |:----------|:------------|
 | azmcp_keyvault_secret_get | Get my secret from Key Vault |
-| azmcp_keyvault_key_list | List all keys in my Key Vault |
+| azmcp_keyvault_key_get | List all keys in my Key Vault |
 ```
 
 #### Tool Prefix Filtering
@@ -337,7 +337,7 @@ For example, `--area "keyvault"` (auto-prefixed to `azmcp_keyvault`) will match 
 - `azmcp_keyvault_certificate_create`
 - `azmcp_keyvault_certificate_get`  
 - `azmcp_keyvault_secret_get`
-- `azmcp_keyvault_key_list`
+- `azmcp_keyvault_key_get`
 - And all other Key Vault tools
 
 ```bash

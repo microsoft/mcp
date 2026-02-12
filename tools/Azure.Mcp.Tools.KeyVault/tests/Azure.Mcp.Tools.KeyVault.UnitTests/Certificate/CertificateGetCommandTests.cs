@@ -85,25 +85,6 @@ public class CertificateGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfCertificateNameIsEmpty()
-    {
-        // Arrange - No need to mock service since validation should fail before service is called
-        var args = _commandDefinition.Parse([
-            "--vault", _knownVaultName,
-            "--certificate", "",
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert - Should return validation error response
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
@@ -122,6 +103,73 @@ public class CertificateGetCommandTests
         var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--certificate", _knownCertificateName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsCertificatesList_WhenCertificateNameNotProvided()
+    {
+        // Arrange
+        var expectedCertificates = new List<string> { "cert1", "cert2", "cert3" };
+
+        _keyVaultService
+            .ListCertificates(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(expectedCertificates);
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
+        var result = System.Text.Json.JsonSerializer.Deserialize(json, Commands.KeyVaultJsonContext.Default.CertificateGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Certificates);
+        Assert.Null(result.Certificate);
+        Assert.Equal(expectedCertificates.Count, result.Certificates.Count);
+        Assert.Equal(expectedCertificates, result.Certificates);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException_WhenListingCertificates()
+    {
+        // Arrange
+        var expectedError = "List error";
+
+        _keyVaultService
+            .ListCertificates(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
 

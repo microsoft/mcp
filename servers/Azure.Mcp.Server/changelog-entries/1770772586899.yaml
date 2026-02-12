@@ -1,0 +1,7 @@
+changes:
+  - section: "Breaking Changes"
+    description: |
+      Consolidated KeyVault get/list commands - separate list commands removed:
+      - Removed keyvault_key_list - use keyvault_key_get without providing a key name
+      - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+      - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
