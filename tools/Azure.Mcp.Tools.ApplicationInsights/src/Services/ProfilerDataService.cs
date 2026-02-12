@@ -118,7 +118,7 @@ public class ProfilerDataService(
 
         var scopes = new string[]
         {
-            GetApplicationInsightsScope().ToString()
+            GetDiagnosticServicesScope()
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
@@ -214,18 +214,18 @@ public class ProfilerDataService(
         }
     }
 
-    private Uri GetApplicationInsightsScope()
+    private string GetDiagnosticServicesScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://api.applicationinsights.azure.com/.default");
+                return "api://dataplane.diagnosticservices.azure.com/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://api.applicationinsights.azure.cn/.default");
+                return "api://dataplane.diagnosticservices.azure.cn/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://api.applicationinsights.azure.us/.default");
+                return "api://dataplane.diagnosticservices.azure.us/.default";
             default:
-                return new Uri("https://api.applicationinsights.azure.com/.default");
+                return "api://dataplane.diagnosticservices.azure.com/.default";
         }
     }
 }
