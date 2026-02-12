@@ -1216,7 +1216,7 @@
         }
       },
       "mappedToolList": [
-        "loadtesting_testrun_update"
+        "loadtesting_testrun_createorupdate"
       ]
     },
     {
