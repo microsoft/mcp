@@ -567,11 +567,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
-| monitor_webtests_create | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
-| monitor_webtests_list | List all Web Test resources in my subscription |
-| monitor_webtests_list | List all Web Test resources in my subscription in <resource_group> |
-| monitor_webtests_update | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_get | List all Web Test resources in my subscription |
+| monitor_webtests_get | List all Web Test resources in my subscription in <resource_group> |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |

@@ -603,18 +603,18 @@
     "List all available table types in the Log Analytics workspace <workspace_name>",
     "Show me the available table types in the Log Analytics workspace <workspace_name>"
   ],
-  "monitor_webtests_create": [
-    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
-  ],
   "monitor_webtests_get": [
-    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>"
-  ],
-  "monitor_webtests_list": [
+    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
     "List all Web Test resources in my subscription",
-    "List all Web Test resources in my subscription in <resource_group>"
+    "List all Web Test resources in my subscription in <resource_group>",
+    "Show me all web tests in my subscription",
+    "Show me web tests in resource group <resource_group>"
   ],
-  "monitor_webtests_update": [
-    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  "monitor_webtests_createorupdate": [
+    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Create or update web test <webtest_resource_name> in resource group <resource_group>",
+    "Set up a web test named <webtest_resource_name> in <resource_group> for application insights <appinsights_component>"
   ],
   "monitor_workspace_list": [
     "List all Log Analytics workspaces in my subscription",

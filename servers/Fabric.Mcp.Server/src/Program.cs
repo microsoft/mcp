@@ -37,7 +37,6 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -73,9 +72,7 @@ internal class Program
 
         return [
             // Register core areas
-            new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Azure.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
             new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
