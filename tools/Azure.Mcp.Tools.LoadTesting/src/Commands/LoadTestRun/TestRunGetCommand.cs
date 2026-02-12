@@ -53,6 +53,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
             if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
             {
                 commandResult.AddError("Either --testrun or --test must be provided.");
+                commandResult.AddError("Either --testrun or --test must be provided. Pass --testrun to get details about a specific run or pass --test to list all test runs for the test.");
             }
             else if (!string.IsNullOrEmpty(testRunId) && !string.IsNullOrEmpty(testId))
             {

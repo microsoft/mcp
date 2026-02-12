@@ -22,10 +22,11 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
     public override string Name => "createorupdate";
     public override string Description =>
         $"""
-        Create a test run or update test run display name and description in load testing resource.
-        Create: Starts a new test run execution using testrun ID for a test in the load testing resource. Specify display name and description for the run.
-        Update: Modifies test run display name and description for a testrun ID in the load testing resource.
-        Manages test run executions in load testing resource - does not modify test configuration or resource settings.
+        Create or update a load test run execution.
+        Creates a new test run for a specified test in the load testing resource, or updates metadata and display properties of an existing test run.
+        When creating: Triggers a new test run execution based on the existing test configuration. Use testrun ID to specify the new run identifier. Create operations are NOT idempotent - each call starts a new test run with unique timestamps and execution state.
+        When updating: Modifies descriptive information (display name, description) of a completed or in-progress test run for better organization and documentation. Update operations are idempotent - repeated calls with same values produce the same result.
+        This does not modify the test plan configuration or create a new test/resource - only manages test run executions.
         """;
     public override string Title => _commandTitle;
 
