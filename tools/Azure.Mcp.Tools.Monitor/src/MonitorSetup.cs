@@ -45,9 +45,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<ActivityLogListCommand>();
 
         services.AddSingleton<WebTestsGetCommand>();
-        services.AddSingleton<WebTestsListCommand>();
-        services.AddSingleton<WebTestsCreateCommand>();
-        services.AddSingleton<WebTestsUpdateCommand>();
+        services.AddSingleton<WebTestsCreateOrUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -119,12 +117,8 @@ public class MonitorSetup : IAreaSetup
 
         var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();
         webTests.AddCommand(webTestGet.Name, webTestGet);
-        var webTestList = serviceProvider.GetRequiredService<WebTestsListCommand>();
-        webTests.AddCommand(webTestList.Name, webTestList);
-        var webTestCreate = serviceProvider.GetRequiredService<WebTestsCreateCommand>();
-        webTests.AddCommand(webTestCreate.Name, webTestCreate);
-        var webTestUpdate = serviceProvider.GetRequiredService<WebTestsUpdateCommand>();
-        webTests.AddCommand(webTestUpdate.Name, webTestUpdate);
+        var webTestCreateOrUpdate = serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>();
+        webTests.AddCommand(webTestCreateOrUpdate.Name, webTestCreateOrUpdate);
 
         return monitor;
     }

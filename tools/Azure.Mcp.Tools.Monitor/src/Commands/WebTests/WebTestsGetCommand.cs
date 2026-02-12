@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -16,7 +17,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
 public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
 {
-    private const string CommandTitle = "Get details of a specific web test";
+    private const string CommandTitle = "Get or list web tests";
 
     public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
 
@@ -24,8 +25,9 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
     public override string Description =>
          $"""
-        Gets details for a specific web test in the provided resource group based on webtest resource name.
-        Returns detailed information about a single web test.
+        Gets details for a specific web test or lists all web tests.
+        When --webtest-resource is provided, returns detailed information about a single web test.
+        When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
         """;
 
     public override string Title => CommandTitle;
@@ -45,14 +47,25 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(MonitorOptionDefinitions.WebTest.WebTestResourceName);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(MonitorOptionDefinitions.WebTest.WebTestResourceName.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+
+        command.Validators.Add(commandResult =>
+        {
+            var webTestName = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
+            var resourceGroup = commandResult.GetValueWithoutDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+
+            if (!string.IsNullOrEmpty(webTestName) && string.IsNullOrEmpty(resourceGroup))
+            {
+                commandResult.AddError("The --resource-group option is required when --webtest-resource is specified.");
+            }
+        });
     }
 
     protected override WebTestsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
+        options.WebTestName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
@@ -68,30 +81,48 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         try
         {
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-            var webTest = await monitorWebTestService.GetWebTest(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.ResourceName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
 
-            if (webTest != null)
+            // If --webtest-resource is provided, get a specific web test
+            if (!string.IsNullOrEmpty(options.WebTestName))
             {
-                context.Response.Results = ResponseResult.Create(
-                    new WebTestsGetCommandResult(webTest),
-                    MonitorJsonContext.Default.WebTestsGetCommandResult);
+                var webTest = await monitorWebTestService.GetWebTest(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.WebTestName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                if (webTest != null)
+                {
+                    context.Response.Results = ResponseResult.Create(
+                        new WebTestsGetCommandResult(webTest),
+                        MonitorJsonContext.Default.WebTestsGetCommandResult);
+                }
+                else
+                {
+                    context.Response.Status = HttpStatusCode.NotFound;
+                    context.Response.Message = $"Web test '{options.WebTestName}' not found in resource group '{options.ResourceGroup}'";
+                }
             }
             else
             {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = $"Web test '{options.ResourceName}' not found in resource group '{options.ResourceGroup}'";
+                // Otherwise, list web tests
+                var webTests = options.ResourceGroup == null
+                    ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
+                    : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(
+                    new WebTestsGetCommandListResult(webTests ?? []),
+                    MonitorJsonContext.Default.WebTestsGetCommandListResult);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving web test '{Name}' in resource group '{ResourceGroup}', subscription '{Subscription}'",
-                options.ResourceName, options.ResourceGroup, options.Subscription);
+            var message = !string.IsNullOrEmpty(options.WebTestName)
+                ? $"Error retrieving web test '{options.WebTestName}' in resource group '{options.ResourceGroup}', subscription '{options.Subscription}'"
+                : $"Error listing web tests in subscription '{options.Subscription}'";
+            _logger.LogError(ex, message);
             HandleException(context, ex);
         }
 
@@ -99,4 +130,5 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
     }
 
     internal record WebTestsGetCommandResult(WebTestDetailedInfo WebTest);
+    internal record WebTestsGetCommandListResult(List<WebTestSummaryInfo> WebTests);
 }

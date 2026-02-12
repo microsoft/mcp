@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Consolidated Monitor WebTest tools from 4 commands to 2 (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate)"

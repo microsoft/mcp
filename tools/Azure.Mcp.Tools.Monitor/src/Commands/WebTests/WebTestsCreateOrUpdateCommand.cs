@@ -15,20 +15,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger) : BaseMonitorWebTestsCommand<WebTestsUpdateOptions>
+public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
 {
-    private const string CommandTitle = "Update a web test in Azure Monitor";
+    private const string CommandTitle = "Create or update a web test in Azure Monitor";
 
-    private readonly ILogger<WebTestsUpdateCommand> _logger = logger;
+    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
 
-    public override string Id => "5d7d322b-0e38-412c-982f-17d84554844b";
+    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
 
-    public override string Name => "update";
+    public override string Name => "createorupdate";
 
     public override string Description =>
         """
-        Updates an existing standard web test in Azure Monitor. Ping/Multstep web tests are deprecated and are not supported.
-        Returns the updated web test details.
+        Create or update a standard web test in Azure Monitor to monitor endpoint availability.
+        Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
+        Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
         """;
 
     public override string Title => CommandTitle;
@@ -51,7 +52,7 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
         command.Options.Add(MonitorOptionDefinitions.WebTest.WebTestResourceName);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
 
-        // Add optional options - for update, most options become optional
+        // Add optional options (required for create, optional for update)
         command.Options.Add(MonitorOptionDefinitions.WebTest.AppInsightsComponentId);
         command.Options.Add(MonitorOptionDefinitions.WebTest.ResourceLocation);
         command.Options.Add(MonitorOptionDefinitions.WebTest.Locations);
@@ -74,7 +75,6 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
 
         command.Validators.Add(commandResult =>
         {
-            // Only validate explicitly provided values for update operations
             var locations = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.Locations.Name);
             if (locations != null && locations.Length == 0)
             {
@@ -95,7 +95,7 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
         });
     }
 
-    protected override WebTestsUpdateOptions BindOptions(ParseResult parseResult)
+    protected override WebTestsCreateOrUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
 
@@ -134,44 +134,118 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
         var options = BindOptions(parseResult);
         try
         {
-            var locationsArray = options.Locations?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            var headersDictionary = options.Headers == null ? null : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
-
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-            var webTest = await monitorWebTestService.UpdateWebTest(
-                subscription: options.Subscription!,
-                resourceGroup: options.ResourceGroup!,
-                resourceName: options.ResourceName!,
-                appInsightsComponentId: options.AppInsightsComponentId,
-                location: options.Location,
-                locations: locationsArray,
-                requestUrl: options.RequestUrl,
-                webTestName: options.WebTestName,
-                description: options.Description,
-                enabled: options.Enabled,
-                expectedStatusCode: options.ExpectedStatusCode,
-                followRedirects: options.FollowRedirects,
-                frequencyInSeconds: options.FrequencyInSeconds,
-                headers: headersDictionary,
-                httpVerb: options.HttpVerb,
-                ignoreStatusCode: options.IgnoreStatusCode,
-                parseRequests: options.ParseRequests,
-                requestBody: options.RequestBody,
-                retryEnabled: options.RetryEnabled,
-                sslCheck: options.SslCheck,
-                sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
-                timeoutInSeconds: options.TimeoutInSeconds,
-                tenant: options.Tenant,
-                retryPolicy: options.RetryPolicy,
-                cancellationToken: cancellationToken);
+
+            // Check if the web test exists
+            WebTestDetailedInfo? existingWebTest = null;
+            try
+            {
+                existingWebTest = await monitorWebTestService.GetWebTest(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.ResourceName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+            }
+            catch
+            {
+                // Web test doesn't exist, will create
+            }
+
+            WebTestDetailedInfo webTest;
+
+            if (existingWebTest == null)
+            {
+                // Create new web test - validate required parameters
+                if (string.IsNullOrEmpty(options.AppInsightsComponentId))
+                {
+                    throw new ArgumentException("The app-insights-component-id option is required when creating a new web test.");
+                }
+                if (string.IsNullOrEmpty(options.Location))
+                {
+                    throw new ArgumentException("The location option is required when creating a new web test.");
+                }
+                if (string.IsNullOrEmpty(options.Locations))
+                {
+                    throw new ArgumentException("The locations option is required when creating a new web test.");
+                }
+                if (string.IsNullOrEmpty(options.RequestUrl))
+                {
+                    throw new ArgumentException("The request-url option is required when creating a new web test.");
+                }
+
+                var locationsArray = options.Locations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
+
+                webTest = await monitorWebTestService.CreateWebTest(
+                    subscription: options.Subscription!,
+                    resourceGroup: options.ResourceGroup!,
+                    resourceName: options.ResourceName!,
+                    appInsightsComponentId: options.AppInsightsComponentId!,
+                    location: options.Location!,
+                    locations: locationsArray,
+                    requestUrl: options.RequestUrl!,
+                    webTestName: options.WebTestName,
+                    description: options.Description,
+                    enabled: options.Enabled,
+                    expectedStatusCode: options.ExpectedStatusCode,
+                    followRedirects: options.FollowRedirects,
+                    frequencyInSeconds: options.FrequencyInSeconds,
+                    headers: headersDictionary,
+                    httpVerb: options.HttpVerb,
+                    ignoreStatusCode: options.IgnoreStatusCode,
+                    parseRequests: options.ParseRequests,
+                    requestBody: options.RequestBody,
+                    retryEnabled: options.RetryEnabled,
+                    sslCheck: options.SslCheck,
+                    sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
+                    timeoutInSeconds: options.TimeoutInSeconds,
+                    tenant: options.Tenant,
+                    retryPolicy: options.RetryPolicy,
+                    cancellationToken: cancellationToken);
+            }
+            else
+            {
+                // Update existing web test
+                var locationsArray = options.Locations?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var headersDictionary = options.Headers == null ? null : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
+
+                webTest = await monitorWebTestService.UpdateWebTest(
+                    subscription: options.Subscription!,
+                    resourceGroup: options.ResourceGroup!,
+                    resourceName: options.ResourceName!,
+                    appInsightsComponentId: options.AppInsightsComponentId,
+                    location: options.Location,
+                    locations: locationsArray,
+                    requestUrl: options.RequestUrl,
+                    webTestName: options.WebTestName,
+                    description: options.Description,
+                    enabled: options.Enabled,
+                    expectedStatusCode: options.ExpectedStatusCode,
+                    followRedirects: options.FollowRedirects,
+                    frequencyInSeconds: options.FrequencyInSeconds,
+                    headers: headersDictionary,
+                    httpVerb: options.HttpVerb,
+                    ignoreStatusCode: options.IgnoreStatusCode,
+                    parseRequests: options.ParseRequests,
+                    requestBody: options.RequestBody,
+                    retryEnabled: options.RetryEnabled,
+                    sslCheck: options.SslCheck,
+                    sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
+                    timeoutInSeconds: options.TimeoutInSeconds,
+                    tenant: options.Tenant,
+                    retryPolicy: options.RetryPolicy,
+                    cancellationToken: cancellationToken);
+            }
 
             context.Response.Results = ResponseResult.Create(
                 new(webTest),
-                MonitorJsonContext.Default.WebTestsUpdateCommandResult);
+                MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating web test '{WebTestName}' in resource group '{ResourceGroup}'",
+            _logger.LogError(ex, "Error creating or updating web test '{WebTestName}' in resource group '{ResourceGroup}'",
                 options.WebTestName ?? options.ResourceName, options.ResourceGroup);
             HandleException(context, ex);
         }
@@ -179,5 +253,5 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
         return context.Response;
     }
 
-    internal record WebTestsUpdateCommandResult(WebTestDetailedInfo WebTest);
+    internal record WebTestsCreateOrUpdateCommandResult(WebTestDetailedInfo WebTest);
 }
