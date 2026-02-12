@@ -1426,24 +1426,25 @@ azmcp loadtesting testresource list --subscription <subscription> \
                                     --test-resource-name <test-resource-name>
 
 # Get load test run (single run or list all runs for a test)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 # Get a single test run by ID:
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
                               --testrun-id <testrun-id>
 
 # List all test runs for a specific test:
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
                               --test-id <test-id>
 
 # Create or update load test run
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 # Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
 #       Update operations ARE idempotent (repeated calls with same values produce same result).
 # Create a new test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --test-resource-name <test-resource-name> \
@@ -1453,6 +1454,7 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --description <description>
 
 # Rerun an existing test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --test-resource-name <test-resource-name> \
@@ -1461,6 +1463,7 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --old-testrun-id <existing-testrun-id>
 
 # Update test run metadata (idempotent):
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --test-resource-name <test-resource-name> \
@@ -1699,7 +1702,6 @@ azmcp monitor metrics query --subscription <subscription> \
 
 ```bash
 # Create a new web test in Azure Monitor
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
@@ -1730,11 +1732,9 @@ azmcp monitor webtests get --subscription <subscription> \
                           --webtest-resource <webtest-resource-name>
 
 # List all web tests in a subscription or optionally, within a resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
 
 # Update an existing web test in Azure Monitor
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests update --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
