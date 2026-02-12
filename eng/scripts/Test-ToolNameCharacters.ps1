@@ -100,7 +100,7 @@ function Test-ToolAreaTools {
     $name = $(Split-Path $ToolAreaDirectory -Leaf)
     $toolViolationsForArea = @()
 
-    $areaTools = Get-ChildItem -Path $ToolAreaDirectory -Recurse -Include *Command.cs, *Setup.cs
+    $areaTools = Get-ChildItem $ToolAreaDirectory -Recurse | Where-Object { $_.Name.EndsWith("Command.cs") -or $_.Name.EndsWith("Setup.cs") } 
 
     if ($areaTools.Count -eq 0) {
         Write-Warning "No files with *Command.cs or *Setup.cs found in area: $ToolAreaDirectory"
