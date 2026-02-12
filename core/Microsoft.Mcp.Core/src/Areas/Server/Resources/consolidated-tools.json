@@ -1148,8 +1148,7 @@
       "mappedToolList": [
         "loadtesting_testresource_list",
         "loadtesting_test_get",
-        "loadtesting_testrun_get",
-        "loadtesting_testrun_list"
+        "loadtesting_testrun_get"
       ]
     },
     {
@@ -1184,7 +1183,7 @@
       "mappedToolList": [
         "loadtesting_test_create",
         "loadtesting_testresource_create",
-        "loadtesting_testrun_create"
+        "loadtesting_testrun_createorupdate"
       ]
     },
     {

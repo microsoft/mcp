@@ -1441,7 +1441,6 @@ azmcp loadtesting testresource list --subscription <subscription> \
                                     --test-resource-name <test-resource-name>
 
 # Create load test run
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --test-resource-name <test-resource-name> \
@@ -1459,14 +1458,12 @@ azmcp loadtesting testrun get --subscription <subscription> \
                               --testrun-id <testrun-id>
 
 # List load test run
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --test-resource-name <test-resource-name> \
                                --test-id <test-id>
 
 # Update load test run
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun update --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --test-resource-name <test-resource-name> \
