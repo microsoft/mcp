@@ -67,7 +67,7 @@ public class FastTranscriptionRecognizer(
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesEndpoint().ToString()]);
+                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
                 var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Build the Fast Transcription API URL
@@ -248,18 +248,18 @@ public class FastTranscriptionRecognizer(
         };
     }
 
-    private Uri GetCognitiveServicesEndpoint()
+    private string GetCognitiveServicesScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://cognitiveservices.azure.us/.default");
+                return "https://cognitiveservices.azure.us/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://cognitiveservices.azure.cn/.default");
+                return "https://cognitiveservices.azure.cn/.default";
             default:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
         }
     }
 }
