@@ -50,19 +50,6 @@ jobs:
 
   - checkout: self
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
-
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
-
   - powershell: |
       $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
       if ($pwsh) {
@@ -86,6 +73,19 @@ jobs:
       }
     displayName: "Install pwsh on windows-arm64 if needed"
     condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK 9.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 9.0.x
 
   - task: Powershell@2
     displayName: "Build code"
