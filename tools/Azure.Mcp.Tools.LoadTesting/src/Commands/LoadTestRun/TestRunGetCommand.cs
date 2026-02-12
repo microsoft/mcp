@@ -23,10 +23,9 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     public override string Name => "get";
     public override string Description =>
         $"""
-        Get load test run details in a load test resource.
-        With testrun ID: Returns a single test run with execution details including status, start/end times, progress, metrics, and artifacts in the load test resource.
-        With test ID: Returns all load test runs for a specific test in the load test resource.
-        Returns test run execution data only - not test configuration or resource details.
+        Get load test run details by testrun ID, or list all test runs by test ID.
+        Returns execution details including status, start/end times, progress, metrics, and artifacts.
+        Does not return test configuration or resource details.
         """;
     public override string Title => _commandTitle;
 
