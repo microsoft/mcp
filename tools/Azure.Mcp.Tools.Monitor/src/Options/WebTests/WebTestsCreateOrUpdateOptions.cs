@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 
-public class WebTestsUpdateOptions : BaseMonitorOptions
+public class WebTestsCreateOrUpdateOptions : BaseMonitorOptions
 {
     public string? ResourceName { get; set; }
     public string? AppInsightsComponentId { get; set; }
