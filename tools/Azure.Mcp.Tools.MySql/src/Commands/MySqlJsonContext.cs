@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.MySql.Services;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
-[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(DatabaseQueryCommand.DatabaseQueryCommandResult))]
 [JsonSerializable(typeof(ServerConfigGetCommand.ServerConfigGetCommandResult))]
 [JsonSerializable(typeof(ServerParamGetCommand.ServerParamGetCommandResult))]
@@ -17,6 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands;
 [JsonSerializable(typeof(TableSchemaGetCommand.TableSchemaGetCommandResult))]
 [JsonSerializable(typeof(MySqlListCommand.MySqlListCommandResult))]
 [JsonSerializable(typeof(MySqlService.ServerConfigGetResult))]
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 
 internal sealed partial class MySqlJsonContext : JsonSerializerContext
 {

@@ -9,21 +9,12 @@ using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
-public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : BasePostgresCommand<PostgresListOptions>(logger)
+public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
 {
-    private readonly Option<string?> _serverOption = new("--server")
-    {
-        Description = "The PostgreSQL server to list databases from (optional)."
-    };
-
-    private readonly Option<string?> _databaseOption = new("--database")
-    {
-        Description = "The PostgreSQL database to list tables from (optional, requires --server)."
-    };
-
     public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
 
     public override string Name => "list";
@@ -32,22 +23,22 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override string Title => "List PostgreSQL Resources";
 
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_serverOption);
-        command.Options.Add(_databaseOption);
+        command.Options.Add(PostgresOptionDefinitions.ServerOptional);
+        command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
         command.Options.Add(PostgresOptionDefinitions.Password);
     }
 
-    protected override PostgresListOptions BindOptions(ParseResult parseResult)
+    protected override BasePostgresOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValue(_serverOption);
-        options.Database = parseResult.GetValue(_databaseOption);
+        options.Server = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name);
+        options.Database = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name);
         options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
         options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
         return options;
@@ -87,11 +78,9 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     options.Database!,
                     cancellationToken);
 
-                context.Response.Results = tables?.Count > 0 ?
-                    ResponseResult.Create(
-                        new PostgresListCommandResult(null, null, tables),
-                        PostgresJsonContext.Default.PostgresListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new PostgresListCommandResult(null, null, tables ?? []),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -105,11 +94,9 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     options.Server!,
                     cancellationToken);
 
-                context.Response.Results = databases?.Count > 0 ?
-                    ResponseResult.Create(
-                        new PostgresListCommandResult(null, databases, null),
-                        PostgresJsonContext.Default.PostgresListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new PostgresListCommandResult(null, databases ?? [], null),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
             {
@@ -120,11 +107,9 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     options.User!,
                     cancellationToken);
 
-                context.Response.Results = servers?.Count > 0 ?
-                    ResponseResult.Create(
-                        new PostgresListCommandResult(servers, null, null),
-                        PostgresJsonContext.Default.PostgresListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new PostgresListCommandResult(servers ?? [], null, null),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
         }
         catch (Exception ex)

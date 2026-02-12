@@ -3,26 +3,18 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMySqlCommand<MySqlListOptions>(logger)
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
 {
-    private readonly Option<string?> _serverOption = new("--server")
-    {
-        Description = "The MySQL server to list databases from (optional)."
-    };
-
-    private readonly Option<string?> _databaseOption = new("--database")
-    {
-        Description = "The MySQL database to list tables from (optional, requires --server)."
-    };
-
     public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
 
     public override string Name => "list";
@@ -31,20 +23,20 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
 
     public override string Title => "List MySQL Resources";
 
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_serverOption);
-        command.Options.Add(_databaseOption);
+        command.Options.Add(MySqlOptionDefinitions.ServerOptional);
+        command.Options.Add(MySqlOptionDefinitions.DatabaseOptional);
     }
 
-    protected override MySqlListOptions BindOptions(ParseResult parseResult)
+    protected override MySqlDatabaseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValue(_serverOption);
-        options.Database = parseResult.GetValue(_databaseOption);
+        options.Server = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.ServerOptional.Name);
+        options.Database = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.DatabaseOptional.Name);
         return options;
     }
 
@@ -80,11 +72,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
                     options.Database!,
                     cancellationToken);
 
-                context.Response.Results = tables?.Count > 0 ?
-                    ResponseResult.Create(
-                        new MySqlListCommandResult(null, null, tables),
-                        MySqlJsonContext.Default.MySqlListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new MySqlListCommandResult(null, null, tables ?? []),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -96,11 +86,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
                     options.Server!,
                     cancellationToken);
 
-                context.Response.Results = databases?.Count > 0 ?
-                    ResponseResult.Create(
-                        new MySqlListCommandResult(null, databases, null),
-                        MySqlJsonContext.Default.MySqlListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new MySqlListCommandResult(null, databases ?? [], null),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else
             {
@@ -111,11 +99,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
                     options.User!,
                     cancellationToken);
 
-                context.Response.Results = servers?.Count > 0 ?
-                    ResponseResult.Create(
-                        new MySqlListCommandResult(servers, null, null),
-                        MySqlJsonContext.Default.MySqlListCommandResult) :
-                    null;
+                context.Response.Results = ResponseResult.Create(
+                    new MySqlListCommandResult(servers ?? [], null, null),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
         }
         catch (Exception ex)
