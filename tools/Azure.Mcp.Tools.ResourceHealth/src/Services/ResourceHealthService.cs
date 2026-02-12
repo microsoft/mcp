@@ -88,7 +88,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{managementEndpoint}/.default"]),
+                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
@@ -146,7 +146,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{managementEndpoint}/.default"]),
+                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
