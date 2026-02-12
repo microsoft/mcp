@@ -112,7 +112,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.NotNull(location.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_D2s_v6", vmSize.GetString());
+        Assert.Equal("Standard_B2s", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("Linux", osType.GetString());
