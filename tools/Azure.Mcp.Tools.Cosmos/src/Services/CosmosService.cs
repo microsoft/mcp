@@ -79,7 +79,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new CosmosClient(
-                    string.Format(GetCosmosBaseUri().ToString(), accountName),
+                    string.Format(GetCosmosBaseUriFormat(), accountName),
                     keys.Value.PrimaryMasterKey,
                     clientOptions);
                 break;
@@ -87,7 +87,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             case AuthMethod.Credential:
             default:
                 cosmosClient = new CosmosClient(
-                    string.Format(GetCosmosBaseUri().ToString(), accountName),
+                    string.Format(GetCosmosBaseUriFormat(), accountName),
                     await GetCredential(cancellationToken),
                     clientOptions);
                 break;
@@ -99,18 +99,18 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         return cosmosClient;
     }
 
-    private Uri GetCosmosBaseUri()
+    private string GetCosmosBaseUriFormat()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://{0}.documents.azure.com:443/");
+                return "https://{0}.documents.azure.com:443/";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://{0}.documents.azure.us:443/");
+                return "https://{0}.documents.azure.us:443/";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://{0}.documents.azure.cn:443/");
+                return "https://{0}.documents.azure.cn:443/";
             default:
-                return new Uri("https://{0}.documents.azure.com:443/");
+                return "https://{0}.documents.azure.com:443/";
         }
     }
 
