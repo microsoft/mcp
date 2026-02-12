@@ -14,7 +14,6 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorHealthModelService(ITenantService tenantService, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
@@ -117,7 +116,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     {
         TokenCredential credential = await GetCredential(cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([HealthModelsDataApiScope]),
+            new TokenRequestContext([GetHealthModelsDataApiScope()]),
             cancellationToken);
 
         return accessToken.Token;
@@ -128,18 +127,18 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         return _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
     }
 
-    private Uri GetHealthModelsDataApiScope()
+    private string GetHealthModelsDataApiScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://data.healthmodels.azure.com/");
+                return "https://data.healthmodels.azure.com/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://data.healthmodels.azure.cn/");
+                return "https://data.healthmodels.azure.cn/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://data.healthmodels.azure.us/");
+                return "https://data.healthmodels.azure.us/.default";
             default:
-                return new Uri("https://data.healthmodels.azure.com/");
+                return "https://data.healthmodels.azure.com/.default";
         }
     }
 }
