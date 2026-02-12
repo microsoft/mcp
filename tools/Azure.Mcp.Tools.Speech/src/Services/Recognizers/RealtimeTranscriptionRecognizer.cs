@@ -63,7 +63,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope().ToString()]);
+                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
                 var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Configure Speech SDK with endpoint
@@ -499,18 +499,18 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         return nbestResults;
     }
 
-    private Uri GetCognitiveServicesScope()
+    private string GetCognitiveServicesScope()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://cognitiveservices.azure.us/.default");
+                return "https://cognitiveservices.azure.us/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://cognitiveservices.azure.cn/.default");
+                return "https://cognitiveservices.azure.cn/.default";
             default:
-                return new Uri("https://cognitiveservices.azure.com/.default");
+                return "https://cognitiveservices.azure.com/.default";
         }
     }
 }
