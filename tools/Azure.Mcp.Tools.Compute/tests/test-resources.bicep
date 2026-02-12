@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
+param location string = 'westus2'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
@@ -20,7 +20,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_D2s_v6'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -63,7 +63,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 // Test Virtual Machine (Linux)
-resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: '${baseName}-vm'
   location: location
   properties: {
@@ -83,6 +83,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
           storageAccountType: 'Standard_LRS'
         }
       }
+      diskControllerType: 'NVMe'
     }
     osProfile: {
       computerName: '${baseName}-vm'
@@ -110,7 +111,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 }
 
 // Virtual Machine Scale Set for VMSS testing
-resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
+resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
   name: '${baseName}-vmss'
   location: location
   sku: {
@@ -137,6 +138,7 @@ resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
             storageAccountType: 'Standard_LRS'
           }
         }
+        diskControllerType: 'NVMe'
       }
       osProfile: {
         computerNamePrefix: '${baseName}-'

@@ -31,9 +31,9 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
-            fromSms = tempFromSms!.Substring(1); // Remove '+' for regex matching
+            fromSms = tempFromSms?.Substring(1); // Remove '+' for regex matching
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var tempToSms);
-            toSms = tempToSms!.Substring(1); // Remove '+' for regex matching
+            toSms = tempToSms?.Substring(1); // Remove '+' for regex matching
         }
 
         await base.InitializeAsync();
