@@ -119,10 +119,7 @@ param (
     # hotfix branches if and when the dynamic subscription configuration
     # secrets get updated to add new parameters.
     [Parameter(ValueFromRemainingArguments = $true)]
-    $NewTestResourcesRemainingArguments,
-
-    [Parameter()]
-    [switch] $UseHttpTransport
+    $NewTestResourcesRemainingArguments
 )
 
 . (Join-Path $PSScriptRoot .. scripts common.ps1)

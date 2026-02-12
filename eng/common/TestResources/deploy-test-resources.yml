@@ -104,12 +104,12 @@ steps:
             -Location '${{ parameters.Location }}' `
             -DeleteAfterHours '${{ parameters.DeleteAfterHours }}' `
             @subscriptionConfiguration `
-            -AdditionalParameters ${{ parameters.ArmTemplateParameters }} `
+            -ArmTemplateParameters ${{ parameters.ArmTemplateParameters }} `
+            -AdditionalParameters @{ UseHttpTransport = ('${{ parameters.UseHttpTransport }}' -eq 'true') } `
             -AllowIpRanges ('$(azsdk-corp-net-ip-ranges)' -split ',') `
             -SelfContainedPostScript $postScriptPath `
             -CI `
             -Force `
-            -UseHttpTransport:('${{ parameters.UseHttpTransport }}' -eq 'true') `
             -Verbose | Out-Null
 
     - ${{ if eq(parameters.PersistOidcToken, true) }}:
@@ -150,12 +150,12 @@ steps:
           -Location '${{ parameters.Location }}' `
           -DeleteAfterHours '${{ parameters.DeleteAfterHours }}' `
           @subscriptionConfiguration `
-          -AdditionalParameters ${{ parameters.ArmTemplateParameters }} `
+          -ArmTemplateParameters ${{ parameters.ArmTemplateParameters }} `
+          -AdditionalParameters @{ UseHttpTransport = ('${{ parameters.UseHttpTransport }}' -eq 'true') } `
           -AllowIpRanges ('$(azsdk-corp-net-ip-ranges)' -split ',') `
           -CI `
           -ServicePrincipalAuth `
           -Force `
-          -UseHttpTransport:('${{ parameters.UseHttpTransport }}' -eq 'true') `
           -Verbose | Out-Null
       displayName: 🚀 Deploy test resources
       env:
