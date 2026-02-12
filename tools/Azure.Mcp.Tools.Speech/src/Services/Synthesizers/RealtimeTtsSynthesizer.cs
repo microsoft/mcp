@@ -104,7 +104,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         var credential = await GetCredential(cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
-        var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesEndpoint().ToString()]);
+        var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
         var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
         // Convert https endpoint to wss for WebSocket-based TTS
