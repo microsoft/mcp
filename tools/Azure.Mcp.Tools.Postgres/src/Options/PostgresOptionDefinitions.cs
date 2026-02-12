@@ -50,12 +50,26 @@ public static class PostgresOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string?> ServerOptional = new(
+        $"--{ServerName}"
+    )
+    {
+        Description = "The PostgreSQL server to list databases from (optional)."
+    };
+
     public static readonly Option<string> Database = new(
         $"--{DatabaseName}"
     )
     {
         Description = "The PostgreSQL database to be accessed.",
         Required = true
+    };
+
+    public static readonly Option<string?> DatabaseOptional = new(
+        $"--{DatabaseName}"
+    )
+    {
+        Description = "The PostgreSQL database to list tables from (optional, requires --server)."
     };
 
     public static readonly Option<string> Table = new(

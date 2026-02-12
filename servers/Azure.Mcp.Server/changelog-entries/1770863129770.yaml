@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Consolidated MySQL and PostgreSQL list commands from 6 separate tools (postgres_server_list, postgres_database_list, postgres_table_list, mysql_server_list, mysql_database_list, mysql_table_list) into 2 hierarchical commands (postgres_list, mysql_list) that automatically route based on provided parameters"
