@@ -9,6 +9,13 @@ public static class ComputeOptionDefinitions
     public const string VmssNameName = "vmss-name";
     public const string InstanceIdName = "instance-id";
     public const string LocationName = "location";
+    public const string DiskName = "disk";
+
+    public static readonly Option<string> Disk = new($"--{DiskName}", "--name")
+    {
+        Description = "The name of the disk",
+        Required = false
+    };
 
     public static readonly Option<string> VmName = new($"--{VmNameName}", "--name")
     {

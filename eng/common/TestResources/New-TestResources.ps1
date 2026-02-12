@@ -179,7 +179,7 @@ try {
         }
         Write-Verbose "Overriding test resources search directory to '$root'"
     }
-    
+
     $templateFiles = @()
 
     "$ResourceType-resources.json", "$ResourceType-resources.bicep" | ForEach-Object {
@@ -203,7 +203,7 @@ try {
 
     # returns empty string if $ServiceDirectory is not set
     $serviceName = GetServiceLeafDirectoryName $ServiceDirectory
-    
+
     # in ci, random names are used
     # in non-ci, without BaseName, ResourceGroupName or ServiceDirectory, all invocations will
     # generate the same resource group name and base name for a given user
@@ -232,9 +232,10 @@ try {
     # If no location is specified use safe default locations for the given
     # environment. If no matching environment is found $Location remains an empty
     # string.
+    # TODO: We should parameterize location so it can be passed to the script
     if (!$Location) {
         $Location = @{
-            'AzureCloud' = 'westus';
+            'AzureCloud' = ($TestResourcesDirectory -like '*Compute*') ? 'eastus2' : 'westus';
             'AzureUSGovernment' = 'usgovvirginia';
             'AzureChinaCloud' = 'chinaeast2';
             'Dogfood' = 'westus'
@@ -310,7 +311,7 @@ try {
         }
     }
 
-    # This needs to happen after we set the TenantId but before we use the ResourceGroupName	
+    # This needs to happen after we set the TenantId but before we use the ResourceGroupName
     if ($wellKnownTMETenants.Contains($TenantId)) {
         # Add a prefix to the resource group name to avoid flagging the usages of local auth
         # See details at https://eng.ms/docs/products/onecert-certificates-key-vault-and-dsms/key-vault-dsms/certandsecretmngmt/credfreefaqs#how-can-i-disable-s360-reporting-when-testing-customer-facing-3p-features-that-depend-on-use-of-unsafe-local-auth
