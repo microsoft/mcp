@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
-using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
