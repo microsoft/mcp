@@ -18,7 +18,7 @@ function New-TestSettings {
         [string] $BaseName,
         [hashtable] $DeploymentOutputs,
         [string] $OutputPath,
-        [switch] $UseHttpTransport
+        [hashtable] $AdditionalParameters
     )
 
     if($env:ARM_OIDC_TOKEN -and $TenantId -and $TestApplicationId) {
@@ -60,7 +60,7 @@ function New-TestSettings {
         TestMode = "Live"
     }
 
-    if ($UseHttpTransport) {
+    if ($AdditionalParameters -and $AdditionalParameters.ContainsKey("UseHttpTransport") -and $AdditionalParameters["UseHttpTransport"]) {
         $testSettings.EnvironmentVariables["MCP_TEST_TRANSPORT"] = "http"
     }
 

@@ -11,7 +11,6 @@ parameters:
   UseFederatedAuth: true
   PersistOidcToken: false
   SelfContainedPostScript: self-contained-test-resources-post.ps1
-  UseHttpTransport: false
 
 # SubscriptionConfiguration will be splatted into the parameters of the test
 # resources script. It should be JSON in the form:
@@ -104,8 +103,7 @@ steps:
             -Location '${{ parameters.Location }}' `
             -DeleteAfterHours '${{ parameters.DeleteAfterHours }}' `
             @subscriptionConfiguration `
-            -ArmTemplateParameters ${{ parameters.ArmTemplateParameters }} `
-            -AdditionalParameters @{ UseHttpTransport = ('${{ parameters.UseHttpTransport }}' -eq 'true') } `
+            -AdditionalParameters ${{ parameters.ArmTemplateParameters }} `
             -AllowIpRanges ('$(azsdk-corp-net-ip-ranges)' -split ',') `
             -SelfContainedPostScript $postScriptPath `
             -CI `
@@ -150,8 +148,7 @@ steps:
           -Location '${{ parameters.Location }}' `
           -DeleteAfterHours '${{ parameters.DeleteAfterHours }}' `
           @subscriptionConfiguration `
-          -ArmTemplateParameters ${{ parameters.ArmTemplateParameters }} `
-          -AdditionalParameters @{ UseHttpTransport = ('${{ parameters.UseHttpTransport }}' -eq 'true') } `
+          -AdditionalParameters ${{ parameters.ArmTemplateParameters }} `
           -AllowIpRanges ('$(azsdk-corp-net-ip-ranges)' -split ',') `
           -CI `
           -ServicePrincipalAuth `

@@ -5,7 +5,7 @@ param(
     [string] $ResourceGroupName,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,
-    [switch] $UseHttpTransport
+    [hashtable] $AdditionalParameters
 )
 
 $ErrorActionPreference = "Stop"
