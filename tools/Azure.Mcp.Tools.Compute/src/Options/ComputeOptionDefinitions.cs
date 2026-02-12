@@ -11,7 +11,7 @@ public static class ComputeOptionDefinitions
     public const string LocationName = "location";
     public const string DiskName = "disk";
 
-    public static Option<string> Disk = new($"--{DiskName}", "--name")
+    public static readonly Option<string> Disk = new($"--{DiskName}", "--name")
     {
         Description = "The name of the disk",
         Required = false
