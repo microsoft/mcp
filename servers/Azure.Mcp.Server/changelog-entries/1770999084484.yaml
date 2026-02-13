@@ -1,0 +1,4 @@
+pr: 1728
+changes:
+  - section: "Breaking Changes"
+    description: "Change ManagedLustre group names to use dash instead of underscore. auto-blobimport, auto-blobexport, auto-import have dashes now."
