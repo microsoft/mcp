@@ -182,10 +182,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         var options = BindOptions(parseResult);
 
-        // Update the UserAgentPolicy for all Azure service calls to include the transport type.
-        var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
-        BaseAzureService.InitializeUserAgentPolicy(transport);
-
         try
         {
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);

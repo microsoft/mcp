@@ -4,8 +4,10 @@
 using System.Net;
 using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Commands;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -15,6 +17,7 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -232,6 +235,15 @@ internal class Program
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {
+        ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+
+        if(options != null)
+        {
+            // Update the UserAgentPolicy for all Azure service calls to include the transport type.
+            var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
+            BaseAzureService.InitializeUserAgentPolicy(transport);
+        }
+
         // Perform any initialization before starting the service.
         // If the initialization operation fails, do not continue because we do not want
         // invalid telemetry published.
