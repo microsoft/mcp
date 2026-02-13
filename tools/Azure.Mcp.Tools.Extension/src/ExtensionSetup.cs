@@ -30,7 +30,7 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var extension = new CommandGroup(Name, "Extension operations – Commands providing additional Azure tooling functionality, including running Azure Quick Review (azqr) for service recommendations, generating Azure CLI commands from user intent, and retrieving installation guidance for Azure CLI, Azure Developer CLI, and Azure Functions Core Tools.", Title);
+        var extension = new CommandGroup(Name, "Extension commands for additional Azure tooling functionality. Includes running Azure Quick Review (azqr) commands directly from the MCP server to get service recommendations, generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.", Title);
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));

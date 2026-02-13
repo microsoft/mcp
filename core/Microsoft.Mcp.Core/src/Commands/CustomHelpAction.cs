@@ -8,7 +8,7 @@ using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Custom help action that displays version information before the standard help output.
