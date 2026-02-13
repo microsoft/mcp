@@ -17,6 +17,8 @@ public sealed class ServerSetup : IAreaSetup
 
     public string Title => "MCP Server Management";
 
+    public CommandCategory Category => CommandCategory.Mcp;
+
     /// <summary>
     /// Configures services required for the Server area.
     /// </summary>
