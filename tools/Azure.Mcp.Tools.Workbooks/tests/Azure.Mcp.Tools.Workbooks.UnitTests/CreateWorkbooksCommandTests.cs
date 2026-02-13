@@ -88,14 +88,15 @@ public class CreateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -112,14 +113,15 @@ public class CreateWorkbooksCommandTests
         Assert.NotNull(result.Results);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "azure monitor",
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -141,14 +143,15 @@ public class CreateWorkbooksCommandTests
             SourceId: null
         );
 
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -162,28 +165,30 @@ public class CreateWorkbooksCommandTests
         await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "custom-source",
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceReturnsNull()
     {
         // Arrange
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns((WorkbookInfo?)null);
 
         var context = new CommandContext(_serviceProvider);
@@ -204,14 +209,15 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new InvalidOperationException("Service error")));
 
         var context = new CommandContext(_serviceProvider);
@@ -247,14 +253,15 @@ public class CreateWorkbooksCommandTests
             SourceId: null
         );
 
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -267,14 +274,15 @@ public class CreateWorkbooksCommandTests
         await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-subscription",
             "test-resource-group",
             "My Test Workbook",
             """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""",
             "azure monitor",
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -282,14 +290,15 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -302,14 +311,15 @@ public class CreateWorkbooksCommandTests
         await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
             """{"items":[]}""",
             "azure monitor",
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Is<string?>(t => t == null),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -317,7 +327,7 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -340,7 +350,7 @@ public class CreateWorkbooksCommandTests
         await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -442,14 +452,15 @@ public class CreateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -472,14 +483,15 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(workbook);
 
         var context = new CommandContext(_serviceProvider);
@@ -496,7 +508,7 @@ public class CreateWorkbooksCommandTests
         await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).CreateWorkbook(
+        await _service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -507,21 +519,23 @@ public class CreateWorkbooksCommandTests
                 opts.MaxRetries == 5 &&
                 opts.DelaySeconds == 2.5 &&
                 opts.MaxDelaySeconds == 30),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesExceptionCorrectly_WhenExceptionOccurs()
     {
         // Arrange
-        _service.CreateWorkbook(
+        _service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
-            cancellationToken: Arg.Any<CancellationToken>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new ArgumentException("Invalid workbook data")));
 
         var context = new CommandContext(_serviceProvider);

@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
+using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -61,15 +62,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId
+            "--workbook-ids", workbookId
         ]);
 
         var context = new CommandContext(_serviceProvider);
@@ -86,25 +89,30 @@ public class DeleteWorkbooksCommandTests
         var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(workbookId, result.WorkbookId);
-        Assert.Equal("Successfully deleted", result.Message);
+        Assert.Single(result.Succeeded);
+        Assert.Contains(workbookId, result.Succeeded);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenWorkbookDeletionFails()
+    public async Task ExecuteAsync_ReturnsBatchResults_WhenMultipleWorkbooksDeleted()
     {
         // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
+        var workbookId1 = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
+        var workbookId2 = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook2";
 
-        _service.DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId1, workbookId2], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(false);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId
+            "--workbook-ids", workbookId1,
+            "--workbook-ids", workbookId2
         ]);
 
         var context = new CommandContext(_serviceProvider);
@@ -113,9 +121,97 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.Contains($"Failed to delete workbook with ID '{workbookId}'", response.Message);
-        Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Succeeded.Count);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsPartialResults_WhenSomeDeletionsFail()
+    {
+        // Arrange
+        var workbookId1 = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
+        var workbookId2 = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook2";
+
+        var error = new WorkbookError(workbookId2, 404, "Resource not found");
+        var batchResult = new WorkbookDeleteBatchResult([workbookId1], [error]);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(batchResult);
+
+        var args = _command.GetCommand().Parse([
+            "--workbook-ids", workbookId1,
+            "--workbook-ids", workbookId2
+        ]);
+
+        var context = new CommandContext(_serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Succeeded);
+        Assert.Contains(workbookId1, result.Succeeded);
+        Assert.Single(result.Errors);
+        Assert.Equal(workbookId2, result.Errors[0].WorkbookId);
+        Assert.Equal(404, result.Errors[0].StatusCode);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsError_WhenAllDeletionsFail()
+    {
+        // Arrange
+        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
+
+        var error = new WorkbookError(workbookId, 403, "Access denied");
+        var batchResult = new WorkbookDeleteBatchResult([], [error]);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(batchResult);
+
+        var args = _command.GetCommand().Parse([
+            "--workbook-ids", workbookId
+        ]);
+
+        var context = new CommandContext(_serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Succeeded);
+        Assert.Single(result.Errors);
     }
 
     [Fact]
@@ -124,15 +220,15 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<bool>(new Exception("Service error")));
+            .Returns(Task.FromException<WorkbookDeleteBatchResult>(new Exception("Service error")));
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId
+            "--workbook-ids", workbookId
         ]);
 
         var context = new CommandContext(_serviceProvider);
@@ -152,15 +248,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/test-sub/resourceGroups/test-rg/providers/microsoft.insights/workbooks/test-workbook";
 
-        _service.DeleteWorkbook(
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
+            "--workbook-ids", workbookId,
             "--tenant", "test-tenant"
         ]);
 
@@ -170,9 +268,9 @@ public class DeleteWorkbooksCommandTests
         await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        await _service.Received(1).DeleteWorkbooksAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is("test-tenant"),
             Arg.Any<CancellationToken>());
     }
@@ -183,15 +281,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/test-sub/resourceGroups/test-rg/providers/microsoft.insights/workbooks/test-workbook";
 
-        _service.DeleteWorkbook(
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId
+            "--workbook-ids", workbookId
         ]);
 
         var context = new CommandContext(_serviceProvider);
@@ -200,10 +300,10 @@ public class DeleteWorkbooksCommandTests
         await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Is((string?)null),
+        await _service.Received(1).DeleteWorkbooksAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Is<string?>(t => t == null),
             Arg.Any<CancellationToken>());
     }
 
@@ -213,15 +313,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/test-sub/resourceGroups/test-rg/providers/microsoft.insights/workbooks/test-workbook";
 
-        _service.DeleteWorkbook(
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
+            "--workbook-ids", workbookId,
             "--auth-method", "1"
         ]);
 
@@ -231,43 +333,23 @@ public class DeleteWorkbooksCommandTests
         await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        await _service.Received(1).DeleteWorkbooksAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task ExecuteAsync_WithInvalidWorkbookId_ReturnsValidationError(string invalidWorkbookId)
+    [Fact]
+    public async Task ExecuteAsync_WithoutWorkbookIds_ReturnsError()
     {
         // Arrange
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", invalidWorkbookId
-        ]);
+        var args = _command.GetCommand().Parse([]);
 
         var context = new CommandContext(_serviceProvider);
 
         // Act
         var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("workbook", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithMissingWorkbookId_ReturnsValidationError()
-    {
-        // Arrange - Parse without required workbook-id parameter
-        var parseResult = _command.GetCommand().Parse([]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -280,15 +362,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var validWorkbookId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/microsoft.insights/workbooks/my-workbook-guid";
 
-        _service.DeleteWorkbook(
-            Arg.Is(validWorkbookId),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([validWorkbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", validWorkbookId
+            "--workbook-ids", validWorkbookId
         ]);
 
         var context = new CommandContext(_serviceProvider);
@@ -304,42 +388,8 @@ public class DeleteWorkbooksCommandTests
         var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(validWorkbookId, result.WorkbookId);
-        Assert.Equal("Successfully deleted", result.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithDisplayNameAsWorkbookId_ProcessesCorrectly()
-    {
-        // Arrange
-        var displayName = "My Test Workbook";
-
-        _service.DeleteWorkbook(
-            Arg.Is(displayName),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", displayName
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Equal(displayName, result.WorkbookId);
-        Assert.Equal("Successfully deleted", result.Message);
+        Assert.Single(result.Succeeded);
+        Assert.Contains(validWorkbookId, result.Succeeded);
     }
 
     [Fact]
@@ -348,15 +398,17 @@ public class DeleteWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.DeleteWorkbook(
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
+        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
+
+        _service.DeleteWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(batchResult);
 
         var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
+            "--workbook-ids", workbookId,
             "--retry-max-retries", "5",
             "--retry-delay", "2"
         ]);
@@ -367,9 +419,10 @@ public class DeleteWorkbooksCommandTests
         await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).DeleteWorkbook(
-            Arg.Is(workbookId),
-            Arg.Is<RetryPolicyOptions>(options =>
+        await _service.Received(1).DeleteWorkbooksAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
+            Arg.Is<RetryPolicyOptions?>(options =>
+                options != null &&
                 options.MaxRetries == 5 &&
                 options.DelaySeconds == 2),
             Arg.Any<string?>(),
