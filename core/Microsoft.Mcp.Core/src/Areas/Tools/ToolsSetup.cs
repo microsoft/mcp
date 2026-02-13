@@ -14,6 +14,8 @@ public sealed class ToolsSetup : IAreaSetup
 
     public string Title => "MCP Tools Discovery";
 
+    public CommandCategory Category => CommandCategory.Cli;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ToolsListCommand>();
