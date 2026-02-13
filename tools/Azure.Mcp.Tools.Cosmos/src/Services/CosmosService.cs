@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -17,10 +18,10 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private const string CosmosBaseUri = "https://{0}.documents.azure.com:443/";
     private const string CacheGroup = "cosmos";
     private const string CosmosClientsCacheKeyPrefix = "clients_";
     private const string CosmosDatabasesCacheKeyPrefix = "databases_";
@@ -78,7 +79,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new CosmosClient(
-                    string.Format(CosmosBaseUri, accountName),
+                    string.Format(GetCosmosBaseUriFormat(), accountName),
                     keys.Value.PrimaryMasterKey,
                     clientOptions);
                 break;
@@ -86,7 +87,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             case AuthMethod.Credential:
             default:
                 cosmosClient = new CosmosClient(
-                    string.Format(CosmosBaseUri, accountName),
+                    string.Format(GetCosmosBaseUriFormat(), accountName),
                     await GetCredential(cancellationToken),
                     clientOptions);
                 break;
@@ -96,6 +97,21 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         await ValidateCosmosClientAsync(cosmosClient, cancellationToken);
 
         return cosmosClient;
+    }
+
+    private string GetCosmosBaseUriFormat()
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return "https://{0}.documents.azure.com:443/";
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return "https://{0}.documents.azure.us:443/";
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return "https://{0}.documents.azure.cn:443/";
+            default:
+                return "https://{0}.documents.azure.com:443/";
+        }
     }
 
     private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)

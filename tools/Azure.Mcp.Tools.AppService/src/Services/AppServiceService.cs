@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Models;
@@ -17,6 +18,7 @@ public class AppServiceService(
     ITenantService tenantService,
     ILogger<AppServiceService> logger) : BaseAzureService(tenantService), IAppServiceService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;
 
@@ -95,7 +97,7 @@ public class AppServiceService(
         return webAppResource.Value;
     }
 
-    private static string PrepareConnectionString(string? connectionString, string databaseType,
+    private string PrepareConnectionString(string? connectionString, string databaseType,
         string databaseServer, string databaseName)
     {
         return string.IsNullOrWhiteSpace(connectionString)
@@ -177,15 +179,30 @@ public class AppServiceService(
         };
     }
 
-    private static string BuildConnectionString(string databaseType, string databaseServer, string databaseName)
+    private string BuildConnectionString(string databaseType, string databaseServer, string databaseName)
     {
         return databaseType.ToLowerInvariant() switch
         {
             "sqlserver" => $"Server={databaseServer};Database={databaseName};User Id={{username}};Password={{password}};TrustServerCertificate=True;",
             "mysql" => $"Server={databaseServer};Database={databaseName};Uid={{username}};Pwd={{password}};",
             "postgresql" => $"Host={databaseServer};Database={databaseName};Username={{username}};Password={{password}};",
-            "cosmosdb" => $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};",
+            "cosmosdb" => BuildCosmosConnectionString(databaseServer, databaseName),
             _ => throw new ArgumentException($"Unsupported database type: {databaseType}")
         };
+    }
+
+    private string BuildCosmosConnectionString(string databaseServer, string databaseName)
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};";
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return $"AccountEndpoint=https://{databaseServer}.documents.azure.cn:443/;AccountKey={{key}};Database={databaseName};";
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return $"AccountEndpoint=https://{databaseServer}.documents.azure.us:443/;AccountKey={{key}};Database={databaseName};";
+            default:
+                throw new ArgumentException($"Unsupported Azure cloud type: {_tenantService.CloudConfiguration.CloudType}");
+        }
     }
 }

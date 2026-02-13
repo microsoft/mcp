@@ -144,6 +144,126 @@
 - Updated repository to build projects using .NET 10. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
 - Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
 
+## 2.0.0-beta.18 (2026-02-10) (pre-release)
+
+### Added
+
+- AMD64 and ARM64 Docker images of the Azure MCP Server are now available. [[#1651](https://github.com/microsoft/mcp/pull/1651)]
+
+### Fixed
+
+- Added CORS policy to restrict cross-origin requests to localhost when running in unauthenticated development environment. [[#1609](https://github.com/microsoft/mcp/pull/1609)]
+- Fixed elicitation prompts failing with 'Form mode elicitation requests require a requested schema' error by using simple accept/decline prompts instead of form-based schemas for sensitive tool confirmations. [[#1668](https://github.com/microsoft/mcp/pull/1668)]
+
+## 2.0.0-beta.17 (2026-02-05) (pre-release)
+
+### Added
+
+- Added log telemetry support for customer-owned AppInsights. [[#1638](https://github.com/microsoft/mcp/pull/1638)]
+- Added support for dangerous persistent logging configuration in VSIX extension, allowing users to specify a directory for detailed debug logs via the azureMcp.dangerouslyWriteSupportLogsToDir setting. [[#1639](https://github.com/microsoft/mcp/pull/1639)]
+
+### Fixed
+
+- Improved input validation in ResourceHealth and Kusto tools: [[#1634](https://github.com/microsoft/mcp/pull/1634)]
+  - ResourceHealth: Added resource ID validation using Azure.Core.ResourceIdentifier.Parse()
+  - Kusto: Added cluster URI validation with domain suffix and hostname allowlist
+
+### Changed
+
+- Added cancellation token support so deploy operations can be cancelled cleanly and consistently. [[#1627](https://github.com/microsoft/mcp/pull/1627)]
+- Improved cancellation behavior for async enumerators by adding support for `CancellationToken`, making it easier to correctly stop long-running or streaming async iteration. [[#1649](https://github.com/microsoft/mcp/pull/1649)]
+
+## 2.0.0-beta.16 (2026-02-03) (pre-release)
+
+### Added
+
+- Added Azure Compute VM operations with flexible compute vm get command that supports listing all VMs in a subscription, listing VMs in a resource group, getting specific VM details, and retrieving VM instance view with runtime status: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vm_get`
+- Added Virtual Machine Scale Set (VMSS) get operations to retrieve VMSS information including listing across subscriptions or resource groups, getting specific VMSS details, and retrieving individual VM instances within a scale set: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vmss_get`
+- Added Azure Retail Pricing MCP tool for querying Azure service pricing information: [[#1621](https://github.com/microsoft/mcp/pull/1621)]
+  - `pricing_get`
+
+### Fixed
+
+- Added support for new versions of Azure AI Search knowledge bases and those set to 'minimal' reasoning effort. [[#1422](https://github.com/microsoft/mcp/pull/1422)]
+
+### Changed
+
+- Removed ErrorDetails from telemetry. [[#1625](https://github.com/microsoft/mcp/pull/1625)]
+- Updated bestpractices tool description to ask LLM to use azure skills. [[#1622](https://github.com/microsoft/mcp/pull/1622)]
+- Updated swa app deployment instructions in bestpractices tool. [[#1637](https://github.com/microsoft/mcp/pull/1637)]
+
+## 2.0.0-beta.15 (2026-01-29) (pre-release)
+
+### Added
+
+- Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
+
+### Fixed
+
+- Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
+- Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
+
+### Changed
+
+- Added AreResultsTruncated to tools that list resources using Resource Graph. [[#1526](https://github.com/microsoft/mcp/pull/1526)]
+- Improved server startup performance by parallelizing external MCP server initialization, reducing startup time from ~20 seconds to ~1-2 seconds when using registry-based servers. [[#1534](https://github.com/microsoft/mcp/pull/1534)]
+
+## 2.0.0-beta.14 (2026-01-27) (pre-release)
+
+### Added
+
+- Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`. [[#1519](https://github.com/microsoft/mcp/pull/1519)]
+- Added new Azure Managed Lustre fileshare blob import management tools: [[#1492](https://github.com/microsoft/mcp/pull/1492)]
+  - `managedlustre_fs_blob_import_create`
+  - `managedlustre_fs_blob_import_get`
+  - `managedlustre_fs_blob_import_cancel`
+  - `managedlustre_fs_blob_import_delete`
+- Added Sovereign Cloud support for the Azure MCP server. Select services require additional changes and remain unsupported. [[#1533](https://github.com/microsoft/mcp/pull/1533)]
+- Added support for Azure Migrate platform landing zone operations with two new commands:  [[#1524](https://github.com/microsoft/mcp/pull/1524)]
+  - `azmcp_azuremigrate_platformlandingzone_getguidance` - provides scenario-based guidance for Azure Landing Zone configurations including policy search and archetype-based policy listing
+  - `azmcp_azuremigrate_platformlandingzone_request` - enables checking, generating, updating and downloading, platform landing zone configurations based on user inputs
+- Added UVX support, enabling running MCP servers via `uvx` for improved Python/uv-based workflows. [[#1359](https://github.com/microsoft/mcp/pull/1359)]
+
+### Changed
+
+- Optimized `--version` flag to bypass full service initialization, reducing response time from ~10s to <3s. [[#1531](https://github.com/microsoft/mcp/pull/1531)]
+- Replaced the in-house `HttpClientService` with the built-in .NET `IHttpClientFactory` for HTTP client creation/management, improving configurability and aligning with recommended .NET patterns. [[#1564](https://github.com/microsoft/mcp/pull/1564)]
+- Added the internal utility `ToolMetadataExporter` to export current azmcp tool metadata (supporting Azure MCP metadata/telemetry documentation workflows). [[#992](https://github.com/microsoft/mcp/pull/992)]
+
+## 2.0.0-beta.13 (2026-01-22) (pre-release)
+
+### Changed
+
+- Improved Foundry project endpoint parameter description. [[#1555](https://github.com/microsoft/mcp/pull/1555)]
+
+## 2.0.0-beta.12 (2026-01-20) (pre-release)
+
+### Fixed
+
+- Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
+
+## 2.0.0-beta.11 (2026-01-16) (pre-release)
+
+### Added
+
+- Added 12 Azure File Shares tools for managing Azure managed file shares: [[#1419](https://github.com/microsoft/mcp/pull/1419)]
+  - **File Share** tools (5): CheckNameAvailability, Create, Delete, Get, Update
+  - **File Share Snapshot** tools (4): Create, Delete, Get, Update
+  - **Informational** tools (3): GetLimits, GetProvisioningRecommendation, GetUsageData
+- Added support for listing and viewing individual Azure Policy assignments in subscriptions or scopes. [[#1483](https://github.com/microsoft/mcp/pull/1483)]
+
+### Changed
+
+- **Breaking:** Renamed the `--insecure-disable-elicitation` server startup option to `--dangerously-disable-elicitation` to align with the naming convention used by other dangerous options (e.g., `--dangerously-disable-http-incoming-auth`). The old option name is no longer supported. [[#1374](https://github.com/microsoft/mcp/pull/1374)]
+- **Breaking:** Renamed the `storagesync_cloudendpoint_triggerchangedetection` tool to `storagesync_cloudendpoint_changedetection`. The `--directory-path` parameter is now required. Added new optional parameters: `--change-detection-mode` (supports 'Default' or 'Recursive') and `--paths` (array of relative paths for change detection).
+- **Breaking:** Renamed the following commands: [[#1474](https://github.com/microsoft/mcp/pull/1474)]
+  - `get_bestpractices_get` → `get_azure_bestpractices_get`
+  - `get_bestpractices_ai_app` → `get_azure_bestpractices_ai_app`
+- Updated repository to build projects using .NET 10. [[#1221](https://github.com/microsoft/mcp/pull/1221)]
+- Switched to `Azure.ResourceManager.Monitor` library to query metrics, list metrics definitions and metrics namespaces. [[#1409](https://github.com/microsoft/mcp/pull/1409)]
+
 ## 2.0.0-beta.10 (2026-01-09) (pre-release)
 
 ### Added

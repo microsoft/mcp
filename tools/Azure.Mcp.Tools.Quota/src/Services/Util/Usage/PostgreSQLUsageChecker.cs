@@ -4,11 +4,12 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory) : AzureUsageChecker(credential, subscriptionId, logger)
+public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
@@ -16,7 +17,7 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
     {
         try
         {
-            var requestUrl = $"{managementEndpoint}/subscriptions/{SubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{location}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
+            var requestUrl = $"{GetManagementEndpoint()}/subscriptions/{SubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{location}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
             using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
@@ -67,7 +68,7 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
     {
         try
         {
-            var token = await Credential.GetTokenAsync(new TokenRequestContext([$"{managementEndpoint}/.default"]), cancellationToken);
+            var token = await Credential.GetTokenAsync(new TokenRequestContext([$"{GetManagementEndpoint()}/.default"]), cancellationToken);
 
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
