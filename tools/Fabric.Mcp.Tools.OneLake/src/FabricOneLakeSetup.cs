@@ -59,44 +59,75 @@ public class FabricOneLakeSetup : IAreaSetup
     {
         var fabricOneLake = new CommandGroup(Name,
             """
-            Microsoft Fabric OneLake Operations - Manage and interact with OneLake data lake storage.
-            OneLake is Microsoft Fabric's built-in data lake that provides unified storage for all
-            analytics workloads. Use this tool when you need to:
-            - Manage OneLake folders and files
-            - Configure data access and permissions
-            - Monitor OneLake storage usage and performance
-            - Integrate with other Fabric workloads through OneLake
-            This tool provides operations for working with OneLake resources within your Fabric tenant.
+            Microsoft Fabric OneLake Operations - Manage and interact with OneLake
+            data lake storage. OneLake is Microsoft Fabric's built-in data lake that
+            provides unified storage for all analytics workloads. Use this tool when
+            you need to: - Manage OneLake folders and files - Configure data access
+            and permissions - Monitor OneLake storage usage and performance -
+            Integrate with other Fabric workloads through OneLake This tool provides
+            operations for working with OneLake resources within your Fabric tenant.
             """);
 
-        var workspaceGroup = new CommandGroup("workspace", "Workspace operations - Commands for listing and managing OneLake workspaces.");
+        var workspaceGroup = new CommandGroup("workspace",
+            """
+            Workspace operations - Commands for listing and managing OneLake
+            workspaces.
+            """);
         fabricOneLake.AddSubGroup(workspaceGroup);
 
         var itemGroup = new CommandGroup("item", "Item operations - Commands for listing and creating OneLake items.");
         fabricOneLake.AddSubGroup(itemGroup);
 
-        var fileGroup = new CommandGroup("file", "File operations - Commands for reading, writing, deleting, and browsing OneLake files using the DFS API.");
+        var fileGroup = new CommandGroup("file",
+            """
+            File operations - Commands for reading, writing, deleting, and browsing
+            OneLake files using the DFS API.
+            """);
         fabricOneLake.AddSubGroup(fileGroup);
 
-        var blobGroup = new CommandGroup("blob", "Blob operations - Commands for interacting with OneLake's blob-compatible endpoints.");
+        var blobGroup = new CommandGroup("blob",
+          """
+          Blob operations - Commands for interacting with OneLake's
+          blob-compatible endpoints.
+          """);
         fabricOneLake.AddSubGroup(blobGroup);
 
         var uploadGroup = new CommandGroup("upload", "Upload operations - Commands for uploading files into OneLake storage.");
         fabricOneLake.AddSubGroup(uploadGroup);
 
-        var downloadGroup = new CommandGroup("download", "Download operations - Commands for retrieving files from OneLake storage.");
+        var downloadGroup = new CommandGroup("download",
+            """
+            Download operations - Commands for retrieving files from OneLake
+            storage.
+            """);
         fabricOneLake.AddSubGroup(downloadGroup);
 
-        var directoryGroup = new CommandGroup("directory", "Directory operations - Commands for creating and deleting OneLake directories.");
+        var directoryGroup = new CommandGroup("directory",
+                """
+                Directory operations - Commands for creating and deleting OneLake
+                directories.
+                """);
         fabricOneLake.AddSubGroup(directoryGroup);
 
-        var tableGroup = new CommandGroup("table", "Table operations - Commands for interacting with OneLake table endpoints.");
+        var tableGroup = new CommandGroup("table",
+            """
+            Table operations - Commands for interacting with OneLake table
+            endpoints.
+            """);
         fabricOneLake.AddSubGroup(tableGroup);
 
-        var tableConfigGroup = new CommandGroup("config", "Table configuration commands - Inspect table endpoint configuration details.");
+        var tableConfigGroup = new CommandGroup("config",
+            """
+            Table configuration commands - Inspect table endpoint configuration
+            details.
+            """);
         tableGroup.AddSubGroup(tableConfigGroup);
 
-        var tableNamespaceGroup = new CommandGroup("namespace", "Table namespace operations - Commands for browsing OneLake table namespaces.");
+        var tableNamespaceGroup = new CommandGroup("namespace",
+             """
+             Table namespace operations - Commands for browsing OneLake table
+             namespaces.
+             """);
         tableGroup.AddSubGroup(tableNamespaceGroup);
 
         var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();

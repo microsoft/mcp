@@ -51,25 +51,53 @@ public class MonitorSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
-        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.", Title);
+        var monitor = new CommandGroup(Name,
+            """
+            Azure Monitor operations - Commands for querying and analyzing Azure
+            Monitor logs and metrics.
+            """, Title);
 
         // Create Monitor subgroups
-        var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");
+        var workspaces = new CommandGroup("workspace",
+            """
+            Log Analytics workspace operations - Commands for managing Log Analytics
+            workspaces.
+            """);
         monitor.AddSubGroup(workspaces);
 
-        var resources = new CommandGroup("resource", "Azure Monitor resource operations - Commands for resource-centric operations.");
+        var resources = new CommandGroup("resource",
+            """
+            Azure Monitor resource operations - Commands for resource-centric
+            operations.
+            """);
         monitor.AddSubGroup(resources);
 
-        var monitorTable = new CommandGroup("table", "Log Analytics workspace table operations - Commands for listing tables in Log Analytics workspaces.");
+        var monitorTable = new CommandGroup("table",
+           """
+           Log Analytics workspace table operations - Commands for listing tables
+           in Log Analytics workspaces.
+           """);
         monitor.AddSubGroup(monitorTable);
 
-        var monitorTableType = new CommandGroup("type", "Log Analytics workspace table type operations - Commands for listing table types in Log Analytics workspaces.");
+        var monitorTableType = new CommandGroup("type",
+            """
+            Log Analytics workspace table type operations - Commands for listing
+            table types in Log Analytics workspaces.
+            """);
         monitorTable.AddSubGroup(monitorTableType);
 
-        var workspaceLogs = new CommandGroup("log", "Azure Monitor logs operations - Commands for querying Log Analytics workspaces using KQL.");
+        var workspaceLogs = new CommandGroup("log",
+          """
+          Azure Monitor logs operations - Commands for querying Log Analytics
+          workspaces using KQL.
+          """);
         workspaces.AddSubGroup(workspaceLogs);
 
-        var resourceLogs = new CommandGroup("log", "Azure Monitor resource logs operations - Commands for querying resource logs using KQL.");
+        var resourceLogs = new CommandGroup("log",
+            """
+            Azure Monitor resource logs operations - Commands for querying resource
+            logs using KQL.
+            """);
         resources.AddSubGroup(resourceLogs);
 
         // Register Monitor commands
@@ -87,17 +115,29 @@ public class MonitorSetup : IAreaSetup
         var tableTypeList = serviceProvider.GetRequiredService<TableTypeListCommand>();
         monitorTableType.AddCommand(tableTypeList.Name, tableTypeList);
 
-        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
+        var health = new CommandGroup("healthmodels",
+            """
+            Azure Monitor Health Models operations - Commands for working with Azure
+            Monitor Health Models.
+            """);
         monitor.AddSubGroup(health);
 
-        var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
+        var entity = new CommandGroup("entity",
+            """
+            Entity operations - Commands for working with entities in Azure Monitor
+            Health Models.
+            """);
         health.AddSubGroup(entity);
 
         var entityGetHealth = serviceProvider.GetRequiredService<EntityGetHealthCommand>();
         entity.AddCommand(entityGetHealth.Name, entityGetHealth);
 
         // Create Metrics command group and register commands
-        var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
+        var metrics = new CommandGroup("metrics",
+            """
+            Azure Monitor metrics operations - Commands for querying and analyzing
+            Azure Monitor metrics.
+            """);
         monitor.AddSubGroup(metrics);
 
         var metricsQuery = serviceProvider.GetRequiredService<MetricsQueryCommand>();
@@ -105,14 +145,22 @@ public class MonitorSetup : IAreaSetup
         var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
         metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
 
-        var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
+        var activityLog = new CommandGroup("activitylog",
+            """
+            Azure Monitor activity log operations - Commands for querying and
+            analyzing activity logs for Azure resources.
+            """);
         monitor.AddSubGroup(activityLog);
 
         var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
         activityLog.AddCommand(activityLogList.Name, activityLogList);
 
         // Register Monitor.WebTest sub-group commands
-        var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
+        var webTests = new CommandGroup("webtests",
+            """
+            Azure Monitor Web Test operations - Commands for working with Azure
+            Availability/Web Tests.
+            """);
         monitor.AddSubGroup(webTests);
 
         var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();

@@ -38,22 +38,37 @@ public class StorageSetup : IAreaSetup
     {
         var storage = new CommandGroup(Name,
             """
-            Storage operations – Commands to manage Azure Storage accounts and data services, including Blobs and Tables.
-            This is a hierarchical MCP command router where sub-commands are routed to MCP servers via the command field
-            and arguments are provided in parameters. Use learn=true to discover available sub-commands. Supports listing
-            storage accounts, working with blob containers and blobs, and listing tables for object storage scenarios.
+            Storage operations – Commands to manage Azure Storage accounts and data
+            services, including Blobs and Tables. This is a hierarchical MCP command
+            router where sub-commands are routed to MCP servers via the command
+            field and arguments are provided in parameters. Use learn=true to
+            discover available sub-commands. Supports listing storage accounts,
+            working with blob containers and blobs, and listing tables for object
+            storage scenarios.
             """,
             Title);
 
         // Create Storage subgroups
-        var storageAccount = new CommandGroup("account", "Storage accounts operations - Commands for listing and managing Storage accounts in your Azure subscription.");
+        var storageAccount = new CommandGroup("account",
+            """
+            Storage accounts operations - Commands for listing and managing Storage
+            accounts in your Azure subscription.
+            """);
         storage.AddSubGroup(storageAccount);
 
-        var blobs = new CommandGroup("blob", "Storage blob operations - Commands for uploading, downloading, and managing blob in your Azure Storage accounts.");
+        var blobs = new CommandGroup("blob",
+            """
+            Storage blob operations - Commands for uploading, downloading, and
+            managing blob in your Azure Storage accounts.
+            """);
         storage.AddSubGroup(blobs);
 
         // Create a containers subgroup under blobs
-        var blobContainer = new CommandGroup("container", "Storage blob container operations - Commands for managing blob containers in your Azure Storage accounts.");
+        var blobContainer = new CommandGroup("container",
+            """
+            Storage blob container operations - Commands for managing blob
+            containers in your Azure Storage accounts.
+            """);
         blobs.AddSubGroup(blobContainer);
 
         // Register Storage commands
@@ -73,7 +88,11 @@ public class StorageSetup : IAreaSetup
         blobContainer.AddCommand(containerGet.Name, containerGet);
 
         // Create Table subgroup under storage
-        var tables = new CommandGroup("table", "Storage table operations - Commands for managing tables in your Azure Storage accounts.");
+        var tables = new CommandGroup("table",
+            """
+            Storage table operations - Commands for managing tables in your Azure
+            Storage accounts.
+            """);
         storage.AddSubGroup(tables);
 
         var tableList = serviceProvider.GetRequiredService<TableListCommand>();

@@ -26,10 +26,18 @@ public class MarketplaceSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Marketplace command group
-        var marketplace = new CommandGroup(Name, "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.", Title);
+        var marketplace = new CommandGroup(Name,
+            """
+            Marketplace operations - Commands for managing and accessing Azure
+            Marketplace products and offers.
+            """, Title);
 
         // Create Product subgroup
-        var product = new CommandGroup("product", "Marketplace product operations - Commands for retrieving and managing marketplace products.");
+        var product = new CommandGroup("product",
+            """
+            Marketplace product operations - Commands for retrieving and managing
+            marketplace products.
+            """);
         marketplace.AddSubGroup(product);
 
         // Register Product commands

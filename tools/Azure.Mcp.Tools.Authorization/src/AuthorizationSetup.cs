@@ -26,11 +26,18 @@ public sealed class AuthorizationSetup : IAreaSetup
     {
         // Create Authorization RBAC role command group
         var authorization = new CommandGroup(Name,
-            "Authorization operations – Commands for managing Azure RBAC resources, including role assignments, permission management, and access control at subscription, resource group, and resource scopes.", Title);
+            """
+            Authorization operations – Commands for managing Azure RBAC resources,
+            including role assignments, permission management, and access control at
+            subscription, resource group, and resource scopes.
+            """, Title);
 
         // Create Role Assignment subgroup
         var roleAssignment = new CommandGroup("assignment",
-            "Role assignment operations - Commands for listing and managing Azure RBAC role assignments for a given scope.");
+            """
+            Role assignment operations - Commands for listing and managing Azure
+            RBAC role assignments for a given scope.
+            """);
         authorization.AddSubGroup(roleAssignment);
 
         // Register role assignment commands

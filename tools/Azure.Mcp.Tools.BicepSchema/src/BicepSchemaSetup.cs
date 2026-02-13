@@ -24,7 +24,13 @@ public class BicepSchemaSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var bicepschema = new CommandGroup(Name, "Bicep schema operations – Commands to work with Azure Bicep Infrastructure as Code (IaC) schemas and templates, including retrieving Bicep schema and resource definitions to support infrastructure deployment automation.", Title);
+        var bicepschema = new CommandGroup(Name,
+            """
+            Bicep schema operations – Commands to work with Azure Bicep
+            Infrastructure as Code (IaC) schemas and templates, including retrieving
+            Bicep schema and resource definitions to support infrastructure
+            deployment automation.
+            """, Title);
 
         // Register Bicep Schema command
 

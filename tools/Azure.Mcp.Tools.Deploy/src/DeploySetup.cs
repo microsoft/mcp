@@ -32,7 +32,14 @@ public sealed class DeploySetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var deploy = new CommandGroup(Name, "Deploy operations – Commands for deploying applications to Azure. Provides sub-commands to generate deployment plans, offer infrastructure-as-code (Bicep/Terraform) guidance, fetch application logs, generate CI/CD pipeline guidance, and produce Azure architecture diagrams based on application topology.", Title);
+        var deploy = new CommandGroup(Name,
+            """
+            Deploy operations – Commands for deploying applications to Azure.
+            Provides sub-commands to generate deployment plans, offer
+            infrastructure-as-code (Bicep/Terraform) guidance, fetch application
+            logs, generate CI/CD pipeline guidance, and produce Azure architecture
+            diagrams based on application topology.
+            """, Title);
 
         // Application-specific commands
         // This command will be deprecated when 'azd cli' supports the same functionality

@@ -28,8 +28,13 @@ public class PricingSetup : IAreaSetup
     {
         var pricing = new CommandGroup(
             Name,
-            "Azure Retail Pricing operations - Get Azure retail pricing for SKUs, services, regions and compare pricing across different options. " +
-            "For Bicep/ARM template cost estimation, read the template file, extract resource SKUs, then call 'pricing get' for each resource to build a cost estimate.",
+            """
+            Azure Retail Pricing operations - Get Azure retail pricing for SKUs,
+            services, regions and compare pricing across different options.
+            For Bicep/ARM template cost estimation, read the template file, 
+            extract resource SKUs, then call 'pricing get' for each resource 
+            to build a cost estimate.
+            """,
             Title);
 
         var getCommand = serviceProvider.GetRequiredService<PricingGetCommand>();

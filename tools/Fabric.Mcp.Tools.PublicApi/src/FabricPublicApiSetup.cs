@@ -38,30 +38,51 @@ public class FabricPublicApiSetup : IAreaSetup
     {
         var fabricPublicApis = new CommandGroup(Name,
             """
-            Microsoft Fabric Public API Access - Retrieve OpenAPI specifications and example files 
-            from Microsoft Fabric's official API documentation. Use this tool when you need to:
-            - Build applications that integrate with Microsoft Fabric APIs
-            - Understand API endpoints, request/response schemas, and authentication requirements
-            - Generate client SDKs or API wrappers for Fabric services
-            - Review example API calls and responses for development guidance
-            - Explore available APIs across different Fabric workloads
-            This tool provides read-only access to Microsoft Fabric's public API documentation 
-            repository on GitHub. It does NOT interact with live Fabric resources or require 
-            authentication - it only retrieves API specifications and examples.
+            Microsoft Fabric Public API Access - Retrieve OpenAPI specifications and
+            example files from Microsoft Fabric's official API documentation. Use
+            this tool when you need to: - Build applications that integrate with
+            Microsoft Fabric APIs - Understand API endpoints, request/response
+            schemas, and authentication requirements - Generate client SDKs or API
+            wrappers for Fabric services - Review example API calls and responses
+            for development guidance - Explore available APIs across different
+            Fabric workloads This tool provides read-only access to Microsoft
+            Fabric's public API documentation repository on GitHub. It does NOT
+            interact with live Fabric resources or require authentication - it only
+            retrieves API specifications and examples.
             """, Title);
 
         // Create public apis subgroups
-        var platform = new CommandGroup("platform", "Platform API Operations - Commands for accessing Microsoft Fabric platform-level APIs, including authentication, user management, and tenant configuration.");
+        var platform = new CommandGroup("platform",
+            """
+            Platform API Operations - Commands for accessing Microsoft Fabric
+            platform-level APIs, including authentication, user management, and
+            tenant configuration.
+            """);
         fabricPublicApis.AddSubGroup(platform);
 
-        var bestPractices = new CommandGroup("bestpractices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
+        var bestPractices = new CommandGroup("bestpractices",
+            """
+            API Examples and Best Practices - Commands for retrieving example API
+            request/response files and implementation guidance from Microsoft
+            Fabric's documentation repository.
+            """);
         fabricPublicApis.AddSubGroup(bestPractices);
 
         // Create Best Practices subgroups
-        var examples = new CommandGroup("examples", "Example API Files - Commands for retrieving example API request/response files for specific Microsoft Fabric workloads from the official documentation repository.");
+        var examples = new CommandGroup("examples",
+                """
+                Example API Files - Commands for retrieving example API request/response
+                files for specific Microsoft Fabric workloads from the official
+                documentation repository.
+                """);
         bestPractices.AddSubGroup(examples);
 
-        var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
+        var itemDefinition = new CommandGroup("itemdefinition",
+           """
+           Workload API Definitions - Commands for retrieving OpenAPI definitions
+           and schema details for specific Microsoft Fabric workloads from the
+           official documentation repository.
+           """);
         bestPractices.AddSubGroup(itemDefinition);
 
         var listWorkloads = serviceProvider.GetRequiredService<ListWorkloadsCommand>();

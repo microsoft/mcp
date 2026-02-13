@@ -72,14 +72,19 @@ public class StorageSyncSetup : IAreaSetup
     {
         var storageSync = new CommandGroup(Name,
             """
-            Azure Storage Sync Operations - Commands to manage Azure File Sync resources, including Storage Sync services, sync groups, cloud and server
-            endpoints, and registered servers. Use this tool to deploy and maintain hybrid cloud file synchronization.
+            Azure Storage Sync Operations - Commands to manage Azure File Sync
+            resources, including Storage Sync services, sync groups, cloud and
+            server endpoints, and registered servers. Use this tool to deploy and
+            maintain hybrid cloud file synchronization.
             """,
             Title);
 
         // StorageSyncService subgroup
         var storageSyncServiceGroup = new CommandGroup("service",
-            "Storage Sync Service operations - Create, get, update, and delete Storage Sync services in your Azure subscription.");
+            """
+            Storage Sync Service operations - Create, get, update, and delete
+            Storage Sync services in your Azure subscription.
+            """);
         storageSync.AddSubGroup(storageSyncServiceGroup);
 
         storageSyncServiceGroup.AddCommand("get", serviceProvider.GetRequiredService<StorageSyncServiceGetCommand>());
@@ -89,7 +94,10 @@ public class StorageSyncSetup : IAreaSetup
 
         // RegisteredServer subgroup
         var registeredServerGroup = new CommandGroup("registeredserver",
-            "Registered Server operations - Get, update, and unregister servers in your Storage Sync service.");
+            """
+            Registered Server operations - Get, update, and unregister servers in
+            your Storage Sync service.
+            """);
         storageSync.AddSubGroup(registeredServerGroup);
 
         registeredServerGroup.AddCommand("get", serviceProvider.GetRequiredService<RegisteredServerGetCommand>());
@@ -98,7 +106,10 @@ public class StorageSyncSetup : IAreaSetup
 
         // SyncGroup subgroup
         var syncGroupGroup = new CommandGroup("syncgroup",
-            "Sync Group operations - Create, get, and delete sync groups in your Storage Sync service.");
+            """
+            Sync Group operations - Create, get, and delete sync groups in your
+            Storage Sync service.
+            """);
         storageSync.AddSubGroup(syncGroupGroup);
 
         syncGroupGroup.AddCommand("get", serviceProvider.GetRequiredService<SyncGroupGetCommand>());
@@ -107,7 +118,10 @@ public class StorageSyncSetup : IAreaSetup
 
         // CloudEndpoint subgroup
         var cloudEndpointGroup = new CommandGroup("cloudendpoint",
-            "Cloud Endpoint operations - Create, get, delete, and manage cloud endpoints in your sync groups.");
+            """
+            Cloud Endpoint operations - Create, get, delete, and manage cloud
+            endpoints in your sync groups.
+            """);
         storageSync.AddSubGroup(cloudEndpointGroup);
 
         cloudEndpointGroup.AddCommand("get", serviceProvider.GetRequiredService<CloudEndpointGetCommand>());
@@ -117,7 +131,10 @@ public class StorageSyncSetup : IAreaSetup
 
         // ServerEndpoint subgroup
         var serverEndpointGroup = new CommandGroup("serverendpoint",
-            "Server Endpoint operations - Create, get, update, and delete server endpoints in your sync groups.");
+            """
+            Server Endpoint operations - Create, get, update, and delete server
+            endpoints in your sync groups.
+            """);
         storageSync.AddSubGroup(serverEndpointGroup);
 
         serverEndpointGroup.AddCommand("get", serviceProvider.GetRequiredService<ServerEndpointGetCommand>());

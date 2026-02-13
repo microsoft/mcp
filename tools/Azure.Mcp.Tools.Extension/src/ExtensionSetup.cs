@@ -30,14 +30,27 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var extension = new CommandGroup(Name, "Extension operations – Commands providing additional Azure tooling functionality, including running Azure Quick Review (azqr) for service recommendations, generating Azure CLI commands from user intent, and retrieving installation guidance for Azure CLI, Azure Developer CLI, and Azure Functions Core Tools.", Title);
+        var extension = new CommandGroup(Name,
+            """
+            Extension operations – Commands providing additional Azure tooling
+            functionality, including running Azure Quick Review (azqr) for service
+            recommendations, generating Azure CLI commands from user intent, and
+            retrieving installation guidance for Azure CLI, Azure Developer CLI, and
+            Azure Functions Core Tools.
+            """, Title);
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));
         var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
         extension.AddCommand(azqr.Name, azqr);
 
-        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.");
+        var cli = new CommandGroup("cli",
+            """
+            Commands for helping users to use CLI tools for Azure services
+            operations. Includes operations for generating Azure CLI commands and
+            getting installation instructions for Azure CLI, Azure Developer CLI and
+            Azure Core Function Tools CLI.
+            """);
         extension.AddSubGroup(cli);
         var cliGenerateCommand = serviceProvider.GetRequiredService<CliGenerateCommand>();
         cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);

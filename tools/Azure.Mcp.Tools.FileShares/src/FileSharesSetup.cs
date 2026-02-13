@@ -59,7 +59,11 @@ public class FileSharesSetup : IAreaSetup
         var checkName = serviceProvider.GetRequiredService<FileShareCheckNameAvailabilityCommand>();
         fileShare.AddCommand(checkName.Name, checkName);
 
-        var snapshot = new CommandGroup("snapshot", "File share snapshot operations - Commands for managing file share snapshots.");
+        var snapshot = new CommandGroup("snapshot",
+            """
+            File share snapshot operations - Commands for managing file share
+            snapshots.
+            """);
         fileShare.AddSubGroup(snapshot);
 
         var snapshotGet = serviceProvider.GetRequiredService<SnapshotGetCommand>();

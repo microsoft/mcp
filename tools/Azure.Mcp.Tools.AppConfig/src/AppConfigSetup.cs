@@ -33,17 +33,31 @@ public class AppConfigSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AppConfig command group
-        var appConfig = new CommandGroup(Name, "App Configuration operations - Commands for managing Azure App Configuration stores and key-value settings. Includes operations for listing configuration stores, managing key-value pairs, setting labels, locking/unlocking settings, and retrieving configuration data.", Title);
+        var appConfig = new CommandGroup(Name,
+            """
+            App Configuration operations - Commands for managing Azure App
+            Configuration stores and key-value settings. Includes operations for
+            listing configuration stores, managing key-value pairs, setting labels,
+            locking/unlocking settings, and retrieving configuration data.
+            """, Title);
 
         // Create AppConfig subgroups
         var accounts = new CommandGroup("account", "App Configuration store operations");
         appConfig.AddSubGroup(accounts);
 
-        var keyValue = new CommandGroup("kv", "App Configuration key-value setting operations - Commands for managing complete configuration settings including values, labels, and metadata");
+        var keyValue = new CommandGroup("kv",
+            """
+            App Configuration key-value setting operations - Commands for managing
+            complete configuration settings including values, labels, and metadata
+            """);
         appConfig.AddSubGroup(keyValue);
 
         // Create Lock subgroup under KeyValue
-        var lockGroup = new CommandGroup("lock", "App Configuration key-value lock operations - Commands for locking and unlocking key-value settings to prevent or allow modifications");
+        var lockGroup = new CommandGroup("lock",
+            """
+            App Configuration key-value lock operations - Commands for locking and
+            unlocking key-value settings to prevent or allow modifications
+            """);
         keyValue.AddSubGroup(lockGroup);
 
         // Register AppConfig commands
