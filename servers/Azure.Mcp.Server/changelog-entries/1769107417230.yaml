@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added compute_disk_get tool to retrieve Azure managed disk information that supports listing all disks in a subscription, listing disks in a resource group, and getting specific disk details."
