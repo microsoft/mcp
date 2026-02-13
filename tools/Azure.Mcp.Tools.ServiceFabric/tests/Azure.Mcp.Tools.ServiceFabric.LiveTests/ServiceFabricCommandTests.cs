@@ -14,13 +14,13 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
     : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
-    public async Task Should_ListNodes_Successfully()
+    public async Task Should_GetNodes_Successfully()
     {
         // Arrange
         var clusterName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "servicefabric_managedcluster_node_list",
+            "servicefabric_managedcluster_node_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
