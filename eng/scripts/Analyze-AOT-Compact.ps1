@@ -5,13 +5,14 @@ param(
     [string]$Runtime,
     [Parameter(Mandatory=$false)]
     [ValidateSet('Html', 'Console')]
-    [string]$OutputFormat = 'Html'
+    [string]$OutputFormat = 'Html',
+    [string]$ServerName = "Azure.Mcp.Server"
 )
 
 $ErrorActionPreference = "Stop"
 
-. "$PSScriptRoot/AOT-Config.ps1"
-$config = Get-AOTConfig
+. "$PSScriptRoot/AOT-Config.ps1" -ServerName $ServerName
+$config = Get-AOTConfig -ServerName $ServerName
 
 $root = $config.RootPath
 $projectFile = $config.ProjectFile

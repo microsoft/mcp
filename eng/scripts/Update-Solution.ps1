@@ -43,14 +43,31 @@ function Update-Solution {
         $projectDirectory = Split-Path -Parent $project
         $projectArea = Split-Path -Parent $projectDirectory
 
-        if($serverName -ne 'Azure.Mcp.Server' -and $projectArea -like "*Azure.Mcp.Core*") {
-            # Because of the Azure.Mcp.Core.UnitTests -> Azure.Mcp.Server -> All Azure Tools dependency chain, when
-            # we're not building the Azure.Mcp.Server solution, avoid adding the Azure.Mcp.Core.UnitTests project
-            continue
-        }
-        $testProjects = Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
-        foreach ($testProject in $testProjects) {
-            dotnet sln $slnFile add $testProject
+        # Skip core unit tests that have dependencies on different servers
+        # For example, Azure.Mcp.Core.UnitTests depends on Azure.Mcp.Server
+        if ($projectArea -like "*Core*") {
+            $testProjects = Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+            foreach ($testProject in $testProjects) {
+                $testProjectContent = Get-Content $testProject.FullName -Raw
+                # Check if this test project references a different server than the one we're building
+                $referencesOtherServer = $false
+                $allServers = Get-ChildItem -Path "$RepoRoot/servers" -Directory | ForEach-Object { $_.Name }
+                foreach ($otherServer in $allServers) {
+                    if ($otherServer -ne $serverName -and $testProjectContent -like "*$otherServer*") {
+                        $referencesOtherServer = $true
+                        break
+                    }
+                }
+                if (-not $referencesOtherServer) {
+                    dotnet sln $slnFile add $testProject
+                }
+            }
+        } else {
+            # For non-core projects, add all tests normally
+            $testProjects = Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+            foreach ($testProject in $testProjects) {
+                dotnet sln $slnFile add $testProject
+            }
         }
     }
 
