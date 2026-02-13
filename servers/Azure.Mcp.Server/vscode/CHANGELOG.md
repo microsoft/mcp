@@ -1,5 +1,28 @@
 # Release History
 
+## 2.0.0-beta.19 (2026-02-12) (pre-release)
+
+### Added
+
+- Added `compute_disk_get` tool to retrieve Azure managed disk information that supports listing all disks in a subscription, listing disks in a resource group, and getting specific disk details. [[#1559](https://github.com/microsoft/mcp/pull/1559)]
+- Added support for OAuth-protected registry servers by allowing `oauthScopes` in `registry.json` for HTTP-transport servers. [[#1509](https://github.com/microsoft/mcp/pull/1509)]
+
+### Changed
+
+- Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
+    - Removed keyvault_key_list - use keyvault_key_get without providing a key name
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
+- Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
+    - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
+    - Removed monitor_webtests_update – use monitor_webtests_createorupdate for both create and update scenarios
+- Consolidated MySQL and PostgreSQL list commands – separate server/database/table list tools removed: [[#1710](https://github.com/microsoft/mcp/pull/1710)]
+    - Removed postgres_server_list, postgres_database_list, postgres_table_list – use postgres_list with appropriate parameters to route hierarchically
+    - Removed mysql_server_list, mysql_database_list, mysql_table_list – use mysql_list with appropriate parameters to route hierarchically
+- Consolidated Load Testing TestRun commands – separate list/update commands removed: [[#1711](https://github.com/microsoft/mcp/pull/1711)]
+    - Removed loadtesting_testrun_list – use loadtesting_testrun_get for retrieving test runs
+    - Removed loadtesting_testrun_update – use loadtesting_testrun_createorupdate for both create and update scenarios
+- Added processor architecture to captured telemetry. [[#1691](https://github.com/microsoft/mcp/pull/1691)]
 
 ## 2.0.0-beta.18 (2026-02-10) (pre-release)
 
