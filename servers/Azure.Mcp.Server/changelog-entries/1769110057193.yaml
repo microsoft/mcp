@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure Compute VM operations with flexible compute vm get command that supports listing all VMs in a subscription, listing VMs in a resource group, getting specific VM details, and retrieving VM instance view with runtime status."

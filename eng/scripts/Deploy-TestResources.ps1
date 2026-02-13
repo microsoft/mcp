@@ -4,7 +4,7 @@ param(
     [string]$SubscriptionId,
     [string]$ResourceGroupName,
     [string]$BaseName,
-    [string]$Location = 'eastus2',
+    [string]$Location,
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel
