@@ -23,8 +23,8 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, (string ServerName, McpClient Client)> _toolClientMap = new();
-    private List<McpClient> _discoveredClients = new();
+    private Dictionary<string, (string ServerName, McpClient Client)> _toolClientMap = [];
+    private List<McpClient> _discoveredClients = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -45,7 +45,7 @@ public sealed class RegistryToolLoader(
 
         var allToolsResponse = new ListToolsResult
         {
-            Tools = new List<Tool>()
+            Tools = []
         };
 
         // Use cached discovered clients instead of re-discovering servers
@@ -79,6 +79,7 @@ public sealed class RegistryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -135,7 +136,9 @@ public sealed class RegistryToolLoader(
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
-        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName);
+        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName)
+            .SetTag(TagName.ToolName, request.Params.Name)
+            .SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
         return await kvp.Client.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
@@ -199,7 +202,7 @@ public sealed class RegistryToolLoader(
                         if (mcpClient == null)
                         {
                             _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
-                            return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                            return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
                         }
                     }
                     catch (OperationCanceledException)
@@ -210,12 +213,12 @@ public sealed class RegistryToolLoader(
                     catch (InvalidOperationException ex)
                     {
                         _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
                     }
 
                     try

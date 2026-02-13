@@ -12,7 +12,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupServerProviderTests
 {
-    private readonly CommandFactory _commandFactory;
+    private readonly ICommandFactory _commandFactory;
     public CommandGroupServerProviderTests()
     {
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory();

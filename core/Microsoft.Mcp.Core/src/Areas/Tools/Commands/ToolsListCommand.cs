@@ -61,7 +61,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     {
         try
         {
-            var factory = context.GetService<CommandFactory>();
+            var factory = context.GetService<ICommandFactory>();
             var options = BindOptions(parseResult);
 
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').

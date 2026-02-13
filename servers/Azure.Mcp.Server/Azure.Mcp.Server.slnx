@@ -13,6 +13,9 @@
   <Folder Name="/core/Microsoft.Mcp.Core/src/">
     <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
   </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/tests/">
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.UnitTests/Microsoft.Mcp.Core.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
   <Folder Name="/servers/Azure.Mcp.Server/src/">

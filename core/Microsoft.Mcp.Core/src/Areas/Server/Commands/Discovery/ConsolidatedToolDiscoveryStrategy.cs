@@ -23,13 +23,13 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
-    private readonly CommandFactory _commandFactory = commandFactory;
+    private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IOptions<ServiceStartOptions> _options = options;
     private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions = configurationOptions;
-    private CommandFactory? _consolidatedCommandFactory;
+    private ICommandFactory? _consolidatedCommandFactory;
 
     /// <summary>
     /// Gets or sets the entry point to use for the command group servers.
@@ -44,7 +44,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
     /// without mutating the original CommandFactory.
     /// </summary>
     /// <returns>A new CommandFactory instance with consolidated command groups.</returns>
-    public CommandFactory CreateConsolidatedCommandFactory()
+    public ICommandFactory CreateConsolidatedCommandFactory()
     {
         if (_consolidatedCommandFactory != null)
         {

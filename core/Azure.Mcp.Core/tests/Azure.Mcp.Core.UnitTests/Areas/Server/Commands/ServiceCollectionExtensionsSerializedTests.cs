@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +20,7 @@ public class ServiceCollectionExtensionsSerializedTests
     private IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
-        services.AddSingleton<CommandFactory>(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
+        services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
 
         return services;
     }

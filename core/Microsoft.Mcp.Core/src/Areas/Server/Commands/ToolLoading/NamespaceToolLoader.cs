@@ -24,16 +24,15 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// Supports learn functionality for progressive discovery of commands within each namespace.
 /// </summary>
 public sealed class NamespaceToolLoader(
-    CommandFactory commandFactory,
+    ICommandFactory commandFactory,
     IOptions<ServiceStartOptions> options,
     IServiceProvider serviceProvider,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
-    private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+    private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    private readonly bool _applyFilter = applyFilter;
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
@@ -108,7 +107,7 @@ public sealed class NamespaceToolLoader(
         var namespaces = _availableNamespaces.Value;
         var allToolsResponse = new ListToolsResult
         {
-            Tools = new List<Tool>()
+            Tools = []
         };
 
         foreach (var namespaceName in namespaces)
@@ -146,6 +145,7 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
@@ -283,7 +283,6 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -368,7 +367,9 @@ public sealed class NamespaceToolLoader(
             // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
             // The logic above performs sampling to try and get a correct command name.  "blob_get" in
             // this case, which will be executed.
-            currentActivity?.SetTag(TagName.ToolName, command).SetTag(TagName.ToolId, cmd.Id);
+            currentActivity?.SetTag(TagName.ToolName, command)
+                .SetTag(TagName.ToolId, cmd.Id)
+                .SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
@@ -590,7 +591,7 @@ public sealed class NamespaceToolLoader(
     {
         if (args == null || !args.TryGetValue("parameters", out var paramsElem))
         {
-            return new Dictionary<string, JsonElement>();
+            return [];
         }
 
         if (paramsElem.ValueKind == JsonValueKind.Object)
@@ -599,7 +600,7 @@ public sealed class NamespaceToolLoader(
                 .ToDictionary(prop => prop.Name, prop => prop.Value);
         }
 
-        return new Dictionary<string, JsonElement>();
+        return [];
     }
 
     private static bool SupportsSampling(McpServer server)
@@ -689,7 +690,7 @@ public sealed class NamespaceToolLoader(
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value.Clone()) ?? new Dictionary<string, JsonElement>();
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value.Clone()) ?? [];
                 }
             }
 

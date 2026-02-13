@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -23,7 +22,7 @@ public class ServiceCollectionExtensionsTests
     private IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
-        services.AddSingleton<CommandFactory>(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
+        services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
         services.AddSingleIdentityTokenCredentialProvider();
         services.AddRegistryRoot();
         return services;
