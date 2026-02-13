@@ -45,17 +45,9 @@ public class ManagedLustreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var managedLustre = new CommandGroup(Name,
-            """
-            Azure Managed Lustre operations – Commands to manage Azure Managed
-            Lustre (AMLFS) file system instances, including creation, updates,
-            listing, and inspection, for high-performance computing workloads.
-            """, Title);
+            "Azure Managed Lustre operations – Commands to manage Azure Managed Lustre (AMLFS) file system instances, including creation, updates, listing, and inspection, for high-performance computing workloads.", Title);
 
-        var fileSystem = new CommandGroup("fs",
-            """
-            Azure Managed Lustre file system operations - Commands for listing
-            managed Lustre file systems.
-            """);
+        var fileSystem = new CommandGroup("fs", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         managedLustre.AddSubGroup(fileSystem);
 
         var list = serviceProvider.GetRequiredService<FileSystemListCommand>();
@@ -76,24 +68,13 @@ public class ManagedLustreSetup : IAreaSetup
         var subnetSizeValidate = serviceProvider.GetRequiredService<SubnetSizeValidateCommand>();
         subnetSize.AddCommand(subnetSizeValidate.Name, subnetSizeValidate);
 
-        var sku = new CommandGroup("sku",
-            """
-            This group provides commands to discover and retrieve information about
-            available Azure Managed Lustre SKUs, including supported tiers,
-            performance characteristics, and regional availability. Use these
-            commands to validate SKU options prior to provisioning or updating a
-            filesystem.
-            """);
+        var sku = new CommandGroup("sku", "This group provides commands to discover and retrieve information about available Azure Managed Lustre SKUs, including supported tiers, performance characteristics, and regional availability. Use these commands to validate SKU options prior to provisioning or updating a filesystem.");
         fileSystem.AddSubGroup(sku);
 
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
 
-        var autoexportJob = new CommandGroup("blob_autoexport",
-            """
-            Autoexport job operations for Azure Managed Lustre - Commands for
-            creating jobs to export data from the filesystem to blob storage.
-            """);
+        var autoexportJob = new CommandGroup("blob_autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
         fileSystem.AddSubGroup(autoexportJob);
 
         var autoexportJobCreate = serviceProvider.GetRequiredService<AutoexportJobCreateCommand>();
@@ -108,11 +89,7 @@ public class ManagedLustreSetup : IAreaSetup
         var autoexportJobDelete = serviceProvider.GetRequiredService<AutoexportJobDeleteCommand>();
         autoexportJob.AddCommand(autoexportJobDelete.Name, autoexportJobDelete);
 
-        var autoimportJob = new CommandGroup("blob_autoimport",
-            """
-            Autoimport job operations for Azure Managed Lustre - Commands for
-            creating jobs to import data from blob storage to the filesystem.
-            """);
+        var autoimportJob = new CommandGroup("blob_autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
         fileSystem.AddSubGroup(autoimportJob);
 
         var autoimportJobCreate = serviceProvider.GetRequiredService<AutoimportJobCreateCommand>();
@@ -127,12 +104,7 @@ public class ManagedLustreSetup : IAreaSetup
         var autoimportJobDelete = serviceProvider.GetRequiredService<AutoimportJobDeleteCommand>();
         autoimportJob.AddCommand(autoimportJobDelete.Name, autoimportJobDelete);
 
-        var blobImport = new CommandGroup("blob_import",
-            """
-            One-time blob import operations for Azure Managed Lustre - Commands for
-            creating jobs to perform one-time import of data from blob storage to
-            the filesystem.
-            """);
+        var blobImport = new CommandGroup("blob_import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
         fileSystem.AddSubGroup(blobImport);
 
         var importJobCreate = serviceProvider.GetRequiredService<ImportJobCreateCommand>();

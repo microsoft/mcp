@@ -24,12 +24,7 @@ public class GrafanaSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var grafana = new CommandGroup(Name,
-            """
-            Grafana workspace operations – Commands to manage and access Azure
-            Managed Grafana resources and monitoring dashboards, including listing
-            Grafana workspaces and managing data visualization capabilities.
-            """, Title);
+        var grafana = new CommandGroup(Name, "Grafana workspace operations – Commands to manage and access Azure Managed Grafana resources and monitoring dashboards, including listing Grafana workspaces and managing data visualization capabilities.", Title);
 
         var workspace = serviceProvider.GetRequiredService<WorkspaceListCommand>();
         grafana.AddCommand(workspace.Name, workspace);

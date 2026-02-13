@@ -49,11 +49,7 @@ public class ComputeSetup : IAreaSetup
             Title);
 
         // Create VM subgroup
-        var vm = new CommandGroup("vm",
-                """
-                Virtual Machine operations - Commands for managing and monitoring Azure
-                Virtual Machines including lifecycle, status, and size information.
-                """);
+        var vm = new CommandGroup("vm", "Virtual Machine operations - Commands for managing and monitoring Azure Virtual Machines including lifecycle, status, and size information.");
         compute.AddSubGroup(vm);
 
         // Register VM commands
@@ -61,12 +57,7 @@ public class ComputeSetup : IAreaSetup
         vm.AddCommand(vmGet.Name, vmGet);
 
         // Create VMSS subgroup
-        var vmss = new CommandGroup("vmss",
-            """
-            Virtual Machine Scale Set operations - Commands for managing and
-            monitoring Azure Virtual Machine Scale Sets including scale set details,
-            instances, and rolling upgrades.
-            """);
+        var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
 
         // Register VMSS commands

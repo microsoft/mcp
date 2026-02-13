@@ -40,7 +40,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
     {
         Console.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
 
-        if (_serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
+        if( _serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
         {
             RenderGroupAreasHelp(rootCommand);
             return 0;
@@ -106,10 +106,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
                 line = word;
             }
         }
-        if (line.Length > 0)
-        {
-            lines.Add(line);
-        }
+        if (line.Length > 0) lines.Add(line);
 
         return string.Join(Environment.NewLine + indent, lines);
     }

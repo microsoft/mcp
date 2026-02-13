@@ -46,13 +46,7 @@ public class SqlSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var sql = new CommandGroup(Name,
-            """
-            Azure SQL operations - Commands for managing Azure SQL databases,
-            servers, and elastic pools. Includes operations for listing databases,
-            configuring server settings, managing firewall rules, Entra ID
-            administrators, and elastic pool resources.
-            """, Title);
+        var sql = new CommandGroup(Name, "Azure SQL operations - Commands for managing Azure SQL databases, servers, and elastic pools. Includes operations for listing databases, configuring server settings, managing firewall rules, Entra ID administrators, and elastic pool resources.", Title);
 
         var database = new CommandGroup("db", "SQL database operations");
         sql.AddSubGroup(database);

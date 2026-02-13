@@ -24,11 +24,7 @@ public sealed class ToolsSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Tools command group
-        var tools = new CommandGroup(Name,
-            """
-            CLI tools operations - Commands for discovering and exploring the
-            functionality available in this CLI tool.
-            """, Title);
+        var tools = new CommandGroup(Name, "CLI tools operations - Commands for discovering and exploring the functionality available in this CLI tool.", Title);
 
         var list = serviceProvider.GetRequiredService<ToolsListCommand>();
         tools.AddCommand(list.Name, list);

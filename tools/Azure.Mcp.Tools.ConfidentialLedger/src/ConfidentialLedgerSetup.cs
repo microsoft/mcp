@@ -25,18 +25,9 @@ public class ConfidentialLedgerSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var root = new CommandGroup(Name,
-            """
-            Azure Confidential Ledger operations - Commands for appending and
-            querying tamper-proof ledger entries backed by TEEs and blockchain-style
-            integrity guarantees. Use these commands to write immutable audit
-            records.
-            """, Title);
+            "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.", Title);
 
-        var entries = new CommandGroup("entries",
-          """
-          Ledger entries operations - Commands for appending and retrieving ledger
-          entries.
-          """);
+        var entries = new CommandGroup("entries", "Ledger entries operations - Commands for appending and retrieving ledger entries.");
         root.AddSubGroup(entries);
 
         var append = serviceProvider.GetRequiredService<LedgerEntryAppendCommand>();

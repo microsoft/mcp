@@ -33,12 +33,7 @@ public class EventHubsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var eventHubs = new CommandGroup(Name,
-            """
-            Azure Event Hubs operations - Commands for managing Azure Event Hubs
-            namespaces and event hubs. Includes CRUD operations Event Hubs service
-            resources.
-            """, Title);
+        var eventHubs = new CommandGroup(Name, "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes CRUD operations Event Hubs service resources.", Title);
 
         var eventHubGroup = new CommandGroup("eventhub", "Event Hub operations");
         eventHubs.AddSubGroup(eventHubGroup);

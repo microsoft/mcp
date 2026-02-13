@@ -39,20 +39,15 @@ public class SpeechSetup : IAreaSetup
     {
         var speech = new CommandGroup(Name,
             """
-            Speech operations – Commands to work with Azure AI Services Speech,
-            including speech-to-text (STT) recognition, text-to-speech (TTS)
-            synthesis, audio processing, and language detection. Uses a hierarchical
-            MCP command model with command and parameters; set learn=true to
-            discover sub-commands. Supports multiple audio formats, languages, and
-            output options.
+            Speech operations – Commands to work with Azure AI Services Speech, including speech-to-text (STT) recognition,
+            text-to-speech (TTS) synthesis, audio processing, and language detection. Uses a hierarchical MCP command model
+            with command and parameters; set learn=true to discover sub-commands. Supports multiple audio formats, languages,
+            and output options.
             """, Title);
 
         var stt = new CommandGroup(
             name: "stt",
-            description: """
-            Speech-to-text operations - Commands for converting spoken audio to text 
-            using Azure AI Services Speech recognition.
-            """);
+            description: "Speech-to-text operations - Commands for converting spoken audio to text using Azure AI Services Speech recognition.");
 
         var sttRecognize = serviceProvider.GetRequiredService<SttRecognizeCommand>();
         stt.AddCommand(sttRecognize.Name, sttRecognize);
@@ -61,10 +56,7 @@ public class SpeechSetup : IAreaSetup
 
         var tts = new CommandGroup(
             name: "tts",
-            description: """
-            Text-to-speech operations - Commands for converting text to spoken audio 
-            using Azure AI Services Speech synthesis.
-            """);
+            description: "Text-to-speech operations - Commands for converting text to spoken audio using Azure AI Services Speech synthesis.");
 
         var ttsSynthesize = serviceProvider.GetRequiredService<TtsSynthesizeCommand>();
         tts.AddCommand(ttsSynthesize.Name, ttsSynthesize);

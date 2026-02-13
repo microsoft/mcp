@@ -37,38 +37,18 @@ public class KeyVaultSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var keyVault = new CommandGroup(Name,
-            """
-            Key Vault operations - Commands for managing and accessing Azure Key
-            Vault resources.
-            """, Title);
+        var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.", Title);
 
-        var keys = new CommandGroup("key",
-            """
-            Key Vault key operations - Commands for managing and accessing keys in
-            Azure Key Vault.
-            """);
+        var keys = new CommandGroup("key", "Key Vault key operations - Commands for managing and accessing keys in Azure Key Vault.");
         keyVault.AddSubGroup(keys);
 
-        var secret = new CommandGroup("secret",
-            """
-            Key Vault secret operations - Commands for managing and accessing
-            secrets in Azure Key Vault.
-            """);
+        var secret = new CommandGroup("secret", "Key Vault secret operations - Commands for managing and accessing secrets in Azure Key Vault.");
         keyVault.AddSubGroup(secret);
 
-        var certificate = new CommandGroup("certificate",
-            """
-            Key Vault certificate operations - Commands for managing and accessing
-            certificates in Azure Key Vault.
-            """);
+        var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
 
-        var admin = new CommandGroup("admin",
-            """
-            Key Vault administration operations - Commands for administering a
-            Managed HSM in Azure Key Vault.
-            """);
+        var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
         var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
@@ -88,11 +68,7 @@ public class KeyVaultSetup : IAreaSetup
         var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
         certificate.AddCommand(certificateImport.Name, certificateImport);
 
-        var settings = new CommandGroup("settings",
-            """
-            Key Vault Managed HSM account settings operations - Commands for
-            managing Key Vault Managed HSM account settings.
-            """);
+        var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
         admin.AddSubGroup(settings);
 
         var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();

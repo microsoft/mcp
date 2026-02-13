@@ -42,22 +42,13 @@ public class AzureMigrateSetup : IAreaSetup
     {
         var azureMigrate = new CommandGroup(
             Name,
-            """
-            Azure Landing Zone operations – Guidance and tooling for customizing and
-            generating Azure Landing Zones, including policy configuration,
-            networking, identity, governance, and naming standards. Supports
-            generating platform landing zones using Bicep, Terraform, or the Azure
-            portal in alignment with Microsoft's Cloud Adoption Framework.
-            """,
+            "Azure Landing Zone operations – Guidance and tooling for customizing and generating Azure Landing Zones, including policy configuration, networking, identity, governance, and naming standards. Supports generating platform landing zones using Bicep, Terraform, or the Azure portal in alignment with Microsoft's Cloud Adoption Framework.",
             Title);
 
         // Create platform landing zone subgroup
         var platformLandingZone = new CommandGroup(
             "platformlandingzone",
-            """
-            Platform landing zone operations - Commands for generating new platform
-            landing zones and providing guidance on configuration and customization.
-            """);
+            "Platform landing zone operations - Commands for generating new platform landing zones and providing guidance on configuration and customization.");
         azureMigrate.AddSubGroup(platformLandingZone);
 
         // Register platform landing zone commands

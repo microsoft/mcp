@@ -34,20 +34,10 @@ public class KustoSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Kusto command group
-        var kusto = new CommandGroup(Name,
-            """
-            Kusto operations – Commands to manage and query Azure Data Explorer
-            (Kusto) resources, including listing clusters and databases, executing
-            KQL queries, retrieving table schemas, and working with data analytics
-            workloads.
-            """, Title);
+        var kusto = new CommandGroup(Name, "Kusto operations – Commands to manage and query Azure Data Explorer (Kusto) resources, including listing clusters and databases, executing KQL queries, retrieving table schemas, and working with data analytics workloads.", Title);
 
         // Create Kusto cluster subgroups
-        var clusters = new CommandGroup("cluster",
-            """
-            Kusto cluster operations - Commands for listing clusters in your Azure
-            subscription.
-            """);
+        var clusters = new CommandGroup("cluster", "Kusto cluster operations - Commands for listing clusters in your Azure subscription.");
         kusto.AddSubGroup(clusters);
 
         var databases = new CommandGroup("database", "Kusto database operations - Commands for listing databases in a cluster.");

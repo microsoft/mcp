@@ -26,19 +26,12 @@ public sealed class PolicySetup : IAreaSetup
     {
         // Create Policy command group
         var policy = new CommandGroup(Name,
-            """
-            Manage Azure Policy assignments and definitions using Azure CLI.
-            Retrieve policy assignments, view enforcement modes, and analyze policy
-            compliance across subscriptions.
-            """,
+            "Manage Azure Policy assignments and definitions using Azure CLI. Retrieve policy assignments, view enforcement modes, and analyze policy compliance across subscriptions.",
             Title);
 
         // Create Assignment subgroup
         var assignment = new CommandGroup("assignment",
-            """
-            Policy assignment operations - Commands for getting and managing Azure
-            Policy assignments.
-            """);
+            "Policy assignment operations - Commands for getting and managing Azure Policy assignments.");
         policy.AddSubGroup(assignment);
 
         // Register assignment commands

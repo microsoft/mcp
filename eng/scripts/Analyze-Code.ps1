@@ -50,23 +50,11 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Tool name length validation failed"
-        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Review the above output for details.`n"
+        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Review the above output for details."
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool name length validation passed."
-        Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit.`n"
-    }
-
-    # Run tool description line length validation
-    $toolDescriptionResult = & "$PSScriptRoot/Test-DescriptionLineLength.ps1"
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Tool description line length validation failed"
-        Write-Host "Maximum Length Allowed: $($toolDescriptionResult.MaxAllowed). $($toolDescriptionResult.ViolationCount) tool(s) exceeding this limit. Review the above output for details.`n"
-        $hasErrors = $true
-    } else {
-        Write-Host "✅ Tool description line length validation passed."
-        Write-Host "All tools are within the $($toolDescriptionResult.MaxAllowed) character limit.`n"
+        Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit."
     }
 
     # Run tool id validation

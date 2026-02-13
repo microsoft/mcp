@@ -28,34 +28,18 @@ public class EventGridSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Event Grid top-level group
-        var eventGrid = new CommandGroup(Name,
-            """
-            Event Grid operations - Commands for managing and accessing Event Grid
-            topics, domains, and event subscriptions.
-            """, Title);
+        var eventGrid = new CommandGroup(Name, "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and event subscriptions.", Title);
 
         // Events subgroup
-        var events = new CommandGroup("events",
-                """
-                Event Grid event operations - Commands for publishing and managing
-                events sent to Event Grid topics.
-                """);
+        var events = new CommandGroup("events", "Event Grid event operations - Commands for publishing and managing events sent to Event Grid topics.");
         eventGrid.AddSubGroup(events);
 
         // Topics subgroup
-        var topics = new CommandGroup("topic",
-                    """
-                    Event Grid topic operations - Commands for managing Event Grid topics
-                    and their configurations.
-                    """);
+        var topics = new CommandGroup("topic", "Event Grid topic operations - Commands for managing Event Grid topics and their configurations.");
         eventGrid.AddSubGroup(topics);
 
         // Subscriptions subgroup
-        var subscriptions = new CommandGroup("subscription",
-                        """
-                        Event Grid subscription operations - Commands for managing event
-                        subscriptions with filtering and endpoint configuration.
-                        """);
+        var subscriptions = new CommandGroup("subscription", "Event Grid subscription operations - Commands for managing event subscriptions with filtering and endpoint configuration.");
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
