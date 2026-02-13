@@ -130,19 +130,15 @@
         }
       },
       "mappedToolList": [
-        "mysql_database_list",
+        "mysql_list",
         "mysql_database_query",
         "mysql_server_config_get",
-        "mysql_server_list",
         "mysql_server_param_get",
-        "mysql_table_list",
         "mysql_table_schema_get",
-        "postgres_database_list",
+        "postgres_list",
         "postgres_database_query",
         "postgres_server_config_get",
-        "postgres_server_list",
         "postgres_server_param_get",
-        "postgres_table_list",
         "postgres_table_schema_get",
         "sql_db_list",
         "sql_db_show",
@@ -1145,13 +1141,12 @@
       "mappedToolList": [
         "loadtesting_testresource_list",
         "loadtesting_test_get",
-        "loadtesting_testrun_get",
-        "loadtesting_testrun_list"
+        "loadtesting_testrun_get"
       ]
     },
     {
-      "name": "create_azure_load_testing",
-      "description": "Create Load Testing resource or execute Azure Load Testing tests.",
+      "name": "create_or_update_azure_load_testing",
+      "description": "Create or Update Load Testing resource or execute Azure Load Testing tests.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1181,40 +1176,7 @@
       "mappedToolList": [
         "loadtesting_test_create",
         "loadtesting_testresource_create",
-        "loadtesting_testrun_create"
-      ]
-    },
-    {
-      "name": "update_azure_load_testing_configurations",
-      "description": "Update Azure Load Testing configurations and test run settings.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "loadtesting_testrun_update"
+        "loadtesting_testrun_createorupdate"
       ]
     },
     {
@@ -1505,6 +1467,41 @@
         "managedlustre_fs_subnetsize_ask",
         "managedlustre_fs_subnetsize_validate",
         "storage_table_list"
+      ]
+    },
+    {
+      "name": "get_azure_compute_details",
+      "description": "Get details about Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state. View disk properties, state, size, SKU, OS type, and provisioning status. Supports wildcard patterns for disk name filtering.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_get",
+        "compute_vm_get",
+        "compute_vmss_get"
       ]
     },
     {
@@ -2240,40 +2237,6 @@
         "acr_registry_repository_list",
         "aks_cluster_get",
         "aks_nodepool_get"
-      ]
-    },
-    {
-      "name": "get_azure_compute_resources",
-      "description": "Get details about Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state.",
-      "toolMetadata": {
-        "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
-        },
-        "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "compute_vm_get",
-        "compute_vmss_get"
       ]
     },
     {

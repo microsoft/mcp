@@ -199,6 +199,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
 | confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
+## Azure Compute
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| compute_disk_get | List all managed disks in my subscription |
+| compute_disk_get | Show me all disks in resource group <resource-group> |
+| compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
+| compute_disk_get | Show me the disk sizes in resource group <resource-group> |
+| compute_disk_get | What managed disks are available? |
+| compute_disk_get | Get information about disk <disk-name> |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
@@ -232,34 +243,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| mysql_database_list | List all MySQL databases in server \<server> |
-| mysql_database_list | Show me the MySQL databases in server \<server> |
+| mysql_list | List all MySQL servers in my subscription |
+| mysql_list | Show me my MySQL servers |
+| mysql_list | Show me the MySQL servers in my subscription |
+| mysql_list | List all MySQL databases in server \<server> |
+| mysql_list | Show me the MySQL databases in server \<server> |
+| mysql_list | List all tables in the MySQL database \<database> in server \<server> |
+| mysql_list | Show me the tables in the MySQL database \<database> in server \<server> |
 | mysql_database_query | Show me all items that contain the word \<search_term> in the MySQL database \<database> in server \<server> |
 | mysql_server_config_get | Show me the configuration of MySQL server \<server> |
-| mysql_server_list | List all MySQL servers in my subscription |
-| mysql_server_list | Show me my MySQL servers |
-| mysql_server_list | Show me the MySQL servers in my subscription |
 | mysql_server_param_get | Show me the value of connection timeout in seconds in my MySQL server \<server>  |
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> |
-| mysql_table_list | List all tables in the MySQL database \<database> in server \<server> |
-| mysql_table_list | Show me the tables in the MySQL database \<database> in server \<server> |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> |
 
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| postgres_database_list | List all PostgreSQL databases in server \<server> |
-| postgres_database_list | Show me the PostgreSQL databases in server \<server> |
+| postgres_list | List all PostgreSQL servers in my subscription |
+| postgres_list | Show me my PostgreSQL servers |
+| postgres_list | Show me the PostgreSQL servers in my subscription |
+| postgres_list | List all PostgreSQL databases in server \<server> |
+| postgres_list | Show me the PostgreSQL databases in server \<server> |
+| postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> |
+| postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> |
-| postgres_server_list | List all PostgreSQL servers in my subscription |
-| postgres_server_list | Show me my PostgreSQL servers |
-| postgres_server_list | Show me the PostgreSQL servers in my subscription |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
-| postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
-| postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
 
 ## Azure Deploy
@@ -457,10 +468,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | loadtesting_test_get | Get the load test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
 | loadtesting_testresource_create | Create a load test resource \<load-test-resource-name> in the resource group \<resource-group> in my subscription |
 | loadtesting_testresource_list | List all load testing resources in the resource group \<resource-group> in my subscription |
-| loadtesting_testrun_create | Create a test run using the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>. Use the name of test run \<display-name> and description as \<description> |
 | loadtesting_testrun_get | Get the load test run with id \<testrun-id> in the load test resource \<test-resource> in resource group \<resource-group> |
-| loadtesting_testrun_list |  Get all the load test runs for the test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
-| loadtesting_testrun_update | Update a test run display name as \<display-name> for the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>.|
+| loadtesting_testrun_get | Get all the load test runs for the test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
+| loadtesting_testrun_createorupdate | Create a test run using the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>. Use the name of test run \<display-name> and description as \<description> |
+| loadtesting_testrun_createorupdate | Update a test run display name as \<display-name> for the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>.|
 
 ## Azure Managed Grafana
 

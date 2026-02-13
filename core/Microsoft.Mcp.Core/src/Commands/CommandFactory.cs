@@ -265,7 +265,7 @@ public class CommandFactory : ICommandFactory
         {
             if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
             {
-                helpOption.Action = new VersionDisplayHelpAction(_configurationOptions, helpAction);
+                helpOption.Action = new CustomHelpAction(_configurationOptions, helpAction, _serviceAreas);
                 break;
             }
         }

@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 
-public class TestRunUpdateOptions : BaseLoadTestingOptions
+public class TestRunCreateOrUpdateOptions : BaseLoadTestingOptions
 {
     /// <summary>
     /// The ID of the load test run resource.
@@ -24,4 +24,9 @@ public class TestRunUpdateOptions : BaseLoadTestingOptions
     /// The description for the load test run.
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// The ID of an existing test run to update. If provided, the command will trigger a rerun of the given test run id.
+    /// </summary>
+    public string? OldTestRunId { get; set; }
 }
