@@ -877,10 +877,7 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 
 ### 🕸️ Azure App Service
 
-* "List the websites in my subscription"
-* "Show me the websites in my 'my-resource-group' resource group"
-* "Get the details for website 'my-website'"
-* "Get the details for app service plan 'my-app-service-plan'"
+* Add a database connection for an App Service web app
 
 ### 🖥️ Azure CLI Generate
 
