@@ -13,7 +13,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 public class ConsolidatedToolDiscoveryStrategyTests
 {
     private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
-        CommandFactory? commandFactory = null,
+        ICommandFactory? commandFactory = null,
         ServiceStartOptions? options = null,
         string? entryPoint = null)
     {
