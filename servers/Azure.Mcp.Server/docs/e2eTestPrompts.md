@@ -676,8 +676,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| servicefabric_managedcluster_node_list | List all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name> |
-| servicefabric_managedcluster_node_list | Show me the nodes and their status for managed cluster <cluster_name> |
+| servicefabric_managedcluster_node_get | Get all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name> |
+| servicefabric_managedcluster_node_get | Show me the nodes and their status for managed cluster <cluster_name> |
+| servicefabric_managedcluster_node_get | Get node <node_name> from Service Fabric managed cluster <cluster_name> |
 | servicefabric_managedcluster_nodetype_restart | Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD |
 | servicefabric_managedcluster_nodetype_restart | Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name> |
 

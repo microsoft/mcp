@@ -2383,7 +2383,7 @@
     },
     {
       "name": "get_azure_service_fabric_managed_cluster_nodes",
-      "description": "List nodes in an Azure Service Fabric managed cluster including node name, type, status, IP address, fault domain, upgrade domain, health state, and seed node status.",
+      "description": "Get nodes in an Azure Service Fabric managed cluster including node name, type, status, IP address, fault domain, upgrade domain, health state, and seed node status. Returns all nodes by default, or a single node when a node name is specified.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2411,7 +2411,7 @@
         }
       },
       "mappedToolList": [
-        "servicefabric_managedcluster_node_list"
+        "servicefabric_managedcluster_node_get"
       ]
     },
     {

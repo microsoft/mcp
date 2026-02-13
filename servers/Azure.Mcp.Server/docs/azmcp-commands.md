@@ -2209,11 +2209,12 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 #### Managed Cluster Node
 
 ```bash
-# List all nodes for a Service Fabric managed cluster
+# Get nodes for a Service Fabric managed cluster (all nodes, or a single node by name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicefabric managedcluster node list --subscription <subscription> \
-                                             --resource-group <resource-group> \
-                                             --cluster <cluster>
+azmcp servicefabric managedcluster node get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --cluster <cluster> \
+                                            [--node <node>]
 ```
 
 #### Managed Cluster Node Type

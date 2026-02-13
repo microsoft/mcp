@@ -15,18 +15,18 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
-public sealed class ManagedClusterNodeListCommand(ILogger<ManagedClusterNodeListCommand> logger)
-    : BaseServiceFabricCommand<ManagedClusterNodeListOptions>
+public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCommand> logger)
+    : BaseServiceFabricCommand<ManagedClusterNodeGetOptions>
 {
-    private const string CommandTitle = "List Service Fabric Managed Cluster Nodes";
-    private readonly ILogger<ManagedClusterNodeListCommand> _logger = logger;
+    private const string CommandTitle = "Get Service Fabric Managed Cluster Nodes";
+    private readonly ILogger<ManagedClusterNodeGetCommand> _logger = logger;
 
     public override string Id => "a3f1b2c4-d5e6-47f8-9a0b-1c2d3e4f5a6b";
 
-    public override string Name => "list";
+    public override string Name => "get";
 
     public override string Description =>
-        "List all nodes for a Service Fabric managed cluster. Returns node information including name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.";
+        "Get nodes for a Service Fabric managed cluster. Returns all nodes by default or a single node when a node name is specified. Includes name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.";
 
     public override string Title => CommandTitle;
 
@@ -45,13 +45,15 @@ public sealed class ManagedClusterNodeListCommand(ILogger<ManagedClusterNodeList
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(ServiceFabricOptionDefinitions.Cluster.AsRequired());
+        command.Options.Add(ServiceFabricOptionDefinitions.Node.AsOptional());
     }
 
-    protected override ManagedClusterNodeListOptions BindOptions(ParseResult parseResult)
+    protected override ManagedClusterNodeGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.ClusterName = parseResult.GetValueOrDefault<string>(ServiceFabricOptionDefinitions.Cluster.Name);
+        options.NodeName = parseResult.GetValueOrDefault<string>(ServiceFabricOptionDefinitions.Node.Name);
         return options;
     }
 
@@ -67,21 +69,38 @@ public sealed class ManagedClusterNodeListCommand(ILogger<ManagedClusterNodeList
         try
         {
             var service = context.GetService<IServiceFabricService>();
-            var nodes = await service.ListManagedClusterNodes(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.ClusterName!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeListCommandResult);
+            if (!string.IsNullOrEmpty(options.NodeName))
+            {
+                var node = await service.GetManagedClusterNode(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.ClusterName!,
+                    options.NodeName,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new ManagedClusterNodeGetCommandResult([node]), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+            }
+            else
+            {
+                var nodes = await service.ListManagedClusterNodes(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.ClusterName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new ManagedClusterNodeGetCommandResult(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options);
+                "Error getting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Node: {Node}, Options: {@Options}",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeName, options);
             HandleException(context, ex);
         }
 
@@ -91,7 +110,7 @@ public sealed class ManagedClusterNodeListCommand(ILogger<ManagedClusterNodeList
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
-            "Managed cluster or resource group not found. Verify the cluster name, resource group, and that you have access.",
+            "Managed cluster, resource group, or node not found. Verify the names and that you have access.",
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the Service Fabric managed cluster. Details: {httpEx.Message}",
         HttpRequestException httpEx => httpEx.Message,
@@ -104,5 +123,5 @@ public sealed class ManagedClusterNodeListCommand(ILogger<ManagedClusterNodeList
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ManagedClusterNodeListCommandResult(List<Models.ManagedClusterNode> Nodes);
+    internal record ManagedClusterNodeGetCommandResult(List<Models.ManagedClusterNode> Nodes);
 }

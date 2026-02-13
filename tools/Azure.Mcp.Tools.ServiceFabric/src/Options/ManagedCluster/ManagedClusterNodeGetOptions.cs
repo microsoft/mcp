@@ -5,8 +5,11 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 
-public class ManagedClusterNodeListOptions : BaseServiceFabricOptions
+public class ManagedClusterNodeGetOptions : BaseServiceFabricOptions
 {
     [JsonPropertyName(ServiceFabricOptionDefinitions.ClusterName)]
     public string? ClusterName { get; set; }
+
+    [JsonPropertyName(ServiceFabricOptionDefinitions.NodeName)]
+    public string? NodeName { get; set; }
 }

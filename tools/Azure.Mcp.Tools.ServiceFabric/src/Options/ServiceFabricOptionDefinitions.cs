@@ -6,6 +6,7 @@ namespace Azure.Mcp.Tools.ServiceFabric.Options;
 public static class ServiceFabricOptionDefinitions
 {
     public const string ClusterName = "cluster";
+    public const string NodeName = "node";
     public const string NodeTypeName = "node-type";
     public const string NodesName = "nodes";
     public const string UpdateTypeName = "update-type";
@@ -13,6 +14,11 @@ public static class ServiceFabricOptionDefinitions
     public static readonly Option<string> Cluster = new($"--{ClusterName}")
     {
         Description = "Service Fabric managed cluster name.",
+    };
+
+    public static readonly Option<string> Node = new($"--{NodeName}")
+    {
+        Description = "The node name. When specified, returns a single node instead of all nodes.",
     };
 
     public static readonly Option<string> NodeType = new($"--{NodeTypeName}")

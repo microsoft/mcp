@@ -73,6 +73,42 @@ public sealed class ServiceFabricService(
         return allNodes;
     }
 
+    public async Task<ManagedClusterNode> GetManagedClusterNode(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string nodeName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(clusterName), clusterName),
+            (nameof(nodeName), nodeName));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Id.SubscriptionId;
+
+        var credential = await GetCredential(tenant, cancellationToken);
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+            cancellationToken);
+
+        var client = _httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+
+        var requestUrl = $"{AzureManagementBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes/{Uri.EscapeDataString(nodeName)}?api-version={ApiVersion}";
+
+        using var response = await client.GetAsync(requestUrl, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        return JsonSerializer.Deserialize(content, ServiceFabricJsonContext.Default.ManagedClusterNode)
+            ?? throw new InvalidOperationException("Failed to deserialize the managed cluster node response.");
+    }
+
     public async Task<RestartNodeResponse> RestartManagedClusterNodes(
         string subscription,
         string resourceGroup,

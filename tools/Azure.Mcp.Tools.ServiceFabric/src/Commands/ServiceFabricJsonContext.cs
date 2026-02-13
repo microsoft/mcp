@@ -7,7 +7,7 @@ using Azure.Mcp.Tools.ServiceFabric.Models;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands;
 
-[JsonSerializable(typeof(ManagedClusterNodeListCommand.ManagedClusterNodeListCommandResult))]
+[JsonSerializable(typeof(ManagedClusterNodeGetCommand.ManagedClusterNodeGetCommandResult))]
 [JsonSerializable(typeof(ManagedClusterNodeTypeRestartCommand.ManagedClusterNodeTypeRestartCommandResult))]
 [JsonSerializable(typeof(ManagedClusterNode))]
 [JsonSerializable(typeof(ManagedClusterNodeProperties))]

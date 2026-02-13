@@ -16,6 +16,15 @@ public interface IServiceFabricService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<ManagedClusterNode> GetManagedClusterNode(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string nodeName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     Task<RestartNodeResponse> RestartManagedClusterNodes(
         string subscription,
         string resourceGroup,

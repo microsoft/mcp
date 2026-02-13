@@ -18,7 +18,7 @@ public class ServiceFabricSetup : IAreaSetup
     {
         services.AddSingleton<IServiceFabricService, ServiceFabricService>();
 
-        services.AddSingleton<ManagedClusterNodeListCommand>();
+        services.AddSingleton<ManagedClusterNodeGetCommand>();
         services.AddSingleton<ManagedClusterNodeTypeRestartCommand>();
     }
 
@@ -36,11 +36,11 @@ public class ServiceFabricSetup : IAreaSetup
 
         var node = new CommandGroup(
             "node",
-            "Node operations - Commands for listing and querying nodes in a Service Fabric managed cluster.");
+            "Node operations - Commands for getting and querying nodes in a Service Fabric managed cluster.");
         managedCluster.AddSubGroup(node);
 
-        var nodeList = serviceProvider.GetRequiredService<ManagedClusterNodeListCommand>();
-        node.AddCommand(nodeList.Name, nodeList);
+        var nodeGet = serviceProvider.GetRequiredService<ManagedClusterNodeGetCommand>();
+        node.AddCommand(nodeGet.Name, nodeGet);
 
         var nodetype = new CommandGroup(
             "nodetype",
