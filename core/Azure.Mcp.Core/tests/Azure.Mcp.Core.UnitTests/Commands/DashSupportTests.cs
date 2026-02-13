@@ -22,7 +22,7 @@ public class DashSupportTests
         // After the fix: separator is '_'
 
         // Arrange & Act
-        var separator = ICommandFactory.Separator;
+        var separator = CommandFactory.Separator;
 
         // Assert
         Assert.Equal('_', separator);

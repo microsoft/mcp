@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Commands;
 
 public interface ICommandFactory
 {
-    const char Separator = '_';
 
     RootCommand RootCommand { get; }
     CommandGroup RootGroup { get; }
@@ -29,11 +27,4 @@ public interface ICommandFactory
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     string? GetServiceArea(string fullCommandName);
-
-    static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
-    {
-        return commands
-            .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
-            .OrderBy(kvp => kvp.Key);
-    }
 }

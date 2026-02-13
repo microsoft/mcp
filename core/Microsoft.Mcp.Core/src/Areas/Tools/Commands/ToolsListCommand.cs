@@ -61,7 +61,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     {
         try
         {
-            var factory = context.GetService<CommandFactory>();
+            var factory = context.GetService<ICommandFactory>();
             var options = BindOptions(parseResult);
 
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
@@ -119,12 +119,12 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             if (options.NameOnly)
             {
                 // Get all visible commands and extract their tokenized names (full command paths)
-                var allToolNames = ICommandFactory.GetVisibleCommands(factory.AllCommands)
+                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
                     .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
                     .Where(name => !string.IsNullOrEmpty(name));
 
                 // Apply namespace filtering if specified (using underscore separator for tokenized names)
-                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, ICommandFactory.Separator);
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, CommandFactory.Separator);
 
                 var toolNames = await Task.Run(() => allToolNames
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -136,7 +136,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             }
 
             // Get all tools with full details
-            var allTools = ICommandFactory.GetVisibleCommands(factory.AllCommands)
+            var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
@@ -182,7 +182,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 required: arg.Required))
             .ToList();
 
-        var fullCommand = tokenizedName.Replace(ICommandFactory.Separator, ' ');
+        var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');
 
         return new CommandInfo
         {
@@ -198,7 +198,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     public record ToolNamesResult(List<string> Names);
     private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
-        var commands = ICommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
+        var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
             var command = kvp.Value.GetCommand();
             return new CommandInfo

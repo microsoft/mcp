@@ -4,6 +4,7 @@
 using System.CommandLine.Help;
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Configuration;
@@ -18,6 +19,7 @@ namespace Azure.Mcp.Core.Commands;
 
 public class CommandFactory : ICommandFactory
 {
+    internal const char Separator = '_';
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
@@ -418,5 +420,12 @@ public class CommandFactory : ICommandFactory
 
     internal static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
-        : currentPrefix + ICommandFactory.Separator + additional;
+        : currentPrefix + Separator + additional;
+
+    internal static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
+    {
+        return commands
+            .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
+            .OrderBy(kvp => kvp.Key);
+    }
 }

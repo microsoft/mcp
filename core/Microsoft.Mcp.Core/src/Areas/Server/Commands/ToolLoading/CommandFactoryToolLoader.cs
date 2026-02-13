@@ -61,7 +61,7 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var visibleCommands = ICommandFactory.GetVisibleCommands(_toolCommands);
+        var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
