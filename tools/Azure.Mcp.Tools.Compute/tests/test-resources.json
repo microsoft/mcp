@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "14469809156686005433"
+      "version": "0.39.26.7824",
+      "templateHash": "15386900013071109327"
     }
   },
   "parameters": {
@@ -20,14 +20,13 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "westus2",
+      "defaultValue": "[resourceGroup().location]",
       "metadata": {
         "description": "The location of the resource. By default, this is the same as the resource group."
       }
     },
     "testApplicationOid": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "The client OID to grant access to test resources."
       }
@@ -48,7 +47,7 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_D2s_v6",
+      "defaultValue": "Standard_B2s",
       "metadata": {
         "description": "The VM size to use for testing."
       }
@@ -100,7 +99,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vm', parameters('baseName'))]",
       "location": "[parameters('location')]",
       "properties": {
@@ -120,7 +119,7 @@
               "storageAccountType": "Standard_LRS"
             }
           },
-          "diskControllerType": "NVMe"
+          "diskControllerType": "SCSI"
         },
         "osProfile": {
           "computerName": "[format('{0}-vm', parameters('baseName'))]",
@@ -151,7 +150,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vmss', parameters('baseName'))]",
       "location": "[parameters('location')]",
       "sku": {
@@ -178,7 +177,7 @@
                 "storageAccountType": "Standard_LRS"
               }
             },
-            "diskControllerType": "NVMe"
+            "diskControllerType": "SCSI"
           },
           "osProfile": {
             "computerNamePrefix": "[format('{0}-', parameters('baseName'))]",
@@ -235,6 +234,16 @@
       }
     },
     {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7'), parameters('testApplicationOid'), resourceGroup().id)]",
+      "properties": {
+        "principalId": "[parameters('testApplicationOid')]",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
+        "description": "Network Contributor for testApplicationOid - required for VM create tests"
+      }
+    },
+    {
       "type": "Microsoft.Compute/disks",
       "apiVersion": "2023-10-02",
       "name": "[format('{0}-disk', parameters('baseName'))]",
@@ -256,7 +265,7 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "scope": "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]",
+      "scope": "[format('Microsoft.Compute/disks/{0}', format('{0}-disk', parameters('baseName')))]",
       "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c'), parameters('testApplicationOid'), resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
