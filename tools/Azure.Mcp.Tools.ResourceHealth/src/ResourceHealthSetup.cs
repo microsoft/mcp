@@ -29,12 +29,7 @@ public class ResourceHealthSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resourceHealth = new CommandGroup(Name,
-            """
-            Resource Health operations - Commands for monitoring and diagnosing Azure resource health status.
-            Use this tool to check the current availability status of Azure resources and identify potential issues.
-            This tool provides access to Azure Resource Health data including availability state, detailed status,
-            historical health information, and service health events for troubleshooting and monitoring purposes.
-            """, Title);
+            "Resource Health operations – Commands to monitor and diagnose Azure resource health, including availability status, detailed health information, historical data, and service health events for troubleshooting and monitoring purposes.", Title);
 
         // Create availability-status subgroup
         var availabilityStatus = new CommandGroup("availability-status",

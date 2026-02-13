@@ -16,6 +16,8 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public string Title => "Azure VM Extensions";
 
+    public CommandCategory Category => CommandCategory.RecommendedTools;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClientServices();

@@ -12,6 +12,7 @@ public class AzureBestPracticesSetup : IAreaSetup
 {
     public string Name => "get_azure_bestpractices";
     public string Title => "Azure Best Practices";
+    public CommandCategory Category => CommandCategory.RecommendedTools;
 
     public void ConfigureServices(IServiceCollection services)
     {
