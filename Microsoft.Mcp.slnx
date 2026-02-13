@@ -139,6 +139,7 @@
     <Project Path="tools/Azure.Mcp.Tools.AzureMigrate/src/Azure.Mcp.Tools.AzureMigrate.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.LiveTests/Azure.Mcp.Tools.AzureMigrate.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.UnitTests/Azure.Mcp.Tools.AzureMigrate.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/" />

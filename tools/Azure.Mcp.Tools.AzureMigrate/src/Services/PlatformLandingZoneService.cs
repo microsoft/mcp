@@ -70,9 +70,23 @@ public sealed class PlatformLandingZoneService(
         try
         {
             var response = await httpHelper.GetAsync(url, cancellationToken);
-            return !string.IsNullOrEmpty(response);
+
+            if (string.IsNullOrEmpty(response))
+                return false;
+
+            using var doc = JsonDocument.Parse(response);
+            if (doc.RootElement.TryGetProperty("exists", out var existsProperty))
+            {
+                return existsProperty.GetBoolean();
+            }
+
+            return false;
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+        catch (JsonException)
         {
             return false;
         }
