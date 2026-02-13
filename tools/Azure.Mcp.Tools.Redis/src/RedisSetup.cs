@@ -25,7 +25,7 @@ public class RedisSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var redis = new CommandGroup(Name, "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services, as well as for creating Azure Managed Redis resources.", Title);
+        var redis = new CommandGroup(Name, "Redis operations – Commands to manage Azure Redis resources, including creating and listing Redis instances, databases, and data access policies, across Azure Managed Redis and legacy Azure Cache for Redis services.", Title);
 
         var redisResourceList = serviceProvider.GetRequiredService<ResourceListCommand>();
         redis.AddCommand(redisResourceList.Name, redisResourceList);

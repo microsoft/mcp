@@ -72,11 +72,8 @@ public class StorageSyncSetup : IAreaSetup
     {
         var storageSync = new CommandGroup(Name,
             """
-            Azure Storage Sync operations - Commands for managing Azure File Sync services, sync groups, cloud endpoints,
-            server endpoints, and registered servers. Use this tool to deploy, configure, and manage File Sync infrastructure
-            for hybrid cloud file synchronization scenarios. The tool supports listing, creating, updating, and deleting
-            resources across the Storage Sync service hierarchy. Each command requires appropriate Azure permissions and
-            subscription access.
+            Azure Storage Sync Operations - Commands to manage Azure File Sync resources, including Storage Sync services, sync groups, cloud and server
+            endpoints, and registered servers. Use this tool to deploy and maintain hybrid cloud file synchronization.
             """,
             Title);
 

@@ -37,7 +37,7 @@ public class LoadTestingSetup : IAreaSetup
         // Create Load Testing command group
         var service = new CommandGroup(
             Name,
-            "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.",
+            "Load Testing operations – Commands to manage Azure Load Testing resources, test configurations, and test runs, including creating tests, configuring scripts, executing performance tests, and monitoring results.",
             Title);
 
         // Create Load Test subgroups
