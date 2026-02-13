@@ -27,20 +27,21 @@ internal class CustomHelpAction : SynchronousCommandLineAction
         _serviceAreas = serviceAreas;
     }
 
-    private static readonly Dictionary<CommandCategory, string> _categoryNames = new()
+    private static string GetCategoryName(CommandCategory category) => category switch
     {
-        [CommandCategory.Cli] = "CLI",
-        [CommandCategory.Mcp] = "MCP",
-        [CommandCategory.RecommendedTools] = "Recommended Tools",
-        [CommandCategory.SubscriptionManagement] = "Subscription Management",
-        [CommandCategory.AzureServices] = "Azure Services"
+        CommandCategory.Cli => "CLI",
+        CommandCategory.Mcp => "MCP",
+        CommandCategory.RecommendedTools => "Recommended Tools",
+        CommandCategory.SubscriptionManagement => "Subscription Management",
+        CommandCategory.AzureServices => "Azure Services",
+        _ => category.ToString()
     };
 
     public override int Invoke(ParseResult parseResult)
     {
         Console.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
 
-        if( _serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
+        if (_serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
         {
             RenderGroupAreasHelp(rootCommand);
             return 0;
@@ -71,7 +72,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
         var groupedAreas = _serviceAreas!.GroupBy(area => area.Category).OrderBy(g => (int)g.Key);
         foreach (var group in groupedAreas)
         {
-            Console.WriteLine($"\n{_categoryNames[group.Key]}:");
+            Console.WriteLine($"\n{GetCategoryName(group.Key)}:");
             foreach (var commandArea in group.OrderBy(a => a.Name))
             {
                 var subCommand = rootCommand.Subcommands.FirstOrDefault(c => c.Name.Equals(commandArea.Name));
@@ -106,7 +107,10 @@ internal class CustomHelpAction : SynchronousCommandLineAction
                 line = word;
             }
         }
-        if (line.Length > 0) lines.Add(line);
+        if (line.Length > 0)
+        {
+            lines.Add(line);
+        }
 
         return string.Join(Environment.NewLine + indent, lines);
     }

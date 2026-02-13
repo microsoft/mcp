@@ -33,7 +33,7 @@ public class MySqlSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
-        
+
         // Consolidated hierarchical list command
         var mysqlList = serviceProvider.GetRequiredService<MySqlListCommand>();
         mysql.AddCommand(mysqlList.Name, mysqlList);
