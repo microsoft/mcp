@@ -9,6 +9,7 @@ public static class ComputeOptionDefinitions
     public const string VmssNameName = "vmss-name";
     public const string InstanceIdName = "instance-id";
     public const string LocationName = "location";
+    public const string DiskName = "disk";
     public const string VmSizeName = "vm-size";
     public const string ImageName = "image";
     public const string AdminUsernameName = "admin-username";
@@ -24,6 +25,12 @@ public static class ComputeOptionDefinitions
     public const string ZoneName = "zone";
     public const string OsDiskSizeGbName = "os-disk-size-gb";
     public const string OsDiskTypeName = "os-disk-type";
+
+    public static readonly Option<string> Disk = new($"--{DiskName}", "--name")
+    {
+        Description = "The name of the disk",
+        Required = false
+    };
 
     public static readonly Option<string> VmName = new($"--{VmNameName}", "--name")
     {

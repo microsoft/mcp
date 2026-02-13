@@ -92,27 +92,10 @@ public class KeyGetCommandTests
         var retrievedKey = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyGetCommandResult);
 
         Assert.NotNull(retrievedKey);
-        Assert.Equal(_knownKeyName, retrievedKey.Name);
-        Assert.Equal(_knownKeyType.ToString(), retrievedKey.KeyType);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfKeyNameIsEmpty()
-    {
-        // Arrange - No need to mock service since validation should fail before service is called
-        var args = _commandDefinition.Parse([
-            "--vault", _knownVaultName,
-            "--key", "",
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert - Should return validation error response
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        Assert.NotNull(retrievedKey.Key);
+        Assert.Null(retrievedKey.Keys);
+        Assert.Equal(_knownKeyName, retrievedKey.Key.Name);
+        Assert.Equal(_knownKeyType.ToString(), retrievedKey.Key.KeyType);
     }
 
     [Fact]
@@ -134,6 +117,115 @@ public class KeyGetCommandTests
         var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--key", _knownKeyName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsKeysList_WhenKeyNameNotProvided()
+    {
+        // Arrange
+        var expectedKeys = new List<string> { "key1", "key2", "key3" };
+
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Is(false),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(expectedKeys);
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Keys);
+        Assert.Null(result.Key);
+        Assert.Equal(expectedKeys.Count, result.Keys.Count);
+        Assert.Equal(expectedKeys, result.Keys);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsKeysList_WithManagedKeys()
+    {
+        // Arrange
+        var expectedKeys = new List<string> { "key1", "key2", "managed-key1" };
+
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Is(true),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(expectedKeys);
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId,
+            "--include-managed", "true"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Keys);
+        Assert.Null(result.Key);
+        Assert.Equal(expectedKeys.Count, result.Keys.Count);
+        Assert.Equal(expectedKeys, result.Keys);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException_WhenListingKeys()
+    {
+        // Arrange
+        var expectedError = "List error";
+
+        _keyVaultService
+            .ListKeys(
+                Arg.Is(_knownVaultName),
+                Arg.Any<bool>(),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
 

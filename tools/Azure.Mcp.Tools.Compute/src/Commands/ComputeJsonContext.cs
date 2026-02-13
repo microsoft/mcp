@@ -2,12 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 
 namespace Azure.Mcp.Tools.Compute.Commands;
 
+/// <summary>
+/// JSON serialization context for Compute commands.
+/// </summary>
+[JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
+[JsonSerializable(typeof(Models.DiskInfo))]
+[JsonSerializable(typeof(List<Models.DiskInfo>))]
 [JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
 [JsonSerializable(typeof(VmCreateResult))]
 [JsonSerializable(typeof(VmUpdateCommand.VmUpdateCommandResult))]

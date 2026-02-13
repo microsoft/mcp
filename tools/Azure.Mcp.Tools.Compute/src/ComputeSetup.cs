@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -10,6 +11,9 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Compute;
 
+/// <summary>
+/// Setup class for Compute toolset registration.
+/// </summary>
 public class ComputeSetup : IAreaSetup
 {
     public string Name => "compute";
@@ -29,13 +33,16 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<VmssGetCommand>();
         services.AddSingleton<VmssCreateCommand>();
         services.AddSingleton<VmssUpdateCommand>();
+
+        // Disk commands
+        services.AddSingleton<DiskGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var compute = new CommandGroup(Name,
             """
-            Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS).
+            Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.
             This tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.
             Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.
             Supports smart defaults for VM creation based on workload requirements (development, web, database, compute, memory, gpu, general).
@@ -73,6 +80,16 @@ public class ComputeSetup : IAreaSetup
 
         var vmssUpdate = serviceProvider.GetRequiredService<VmssUpdateCommand>();
         vmss.AddCommand(vmssUpdate.Name, vmssUpdate);
+
+        // Create Disk subgroup
+        var disk = new CommandGroup(
+            "disk",
+            "Managed Disk operations - Get details about Azure managed disks in your subscription.");
+        compute.AddSubGroup(disk);
+
+        // Register Disk commands
+        var diskGet = serviceProvider.GetRequiredService<DiskGetCommand>();
+        disk.AddCommand(diskGet.Name, diskGet);
 
         return compute;
     }

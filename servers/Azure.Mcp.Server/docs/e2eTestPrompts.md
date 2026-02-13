@@ -221,6 +221,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
 | confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
+## Azure Compute
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| compute_disk_get | List all managed disks in my subscription |
+| compute_disk_get | Show me all disks in resource group <resource-group> |
+| compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
+| compute_disk_get | Show me the disk sizes in resource group <resource-group> |
+| compute_disk_get | What managed disks are available? |
+| compute_disk_get | Get information about disk <disk-name> |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
@@ -254,34 +265,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| mysql_database_list | List all MySQL databases in server \<server> |
-| mysql_database_list | Show me the MySQL databases in server \<server> |
+| mysql_list | List all MySQL servers in my subscription |
+| mysql_list | Show me my MySQL servers |
+| mysql_list | Show me the MySQL servers in my subscription |
+| mysql_list | List all MySQL databases in server \<server> |
+| mysql_list | Show me the MySQL databases in server \<server> |
+| mysql_list | List all tables in the MySQL database \<database> in server \<server> |
+| mysql_list | Show me the tables in the MySQL database \<database> in server \<server> |
 | mysql_database_query | Show me all items that contain the word \<search_term> in the MySQL database \<database> in server \<server> |
 | mysql_server_config_get | Show me the configuration of MySQL server \<server> |
-| mysql_server_list | List all MySQL servers in my subscription |
-| mysql_server_list | Show me my MySQL servers |
-| mysql_server_list | Show me the MySQL servers in my subscription |
 | mysql_server_param_get | Show me the value of connection timeout in seconds in my MySQL server \<server>  |
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> |
-| mysql_table_list | List all tables in the MySQL database \<database> in server \<server> |
-| mysql_table_list | Show me the tables in the MySQL database \<database> in server \<server> |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> |
 
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| postgres_database_list | List all PostgreSQL databases in server \<server> |
-| postgres_database_list | Show me the PostgreSQL databases in server \<server> |
+| postgres_list | List all PostgreSQL servers in my subscription |
+| postgres_list | Show me my PostgreSQL servers |
+| postgres_list | Show me the PostgreSQL servers in my subscription |
+| postgres_list | List all PostgreSQL databases in server \<server> |
+| postgres_list | Show me the PostgreSQL databases in server \<server> |
+| postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> |
+| postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> |
-| postgres_server_list | List all PostgreSQL servers in my subscription |
-| postgres_server_list | Show me my PostgreSQL servers |
-| postgres_server_list | Show me the PostgreSQL servers in my subscription |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
-| postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
-| postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
 
 ## Azure Deploy
@@ -414,12 +425,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> |
 | keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> |
 | keyvault_certificate_import | Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name> |
-| keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
-| keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
-| keyvault_certificate_list | What certificates are in the key vault <key_vault_account_name>? |
-| keyvault_certificate_list | List certificate names in vault <key_vault_account_name> |
-| keyvault_certificate_list | Enumerate certificates in key vault <key_vault_account_name> |
-| keyvault_certificate_list | Show certificate names in the key vault <key_vault_account_name> |
+| keyvault_certificate_get | List all certificates in the key vault <key_vault_account_name> |
+| keyvault_certificate_get | Show me the certificates in the key vault <key_vault_account_name> |
+| keyvault_certificate_get | What certificates are in the key vault <key_vault_account_name>? |
+| keyvault_certificate_get | List certificate names in vault <key_vault_account_name> |
+| keyvault_certificate_get | Enumerate certificates in key vault <key_vault_account_name> |
+| keyvault_certificate_get | Show certificate names in the key vault <key_vault_account_name> |
 | keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
 | keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> |
 | keyvault_key_create | Create an oct key in the vault <key_vault_account_name> |
@@ -430,12 +441,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | keyvault_key_get | Get the key <key_name> from vault <key_vault_account_name> |
 | keyvault_key_get | Display the key details for <key_name> in vault <key_vault_account_name> |
 | keyvault_key_get | Retrieve key metadata for <key_name> in vault <key_vault_account_name> |
-| keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
-| keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
-| keyvault_key_list | What keys are in the key vault <key_vault_account_name>? |
-| keyvault_key_list | List key names in vault <key_vault_account_name> |
-| keyvault_key_list | Enumerate keys in key vault <key_vault_account_name> |
-| keyvault_key_list | Show key names in the key vault <key_vault_account_name> |
+| keyvault_key_get | List all keys in the key vault <key_vault_account_name> |
+| keyvault_key_get | Show me the keys in the key vault <key_vault_account_name> |
+| keyvault_key_get | What keys are in the key vault <key_vault_account_name>? |
+| keyvault_key_get | List key names in vault <key_vault_account_name> |
+| keyvault_key_get | Enumerate keys in key vault <key_vault_account_name> |
+| keyvault_key_get | Show key names in the key vault <key_vault_account_name> |
 | keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
 | keyvault_secret_create | Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name> |
 | keyvault_secret_create | Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name> |
@@ -446,12 +457,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | keyvault_secret_get | Get the secret <secret_name> from vault <key_vault_account_name> |
 | keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> |
 | keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> |
-| keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
-| keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
-| keyvault_secret_list | What secrets are in the key vault <key_vault_account_name>? |
-| keyvault_secret_list | List secrets names in vault <key_vault_account_name> |
-| keyvault_secret_list | Enumerate secrets in key vault <key_vault_account_name> |
-| keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
+| keyvault_secret_get | List all secrets in the key vault <key_vault_account_name> |
+| keyvault_secret_get | Show me the secrets in the key vault <key_vault_account_name> |
+| keyvault_secret_get | What secrets are in the key vault <key_vault_account_name>? |
+| keyvault_secret_get | List secrets names in vault <key_vault_account_name> |
+| keyvault_secret_get | Enumerate secrets in key vault <key_vault_account_name> |
+| keyvault_secret_get | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
 
@@ -479,10 +490,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | loadtesting_test_get | Get the load test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
 | loadtesting_testresource_create | Create a load test resource \<load-test-resource-name> in the resource group \<resource-group> in my subscription |
 | loadtesting_testresource_list | List all load testing resources in the resource group \<resource-group> in my subscription |
-| loadtesting_testrun_create | Create a test run using the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>. Use the name of test run \<display-name> and description as \<description> |
 | loadtesting_testrun_get | Get the load test run with id \<testrun-id> in the load test resource \<test-resource> in resource group \<resource-group> |
-| loadtesting_testrun_list |  Get all the load test runs for the test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
-| loadtesting_testrun_update | Update a test run display name as \<display-name> for the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>.|
+| loadtesting_testrun_get | Get all the load test runs for the test with id \<test-id> in the load test resource \<test-resource> in resource group \<resource-group> |
+| loadtesting_testrun_createorupdate | Create a test run using the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>. Use the name of test run \<display-name> and description as \<description> |
+| loadtesting_testrun_createorupdate | Update a test run display name as \<display-name> for the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>.|
 
 ## Azure Managed Grafana
 
@@ -589,11 +600,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
-| monitor_webtests_create | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
-| monitor_webtests_list | List all Web Test resources in my subscription |
-| monitor_webtests_list | List all Web Test resources in my subscription in <resource_group> |
-| monitor_webtests_update | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| monitor_webtests_get | List all Web Test resources in my subscription |
+| monitor_webtests_get | List all Web Test resources in my subscription in <resource_group> |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |

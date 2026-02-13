@@ -282,7 +282,7 @@ public class ToolsListCommandTests
 
         // Verify specific known commands exist
         Assert.Contains(result, cmd => cmd.Command == "subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "keyvault key list");
+        Assert.Contains(result, cmd => cmd.Command == "keyvault key get");
         Assert.Contains(result, cmd => cmd.Command == "storage account get");
         Assert.Contains(result, cmd => cmd.Command == "appconfig account list");
 
