@@ -119,12 +119,12 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             if (options.NameOnly)
             {
                 // Get all visible commands and extract their tokenized names (full command paths)
-                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                var allToolNames = ICommandFactory.GetVisibleCommands(factory.AllCommands)
                     .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
                     .Where(name => !string.IsNullOrEmpty(name));
 
                 // Apply namespace filtering if specified (using underscore separator for tokenized names)
-                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, CommandFactory.Separator);
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, ICommandFactory.Separator);
 
                 var toolNames = await Task.Run(() => allToolNames
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -136,7 +136,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             }
 
             // Get all tools with full details
-            var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
+            var allTools = ICommandFactory.GetVisibleCommands(factory.AllCommands)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
@@ -182,7 +182,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 required: arg.Required))
             .ToList();
 
-        var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');
+        var fullCommand = tokenizedName.Replace(ICommandFactory.Separator, ' ');
 
         return new CommandInfo
         {
@@ -198,7 +198,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     public record ToolNamesResult(List<string> Names);
     private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
-        var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
+        var commands = ICommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
             var command = kvp.Value.GetCommand();
             return new CommandInfo

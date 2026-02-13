@@ -4,7 +4,6 @@
 using System.CommandLine.Help;
 using System.Diagnostics;
 using System.Net;
-using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Configuration;
@@ -17,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandFactory
+public class CommandFactory : ICommandFactory
 {
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
@@ -25,8 +24,6 @@ public class CommandFactory
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
-
-    public const char Separator = '_';
 
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
@@ -341,7 +338,7 @@ public class CommandFactory
     /// - B2
     /// </summary>
     /// <param name="rootNode">Node to begin traversal.</param>
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
+    private static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
     {
         const string rootPrefix = "";
         var aggregated = new Dictionary<string, IBaseCommand>();
@@ -421,12 +418,5 @@ public class CommandFactory
 
     internal static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
-        : currentPrefix + Separator + additional;
-
-    public static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
-    {
-        return commands
-            .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
-            .OrderBy(kvp => kvp.Key);
-    }
+        : currentPrefix + ICommandFactory.Separator + additional;
 }

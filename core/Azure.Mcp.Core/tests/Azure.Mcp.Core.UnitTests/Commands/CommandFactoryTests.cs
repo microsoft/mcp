@@ -54,7 +54,7 @@ public class CommandFactoryTests
         // by ensuring the separator is underscore instead of dash
 
         // Arrange & Act
-        var separator = CommandFactory.Separator;
+        var separator = ICommandFactory.Separator;
 
         // Assert
         Assert.Equal('_', separator);
@@ -191,7 +191,7 @@ public class CommandFactoryTests
         var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
 
         // All commands created in command factory are prefixed with the root command group, "azmcp".
-        var commandNameToTry = "azmcp" + CommandFactory.Separator + "name0_subgroup2_directCommand4";
+        var commandNameToTry = "azmcp" + ICommandFactory.Separator + "name0_subgroup2_directCommand4";
 
         // Act
         var actual = factory.GetServiceArea(commandNameToTry);

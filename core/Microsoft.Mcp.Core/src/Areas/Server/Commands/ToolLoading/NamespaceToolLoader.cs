@@ -24,13 +24,13 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// Supports learn functionality for progressive discovery of commands within each namespace.
 /// </summary>
 public sealed class NamespaceToolLoader(
-    CommandFactory commandFactory,
+    ICommandFactory commandFactory,
     IOptions<ServiceStartOptions> options,
     IServiceProvider serviceProvider,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
-    private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+    private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 

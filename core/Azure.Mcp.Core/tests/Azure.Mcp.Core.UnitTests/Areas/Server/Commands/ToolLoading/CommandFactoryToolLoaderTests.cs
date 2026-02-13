@@ -18,7 +18,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
 public class CommandFactoryToolLoaderTests
 {
-    private static (CommandFactoryToolLoader toolLoader, CommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
@@ -55,7 +55,7 @@ public class CommandFactoryToolLoaderTests
         Assert.True(result.Tools.Count > 0, "Expected at least one tool to be returned");
 
         // Get the visible commands from the command factory for comparison
-        var visibleCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var visibleCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
         Assert.Equal(visibleCommands.Count, result.Tools.Count);
 
         // Verify each tool has the expected properties
@@ -105,7 +105,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
 
         // Skip test if no commands are available
         if (!availableCommands.Any())
@@ -151,7 +151,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
 
         // Skip test if no commands are available
         if (!availableCommands.Any())
@@ -298,7 +298,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, commandFactory) = CreateToolLoader();
 
         // Get the first available command for testing
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands);
         var firstCommand = availableCommands.First();
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
@@ -430,7 +430,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, commandFactory) = CreateToolLoader();
 
         // Get the subscription list command for testing
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands);
 
         // Find the subscription list command
         var subscriptionListCommand = availableCommands.FirstOrDefault(cmd => cmd.Key.Contains("subscription") && cmd.Key.Contains("list"));
@@ -759,7 +759,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
 
         // Skip test if no commands are available
         if (!availableCommands.Any())
@@ -801,7 +801,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
 
         // Skip test if fewer than 2 commands are available
         if (availableCommands.Count < 2)
@@ -841,7 +841,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
-        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var availableCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
 
         // Skip test if no commands are available
         if (!availableCommands.Any())
@@ -903,7 +903,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var (toolLoader, commandFactory) = CreateToolLoader();
-        var allCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
+        var allCommands = ICommandFactory.GetVisibleCommands(commandFactory.AllCommands);
 
         // Skip test if we don't have at least 2 commands
         if (allCommands.Count() < 2)

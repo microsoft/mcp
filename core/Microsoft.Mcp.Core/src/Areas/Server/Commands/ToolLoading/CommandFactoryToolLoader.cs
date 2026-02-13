@@ -21,12 +21,12 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,
-    CommandFactory commandFactory,
+    ICommandFactory commandFactory,
     IOptions<ToolLoaderOptions> options,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    private readonly CommandFactory _commandFactory = commandFactory;
+    private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
@@ -61,7 +61,7 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
+        var visibleCommands = ICommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
@@ -204,7 +204,6 @@ public sealed class CommandFactoryToolLoader(
         catch (Exception ex)
         {
             _logger.LogError(ex, "An exception occurred running '{Tool}'. ", realCommand.Name);
-
             throw;
         }
         finally
