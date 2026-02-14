@@ -50,30 +50,6 @@ jobs:
 
   - checkout: self
 
-  - powershell: |
-      $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
-      if ($pwsh) {
-        Write-Host "pwsh already available at $($pwsh.Source)"
-        exit 0
-      }
-
-      $version = "7.4.1"
-      $msiName = "PowerShell-$version-win-arm64.msi"
-      $msiUrl = "https://github.com/PowerShell/PowerShell/releases/download/v$version/$msiName"
-      $msiPath = Join-Path $env:TEMP $msiName
-
-      Write-Host "Downloading $msiUrl"
-      Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
-
-      Write-Host "Installing PowerShell $version"
-      Start-Process msiexec.exe -ArgumentList @('/i', $msiPath, '/qn', '/norestart', 'ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=0', 'ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=0', 'ENABLE_PSREMOTING=0') -Wait -NoNewWindow
-
-      if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
-        throw "pwsh.exe was not found after installation."
-      }
-    displayName: "Install pwsh on windows-arm64 if needed"
-    condition: and(succeeded(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
-
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
@@ -86,6 +62,43 @@ jobs:
     inputs:
       packageType: sdk
       version: 9.0.x
+
+  - powershell: |
+      $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+      if ($pwsh) {
+        Write-Host "pwsh already available at $($pwsh.Source)"
+        exit 0
+      }
+
+      # Windows PowerShell defaults to TLS 1.0/1.1; GitHub requires TLS 1.2+
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+      $version = "7.4.1"
+      $msiName = "PowerShell-$version-win-arm64.msi"
+      $msiUrl = "https://github.com/PowerShell/PowerShell/releases/download/v$version/$msiName"
+      $msiPath = Join-Path $env:TEMP $msiName
+
+      $retries = 3
+      for ($i = 1; $i -le $retries; $i++) {
+        try {
+          Write-Host "Downloading $msiUrl (attempt $i/$retries)"
+          Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
+          break
+        } catch {
+          if ($i -eq $retries) { throw }
+          Write-Host "Download failed: $_. Retrying in 10 seconds..."
+          Start-Sleep -Seconds 10
+        }
+      }
+
+      Write-Host "Installing PowerShell $version"
+      Start-Process msiexec.exe -ArgumentList @('/i', $msiPath, '/qn', '/norestart', 'ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=0', 'ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=0', 'ENABLE_PSREMOTING=0') -Wait -NoNewWindow
+
+      if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
+        throw "pwsh.exe was not found after installation."
+      }
+    displayName: "Install pwsh on windows-arm64 if needed"
+    condition: and(succeededOrFailed(), eq(variables['OSVmImage'], variables['WINDOWSARM64VMIMAGE']))
 
   - task: Powershell@2
     displayName: "Build code"
