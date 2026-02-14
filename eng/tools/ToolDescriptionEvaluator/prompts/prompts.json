@@ -550,7 +550,7 @@
     "Create an AI app that helps me to manage travel queries.",
     "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
   ],
-  "get_azure_bestpractices_get": [
+  "get-azure-bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
     "Get the latest Azure best practices",
