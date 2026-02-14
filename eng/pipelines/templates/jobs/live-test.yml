@@ -62,9 +62,34 @@ jobs:
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
 
   - task: AzurePowershell@5
-    displayName: "Run tests - az pwsh"
+    displayName: "Run tests (stdio) - az pwsh"
     env:
-      AZURE_TEST_MODE: 'live'
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      azurePowerShellVersion: 'LatestVersion'
+      scriptType: InlineScript
+      Inline: |
+        ./eng/scripts/Test-Code.ps1 `
+          -TestType 'Live' `
+          -Path $(PathToTest) `
+          -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
+
+        exit $LastExitCode
+      pwsh: true
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - template: /eng/common/TestResources/deploy-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+      PersistOidcToken: true
+      TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      AdditionalParameters: "@{ UseHttpTransport = true }"
+
+  - task: AzurePowershell@5
+    displayName: "Run tests (http) - az pwsh"
+    env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:

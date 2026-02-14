@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 

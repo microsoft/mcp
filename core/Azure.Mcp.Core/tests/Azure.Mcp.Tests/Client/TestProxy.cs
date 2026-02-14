@@ -7,8 +7,6 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure.Mcp.Tests.Generated;
 
 namespace Azure.Mcp.Tests.Client;

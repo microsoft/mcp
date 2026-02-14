@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
-public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     /// <summary>
     /// Disable the default sanitizer that redacts all JSON properties named "name". We need this

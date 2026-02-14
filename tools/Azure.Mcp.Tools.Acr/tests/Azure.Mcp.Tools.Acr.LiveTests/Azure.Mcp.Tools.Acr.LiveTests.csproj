@@ -15,4 +15,3 @@
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 </Project>
-
