@@ -812,7 +812,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resource "azmcp-test" doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
