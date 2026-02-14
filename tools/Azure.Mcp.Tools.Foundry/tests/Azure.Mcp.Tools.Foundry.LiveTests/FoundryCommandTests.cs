@@ -105,7 +105,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "model-format", "OpenAI"},
                 { "azure-ai-services", TestVariables.GetValueOrDefault("azureAiServicesAccount", Settings.ResourceBaseName) },
                 { "resource-group", Settings.ResourceGroupName },
-                { "subscription", TestVariables["subscriptionId"] },
+                { "subscription", TestVariables.GetValueOrDefault("subscriptionId", Settings.SubscriptionId) },
             });
 
         var deploymentResource = result.AssertProperty("deploymentData");
@@ -296,7 +296,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Verify model name in response
         var model = embeddingResult.AssertProperty("model");
         Assert.Equal(JsonValueKind.String, model.ValueKind);
-        // Static deployment name from EMBEDDINGDEPLOYMENTNAME doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["deploymentName"], model.GetString());
 
         // Verify usage information
@@ -322,7 +321,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(JsonValueKind.String, deploymentNameProperty.ValueKind);
         Assert.Equal(JsonValueKind.String, inputTextProperty.ValueKind);
 
-        // Static resources from deployment outputs (OPENAIACCOUNT, EMBEDDINGDEPLOYMENTNAME) don't get sanitized
         Assert.Equal(TestVariables["resourceName"], resourceNameProperty.GetString());
         Assert.Equal(TestVariables["deploymentName"], deploymentNameProperty.GetString());
         Assert.Equal(inputText, inputTextProperty.GetString());
@@ -416,8 +414,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Verify resource name matches
         var returnedResourceName = modelsListResult.AssertProperty("resourceName");
-        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
-        // Static resource from OPENAIACCOUNT doesn't get sanitized by test proxy
+        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind)
         Assert.Equal(TestVariables["resourceName"], returnedResourceName.GetString());
 
         // Verify models array exists (may be empty if no models deployed)
@@ -496,7 +493,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Verify command metadata (returned resource name should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resource from OPENAIACCOUNT doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
     }
 

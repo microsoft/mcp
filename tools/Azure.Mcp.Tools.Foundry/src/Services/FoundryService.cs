@@ -1555,12 +1555,12 @@ public class FoundryService(
                 var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
                 await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
                 {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
                     resources.Add(resourceInfo);
                     if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
                     {
-                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                        resources.Add(resourceInfo);
+                        var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                        resources.Add(retrieved);
                     }
                 }
             }
