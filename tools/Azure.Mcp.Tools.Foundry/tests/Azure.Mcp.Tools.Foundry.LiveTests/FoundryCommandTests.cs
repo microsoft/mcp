@@ -414,7 +414,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Verify resource name matches
         var returnedResourceName = modelsListResult.AssertProperty("resourceName");
-        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind)
+        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
         Assert.Equal(TestVariables["resourceName"], returnedResourceName.GetString());
 
         // Verify models array exists (may be empty if no models deployed)
@@ -664,7 +664,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(JsonValueKind.Object, metrics.ValueKind);
         var metric = metrics.AssertProperty(evaluationMetric);
         Assert.Equal(JsonValueKind.Object, metric.ValueKind);
-        
+
         // Check if diagnostics exist (indicates evaluation error/warning)
         if (metric.TryGetProperty("diagnostics", out var diagnostics))
         {
@@ -1264,7 +1264,7 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     // Helper methods removed - use CallToolAsync instead to ensure proper test proxy recording
-    // 
+    //
     // Previously these helpers made direct SDK calls that bypassed the test proxy recording mechanism.
     // All tests now use CallToolAsync("foundry_agents_create") etc. which properly routes through the test proxy.
 }
