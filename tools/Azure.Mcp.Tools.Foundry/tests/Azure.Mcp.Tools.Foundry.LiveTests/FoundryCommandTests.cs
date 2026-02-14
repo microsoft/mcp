@@ -817,7 +817,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
         Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
-        // Static resource from deployment outputs (OPENAIDEPLOYMENTNAME) doesn't get sanitized
         Assert.Equal(TestVariables["deploymentName"], commandDeploymentName.GetString());
     }
 
@@ -915,7 +914,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resources from deployment outputs (OPENAIACCOUNT, OPENAIDEPLOYMENTNAME) don't get sanitized
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
@@ -1169,7 +1167,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["staticOpenAIAccount"], resourceName.GetString());
 
         var resourceGroup = resource.AssertProperty("resourceGroup");
-        // Static resource group is a hardcoded literal value that doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["staticResourceGroup"], resourceGroup.GetString());
 
         // Verify endpoint is valid
