@@ -543,7 +543,7 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "get_azure_bestpractices_ai_app": [
+  "get-azure-bestpractices_ai-app": [
     "Get best practices for building AI applications in Azure",
     "Show me the best practices for Microsoft Foundry agents code generation",
     "Get guidance for building agents with Microsoft Foundry",
