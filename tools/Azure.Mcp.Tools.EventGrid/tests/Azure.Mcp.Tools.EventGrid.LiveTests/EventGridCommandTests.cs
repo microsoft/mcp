@@ -10,8 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.LiveTests;
 
-public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-    : RecordedCommandTestsBase(output, fixture)
+public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
