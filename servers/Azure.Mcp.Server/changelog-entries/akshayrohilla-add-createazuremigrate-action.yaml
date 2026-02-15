@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Add createmigrateproject action in azmcp_azuremigrate_platformlandingzone_request command to create a new Azure Migrate project if one doesn't exist"
