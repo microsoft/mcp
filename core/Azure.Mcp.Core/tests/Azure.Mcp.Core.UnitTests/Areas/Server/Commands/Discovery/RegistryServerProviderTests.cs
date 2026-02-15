@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Extensions.Configuration;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;
@@ -18,7 +19,8 @@ public class RegistryServerProviderTests
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient(Arg.Any<string>())
             .Returns(Substitute.For<HttpClient>());
-        return new RegistryServerProvider(id, serverInfo, httpClientFactory);
+        var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+        return new RegistryServerProvider(id, serverInfo, httpClientFactory, configuration);
     }
     [Fact]
     public void Constructor_InitializesCorrectly()

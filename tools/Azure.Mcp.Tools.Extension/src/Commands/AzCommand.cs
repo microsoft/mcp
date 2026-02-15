@@ -8,16 +8,18 @@ using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Tools.Extension.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class AzCommand(ILogger<AzCommand> logger, int processTimeoutSeconds = 300) : GlobalCommand<AzOptions>()
+public sealed class AzCommand(ILogger<AzCommand> logger, IConfiguration configuration, int processTimeoutSeconds = 300) : GlobalCommand<AzOptions>()
 {
     private const string CommandTitle = "Azure CLI Command";
     private readonly ILogger<AzCommand> _logger = logger;
+    private readonly IConfiguration _configuration = configuration;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzPath;
     private volatile bool _isAuthenticated = false;
@@ -65,7 +67,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
         return options;
     }
 
-    internal static string? FindAzCliPath()
+    internal string? FindAzCliPath()
     {
         string executableName = "az";
 
@@ -75,7 +77,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
             return _cachedAzPath;
         }
 
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        var pathEnv = _configuration["PATH"];
         if (string.IsNullOrEmpty(pathEnv))
             return null;
 

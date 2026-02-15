@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using ModelContextProtocol.Client;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -15,11 +16,12 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
 /// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
-public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
+public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory, IConfiguration configuration) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IConfiguration _configuration = configuration;
 
     /// <summary>
     /// Creates metadata that describes this registry-based server.
@@ -126,10 +128,10 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             throw new InvalidOperationException($"Registry server '{_id}' does not have a valid command for stdio transport.");
         }
 
-        // Merge current system environment variables with serverInfo.Env (serverInfo.Env overrides system)
-        var env = Environment.GetEnvironmentVariables()
-            .Cast<System.Collections.DictionaryEntry>()
-            .ToDictionary(e => (string)e.Key, e => (string?)e.Value);
+        // Merge current configuration values (includes environment variables) with serverInfo.Env (serverInfo.Env overrides)
+        var env = _configuration.AsEnumerable()
+            .Where(kvp => kvp.Value is not null)
+            .ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value);
 
         if (_serverInfo.Env != null)
         {
