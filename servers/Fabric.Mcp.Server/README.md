@@ -258,6 +258,7 @@ All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or f
 
 ## Feedback and Support
 
+- The Microsoft Fabric MCP Server is an **open-source project in Public Preview**. Support is only provided through community channels and GitHub repositories. Review the [Microsoft Support Policy](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md#microsoft-support-policy) section of this project for more details.
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
     - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
