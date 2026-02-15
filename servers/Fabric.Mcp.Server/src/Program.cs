@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -161,6 +162,8 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        services.AddRegistryRoot();
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
