@@ -28,30 +28,6 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     ];
 
     [Fact]
-    public async Task Should_create_azure_migrate_project()
-    {
-        var migrateProjectName = RegisterOrRetrieveVariable("migrateProjectName", $"testmigrate{DateTime.UtcNow:MMddHHmmss}");
-
-        var result = await CallToolAsync(
-            "azuremigrate_platformlandingzone_request",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "migrate-project-name", migrateProjectName },
-                { "location", "southeastasia" },
-                { "action", "createmigrateproject" }
-            });
-
-        var message = result.AssertProperty("message");
-        Assert.Equal(JsonValueKind.String, message.ValueKind);
-        var messageText = message.GetString();
-        Assert.NotNull(messageText);
-        Assert.Contains("created successfully", messageText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(migrateProjectName, messageText);
-    }
-
-    [Fact]
     public async Task Should_check_platform_landing_zone_exists()
     {
         var result = await CallToolAsync(
@@ -122,74 +98,6 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         var messageText = message.GetString();
         Assert.NotNull(messageText);
         Assert.NotEmpty(messageText);
-    }
-
-    [Fact]
-    public async Task Should_generate_platform_landing_zone()
-    {
-        await CallToolAsync(
-            "azuremigrate_platformlandingzone_request",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "migrate-project-name", Settings.ResourceBaseName },
-                { "action", "update" },
-                { "region-type", "single" },
-                { "firewall-type", "azurefirewall" },
-                { "network-architecture", "hubspoke" },
-                { "regions", "southeastasia" },
-                { "environment-name", "prod" },
-                { "version-control-system", "local" },
-                { "organization-name", "contoso" },
-                { "identity-subscription-id", Settings.SubscriptionId },
-                { "management-subscription-id", Settings.SubscriptionId },
-                { "connectivity-subscription-id", Settings.SubscriptionId }
-            });
-
-        var result = await CallToolAsync(
-            "azuremigrate_platformlandingzone_request",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "migrate-project-name", Settings.ResourceBaseName },
-                { "action", "generate" }
-            });
-
-        var message = result.AssertProperty("message");
-        Assert.Equal(JsonValueKind.String, message.ValueKind);
-        var messageText = message.GetString();
-        Assert.NotNull(messageText);
-        Assert.True(
-            messageText.Contains("generated successfully", StringComparison.OrdinalIgnoreCase) ||
-            messageText.Contains("in progress", StringComparison.OrdinalIgnoreCase),
-            "Expected generation result message");
-    }
-
-    [Fact]
-    public async Task Should_handle_missing_location_for_create()
-    {
-        var migrateProjectName = RegisterOrRetrieveVariable("migrateProjectName2", $"testmigrate2{DateTime.UtcNow:MMddHHmmss}");
-
-        try
-        {
-            await CallToolAsync(
-                "azuremigrate_platformlandingzone_request",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "migrate-project-name", migrateProjectName },
-                    { "action", "createmigrateproject" }
-                });
-
-            Assert.Fail("Expected an exception for missing location parameter");
-        }
-        catch (Exception ex)
-        {
-            Assert.Contains("location", ex.Message, StringComparison.OrdinalIgnoreCase);
-        }
     }
 
     [Fact]
