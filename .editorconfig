@@ -167,6 +167,161 @@ dotnet_code_quality.ca1802.api_surface = private, internal
 # CA2016: Forward the CancellationToken parameter to methods that take one
 dotnet_diagnostic.CA2016.severity = error
 
+# StyleCop Analyzer Configuration
+dotnet_diagnostic.SA1101.severity = none # Prefix local calls with this
+dotnet_diagnostic.SA1200.severity = none # Using directives should be placed correctly (allow flexibility)
+dotnet_diagnostic.SA1309.severity = none # Field names should not begin with underscore (we use _ prefix)
+dotnet_diagnostic.SA1633.severity = none # File should have header
+dotnet_diagnostic.SA1602.severity = none # Enumeration items should be documented
+dotnet_diagnostic.SA1116.severity = none # Split parameters should start on line after declaration
+dotnet_diagnostic.SA1117.severity = none # Parameters should be on same line or separate lines
+dotnet_diagnostic.SA1600.severity = warning # Elements should be documented
+dotnet_diagnostic.SA1601.severity = warning # Partial elements should be documented
+dotnet_diagnostic.SA1611.severity = warning # Element parameters should be documented
+dotnet_diagnostic.SA1615.severity = warning # Element return value should be documented
+dotnet_diagnostic.SA1618.severity = warning # Generic type parameters should be documented
+
+# Code Analysis Rules - Design
+dotnet_diagnostic.CA1014.severity = none # Mark assemblies with CLSCompliant
+dotnet_diagnostic.CA1017.severity = none # Mark assemblies with ComVisible
+dotnet_diagnostic.CA1031.severity = warning # Do not catch general exception types
+dotnet_diagnostic.CA1034.severity = warning # Nested types should not be visible
+dotnet_diagnostic.CA1040.severity = warning # Avoid empty interfaces
+dotnet_diagnostic.CA1041.severity = warning # Provide ObsoleteAttribute message
+dotnet_diagnostic.CA1043.severity = warning # Use integral or string argument for indexers
+dotnet_diagnostic.CA1044.severity = warning # Properties should not be write only
+dotnet_diagnostic.CA1050.severity = warning # Declare types in namespaces
+dotnet_diagnostic.CA1051.severity = warning # Do not declare visible instance fields
+dotnet_diagnostic.CA1052.severity = warning # Static holder types should be sealed
+dotnet_diagnostic.CA1054.severity = warning # URI parameters should not be strings
+dotnet_diagnostic.CA1055.severity = warning # URI return values should not be strings
+dotnet_diagnostic.CA1056.severity = warning # URI properties should not be strings
+dotnet_diagnostic.CA1058.severity = warning # Types should not extend certain base types
+dotnet_diagnostic.CA1060.severity = warning # Move P/Invokes to NativeMethods class
+dotnet_diagnostic.CA1061.severity = warning # Do not hide base class methods
+dotnet_diagnostic.CA1062.severity = suggestion # Validate arguments of public methods
+dotnet_diagnostic.CA1063.severity = warning # Implement IDisposable correctly
+dotnet_diagnostic.CA1064.severity = warning # Exceptions should be public
+dotnet_diagnostic.CA1065.severity = warning # Do not raise exceptions in unexpected locations
+dotnet_diagnostic.CA1066.severity = warning # Implement IEquatable when overriding Equals
+dotnet_diagnostic.CA1067.severity = warning # Override Equals when implementing IEquatable
+dotnet_diagnostic.CA1068.severity = warning # CancellationToken parameters must come last
+
+# Code Analysis Rules - Globalization
+dotnet_diagnostic.CA1303.severity = none # Do not pass literals as localized parameters
+dotnet_diagnostic.CA1304.severity = warning # Specify CultureInfo
+dotnet_diagnostic.CA1305.severity = warning # Specify IFormatProvider
+dotnet_diagnostic.CA1307.severity = warning # Specify StringComparison for clarity
+dotnet_diagnostic.CA1308.severity = warning # Normalize strings to uppercase
+dotnet_diagnostic.CA1309.severity = warning # Use ordinal StringComparison
+dotnet_diagnostic.CA1310.severity = warning # Specify StringComparison for correctness
+
+# Code Analysis Rules - Naming
+dotnet_diagnostic.CA1707.severity = none # Identifiers should not contain underscores (allow for test methods)
+dotnet_diagnostic.CA1708.severity = warning # Identifiers should differ by more than case
+dotnet_diagnostic.CA1710.severity = warning # Identifiers should have correct suffix
+dotnet_diagnostic.CA1711.severity = warning # Identifiers should not have incorrect suffix
+dotnet_diagnostic.CA1712.severity = warning # Do not prefix enum values with type name
+dotnet_diagnostic.CA1713.severity = warning # Events should not have before or after prefix
+dotnet_diagnostic.CA1714.severity = warning # Flags enums should have plural names
+dotnet_diagnostic.CA1715.severity = warning # Identifiers should have correct prefix
+dotnet_diagnostic.CA1716.severity = warning # Identifiers should not match keywords
+dotnet_diagnostic.CA1717.severity = warning # Only FlagsAttribute enums should have plural names
+dotnet_diagnostic.CA1720.severity = warning # Identifiers should not contain type names
+dotnet_diagnostic.CA1721.severity = warning # Property names should not match get methods
+dotnet_diagnostic.CA1724.severity = warning # Type names should not match namespaces
+dotnet_diagnostic.CA1725.severity = warning # Parameter names should match base declaration
+
+# Code Analysis Rules - Performance
+dotnet_diagnostic.CA1805.severity = warning # Do not initialize unnecessarily
+dotnet_diagnostic.CA1806.severity = warning # Do not ignore method results
+dotnet_diagnostic.CA1810.severity = warning # Initialize reference type static fields inline
+dotnet_diagnostic.CA1812.severity = warning # Avoid uninstantiated internal classes
+dotnet_diagnostic.CA1813.severity = warning # Avoid unsealed attributes
+dotnet_diagnostic.CA1814.severity = warning # Prefer jagged arrays over multidimensional
+dotnet_diagnostic.CA1815.severity = warning # Override equals and operator equals on value types
+dotnet_diagnostic.CA1816.severity = warning # Call GC.SuppressFinalize correctly
+dotnet_diagnostic.CA1819.severity = warning # Properties should not return arrays
+dotnet_diagnostic.CA1820.severity = warning # Test for empty strings using string length
+dotnet_diagnostic.CA1821.severity = warning # Remove empty finalizers
+dotnet_diagnostic.CA1822.severity = suggestion # Mark members as static
+dotnet_diagnostic.CA1823.severity = warning # Avoid unused private fields
+dotnet_diagnostic.CA1824.severity = warning # Mark assemblies with NeutralResourcesLanguageAttribute
+dotnet_diagnostic.CA1825.severity = warning # Avoid zero-length array allocations
+
+# Code Analysis Rules - Reliability
+dotnet_diagnostic.CA2000.severity = warning # Dispose objects before losing scope
+dotnet_diagnostic.CA2002.severity = warning # Do not lock on objects with weak identity
+dotnet_diagnostic.CA2007.severity = none # Do not directly await a Task (library code pattern)
+dotnet_diagnostic.CA2008.severity = warning # Do not create tasks without passing a TaskScheduler
+dotnet_diagnostic.CA2009.severity = warning # Do not call ToImmutableCollection on an ImmutableCollection value
+dotnet_diagnostic.CA2011.severity = warning # Do not assign property within its setter
+dotnet_diagnostic.CA2012.severity = warning # Use ValueTasks correctly
+dotnet_diagnostic.CA2013.severity = warning # Do not use ReferenceEquals with value types
+dotnet_diagnostic.CA2014.severity = warning # Do not use stackalloc in loops
+dotnet_diagnostic.CA2015.severity = warning # Do not define finalizers for types derived from MemoryManager<T>
+
+# Code Analysis Rules - Security
+dotnet_diagnostic.CA2100.severity = warning # Review SQL queries for security vulnerabilities
+dotnet_diagnostic.CA2109.severity = warning # Review visible event handlers
+dotnet_diagnostic.CA2119.severity = warning # Seal methods that satisfy private interfaces
+dotnet_diagnostic.CA2153.severity = warning # Avoid handling Corrupted State Exceptions
+
+# Code Analysis Rules - Usage
+dotnet_diagnostic.CA2200.severity = warning # Rethrow to preserve stack details
+dotnet_diagnostic.CA2201.severity = warning # Do not raise reserved exception types
+dotnet_diagnostic.CA2207.severity = warning # Initialize value type static fields inline
+dotnet_diagnostic.CA2208.severity = warning # Instantiate argument exceptions correctly
+dotnet_diagnostic.CA2211.severity = warning # Non-constant fields should not be visible
+dotnet_diagnostic.CA2213.severity = warning # Disposable fields should be disposed
+dotnet_diagnostic.CA2214.severity = warning # Do not call overridable methods in constructors
+dotnet_diagnostic.CA2215.severity = warning # Dispose methods should call base class dispose
+dotnet_diagnostic.CA2216.severity = warning # Disposable types should declare finalizer
+dotnet_diagnostic.CA2217.severity = warning # Do not mark enums with FlagsAttribute
+dotnet_diagnostic.CA2218.severity = warning # Override GetHashCode on overriding Equals
+dotnet_diagnostic.CA2219.severity = warning # Do not raise exceptions in exception clauses
+dotnet_diagnostic.CA2224.severity = warning # Override Equals on overloading operator equals
+dotnet_diagnostic.CA2225.severity = warning # Operator overloads have named alternates
+dotnet_diagnostic.CA2226.severity = warning # Operators should have symmetrical overloads
+dotnet_diagnostic.CA2227.severity = warning # Collection properties should be read only
+dotnet_diagnostic.CA2229.severity = warning # Implement serialization constructors
+dotnet_diagnostic.CA2231.severity = warning # Overload operator equals on overriding ValueType.Equals
+dotnet_diagnostic.CA2234.severity = warning # Pass System.Uri objects instead of strings
+dotnet_diagnostic.CA2235.severity = warning # Mark all non-serializable fields
+dotnet_diagnostic.CA2237.severity = warning # Mark ISerializable types with SerializableAttribute
+dotnet_diagnostic.CA2241.severity = warning # Provide correct arguments to formatting methods
+dotnet_diagnostic.CA2242.severity = warning # Test for NaN correctly
+dotnet_diagnostic.CA2243.severity = warning # Attribute string literals should parse correctly
+dotnet_diagnostic.CA2244.severity = warning # Do not duplicate indexed element initializations
+dotnet_diagnostic.CA2245.severity = warning # Do not assign a property to itself
+dotnet_diagnostic.CA2246.severity = warning # Do not assign a symbol and its member in the same statement
+dotnet_diagnostic.CA2247.severity = warning # Argument passed to TaskCompletionSource constructor should be TaskCreationOptions enum
+dotnet_diagnostic.CA2248.severity = warning # Provide correct enum argument to Enum.HasFlag
+dotnet_diagnostic.CA2249.severity = warning # Consider using String.Contains instead of String.IndexOf
+
+# IDE Suggestions
+dotnet_diagnostic.IDE0001.severity = warning # Simplify name
+dotnet_diagnostic.IDE0002.severity = warning # Simplify member access
+dotnet_diagnostic.IDE0003.severity = warning # Remove this or Me qualification
+dotnet_diagnostic.IDE0004.severity = warning # Remove unnecessary cast
+dotnet_diagnostic.IDE0005.severity = warning # Remove unnecessary import
+dotnet_diagnostic.IDE0011.severity = warning # Add braces
+dotnet_diagnostic.IDE0035.severity = warning # Remove unreachable code
+dotnet_diagnostic.IDE0040.severity = warning # Add accessibility modifiers
+dotnet_diagnostic.IDE0051.severity = warning # Remove unused private member
+dotnet_diagnostic.IDE0052.severity = warning # Remove unread private member
+dotnet_diagnostic.IDE0055.severity = warning # Fix formatting
+dotnet_diagnostic.IDE0058.severity = none # Expression value is never used (allow discarding)
+dotnet_diagnostic.IDE0059.severity = warning # Unnecessary assignment of a value
+dotnet_diagnostic.IDE0060.severity = warning # Remove unused parameter
+dotnet_diagnostic.IDE0070.severity = warning # Use System.HashCode.Combine
+dotnet_diagnostic.IDE0071.severity = warning # Simplify interpolation
+dotnet_diagnostic.IDE0072.severity = warning # Add missing cases to switch expression
+dotnet_diagnostic.IDE0073.severity = none # File header (handled by templates)
+dotnet_diagnostic.IDE0080.severity = warning # Remove unnecessary suppression operator
+dotnet_diagnostic.IDE0100.severity = warning # Remove unnecessary equality operator
+dotnet_diagnostic.IDE0110.severity = warning # Remove unnecessary discard
+
 # Xml project files
 [*.{csproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
 indent_size = 2
