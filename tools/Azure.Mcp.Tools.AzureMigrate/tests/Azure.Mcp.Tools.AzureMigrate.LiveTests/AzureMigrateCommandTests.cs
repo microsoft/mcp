@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.LiveTests;
 
-public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
