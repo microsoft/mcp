@@ -16,9 +16,9 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
     : BaseAzureService(tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private const string AzureManagementBaseUrl = "https://management.azure.com";
     private const string ResourceHealthApiVersion = "2025-05-01";
 
     public async Task<AvailabilityStatus> GetAvailabilityStatusAsync(
@@ -33,18 +33,19 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
         try
         {
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
+
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             // Construct URL safely using Uri to ensure path is relative to base
-            var baseUri = new Uri(AzureManagementBaseUrl);
             var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
-            var requestUri = new Uri(baseUri, relativePath);
+            var requestUri = new Uri(managementEndpoint, relativePath);
 
             using var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -83,20 +84,20 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             // Construct URL safely using Uri to ensure path is relative to base
-            var baseUri = new Uri(AzureManagementBaseUrl);
             var relativePath = resourceGroup != null
                 ? $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
                 : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
-            var requestUri = new Uri(baseUri, relativePath);
+            var requestUri = new Uri(managementEndpoint, relativePath);
 
             using var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -140,9 +141,11 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
+            var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
@@ -196,8 +199,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             }
 
             // Construct URL safely using Uri to ensure path is relative to base
-            var baseUri = new Uri(AzureManagementBaseUrl);
-            var requestUri = new Uri(baseUri, relativePath);
+            var requestUri = new Uri(managementEndpoint, relativePath);
 
             using var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();

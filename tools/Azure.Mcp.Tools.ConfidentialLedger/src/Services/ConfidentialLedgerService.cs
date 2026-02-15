@@ -5,6 +5,7 @@ using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
@@ -15,7 +16,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
     : BaseAzureService(tenantService), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
-    private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
@@ -43,7 +44,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(GetLedgerUri(ledgerName), credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
@@ -74,7 +75,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(GetLedgerUri(ledgerName), credential);
 
         Response? getByCollectionResponse = null;
         bool loaded = false;
@@ -114,5 +115,20 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             TransactionId = actualTransactionId ?? transactionId,
             Contents = contents ?? string.Empty,
         };
+    }
+
+    private Uri GetLedgerUri(string ledgerName)
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri($"https://{ledgerName}.confidential-ledger.azure.com");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri($"https://{ledgerName}.confidential-ledger.azure.cn");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return new Uri($"https://{ledgerName}.confidential-ledger.azure.us");
+            default:
+                return new Uri($"https://{ledgerName}.confidential-ledger.azure.com");
+        }
     }
 }

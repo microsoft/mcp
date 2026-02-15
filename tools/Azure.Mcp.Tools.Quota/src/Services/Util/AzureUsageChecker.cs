@@ -3,6 +3,7 @@
 
 using System.Net.Http;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
@@ -50,15 +51,27 @@ public abstract class AzureUsageChecker : IUsageChecker
     protected readonly ArmClient ResourceClient;
     protected readonly TokenCredential Credential;
     protected readonly ILogger Logger;
-    protected const string managementEndpoint = "https://management.azure.com";
+    protected readonly ITenantService TenantService;
 
-    protected AzureUsageChecker(TokenCredential credential, string subscriptionId, ILogger logger)
+    protected AzureUsageChecker(TokenCredential credential, string subscriptionId, ILogger logger, ITenantService tenantService)
     {
         SubscriptionId = subscriptionId;
         Credential = credential ?? throw new ArgumentNullException(nameof(credential));
-        ResourceClient = new ArmClient(credential, subscriptionId);
+        TenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         Logger = logger;
+        var clientOptions = new ArmClientOptions { Environment = tenantService.CloudConfiguration.ArmEnvironment };
+
+        ResourceClient = new ArmClient(
+            credential,
+            subscriptionId,
+            clientOptions);
     }
+
+    protected Uri GetManagementEndpoint()
+    {
+        return TenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+    }
+
 
     public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 
@@ -81,7 +94,7 @@ public static class UsageCheckerFactory
         { "Microsoft.ContainerInstance", ResourceProvider.ContainerInstance }
     };
 
-    public static IUsageChecker CreateUsageChecker(TokenCredential credential, string provider, string subscriptionId, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
+    public static IUsageChecker CreateUsageChecker(TokenCredential credential, string provider, string subscriptionId, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, ITenantService tenantService)
     {
         if (!ProviderMapping.TryGetValue(provider, out var resourceProvider))
         {
@@ -90,16 +103,16 @@ public static class UsageCheckerFactory
 
         return resourceProvider switch
         {
-            ResourceProvider.Compute => new ComputeUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ComputeUsageChecker>()),
-            ResourceProvider.CognitiveServices => new CognitiveServicesUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<CognitiveServicesUsageChecker>()),
-            ResourceProvider.Storage => new StorageUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<StorageUsageChecker>()),
-            ResourceProvider.ContainerApp => new ContainerAppUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerAppUsageChecker>()),
-            ResourceProvider.Network => new NetworkUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<NetworkUsageChecker>()),
-            ResourceProvider.MachineLearning => new MachineLearningUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<MachineLearningUsageChecker>()),
-            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), httpClientFactory),
-            ResourceProvider.HDInsight => new HDInsightUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>()),
-            ResourceProvider.Search => new SearchUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>()),
-            ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>()),
+            ResourceProvider.Compute => new ComputeUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ComputeUsageChecker>(), tenantService),
+            ResourceProvider.CognitiveServices => new CognitiveServicesUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<CognitiveServicesUsageChecker>(), tenantService),
+            ResourceProvider.Storage => new StorageUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<StorageUsageChecker>(), tenantService),
+            ResourceProvider.ContainerApp => new ContainerAppUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerAppUsageChecker>(), tenantService),
+            ResourceProvider.Network => new NetworkUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<NetworkUsageChecker>(), tenantService),
+            ResourceProvider.MachineLearning => new MachineLearningUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<MachineLearningUsageChecker>(), tenantService),
+            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), httpClientFactory, tenantService),
+            ResourceProvider.HDInsight => new HDInsightUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>(), tenantService),
+            ResourceProvider.Search => new SearchUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>(), tenantService),
+            ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>(), tenantService),
             _ => throw new ArgumentException($"No implementation for provider: {provider}")
         };
     }
@@ -113,6 +126,7 @@ public static class AzureQuotaService
         List<string> resourceTypes,
         string subscriptionId,
         string location,
+        ITenantService tenantService,
         ILoggerFactory loggerFactory,
         IHttpClientFactory httpClientFactory,
         CancellationToken cancellationToken)
@@ -130,7 +144,7 @@ public static class AzureQuotaService
             var (provider, resourceTypesForProvider) = (kvp.Key, kvp.Value);
             try
             {
-                var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, httpClientFactory);
+                var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, httpClientFactory, tenantService);
                 var quotaInfo = await usageChecker.GetUsageForLocationAsync(location, cancellationToken);
                 logger.LogDebug("Retrieved quota info for provider {Provider}: {ItemCount} items", provider, quotaInfo.Count);
 
