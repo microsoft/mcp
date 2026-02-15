@@ -165,13 +165,15 @@ function CheckVariable($name) {
 }
 
 $windowsPool = CheckVariable 'WINDOWSPOOL'
+$windowsArm64Pool = CheckVariable 'WINDOWSARM64POOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
-$linuxArmPool = CheckVariable 'LINUXARMPOOL'
+$linuxArm64Pool = CheckVariable 'LINUXARM64POOL'
 $macPool = CheckVariable 'MACPOOL'
 
 $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
+$windowsArm64VmImage = CheckVariable 'WINDOWSARM64VMIMAGE'
 $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
-$linuxArmVmImage = CheckVariable 'LINUXARMVMIMAGE'
+$linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
@@ -539,7 +541,7 @@ function Get-BuildMatrices {
     $matrices = [ordered]@{}
 
     foreach ($os in $operatingSystems.name) {
-        $buildMatrix = [ordered]@{}
+        $buildMatricesByArch = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
 
         $supportedPlatforms = $servers.platforms
@@ -558,39 +560,59 @@ function Get-BuildMatrices {
             }
 
             $pool = switch($os) {
-                'windows' { $windowsPool }
-                'linux' { $linuxPool }
+                'windows' { if ($arch -like '*arm64*') { $windowsArm64Pool } else { $windowsPool } }
+                'linux' { if ($arch -like '*arm64*') { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
-                'windows' { $windowsVmImage }
-                'linux' { $linuxVmImage }
+                'windows' { if ($arch -like '*arm64*') { $windowsArm64VmImage } else { $windowsVmImage } }
+                'linux' { if ($arch -like '*arm64*') { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
-            $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
-
+            # we do not currently have a method to get an arm64 mac agent at this time, so we will have to skip $runUnitTests for that platform
+            $runUnitTests = !$platform.native `
+                -and !$platform.specialPurpose `
+                -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
+                -and !($os -eq 'macos' -and $arch -like '*arm64*')
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+            $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
-            $buildMatrix[$legName] = [ordered]@{
+            $hostArchitecture = if ($arch -like '*arm64*') { 'Arm64' } else { '' }
+
+            $architectureKey = if ($arch -like '*arm64*') { 'arm64' } else { 'x64' }
+            if (-not $buildMatricesByArch.Contains($architectureKey)) {
+                $buildMatricesByArch[$architectureKey] = [ordered]@{}
+            }
+
+            $buildMatricesByArch[$architectureKey][$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
+                HostArchitecture = $hostArchitecture
                 RunUnitTests = $runUnitTests
                 RunRecordedTests = $runRecordedTests
+                PublishCoverage = $publishCoverage
             }
 
             if($runUnitTests) {
                 $smokeTestMatrix[$legName] = [ordered]@{
                     Pool = $pool
                     OSVmImage = $vmImage
+                    HostArchitecture = $hostArchitecture
                     Architecture = $arch
                 }
             }
         }
 
-        $matrices["${os}BuildMatrix"] = $buildMatrix
+        foreach ($requiredArch in @('x64', 'arm64')) {
+            if (-not $buildMatricesByArch.Contains($requiredArch)) {
+                $buildMatricesByArch[$requiredArch] = [ordered]@{}
+            }
+        }
+
+        $matrices["${os}BuildMatrices"] = $buildMatricesByArch
         $matrices["${os}SmokeTestMatrix"] = $smokeTestMatrix
     }
 
@@ -617,8 +639,8 @@ function Get-ServerMatrix {
         @{
             Architecture = 'arm64'
             PlatformName = 'linux-musl-arm64-docker'
-            Pool = $linuxArmPool
-            VMImage = $linuxArmVmImage
+            Pool = $linuxArm64Pool
+            VMImage = $linuxArm64VmImage
         }
     )
 
@@ -667,10 +689,26 @@ try {
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
             if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
-                $matrices[$key] = @{}
+                if ($key -match 'BuildMatrices$') {
+                    $emptyByArch = [ordered]@{}
+                    foreach($archKey in @('x64', 'arm64')) {
+                        $emptyByArch[$archKey] = @{}
+                    }
+                    $matrices[$key] = $emptyByArch
+                } else {
+                    $matrices[$key] = @{}
+                }
             }
 
-            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
+            $value = $matrices[$key]
+            if ($key -match 'BuildMatrices$' -and $value -is [System.Collections.IDictionary]) {
+                foreach($subKey in $value.Keys) {
+                    $subJson = $value[$subKey] | ConvertTo-Json -Compress
+                    Write-Host "##vso[task.setvariable variable=${key}.${subKey};isOutput=true]$subJson"
+                }
+            }
+
+            $matrixJson = $value | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
     }

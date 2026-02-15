@@ -91,16 +91,20 @@ To simplify the work of collection server and platform metadata in build scripts
     }
   ],
   "matrices": {
-    "linuxBuildMatrix": {
-      "linux_x64": {
-        "Pool": "Missing-LINUXPOOL",
-        "OSVmImage": "Missing-LINUXVMIMAGE",
-        "Architecture": "x64",
-        "Native": false,
-        "RunUnitTests": true
+    "linuxBuildMatrices": {
+      "x64": {
+        "linux_x64": {
+          "Pool": "Missing-LINUXPOOL",
+          "OSVmImage": "Missing-LINUXVMIMAGE",
+          "Architecture": "x64",
+          "Native": false,
+          "RunUnitTests": true
+        }
       },
-      "linux_arm64": {
-        ...
+      "arm64": {
+        "linux_arm64": {
+          ...
+        }
       }
     },
     "linuxSmokeTestMatrix": {
@@ -110,9 +114,13 @@ To simplify the work of collection server and platform metadata in build scripts
         "Architecture": "x64"
       }
     },
-    "macosBuildMatrix": {
-      "macos_x64": {},
-      "macos_arm64": {},
+    "macosBuildMatrices": {
+      "x64": {
+        "macos_x64": {}
+      },
+      "arm64": {
+        "macos_arm64": {}
+      }
     },
     ...
     "liveTestMatrix": {
