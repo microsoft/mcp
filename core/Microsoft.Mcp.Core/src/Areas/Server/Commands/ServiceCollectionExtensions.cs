@@ -147,7 +147,7 @@ public static class ServiceCollectionExtensions
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp,
-                    sp.GetRequiredService<CommandFactory>(),
+                    sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(utilityToolLoaderOptions),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
                 ));
