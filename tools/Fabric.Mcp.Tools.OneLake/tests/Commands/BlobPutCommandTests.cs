@@ -28,7 +28,7 @@ public class BlobPutCommandTests
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new BlobPutCommand(NullLogger<BlobPutCommand>.Instance, oneLakeService);
 
-        Assert.Equal("file", command.Name);
+        Assert.Equal("upload_onelake_file", command.Name);
         Assert.Contains("Upload content to OneLake", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
@@ -43,7 +43,7 @@ public class BlobPutCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("file", systemCommand.Name);
+        Assert.Equal("upload_onelake_file", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 
@@ -213,3 +213,4 @@ public class BlobPutCommandTests
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 }
+

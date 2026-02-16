@@ -27,9 +27,9 @@ public class BestPracticesCommandsTests
         var command = new GetBestPracticesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_fabric_best_practices", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get API Examples", command.Title);
+        Assert.Equal("Get Fabric Best Practices", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -46,7 +46,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_fabric_best_practices", systemCommand.Name);
         // Options are registered dynamically, not statically in the Options collection
     }
 
@@ -165,9 +165,9 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_fabric_api_examples", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get API Examples", command.Title);
+        Assert.Equal("Get Fabric API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -184,7 +184,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_fabric_api_examples", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -282,9 +282,9 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_fabric_item_schema", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Workload Item Definition", command.Title);
+        Assert.Equal("Get Fabric Item Schema", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -301,7 +301,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_fabric_item_schema", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -417,3 +417,7 @@ public class BestPracticesCommandsTests
 
     #endregion
 }
+
+
+
+

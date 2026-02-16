@@ -28,7 +28,7 @@ public class BlobGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
 
-        Assert.Equal("file", command.Name);
+        Assert.Equal("download_onelake_file", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -291,3 +291,4 @@ public class BlobGetCommandTests
         return new CommandContext(serviceProvider);
     }
 }
+

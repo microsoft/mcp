@@ -18,8 +18,8 @@ public class PathListCommandTests
         var command = new PathListCommand(logger);
 
         // Assert
-        Assert.Equal("list", command.Name);
-        Assert.Equal("List OneLake Path Structure", command.Title);
+        Assert.Equal("list_onelake_files", command.Name);
+        Assert.Equal("List OneLake Files", command.Title);
         Assert.Contains("List files and directories", command.Description);
         Assert.True(command.Metadata.ReadOnly);
         Assert.False(command.Metadata.Destructive);
@@ -38,7 +38,7 @@ public class PathListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
+        Assert.Equal("list_onelake_files", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
@@ -56,3 +56,4 @@ public class PathListCommandTests
         Assert.NotEmpty(systemCommand.Options);
     }
 }
+
