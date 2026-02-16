@@ -26,7 +26,7 @@ public class PublicApisCommandsTests
         var command = new ListWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("list_fabric_api_workloads", command.Name);
+        Assert.Equal("list_workloads", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("List Fabric API Workloads", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -45,7 +45,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_fabric_api_workloads", systemCommand.Name);
+        Assert.Equal("list_workloads", systemCommand.Name);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("get_fabric_platform_api_spec", command.Name);
+        Assert.Equal("get_platform_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Fabric Platform API Spec", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -129,7 +129,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_fabric_platform_api_spec", systemCommand.Name);
+        Assert.Equal("get_platform_api_spec", systemCommand.Name);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("get_fabric_api_spec", command.Name);
+        Assert.Equal("get_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Fabric API Spec", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -213,7 +213,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_fabric_api_spec", systemCommand.Name);
+        Assert.Equal("get_api_spec", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

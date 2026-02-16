@@ -27,7 +27,7 @@ public sealed class BlobPutCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "upload_onelake_file";
+    public override string Name => "upload_file";
     public override string Title => "Upload OneLake File";
     public override string Description => "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.";
 

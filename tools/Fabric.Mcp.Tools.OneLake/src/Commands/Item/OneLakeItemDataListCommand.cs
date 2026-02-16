@@ -27,7 +27,7 @@ public sealed class OneLakeItemDataListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "8925d0c4-becf-4b5a-8af1-3e998c1058ec";
-    public override string Name => "list_onelake_items_dfs";
+    public override string Name => "list_items_dfs";
     public override string Title => "List OneLake Items (DFS)";
     public override string Description => "Lists items in a Fabric workspace using the DFS-style data API. Use this when detailed filesystem-level access is needed for workspace items. Provides lower-level data plane view than standard item listing.";
 

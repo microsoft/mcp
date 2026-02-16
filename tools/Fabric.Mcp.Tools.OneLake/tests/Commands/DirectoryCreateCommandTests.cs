@@ -21,7 +21,7 @@ public class DirectoryCreateCommandTests
         var command = new DirectoryCreateCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("create_onelake_directory", command.Name);
+        Assert.Equal("create_directory", command.Name);
         Assert.Equal("Create OneLake Directory", command.Title);
         Assert.Contains("Create a directory in OneLake storage", command.Description);
         Assert.False(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class DirectoryCreateCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("create_onelake_directory", systemCommand.Name);
+        Assert.Equal("create_directory", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

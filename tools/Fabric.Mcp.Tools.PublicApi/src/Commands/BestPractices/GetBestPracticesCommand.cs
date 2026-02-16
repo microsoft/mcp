@@ -21,7 +21,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     
     public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
 
-    public override string Name => "get_fabric_best_practices";
+    public override string Name => "get_best_practices";
 
     public override string Description =>
         """

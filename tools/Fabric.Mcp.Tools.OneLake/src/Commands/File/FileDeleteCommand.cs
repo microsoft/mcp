@@ -25,7 +25,7 @@ public sealed class FileDeleteCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "0aa3f887-0085-4141-8e34-f0cf1ed44f71";
-    public override string Name => "delete_onelake_file";
+    public override string Name => "delete_file";
     public override string Title => "Delete OneLake File";
     public override string Description => "Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. This action permanently removes the file.";
 

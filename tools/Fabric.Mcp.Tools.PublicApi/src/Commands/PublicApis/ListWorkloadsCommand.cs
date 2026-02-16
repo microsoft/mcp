@@ -18,7 +18,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
     
     public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
 
-    public override string Name => "list_fabric_api_workloads";
+    public override string Name => "list_workloads";
 
     public override string Description =>
         """

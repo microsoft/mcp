@@ -21,7 +21,7 @@ public class OneLakeItemDataListCommandTests
         var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("list_onelake_items_dfs", command.Name);
+        Assert.Equal("list_items_dfs", command.Name);
         Assert.Equal("List OneLake Items (Data API)", command.Title);
         Assert.Contains("OneLake DFS", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class OneLakeItemDataListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_onelake_items_dfs", systemCommand.Name);
+        Assert.Equal("list_items_dfs", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

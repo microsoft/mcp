@@ -51,8 +51,8 @@ public class FabricPublicApiSetupTests
         var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "bestpractices");
         Assert.NotNull(bestPracticesGroup);
 
-        Assert.Contains("list_fabric_api_workloads", publicApisGroup.Commands.Keys);
-        Assert.Contains("get_fabric_api_spec", publicApisGroup.Commands.Keys);
-        Assert.Contains("get_fabric_best_practices", bestPracticesGroup.Commands.Keys);
+        Assert.Contains("list_workloads", publicApisGroup.Commands.Keys);
+        Assert.Contains("get_api_spec", publicApisGroup.Commands.Keys);
+        Assert.Contains("get_best_practices", bestPracticesGroup.Commands.Keys);
     }
 }
