@@ -282,7 +282,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("get_schema", command.Name);
+        Assert.Equal("schema", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Fabric Item Schema", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -301,7 +301,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_schema", systemCommand.Name);
+        Assert.Equal("schema", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
