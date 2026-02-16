@@ -110,7 +110,7 @@ public abstract class GlobalCommand<
     {
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
-        RequestFailedException rfEx => rfEx.Message,
+        RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
         _ => ex.Message  // Just return the actual exception message
@@ -124,4 +124,19 @@ public abstract class GlobalCommand<
         HttpRequestException => HttpStatusCode.ServiceUnavailable,
         _ => HttpStatusCode.InternalServerError
     };
+
+    private static string HandleRequestFailedException(RequestFailedException ex)
+    {
+        if (ex.Status == 401 && ex.Message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Authentication failed due to a tenant mismatch. " +
+                "Your credential is authenticated to a different Azure tenant than the one required by this subscription. " +
+                "To mitigate this issue, please do one of the following: " +
+                "1. Explicitly specify the target tenant in your prompt (for example: List my resource groups for tenant ID <target_tenant_id>), or " +
+                "2. Explicitly configure Azure MCP to use your intended credential by setting the environment variable AZURE_TOKEN_CREDENTIALS to a supported Azure.Identity credential type. " +
+                "Note: Refer to Troubleshooting guide for the full list of supported credential types by Azure MCP server, and additional support.";
+        }
+
+        return ex.Message;
+    }
 }
