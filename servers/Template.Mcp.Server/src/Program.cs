@@ -34,7 +34,6 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -42,7 +41,7 @@ internal class Program
             var serviceProvider = services.BuildServiceProvider();
             await InitializeServicesAsync(serviceProvider);
 
-            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -140,7 +139,7 @@ internal class Program
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<CommandFactory>();
+        services.AddSingleton<ICommandFactory, CommandFactory>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.

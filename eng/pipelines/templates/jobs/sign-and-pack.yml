@@ -5,6 +5,8 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackagePyPI
+  type: boolean
 
 jobs:
 - job: Sign
@@ -110,9 +112,10 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
-  parameters:
-    DependsOn: Sign
+- ${{ if parameters.PackagePyPI }}:
+  - template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
+    parameters:
+      DependsOn: Sign
 
 - template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
   parameters:
@@ -139,6 +142,6 @@ jobs:
         - PackNpm
         - PackNuget
         - ${{ if parameters.PackageDocker }}:
-          - BuildDockerImages
+          - BuildDockerImage
       TestTimeoutInMinutes: 10
       PackageDocker: ${{ parameters.PackageDocker }}

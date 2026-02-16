@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Commands.Table;
@@ -21,16 +22,10 @@ public class MySqlSetup : IAreaSetup
     {
         services.AddSingleton<IMySqlService, MySqlService>();
 
-        services.AddSingleton<DatabaseListCommand>();
+        services.AddSingleton<MySqlListCommand>();
         services.AddSingleton<DatabaseQueryCommand>();
-
-        services.AddSingleton<TableListCommand>();
-
         services.AddSingleton<TableSchemaGetCommand>();
-
-        services.AddSingleton<ServerListCommand>();
         services.AddSingleton<ServerConfigGetCommand>();
-
         services.AddSingleton<ServerParamGetCommand>();
         services.AddSingleton<ServerParamSetCommand>();
     }
@@ -39,18 +34,18 @@ public class MySqlSetup : IAreaSetup
     {
         var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
+        // Consolidated hierarchical list command
+        var mysqlList = serviceProvider.GetRequiredService<MySqlListCommand>();
+        mysql.AddCommand(mysqlList.Name, mysqlList);
+
         var database = new CommandGroup("database", "MySQL database operations");
         mysql.AddSubGroup(database);
 
-        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
-        database.AddCommand(databaseList.Name, databaseList);
         var databaseQuery = serviceProvider.GetRequiredService<DatabaseQueryCommand>();
         database.AddCommand(databaseQuery.Name, databaseQuery);
 
         var table = new CommandGroup("table", "MySQL table operations");
         mysql.AddSubGroup(table);
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        table.AddCommand(tableList.Name, tableList);
 
         var schema = new CommandGroup("schema", "MySQL table schema operations");
         table.AddSubGroup(schema);
@@ -59,8 +54,6 @@ public class MySqlSetup : IAreaSetup
 
         var server = new CommandGroup("server", "MySQL server operations");
         mysql.AddSubGroup(server);
-        var serverList = serviceProvider.GetRequiredService<ServerListCommand>();
-        server.AddCommand(serverList.Name, serverList);
 
         var config = new CommandGroup("config", "MySQL server configuration operations");
         server.AddSubGroup(config);

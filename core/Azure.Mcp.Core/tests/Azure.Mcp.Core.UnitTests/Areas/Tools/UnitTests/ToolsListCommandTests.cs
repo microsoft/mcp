@@ -223,7 +223,7 @@ public class ToolsListCommandTests
     {
         // Arrange
         var faultyServiceProvider = Substitute.For<IServiceProvider>();
-        faultyServiceProvider.GetService(typeof(CommandFactory))
+        faultyServiceProvider.GetService(typeof(ICommandFactory))
             .Returns(x => throw new InvalidOperationException("Corrupted command factory"));
 
         var faultyContext = new CommandContext(faultyServiceProvider);
@@ -282,7 +282,7 @@ public class ToolsListCommandTests
 
         // Verify specific known commands exist
         Assert.Contains(result, cmd => cmd.Command == "subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "keyvault key list");
+        Assert.Contains(result, cmd => cmd.Command == "keyvault key get");
         Assert.Contains(result, cmd => cmd.Command == "storage account get");
         Assert.Contains(result, cmd => cmd.Command == "appconfig account list");
 
@@ -410,7 +410,7 @@ public class ToolsListCommandTests
         finalCollection.AddLogging();
 
         var emptyCommandFactory = new CommandFactory(tempServiceProvider, emptyAreaSetups, telemetryService, configurationOptions, logger);
-        finalCollection.AddSingleton(emptyCommandFactory);
+        finalCollection.AddSingleton<ICommandFactory>(emptyCommandFactory);
 
         var emptyServiceProvider = finalCollection.BuildServiceProvider();
         var emptyContext = new CommandContext(emptyServiceProvider);

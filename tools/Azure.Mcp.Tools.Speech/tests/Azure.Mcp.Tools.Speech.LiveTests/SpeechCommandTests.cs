@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
-public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     #region SpeechToText Tests
 
