@@ -101,4 +101,3 @@ public class DirectoryDeleteCommandTests
         Assert.False(metadata.Secret);
     }
 }
-

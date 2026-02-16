@@ -101,4 +101,3 @@ public class OneLakeItemDataListCommandTests
         Assert.False(metadata.Secret);
     }
 }
-

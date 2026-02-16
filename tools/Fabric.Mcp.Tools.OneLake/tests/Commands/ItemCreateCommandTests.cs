@@ -101,4 +101,3 @@ public class ItemCreateCommandTests
         Assert.False(metadata.Secret);
     }
 }
-

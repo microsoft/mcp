@@ -376,5 +376,3 @@ public class PublicApisCommandsTests
         return command.Parse(args);
     }
 }
-
-

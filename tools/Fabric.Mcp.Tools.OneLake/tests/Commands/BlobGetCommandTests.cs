@@ -291,4 +291,3 @@ public class BlobGetCommandTests
         return new CommandContext(serviceProvider);
     }
 }
-

@@ -417,7 +417,3 @@ public class BestPracticesCommandsTests
 
     #endregion
 }
-
-
-
-

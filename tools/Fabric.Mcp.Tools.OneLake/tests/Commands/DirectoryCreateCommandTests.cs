@@ -101,4 +101,3 @@ public class DirectoryCreateCommandTests
         Assert.False(metadata.Secret);
     }
 }
-

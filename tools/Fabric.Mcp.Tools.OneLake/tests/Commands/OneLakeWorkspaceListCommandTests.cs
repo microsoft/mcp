@@ -61,4 +61,3 @@ public class OneLakeWorkspaceListCommandTests
         Assert.NotEmpty(systemCommand.Options);
     }
 }
-

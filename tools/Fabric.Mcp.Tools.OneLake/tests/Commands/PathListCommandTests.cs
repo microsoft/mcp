@@ -56,4 +56,3 @@ public class PathListCommandTests
         Assert.NotEmpty(systemCommand.Options);
     }
 }
-

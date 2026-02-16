@@ -56,4 +56,3 @@ public class FabricPublicApiSetupTests
         Assert.Contains("get_fabric_best_practices", bestPracticesGroup.Commands.Keys);
     }
 }
-

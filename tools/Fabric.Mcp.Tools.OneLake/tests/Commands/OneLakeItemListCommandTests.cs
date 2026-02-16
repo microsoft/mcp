@@ -81,4 +81,3 @@ public class OneLakeItemListCommandTests
         Assert.Throws<ArgumentNullException>(() => new OneLakeItemListCommand(logger, null!));
     }
 }
-
