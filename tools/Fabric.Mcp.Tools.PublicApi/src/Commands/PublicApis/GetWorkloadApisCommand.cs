@@ -25,7 +25,9 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
     public override string Description =>
         """
         Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

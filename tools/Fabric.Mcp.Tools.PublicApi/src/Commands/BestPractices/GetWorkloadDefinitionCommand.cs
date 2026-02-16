@@ -26,7 +26,9 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
     public override string Description =>
         """
         Retrieves JSON schema definitions for items in a Fabric workload API. Use this when the user needs to understand item structure or validate item definitions. Returns schema definitions for the specified workload.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

@@ -26,7 +26,9 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     public override string Description =>
         """
         Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

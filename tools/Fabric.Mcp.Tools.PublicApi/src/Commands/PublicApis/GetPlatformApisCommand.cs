@@ -22,7 +22,9 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
     public override string Description =>
         """
         Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-workload platform APIs like workspace management. Returns complete platform API specification.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

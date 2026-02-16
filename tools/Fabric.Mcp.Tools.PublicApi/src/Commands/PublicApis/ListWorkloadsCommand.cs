@@ -23,7 +23,9 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
     public override string Description =>
         """
         Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

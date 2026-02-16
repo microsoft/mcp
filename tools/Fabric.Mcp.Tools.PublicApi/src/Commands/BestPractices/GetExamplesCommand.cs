@@ -25,7 +25,9 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     public override string Description =>
         """
         Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {

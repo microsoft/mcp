@@ -31,7 +31,9 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
     public override string Description =>
         """
         Lists files and directories in OneLake storage using hierarchical DFS-style view. Use this when the user needs to explore OneLake content in a filesystem format. Supports path filtering and recursive traversal.
-        """;    public override string Title => CommandTitle;
+        """;
+
+    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
