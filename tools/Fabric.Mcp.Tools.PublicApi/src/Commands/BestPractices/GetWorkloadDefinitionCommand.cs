@@ -21,7 +21,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
     
     public override string Id => "445c49f3-2a5d-478a-82ca-87fde1a7943e";
 
-    public override string Name => "get_item_schema";
+    public override string Name => "get_schema";
 
     public override string Description =>
         """

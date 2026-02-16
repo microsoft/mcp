@@ -20,7 +20,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     
     public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
 
-    public override string Name => "get_api_examples";
+    public override string Name => "get_examples";
 
     public override string Description =>
         """
