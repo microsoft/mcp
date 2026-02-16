@@ -18,7 +18,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
     private const string CommandTitle = "Get Fabric Item Schema";
 
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    
+
     public override string Id => "445c49f3-2a5d-478a-82ca-87fde1a7943e";
 
     public override string Name => "get_item_schema";

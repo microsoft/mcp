@@ -15,7 +15,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
     private const string CommandTitle = "List Fabric API Workloads";
 
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    
+
     public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
 
     public override string Name => "list_workloads";

@@ -14,7 +14,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
 {
     private const string CommandTitle = "Get Fabric Platform API Spec";
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    
+
     public override string Id => "2338df97-d6d9-4f1d-9e92-e118efe9c643";
 
     public override string Name => "get_platform_api_spec";
