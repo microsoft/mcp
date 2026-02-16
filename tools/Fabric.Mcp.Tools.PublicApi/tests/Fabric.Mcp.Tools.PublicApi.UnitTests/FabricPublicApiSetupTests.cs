@@ -45,7 +45,7 @@ public class FabricPublicApiSetupTests
         rootGroup.AddSubGroup(commands);
 
         // Assert
-        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");
+        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "api");
         Assert.NotNull(publicApisGroup);
 
         var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "bestpractices");
