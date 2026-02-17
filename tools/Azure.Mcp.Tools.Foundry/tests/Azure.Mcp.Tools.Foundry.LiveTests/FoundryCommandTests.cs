@@ -11,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-    : RecordedCommandTestsBase(output, fixture)
+public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture)
 {
     // Sanitize subscription IDs in URIs to allow playback to work
     public override List<UriRegexSanitizer> UriRegexSanitizers =>

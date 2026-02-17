@@ -1,0 +1,4 @@
+pr: 1696
+changes:
+  - section: "Features Added"
+    description: "Add Azure Service Fabric managed clusters tools"

@@ -128,6 +128,7 @@ internal class Program
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
+            new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
