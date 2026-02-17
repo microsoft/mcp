@@ -165,7 +165,7 @@ internal class Program
     /// <item>
     /// <see cref="Main"/>'s command picking: The container used to populate instances of
     /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// baesd on the command line input. This container is a local variable in
+    /// based on the command line input. This container is a local variable in
     /// <see cref="Main"/>, and it is not tied to
     /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
@@ -191,7 +191,7 @@ internal class Program
     /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overriden within
+    /// but such transport-specific registrations must be overridden within
     /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
@@ -219,7 +219,7 @@ internal class Program
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
-        // The http-traport-specific implementations and configurations must be registered
+        // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
