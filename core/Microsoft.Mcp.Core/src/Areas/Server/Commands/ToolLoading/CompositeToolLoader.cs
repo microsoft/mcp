@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -79,6 +81,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// <returns>A result containing the output of the tool invocation, or an error result if the tool is not found or initialization fails.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock

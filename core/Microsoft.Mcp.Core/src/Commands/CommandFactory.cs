@@ -17,16 +17,15 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandFactory
+public class CommandFactory : ICommandFactory
 {
+    internal const char Separator = '_';
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
-
-    public const char Separator = '_';
 
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
@@ -268,7 +267,7 @@ public class CommandFactory
         {
             if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
             {
-                helpOption.Action = new VersionDisplayHelpAction(_configurationOptions, helpAction);
+                helpOption.Action = new CustomHelpAction(_configurationOptions, helpAction, _serviceAreas);
                 break;
             }
         }
@@ -341,7 +340,7 @@ public class CommandFactory
     /// - B2
     /// </summary>
     /// <param name="rootNode">Node to begin traversal.</param>
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
+    private static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
     {
         const string rootPrefix = "";
         var aggregated = new Dictionary<string, IBaseCommand>();
@@ -423,7 +422,7 @@ public class CommandFactory
         ? additional
         : currentPrefix + Separator + additional;
 
-    public static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
+    internal static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
     {
         return commands
             .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)

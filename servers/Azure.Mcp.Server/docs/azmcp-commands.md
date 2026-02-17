@@ -910,15 +910,17 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ### Azure Database for MySQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a MySQL server
+# Hierarchical list command for MySQL resources
+# Without parameters: lists all MySQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server>
+azmcp mysql list --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --user <user> \
+                 [--server <server>] \
+                 [--database <database>]
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -928,18 +930,6 @@ azmcp mysql database query --subscription <subscription> \
                            --server <server> \
                            --database <database> \
                            --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a MySQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table list --subscription <subscription> \
-                       --resource-group <resource-group> \
-                       --user <user> \
-                       --server <server> \
-                       --database <database>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -949,23 +939,13 @@ azmcp mysql table schema get --subscription <subscription> \
                              --server <server> \
                              --database <database> \
                              --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --user <user> \
                               --server <server>
-
-# List all MySQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql server list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --user <user>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -987,15 +967,17 @@ azmcp mysql server param set --subscription <subscription> \
 
 ### Azure Database for PostgreSQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a PostgreSQL server
+# Hierarchical list command for PostgreSQL resources
+# Without parameters: lists all PostgreSQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres database list --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
-                             --server <server>
+azmcp postgres list --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --user <user> \
+                    [--server <server>] \
+                    [--database <database>]
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1005,18 +987,6 @@ azmcp postgres database query --subscription <subscription> \
                               --server <server> \
                               --database <database> \
                               --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a PostgreSQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres table list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server> \
-                          --database <database>
 
 # Get the schema of a specific table in a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1026,23 +996,13 @@ azmcp postgres table schema get --subscription <subscription> \
                                 --server <server> \
                                 --database <database> \
                                 --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --user <user> \
                                  --server <server>
-
-# List all PostgreSQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres server list --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1449,40 +1409,52 @@ azmcp loadtesting testresource list --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --test-resource-name <test-resource-name>
 
-# Create load test run
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun create --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --test-resource-name <test-resource-name> \
-                                 --test-id <test-id> \
-                                 --testrun-id <testrun-id> \
-                                 --display-name <display-name> \
-                                 --description <description> \
-                                 --old-testrun-id <old-testrun-id>
-
-# Get load test run
+# Get load test run (single run or list all runs for a test)
+# Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
                               --testrun-id <testrun-id>
 
-# List load test run
+# List all test runs for a specific test:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun list --subscription <subscription> \
-                               --resource-group <resource-group> \
-                               --test-resource-name <test-resource-name> \
-                               --test-id <test-id>
+azmcp loadtesting testrun get --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --test-resource-name <test-resource-name> \
+                              --test-id <test-id>
 
-# Update load test run
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun update --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --test-resource-name <test-resource-name> \
-                                 --test-id <test-id> \
-                                 --testrun-id <testrun-id> \
-                                 --display-name <display-name> \
-                                 --description <description>
+# Create or update load test run
+# Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
+#       Update operations ARE idempotent (repeated calls with same values produce same result).
+# Create a new test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <testrun-id> \
+                                         --display-name <display-name> \
+                                         --description <description>
+
+# Rerun an existing test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <new-testrun-id> \
+                                         --old-testrun-id <existing-testrun-id>
+
+# Update test run metadata (idempotent):
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <testrun-id> \
+                                         --display-name <updated-display-name> \
+                                         --description <updated-description>
 ```
 
 ### Azure Managed Grafana Operations
@@ -1713,85 +1685,63 @@ azmcp monitor metrics query --subscription <subscription> \
 #### Web Tests (Availability Tests)
 
 ```bash
-# Get details for a specific web test or list all web tests
-# When --webtest-resource is provided: returns detailed information about a single web test
-# When --webtest-resource is omitted: returns a list of all web tests in the subscription (optionally filtered by resource group)
+# Create a new web test in Azure Monitor
+azmcp monitor webtests create --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              --appinsights-component <component-name> \
+                              --location <location> \
+                              --webtest-locations <locations> \
+                              --request-url <url> \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+
+# Get details for a specific web test
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription <subscription> \
-                           [--resource-group <resource-group>] \
-                           [--webtest-resource <webtest-resource-name>]
+                          --resource-group <resource-group> \
+                          --webtest-resource <webtest-resource-name>
 
-# Examples:
-# List all web tests in subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests get --subscription "my-subscription"
+# List all web tests in a subscription or optionally, within a resource group
+azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
 
-# List all web tests in a resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests get --subscription "my-subscription" \
-                           --resource-group "my-rg"
-
-# Get specific web test details
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests get --subscription "my-subscription" \
-                           --resource-group "my-rg" \
-                           --webtest-resource "my-webtest"
-
-# Create a new or update an existing web test in Azure Monitor
-# Automatically detects whether to create or update based on resource existence
-# For create operations: location, appinsights-component, request-url, and webtest-locations are required
-# For update operations: all parameters are optional, only specified values will be updated
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests createorupdate --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --webtest-resource <webtest-resource-name> \
-                                      [--appinsights-component <component-resource-id>] \
-                                      [--location <location>] \
-                                      [--webtest-locations <locations>] \
-                                      [--request-url <url>] \
-                                      [--webtest <display-name>] \
-                                      [--description <description>] \
-                                      [--enabled <true|false>] \
-                                      [--expected-status-code <code>] \
-                                      [--follow-redirects <true|false>] \
-                                      [--frequency <seconds>] \
-                                      [--headers <key=value,key2=value2>] \
-                                      [--http-verb <get|post|..>] \
-                                      [--ignore-status-code <true|false>] \
-                                      [--parse-requests <true|false>] \
-                                      [--request-body <body>] \
-                                      [--retry-enabled <true|false>] \
-                                      [--ssl-check <true|false>] \
-                                      [--ssl-lifetime-check <days>] \
-                                      [--timeout <seconds>]
-
-# Examples:
-# Create a new web test
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests createorupdate --subscription "my-subscription" \
-                                      --resource-group "my-rg" \
-                                      --webtest-resource "my-webtest" \
-                                      --appinsights-component "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/components/myappinsights" \
-                                      --location "eastus" \
-                                      --webtest-locations "us-il-ch1-azr,us-ca-sjc-azr" \
-                                      --request-url "https://example.com" \
-                                      --enabled true
-
-# Update an existing web test (only change frequency and timeout)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor webtests createorupdate --subscription "my-subscription" \
-                                      --resource-group "my-rg" \
-                                      --webtest-resource "my-webtest" \
-                                      --frequency 600 \
-                                      --timeout 90
-```
-
-### Azure Managed Lustre
-
-```bash
-# List Azure Managed Lustre Filesystems available in a subscription or resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs list --subscription <subscription> \
+# Update an existing web test in Azure Monitor
+azmcp monitor webtests update --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              [--appinsights-component <component-name>] \
+                              [--location <location>] \
+                              [--webtest-locations <locations>] \
+                              [--request-url <url>] \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+ubscription> \
                             --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
@@ -2223,6 +2173,32 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
+```
+
+### Azure Service Fabric Operations
+
+#### Managed Cluster Node
+
+```bash
+# Get nodes for a Service Fabric managed cluster (all nodes, or a single node by name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster node get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --cluster <cluster> \
+                                            [--node <node>]
+```
+
+#### Managed Cluster Node Type
+
+```bash
+# Restart nodes of a specific node type in a Service Fabric managed cluster
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster nodetype restart --subscription <subscription> \
+                                                    --resource-group <resource-group> \
+                                                    --cluster <cluster> \
+                                                    --node-type <node-type> \
+                                                    --nodes <node1> [--nodes <node2> ...] \
+                                                    [--update-type <Default|ByUpgradeDomain>]
 ```
 
 ### Azure SignalR Service Operations
