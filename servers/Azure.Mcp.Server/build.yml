@@ -9,6 +9,9 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: true
+- name: PackagePyPi
+  type: boolean
+  default: true
 - name: IncludeNative
   type: boolean
   default: true

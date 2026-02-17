@@ -29,9 +29,7 @@ public class LoadTestingSetup : IAreaSetup
         services.AddSingleton<TestCreateCommand>();
 
         services.AddSingleton<TestRunGetCommand>();
-        services.AddSingleton<TestRunListCommand>();
-        services.AddSingleton<TestRunCreateCommand>();
-        services.AddSingleton<TestRunUpdateCommand>();
+        services.AddSingleton<TestRunCreateOrUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -74,11 +72,7 @@ public class LoadTestingSetup : IAreaSetup
         // Register commands for Load Test Run
         var testRunGet = serviceProvider.GetRequiredService<TestRunGetCommand>();
         testRun.AddCommand(testRunGet.Name, testRunGet);
-        var testRunList = serviceProvider.GetRequiredService<TestRunListCommand>();
-        testRun.AddCommand(testRunList.Name, testRunList);
-        var testRunCreate = serviceProvider.GetRequiredService<TestRunCreateCommand>();
-        testRun.AddCommand(testRunCreate.Name, testRunCreate);
-        var testRunUpdate = serviceProvider.GetRequiredService<TestRunUpdateCommand>();
+        var testRunUpdate = serviceProvider.GetRequiredService<TestRunCreateOrUpdateCommand>();
         testRun.AddCommand(testRunUpdate.Name, testRunUpdate);
 
         return service;

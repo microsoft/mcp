@@ -1,0 +1,77 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+
+namespace Azure.Mcp.Core.Areas.Server.Models;
+
+/// <summary>
+/// Contains configuration information for an MCP server defined in the registry.
+/// Supports command-based (stdio) transport mechanism.
+/// </summary>
+public sealed class RegistryServerInfo
+{
+    /// <summary>
+    /// Gets or sets the name of the server, typically derived from the key in the registry.
+    /// This property is not serialized to/from JSON.
+    /// </summary>
+    [JsonIgnore]
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// Gets the URL of the remote server.
+    /// This should be <see langword="null"/> if <see cref="Type"/> is "stdio".
+    /// </summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
+
+    /// <summary>
+    /// Gets OAuth scopes to request in the access token.
+    /// Used for remote MCP servers protected by OAuth.
+    /// </summary>
+    [JsonPropertyName("oauthScopes")]
+    public string[]? OAuthScopes { get; init; }
+
+    /// <summary>
+    /// Gets a description of the server's purpose or capabilities.
+    /// </summary>
+    [JsonPropertyName("description")]
+    public string? Description { get; init; }
+
+    /// <summary>
+    /// Gets the user-friendly title for the server.
+    /// </summary>
+    [JsonPropertyName("title")]
+    public string? Title { get; init; }
+
+    /// <summary>
+    /// Gets the transport type, e.g., "stdio".
+    /// This should be <see langword="null"/> if <see cref="Url"/> is non-<see langword="null"/>.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+
+    /// <summary>
+    /// Gets the command to execute for stdio-based transport.
+    /// </summary>
+    [JsonPropertyName("command")]
+    public string? Command { get; init; }
+
+    /// <summary>
+    /// Gets the command-line arguments to pass to the command for stdio-based transport.
+    /// </summary>
+    [JsonPropertyName("args")]
+    public List<string>? Args { get; init; }
+
+    /// <summary>
+    /// Gets environment variables to set for the stdio process.
+    /// </summary>
+    [JsonPropertyName("env")]
+    public Dictionary<string, string>? Env { get; init; }
+
+    /// <summary>
+    /// Gets installation instructions for the server.
+    /// </summary>
+    [JsonPropertyName("installInstructions")]
+    public string? InstallInstructions { get; init; }
+}

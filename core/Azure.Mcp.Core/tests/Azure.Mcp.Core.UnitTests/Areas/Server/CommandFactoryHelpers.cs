@@ -50,7 +50,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
 internal class CommandFactoryHelpers
 {
-    public static CommandFactory CreateCommandFactory(IServiceProvider? serviceProvider = default)
+    public static ICommandFactory CreateCommandFactory(IServiceProvider? serviceProvider = default)
     {
         IAreaSetup[] areaSetups = [
             // Core areas
