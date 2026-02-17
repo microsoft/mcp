@@ -11,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture)
-    : CommandTestsBase(output, liveServerFixture)
+public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     // Sanitize subscription IDs in URIs to allow playback to work
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
@@ -105,7 +105,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
                 { "model-format", "OpenAI"},
                 { "azure-ai-services", TestVariables.GetValueOrDefault("azureAiServicesAccount", Settings.ResourceBaseName) },
                 { "resource-group", Settings.ResourceGroupName },
-                { "subscription", TestVariables["subscriptionId"] },
+                { "subscription", TestVariables.GetValueOrDefault("subscriptionId", Settings.SubscriptionId) },
             });
 
         var deploymentResource = result.AssertProperty("deploymentData");
@@ -296,7 +296,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify model name in response
         var model = embeddingResult.AssertProperty("model");
         Assert.Equal(JsonValueKind.String, model.ValueKind);
-        // Static deployment name from EMBEDDINGDEPLOYMENTNAME doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["deploymentName"], model.GetString());
 
         // Verify usage information
@@ -322,7 +321,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(JsonValueKind.String, deploymentNameProperty.ValueKind);
         Assert.Equal(JsonValueKind.String, inputTextProperty.ValueKind);
 
-        // Static resources from deployment outputs (OPENAIACCOUNT, EMBEDDINGDEPLOYMENTNAME) don't get sanitized
         Assert.Equal(TestVariables["resourceName"], resourceNameProperty.GetString());
         Assert.Equal(TestVariables["deploymentName"], deploymentNameProperty.GetString());
         Assert.Equal(inputText, inputTextProperty.GetString());
@@ -417,7 +415,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify resource name matches
         var returnedResourceName = modelsListResult.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
-        // Static resource from OPENAIACCOUNT doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["resourceName"], returnedResourceName.GetString());
 
         // Verify models array exists (may be empty if no models deployed)
@@ -496,7 +493,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource name should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resource from OPENAIACCOUNT doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
     }
 
@@ -668,7 +664,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(JsonValueKind.Object, metrics.ValueKind);
         var metric = metrics.AssertProperty(evaluationMetric);
         Assert.Equal(JsonValueKind.Object, metric.ValueKind);
-        
+
         // Check if diagnostics exist (indicates evaluation error/warning)
         if (metric.TryGetProperty("diagnostics", out var diagnostics))
         {
@@ -816,12 +812,10 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resource "azmcp-test" doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
         Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
-        // Static resource from deployment outputs (OPENAIDEPLOYMENTNAME) doesn't get sanitized
         Assert.Equal(TestVariables["deploymentName"], commandDeploymentName.GetString());
     }
 
@@ -919,7 +913,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        // Static resources from deployment outputs (OPENAIACCOUNT, OPENAIDEPLOYMENTNAME) don't get sanitized
         Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
@@ -1173,7 +1166,6 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["staticOpenAIAccount"], resourceName.GetString());
 
         var resourceGroup = resource.AssertProperty("resourceGroup");
-        // Static resource group is a hardcoded literal value that doesn't get sanitized by test proxy
         Assert.Equal(TestVariables["staticResourceGroup"], resourceGroup.GetString());
 
         // Verify endpoint is valid
@@ -1272,6 +1264,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
     }
 
     // Helper methods removed - use CallToolAsync instead to ensure proper test proxy recording
+    //
     // Previously these helpers made direct SDK calls that bypassed the test proxy recording mechanism.
     // All tests now use CallToolAsync("foundry_agents_create") etc. which properly routes through the test proxy.
 }
