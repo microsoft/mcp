@@ -128,7 +128,7 @@ public abstract class GlobalCommand<
     private static string HandleRequestFailedException(RequestFailedException ex)
     {
         string message = ex.Message ?? string.Empty;
-        
+
         if (ex.Status == 401 && message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase))
         {
             return "Authentication failed due to a tenant mismatch. " +
