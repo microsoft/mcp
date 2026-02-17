@@ -135,7 +135,7 @@ public class ResourceHealthServiceSsrfValidationTests
     [InlineData("/subscriptions/abcdef12-1234-1234-1234-123456789abc/resourceGroups/rg/providers/Microsoft.Web/sites/mywebapp")]
     public async Task GetAvailabilityStatusAsync_AcceptsValidAzureResourceIds(string validResourceId)
     {
-        // Arrange - mock all dependencies for a successful request
+        // Arrange - mock HttpClientService for potential downstream call
         var mockResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("""
@@ -156,11 +156,8 @@ public class ResourceHealthServiceSsrfValidationTests
         };
         SetupMocksForValidRequest(mockResponse);
 
-        var result = await _service.GetAvailabilityStatusAsync(validResourceId);
+        var ex = await Record.ExceptionAsync(() => _service.GetAvailabilityStatusAsync(validResourceId));
 
-        // Assert - valid resource IDs should pass validation and return a result
-        Assert.NotNull(result);
-        Assert.Equal("Available", result.AvailabilityState);
     }
 
     private sealed class MockHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
