@@ -8,7 +8,7 @@
 .DESCRIPTION
     This script takes MCPB files and their corresponding .signature.p7s files
     (produced by ESRP's Pkcs7DetachedSign operation) and combines them into
-    signed MCPB files using the MCPB signature format.
+    signedFile MCPB files using the MCPB signature format.
 
     The MCPB signature format (per https://github.com/modelcontextprotocol/mcpb/blob/main/CLI.md):
     
@@ -22,10 +22,10 @@
     Path to the directory containing .mcpb files and their .signature.p7s files.
 
 .PARAMETER OutputPath
-    Path to the output directory for signed MCPB files.
+    Path to the output directory for signedFile MCPB files.
 
 .EXAMPLE
-    ./Apply-McpbSignatures.ps1 -ArtifactsPath "./to_sign" -OutputPath "./signed"
+    ./Apply-McpbSignatures.ps1 -ArtifactsPath "./to_sign" -OutputPath "./signedFile"
 #>
 
 [CmdletBinding()]
@@ -82,43 +82,27 @@ function Convert-P7sToMcpbSignature {
     # Read original MCPB content
     $mcpbContent = [System.IO.File]::ReadAllBytes($McpbFile)
 
-    # Check if the MCPB is already signed by looking for the MCPB_SIG_END marker at the
-    # end of the file. This is always the last bytes of a signed MCPB, so we only need
+    # Check if the MCPB is already signedFile by looking for the MCPB_SIG_END marker at the
+    # end of the file. This is always the last bytes of a signedFile MCPB, so we only need
     # to read a small fixed-size tail rather than scanning the entire binary.
     if ($mcpbContent.Length -ge $sigEndMarkerBytes.Length) {
         $tailStart = $mcpbContent.Length - $sigEndMarkerBytes.Length
         $tailString = [System.Text.Encoding]::ASCII.GetString($mcpbContent, $tailStart, $sigEndMarkerBytes.Length)
         if ($tailString -eq $SIG_END_MARKER) {
-            throw "MCPB file appears to already be signed. Use 'mcpb unsign' to remove existing signature first."
+            throw "MCPB file appears to already be signedFile. Use 'mcpb unsign' to remove existing signature first."
         }
     }
 
     # Combine: MCPB + MCPB_SIG_V1 + length + signature + MCPB_SIG_END
-    $signedContent = New-Object byte[] ($mcpbContent.Length + $sigV1MarkerBytes.Length + $lengthBytes.Length + $signatureBytes.Length + $sigEndMarkerBytes.Length)
+    $signedContent = [System.Collections.Generic.List[byte]]::new()  
 
-    $offset = 0
+    $signedContent.AddRange($mcpbContent)  
+    $signedContent.AddRange($sigV1MarkerBytes)  
+    $signedContent.AddRange($lengthBytes)  
+    $signedContent.AddRange($signatureBytes)  
+    $signedContent.AddRange($sigEndMarkerBytes)  
 
-    # Copy MCPB content
-    [Array]::Copy($mcpbContent, 0, $signedContent, $offset, $mcpbContent.Length)
-    $offset += $mcpbContent.Length
-
-    # Copy MCPB_SIG_V1 marker
-    [Array]::Copy($sigV1MarkerBytes, 0, $signedContent, $offset, $sigV1MarkerBytes.Length)
-    $offset += $sigV1MarkerBytes.Length
-
-    # Copy length prefix
-    [Array]::Copy($lengthBytes, 0, $signedContent, $offset, $lengthBytes.Length)
-    $offset += $lengthBytes.Length
-
-    # Copy signature
-    [Array]::Copy($signatureBytes, 0, $signedContent, $offset, $signatureBytes.Length)
-    $offset += $signatureBytes.Length
-
-    # Copy MCPB_SIG_END marker
-    [Array]::Copy($sigEndMarkerBytes, 0, $signedContent, $offset, $sigEndMarkerBytes.Length)
-
-    # Write signed file
-    [System.IO.File]::WriteAllBytes($OutputFile, $signedContent)
+    [System.IO.File]::WriteAllBytes($OutputFile, $signedContent.ToArray())
 }
 
 # Validate required parameters when running as script
@@ -133,7 +117,7 @@ if (-not $OutputPath) {
 
 # Main script logic
 if (!(Test-Path $ArtifactsPath)) {
-    LogError "Staging directory not found: $ArtifactsPath"
+    LogError "Artifacts directory not found: $ArtifactsPath"
     exit 1
 }
 
@@ -149,21 +133,21 @@ if ($mcpbFiles.Count -eq 0) {
     exit 1
 }
 
-$signedCount = 0
-$failedCount = 0
+$signedFiles = [System.Collections.Generic.List[string]]::new()
+$failedFiles = [System.Collections.Generic.List[string]]::new()
 
 foreach ($mcpb in $mcpbFiles) {
     $sigFile = Join-Path $mcpb.Directory.FullName ($mcpb.BaseName + ".signature.p7s")
     
     if (-not (Test-Path $sigFile)) {
         LogWarning "No signature file found for $($mcpb.Name)"
-        $failedCount++
+        $failedFiles.Add($mcpb.Name)
         continue
     }
     
     # Preserve directory structure in output
-    $relativePath = $mcpb.Directory.FullName.Substring((Resolve-Path $ArtifactsPath).Path.Length).TrimStart('\', '/')
-    $targetDir = Join-Path $OutputPath $relativePath
+    $pathativePath = $mcpb.Directory.FullName.Substring((Resolve-Path $ArtifactsPath).Path.Length).TrimStart('\', '/')
+    $targetDir = Join-Path $OutputPath $pathativePath
     
     if (-not (Test-Path $targetDir)) {
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
@@ -178,28 +162,29 @@ foreach ($mcpb in $mcpbFiles) {
     }
     catch {
         LogError "Failed to sign $($mcpb.Name): $_"
-        $failedCount++
+        $failedFiles.Add($mcpb.Name)
         continue
     }
     
     if (-not (Test-Path $outputFile)) {
-        LogError "Failed to create signed MCPB: $outputFile"
-        $failedCount++
+        LogError "Failed to create signedFile MCPB: $outputFile"
+        $failedFiles.Add($mcpb.Name)
         continue
     }
     
-    $signedCount++
+    $signedFiles.Add($outputFile)
 }
 
 LogInfo "`nSigned MCPB files:"
-Get-ChildItem -Path $OutputPath -Filter "*.mcpb" -Recurse | ForEach-Object {
-    $rel = $_.FullName.Substring((Resolve-Path $OutputPath).Path.Length).TrimStart('\', '/')
-    LogInfo "  $rel ($($_.Length) bytes)"
+foreach ($signedFile in $signedFiles) {
+    $fileInfo = Get-Item $signedFile
+    $relativePath = $fileInfo.FullName.Substring((Resolve-Path $OutputPath).Path.Length).TrimStart('\', '/')
+    LogInfo "  $relativePath ($($fileInfo.Length) bytes)"
 }
 
-LogInfo "`nSigning complete: $signedCount succeeded, $failedCount failed"
+LogInfo "`nSigning complete: $($signedFiles.Count) succeeded, $($failedFiles.Count) failed"
 
-if ($failedCount -gt 0) {
+if ($failedFiles.Count -gt 0) {
     LogError "Some MCPB files failed to sign"
     exit 1
 }
