@@ -28,6 +28,9 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
     {
         ValidateRequiredParameters((nameof(resourceId), resourceId));
 
+        // Parse and validate resource ID format using Azure SDK
+        var parsedResourceId = ResourceIdentifier.Parse(resourceId);
+
         try
         {
             var credential = await GetCredential();
@@ -35,12 +38,15 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
-            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
+            using var client = _httpClientService.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
+            // Construct URL safely using Uri to ensure path is relative to base
+            var baseUri = new Uri(AzureManagementBaseUrl);
+            var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
+            var requestUri = new Uri(baseUri, relativePath);
 
-            using var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(requestUri);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -81,14 +87,17 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
-            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
+            using var client = _httpClientService.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            var url = resourceGroup != null
+            // Construct URL safely using Uri to ensure path is relative to base
+            var baseUri = new Uri(AzureManagementBaseUrl);
+            var relativePath = resourceGroup != null
                 ? $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
                 : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
+            var requestUri = new Uri(baseUri, relativePath);
 
-            using var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(requestUri);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -134,7 +143,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
-            using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
+            using var client = _httpClientService.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             // Build OData filter - using correct property paths for Azure Resource Health API
@@ -164,27 +173,31 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             }
 
             // Use Service Health Events API with 2025-05-01 version
-            var url = $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01";
+            var relativePath = $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01";
 
             // Add time range query parameters if provided (not as OData filters)
             if (!string.IsNullOrWhiteSpace(queryStartTime))
             {
-                url += $"&queryStartTime={Uri.EscapeDataString(queryStartTime)}";
+                relativePath += $"&queryStartTime={Uri.EscapeDataString(queryStartTime)}";
             }
 
             if (!string.IsNullOrWhiteSpace(queryEndTime))
             {
-                url += $"&queryEndTime={Uri.EscapeDataString(queryEndTime)}";
+                relativePath += $"&queryEndTime={Uri.EscapeDataString(queryEndTime)}";
             }
 
             // Add OData filters if provided
             if (filterParts.Count > 0)
             {
                 var combinedFilter = string.Join(" and ", filterParts);
-                url += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
+                relativePath += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
             }
 
-            using var response = await client.GetAsync(url);
+            // Construct URL safely using Uri to ensure path is relative to base
+            var baseUri = new Uri(AzureManagementBaseUrl);
+            var requestUri = new Uri(baseUri, relativePath);
+
+            using var response = await client.GetAsync(requestUri);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 

@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Improved input validation in ResourceHealth and Kusto tools: ResourceHealth now validates resource IDs using `Azure.Core.ResourceIdentifier.Parse()`, and Kusto validates cluster URIs with domain suffix and hostname allowlist to prevent SSRF attacks. [[#1742](https://github.com/microsoft/mcp/pull/1742)]
+
 ### Other Changes
 
 ## 1.0.1 (2025-11-25)
