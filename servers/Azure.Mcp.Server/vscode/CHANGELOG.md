@@ -6,7 +6,7 @@
 ### Added
 
 - Added two new Azure Service Fabric managed clusters tools: [[#1696](https://github.com/microsoft/mcp/pull/1696)]
-  - `servicefabric_managedcluster_node_list`: List all nodes in a Service Fabric managed cluster
+  - `servicefabric_managedcluster_node_get`: List all nodes in a Service Fabric managed cluster
   - `servicefabric_managedcluster_nodetype_restart`: Restart nodes from a Service Fabric managed cluster
 
 ### Changed
@@ -15,7 +15,7 @@
 - Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
 
 #### Dependency Updates
-- Updated .NET tooling to stable version: `10.0.100.preview3` → `10.0.103`. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
+- Updated .NET tooling to stable version: `10.0.100-preview.7+` → `10.0.103`. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
 - Updated Microsoft.Azure.Kusto.Data and Microsoft.Azure.Kusto.Ingest from version 14.0.1 to 14.0.3. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
 
 ## 2.0.0-beta.19 (2026-02-12) (pre-release)
