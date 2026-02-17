@@ -105,6 +105,6 @@ Reminder: We're working with tenant contoso.onmicrosoft.com and subscription Pro
 
 ## Additional Resources
 
-- [Authentication and Security for Azure MCP Server](Authentication.md)
-- [Azure MCP Commands Reference](../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication and Security for Azure MCP Server](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md)
+- [Azure MCP Commands Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
 - [Azure RBAC Documentation](https://learn.microsoft.com/azure/role-based-access-control/overview)
