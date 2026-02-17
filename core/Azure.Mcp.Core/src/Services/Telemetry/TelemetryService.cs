@@ -43,12 +43,11 @@ internal class TelemetryService : ITelemetryService
         _tagsList =
         [
             new(TagName.AzureMcpVersion, options.Value.Version),
+            new(TagName.ServerMode, serverOptions.Value.Mode),
+            new(TagName.Transport, serverOptions.Value.Transport),
+            new(TagName.Host, RuntimeInformation.OSDescription),
+            new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];
-
-        if (serverOptions?.Value != null)
-        {
-            _tagsList.Add(new(TagName.ServerMode, serverOptions.Value.Mode));
-        }
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;

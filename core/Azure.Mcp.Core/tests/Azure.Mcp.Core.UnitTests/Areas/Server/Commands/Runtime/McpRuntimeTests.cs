@@ -351,8 +351,6 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-
-        GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
     }
 
     [Fact]
@@ -390,8 +388,6 @@ public class McpRuntimeTests
 
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
         Assert.Equal(toolName, actualToolName);
-
-        GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
 
         Assert.DoesNotContain(activity.TagObjects,
             x => string.Equals(x.Key, TagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
@@ -512,7 +508,6 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
     }
 
     [Fact]

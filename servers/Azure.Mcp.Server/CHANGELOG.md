@@ -10,7 +10,14 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed.
+
 ### Other Changes
+
+- Begin capturing information for the MCP client request's `_meta` store.
+- Removed ErrorDetails from telemetry.
+- Added processor architecture to captured telemetry.
+- Resolve incorrect/missing setting of `IsServerCommandInvoked` in telemetry.
 
 ## 1.0.1 (2025-11-25)
 

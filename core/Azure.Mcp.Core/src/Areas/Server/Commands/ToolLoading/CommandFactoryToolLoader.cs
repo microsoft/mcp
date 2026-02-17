@@ -95,6 +95,7 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -129,12 +130,7 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var activity = Activity.Current;
-
-        if (activity != null)
-        {
-            activity.SetTag(TagName.ToolName, toolName);
-        }
+        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
 
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
@@ -234,6 +230,7 @@ public sealed class CommandFactoryToolLoader(
 
         try
         {
+            activity?.SetTag(TagName.IsServerCommandInvoked, true);
             var commandResponse = await command.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;

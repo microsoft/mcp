@@ -31,6 +31,9 @@ internal static class TelemetryConstants
         public const string IsDebug = "IsDebug";
         public const string EnableInsecureTransports = "EnableInsecureTransports";
         public const string Tool = "Tool";
+        public const string VSCodeConversationId = "VSCodeConversationId";
+        public const string VSCodeRequestId = "VSCodeRequestId";
+        public const string ProcessorArchitecture = "ProcessorArchitecture";
     }
 
     internal class ActivityName

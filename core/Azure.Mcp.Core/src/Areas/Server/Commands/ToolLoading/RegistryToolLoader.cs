@@ -79,6 +79,7 @@ public sealed class RegistryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -135,7 +136,8 @@ public sealed class RegistryToolLoader(
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
-        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName);
+        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName)
+            .SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
         return await kvp.Client.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
