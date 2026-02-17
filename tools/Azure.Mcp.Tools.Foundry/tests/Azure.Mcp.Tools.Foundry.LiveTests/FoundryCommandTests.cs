@@ -1272,7 +1272,6 @@ public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     // Helper methods removed - use CallToolAsync instead to ensure proper test proxy recording
-    // 
     // Previously these helpers made direct SDK calls that bypassed the test proxy recording mechanism.
     // All tests now use CallToolAsync("foundry_agents_create") etc. which properly routes through the test proxy.
 }
