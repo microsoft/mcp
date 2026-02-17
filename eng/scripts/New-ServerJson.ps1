@@ -88,26 +88,21 @@ foreach ($package in $jsonHashTable.packages) {
             
             # Extract platform from placeholder (e.g., "WinX64" from "<<McpbUrlWinX64>>")
             if ($identifier -match '<<McpbUrl(\w+)>>') {
-                $platformKey = $Matches[1]
+                $placeholderKey = $Matches[1]
                 
-                # Map placeholder suffix to MCPB filename convention
-                $platformMap = @{
-                    'WinX64' = 'win-x64'
-                    'WinArm64' = 'win-arm64'
-                    'LinuxX64' = 'linux-x64'
-                    'LinuxArm64' = 'linux-arm64'
-                    'OsxX64' = 'osx-x64'
-                    'OsxArm64' = 'osx-arm64'
-                }
+                # Look up the platform from build info by deriving PascalCase key from dotnetOs + architecture
+                $matchingPlatform = $server.platforms | Where-Object {
+                    $key = $_.dotnetOs.Substring(0,1).ToUpper() + $_.dotnetOs.Substring(1) + $_.architecture.Substring(0,1).ToUpper() + $_.architecture.Substring(1)
+                    $key -eq $placeholderKey
+                } | Select-Object -First 1
                 
-                if ($platformMap.ContainsKey($platformKey)) {
-                    $platform = $platformMap[$platformKey]
-                    $mcpbFilename = "$($server.name)-$platform.mcpb"
+                if ($matchingPlatform) {
+                    $mcpbFilename = "$($server.name)-$($matchingPlatform.dotnetOs)-$($matchingPlatform.architecture).mcpb"
                     $mcpbUrl = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$mcpbFilename"
                     ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $mcpbUrl
                     # fileSha256 placeholder will be replaced by Update-ServerJsonMcpbHashes.ps1 after signing
                 } else {
-                    LogWarning "Unknown MCPB platform key '$platformKey' in server.json."
+                    LogWarning "Unknown MCPB platform key '$placeholderKey' in server.json."
                 }
             } else {
                 LogWarning "MCPB package identifier '$identifier' doesn't match expected placeholder pattern."

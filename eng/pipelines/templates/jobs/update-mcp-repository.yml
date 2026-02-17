@@ -41,6 +41,7 @@ jobs:
           -ServerName '${{ parameters.ServerName }}'
           -McpbPath '$(Pipeline.Workspace)/packages_mcpb_signed/${{ parameters.ServerName }}'
           -ServerJsonPath '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
+          -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
 
   - task: Powershell@2
     displayName: 'Verify Nuget package was published'

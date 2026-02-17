@@ -22,10 +22,14 @@
 .PARAMETER OutputPath
     Optional path for the updated server.json. Defaults to updating in place.
 
+.PARAMETER BuildInfoPath
+    Path to the build_info.json file containing server and platform details.
+
 .EXAMPLE
     ./Update-ServerJsonMcpbHashes.ps1 -ServerName "Azure.Mcp.Server" `
         -McpbPath "./packages_mcpb_signed/Azure.Mcp.Server" `
-        -ServerJsonPath "./build_info/Azure.Mcp.Server/server.json"
+        -ServerJsonPath "./build_info/Azure.Mcp.Server/server.json" `
+        -BuildInfoPath "./build_info/build_info.json"
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -36,6 +40,9 @@ param(
 
     [Parameter(Mandatory = $true)]
     [string] $ServerJsonPath,
+
+    [Parameter(Mandatory = $true)]
+    [string] $BuildInfoPath,
 
     [string] $OutputPath
 )
@@ -53,14 +60,28 @@ if (!(Test-Path $McpbPath)) {
     exit 1
 }
 
-# Map platform names to their placeholder suffixes
-$platformToPlaceholder = @{
-    'win-x64' = 'WinX64'
-    'win-arm64' = 'WinArm64'
-    'linux-x64' = 'LinuxX64'
-    'linux-arm64' = 'LinuxArm64'
-    'osx-x64' = 'OsxX64'
-    'osx-arm64' = 'OsxArm64'
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file not found: $BuildInfoPath"
+    exit 1
+}
+
+# Load platform data from build info
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
+$server = $buildInfo.servers | Where-Object { $_.name -ieq $ServerName }
+
+if (!$server) {
+    LogError "Server '$ServerName' not found in build info file $BuildInfoPath."
+    exit 1
+}
+
+# Build platform lookup from build info (e.g., 'win-x64' from dotnetOs + architecture)
+# Only include trimmed, non-special-purpose platforms (those eligible for MCPB packaging)
+$knownPlatforms = @{}
+foreach ($platform in $server.platforms) {
+    if ($platform.trimmed -and -not $platform.specialPurpose) {
+        $key = "$($platform.dotnetOs)-$($platform.architecture)"
+        $knownPlatforms[$key] = $platform
+    }
 }
 
 # Find all MCPB files and compute their SHA256 hashes
@@ -94,14 +115,14 @@ $updatedCount = 0
 foreach ($package in $serverJson.packages) {
     if ($package.registryType -eq 'mcpb') {
         # Find the platform from the identifier URL (e.g., "-win-x64.mcpb")
-        foreach ($platform in $platformToPlaceholder.Keys) {
-            if ($package.identifier -like "*-$platform.mcpb*") {
-                if ($hashes.ContainsKey($platform)) {
-                    $package.fileSha256 = $hashes[$platform]
+        foreach ($platformKey in $knownPlatforms.Keys) {
+            if ($package.identifier -like "*-$platformKey.mcpb*") {
+                if ($hashes.ContainsKey($platformKey)) {
+                    $package.fileSha256 = $hashes[$platformKey]
                     $updatedCount++
-                    LogInfo "Updated SHA256 for $platform package"
+                    LogInfo "Updated SHA256 for $platformKey package"
                 } else {
-                    LogWarning "No hash found for platform $platform"
+                    LogWarning "No hash found for platform $platformKey"
                 }
                 break
             }
