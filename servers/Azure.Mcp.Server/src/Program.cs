@@ -237,7 +237,7 @@ internal class Program
     {
         ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
 
-        if(options != null)
+        if (options != null)
         {
             // Update the UserAgentPolicy for all Azure service calls to include the transport type.
             var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
