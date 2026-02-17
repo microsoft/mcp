@@ -168,7 +168,7 @@ internal class CommandFactoryHelpers
     {
         public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
 
-        public Activity? StartActivity(string activityName, Implementation clientInfo) => null;
+        public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
 
         public void Dispose()
         {
