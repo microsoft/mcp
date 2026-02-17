@@ -2308,6 +2308,72 @@
       ]
     },
     {
+      "name": "get_azure_service_fabric_managed_cluster_nodes",
+      "description": "Get nodes in an Azure Service Fabric managed cluster including node name, type, status, IP address, fault domain, upgrade domain, health state, and seed node status. Returns all nodes by default, or a single node when a node name is specified.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "servicefabric_managedcluster_node_get"
+      ]
+    },
+    {
+      "name": "restart_azure_service_fabric_managed_cluster_nodes",
+      "description": "Restart nodes of a specific node type in an Azure Service Fabric managed cluster. Specify the node names and optionally the update type (Default or ByUpgradeDomain).",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool restarts nodes which temporarily disrupts workloads running on those nodes."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool performs write operations that modify cluster node state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "servicefabric_managedcluster_nodetype_restart"
+      ]
+    },
+    {
       "name": "get_azure_confidential_ledger_entries",
       "description": "Retrieve tamper-proof entries from Azure Confidential Ledger instances.",
       "toolMetadata": {

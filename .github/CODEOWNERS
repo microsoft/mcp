@@ -312,6 +312,12 @@
 # ServiceLabel: %tools-ServiceBus
 # ServiceOwners:                       @anuchandy @conniey @EldertGrootenboer @shankarsama
 
+# PRLabel: %tools-ServiceFabric
+/tools/Azure.Mcp.Tools.ServiceFabric/  @linmeng08 @jkochhar @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ServiceFabric
+# ServiceOwners:                       @linmeng08 @jkochhar
+
 # PRLabel: %tools-SignalR
 /tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @kenchennt @microsoft/azure-mcp
 
