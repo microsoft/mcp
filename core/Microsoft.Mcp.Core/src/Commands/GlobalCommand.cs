@@ -131,12 +131,15 @@ public abstract class GlobalCommand<
 
         if (ex.Status == 401 && message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase))
         {
-            return "Authentication failed due to a tenant mismatch. " +
-                "Your credential is authenticated to a different Azure tenant than the one required by this subscription. " +
-                "To resolve this issue, please do one of the following: " +
-                "1. Explicitly specify the target tenant in your prompt (for example: List my resource groups for tenant ID <target_tenant_id>), or " +
-                "2. Explicitly configure Azure MCP to use your intended credential by setting the environment variable AZURE_TOKEN_CREDENTIALS to a supported Azure.Identity credential type. " +
-                "Note: Refer to the Troubleshooting.md guide for the complete list of supported credential types for the Azure MCP server, and further assistance.";
+            return "Authentication failed due to a tenant mismatch. " +  
+            "Your credential is authenticated to a different Azure tenant than the one required by this subscription. " +  
+            "To resolve: " +  
+            "1. Authenticate to the target tenant using one of the supported credential types: " +  
+            "   - Azure CLI: Run 'az login --tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureCliCredential, " +  
+            "   - Azure PowerShell: Run 'Connect-AzAccount -Tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzurePowerShellCredential, " +  
+            "   - Azure Developer CLI: Run 'azd auth login --tenant-id <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureDeveloperCliCredential, " +  
+            "2. Restart the Azure MCP Server. " +  
+            "For the complete list of supported credentials, see: https://aka.ms/azmcp/auth";  
         }
 
         return message;
