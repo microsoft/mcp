@@ -74,16 +74,6 @@ if (!$server) {
     exit 1
 }
 
-# Build platform lookup from build info (e.g., 'win-x64' from dotnetOs + architecture)
-# Only include trimmed, non-special-purpose platforms (those eligible for MCPB packaging)
-$knownPlatforms = @{}
-foreach ($platform in $server.platforms) {
-    if ($platform.trimmed -and -not $platform.specialPurpose) {
-        $key = "$($platform.dotnetOs)-$($platform.architecture)"
-        $knownPlatforms[$key] = $platform
-    }
-}
-
 # Find all MCPB files and compute their SHA256 hashes
 $mcpbFiles = Get-ChildItem -Path $McpbPath -Filter "*.mcpb" -Recurse
 $hashes = @{}
@@ -115,14 +105,14 @@ $updatedCount = 0
 foreach ($package in $serverJson.packages) {
     if ($package.registryType -eq 'mcpb') {
         # Find the platform from the identifier URL (e.g., "-win-x64.mcpb")
-        foreach ($platformKey in $knownPlatforms.Keys) {
-            if ($package.identifier -like "*-$platformKey.mcpb*") {
-                if ($hashes.ContainsKey($platformKey)) {
-                    $package.fileSha256 = $hashes[$platformKey]
+        foreach ($mcpbPlatform in $server.mcpbPlatforms) {
+            if ($package.identifier -like "*-$mcpbPlatform.mcpb*") {
+                if ($hashes.ContainsKey($mcpbPlatform)) {
+                    $package.fileSha256 = $hashes[$mcpbPlatform]
                     $updatedCount++
-                    LogInfo "Updated SHA256 for $platformKey package"
+                    LogInfo "Updated SHA256 for $mcpbPlatform package"
                 } else {
-                    LogWarning "No hash found for platform $platformKey"
+                    LogWarning "No hash found for platform $mcpbPlatform"
                 }
                 break
             }

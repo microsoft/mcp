@@ -81,35 +81,24 @@ foreach ($package in $jsonHashTable.packages) {
         'pypi' {
             ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.pypiPackageName
         }
-        'mcpb' {
-            # MCPB packages need an identifier (GitHub release URL) and fileSha256
-            # The identifier placeholder encodes the platform: <<McpbUrlWinX64>>, <<McpbUrlLinuxX64>>, etc.
-            $identifier = $package.identifier
-            
-            # Extract platform from placeholder (e.g., "WinX64" from "<<McpbUrlWinX64>>")
-            if ($identifier -match '<<McpbUrl(\w+)>>') {
-                $placeholderKey = $Matches[1]
-                
-                # Look up the platform from build info by deriving PascalCase key from dotnetOs + architecture
-                $matchingPlatform = $server.platforms | Where-Object {
-                    $key = $_.dotnetOs.Substring(0,1).ToUpper() + $_.dotnetOs.Substring(1) + $_.architecture.Substring(0,1).ToUpper() + $_.architecture.Substring(1)
-                    $key -eq $placeholderKey
-                } | Select-Object -First 1
-                
-                if ($matchingPlatform) {
-                    $mcpbFilename = "$($server.name)-$($matchingPlatform.dotnetOs)-$($matchingPlatform.architecture).mcpb"
-                    $mcpbUrl = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$mcpbFilename"
-                    ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $mcpbUrl
-                    # fileSha256 placeholder will be replaced by Update-ServerJsonMcpbHashes.ps1 after signing
-                } else {
-                    LogWarning "Unknown MCPB platform key '$placeholderKey' in server.json."
-                }
-            } else {
-                LogWarning "MCPB package identifier '$identifier' doesn't match expected placeholder pattern."
-            }
-        }
         Default {
             LogWarning "Unknown package registry type '$($package.registryType)' in server.json."
+        }
+    }
+}
+
+# Generate MCPB package entries from the McpbPlatforms csproj property
+if ($server.mcpbPlatforms -and $server.mcpbPlatforms.Count -gt 0) {
+    foreach ($mcpbPlatform in $server.mcpbPlatforms) {
+        $mcpbFilename = "$($server.name)-$mcpbPlatform.mcpb"
+        $mcpbUrl = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$mcpbFilename"
+
+        $jsonHashTable.packages += @{
+            registryType = 'mcpb'
+            identifier = $mcpbUrl
+            # fileSha256 will be set by Update-ServerJsonMcpbHashes.ps1 after signing
+            fileSha256 = ''
+            transport = @{ type = 'stdio' }
         }
     }
 }
