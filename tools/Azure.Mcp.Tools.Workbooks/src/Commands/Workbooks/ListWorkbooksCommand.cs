@@ -93,10 +93,8 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         var maxResults = parseResult.GetValueOrDefault<int>(WorkbooksOptionDefinitions.MaxResults.Name);
         options.MaxResults = maxResults > 0 ? Math.Min(maxResults, 1000) : 50;
 
-        var includeTotalCountOption = WorkbooksOptionDefinitions.IncludeTotalCount;
-        var includeTotalCountSpecified = parseResult.HasOption(includeTotalCountOption);
-        var includeTotalCount = parseResult.GetValueForOption(includeTotalCountOption);
-        options.IncludeTotalCount = includeTotalCountSpecified ? includeTotalCount : true;
+        var includeTotalCount = parseResult.GetValueOrDefault<bool?>(WorkbooksOptionDefinitions.IncludeTotalCount.Name);
+        options.IncludeTotalCount = includeTotalCount ?? true;
 
         return options;
     }
