@@ -83,9 +83,9 @@ When you authenticate to Azure, Entra ID issues tokens scoped to a specific **te
 3. **Resource access**: You can see and manage the subscription's resources
 
 Most Azure MCP tools support these parameters:
-- `--tenant` or `-t`: Tenant ID or domain name
-- `--subscription` or `-s`: Subscription ID or name
-- `--resource-group` or `-g`: Resource group name
+- `--tenant`: Tenant ID or domain name
+- `--subscription`: Subscription ID or name
+- `--resource-group`: Resource group name
 
 ## Troubleshooting
 
