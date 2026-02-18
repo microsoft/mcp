@@ -3,13 +3,13 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
 using Xunit;
 
@@ -25,15 +25,15 @@ public class CommandFactoryTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
-    private readonly AzureMcpServerConfiguration _serverConfiguration;
-    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions;
+    private readonly McpServerConfiguration _serverConfiguration;
+    private readonly IOptions<McpServerConfiguration> _configurationOptions;
 
     public CommandFactoryTests()
     {
         var services = new ServiceCollection();
         services.AddLogging();
 
-        _serverConfiguration = new AzureMcpServerConfiguration
+        _serverConfiguration = new McpServerConfiguration
         {
             Name = "Test Server",
             Version = "Test Version",
