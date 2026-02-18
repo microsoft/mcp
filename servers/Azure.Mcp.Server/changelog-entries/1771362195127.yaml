@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Added prompt templates documentation (docs/prompt-templates.md) showing how to set tenant and subscription context once using .github/copilot-instructions.md or at the start of chat sessions, eliminating repetitive prompting."
