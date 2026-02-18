@@ -27,7 +27,6 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
-    hostArchitecture: $(HostArchitecture)
 
   steps:
   - checkout: self
