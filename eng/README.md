@@ -118,9 +118,7 @@ To simplify the work of collection server and platform metadata in build scripts
       "x64": {
         "macos_x64": {}
       },
-      "arm64": {
-        "macos_arm64": {}
-      }
+      "arm64": {}
     },
     ...
     "liveTestMatrix": {

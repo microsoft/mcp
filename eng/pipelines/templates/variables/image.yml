@@ -12,8 +12,6 @@ variables:
 
   - name: LINUXARM64POOL
     value: azsdk-pool-arm64
-  - name: WINDOWSARM64POOL
-    value: azsdk-pool-arm64
 
   - name: LINUXVMIMAGE
     value: ubuntu-24.04
@@ -21,8 +19,6 @@ variables:
     value: azsdk-azure-linux3-arm64-1espt
   - name: WINDOWSVMIMAGE
     value: windows-2022
-  - name: WINDOWSARM64VMIMAGE
-    value: windows-2025-arm64-1espt
   - name: MACVMIMAGE
     value: macos-latest
 

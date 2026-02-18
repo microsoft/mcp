@@ -24,7 +24,6 @@ extends:
   parameters:
     settings:
       skipBuildTagsForGitHubPullRequests: true
-      networkIsolationPolicy: Permissive
       # only enable autoBaseline for the internal build of rust-core on main branch
       ${{ if parameters.AutoBaseline }}:
         featureFlags:

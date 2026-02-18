@@ -165,13 +165,11 @@ function CheckVariable($name) {
 }
 
 $windowsPool = CheckVariable 'WINDOWSPOOL'
-$windowsArm64Pool = CheckVariable 'WINDOWSARM64POOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
 $linuxArm64Pool = CheckVariable 'LINUXARM64POOL'
 $macPool = CheckVariable 'MACPOOL'
 
 $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
-$windowsArm64VmImage = CheckVariable 'WINDOWSARM64VMIMAGE'
 $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
 $linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
@@ -560,22 +558,22 @@ function Get-BuildMatrices {
             }
 
             $pool = switch($os) {
-                'windows' { if ($arch -like '*arm64*') { $windowsArm64Pool } else { $windowsPool } }
+                'windows' { $windowsPool }
                 'linux' { if ($arch -like '*arm64*') { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
-                'windows' { if ($arch -like '*arm64*') { $windowsArm64VmImage } else { $windowsVmImage } }
+                'windows' { $windowsVmImage }
                 'linux' { if ($arch -like '*arm64*') { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
-            # we do not currently have a method to get an arm64 mac agent at this time, so we will have to skip $runUnitTests for that platform
+            # we do not currently have a method to get an arm64 mac or windows agent at this time, so we will have to skip $runUnitTests for those platforms
             $runUnitTests = !$platform.native `
                 -and !$platform.specialPurpose `
                 -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
-                -and !($os -eq 'macos' -and $arch -like '*arm64*')
+                -and !($os -ne 'linux' -and $arch -like '*arm64*')
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
             $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
