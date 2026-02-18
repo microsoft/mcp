@@ -13,7 +13,7 @@
 
 - Resolve gaps in the capture of certain telemetry tags. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
 - Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
-- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using .`github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
+- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using `.github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
 - Improved error message for tenant mismatch authentication errors with actionable resolution steps. [[#1737](https://github.com/microsoft/mcp/pull/1737)]
 
 ## 2.0.0-beta.19 (2026-02-12) (pre-release)
