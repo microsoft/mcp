@@ -136,6 +136,7 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
@@ -175,7 +176,7 @@ public sealed class NamespaceToolLoader(
         {
             var activity = Activity.Current;
 
-            if (learn && string.IsNullOrEmpty(command))
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
@@ -273,7 +274,6 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -401,7 +401,7 @@ public sealed class NamespaceToolLoader(
             // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
             // The logic above performs sampling to try and get a correct command name.  "blob_get" in
             // this case, which will be executed.
-            currentActivity?.SetTag(TagName.ToolName, command);
+            currentActivity?.SetTag(TagName.ToolName, command).SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);

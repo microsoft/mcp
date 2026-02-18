@@ -1161,7 +1161,7 @@ The base `HandleException` method in BaseCommand handles the response formatting
 ```csharp
 protected virtual void HandleException(CommandContext context, Exception ex)
 {
-    context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
+    context.Activity?.SetStatus(ActivityStatusCode.Error);
 
     var response = context.Response;
     var result = new ExceptionResult(

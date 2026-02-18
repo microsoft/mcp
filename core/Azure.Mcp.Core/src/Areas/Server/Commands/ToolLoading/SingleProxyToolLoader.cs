@@ -102,6 +102,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     /// <returns>A <see cref="CallToolResult"/> representing the result of the operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var args = request.Params?.Arguments;
         string? intent = null;
         bool learn = false;
@@ -133,11 +134,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        if (learn && string.IsNullOrEmpty(tool))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
         }
-        else if (learn && !string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        else if (learn && !string.IsNullOrEmpty(tool))
         {
             return await ToolLearnModeAsync(request, intent ?? "", tool!, cancellationToken);
         }
@@ -305,13 +306,9 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
 
-        var activity = Activity.Current;
-        if (activity != null)
-        {
-            activity.SetTag(TagName.IsServerCommandInvoked, true)
-                    .SetTag(TagName.ToolArea, tool)
-                    .SetTag(TagName.ToolName, command);
-        }
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
+            .SetTag(TagName.ToolArea, tool)
+            .SetTag(TagName.ToolName, command);
 
         try
         {
