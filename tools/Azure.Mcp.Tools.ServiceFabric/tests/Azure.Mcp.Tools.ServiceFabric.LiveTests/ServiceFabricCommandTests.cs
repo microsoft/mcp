@@ -10,8 +10,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceFabric.LiveTests;
 
-public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-    : RecordedCommandTestsBase(output, fixture)
+public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_GetNodes_Successfully()
