@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Improved error message for tenant mismatch authentication errors with actionable resolution steps"
