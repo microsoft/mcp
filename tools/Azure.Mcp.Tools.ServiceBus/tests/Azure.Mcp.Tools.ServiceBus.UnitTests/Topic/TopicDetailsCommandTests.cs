@@ -114,6 +114,58 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_HandlesAuthenticationFailure()
+    {
+        // Arrange
+        var authException = new Azure.Identity.AuthenticationFailedException("The access token is from the wrong issuer");
+
+        _serviceBusService.GetTopicDetails(
+            Arg.Is(NamespaceName),
+            Arg.Is(TopicName),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
+        ).ThrowsAsync(authException);
+
+        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("Authentication failed", response.Message);
+        Assert.Contains("wrong issuer", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesUnauthorizedAccess()
+    {
+        // Arrange
+        var unauthorizedException = new UnauthorizedAccessException("Access denied");
+
+        _serviceBusService.GetTopicDetails(
+            Arg.Is(NamespaceName),
+            Arg.Is(TopicName),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
+        ).ThrowsAsync(unauthorizedException);
+
+        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Access denied", response.Message);
+        Assert.Contains("credentials and permissions", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesGenericException()
     {
         // Arrange
