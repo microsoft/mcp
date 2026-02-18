@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 /// <summary>
 /// Provides access to services.
