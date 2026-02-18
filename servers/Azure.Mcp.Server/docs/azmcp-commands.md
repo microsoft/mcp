@@ -254,7 +254,8 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription
-azmcp advisor recommendations list --subscription <subscription>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation list --subscription <subscription>
 ```
 
 ### Azure AI Search Operations
