@@ -453,7 +453,7 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithNullRequest_DelegatesToToolLoader()
+    public async Task ListToolsHandler_WithNullParameters_DelegatesToToolLoader()
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
@@ -461,21 +461,22 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList });
 
         var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
-        mockToolLoader.ListToolsHandler(null!, Arg.Any<CancellationToken>())
+        mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
             .Returns(new ValueTask<ListToolsResult>(expectedResult));
 
         // Act
-        var result = await runtime.ListToolsHandler(null!, CancellationToken.None);
+        var result = await runtime.ListToolsHandler(request, CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedResult, result);
-        await mockToolLoader.Received(1).ListToolsHandler(null!, Arg.Any<CancellationToken>());
+        await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task CallToolHandler_WithNullRequest_ReturnsError()
+    public async Task CallToolHandler_WithNullParameters_ReturnsError()
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
@@ -489,9 +490,10 @@ public class McpRuntimeTests
             .Returns(activity);
 
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall });
 
         // Act
-        var result = await runtime.CallToolHandler(null!, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
