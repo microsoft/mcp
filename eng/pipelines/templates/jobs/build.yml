@@ -17,7 +17,7 @@ parameters:
   default: ''
 
 jobs:
-- job: Build_${{ parameters.OSName }}_${{ parameters.HostArchitecture }}
+- job: Build_${{ parameters.OSName }}_${{ coalesce(parameters.HostArchitecture, 'x64') }}
   displayName: "Build"
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
@@ -30,9 +30,7 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
-    ${{ if eq(parameters.HostArchitecture, 'x64') }}:
-      hostArchitecture: ''
-    ${{ else }}:
+    ${{ if ne(parameters.HostArchitecture, '') }}:
       hostArchitecture: ${{ parameters.HostArchitecture }}
 
   # Only run codeql on linux internal build jobs to reduce overall time on pipeline
