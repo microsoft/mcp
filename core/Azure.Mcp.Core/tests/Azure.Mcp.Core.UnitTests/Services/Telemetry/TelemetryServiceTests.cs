@@ -147,7 +147,7 @@ public class TelemetryServiceTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task StartActivity_WithInvalidActivityId_ShouldHandleGracefully(string activityId)
+    public async Task StartActivity_WithInvalidActivityName_ShouldHandleGracefully(string activityName)
     {
         // Arrange
         var configuration = new McpServerConfiguration
@@ -167,7 +167,7 @@ public class TelemetryServiceTests
         await service.InitializeAsync();
 
         // Act
-        var activity = service.StartActivity(activityId);
+        var activity = service.StartActivity(activityName);
 
         // Assert
         // ActivitySource.StartActivity typically handles null/empty names gracefully
@@ -281,7 +281,7 @@ public class TelemetryServiceTests
             Assert.Equal(operationName, activity.OperationName);
         }
 
-        AssertDefaultTags(defaultTags, serviceStartOptions);
+        AssertDefaultTags(defaultTags, configuration, serviceStartOptions);
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public class TelemetryServiceTests
     }
 
     private static void AssertDefaultTags(IReadOnlyList<KeyValuePair<string, object?>> tags,
-        ServiceStartOptions? expectedServiceOptions = null)
+        McpServerConfiguration? expectedOptions, ServiceStartOptions? expectedServiceOptions)
     {
         var dictionary = tags.ToDictionary();
         Assert.NotEmpty(tags);
@@ -321,14 +321,27 @@ public class TelemetryServiceTests
         AssertTag(dictionary, TagName.Host, RuntimeInformation.OSDescription);
         AssertTag(dictionary, TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString());
 
+        if (expectedOptions != null)
+        {
+            AssertTag(dictionary, TagName.McpServerVersion, expectedOptions.Version);
+            AssertTag(dictionary, TagName.McpServerName, expectedOptions.Name);
+        }
+        else
+        {
+            Assert.False(dictionary.ContainsKey(TagName.McpServerVersion));
+            Assert.False(dictionary.ContainsKey(TagName.McpServerName));
+        }
+
         if (expectedServiceOptions != null)
         {
             Assert.NotNull(expectedServiceOptions.Mode);
             AssertTag(dictionary, TagName.ServerMode, expectedServiceOptions.Mode);
+            AssertTag(dictionary, TagName.Transport, expectedServiceOptions.Transport);
         }
         else
         {
             Assert.False(dictionary.ContainsKey(TagName.ServerMode));
+            Assert.False(dictionary.ContainsKey(TagName.Transport));
         }
     }
 
