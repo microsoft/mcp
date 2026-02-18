@@ -6,6 +6,11 @@ using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Advisor;
@@ -56,9 +61,11 @@ using Azure.Mcp.Tools.StorageSync;
 using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using ModelContextProtocol.Protocol;
+using NSubstitute;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -202,7 +209,14 @@ internal class CommandFactoryHelpers
 
         var builder = new ServiceCollection()
             .AddLogging()
+            .AddMemoryCache()
+            .AddHttpClientServices(configureDefaults: true)
+            .AddSingleUserCliCacheService()
             .AddSingleton<ITelemetryService, NoOpTelemetryService>();
+
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>());
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>());
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.ResourceGroup.IResourceGroupService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.ResourceGroup.IResourceGroupService>());
 
         foreach (var area in areaSetups)
         {
