@@ -181,29 +181,11 @@ Processing MCPB packaging:
         $manifest | ConvertTo-Json -Depth 100 | Set-Content "$stagingDir/manifest.json" -NoNewline
 
         # Copy and rename icon to servericon.png (required name for MCPB bundles)
-        $iconCandidates = @("servericon.png", "azureicon.png", "icon.png")
-        $iconFound = $false
-        foreach ($candidate in $iconCandidates) {
-            $candidatePath = "$mcpbDirectory/$candidate"
-            if (Test-Path $candidatePath) {
-                LogInfo "Copying icon from $candidatePath..."
-                Copy-Item $candidatePath "$stagingDir/servericon.png"
-                $iconFound = $true
-                break
-            }
-        }
-
-        # Also check the server's packageIcon from build info
-        if (-not $iconFound -and $server.packageIcon) {
-            $packageIconPath = "$RepoRoot/$($server.packageIcon)"
-            if (Test-Path $packageIconPath) {
-                LogInfo "Copying icon from $packageIconPath..."
-                Copy-Item $packageIconPath "$stagingDir/servericon.png"
-                $iconFound = $true
-            }
-        }
-
-        if (-not $iconFound) {
+        $packageIconPath = "$RepoRoot/$($server.packageIcon)"
+        if (Test-Path $packageIconPath) {
+            LogInfo "Copying icon from $packageIconPath..."
+            Copy-Item -Path $packageIconPath -Destination "$stagingDir/servericon.png" -Force
+        } else {
             LogWarning "No icon found for $($server.name). MCPB may not validate."
         }
 
