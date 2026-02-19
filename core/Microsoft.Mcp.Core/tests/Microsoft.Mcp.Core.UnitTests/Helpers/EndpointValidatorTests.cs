@@ -39,8 +39,8 @@ public class EndpointValidatorTests
         string expectedMessagePart)
     {
         // Act & Assert
-        var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        var exception = Assert.Throws<SecurityException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -52,16 +52,16 @@ public class EndpointValidatorTests
         string serviceType)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        Assert.Throws<ArgumentException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
     }
 
     [Fact]
     public void ValidateAzureServiceEndpoint_NullEndpoint_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication"));
+        Assert.Throws<ArgumentException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication"));
     }
 
     [Fact]
@@ -71,8 +71,8 @@ public class EndpointValidatorTests
         var invalidEndpoint = "not-a-valid-uri";
 
         // Act & Assert
-        var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication"));
+        var exception = Assert.Throws<SecurityException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication"));
         Assert.Contains("Invalid endpoint format", exception.Message);
     }
 
@@ -84,8 +84,8 @@ public class EndpointValidatorTests
         var unknownServiceType = "unknown-service";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType));
+        var exception = Assert.Throws<ArgumentException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType));
         Assert.Contains("Unknown service type", exception.Message);
     }
 
@@ -113,8 +113,8 @@ public class EndpointValidatorTests
         string expectedMessagePart)
     {
         // Act & Assert
-        var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateExternalUrl(url, allowedHosts));
+        var exception = Assert.Throws<SecurityException>(
+            () => EndpointValidator.ValidateExternalUrl(url, allowedHosts));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -131,8 +131,8 @@ public class EndpointValidatorTests
     public void ValidateExternalUrl_NullUrl_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            EndpointValidator.ValidateExternalUrl(null!, new[] { "github.com" }));
+        Assert.Throws<ArgumentException>(
+            () => EndpointValidator.ValidateExternalUrl(null!, new[] { "github.com" }));
     }
 
     #endregion
@@ -246,8 +246,8 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_EdgeCases_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception = Record.Exception(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        var exception = Record.Exception(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
         Assert.Null(exception);
     }
 
@@ -260,8 +260,8 @@ public class EndpointValidatorTests
         string serviceType)
     {
         // Act & Assert
-        Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        Assert.Throws<SecurityException>(
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
     }
 
     [Fact]
