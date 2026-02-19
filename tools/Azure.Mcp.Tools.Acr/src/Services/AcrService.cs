@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
 using Azure.Core.Pipeline;
@@ -9,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
@@ -82,6 +84,12 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
 
     private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrEmpty(reg.LoginServer))
+        {
+            var acrEndpointString = $"https://{reg.LoginServer}";
+            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr");
+        }
+
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);

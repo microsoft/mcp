@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
 using Azure.Core.Pipeline;
@@ -9,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -33,6 +35,8 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(endpoint), endpoint),
             (nameof(from), from),
             (nameof(message), message));
+
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -112,6 +116,8 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(from), from),
             (nameof(subject), subject),
             (nameof(message), message));
+
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
