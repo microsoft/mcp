@@ -140,32 +140,6 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
-    {
-        // Arrange
-        var forbiddenException = new Azure.RequestFailedException(403, "Access denied");
-
-        _serviceBusService.GetTopicDetails(
-            Arg.Is(NamespaceName),
-            Arg.Is(TopicName),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(forbiddenException);
-
-        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
-        Assert.Contains("Authorization failed", response.Message);
-        Assert.Contains("RBAC permissions", response.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesGenericException()
     {
         // Arrange

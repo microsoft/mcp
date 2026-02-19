@@ -97,8 +97,6 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
             $"Queue not found. Please check the queue name and try again.",
         Azure.Identity.AuthenticationFailedException authEx =>
             $"Authentication failed: {authEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed. Ensure you have appropriate RBAC permissions on the Service Bus namespace. Details: {reqEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -106,7 +104,6 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     {
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 => HttpStatusCode.Forbidden,
         _ => base.GetStatusCode(ex)
     };
     internal record QueueDetailsCommandResult(QueueDetails QueueDetails);
