@@ -42,7 +42,7 @@ if (!(Test-Path $ArtifactsPath)) {
 
 # Ensure MCPB CLI is installed
 if (-not (Get-Command mcpb -ErrorAction SilentlyContinue)) {
-    Write-Host "Installing MCPB CLI..."
+    LogInfo "Installing MCPB CLI..."
     Invoke-LoggedCommand 'dotnet tool install --global Mcpb.Cli'
 }
 
@@ -69,7 +69,7 @@ foreach ($mcpb in $mcpbFiles) {
     $verifyOutput = & mcpb verify $mcpb.FullName 2>&1 | Out-String
     $verifyExitCode = $LASTEXITCODE
 
-    Write-Host $verifyOutput
+    LogInfo $verifyOutput
     
     if ($verifyExitCode -eq 0) {
         LogInfo "✓ $($mcpb.Name) - Signature verified"
