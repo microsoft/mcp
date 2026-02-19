@@ -155,6 +155,7 @@ public class SubscriptionDetailsCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
         Assert.Contains("Authentication failed", response.Message);
+        Assert.Contains("az login", response.Message);  // Verify GlobalCommand message format
         Assert.Contains("wrong issuer", response.Message);
     }
 

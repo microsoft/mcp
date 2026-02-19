@@ -92,15 +92,12 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
             $"Topic not found. Please check the topic name and try again.",
-        Azure.Identity.AuthenticationFailedException authEx =>
-            $"Authentication failed: {authEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
-        Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         _ => base.GetStatusCode(ex)
     };
 

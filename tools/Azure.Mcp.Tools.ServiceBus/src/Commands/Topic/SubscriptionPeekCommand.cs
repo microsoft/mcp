@@ -105,15 +105,12 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
             $"Subscription not found. Please check the topic and subscription name and try again.",
-        Azure.Identity.AuthenticationFailedException authEx =>
-            $"Authentication failed: {authEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
-        Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         _ => base.GetStatusCode(ex)
     };
 

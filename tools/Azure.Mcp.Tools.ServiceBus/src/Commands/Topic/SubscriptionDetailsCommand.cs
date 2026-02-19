@@ -99,8 +99,6 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
         ServiceBusException exception when exception.Reason ==
         ServiceBusFailureReason.MessagingEntityNotFound =>
             $"Topic or subscription not found. Please check the topic and subscription names and try again.",
-        Azure.Identity.AuthenticationFailedException authEx =>
-            $"Authentication failed: {authEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -108,7 +106,6 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
     {
         ServiceBusException sbEx when sbEx.Reason ==
         ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
-        Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         _ => base.GetStatusCode(ex)
     };
 
