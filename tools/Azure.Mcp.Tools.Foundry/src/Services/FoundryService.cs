@@ -107,20 +107,21 @@ public class FoundryService(
             }
 
             // Example: https://{Azure-OpenAI-resource-name}.openai.azure.com/
-
+            // Example: https://{Azure-OpenAI-resource-name}.cognitiveservices.azure.com/
             if (parsedUri.Scheme != Uri.UriSchemeHttps)
             {
                 throw new ArgumentException("Scheme must be https");
             }
 
-            const string knownSuffix = ".openai.azure.com";
+            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com"];
             var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
+            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (matchedSuffix == null)
             {
                 throw new ArgumentException("Host must end with Azure OpenAI service suffix");
             }
 
-            var azureOpenAIResourceName = host.Substring(0, host.Length - knownSuffix.Length);
+            var azureOpenAIResourceName = host.Substring(0, host.Length - matchedSuffix.Length);
 
             // Validate Azure OpenAI resource name: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
             if (azureOpenAIResourceName.Length < 2 || azureOpenAIResourceName.Length > 64)
