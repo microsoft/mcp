@@ -17,7 +17,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 public sealed class NamespaceToolLoaderTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly CommandFactory _commandFactory;
+    private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServiceStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
 

@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
 
-public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     /// <summary>
     /// AZSDK3493 = $..name

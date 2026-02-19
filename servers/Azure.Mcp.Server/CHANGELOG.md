@@ -2,15 +2,25 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.20 (Unreleased)
+## 2.0.0-beta.20 (2026-02-17)
 
 ### Features Added
 
-### Breaking Changes
-
-### Bugs Fixed
+- Added two new Azure Service Fabric managed clusters tools: [[#1696](https://github.com/microsoft/mcp/pull/1696)]
+  - `servicefabric_managedcluster_node_get`: List all nodes in a Service Fabric managed cluster
+  - `servicefabric_managedcluster_nodetype_restart`: Restart nodes from a Service Fabric managed cluster
 
 ### Other Changes
+
+- Resolve gaps in the capture of certain telemetry tags. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
+- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using `.github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
+- Improved error message for tenant mismatch authentication errors with actionable resolution steps. [[#1737](https://github.com/microsoft/mcp/pull/1737)]
+
+#### Dependency Updates
+
+- Updated .NET tooling to stable version: `10.0.100-preview.7+` → `10.0.103`. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
+- Updated Microsoft.Azure.Kusto.Data and Microsoft.Azure.Kusto.Ingest from version 14.0.1 to 14.0.3. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
 
 ## 2.0.0-beta.19 (2026-02-12)
 

@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -44,7 +45,7 @@ internal class Program
             var serviceProvider = services.BuildServiceProvider();
             await InitializeServicesAsync(serviceProvider);
 
-            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -146,7 +147,7 @@ internal class Program
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
-        services.AddSingleton<CommandFactory>();
+        services.AddSingleton<ICommandFactory, CommandFactory>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
@@ -161,6 +162,8 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        services.AddRegistryRoot();
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
