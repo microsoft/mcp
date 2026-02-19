@@ -183,7 +183,8 @@ To install the Azure plugin into Copilot CLI and Claude Code:
 3. Update the plugin with `/plugin update azure-skills@skills`
 
 ## 🏗️ Looking for starter templates that use MCP? 
-Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP for additional starter options.
+Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
+
 
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
