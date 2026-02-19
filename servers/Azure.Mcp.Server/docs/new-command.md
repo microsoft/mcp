@@ -2524,7 +2524,7 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
             options.Subscription!,
             options.ResourceGroup,
             options.Server,
-            cancellationToken : cancellationToken);
+            cancellationToken: cancellationToken);
 
         return context.Response;
     }
