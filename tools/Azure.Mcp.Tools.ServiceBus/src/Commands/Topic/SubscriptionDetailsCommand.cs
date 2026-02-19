@@ -96,16 +96,20 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
-            $"Topic or subscription not found. Please check the topic and subscription names and try again.",        Azure.Identity.AuthenticationFailedException authEx =>
+        ServiceBusException exception when exception.Reason ==
+        ServiceBusFailureReason.MessagingEntityNotFound =>
+            $"Topic or subscription not found. Please check the topic and subscription names and try again.",
+        Azure.Identity.AuthenticationFailedException authEx =>
             $"Authentication failed: {authEx.Message}",
         UnauthorizedAccessException =>
-            "Access denied. Please check your credentials and permissions.",        _ => base.GetErrorMessage(ex)
+            "Access denied. Please check your credentials and permissions.",
+        _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
+        ServiceBusException sbEx when sbEx.Reason ==
+        ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         UnauthorizedAccessException => HttpStatusCode.Forbidden,
         _ => base.GetStatusCode(ex)
