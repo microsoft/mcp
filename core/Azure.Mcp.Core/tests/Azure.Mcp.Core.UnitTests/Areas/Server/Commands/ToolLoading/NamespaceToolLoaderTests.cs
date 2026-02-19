@@ -440,13 +440,13 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        
+
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
-        
+
         // Verify the specific error message is preserved (not replaced with generic message)
         Assert.Contains("Missing Required options:", textContent.Text);
-        
+
         // Verify the command spec guidance is still included
         Assert.Contains("Review the following command spec", textContent.Text);
         Assert.Contains("Command Spec:", textContent.Text);
@@ -610,10 +610,10 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         var textContent = response.Content[0] as TextContent;
         Assert.NotNull(textContent);
-        
+
         // Verify the specific error message is preserved (not the generic "missing required parameters")
         Assert.Contains("Missing Required options: --subscription", textContent.Text);
-        
+
         // Verify it still includes the command spec guidance
         Assert.Contains("Review the following command spec", textContent.Text);
     }
