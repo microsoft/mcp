@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 

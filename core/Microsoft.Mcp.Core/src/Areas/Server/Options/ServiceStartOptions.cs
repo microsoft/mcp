@@ -3,10 +3,10 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Options;
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
-/// Configuration options for starting the Azure MCP server service.
+/// Configuration options for starting the MCP server service.
 /// </summary>
 public class ServiceStartOptions
 {
@@ -67,7 +67,7 @@ public class ServiceStartOptions
     public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the outgoing authentication strategy for Azure service requests.
+    /// Gets or sets the outgoing authentication strategy for service requests.
     /// Determines whether to use hosting environment identity or on-behalf-of flow.
     /// </summary>
     [JsonPropertyName("outgoingAuthStrategy")]

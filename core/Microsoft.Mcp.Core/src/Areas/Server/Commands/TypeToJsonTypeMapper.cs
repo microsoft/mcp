@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Collections;
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 
 namespace Azure.Mcp.Core.Areas.Server;
 

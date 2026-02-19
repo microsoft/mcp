@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;

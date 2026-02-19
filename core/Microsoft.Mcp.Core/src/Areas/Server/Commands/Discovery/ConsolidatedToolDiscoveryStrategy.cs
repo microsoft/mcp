@@ -3,12 +3,12 @@
 
 using System.Reflection;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
