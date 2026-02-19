@@ -30,7 +30,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command to start the MCP server with specified configuration options.

@@ -16,10 +16,10 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Configuration;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 // This is intentionally placed after the namespace declaration to avoid
-// conflicts with Azure.Mcp.Core.Areas.Server.Options
+// conflicts with Microsoft.Mcp.Core.Areas.Server.Options
 using Options = Microsoft.Extensions.Options.Options;
 
 /// <summary>

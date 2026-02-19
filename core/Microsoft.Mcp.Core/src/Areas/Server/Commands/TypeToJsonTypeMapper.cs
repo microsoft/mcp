@@ -5,7 +5,7 @@ using System.Collections;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Gets the JSON object type based on its C# type.
