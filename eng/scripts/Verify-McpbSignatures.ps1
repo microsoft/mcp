@@ -40,11 +40,9 @@ if (!(Test-Path $ArtifactsPath)) {
     exit 1
 }
 
-# Ensure MCPB CLI is installed
-if (-not (Get-Command mcpb -ErrorAction SilentlyContinue)) {
-    LogInfo "Installing MCPB CLI..."
-    Invoke-LoggedCommand 'dotnet tool install --global Mcpb.Cli'
-}
+# Restore MCPB CLI from local tool manifest (.config/dotnet-tools.json)
+LogInfo "Restoring MCPB CLI..."
+Invoke-LoggedCommand "dotnet tool restore" -GroupOutput
 
 LogInfo "Verifying signed MCPB files..."
 
@@ -63,10 +61,10 @@ foreach ($mcpb in $mcpbFiles) {
     LogInfo "`n=== Verifying: $($mcpb.Name) ==="
     
     # Show bundle info
-    & mcpb info $mcpb.FullName
+    & dotnet mcpb info $mcpb.FullName
     
     # Verify signature and capture output for classification
-    $verifyOutput = & mcpb verify $mcpb.FullName 2>&1 | Out-String
+    $verifyOutput = & dotnet mcpb verify $mcpb.FullName 2>&1 | Out-String
     $verifyExitCode = $LASTEXITCODE
 
     LogInfo $verifyOutput

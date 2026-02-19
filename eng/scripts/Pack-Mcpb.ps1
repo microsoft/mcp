@@ -74,11 +74,9 @@ if ($exitCode -ne 0) {
     exit $exitCode
 }
 
-# Ensure MCPB CLI is installed
-if (-not (Get-Command mcpb -ErrorAction SilentlyContinue)) {
-    LogInfo "Installing MCPB CLI..."
-    Invoke-LoggedCommand 'dotnet tool install --global Mcpb.Cli'
-}
+# Restore MCPB CLI from local tool manifest (.config/dotnet-tools.json)
+LogInfo "Restoring MCPB CLI..."
+Invoke-LoggedCommand "dotnet tool restore" -GroupOutput
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
 
@@ -195,7 +193,7 @@ Processing MCPB packaging:
 
         # Validate manifest
         LogInfo "Validating manifest..."
-        $validateResult = mcpb validate $stagingDir 2>&1
+        $validateResult = dotnet mcpb validate $stagingDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             LogError "Manifest validation failed for $($server.name) on $platformName"
             LogError $validateResult
@@ -214,7 +212,7 @@ Processing MCPB packaging:
         $mcpbFilePath = "$serverOutputPath/$mcpbFileName"
         
         LogInfo "Packing MCPB to $mcpbFilePath..."
-        & mcpb pack $stagingDir $mcpbFilePath --update
+        & dotnet mcpb pack $stagingDir $mcpbFilePath --update
         if ($LASTEXITCODE -ne 0) {
             LogError "MCPB packing failed for $($server.name) on $platformName"
             $exitCode = 1
@@ -229,7 +227,7 @@ Processing MCPB packaging:
 
         # Show package info
         LogInfo "`nPackage info:"
-        mcpb info $mcpbFilePath
+        dotnet mcpb info $mcpbFilePath
     }
 }
 

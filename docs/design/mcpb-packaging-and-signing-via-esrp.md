@@ -34,8 +34,8 @@ MCP Bundles (`.mcpb`) are ZIP archives containing a local MCP server and a `mani
 
 **MCPB CLI Installation:**
 ```bash
-# Install via dotnet (recommended for our pipeline)
-dotnet tool install --global Mcpb.Cli
+# Restore from local tool manifest (recommended for our pipeline, version pinned in .config/dotnet-tools.json)
+dotnet tool restore
 
 # Or via npm
 npm install -g @anthropic-ai/mcpb
@@ -170,10 +170,10 @@ The signature signs the entire file content. ESRP replaces the staged file with 
 
 #### 1. MCPB CLI Installation
 
-The MCPB CLI is required for packaging and verification. Install via dotnet tool:
+The MCPB CLI is required for packaging and verification. Restore via local tool manifest (version pinned in `.config/dotnet-tools.json`):
 
 ```bash
-dotnet tool install --global Mcpb.Cli
+dotnet tool restore
 ```
 
 The CLI provides essential commands:

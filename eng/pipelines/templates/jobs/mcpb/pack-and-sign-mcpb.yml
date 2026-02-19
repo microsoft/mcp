@@ -49,10 +49,11 @@ jobs:
       version: 8.0.x
 
   - pwsh: |
-      Write-Host "Installing MCPB CLI (.NET global tool)..."
-      dotnet tool install --global Mcpb.Cli
-      mcpb --version
-    displayName: "Install MCPB CLI"
+      Write-Host "Restoring MCPB CLI from local tool manifest..."
+      dotnet tool restore
+      dotnet mcpb --version
+    displayName: "Restore MCPB CLI"
+    workingDirectory: $(Build.SourcesDirectory)
 
   - task: Powershell@2
     displayName: "Pack MCP bundles"
