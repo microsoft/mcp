@@ -83,53 +83,6 @@ public class FoundryService(
             {
                 throw new ArgumentException("Host must end with Foundry service suffix");
             }
-
-            var foundryResourceName = host.Substring(0, host.Length - knownSuffix.Length);
-
-            // Validate foundryResourceName: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
-            if (foundryResourceName.Length < 2 || foundryResourceName.Length > 64)
-            {
-                throw new ArgumentException("Foundry resource name must be between 2 and 64 characters");
-            }
-
-            if (foundryResourceName.StartsWith('-') || foundryResourceName.EndsWith('-'))
-            {
-                throw new ArgumentException("Foundry resource name cannot start or end with a hyphen");
-            }
-
-            if (!foundryResourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
-            {
-                throw new ArgumentException("Foundry resource name must contain only alphanumeric characters and hyphens");
-            }
-
-            var paths = parsedUri.AbsolutePath.Split("/", StringSplitOptions.RemoveEmptyEntries);
-            if (paths.Length != 3)
-            {
-                throw new ArgumentException("Invalid path structure");
-            }
-
-            // Validate path structure: /api/projects/{project-name}
-            if (paths[0] != "api")
-            {
-                throw new ArgumentException("Path must start with '/api'");
-            }
-
-            if (paths[1] != "projects")
-            {
-                throw new ArgumentException("Path must contain '/projects' segment");
-            }
-
-            // Validate project name: lowercase letters, numbers, and hyphens only
-            var projectName = paths[2];
-            if (string.IsNullOrWhiteSpace(projectName))
-            {
-                throw new ArgumentException("Project name cannot be empty");
-            }
-
-            if (projectName != "_project" && !projectName.All(c => char.IsLower(c) || char.IsDigit(c) || c == '-'))
-            {
-                throw new ArgumentException("Project name must be '_project' or contain only lowercase letters, numbers, and hyphens");
-            }
         }
         catch (Exception ex)
         {

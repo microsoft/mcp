@@ -33,17 +33,8 @@ public class FoundryServiceEndpointValidationTests
     public static IEnumerable<object[]> InvalidProjectEndpoints =>
     [
         ["http://my-foundry.services.ai.azure.com/api/projects/my-project"], // HTTP instead of HTTPS
-        ["https://-foundry.services.ai.azure.com/api/projects/my-project"], // Foundry resource name starts with hyphen
-        ["https://foundry-.services.ai.azure.com/api/projects/my-project"], // Foundry resource name ends with hyphen
-        ["https://a.services.ai.azure.com/api/projects/my-project"], // Single character Foundry resource name
-        ["https://my_foundry.services.ai.azure.com/api/projects/my-project"], // Foundry resource name contains underscore
-        ["https://my-foundry.services.ai.azure.com/projects/my-project"], // Missing /api/
-        ["https://my-foundry.services.ai.azure.com/api/projects/MyProject"], // Project name has uppercase
-        ["https://my-foundry.services.ai.azure.com/api/projects/my_project"], // Project name has underscore
-        ["https://my-foundry.services.ai.azure.com/api/projects/"], // Missing project name
         ["https://my-foundry.wrongdomain.com/api/projects/my-project"], // Wrong domain
         ["my-foundry.services.ai.azure.com/api/projects/my-project"], // Missing protocol
-        ["https://a-very-long-resource-name-that-exceeds-the-maximum-length-limit-of-64-characters.services.ai.azure.com/api/projects/my-project"], // Foundry resource name too long
         ["https://167.128.3.12"], // An arbitrary endpoint
         ["https://evil.com/api/projects/steal-data"], // Malicious domain
         ["https://my-foundry.services.ai.azure.com.evil.com/api/projects/my-project"], // Domain spoofing attempt
