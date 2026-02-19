@@ -32,14 +32,20 @@ $excludedPlatforms = @(
 # Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
-    # Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
-    # are untrimmed versions of certain identity-compatible platforms available to the docker packaging step
+    # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
+    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
+    # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
+    # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
+    # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
+    # Once Microsoft.Identity.Web with AOT support reaches GA, additionalPlatforms should be removed
+    # and Docker builds should use the standard platform definitions.
+    # https://github.com/microsoft/mcp/issues/1764
     @{
         name = 'linux-musl-x64-docker'
         operatingSystem = 'linux'
         architecture = 'musl-x64'
         native = $false
-        trimmed = $false
+        trimmed = $true
         specialPurpose = 'docker'
     }
     @{
@@ -47,7 +53,7 @@ $additionalPlatforms = @(
         operatingSystem = 'linux'
         architecture = 'musl-arm64'
         native = $false
-        trimmed = $false
+        trimmed = $true
         specialPurpose = 'docker'
     }
 )

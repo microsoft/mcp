@@ -21,10 +21,13 @@
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
 
-    <!-- HTTP transport is unsupported for native and trimmed variants. ENABLE_HTTP is not set for these build variants.
-       See https://github.com/AzureAD/microsoft-identity-web/issues/3576 -->
-
-  <PropertyGroup Condition="'$(PublishTrimmed)' != 'true' and '$(BuildNative)' != 'true'">
+    <!-- We're using a prerelease version of IdWeb with trimmer support, which enables HTTP support for
+      trimmed azmcp builds across all distributions. The ENABLE_HTTP flag provides a rollback mechanism:
+      if we need to revert to an IdWeb version without trimmer support, we can disable HTTP accordingly.
+      Eventually, ENABLE_HTTP directives will be removed from the code as IdWeb's trimmer support moves
+      closer to GA.
+      See https://github.com/microsoft/mcp/issues/1764 -->
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);ENABLE_HTTP</DefineConstants>
   </PropertyGroup>
 
