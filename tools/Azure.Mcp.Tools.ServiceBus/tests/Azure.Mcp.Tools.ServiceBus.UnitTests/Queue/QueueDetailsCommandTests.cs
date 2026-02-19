@@ -141,10 +141,10 @@ public class QueueDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesUnauthorizedAccess()
+    public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var unauthorizedException = new UnauthorizedAccessException("Access denied");
+        var forbiddenException = new Azure.RequestFailedException(403, "Access denied");
 
         _serviceBusService.GetQueueDetails(
             Arg.Is(NamespaceName),
@@ -152,7 +152,7 @@ public class QueueDetailsCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>()
-        ).ThrowsAsync(unauthorizedException);
+        ).ThrowsAsync(forbiddenException);
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
@@ -162,8 +162,8 @@ public class QueueDetailsCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
-        Assert.Contains("Access denied", response.Message);
-        Assert.Contains("credentials and permissions", response.Message);
+        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("RBAC permissions", response.Message);
     }
 
     [Fact]

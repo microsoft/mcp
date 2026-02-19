@@ -101,8 +101,8 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
             $"Topic or subscription not found. Please check the topic and subscription names and try again.",
         Azure.Identity.AuthenticationFailedException authEx =>
             $"Authentication failed: {authEx.Message}",
-        UnauthorizedAccessException =>
-            "Access denied. Please check your credentials and permissions.",
+        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+            $"Authorization failed. Ensure you have appropriate RBAC permissions on the Service Bus namespace. Details: {reqEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -111,7 +111,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
         ServiceBusException sbEx when sbEx.Reason ==
         ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        UnauthorizedAccessException => HttpStatusCode.Forbidden,
+        Azure.RequestFailedException reqEx when reqEx.Status == 403 => HttpStatusCode.Forbidden,
         _ => base.GetStatusCode(ex)
     };
 
