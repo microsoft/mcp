@@ -126,9 +126,9 @@ public class FoundryService(
                 throw new ArgumentException("Project name cannot be empty");
             }
 
-            if (!projectName.All(c => char.IsLower(c) || char.IsDigit(c) || c == '-'))
+            if (projectName != "_project" && !projectName.All(c => char.IsLower(c) || char.IsDigit(c) || c == '-'))
             {
-                throw new ArgumentException("Project name must contain only lowercase letters, numbers, and hyphens");
+                throw new ArgumentException("Project name must be '_project' or contain only lowercase letters, numbers, and hyphens");
             }
         }
         catch (Exception ex)
