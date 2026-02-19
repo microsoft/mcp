@@ -67,9 +67,9 @@ public abstract class AzureUsageChecker : IUsageChecker
             clientOptions);
     }
 
-    protected Uri GetManagementEndpoint()
+    protected string GetManagementEndpoint()
     {
-        return TenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        return TenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
     }
 
 

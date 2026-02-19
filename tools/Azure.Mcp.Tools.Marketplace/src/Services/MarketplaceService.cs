@@ -56,7 +56,7 @@ public class MarketplaceService(ITenantService tenantService)
             (nameof(productId), productId),
             (nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
@@ -94,14 +94,14 @@ public class MarketplaceService(ITenantService tenantService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productsUrl = BuildProductsListUrl(managementEndpoint, subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
         return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy, cancellationToken);
     }
 
     private static string BuildProductsListUrl(
-        Uri managementEndpoint,
+        string managementEndpoint,
         string subscription,
         string? language,
         string? search,
@@ -158,7 +158,7 @@ public class MarketplaceService(ITenantService tenantService)
 
 
     private static string BuildProductUrl(
-        Uri managementEndpoint,
+        string managementEndpoint,
         string subscription,
         string productId,
         bool? includeStopSoldPlans,

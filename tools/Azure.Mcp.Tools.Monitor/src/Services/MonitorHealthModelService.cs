@@ -122,9 +122,9 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         return accessToken.Token;
     }
 
-    private Uri GetManagementEndpoint()
+    private string GetManagementEndpoint()
     {
-        return _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        return _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
     }
 
     private string GetHealthModelsDataApiScope()
