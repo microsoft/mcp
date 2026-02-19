@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -66,6 +67,46 @@ public class ConsolidatedToolDiscoveryStrategyTests
     }
 
     [Fact]
+    public void CreateConsolidatedCommandFactory_MapsAllRegisteredCommands()
+    {
+        // Arrange
+        var sourceFactory = CommandFactoryHelpers.CreateCommandFactory();
+        var strategy = CreateStrategy(commandFactory: sourceFactory);
+
+        // Act - in DEBUG, CreateConsolidatedCommandFactory throws if any commands are unmapped
+        // or if metadata mismatches are detected
+        var consolidatedFactory = strategy.CreateConsolidatedCommandFactory();
+
+        // Assert - consolidated factory should map all non-ignored source commands
+        var ignoredGroups = new HashSet<string>(
+            ConsolidatedToolDiscoveryStrategy.IgnoredCommandGroups,
+            StringComparer.OrdinalIgnoreCase);
+
+        var expectedCount = sourceFactory.AllCommands.Count(kvp =>
+        {
+            var area = sourceFactory.GetServiceArea(kvp.Key);
+            return area == null || !ignoredGroups.Contains(area);
+        });
+
+        Assert.Equal(expectedCount, consolidatedFactory.AllCommands.Count);
+    }
+
+    [Fact]
+    public void CreateConsolidatedCommandFactory_WithAllAreas_HasSubstantialCommandCount()
+    {
+        // Arrange
+        var strategy = CreateStrategy();
+
+        // Act
+        var factory = strategy.CreateConsolidatedCommandFactory();
+
+        // Assert - with all tool areas registered, expect a substantial number of commands
+        Assert.True(factory.AllCommands.Count > 200,
+            $"Expected more than 200 consolidated commands but found {factory.AllCommands.Count}. " +
+            "Ensure CommandFactoryHelpers registers all tool areas matching production Program.cs.");
+    }
+
+    [Fact]
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange
@@ -115,5 +156,51 @@ public class ConsolidatedToolDiscoveryStrategyTests
         Assert.NotNull(factory);
         var allCommands = factory.AllCommands;
         Assert.True(allCommands.Count > 0);
+    }
+
+    [Fact]
+    public void AreMetadataEqual_BothNull_ReturnsTrue()
+    {
+        Assert.True(ConsolidatedToolDiscoveryStrategy.AreMetadataEqual(null, null));
+    }
+
+    [Fact]
+    public void AreMetadataEqual_OneNull_ReturnsFalse()
+    {
+        var metadata = new ToolMetadata { Destructive = false, ReadOnly = true };
+        Assert.False(ConsolidatedToolDiscoveryStrategy.AreMetadataEqual(metadata, null));
+        Assert.False(ConsolidatedToolDiscoveryStrategy.AreMetadataEqual(null, metadata));
+    }
+
+    [Fact]
+    public void AreMetadataEqual_MatchingValues_ReturnsTrue()
+    {
+        var metadata1 = new ToolMetadata
+        {
+            Destructive = false,
+            Idempotent = true,
+            OpenWorld = false,
+            ReadOnly = true,
+            Secret = false,
+            LocalRequired = false
+        };
+        var metadata2 = new ToolMetadata
+        {
+            Destructive = false,
+            Idempotent = true,
+            OpenWorld = false,
+            ReadOnly = true,
+            Secret = false,
+            LocalRequired = false
+        };
+        Assert.True(ConsolidatedToolDiscoveryStrategy.AreMetadataEqual(metadata1, metadata2));
+    }
+
+    [Fact]
+    public void AreMetadataEqual_DifferentValues_ReturnsFalse()
+    {
+        var metadata1 = new ToolMetadata { Destructive = false, ReadOnly = true };
+        var metadata2 = new ToolMetadata { Destructive = true, ReadOnly = true };
+        Assert.False(ConsolidatedToolDiscoveryStrategy.AreMetadataEqual(metadata1, metadata2));
     }
 }

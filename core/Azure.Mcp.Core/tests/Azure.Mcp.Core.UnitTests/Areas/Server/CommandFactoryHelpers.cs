@@ -6,21 +6,35 @@ using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
+using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Tools.AppLens;
+using Azure.Mcp.Tools.ApplicationInsights;
+using Azure.Mcp.Tools.AppService;
 using Azure.Mcp.Tools.Authorization;
 using Azure.Mcp.Tools.AzureBestPractices;
 using Azure.Mcp.Tools.AzureIsv;
+using Azure.Mcp.Tools.AzureMigrate;
 using Azure.Mcp.Tools.AzureTerraformBestPractices;
 using Azure.Mcp.Tools.BicepSchema;
 using Azure.Mcp.Tools.CloudArchitect;
+using Azure.Mcp.Tools.Communication;
+using Azure.Mcp.Tools.Compute;
+using Azure.Mcp.Tools.ConfidentialLedger;
 using Azure.Mcp.Tools.Cosmos;
 using Azure.Mcp.Tools.Deploy;
 using Azure.Mcp.Tools.EventGrid;
+using Azure.Mcp.Tools.EventHubs;
 using Azure.Mcp.Tools.Extension;
+using Azure.Mcp.Tools.FileShares;
 using Azure.Mcp.Tools.Foundry;
 using Azure.Mcp.Tools.FunctionApp;
 using Azure.Mcp.Tools.Grafana;
@@ -31,20 +45,27 @@ using Azure.Mcp.Tools.ManagedLustre;
 using Azure.Mcp.Tools.Marketplace;
 using Azure.Mcp.Tools.Monitor;
 using Azure.Mcp.Tools.MySql;
+using Azure.Mcp.Tools.Policy;
 using Azure.Mcp.Tools.Postgres;
+using Azure.Mcp.Tools.Pricing;
 using Azure.Mcp.Tools.Quota;
 using Azure.Mcp.Tools.Redis;
 using Azure.Mcp.Tools.ResourceHealth;
 using Azure.Mcp.Tools.Search;
 using Azure.Mcp.Tools.ServiceBus;
+using Azure.Mcp.Tools.SignalR;
+using Azure.Mcp.Tools.Speech;
 using Azure.Mcp.Tools.Sql;
 using Azure.Mcp.Tools.Storage;
+using Azure.Mcp.Tools.StorageSync;
 using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using ModelContextProtocol.Protocol;
+using NSubstitute;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -59,20 +80,29 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
             new AppLensSetup(),
+            new ApplicationInsightsSetup(),
+            new AppServiceSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
             new AzureIsvSetup(),
             new ManagedLustreSetup(),
+            new AzureMigrateSetup(),
             new AzureTerraformBestPracticesSetup(),
             new BicepSchemaSetup(),
             new CloudArchitectSetup(),
+            new CommunicationSetup(),
+            new ComputeSetup(),
+            new ConfidentialLedgerSetup(),
             new CosmosSetup(),
             new DeploySetup(),
             new EventGridSetup(),
+            new EventHubsSetup(),
             new ExtensionSetup(),
+            new FileSharesSetup(),
             new FoundrySetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),
@@ -82,14 +112,19 @@ internal class CommandFactoryHelpers
             new MarketplaceSetup(),
             new MonitorSetup(),
             new MySqlSetup(),
+            new PolicySetup(),
             new PostgresSetup(),
+            new PricingSetup(),
             new QuotaSetup(),
             new RedisSetup(),
             new ResourceHealthSetup(),
             new SearchSetup(),
             new ServiceBusSetup(),
+            new SignalRSetup(),
+            new SpeechSetup(),
             new SqlSetup(),
             new StorageSetup(),
+            new StorageSyncSetup(),
             new VirtualDesktopSetup(),
             new WorkbooksSetup(),
         ];
@@ -123,20 +158,29 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
             new AppLensSetup(),
+            new ApplicationInsightsSetup(),
+            new AppServiceSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
             new AzureIsvSetup(),
             new ManagedLustreSetup(),
+            new AzureMigrateSetup(),
             new AzureTerraformBestPracticesSetup(),
             new BicepSchemaSetup(),
             new CloudArchitectSetup(),
+            new CommunicationSetup(),
+            new ComputeSetup(),
+            new ConfidentialLedgerSetup(),
             new CosmosSetup(),
             new DeploySetup(),
             new EventGridSetup(),
+            new EventHubsSetup(),
             new ExtensionSetup(),
+            new FileSharesSetup(),
             new FoundrySetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),
@@ -146,21 +190,33 @@ internal class CommandFactoryHelpers
             new MarketplaceSetup(),
             new MonitorSetup(),
             new MySqlSetup(),
+            new PolicySetup(),
             new PostgresSetup(),
+            new PricingSetup(),
             new QuotaSetup(),
             new RedisSetup(),
             new ResourceHealthSetup(),
             new SearchSetup(),
             new ServiceBusSetup(),
+            new SignalRSetup(),
+            new SpeechSetup(),
             new SqlSetup(),
             new StorageSetup(),
+            new StorageSyncSetup(),
             new VirtualDesktopSetup(),
             new WorkbooksSetup(),
         ];
 
         var builder = new ServiceCollection()
             .AddLogging()
+            .AddMemoryCache()
+            .AddHttpClientServices(configureDefaults: true)
+            .AddSingleUserCliCacheService()
             .AddSingleton<ITelemetryService, NoOpTelemetryService>();
+
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>());
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>());
+        builder.AddSingleton<Azure.Mcp.Core.Services.Azure.ResourceGroup.IResourceGroupService>(_ => Substitute.For<Azure.Mcp.Core.Services.Azure.ResourceGroup.IResourceGroupService>());
 
         foreach (var area in areaSetups)
         {
