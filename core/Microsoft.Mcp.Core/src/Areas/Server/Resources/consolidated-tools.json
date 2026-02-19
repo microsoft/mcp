@@ -405,39 +405,6 @@
       ]
     },
     {
-      "name": "deploy_azure_ai_models",
-      "description": "Deploy AI models to Microsoft Foundry for machine learning inference and production use.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment by creating, updating, or deleting data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "foundry_models_deploy"
-      ]
-    },
-    {
       "name": "get_azure_app_config_settings",
       "description": "Get details about Azure App Configuration settings",
       "toolMetadata": {
@@ -1040,7 +1007,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and Microsoft Foundry sdk code samples.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1071,8 +1038,7 @@
         "azureterraformbestpractices_get",
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
-        "get_azure_bestpractices_get",
-        "foundry_agents_get-sdk-sample"
+        "get_azure_bestpractices_get"
       ]
     },
     {
@@ -1181,7 +1147,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by Microsoft Foundry, knowledge base and source information, and listing Microsoft Foundry , threads, messages and resources.",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, knowledge base and source information.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1213,16 +1179,7 @@
         "search_index_get",
         "search_index_query",
         "search_knowledge_source_get",
-        "search_knowledge_base_get",
-        "foundry_models_deployments_list",
-        "foundry_models_list",
-        "foundry_knowledge_index_list",
-        "foundry_knowledge_index_schema",
-        "foundry_openai_models-list",
-        "foundry_agents_list",
-        "foundry_resource_get",
-        "foundry_threads_list",
-        "foundry_threads_get-messages"
+        "search_knowledge_base_get"
       ]
     },
     {
