@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Configuration;
+namespace Microsoft.Mcp.Core.Configuration;
 
 /// <summary>
 /// Configuration settings for the MCP server.
 /// </summary>
-public class AzureMcpServerConfiguration
+public class McpServerConfiguration
 {
     /// <summary>
     /// The default prefix for the MCP server commands and help menus.
@@ -14,7 +14,7 @@ public class AzureMcpServerConfiguration
     public required string RootCommandGroupName { get; set; }
 
     /// <summary>
-    /// The name of the MCP server. (i.e. Azure.Mcp.Server)
+    /// The name of the MCP server. (i.e. Azure.Mcp.Server, Fabric.Mcp.Server, etc.)
     /// </summary>
     public required string Name { get; set; }
 

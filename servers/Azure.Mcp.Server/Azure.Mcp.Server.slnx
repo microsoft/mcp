@@ -13,6 +13,9 @@
   <Folder Name="/core/Microsoft.Mcp.Core/src/">
     <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
   </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/tests/">
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.UnitTests/Microsoft.Mcp.Core.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
   <Folder Name="/servers/Azure.Mcp.Server/src/">
@@ -337,6 +340,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceBus/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.ServiceBus/tests/Azure.Mcp.Tools.ServiceBus.LiveTests/Azure.Mcp.Tools.ServiceBus.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.ServiceBus/tests/Azure.Mcp.Tools.ServiceBus.UnitTests/Azure.Mcp.Tools.ServiceBus.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ServiceFabric/src/Azure.Mcp.Tools.ServiceFabric.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ServiceFabric/tests/Azure.Mcp.Tools.ServiceFabric.LiveTests/Azure.Mcp.Tools.ServiceFabric.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.ServiceFabric/tests/Azure.Mcp.Tools.ServiceFabric.UnitTests/Azure.Mcp.Tools.ServiceFabric.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.SignalR/" />
   <Folder Name="/tools/Azure.Mcp.Tools.SignalR/src/">

@@ -7,18 +7,19 @@ using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandFactory
+public class CommandFactory : ICommandFactory
 {
+    internal const char Separator = '_';
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
@@ -26,15 +27,13 @@ public class CommandFactory
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
 
-    public const char Separator = '_';
-
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
     /// </summary>
     private readonly Dictionary<string, IBaseCommand> _commandMap;
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
-    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions;
+    private readonly IOptions<McpServerConfiguration> _configurationOptions;
 
     // Add this new class inside CommandFactory
     private class StringConverter : JsonConverter<string>
@@ -55,7 +54,7 @@ public class CommandFactory
     public CommandFactory(IServiceProvider serviceProvider,
         IEnumerable<IAreaSetup> serviceAreas,
         ITelemetryService telemetryService,
-        IOptions<AzureMcpServerConfiguration> configurationOptions,
+        IOptions<McpServerConfiguration> configurationOptions,
         ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
@@ -268,7 +267,7 @@ public class CommandFactory
         {
             if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
             {
-                helpOption.Action = new VersionDisplayHelpAction(_configurationOptions, helpAction);
+                helpOption.Action = new CustomHelpAction(_configurationOptions, helpAction, _serviceAreas);
                 break;
             }
         }
@@ -341,7 +340,7 @@ public class CommandFactory
     /// - B2
     /// </summary>
     /// <param name="rootNode">Node to begin traversal.</param>
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
+    private static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
     {
         const string rootPrefix = "";
         var aggregated = new Dictionary<string, IBaseCommand>();
@@ -423,7 +422,7 @@ public class CommandFactory
         ? additional
         : currentPrefix + Separator + additional;
 
-    public static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
+    internal static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
     {
         return commands
             .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)

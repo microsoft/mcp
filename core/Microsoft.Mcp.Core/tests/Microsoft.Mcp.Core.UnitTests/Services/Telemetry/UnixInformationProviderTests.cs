@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Services.Telemetry;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
 public class UnixInformationProviderTests
 {
-    private static readonly DirectoryInfo TestStorageDirectory = new DirectoryInfo(Path.DirectorySeparatorChar + Path.Join("test", "storage"));
+    private static readonly DirectoryInfo TestStorageDirectory = new(Path.DirectorySeparatorChar + Path.Join("test", "storage"));
     private static readonly string TestStoragePath = TestStorageDirectory.ToString();
-    private static readonly DirectoryInfo ExpectedCacheDirectory = new DirectoryInfo(Path.Join(TestStorageDirectory.ToString(), "Microsoft", "DeveloperTools"));
+    private static readonly DirectoryInfo ExpectedCacheDirectory = new(Path.Join(TestStorageDirectory.ToString(), "Microsoft", "DeveloperTools"));
     private static readonly string ExpectedCachePath = ExpectedCacheDirectory.ToString();
 
     private readonly ILogger<UnixMachineInformationProvider> _logger;

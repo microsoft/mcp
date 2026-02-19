@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -195,12 +194,12 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
 
             // Create the elicitation request with empty schema (required by MCP SDK 0.8.0-preview.1+)
             // No form fields - pure accept/decline prompt
-            var protocolRequest = new ModelContextProtocol.Protocol.ElicitRequestParams
+            var protocolRequest = new ElicitRequestParams
             {
                 Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
                 RequestedSchema = new()
                 {
-                    Properties = new Dictionary<string, ModelContextProtocol.Protocol.ElicitRequestParams.PrimitiveSchemaDefinition>(),
+                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>(),
                     Required = []
                 }
             };

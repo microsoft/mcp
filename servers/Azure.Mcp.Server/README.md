@@ -1083,6 +1083,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
+- 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
@@ -1102,6 +1103,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 
 - See our [official documentation on learn.microsoft.com](https://learn.microsoft.com/azure/developer/azure-mcp-server/) to learn how to use the Azure MCP Server to interact with Azure resources through natural language commands from AI agents and other types of clients.
 - For additional command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
+- Use [Prompt Templates](https://github.com/microsoft/mcp/blob/main/docs/prompt-templates.md) to set tenant and subscription context once at the beginning of your Copilot session, avoiding repetitive information in subsequent prompts.
 
 ## Feedback and Support
 

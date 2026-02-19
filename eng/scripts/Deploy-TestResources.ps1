@@ -7,7 +7,8 @@ param(
     [string]$Location,
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
-    [switch]$Parallel
+    [switch]$Parallel,
+    [switch]$UseHttpTransport
 )
 
 $ErrorActionPreference = 'Stop'
@@ -89,7 +90,7 @@ Deploying$($AsJob ? ' in background job' : ''):
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
@@ -98,9 +99,10 @@ Deploying$($AsJob ? ' in background job' : ''):
                 -Location $Location `
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
+                -UseHttpTransport:$UseHttpTransport `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
@@ -109,6 +111,7 @@ Deploying$($AsJob ? ' in background job' : ''):
             -Location $Location `
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
+            -UseHttpTransport:$UseHttpTransport `
             -Force
     }
 }

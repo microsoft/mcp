@@ -5,7 +5,7 @@ using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 [SupportedOSPlatform("windows")]
 internal class WindowsMachineInformationProvider(ILogger<WindowsMachineInformationProvider> logger)

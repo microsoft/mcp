@@ -21,12 +21,12 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,
-    CommandFactory commandFactory,
+    ICommandFactory commandFactory,
     IOptions<ToolLoaderOptions> options,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    private readonly CommandFactory _commandFactory = commandFactory;
+    private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
@@ -93,6 +93,7 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -127,12 +128,7 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var activity = Activity.Current;
-
-        if (activity != null)
-        {
-            activity.SetTag(TagName.ToolName, toolName);
-        }
+        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
 
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
@@ -190,6 +186,7 @@ public sealed class CommandFactoryToolLoader(
 
         try
         {
+            activity?.SetTag(TagName.IsServerCommandInvoked, true);
             var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
@@ -207,7 +204,6 @@ public sealed class CommandFactoryToolLoader(
         catch (Exception ex)
         {
             _logger.LogError(ex, "An exception occurred running '{Tool}'. ", realCommand.Name);
-
             throw;
         }
         finally

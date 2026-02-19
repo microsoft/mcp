@@ -254,7 +254,8 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription
-azmcp advisor recommendations list --subscription <subscription>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation list --subscription <subscription>
 ```
 
 ### Azure AI Search Operations
@@ -2435,6 +2436,32 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
+```
+
+### Azure Service Fabric Operations
+
+#### Managed Cluster Node
+
+```bash
+# Get nodes for a Service Fabric managed cluster (all nodes, or a single node by name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster node get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --cluster <cluster> \
+                                            [--node <node>]
+```
+
+#### Managed Cluster Node Type
+
+```bash
+# Restart nodes of a specific node type in a Service Fabric managed cluster
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster nodetype restart --subscription <subscription> \
+                                                    --resource-group <resource-group> \
+                                                    --cluster <cluster> \
+                                                    --node-type <node-type> \
+                                                    --nodes <node1> [--nodes <node2> ...] \
+                                                    [--update-type <Default|ByUpgradeDomain>]
 ```
 
 ### Azure SignalR Service Operations
