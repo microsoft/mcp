@@ -178,9 +178,9 @@ Get started with the Azure plugin, which connects [GitHub Copilot CLI](https://g
 
 To install the Azure plugin into Copilot CLI and Claude Code:
 
-1. Add the marketplace with `/plugin marketplace add microsoft/github-copilot-for-azure`
-2. Install the plugin with `/plugin install azure@github-copilot-for-azure`
-3. Update the plugin with `/plugin update azure@github-copilot-for-azure`
+1. Add the marketplace with `/plugin marketplace add microsoft/skills`
+2. Install the plugin with `/plugin install azure-skills@skills`
+3. Update the plugin with `/plugin update azure-skills@skills`
 
 ## 🏗️ Looking for starter templates that use MCP? 
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP for additional starter options.
