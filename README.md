@@ -176,7 +176,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 ## 🏗️ Looking for starter templates that use MCP? 
 Get started with the Azure plugin, which connects [GitHub Copilot CLI](https://github.com/github/copilot-cli) or Claude Code to your Azure account. This integration lets you manage resources, deploy applications, and monitor services directly from your development environment using tools from the Azure MCP server and extended Azure knowledge skills.
 
-To install the Azure plugin into Copilot CLI and Claude:
+To install the Azure plugin into Copilot CLI and Claude Code:
 
 1. Add the marketplace with `/plugin marketplace add microsoft/github-copilot-for-azure`
 2. Install the plugin with `/plugin install azure@github-copilot-for-azure`
