@@ -83,7 +83,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas

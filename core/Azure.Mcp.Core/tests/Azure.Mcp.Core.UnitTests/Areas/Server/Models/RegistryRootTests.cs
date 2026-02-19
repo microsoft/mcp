@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Xunit;
 

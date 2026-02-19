@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Models.Metadata;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server;
+namespace Microsoft.Mcp.Core.Areas.Server;
 
 [JsonSerializable(typeof(RegistryRoot))]
 [JsonSerializable(typeof(Dictionary<string, RegistryServerInfo>))]

@@ -4,7 +4,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

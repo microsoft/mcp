@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

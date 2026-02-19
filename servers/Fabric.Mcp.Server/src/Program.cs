@@ -72,7 +72,7 @@ internal class Program
 
         return [
             // Register core areas
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
             new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
