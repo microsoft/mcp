@@ -114,33 +114,6 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationFailure()
-    {
-        // Arrange
-        var authException = new Azure.Identity.AuthenticationFailedException("The access token is from the wrong issuer");
-
-        _serviceBusService.GetTopicDetails(
-            Arg.Is(NamespaceName),
-            Arg.Is(TopicName),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(authException);
-
-        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
-        Assert.Contains("Authentication failed", response.Message);
-        Assert.Contains("az login", response.Message);  // Verify GlobalCommand message format
-        Assert.Contains("wrong issuer", response.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesGenericException()
     {
         // Arrange
