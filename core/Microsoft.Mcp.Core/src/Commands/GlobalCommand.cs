@@ -108,6 +108,15 @@ public abstract class GlobalCommand<
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        CredentialUnavailableException credEx =>
+            $"No Azure credentials are available. Please authenticate using one of the supported methods:\n" +
+            $"  - Azure CLI: Run 'az login'\n" +
+            $"  - Azure PowerShell: Run 'Connect-AzAccount'\n" +
+            $"  - Azure Developer CLI: Run 'azd auth login'\n" +
+            $"  - Visual Studio: Sign in through Azure Service Authentication\n" +
+            $"  - VS Code: Sign in through Azure Account extension\n" +
+            $"For more information, see: https://aka.ms/azmcp/auth\n" +
+            $"Details: {credEx.Message}",
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),
@@ -119,6 +128,7 @@ public abstract class GlobalCommand<
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         KeyNotFoundException => HttpStatusCode.NotFound,
+        CredentialUnavailableException => HttpStatusCode.Unauthorized,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
         HttpRequestException => HttpStatusCode.ServiceUnavailable,
