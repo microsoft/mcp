@@ -4,10 +4,10 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Services.Telemetry;
@@ -36,14 +36,15 @@ internal class TelemetryService : ITelemetryService
     internal ActivitySource Parent { get; }
 
     public TelemetryService(IMachineInformationProvider informationProvider,
-        IOptions<AzureMcpServerConfiguration> options,
+        IOptions<McpServerConfiguration> options,
         IOptions<ServiceStartOptions> serverOptions,
         ILogger<TelemetryService> logger)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList =
         [
-            new(TagName.AzureMcpVersion, options.Value.Version),
+            new(TagName.McpServerVersion, options.Value.Version),
+            new(TagName.McpServerName, options.Value.Name),
             new(TagName.ServerMode, serverOptions.Value.Mode),
             new(TagName.Transport, serverOptions.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),
