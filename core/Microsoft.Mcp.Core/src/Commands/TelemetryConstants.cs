@@ -8,7 +8,8 @@ namespace Microsoft.Mcp.Core.Commands;
 /// </summary>
 public class TagName
 {
-    public const string AzureMcpVersion = "Version";
+    public const string McpServerVersion = "Version";
+    public const string McpServerName = "McpServerName";
     public const string ClientName = "ClientName";
     public const string ClientVersion = "ClientVersion";
     public const string DevDeviceId = "DevDeviceId";
