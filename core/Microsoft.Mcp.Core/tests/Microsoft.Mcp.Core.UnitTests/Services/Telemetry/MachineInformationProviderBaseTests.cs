@@ -3,12 +3,12 @@
 
 using System.Security.Cryptography;
 using System.Text;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Services.Telemetry;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
 public class MachineInformationProviderBaseTests
 {

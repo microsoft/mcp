@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Extensions;

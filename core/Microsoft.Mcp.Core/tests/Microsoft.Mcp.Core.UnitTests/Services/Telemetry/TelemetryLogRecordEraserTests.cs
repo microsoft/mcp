@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry.Logs;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Services.Telemetry;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
 public class TelemetryLogRecordEraserTests
 {

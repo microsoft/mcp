@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 /// <summary>
 /// Default information provider not tied to any platform specification for DevDeviceId.

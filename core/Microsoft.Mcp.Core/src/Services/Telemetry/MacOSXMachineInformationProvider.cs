@@ -4,7 +4,7 @@
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 [SupportedOSPlatform("osx")]
 internal class MacOSXMachineInformationProvider(ILogger<MacOSXMachineInformationProvider> logger)

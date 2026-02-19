@@ -3,12 +3,12 @@
 
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.LiveTests.Services.Telemetry;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
 [SupportedOSPlatform("osx")]
 public class MacOSXInformationProviderTests
