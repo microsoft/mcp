@@ -676,7 +676,7 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
+            Transport = TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,
