@@ -5,7 +5,6 @@ using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
@@ -44,6 +43,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;

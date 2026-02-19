@@ -4,7 +4,7 @@
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 /// <summary>
 /// Prevents emitting telemetry events by OpenTelemetryExporter.  Accomplishes this by clearing the log contents
