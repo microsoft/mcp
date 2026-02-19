@@ -91,7 +91,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
-            $"Topic not found. Please check the topic name and try again.",
+            $"Subscription not found. Please check the topic and subscription name and try again.",
         _ => base.GetErrorMessage(ex)
     };
 
