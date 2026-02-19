@@ -9,7 +9,7 @@ using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// RegistryToolLoader is a tool loader that retrieves tools from a registry.

@@ -4,6 +4,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Areas.Server;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,7 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
