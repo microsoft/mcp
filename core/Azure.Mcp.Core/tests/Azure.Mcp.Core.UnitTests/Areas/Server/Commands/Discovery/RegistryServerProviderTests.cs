@@ -3,8 +3,8 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;

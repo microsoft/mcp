@@ -3,7 +3,7 @@
 
 using ModelContextProtocol.Client;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 public interface IMcpDiscoveryStrategy : IAsyncDisposable
 {

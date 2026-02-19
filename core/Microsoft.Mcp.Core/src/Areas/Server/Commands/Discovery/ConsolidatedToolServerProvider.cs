@@ -5,7 +5,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Server provider that starts the azmcp server in "all" mode while explicitly

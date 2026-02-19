@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;

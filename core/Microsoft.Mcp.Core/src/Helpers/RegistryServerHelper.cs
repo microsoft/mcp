@@ -3,8 +3,8 @@
 
 using System.Reflection;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 namespace Azure.Mcp.Core.Helpers;
 

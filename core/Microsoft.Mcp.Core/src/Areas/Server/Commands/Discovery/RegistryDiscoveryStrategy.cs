@@ -6,7 +6,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Discovers MCP servers from an embedded registry.json resource file.

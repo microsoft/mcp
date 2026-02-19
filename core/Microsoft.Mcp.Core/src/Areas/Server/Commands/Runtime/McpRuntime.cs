@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Runtime;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 
 /// <summary>
 /// Implementation of the MCP runtime that delegates tool discovery and invocation to a tool loader.

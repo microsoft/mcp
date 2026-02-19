@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -76,7 +76,7 @@ public class SingleProxyToolLoaderTests
             Params = new CallToolRequestParams
             {
                 Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
+                Arguments = arguments ?? []
             }
         };
     }

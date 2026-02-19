@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -561,7 +562,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     private string GetFirstAvailableNamespace()
     {
         var namespaces = _commandFactory.RootGroup.SubGroup
-            .Where(g => !Azure.Mcp.Core.Areas.Server.Commands.Discovery.DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
             .Select(g => g.Name)
             .ToList();
 

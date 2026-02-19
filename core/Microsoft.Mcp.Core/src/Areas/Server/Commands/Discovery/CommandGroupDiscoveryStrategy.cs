@@ -6,7 +6,7 @@ using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Discovery strategy that exposes command groups as MCP servers.
