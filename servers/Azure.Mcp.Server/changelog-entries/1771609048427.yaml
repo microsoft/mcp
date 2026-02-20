@@ -1,0 +1,4 @@
+pr: 1658
+changes:
+  - section: "Other Changes"
+    description: "Added validation logic for endpoint parameters in foundry tools"
