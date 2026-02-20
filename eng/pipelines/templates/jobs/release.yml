@@ -9,6 +9,8 @@ parameters:
   type: boolean
 - name: PackagePyPI
   type: boolean
+- name: PackageMCPB
+  type: boolean
 - name: IsTestPipeline
   type: boolean
 
@@ -75,6 +77,12 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/release-mcpb.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      DependsOn: TagRepository
+
 - ${{ if parameters.PackageDocker }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
@@ -86,6 +94,7 @@ jobs:
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
     DependsOn:
     - PublishNugetPackage
     - PublishNpm
@@ -93,6 +102,8 @@ jobs:
       - PublishACR
     - ${{ if parameters.PackagePyPI }}:
       - PublishPyPI
+    - ${{ if parameters.PackageMCPB }}:
+      - PublishMCPB
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"

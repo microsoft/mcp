@@ -27,6 +27,9 @@
     <!-- pypi settings -->
     <PypiPackageName>msmcp-azure</PypiPackageName>
     <PypiPackageKeywords>azure,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
+
+    <!-- mcpb settings -->
+    <McpbPlatforms>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</McpbPlatforms>
   </PropertyGroup>
 
   <PropertyGroup>

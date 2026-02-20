@@ -12,6 +12,9 @@ parameters:
 - name: PackagePyPI
   type: boolean
   default: false
+- name: PackageMCPB
+  type: boolean
+  default: false
 - name: IncludeNative
   type: boolean
   default: true
@@ -32,6 +35,7 @@ extends:
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
     PackagePyPI: ${{ parameters.PackagePyPI }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     IsTestPipeline: true

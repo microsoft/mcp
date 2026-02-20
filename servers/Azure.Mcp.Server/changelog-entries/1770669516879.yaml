@@ -1,0 +1,4 @@
+pr: 1681
+changes:
+  - section: "Features Added"
+    description: "Added support for publishing server as an MCP Bundle (.mcpb)"

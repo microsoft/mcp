@@ -531,6 +531,7 @@ function Get-ServerDetails {
             pypiPackageKeywords = @($props.PypiPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
+            mcpbPlatforms = @($props.McpbPlatforms -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
         }
     }
