@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 internal abstract class MachineInformationProviderBase(ILogger<MachineInformationProviderBase> logger)
     : IMachineInformationProvider
@@ -81,6 +81,6 @@ internal abstract class MachineInformationProviderBase(ILogger<MachineInformatio
     protected string HashValue(string value)
     {
         var hashInput = s_sHA256.ComputeHash(Encoding.UTF8.GetBytes(value));
-        return BitConverter.ToString(hashInput).Replace("-", string.Empty).ToLowerInvariant();
+        return Convert.ToHexStringLower(hashInput);
     }
 }
