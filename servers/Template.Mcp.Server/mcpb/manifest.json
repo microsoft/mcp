@@ -1,0 +1,50 @@
+{
+  "manifest_version": "0.3",
+  "name": "Template.Mcp.Server",
+  "display_name": "Template MCP Server",
+  "version": "0.0.12",
+  "description": "Basic Model Context Protocol implementation for Microsoft servers.",
+  "long_description": "A template Model Context Protocol (MCP) server that provides a starting point for building new servers. This server implements the [MCP specification](https://modelcontextprotocol.io) and can be used as a reference implementation for creating custom MCP servers.",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/mcp.git"
+  },
+  "homepage": "https://github.com/microsoft/mcp/tree/main/servers/Template.Mcp.Server",
+  "documentation": "https://github.com/microsoft/mcp/tree/main/servers/Template.Mcp.Server#readme",
+  "support": "https://github.com/microsoft/mcp/issues",
+  "icon": "./servericon.png",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/mcptmp",
+    "mcp_config": {
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}\\server\\mcptmp.exe",
+          "args": []
+        }
+      },
+      "command": "${__dirname}/server/mcptmp",
+      "args": [ "server", "start" ],
+      "env": {}
+    }
+  },
+  "tools": [],
+  "tools_generated": false,
+  "keywords": [],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://www.microsoft.com/privacy/privacystatement"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.8.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  }
+}
