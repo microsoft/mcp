@@ -1,7 +1,7 @@
 # Fix Project References Script
 # This script discovers all .csproj files, maps them by filename, and corrects all project references
 
-Write-Host "Fixing project references in Azure MCP repository..." -ForegroundColor Green
+Write-Host "Fixing project references in MCP repository..." -ForegroundColor Green
 
 # Step 1: Discover all .csproj files and create a filename to path mapping
 Write-Host "Discovering all .csproj files..." -ForegroundColor Yellow
