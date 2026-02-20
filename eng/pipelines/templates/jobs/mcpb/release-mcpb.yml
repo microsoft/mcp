@@ -16,7 +16,7 @@ parameters:
   type: object
 
 jobs:
-- deployment: PublishMcpb
+- deployment: PublishMCPB
   displayName: "Publish MCPB to GitHub Release"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))

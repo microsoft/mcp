@@ -254,7 +254,8 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription
-azmcp advisor recommendations list --subscription <subscription>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation list --subscription <subscription>
 ```
 
 ### Azure AI Search Operations
@@ -558,6 +559,106 @@ azmcp extension cli generate --cli-type <cli-type>
 azmcp extension cli install --cli-type <cli-type>
 ```
 
+### Azure Communication Services Operations
+
+#### Email
+
+```bash
+# Send email using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint <endpoint> \
+                               --from <sender-email> \
+                               --to <recipient-email> \
+                               --subject <email-subject> \
+                               --message <email-content> \
+                               [--is-html] \
+                               [--sender-name <sender-display-name>] \
+                               [--cc <cc-recipient-email>] \
+                               [--bcc <bcc-recipient-email>] \
+                               [--reply-to <reply-to-email>]
+
+# Examples:
+# Send plain text email
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --to "recipient@example.com" \
+                               --subject "Important message" \
+                               --message "Hello from Azure Communication Services!"
+
+# Send HTML-formatted email with CC and sender name
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --sender-name "Support Team" \
+                               --to "recipient@example.com" \
+                               --cc "manager@example.com" \
+                               --subject "Monthly Report" \
+                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+                               --is-html
+
+# Send to multiple recipients with BCC and reply-to
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "notifications@verified-domain.com" \
+                               --to "recipient1@example.com,recipient2@example.com" \
+                               --bcc "archive@example.com" \
+                               --reply-to "support@example.com" \
+                               --subject "System Notification" \
+                               --message "This is an automated notification."
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
+#### SMS
+
+```bash
+# SMS message using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint <endpoint> \
+                             --from <sender-phone-number> \
+                             --to <recipient-phone-number> \
+                             --message <message-text> \
+                             [--enable-delivery-report] \
+                             [--tag <custom-tag>]
+
+# Examples:
+# Send SMS to single recipient
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
+                             --from "+1234567890" \
+                             --to "+1234567891" \
+                             --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
+                             --from "+1234567890" \
+                             --to "+1234567891,+1234567892" \
+                             --message "Broadcast message" \
+                             --enable-delivery-report \
+                             --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
 ### Azure Compute Operations
 
 #### Virtual Machines
@@ -665,105 +766,29 @@ azmcp compute vmss get --subscription "my-subscription" \
 | `--vmss-name` | No | Name of the virtual machine scale set |
 | `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
 
-### Azure Communication Services Operations
-
-#### Email
+#### Disks
 
 ```bash
-# Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint <endpoint> \
-                               --from <sender-email> \
-                               --to <recipient-email> \
-                               --subject <email-subject> \
-                               --message <email-content> \
-                               [--is-html] \
-                               [--sender-name <sender-display-name>] \
-                               [--cc <cc-recipient-email>] \
-                               [--bcc <bcc-recipient-email>] \
-                               [--reply-to <reply-to-email>]
+# List all managed disks in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription>
 
-# Examples:
-# Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "sender@verified-domain.com" \
-                               --to "recipient@example.com" \
-                               --subject "Important message" \
-                               --message "Hello from Azure Communication Services!"
+# List all managed disks in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription> \
+                       --resource-group <resource-group>
 
-# Send HTML-formatted email with CC and sender name
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "sender@verified-domain.com" \
-                               --sender-name "Support Team" \
-                               --to "recipient@example.com" \
-                               --cc "manager@example.com" \
-                               --subject "Monthly Report" \
-                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
-                               --is-html
-
-# Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --from "notifications@verified-domain.com" \
-                               --to "recipient1@example.com,recipient2@example.com" \
-                               --bcc "archive@example.com" \
-                               --reply-to "support@example.com" \
-                               --subject "System Notification" \
-                               --message "This is an automated notification."
+# Get details of a specific managed disk
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk get --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --disk <disk-name>
 ```
 
 **Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--sender`: Email address to send from, must be from a verified domain (required)
--   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
--   `--subject`: Email subject line (required)
--   `--message`: Email content body (required)
--   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
--   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
-
-#### SMS
-
-```bash
-# SMS message using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint <endpoint> \
-                             --from <sender-phone-number> \
-                             --to <recipient-phone-number> \
-                             --message <message-text> \
-                             [--enable-delivery-report] \
-                             [--tag <custom-tag>]
-
-# Examples:
-# Send SMS to single recipient
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
-                             --from "+1234567890" \
-                             --to "+1234567891" \
-                             --message "Hello from Azure Communication Services!"
-
-# Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
-                             --from "+1234567890" \
-                             --to "+1234567891,+1234567892" \
-                             --message "Broadcast message" \
-                             --enable-delivery-report \
-                             --tag "marketing-campaign"
-```
-
-**Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--from`: SMS-enabled phone number in E.164 format (required)
--   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
--   `--message`: SMS message content (required)
--   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
--   `--tag`: Custom tag for message tracking (optional)
-
+-   `--disk`: The name of the managed disk (optional - if not provided, lists all disks)
+-   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
+-   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
 ### Azure Confidential Ledger Operations
 
@@ -886,15 +911,17 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ### Azure Database for MySQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a MySQL server
+# Hierarchical list command for MySQL resources
+# Without parameters: lists all MySQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server>
+azmcp mysql list --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --user <user> \
+                 [--server <server>] \
+                 [--database <database>]
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -904,18 +931,6 @@ azmcp mysql database query --subscription <subscription> \
                            --server <server> \
                            --database <database> \
                            --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a MySQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table list --subscription <subscription> \
-                       --resource-group <resource-group> \
-                       --user <user> \
-                       --server <server> \
-                       --database <database>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -925,23 +940,13 @@ azmcp mysql table schema get --subscription <subscription> \
                              --server <server> \
                              --database <database> \
                              --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --user <user> \
                               --server <server>
-
-# List all MySQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql server list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --user <user>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -963,15 +968,17 @@ azmcp mysql server param set --subscription <subscription> \
 
 ### Azure Database for PostgreSQL Operations
 
-#### Database
-
 ```bash
-# List all databases in a PostgreSQL server
+# Hierarchical list command for PostgreSQL resources
+# Without parameters: lists all PostgreSQL servers in the resource group
+# With --server: lists all databases on that server
+# With --server and --database: lists all tables in that database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres database list --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
-                             --server <server>
+azmcp postgres list --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --user <user> \
+                    [--server <server>] \
+                    [--database <database>]
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -981,18 +988,6 @@ azmcp postgres database query --subscription <subscription> \
                               --server <server> \
                               --database <database> \
                               --query <query>
-```
-
-#### Table
-
-```bash
-# List all tables in a PostgreSQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres table list --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --user <user> \
-                          --server <server> \
-                          --database <database>
 
 # Get the schema of a specific table in a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1002,23 +997,13 @@ azmcp postgres table schema get --subscription <subscription> \
                                 --server <server> \
                                 --database <database> \
                                 --table <table>
-```
 
-#### Server
-
-```bash
 # Retrieve the configuration of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --user <user> \
                                  --server <server>
-
-# List all PostgreSQL servers in a subscription & resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres server list --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1311,11 +1296,11 @@ azmcp keyvault certificate create --subscription <subscription> \
                                   --vault <vault-name> \
                                   --name <certificate-name>
 
-# Gets a certificate in a key vault
+# Get a specific certificate or list all certificates. If --name is provided, returns a specific certificate; otherwise, lists all certificates in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate get --subscription <subscription> \
                                --vault <vault-name> \
-                               --name <certificate-name>
+                               [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -1324,11 +1309,6 @@ azmcp keyvault certificate import --subscription <subscription> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \
                                   [--password <pfx-password>]
-
-# Lists certificates in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate list --subscription <subscription> \
-                                --vault <vault-name>
 ```
 
 #### Keys
@@ -1341,17 +1321,12 @@ azmcp keyvault key create --subscription <subscription> \
                           --key <key-name> \
                           --key-type <key-type>
 
-# Get a key in a key vault
+# Get a specific key or list all keys. If --key is provided, returns a specific key; otherwise, lists all keys in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key get --subscription <subscription> \
                        --vault <vault-name> \
-                       --key <key-name>
-
-# Lists keys in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key list --subscription <subscription> \
-                        --vault <vault-name> \
-                        --include-managed <true/false>
+                       [--key <key-name>] \
+                       [--include-managed]
 ```
 
 #### Secrets
@@ -1376,16 +1351,11 @@ azmcp keyvault secret create --subscription <subscription> \
                              --name <secret-name> \
                              --value <secret-value>
 
-# Get a secret in a key vault (will prompt for user consent)
+# Get a specific secret or list all secrets. If --secret is provided, returns a specific secret with its value (requires user consent); otherwise, lists all secrets in the key vault (returns secret names and properties, not values).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp keyvault secret get --subscription <subscription> \
                           --vault <vault-name> \
-                          --secret <secret-name>
-
-# Lists secrets in a key vault
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault secret list --subscription <subscription> \
-                           --vault <vault-name>
+                          [--secret <secret-name>]
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
@@ -1440,40 +1410,52 @@ azmcp loadtesting testresource list --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --test-resource-name <test-resource-name>
 
-# Create load test run
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun create --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --test-resource-name <test-resource-name> \
-                                 --test-id <test-id> \
-                                 --testrun-id <testrun-id> \
-                                 --display-name <display-name> \
-                                 --description <description> \
-                                 --old-testrun-id <old-testrun-id>
-
-# Get load test run
+# Get load test run (single run or list all runs for a test)
+# Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
                               --testrun-id <testrun-id>
 
-# List load test run
+# List all test runs for a specific test:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun list --subscription <subscription> \
-                               --resource-group <resource-group> \
-                               --test-resource-name <test-resource-name> \
-                               --test-id <test-id>
+azmcp loadtesting testrun get --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --test-resource-name <test-resource-name> \
+                              --test-id <test-id>
 
-# Update load test run
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun update --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --test-resource-name <test-resource-name> \
-                                 --test-id <test-id> \
-                                 --testrun-id <testrun-id> \
-                                 --display-name <display-name> \
-                                 --description <description>
+# Create or update load test run
+# Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
+#       Update operations ARE idempotent (repeated calls with same values produce same result).
+# Create a new test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <testrun-id> \
+                                         --display-name <display-name> \
+                                         --description <description>
+
+# Rerun an existing test run:
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <new-testrun-id> \
+                                         --old-testrun-id <existing-testrun-id>
+
+# Update test run metadata (idempotent):
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp loadtesting testrun createorupdate --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --test-resource-name <test-resource-name> \
+                                         --test-id <test-id> \
+                                         --testrun-id <testrun-id> \
+                                         --display-name <updated-display-name> \
+                                         --description <updated-description>
 ```
 
 ### Azure Managed Grafana Operations
@@ -1705,7 +1687,6 @@ azmcp monitor metrics query --subscription <subscription> \
 
 ```bash
 # Create a new web test in Azure Monitor
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
@@ -1736,11 +1717,9 @@ azmcp monitor webtests get --subscription <subscription> \
                           --webtest-resource <webtest-resource-name>
 
 # List all web tests in a subscription or optionally, within a resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
 
 # Update an existing web test in Azure Monitor
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests update --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
@@ -1763,14 +1742,7 @@ azmcp monitor webtests update --subscription <subscription> \
                               [--ssl-check <true|false>] \
                               [--ssl-lifetime-check <days>] \
                               [--timeout <seconds>]
-```
-
-### Azure Managed Lustre
-
-```bash
-# List Azure Managed Lustre Filesystems available in a subscription or resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs list --subscription <subscription> \
+ubscription> \
                             --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
@@ -2202,6 +2174,32 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
+```
+
+### Azure Service Fabric Operations
+
+#### Managed Cluster Node
+
+```bash
+# Get nodes for a Service Fabric managed cluster (all nodes, or a single node by name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster node get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --cluster <cluster> \
+                                            [--node <node>]
+```
+
+#### Managed Cluster Node Type
+
+```bash
+# Restart nodes of a specific node type in a Service Fabric managed cluster
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp servicefabric managedcluster nodetype restart --subscription <subscription> \
+                                                    --resource-group <resource-group> \
+                                                    --cluster <cluster> \
+                                                    --node-type <node-type> \
+                                                    --nodes <node1> [--nodes <node2> ...] \
+                                                    [--update-type <Default|ByUpgradeDomain>]
 ```
 
 ### Azure SignalR Service Operations

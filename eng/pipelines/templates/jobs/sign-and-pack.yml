@@ -5,6 +5,8 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackagePyPI
+  type: boolean
 - name: PackageMCPB
   type: boolean
 
@@ -112,9 +114,10 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
-  parameters:
-    DependsOn: Sign
+- ${{ if parameters.PackagePyPI }}:
+  - template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
+    parameters:
+      DependsOn: Sign
 
 - template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
   parameters:

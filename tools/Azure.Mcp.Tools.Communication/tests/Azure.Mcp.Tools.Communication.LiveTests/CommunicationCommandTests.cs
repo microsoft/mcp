@@ -10,7 +10,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? endpointRecorded;
@@ -31,9 +31,9 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
-            fromSms = tempFromSms!.Substring(1); // Remove '+' for regex matching
+            fromSms = tempFromSms?.Substring(1); // Remove '+' for regex matching
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var tempToSms);
-            toSms = tempToSms!.Substring(1); // Remove '+' for regex matching
+            toSms = tempToSms?.Substring(1); // Remove '+' for regex matching
         }
 
         await base.InitializeAsync();
