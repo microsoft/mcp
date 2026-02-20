@@ -44,6 +44,11 @@ $ErrorActionPreference = "Stop"
 $SIG_V1_MARKER = "MCPB_SIG_V1"
 $SIG_END_MARKER = "MCPB_SIG_END"
 
+# Maximum signature block size, must match the value in Stage-McpbForSigning.ps1.
+# The EOCD comment length is pre-set to this value before ESRP signing, so the
+# signature block must be padded to exactly this size for the ZIP to be valid.
+$MAX_SIG_BLOCK_SIZE = 16384
+
 <#
 .SYNOPSIS
     Converts a PKCS#7 detached signature to MCPB embedded signature format.
@@ -93,13 +98,30 @@ function Convert-P7sToMcpbSignature {
         }
     }
 
-    # Combine: MCPB + MCPB_SIG_V1 + length + signature + MCPB_SIG_END
+    # Calculate the unpadded signature block size:
+    # MCPB_SIG_V1 (11) + length (4) + signature (N) + MCPB_SIG_END (12) = N + 27
+    $unpaddedBlockSize = $sigV1MarkerBytes.Length + $lengthBytes.Length + $signatureBytes.Length + $sigEndMarkerBytes.Length
+
+    if ($unpaddedBlockSize -gt $MAX_SIG_BLOCK_SIZE) {
+        throw "Signature block ($unpaddedBlockSize bytes) exceeds MAX_SIG_BLOCK_SIZE ($MAX_SIG_BLOCK_SIZE bytes). Increase MAX_SIG_BLOCK_SIZE in both Stage-McpbForSigning.ps1 and Apply-McpbSignatures.ps1."
+    }
+
+    # Pad with zeros so the total signature block equals MAX_SIG_BLOCK_SIZE.
+    # This makes the ZIP valid because EOCD comment_length == MAX_SIG_BLOCK_SIZE.
+    # The padding sits between the DER signature and MCPB_SIG_END. The mcpb
+    # extraction logic reads exactly sigLength bytes via the 4-byte length prefix
+    # and ignores the padding.
+    $paddingSize = $MAX_SIG_BLOCK_SIZE - $unpaddedBlockSize
+    $paddingBytes = [byte[]]::new($paddingSize)
+
+    # Combine: MCPB + MCPB_SIG_V1 + length + signature + padding + MCPB_SIG_END
     $signedContent = [System.Collections.Generic.List[byte]]::new()  
 
     $signedContent.AddRange($mcpbContent)  
     $signedContent.AddRange($sigV1MarkerBytes)  
     $signedContent.AddRange($lengthBytes)  
-    $signedContent.AddRange($signatureBytes)  
+    $signedContent.AddRange($signatureBytes)
+    $signedContent.AddRange($paddingBytes)
     $signedContent.AddRange($sigEndMarkerBytes)  
 
     [System.IO.File]::WriteAllBytes($OutputFile, $signedContent.ToArray())

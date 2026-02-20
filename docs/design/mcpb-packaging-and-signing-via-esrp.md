@@ -98,12 +98,38 @@ This approach allows:
 - Easy signature verification and removal
 - Support for certificate chains with intermediate certificates
 
+### ZIP Compatibility (EOCD Comment Length)
+
+Standard ZIP parsers locate the End of Central Directory (EOCD) record and expect the file to end at `EOCD_offset + 22 + comment_length`. When the MCPB signature block is naively appended, the EOCD `comment_length` remains 0, but extra bytes (the signature block) follow — causing strict ZIP parsers to reject the file.
+
+**Affected tools:** Claude Desktop uses a strict ZIP parser that rejects files with unexpected trailing bytes:
+```
+Failed to read or unzip file: Invalid comment length. Expected: 3997. Found: 0.
+```
+
+**Our fix:** Before ESRP signing, we set the EOCD `comment_length` to a fixed constant (`MAX_SIG_BLOCK_SIZE = 16384`). After signing, we pad the signature block with zero bytes to exactly that size. The result is a valid ZIP where the "comment" bytes happen to be the MCPB signature block.
+
+```
+[ZIP entries + Central Directory + EOCD (comment_length=16384)]
+[MCPB_SIG_V1][4-byte len][DER signature][zero padding][MCPB_SIG_END]
+|<-------- exactly 16384 bytes = EOCD comment_length ----------->|
+```
+
+**Why this works end-to-end:**
+| Step | Behavior |
+|------|----------|
+| ESRP signing | Signs the MCPB *after* EOCD is updated, so the hash covers `comment_length=16384` |
+| `mcpb verify` | Extracts `originalContent` = everything before `MCPB_SIG_V1` = the EOCD-modified file = what ESRP signed ✅ |
+| `mcpb unpack` | Strips signature, reads ZIP entries normally ✅ |
+| ZIP parsers | See `comment_length=16384` and 16384 bytes follow EOCD ✅ |
+| Claude Desktop | Treats it as a valid ZIP and installs successfully ✅ |
+
 ### ESRP Detached Signing Output
 
-- Input: `file.mcpb` (staged using the `.signature.p7s` extension for ESRP processing)
+- Input: `file.mcpb` (staged using the `.signature.p7s` extension for ESRP processing, with EOCD comment_length pre-set)
 - Output: `file.signature.p7s` (detached PKCS#7/CMS signature)
 
-The signature signs the entire file content. ESRP replaces the staged file with the signature, so we stage a copy with a `.signature.p7s` extension and keep the original `.mcpb` intact.
+The signature signs the entire file content (including the pre-set EOCD comment_length). ESRP replaces the staged file with the signature, so we stage a copy with a `.signature.p7s` extension and keep the original `.mcpb` intact.
 
 ---
 
@@ -214,13 +240,14 @@ The pipeline uses separate scripts for each signing phase, enabling better maint
 
 **`Stage-McpbForSigning.ps1`** - Location: `eng/scripts/Stage-McpbForSigning.ps1`
 - Creates copies of `.mcpb` files with `.signature.p7s` extension for ESRP processing
-- Preserves original `.mcpb` files intact
+- **Updates the ZIP EOCD comment length** to `MAX_SIG_BLOCK_SIZE` (16384) before staging, so that the signed file remains a valid ZIP (see [ZIP Compatibility](#zip-compatibility-eocd-comment-length))
 - Parameters: `-ArtifactsPath`, `-StagingPath`
 
 **`Apply-McpbSignatures.ps1`** - Location: `eng/scripts/Apply-McpbSignatures.ps1`
 - Applies ESRP-generated `.p7s` signatures to MCPB files
 - Contains internal `Convert-P7sToMcpbSignature` function for signature format conversion
-- Wraps .p7s in MCPB signature format (MCPB_SIG_V1 + length + sig + MCPB_SIG_END)
+- Wraps .p7s in MCPB signature format (MCPB_SIG_V1 + length + sig + **padding** + MCPB_SIG_END)
+- **Pads the signature block** with zero bytes so the total block size equals `MAX_SIG_BLOCK_SIZE`, matching the pre-set EOCD comment length
 - Parameters: `-ArtifactsPath`, `-OutputPath`
 
 **`Verify-McpbSignatures.ps1`** - Location: `eng/scripts/Verify-McpbSignatures.ps1`
@@ -232,18 +259,24 @@ The pipeline uses separate scripts for each signing phase, enabling better maint
 
 ```
 Input:  signature.p7s (DER-encoded PKCS#7)
-Output: MCPB signature block
+Output: MCPB signature block (padded to MAX_SIG_BLOCK_SIZE)
 
 Algorithm:
 1. Read .p7s file as bytes
 2. Calculate length (4-byte little-endian)
-3. Construct signature block:
+3. Calculate padding = MAX_SIG_BLOCK_SIZE - (11 + 4 + sig_length + 12)
+4. Construct signature block:
    - "MCPB_SIG_V1" (11 bytes, ASCII)
-   - Length prefix (4 bytes, little-endian)
+   - Length prefix (4 bytes, little-endian) — actual signature length, NOT padded
    - Signature bytes (from .p7s)
+   - Zero padding (padding bytes)
    - "MCPB_SIG_END" (12 bytes, ASCII)
-4. Append to original .mcpb content
+5. Append to original .mcpb content (which has EOCD comment_length = MAX_SIG_BLOCK_SIZE)
 ```
+
+> The padding ensures the total appended block size equals the EOCD comment length,
+> making the file a valid ZIP. The `mcpb` extraction logic reads exactly `sig_length`
+> bytes via the 4-byte length prefix and ignores the padding.
 
 #### 5. Pipeline Integration
 
