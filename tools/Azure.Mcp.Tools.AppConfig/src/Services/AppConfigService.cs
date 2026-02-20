@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
@@ -152,6 +153,9 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         {
             throw new InvalidOperationException($"The App Configuration store '{accountName}' does not have a valid endpoint.");
         }
+
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig");
+
         var credential = await GetCredential(cancellationToken);
         var options = new ConfigurationClientOptions();
         AddDefaultPolicies(options);
