@@ -4,55 +4,74 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
+using Azure.ResourceManager;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
-/// Validates Azure service endpoints to prevent SSRF attacks
+/// Validates Azure service endpoints.
 /// </summary>
 public static class EndpointValidator
 {
-    private static readonly Dictionary<string, string[]> AllowedDomainSuffixes = new()
+    /// <summary>
+    /// Gets the allowed domain suffixes for Azure services based on the cloud environment.
+    /// </summary>
+    /// <param name="armEnvironment">The ARM environment (cloud) to get suffixes for.</param>
+    /// <returns>Dictionary mapping service types to their allowed domain suffixes.</returns>
+    private static Dictionary<string, string[]> GetAllowedDomainSuffixes(ArmEnvironment armEnvironment)
     {
-        // Azure Communication Services
-        { "communication", [".communication.azure.com"] },
-        
-        // Azure AI Services
-        { "ai", [
-            ".cognitiveservices.azure.com",
-            ".openai.azure.com",
-            ".services.ai.azure.com"  // Foundry
-        ] },
-        
-        // Azure Storage
-        { "storage-blob", [".blob.core.windows.net"] },
-        { "storage-table", [".table.core.windows.net"] },
-        { "storage-queue", [".queue.core.windows.net"] },
-        { "storage-file", [".file.core.windows.net"] },
-        
-        // Azure Key Vault
-        { "keyvault", [".vault.azure.net"] },
-        
-        // Azure SQL
-        { "sql", [".database.windows.net"] },
-        
-        // Azure App Service
-        { "appservice", [".azurewebsites.net"] },
-        
-        // Azure Cosmos DB
-        { "cosmosdb", [".documents.azure.com"] },
-        
-        // Azure App Configuration
-        { "appconfig", [".azconfig.io"] },
-        
-        // Azure Container Registry
-        { "acr", [".azurecr.io"] },
-    };
+        // Determine which cloud we're in
+        var isPublicCloud = armEnvironment.Equals(ArmEnvironment.AzurePublicCloud);
+        var isChinaCloud = armEnvironment.Equals(ArmEnvironment.AzureChina);
+        var isGovCloud = armEnvironment.Equals(ArmEnvironment.AzureGovernment);
+
+        // Build cloud-specific suffixes for services that require validation
+        var acrSuffix = isPublicCloud ? "azurecr.io"
+            : isChinaCloud ? "azurecr.cn"
+            : isGovCloud ? "azurecr.us"
+            : "azurecr.io";
+
+        var appConfigSuffix = isPublicCloud ? "azconfig.io"
+            : isChinaCloud ? "azconfig.azure.cn"
+            : isGovCloud ? "azconfig.azure.us"
+            : "azconfig.io";
+
+        var commSuffix = isPublicCloud ? "communication.azure.com"
+            : isChinaCloud ? "communication.azure.cn"
+            : isGovCloud ? "communication.azure.us"
+            : "communication.azure.com";
+
+        return new Dictionary<string, string[]>
+        {
+            // Azure Communication Services
+            { "communication", [$".{commSuffix}"] },
+
+            // Azure App Configuration
+            { "appconfig", [$".{appConfigSuffix}"] },
+
+            // Azure Container Registry
+            { "acr", [$".{acrSuffix}"] },
+        };
+    }
 
     /// <summary>
-    /// Validates that an endpoint belongs to an allowed Azure service domain
+    /// Validates that an endpoint belongs to an allowed Azure service domain.
+    /// Uses Azure Public Cloud domains by default.
     /// </summary>
+    /// <param name="endpoint">The endpoint URL to validate.</param>
+    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
     public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType)
+    {
+        ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud);
+    }
+
+    /// <summary>
+    /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
+    /// </summary>
+    /// <param name="endpoint">The endpoint URL to validate.</param>
+    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
+    /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
+    public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType, ArmEnvironment armEnvironment)
     {
         if (string.IsNullOrWhiteSpace(endpoint))
         {
@@ -71,7 +90,9 @@ public static class EndpointValidator
                 $"Endpoint must use HTTPS protocol. Got: {uri.Scheme}");
         }
 
-        if (!AllowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
+        var allowedDomainSuffixes = GetAllowedDomainSuffixes(armEnvironment);
+
+        if (!allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
         {
             throw new ArgumentException($"Unknown service type: {serviceType}", nameof(serviceType));
         }
@@ -87,8 +108,9 @@ public static class EndpointValidator
             // Ensure the suffix starts with a dot, then check if host ends with it
             if (suffix.StartsWith('.') && uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
             {
-                // Additional check: ensure there's a subdomain before the suffix
-                // This prevents "evil.com.azconfig.io" from matching
+                // Ensure there's a subdomain portion and it doesn't contain path separators
+                // This prevents path components from being interpreted as subdomains (e.g., "azconfig.io/evil")
+                // Note: Multi-level subdomains like "sub.myconfig.azconfig.io" are valid and allowed
                 var domainBeforeSuffix = uri.Host.Substring(0, uri.Host.Length - suffix.Length);
                 return !string.IsNullOrEmpty(domainBeforeSuffix) && !domainBeforeSuffix.Contains('/');
             }
@@ -98,8 +120,13 @@ public static class EndpointValidator
 
         if (!isValid)
         {
+            var cloudName = armEnvironment.Equals(ArmEnvironment.AzurePublicCloud) ? "Azure Public Cloud"
+                : armEnvironment.Equals(ArmEnvironment.AzureChina) ? "Azure China Cloud"
+                : armEnvironment.Equals(ArmEnvironment.AzureGovernment) ? "Azure US Government Cloud"
+                : "configured Azure cloud";
+
             throw new SecurityException(
-                $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain. " +
+                $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
                 $"Expected domains: {string.Join(", ", allowedSuffixes)}");
         }
     }
@@ -138,7 +165,8 @@ public static class EndpointValidator
     }
 
     /// <summary>
-    /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources
+    /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources.
+    /// Performs DNS resolution to detect hostnames that resolve to private/reserved IPs.
     /// </summary>
     public static void ValidatePublicTargetUrl(string url)
     {
@@ -152,25 +180,60 @@ public static class EndpointValidator
             throw new SecurityException($"Invalid URL format: {url}");
         }
 
-        // Check if host is an IP address
+        // Check if host is a literal IP address
         if (IPAddress.TryParse(uri.Host, out var ipAddress))
         {
             if (IsPrivateOrReservedIP(ipAddress))
             {
                 throw new SecurityException(
-                    $"Target URL '{url}' resolves to a private or reserved IP address. " +
+                    $"Target URL '{url}' uses a private or reserved IP address ({ipAddress}). " +
                     "Targeting internal endpoints is not permitted.");
             }
         }
         else
         {
-            // Check for reserved hostnames
-            var reservedHosts = new[] { "localhost", "local" };
+            // Check for reserved hostnames (catches localhost variations)
+            var reservedHosts = new[]
+            {
+                "localhost",
+                "local",
+                "localtest.me",          // Common localhost alias
+                "lvh.me",                // localhost variations
+                "169.254.169.254.nip.io"  // IMDS bypass attempt
+            };
+
             if (reservedHosts.Any(reserved =>
-                uri.Host.Equals(reserved, StringComparison.OrdinalIgnoreCase)))
+                uri.Host.Equals(reserved, StringComparison.OrdinalIgnoreCase) ||
+                uri.Host.EndsWith($".{reserved}", StringComparison.OrdinalIgnoreCase)))
             {
                 throw new SecurityException(
                     $"Target URL hostname '{uri.Host}' is reserved and cannot be targeted.");
+            }
+
+            // Resolve DNS and validate all resolved IPs
+            try
+            {
+                var hostEntry = Dns.GetHostEntry(uri.Host);
+                foreach (var resolvedIp in hostEntry.AddressList)
+                {
+                    if (IsPrivateOrReservedIP(resolvedIp))
+                    {
+                        throw new SecurityException(
+                            $"Target URL hostname '{uri.Host}' resolves to a private or reserved IP address ({resolvedIp}). " +
+                            "Targeting internal endpoints is not permitted.");
+                    }
+                }
+            }
+            catch (SecurityException)
+            {
+                throw; // Re-throw SecurityException from private IP check
+            }
+            catch (Exception ex)
+            {
+                // DNS resolution failure - treat as invalid for security
+                throw new SecurityException(
+                    $"Unable to resolve hostname '{uri.Host}' for security validation. " +
+                    $"Ensure the hostname is publicly resolvable. Details: {ex.Message}");
             }
         }
     }

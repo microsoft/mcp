@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
 using Xunit;
 
@@ -15,12 +16,6 @@ public class EndpointValidatorTests
     [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
-    [InlineData("https://myai.cognitiveservices.azure.com", "ai")]
-    [InlineData("https://myai.openai.azure.com", "ai")]
-    [InlineData("https://myproject.services.ai.azure.com", "ai")]
-    [InlineData("https://mystorage.blob.core.windows.net", "storage-blob")]
-    [InlineData("https://myvault.vault.azure.net", "keyvault")]
-    [InlineData("https://mydb.database.windows.net", "sql")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -91,6 +86,75 @@ public class EndpointValidatorTests
 
     #endregion
 
+    #region Sovereign Cloud Tests
+
+    [Theory]
+    // Azure China Cloud
+    [InlineData("https://myregistry.azurecr.cn", "acr")]
+    [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://mycomm.communication.azure.cn", "communication")]
+    public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
+    {
+        // Act & Assert
+        var exception = Record.Exception(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    // Azure US Government
+    [InlineData("https://myregistry.azurecr.us", "acr")]
+    [InlineData("https://myconfig.azconfig.azure.us", "appconfig")]
+    [InlineData("https://mycomm.communication.azure.us", "communication")]
+    public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
+    {
+        // Act & Assert
+        var exception = Record.Exception(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    // Public cloud endpoint should fail in China cloud
+    [InlineData("https://myregistry.azurecr.io", "acr")]
+    [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+        Assert.Contains("Azure China Cloud", exception.Message);
+        Assert.Contains("not a valid", exception.Message);
+    }
+
+    [Theory]
+    // Public cloud endpoint should fail in Gov cloud
+    [InlineData("https://myregistry.azurecr.io", "acr")]
+    [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+        Assert.Contains("Azure US Government Cloud", exception.Message);
+        Assert.Contains("not a valid", exception.Message);
+    }
+
+    [Theory]
+    // China cloud endpoint should fail in public cloud
+    [InlineData("https://myregistry.azurecr.cn", "acr")]
+    [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+        Assert.Contains("Azure Public Cloud", exception.Message);
+        Assert.Contains("not a valid", exception.Message);
+    }
+
+    #endregion
+
     #region ValidateExternalUrl Tests
 
     [Theory]
@@ -140,9 +204,9 @@ public class EndpointValidatorTests
     #region ValidatePublicTargetUrl Tests - SDL Exit Criteria
 
     [Theory]
-    [InlineData("https://myapp.azurewebsites.net")]
-    [InlineData("https://example.com")]
-    [InlineData("https://api.example.com/endpoint")]
+    [InlineData("https://www.microsoft.com")]
+    [InlineData("https://www.google.com")]
+    [InlineData("https://github.com")]
     [InlineData("https://8.8.8.8")]  // Public IP (Google DNS)
     [InlineData("https://1.1.1.1")]  // Public IP (Cloudflare DNS)
     public void ValidatePublicTargetUrl_PublicEndpoints_DoesNotThrow(string url)
@@ -233,6 +297,76 @@ public class EndpointValidatorTests
         var exception = Assert.Throws<SecurityException>(() =>
             EndpointValidator.ValidatePublicTargetUrl(invalidUrl));
         Assert.Contains("Invalid URL format", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("http://localhost")]
+    [InlineData("http://LOCALHOST")]
+    [InlineData("http://localhost:8080")]
+    [InlineData("http://local")]
+    [InlineData("http://localtest.me")]  // Common localhost alias
+    [InlineData("http://lvh.me")]        // Another localhost variation
+    public void ValidatePublicTargetUrl_ReservedHostnames_ThrowsSecurityException(string url)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("http://127.0.0.1.nip.io")]      // nip.io resolves to 127.0.0.1
+    [InlineData("http://127.0.0.1.xip.io")]      // xip.io resolves to 127.0.0.1
+    [InlineData("http://127.0.0.1.sslip.io")]    // sslip.io resolves to 127.0.0.1
+    [InlineData("http://10.0.0.1.nip.io")]       // Private IP via DNS
+    [InlineData("http://192.168.1.1.nip.io")]    // Private IP via DNS
+    public void ValidatePublicTargetUrl_DnsResolvesToPrivateIP_ThrowsSecurityException(string url)
+    {
+        // This test validates that DNS resolution is performed and private IPs are caught
+        // Note: These services (nip.io, xip.io, sslip.io) actually resolve to the IPs in the subdomain
+        // If DNS resolution fails (e.g., offline), the test will throw SecurityException for different reason
+        
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        
+        // The error should mention either:
+        // 1. "resolves to a private or reserved IP" (if DNS succeeded)
+        // 2. "Unable to resolve hostname" (if DNS failed - still secure)
+        Assert.True(
+            exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
+            exception.Message.Contains("Unable to resolve hostname", StringComparison.OrdinalIgnoreCase),
+            $"Expected error about private IP or DNS resolution, but got: {exception.Message}");
+    }
+
+    [Fact]
+    public void ValidatePublicTargetUrl_UnresolvableHostname_ThrowsSecurityException()
+    {
+        // Arrange - use a guaranteed non-existent hostname
+        var url = "http://this-hostname-definitely-does-not-exist-12345.invalid";
+
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Contains("Unable to resolve hostname", exception.Message);
+    }
+
+    #endregion
+
+    #region DNS Bypass Prevention Tests - SDL Security
+
+    [Theory]
+    [InlineData("http://169.254.169.254.nip.io")]  // IMDS bypass attempt
+    public void ValidatePublicTargetUrl_KnownSSRFBypassDomains_ThrowsSecurityException(string url)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.True(
+            exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase) ||
+            exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
+            exception.Message.Contains("Unable to resolve hostname", StringComparison.OrdinalIgnoreCase),
+            $"Expected security error, but got: {exception.Message}");
     }
 
     #endregion
