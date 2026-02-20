@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
@@ -21,6 +22,7 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public class PostgresService : BaseAzureService, IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService;
+    private readonly ITenantService _tenantService;
     private readonly IEntraTokenProvider _entraTokenAuth;
     private readonly IDbProvider _dbProvider;
 
@@ -32,6 +34,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         : base(tenantService)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         _entraTokenAuth = entraTokenAuth;
         _dbProvider = dbProvider;
     }
@@ -44,11 +47,21 @@ public class PostgresService : BaseAzureService, IPostgresService
         return accessToken.Token;
     }
 
-    private static string NormalizeServerName(string server)
+    private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
         {
-            return server + ".postgres.database.azure.com";
+            switch (_tenantService.CloudConfiguration.CloudType)
+            {
+                case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                    return server + ".postgres.database.azure.com";
+                case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                    return server + ".postgres.database.usgovcloudapi.net";
+                case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                    return server + ".postgres.database.chinacloudapi.cn";
+                default:
+                    return server + ".postgres.database.azure.com";
+            }
         }
         return server;
     }
