@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.21 (Unreleased)
+## 2.0.0-beta.21 (2026-02-19)
 
 ### Features Added
 
-### Breaking Changes
-
-### Bugs Fixed
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions. [[#1760](https://github.com/microsoft/mcp/pull/1760)]
 
 ### Other Changes
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
 
 ## 2.0.0-beta.20 (2026-02-17)
 
