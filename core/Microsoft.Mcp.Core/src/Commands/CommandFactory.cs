@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
@@ -211,7 +212,7 @@ public class CommandFactory : ICommandFactory
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
+                var isServiceStartCommand = implementation is ServiceStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));

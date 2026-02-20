@@ -4,11 +4,11 @@
 using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Commands;
 
-namespace Azure.Mcp.Core.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.Areas.Server.Models;
 
 /// <summary>
-/// Represents a composite tool definition that groups multiple related Azure operations together.
-/// Used to create consolidated tools from the azure_mcp_consolidated_tools JSON configuration.
+/// Represents a composite tool definition that groups multiple related operations together.
+/// Used to create consolidated tools from the *_mcp_consolidated_tools JSON configuration.
 /// </summary>
 public sealed class ConsolidatedToolDefinition
 {

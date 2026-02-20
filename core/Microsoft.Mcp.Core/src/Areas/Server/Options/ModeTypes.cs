@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Areas.Server.Options;
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
-/// Defines the supported proxy modes for the Azure MCP server.
+/// Defines the supported proxy modes for the MCP server.
 /// </summary>
 internal static class ModeTypes
 {
     /// <summary>
-    /// Single tool proxy mode - exposes a single "azure" tool that handles internal routing across all Azure MCP tools.
+    /// Single tool proxy mode - exposes a single "azure" tool that handles internal routing across all MCP tools.
     /// </summary>
     public const string SingleToolProxy = "single";
 
@@ -20,12 +20,12 @@ internal static class ModeTypes
     public const string NamespaceProxy = "namespace";
 
     /// <summary>
-    /// All tools mode - exposes all Azure MCP tools individually (one tool per command).
+    /// All tools mode - exposes all MCP tools individually (one tool per command).
     /// </summary>
     public const string All = "all";
 
     /// <summary>
-    /// Consolidated tools mode - exposes consolidated tools that group related Azure operations together.
+    /// Consolidated tools mode - exposes consolidated tools that group related operations together.
     /// </summary>
     public const string ConsolidatedProxy = "consolidated";
 }
