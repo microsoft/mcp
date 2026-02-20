@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security;
 using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;

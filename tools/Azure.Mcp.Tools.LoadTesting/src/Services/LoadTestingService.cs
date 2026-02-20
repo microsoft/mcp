@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Developer.LoadTesting;
