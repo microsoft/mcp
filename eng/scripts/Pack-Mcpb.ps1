@@ -161,15 +161,16 @@ Processing MCPB packaging:
         $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
         
         $executableName = $server.cliName + $platform.extension
-        
+
         # Update version from build_info.json (source of truth for all packaging)
         $manifest.version = $server.version
         
-        # Update entry_point with platform-specific executable (relative path for mcpb pack verification)
+        # entry_point always uses forward slashes (required by MCPB CLI validation)
         $manifest.server.entry_point = "server/$executableName"
         
-        # Update command with platform-specific executable (keeps ${__dirname} for runtime)
-        $manifest.server.mcp_config.command = "`${__dirname}/server/$executableName"
+        # command uses backslashes for Windows paths, forward slashes for all other platforms
+        $pathSep = if ($platform.operatingSystem -eq 'windows') { '\' } else { '/' }
+        $manifest.server.mcp_config.command = "`${__dirname}${pathSep}server${pathSep}$executableName"
         
         # Remove platform_overrides since this bundle is platform-specific
         if ($manifest.server.mcp_config.PSObject.Properties.Name -contains 'platform_overrides') {

@@ -23,7 +23,7 @@
     "mcp_config": {
       "platform_overrides": {
         "win32": {
-          "command": "${__dirname}/server/fabmcp.exe",
+          "command": "${__dirname}\\server\\fabmcp.exe",
           "args": []
         }
       },
