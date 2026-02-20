@@ -8,7 +8,7 @@ using Azure.Mcp.Tools.Extension.Models;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider) : ICliGenerateService
+internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider, IAzureCloudConfiguration cloudConfiguration) : ICliGenerateService
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
@@ -22,7 +22,7 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), cancellationToken);
 
         // AzCli copilot API endpoint
-        const string url = "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
+        var url = GetCliCopilotEndpoint();
 
         var requestBody = new AzureCliGenerateRequest()
         {
@@ -44,5 +44,20 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
         HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
         return responseMessage;
+    }
+
+    private string GetCliCopilotEndpoint()
+    {
+        switch (cloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot";
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot";
+            default:
+                return "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
+        }
     }
 }

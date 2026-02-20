@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppLens.Models;
@@ -20,9 +21,9 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly AppLensOptions _options = new AppLensOptions();
-    private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
@@ -93,12 +94,12 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
 
             // Get ARM token
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext(["https://management.azure.com/user_impersonation"]),
+                new TokenRequestContext([GetManagementImpersonationEndpoint().ToString()]),
                 cancellationToken);
 
             // Call the AppLens token endpoint
             using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01");
+                GetAppLensTokenEndpoint(resourceId));
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
@@ -156,10 +157,10 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
                 // https://learn.microsoft.com/aspnet/core/signalr/configuration?view=aspnetcore-9.0&tabs=dotnet#jsonmessagepack-serialization-options
                 options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppLensJsonContext.Default);
             })
-            .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
+            .WithUrl(GetConversationalDiagnosticsSignalREndpoint(), options =>
             {
                 options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
-                options.Headers.Add("origin", "https://appservice-diagnostics.trafficmanager.net");
+                options.Headers.Add("origin", GetDiagnosticsPortalEndpoint().ToString());
             })
             .WithAutomaticReconnect()
             .Build();
@@ -344,5 +345,49 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
         }
 
         return session;
+    }
+
+    private Uri GetConversationalDiagnosticsSignalREndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://diagnosticschat.azure.com/chatHub"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://diagnosticschat.azure.cn/chatHub"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://diagnosticschat.azure.us/chatHub"),
+            _ => new Uri("https://diagnosticschat.azure.com/chatHub"),
+        };
+    }
+
+    private Uri GetManagementImpersonationEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://management.azure.com/user_impersonation"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://management.chinacloudapi.cn/user_impersonation"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://management.usgovcloudapi.net/user_impersonation"),
+            _ => new Uri("https://management.azure.com/user_impersonation"),
+        };
+    }
+
+    private Uri GetAppLensTokenEndpoint(string resourceId)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri($"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri($"https://management.chinacloudapi.cn/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri($"https://management.usgovcloudapi.net/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
+            _ => new Uri($"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
+        };
+    }
+
+    private Uri GetDiagnosticsPortalEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://appservice-diagnostics.trafficmanager.net"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://appservice-diagnostics.azure.cn"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://appservice-diagnostics.azure.us"),
+            _ => new Uri("https://appservice-diagnostics.trafficmanager.net"),
+        };
     }
 }

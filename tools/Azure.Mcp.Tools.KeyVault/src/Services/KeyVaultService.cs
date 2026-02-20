@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
@@ -13,6 +14,7 @@ namespace Azure.Mcp.Tools.KeyVault.Services;
 
 public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IKeyVaultService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<string>> ListKeys(
@@ -301,7 +303,36 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
     }
 
-    private static Uri BuildVaultUri(string vaultName) => new($"https://{vaultName}.vault.azure.net");
+    private Uri BuildVaultUri(string vaultName)
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri($"https://{vaultName}.vault.azure.net");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri($"https://{vaultName}.vault.azure.cn");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return new Uri($"https://{vaultName}.vault.usgovcloudapi.net");
+            default:
+                return new Uri($"https://{vaultName}.vault.azure.net");
+        }
+    }
+
+
+    private Uri GetHsmUri(string vaultName)
+    {
+        switch (_tenantService.CloudConfiguration.CloudType)
+        {
+            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
+                return new Uri($"https://{vaultName}.managedhsm.azure.net");
+            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
+                return new Uri($"https://{vaultName}.managedhsm.azure.cn");
+            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
+                return new Uri($"https://{vaultName}.managedhsm.usgovcloudapi.net");
+            default:
+                return new Uri($"https://{vaultName}.managedhsm.azure.net");
+        }
+    }
 
     // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
@@ -346,7 +377,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
         var credential = await GetCredential(tenantId, cancellationToken);
-        var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
+        var hsmUri = GetHsmUri(vaultName);
         try
         {
             var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);

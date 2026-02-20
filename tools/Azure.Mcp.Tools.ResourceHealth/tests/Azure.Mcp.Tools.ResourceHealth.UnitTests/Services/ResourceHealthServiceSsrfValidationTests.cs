@@ -3,9 +3,11 @@
 
 using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Services;
+using Azure.ResourceManager;
 using NSubstitute;
 using Xunit;
 
@@ -33,6 +35,12 @@ public class ResourceHealthServiceSsrfValidationTests
 
     private void SetupMocksForValidRequest(HttpResponseMessage response)
     {
+        // Mock CloudConfiguration to return a valid ArmEnvironment
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
+        _tenantService.CloudConfiguration.Returns(cloudConfig);
+
         // Mock TokenCredential
         var mockCredential = Substitute.For<TokenCredential>();
         mockCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
