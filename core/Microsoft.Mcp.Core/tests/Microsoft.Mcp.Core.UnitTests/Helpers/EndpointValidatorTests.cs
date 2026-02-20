@@ -325,11 +325,11 @@ public class EndpointValidatorTests
         // This test validates that DNS resolution is performed and private IPs are caught
         // Note: These services (nip.io, xip.io, sslip.io) actually resolve to the IPs in the subdomain
         // If DNS resolution fails (e.g., offline), the test will throw SecurityException for different reason
-        
+
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
             EndpointValidator.ValidatePublicTargetUrl(url));
-        
+
         // The error should mention either:
         // 1. "resolves to a private or reserved IP" (if DNS succeeded)
         // 2. "Unable to resolve hostname" (if DNS failed - still secure)
