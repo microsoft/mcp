@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Enabled trimmed binary for Docker and HTTP transport support for all distributions"

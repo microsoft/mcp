@@ -1,5 +1,14 @@
 # Release History
 
+## 2.0.0-beta.21 (2026-02-19) (pre-release)
+
+### Added
+
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions. [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+
+### Changed
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
 
 ## 2.0.0-beta.20 (2026-02-17) (pre-release)
 
