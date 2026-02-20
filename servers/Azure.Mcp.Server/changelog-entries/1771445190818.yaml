@@ -1,4 +1,0 @@
-pr: 1755
-changes:
-  - section: "Other Changes"
-    description: "Add McpServerName to telemetry"
