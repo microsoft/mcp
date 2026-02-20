@@ -136,4 +136,47 @@ public class ServerToolLoaderTests
             Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Undefined, "InputSchema should be defined");
         }
     }
+
+    [Fact]
+    public async Task CallToolHandler_PreservesSpecificErrorMessageForMissingParameters()
+    {
+        // Arrange - use real RegistryDiscoveryStrategy
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
+        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+
+        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+
+        // Create request for documentation tool with missing required parameters
+        var request = CreateCallToolRequest("documentation",
+            new Dictionary<string, JsonElement>
+            {
+                { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
+                // Missing 'question' parameter which is required
+                { "parameters", JsonDocument.Parse("{}").RootElement }
+            });
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // Verify the specific error message is preserved (not replaced with generic message)
+        // Should contain "Missing required options:" or similar specific error, not generic "missing required parameters"
+        Assert.Contains("Missing", textContent.Text);
+
+        // Verify the command spec guidance is still included
+        Assert.Contains("Review the following command spec", textContent.Text);
+        Assert.Contains("Command Spec:", textContent.Text);
+    }
 }
