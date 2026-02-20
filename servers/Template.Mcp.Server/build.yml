@@ -9,6 +9,9 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: PackagePyPI
+  type: boolean
+  default: false
 - name: IncludeNative
   type: boolean
   default: true
@@ -28,6 +31,7 @@ extends:
     RunLiveTests: true
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
+    PackagePyPI: ${{ parameters.PackagePyPI }}
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     IsTestPipeline: true
