@@ -414,4 +414,140 @@ public class ComputeService(
         var rgIndex = Array.IndexOf(parts, "resourceGroups");
         return rgIndex >= 0 && rgIndex + 1 < parts.Length ? parts[rgIndex + 1] : string.Empty;
     }
+
+    public async Task<DiskInfo> CreateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        int? sizeGb = null,
+        string? sku = null,
+        string? osType = null,
+        string? zone = null,
+        string? hyperVGeneration = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+        var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+
+        // Default to the resource group's location if not specified
+        var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
+
+        var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
+        {
+            CreationData = new DiskCreationData(DiskCreateOption.Empty)
+        };
+
+        if (sizeGb.HasValue)
+        {
+            diskData.DiskSizeGB = sizeGb.Value;
+        }
+
+        if (!string.IsNullOrEmpty(sku))
+        {
+            diskData.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+        }
+
+        if (!string.IsNullOrEmpty(osType))
+        {
+            if (osType.Equals("Windows", StringComparison.OrdinalIgnoreCase))
+            {
+                diskData.OSType = SupportedOperatingSystemType.Windows;
+            }
+            else if (osType.Equals("Linux", StringComparison.OrdinalIgnoreCase))
+            {
+                diskData.OSType = SupportedOperatingSystemType.Linux;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid OS type: {osType}. Accepted values: Linux, Windows.");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(zone))
+        {
+            diskData.Zones.Add(zone);
+        }
+
+        if (!string.IsNullOrEmpty(hyperVGeneration))
+        {
+            diskData.HyperVGeneration = new HyperVGeneration(hyperVGeneration);
+        }
+
+        _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
+
+        var result = await rgResource.Value.GetManagedDisks()
+            .CreateOrUpdateAsync(Azure.WaitUntil.Completed, diskName, diskData, cancellationToken);
+
+        return ConvertToDiskModel(result.Value, resourceGroup);
+    }
+
+    public async Task<DiskInfo> UpdateDiskAsync(
+        string diskName,
+        string? resourceGroup,
+        string subscription,
+        int? sizeGb = null,
+        string? sku = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+        var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+        var diskResource = await rgResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
+
+        var diskPatch = new ManagedDiskPatch();
+
+        if (sizeGb.HasValue)
+        {
+            diskPatch.DiskSizeGB = sizeGb.Value;
+        }
+
+        if (!string.IsNullOrEmpty(sku))
+        {
+            diskPatch.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+        }
+
+        if (diskIopsReadWrite.HasValue)
+        {
+            diskPatch.DiskIopsReadWrite = diskIopsReadWrite.Value;
+        }
+
+        if (diskMbpsReadWrite.HasValue)
+        {
+            diskPatch.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
+        }
+
+        if (maxShares.HasValue)
+        {
+            diskPatch.MaxShares = maxShares.Value;
+        }
+
+        if (!string.IsNullOrEmpty(networkAccessPolicy))
+        {
+            diskPatch.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+        }
+
+        if (!string.IsNullOrEmpty(enableBursting))
+        {
+            diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
+
+        var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
+
+        return ConvertToDiskModel(result.Value, resourceGroup!);
+    }
 }

@@ -88,4 +88,33 @@ public interface IComputeService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<DiskInfo> CreateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        int? sizeGb = null,
+        string? sku = null,
+        string? osType = null,
+        string? zone = null,
+        string? hyperVGeneration = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DiskInfo> UpdateDiskAsync(
+        string diskName,
+        string? resourceGroup,
+        string subscription,
+        int? sizeGb = null,
+        string? sku = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
