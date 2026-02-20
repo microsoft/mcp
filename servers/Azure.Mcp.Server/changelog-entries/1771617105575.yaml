@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added sovereign cloud endpoint support for Storage, Search, Postgres, ServiceFabric, Pricing, and Extension services"
