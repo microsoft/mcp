@@ -136,7 +136,7 @@ public static class EndpointValidator
                 $"Allowed hosts: {string.Join(", ", allowedHosts)}");
         }
     }
-    
+
     /// <summary>
     /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources
     /// </summary>
@@ -174,34 +174,52 @@ public static class EndpointValidator
             }
         }
     }
-    
+
     /// <summary>
     /// Checks if an IP address is private, reserved, or otherwise non-routable
     /// </summary>
     public static bool IsPrivateOrReservedIP(IPAddress ipAddress)
     {
         var bytes = ipAddress.GetAddressBytes();
-        
+
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
             // Loopback: 127.0.0.0/8
-            if (bytes[0] == 127) return true;
-            
+            if (bytes[0] == 127)
+            {
+                return true;
+            }
+
             // Private: 10.0.0.0/8
-            if (bytes[0] == 10) return true;
-            
+            if (bytes[0] == 10)
+            {
+                return true;
+            }
+
             // Private: 172.16.0.0/12
-            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
-            
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+            {
+                return true;
+            }
+
             // Private: 192.168.0.0/16
-            if (bytes[0] == 192 && bytes[1] == 168) return true;
-            
+            if (bytes[0] == 192 && bytes[1] == 168)
+            {
+                return true;
+            }
+
             // Link-local: 169.254.0.0/16 (includes IMDS at 169.254.169.254)
-            if (bytes[0] == 169 && bytes[1] == 254) return true;
-            
+            if (bytes[0] == 169 && bytes[1] == 254)
+            {
+                return true;
+            }
+
             // WireServer: 168.63.129.16
-            if (bytes[0] == 168 && bytes[1] == 63 && bytes[2] == 129 && bytes[3] == 16) return true;
-            
+            if (bytes[0] == 168 && bytes[1] == 63 && bytes[2] == 129 && bytes[3] == 16)
+            {
+                return true;
+            }
+
             // Shared address space: 100.64.0.0/10
             if (bytes[0] == 100 && bytes[1] >= 64 && bytes[1] <= 127)
             {
@@ -245,7 +263,7 @@ public static class EndpointValidator
                 return true;
             }
         }
-        
+
         return false;
     }
 }
