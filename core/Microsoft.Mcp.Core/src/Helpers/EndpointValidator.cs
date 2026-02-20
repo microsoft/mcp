@@ -204,31 +204,46 @@ public static class EndpointValidator
             
             // Shared address space: 100.64.0.0/10
             if (bytes[0] == 100 && bytes[1] >= 64 && bytes[1] <= 127)
+            {
                 return true;
+            }
 
             // Broadcast: 255.255.255.255
             if (bytes[0] == 255 && bytes[1] == 255 && bytes[2] == 255 && bytes[3] == 255)
+            {
                 return true;
+            }
 
             // Reserved ranges
             if (bytes[0] == 0)
+            {
                 return true;  // 0.0.0.0/8
+            }
+
             if (bytes[0] >= 224)
+            {
                 return true;  // Multicast (224.0.0.0/4) and Reserved (240.0.0.0/4)
+            }
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
             // Loopback: ::1
             if (ipAddress.Equals(IPAddress.IPv6Loopback))
+            {
                 return true;
+            }
 
             // Private: fc00::/7
             if ((bytes[0] & 0xfe) == 0xfc)
+            {
                 return true;
+            }
 
             // Link-local: fe80::/10
             if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80)
+            {
                 return true;
+            }
         }
         
         return false;
