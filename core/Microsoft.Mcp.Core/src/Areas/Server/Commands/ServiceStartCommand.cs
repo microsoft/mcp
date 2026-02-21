@@ -483,10 +483,18 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                         HttpRequest request = context.Request;
                         string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
 
+                        context.Response.StatusCode = 401;
+
+                        var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                        if (!string.IsNullOrEmpty(context.Error))
+                            header += $", error=\"{context.Error}\"";
+                        if (!string.IsNullOrEmpty(context.ErrorDescription))
+                            header += $", error_description=\"{context.ErrorDescription}\"";
+                            
                         // Modify the WWW-Authenticate header to include resource_metadata
-                        context.Response.Headers.WWWAuthenticate =
-                            $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                        context.Response.Headers.WWWAuthenticate = header;
                     }
+                    context.HandleResponse();
                     return Task.CompletedTask;
                 }
             };
