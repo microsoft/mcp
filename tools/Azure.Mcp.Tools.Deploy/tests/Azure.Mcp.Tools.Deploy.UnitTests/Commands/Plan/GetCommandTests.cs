@@ -41,7 +41,7 @@ public class GetCommandTests
             "--project-name", "django",
             "--target-app-service", "ContainerApp",
             "--provisioning-tool", "AZD",
-            "--azd-iac-options", "bicep"
+            "--iac-options", "bicep"
         ]);
 
         // act
@@ -64,7 +64,7 @@ public class GetCommandTests
             "--project-name", "myapp",
             "--target-app-service", "WebApp",
             "--provisioning-tool", "azd"
-            // No azd-iac-options provided - should default to "bicep"
+            // No iac-options provided - should default to "bicep"
         ]);
 
         // act
@@ -98,6 +98,9 @@ public class GetCommandTests
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for k8s-app Project", result.Message);
         Assert.Contains("Azure Kubernetes Service", result.Message);
+        Assert.Contains("Provision Azure Infrastructure with Azure CLI", result.Message);
+        Assert.Contains("terraform", result.Message); // Default IaC option for aks
+        Assert.Contains("Azure Kubernetes Service Deployment", result.Message);
     }
 
     [Fact]
@@ -119,5 +122,31 @@ public class GetCommandTests
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for default-app Project", result.Message);
         Assert.Contains("Azure Container Apps", result.Message); // Should default to Container Apps
+    }
+
+    [Fact]
+    public async Task Should_get_deploy_only_plan()
+    {
+        var args = _commandDefinition.Parse([
+            "--workspace-folder", "C:/",
+            "--project-name", "default-app",
+            "--target-app-service", "ContainerApp",
+            "--provisioning-tool", "AzCli",
+            "--deploy-option", "deploy-only",
+            "--source-type", "from-azure",
+            "--resource-group-name", "DefaultRG"
+        ]);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Message);
+        Assert.Contains("# Azure Deployment Plan for default-app Project", result.Message);
+        Assert.Contains("Azure Container Apps", result.Message); // Should default to Container Apps
+        Assert.Contains("Containerization", result.Message);
+        Assert.Contains("Check Azure resources existence", result.Message);
+        Assert.Contains("Azure Container Registry", result.Message);
+        Assert.Contains("**Existing Azure Resources**", result.Message);
     }
 }

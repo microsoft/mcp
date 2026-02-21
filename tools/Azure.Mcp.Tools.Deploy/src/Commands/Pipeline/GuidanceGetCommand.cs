@@ -24,7 +24,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 
     public override string Description =>
         """
-        Guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure. Use this tool BEFORE generating/creating a Github actions workflow file for DEPLOYMENT on Azure. Infrastructure files should be ready and the application should be ready to be containerized.
+        This tool helps create a CI/CD pipeline to deploy a project to Azure. BEFORE calling this tool, you MUST confirm with user 1. if they want to use Github Actions or ADO pipeline 2. if they have existing Azure resources to deploy for different environments. If user has existing Azure resources, *ASK* for subscription ID, resource groups, environments, Azure hosting service TYPEs. If user does not have existing resources, *ASK* whether to include provision in the pipeline. *DO NOT call this tool UNTIL you made these confirmations with user*.
         """;
 
     public override string Title => CommandTitle;
@@ -41,19 +41,17 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.isAZDProject);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.pipelinePlatform);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.deployOption);
     }
 
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.UseAZDPipelineConfig = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig.Name);
-        options.OrganizationName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName.Name);
-        options.RepositoryName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName.Name);
-        options.GithubEnvironmentName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName.Name);
+        options.IsAZDProject = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.isAZDProject.Name);
+        options.PipelinePlatform = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.pipelinePlatform.Name);
+        options.DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.deployOption.Name);
         return options;
     }
 
