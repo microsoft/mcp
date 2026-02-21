@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -12,37 +13,55 @@ namespace Azure.Mcp.Core.LiveTests.Areas.Server;
 /// Live integration tests for Azure MCP Server that validate tool loading behavior across different modes.
 /// These tests start actual MCP server instances and verify the correct tools are loaded.
 /// </summary>
-public class ServerCommandTests(ITestOutputHelper output)
+public class ServerCommandTests(ITestOutputHelper output) : IAsyncLifetime
 {
+    private string? _serverUrl;
+    private Process? _httpServerProcess;
+
     protected ITestOutputHelper Output { get; } = output;
+
+    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+
+    public ValueTask DisposeAsync()
+    {
+        if (_httpServerProcess is { HasExited: false } process)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+                process.Dispose();
+            }
+            catch (InvalidOperationException)
+            {
+                // Process already exited
+            }
+        }
+
+        _httpServerProcess = null;
+        _serverUrl = null;
+
+        return ValueTask.CompletedTask;
+    }
 
     private async Task<McpClient> CreateClientAsync(params string[] arguments)
     {
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
-        StdioClientTransportOptions transportOptions = new()
-        {
-            Name = "Test Server",
-            Command = executablePath,
-            Arguments = arguments,
-            StandardErrorLines = line =>
-            {
-                // Safely capture stderr lines without accessing test context from background thread
-                try
-                { Output.WriteLine($"[MCP Server] {line}"); }
-                catch { /* Ignore if test context unavailable */ }
-            }
-        };
+        LiveTestSettings? settings = null;
+        LiveTestSettings.TryLoadTestSettings(out settings);
+        Dictionary<string, string?> envVars = settings?.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
 
-        if (LiveTestSettings.TryLoadTestSettings(out var settings) && !string.IsNullOrEmpty(settings.TestPackage))
-        {
-            Environment.CurrentDirectory = settings.SettingsDirectory;
-            transportOptions.Command = "npx";
-            transportOptions.Arguments = ["-y", settings.TestPackage, .. arguments];
-        }
+        var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
+            executablePath,
+            [..arguments],
+            envVars,
+            process => _httpServerProcess = process,
+            Output,
+            settings?.TestPackage,
+            settings?.SettingsDirectory);
 
-        var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClient.CreateAsync(clientTransport);
+        _serverUrl = serverUrl;
+        return client;
     }
 
     #region Default Mode Tests
