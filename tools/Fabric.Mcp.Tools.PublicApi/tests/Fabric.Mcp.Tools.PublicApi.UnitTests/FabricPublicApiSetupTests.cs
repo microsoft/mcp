@@ -45,14 +45,14 @@ public class FabricPublicApiSetupTests
         rootGroup.AddSubGroup(commands);
 
         // Assert
-        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");
+        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "api");
         Assert.NotNull(publicApisGroup);
 
         var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "bestpractices");
         Assert.NotNull(bestPracticesGroup);
 
-        Assert.Contains("list", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", bestPracticesGroup.Commands.Keys);
+        Assert.Contains("list_workloads", publicApisGroup.Commands.Keys);
+        Assert.Contains("get_api_spec", publicApisGroup.Commands.Keys);
+        Assert.Contains("get_best_practices", bestPracticesGroup.Commands.Keys);
     }
 }
