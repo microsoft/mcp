@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.UnitTests;
@@ -16,6 +17,7 @@ public class RegistryDiscoveryStrategyHelper
         logger = logger ?? NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<RegistryDiscoveryStrategy>>();
         var httpClientFactory = NSubstitute.Substitute.For<IHttpClientFactory>();
         var registryRoot = RegistryServerHelper.GetRegistryRoot();
-        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
+        var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+        return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!, configuration);
     }
 }
