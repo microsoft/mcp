@@ -82,7 +82,8 @@ public class VersionSyncTests
         // Look for patterns like:
         // - FROM mcr.microsoft.com/dotnet/aspnet:9.0.5-bookworm-slim
         // - FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
-        var pattern = @"FROM\s+mcr\.microsoft\.com/dotnet/aspnet:(\d+\.\d+(\.\d+)?)";
+        // - FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine
+        var pattern = @"FROM\s+mcr\.microsoft\.com/dotnet/(?:aspnet|runtime-deps):(\d+\.\d+(\.\d+)?)";
         var match = Regex.Match(dockerfileContent, pattern);
 
         if (match.Success)
