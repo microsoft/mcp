@@ -39,7 +39,7 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
 
     public override string Id => "6c29659e-406d-4b9b-8150-e3d4fd7ba31c";
 
-    public override string Name => "ai_app";
+    public override string Name => "ai-app";
 
     public override string Description =>
         @"Returns best practices and code generation guidance for building AI applications in Azure. 

@@ -1,0 +1,4 @@
+pr: 1727
+changes:
+  - section: "Breaking Changes"
+    description: "Change AzureBestPractice tool area from ai_app to ai-app and azure_bestpractices to azure-bestpractices. Consequently, `get_azure_bestpractices_ai_app` becomes `get-azure-bestpractices_ai-app` and `get_azure_bestpractices_get` becomes `get-azure-bestpractices_get`"
