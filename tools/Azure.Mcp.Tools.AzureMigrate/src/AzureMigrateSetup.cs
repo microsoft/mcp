@@ -26,6 +26,7 @@ public class AzureMigrateSetup : IAreaSetup
     {
         // Register shared helpers
         services.AddSingleton<AzureHttpHelper>();
+        services.AddSingleton<AzureMigrateProjectHelper>();
 
         // Register guidance service and command
         services.AddSingleton<IPlatformLandingZoneGuidanceService, PlatformLandingZoneGuidanceService>();
@@ -42,7 +43,9 @@ public class AzureMigrateSetup : IAreaSetup
     {
         var azureMigrate = new CommandGroup(
             Name,
-            "Azure Landing Zone operations – Guidance and tooling for customizing and generating Azure Landing Zones, including policy configuration, networking, identity, governance, and naming standards. Supports generating platform landing zones using Bicep, Terraform, or the Azure portal in alignment with Microsoft's Cloud Adoption Framework.",
+            """
+            Azure Landing Zone operations - Provides best-practice guidance and Terraform-ready generation for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module customization—aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform landing zone with configurable parameters (regions, connectivity, security, subscriptions).
+            """,
             Title);
 
         // Create platform landing zone subgroup

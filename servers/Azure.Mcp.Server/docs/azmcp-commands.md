@@ -2018,6 +2018,16 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --action status
    ```
 
+6. **Create Azure Migrate Project** (`--action createmigrateproject`)
+   ```bash
+   # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action createmigrateproject \
+                                                  --location <azure-region>
+   ```
+
 ### Azure Native ISV Operations
 
 ```bash
