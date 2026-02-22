@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -24,9 +24,9 @@ public sealed class TableNamespaceListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "173cfc00-7c12-486d-a0e7-c0d4c1de23fd";
-    public override string Name => "list";
+    public override string Name => "list_table_namespaces";
     public override string Title => "List OneLake Table Namespaces";
-    public override string Description => "Enumerate namespaces available for a OneLake warehouse or lakehouse table endpoint using the OneLake Table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse').";
+    public override string Description => "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.";
 
     public override ToolMetadata Metadata => new()
     {

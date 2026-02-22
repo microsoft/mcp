@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -28,9 +28,9 @@ public sealed class DirectoryCreateCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe";
-    public override string Name => "create";
+    public override string Name => "create_directory";
     public override string Title => "Create OneLake Directory";
-    public override string Description => "Create a directory in OneLake storage. Can create nested directory structures.";
+    public override string Description => "Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths.";
 
     public override ToolMetadata Metadata => new()
     {

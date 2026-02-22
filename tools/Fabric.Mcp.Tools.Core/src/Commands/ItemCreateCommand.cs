@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -6,26 +6,27 @@ using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Options;
-using Fabric.Mcp.Tools.OneLake.Models;
-using Fabric.Mcp.Tools.OneLake.Options;
-using Fabric.Mcp.Tools.OneLake.Services;
+using Fabric.Mcp.Tools.Core.Models;
+using Fabric.Mcp.Tools.Core.Options;
+using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
+namespace Fabric.Mcp.Tools.Core.Commands;
 
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<ItemCreateOptions>()
+    IFabricCoreService fabricCoreService) : GlobalCommand<ItemCreateOptions>()
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
+    private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
 
     public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
-    public override string Name => "create";
+    public override string Name => "create_item";
     public override string Title => "Create Fabric Item";
-    public override string Description => "Create a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.";
+    public override string Description => "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -40,24 +41,24 @@ public sealed class ItemCreateCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DisplayName.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ItemType.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.Description.AsOptional());
+        command.Options.Add(CoreOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(CoreOptionDefinitions.Workspace.AsOptional());
+        command.Options.Add(CoreOptionDefinitions.DisplayName.AsRequired());
+        command.Options.Add(CoreOptionDefinitions.ItemType.AsRequired());
+        command.Options.Add(CoreOptionDefinitions.Description.AsOptional());
     }
 
     protected override ItemCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        var workspaceId = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceIdName);
+        var workspaceName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceName);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
             ? workspaceId!
             : workspaceName ?? string.Empty;
-        options.ItemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DisplayName.Name) ?? string.Empty;
-        options.ItemType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemType.Name) ?? string.Empty;
-        options.ItemDescription = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Description.Name);
+        options.ItemName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DisplayNameName) ?? string.Empty;
+        options.ItemType = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.ItemTypeName) ?? string.Empty;
+        options.ItemDescription = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DescriptionName);
         return options;
     }
 
@@ -83,13 +84,13 @@ public sealed class ItemCreateCommand(
                 Description = options.ItemDescription
             };
 
-            var item = await _oneLakeService.CreateItemAsync(options.WorkspaceId, request, cancellationToken);
+            var item = await _fabricCoreService.CreateItemAsync(options.WorkspaceId, request, cancellationToken);
 
             _logger.LogInformation("Successfully created {ItemType} '{ItemName}' in workspace {WorkspaceId}",
                 options.ItemType, options.ItemName, options.WorkspaceId);
 
             var result = new ItemCreateCommandResult(item);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ItemCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ItemCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -100,8 +101,6 @@ public sealed class ItemCreateCommand(
 
         return context.Response;
     }
-
-    public sealed record ItemCreateCommandResult(OneLakeItem Item);
 }
 
 public sealed class ItemCreateOptions : GlobalOptions

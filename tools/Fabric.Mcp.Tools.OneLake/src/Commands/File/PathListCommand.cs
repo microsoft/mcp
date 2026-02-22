@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -26,7 +26,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
 
     public override string Id => "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3";
 
-    public override string Name => "list";
+    public override string Name => "list_files";
 
     public override string Description =>
         """

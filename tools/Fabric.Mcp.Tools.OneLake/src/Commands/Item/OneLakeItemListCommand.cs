@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -27,9 +27,9 @@ public sealed class OneLakeItemListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d";
-    public override string Name => "list";
+    public override string Name => "list_items";
     public override string Title => "List OneLake Items";
-    public override string Description => "List OneLake items in a workspace using the OneLake data plane API";
+    public override string Description => "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.";
 
     public override ToolMetadata Metadata => new()
     {

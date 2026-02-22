@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands;
@@ -29,7 +29,6 @@ public class FabricOneLakeSetup : IAreaSetup
         // Register item commands
         services.AddSingleton<OneLakeItemListCommand>();
         services.AddSingleton<OneLakeItemDataListCommand>();
-        services.AddSingleton<ItemCreateCommand>();
 
         // Register file commands
         services.AddSingleton<FileReadCommand>();
@@ -69,92 +68,48 @@ public class FabricOneLakeSetup : IAreaSetup
             This tool provides operations for working with OneLake resources within your Fabric tenant.
             """);
 
-        var workspaceGroup = new CommandGroup("workspace", "Workspace operations - Commands for listing and managing OneLake workspaces.");
-        fabricOneLake.AddSubGroup(workspaceGroup);
+        // Register all commands at the onelake level (flat structure with verb_object naming)
+        var listWorkspaces = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
+        fabricOneLake.AddCommand(listWorkspaces.Name, listWorkspaces);
 
-        var itemGroup = new CommandGroup("item", "Item operations - Commands for listing and creating OneLake items.");
-        fabricOneLake.AddSubGroup(itemGroup);
+        var listItems = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
+        fabricOneLake.AddCommand(listItems.Name, listItems);
 
-        var fileGroup = new CommandGroup("file", "File operations - Commands for reading, writing, deleting, and browsing OneLake files using the DFS API.");
-        fabricOneLake.AddSubGroup(fileGroup);
+        var listItemsDfs = serviceProvider.GetRequiredService<OneLakeItemDataListCommand>();
+        fabricOneLake.AddCommand(listItemsDfs.Name, listItemsDfs);
 
-        var blobGroup = new CommandGroup("blob", "Blob operations - Commands for interacting with OneLake's blob-compatible endpoints.");
-        fabricOneLake.AddSubGroup(blobGroup);
+        var listFiles = serviceProvider.GetRequiredService<PathListCommand>();
+        fabricOneLake.AddCommand(listFiles.Name, listFiles);
 
-        var uploadGroup = new CommandGroup("upload", "Upload operations - Commands for uploading files into OneLake storage.");
-        fabricOneLake.AddSubGroup(uploadGroup);
+        var downloadFile = serviceProvider.GetRequiredService<BlobGetCommand>();
+        fabricOneLake.AddCommand(downloadFile.Name, downloadFile);
 
-        var downloadGroup = new CommandGroup("download", "Download operations - Commands for retrieving files from OneLake storage.");
-        fabricOneLake.AddSubGroup(downloadGroup);
+        var uploadFile = serviceProvider.GetRequiredService<BlobPutCommand>();
+        fabricOneLake.AddCommand(uploadFile.Name, uploadFile);
 
-        var directoryGroup = new CommandGroup("directory", "Directory operations - Commands for creating and deleting OneLake directories.");
-        fabricOneLake.AddSubGroup(directoryGroup);
+        var deleteFile = serviceProvider.GetRequiredService<BlobDeleteCommand>();
+        fabricOneLake.AddCommand(deleteFile.Name, deleteFile);
 
-        var tableGroup = new CommandGroup("table", "Table operations - Commands for interacting with OneLake table endpoints.");
-        fabricOneLake.AddSubGroup(tableGroup);
+        var createDirectory = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
+        fabricOneLake.AddCommand(createDirectory.Name, createDirectory);
 
-        var tableConfigGroup = new CommandGroup("config", "Table configuration commands - Inspect table endpoint configuration details.");
-        tableGroup.AddSubGroup(tableConfigGroup);
+        var deleteDirectory = serviceProvider.GetRequiredService<DirectoryDeleteCommand>();
+        fabricOneLake.AddCommand(deleteDirectory.Name, deleteDirectory);
 
-        var tableNamespaceGroup = new CommandGroup("namespace", "Table namespace operations - Commands for browsing OneLake table namespaces.");
-        tableGroup.AddSubGroup(tableNamespaceGroup);
+        var getTableConfig = serviceProvider.GetRequiredService<TableConfigGetCommand>();
+        fabricOneLake.AddCommand(getTableConfig.Name, getTableConfig);
 
-        var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
-        workspaceGroup.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
+        var listTableNamespaces = serviceProvider.GetRequiredService<TableNamespaceListCommand>();
+        fabricOneLake.AddCommand(listTableNamespaces.Name, listTableNamespaces);
 
-        var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
-        itemGroup.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
+        var getTableNamespace = serviceProvider.GetRequiredService<TableNamespaceGetCommand>();
+        fabricOneLake.AddCommand(getTableNamespace.Name, getTableNamespace);
 
-        var oneLakeItemDataListCommand = serviceProvider.GetRequiredService<OneLakeItemDataListCommand>();
-        itemGroup.AddCommand(oneLakeItemDataListCommand.Name, oneLakeItemDataListCommand);
+        var listTables = serviceProvider.GetRequiredService<TableListCommand>();
+        fabricOneLake.AddCommand(listTables.Name, listTables);
 
-        var itemCreateCommand = serviceProvider.GetRequiredService<ItemCreateCommand>();
-        itemGroup.AddCommand(itemCreateCommand.Name, itemCreateCommand);
-
-        var fileReadCommand = serviceProvider.GetRequiredService<FileReadCommand>();
-        fileGroup.AddCommand(fileReadCommand.Name, fileReadCommand);
-
-        var fileWriteCommand = serviceProvider.GetRequiredService<FileWriteCommand>();
-        fileGroup.AddCommand(fileWriteCommand.Name, fileWriteCommand);
-
-        var fileDeleteCommand = serviceProvider.GetRequiredService<FileDeleteCommand>();
-        fileGroup.AddCommand(fileDeleteCommand.Name, fileDeleteCommand);
-
-        var pathListCommand = serviceProvider.GetRequiredService<PathListCommand>();
-        fileGroup.AddCommand(pathListCommand.Name, pathListCommand);
-
-        var blobPutCommand = serviceProvider.GetRequiredService<BlobPutCommand>();
-        uploadGroup.AddCommand(blobPutCommand.Name, blobPutCommand);
-
-        var blobGetCommand = serviceProvider.GetRequiredService<BlobGetCommand>();
-        downloadGroup.AddCommand(blobGetCommand.Name, blobGetCommand);
-
-        var blobDeleteCommand = serviceProvider.GetRequiredService<BlobDeleteCommand>();
-        blobGroup.AddCommand(blobDeleteCommand.Name, blobDeleteCommand);
-
-        var blobListCommand = serviceProvider.GetRequiredService<BlobListCommand>();
-        blobGroup.AddCommand(blobListCommand.Name, blobListCommand);
-
-        var directoryCreateCommand = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
-        directoryGroup.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);
-
-        var directoryDeleteCommand = serviceProvider.GetRequiredService<DirectoryDeleteCommand>();
-        directoryGroup.AddCommand(directoryDeleteCommand.Name, directoryDeleteCommand);
-
-        var tableConfigGetCommand = serviceProvider.GetRequiredService<TableConfigGetCommand>();
-        tableConfigGroup.AddCommand(tableConfigGetCommand.Name, tableConfigGetCommand);
-
-        var tableListCommand = serviceProvider.GetRequiredService<TableListCommand>();
-        tableGroup.AddCommand(tableListCommand.Name, tableListCommand);
-
-        var tableGetCommand = serviceProvider.GetRequiredService<TableGetCommand>();
-        tableGroup.AddCommand(tableGetCommand.Name, tableGetCommand);
-
-        var tableNamespaceListCommand = serviceProvider.GetRequiredService<TableNamespaceListCommand>();
-        tableNamespaceGroup.AddCommand(tableNamespaceListCommand.Name, tableNamespaceListCommand);
-
-        var tableNamespaceGetCommand = serviceProvider.GetRequiredService<TableNamespaceGetCommand>();
-        tableNamespaceGroup.AddCommand(tableNamespaceGetCommand.Name, tableNamespaceGetCommand);
+        var getTable = serviceProvider.GetRequiredService<TableGetCommand>();
+        fabricOneLake.AddCommand(getTable.Name, getTable);
 
         return fabricOneLake;
     }

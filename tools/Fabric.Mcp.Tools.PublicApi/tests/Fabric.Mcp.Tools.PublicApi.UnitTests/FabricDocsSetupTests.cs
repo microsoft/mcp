@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.PublicApi.Tests;
 
-public class FabricPublicApiSetupTests
+public class FabricDocsSetupTests
 {
     [Fact]
     public void ConfigureServices_RegistersExpectedServices()
@@ -16,7 +16,7 @@ public class FabricPublicApiSetupTests
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        var setup = new FabricPublicApiSetup();
+        var setup = new FabricDocsSetup();
 
         // Act
         setup.ConfigureServices(services);
@@ -34,9 +34,10 @@ public class FabricPublicApiSetupTests
     {
         // Arrange
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var setup = new FabricPublicApiSetup();
+        var setup = new FabricDocsSetup();
         var rootGroup = new CommandGroup("root", "Root command group");
         var services = new ServiceCollection();
+        services.AddLogging();
         setup.ConfigureServices(services);
         var serviceProvider = services.BuildServiceProvider();
 
@@ -44,15 +45,16 @@ public class FabricPublicApiSetupTests
         var commands = setup.RegisterCommands(serviceProvider);
         rootGroup.AddSubGroup(commands);
 
-        // Assert
-        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");
-        Assert.NotNull(publicApisGroup);
+        // Assert - flat structure under docs
+        var docsGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "docs");
+        Assert.NotNull(docsGroup);
 
-        var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "bestpractices");
-        Assert.NotNull(bestPracticesGroup);
-
-        Assert.Contains("list", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", bestPracticesGroup.Commands.Keys);
+        // Verify all 6 commands are registered with verb_object naming
+        Assert.Contains("list_workloads", docsGroup.Commands.Keys);
+        Assert.Contains("get_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("get_platform_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("get_item_definition", docsGroup.Commands.Keys);
+        Assert.Contains("get_best_practices", docsGroup.Commands.Keys);
+        Assert.Contains("get_examples", docsGroup.Commands.Keys);
     }
 }

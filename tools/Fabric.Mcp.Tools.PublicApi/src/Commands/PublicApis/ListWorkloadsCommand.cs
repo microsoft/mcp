@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -18,14 +18,10 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
 
     public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
 
-    public override string Name => "list";
+    public override string Name => "list_workloads";
 
     public override string Description =>
-        """
-        List all Microsoft Fabric workload types that have public API specifications available.
-        Returns workload names like 'notebook', 'report', 'platform', etc. that can be used 
-        with other commands to retrieve their specific API documentation.
-        """;
+        "Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.";
 
     public override string Title => CommandTitle;
 

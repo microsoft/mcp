@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -17,15 +17,10 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
 
     public override string Id => "2338df97-d6d9-4f1d-9e92-e118efe9c643";
 
-    public override string Name => "get";
+    public override string Name => "get_platform_api_spec";
 
     public override string Description =>
-        """
-        Retrieve the OpenAPI/Swagger specification for Microsoft Fabric platform APIs.
-        These are the core platform APIs that work across all Fabric workloads, such as 
-        workspace management, authentication, and common resource operations. Returns the 
-        complete API specification in JSON format with supplementary definition files.
-        """;
+        "Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-workload platform APIs like workspace management. Returns complete platform API specification.";
 
     public override string Title => CommandTitle;
 
