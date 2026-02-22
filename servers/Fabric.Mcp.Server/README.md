@@ -24,10 +24,10 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 - [Overview](#overview)
 - [Installation](#installation)
   - [IDE](#ide)
-        - [VS Code (Recommended)](#vs-code-recommended)
-        - [Manual Setup](#manual-setup)
-            - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
-            - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
+    - [VS Code (Recommended)](#vs-code-recommended)
+    - [Manual Setup](#manual-setup)
+      - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
+      - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
 - [Usage](#usage)
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
@@ -249,7 +249,6 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
 | `onelake_download_file` | Downloads a OneLake file. |
 | `onelake_upload_file` | Uploads a file to OneLake storage. |
-| `onelake_delete_file` | Deletes individual files from OneLake storage. |
 | `onelake_create_directory` | Creates a directory via the DFS endpoint. |
 | `onelake_delete_directory` | Deletes a directory (optionally recursive). |
 | `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
