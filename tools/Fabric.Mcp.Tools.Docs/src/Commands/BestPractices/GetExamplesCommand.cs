@@ -1,0 +1,79 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Fabric.Mcp.Tools.Docs.Options;
+using Fabric.Mcp.Tools.Docs.Options.PublicApis;
+using Fabric.Mcp.Tools.Docs.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
+
+public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+{
+    private const string CommandTitle = "Get API Examples";
+
+    private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
+
+    public override string Name => "get_examples";
+
+    public override string Description =>
+        "Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents.";
+
+    public override string Title => CommandTitle;
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(FabricOptionDefinitions.WorkloadType);
+    }
+
+    protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.WorkloadType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkloadType.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            var fabricService = context.GetService<IFabricPublicApiService>();
+            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting examples for workload {}", options.WorkloadType);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    public record ExampleFileResult(IDictionary<string, string> Examples);
+}

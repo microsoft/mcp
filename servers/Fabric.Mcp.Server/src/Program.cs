@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -77,7 +77,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
-            new Fabric.Mcp.Tools.PublicApi.FabricDocsSetup(),
+            new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
             new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
         ];

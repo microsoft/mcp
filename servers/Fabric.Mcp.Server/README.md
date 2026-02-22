@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
 # <!-- remove-section: start nuget;vsix remove_fabric_logo --><img height="36" width="36" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> <!-- remove-section: end remove_fabric_logo -->Microsoft Fabric MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
@@ -9,7 +9,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 <!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
 
-A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted developmentâ€”without connecting to live Fabric environments.
+A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
 
@@ -19,32 +19,44 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
+- [ Microsoft Fabric MCP Server ](#-microsoft-fabric-mcp-server-)
+  - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
-    - [IDE](#ide)
-        - [VS Code (Recommended)](#vs-code-recommended)
-        - [Manual Setup](#manual-setup)<!-- remove-section: end remove_installation_sub_sections -->
+- [Installation](#installation)
+  - [IDE](#ide)
+    - [VS Code (Recommended)](#vs-code-recommended)
+    - [Manual Setup](#manual-setup)
+      - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
+      - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
 - [Usage](#usage)
-    - [Getting Started](#getting-started)
-    - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-    - [Available Tools](#available-tools)
+  - [Getting Started](#getting-started)
+  - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+    - [📊 Fabric Workloads \& APIs](#-fabric-workloads--apis)
+    - [🏗️ Resource Definitions \& Schemas](#️-resource-definitions--schemas)
+    - [📝 Best Practices \& Examples](#-best-practices--examples)
+    - [🔧 Development Workflows](#-development-workflows)
+  - [Available Tools](#available-tools)
+    - [docs - API Documentation \& Best Practices](#docs---api-documentation--best-practices)
+    - [onelake - OneLake Data Operations](#onelake---onelake-data-operations)
+    - [core - Core Fabric Operations](#core---core-fabric-operations)
 - [Support and Reference](#support-and-reference)
-    - [Documentation](#documentation)
-    - [Feedback and Support](#feedback-and-support)
-    - [Security](#security)
-    - [Data Collection](#data-collection)
-    - [Contributing](#contributing)
-    - [Code of Conduct](#code-of-conduct)
+  - [Documentation](#documentation)
+  - [Feedback and Support](#feedback-and-support)
+  - [Security](#security)
+  - [Data Collection](#data-collection)
+  - [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
+- [License](#license)
 
 # Overview
 
-**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabricâ€”all without directly accessing your environment.
+**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
 
 Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
-- **Local-First Security**: Runs entirely on your machineâ€”never connects to your Fabric environment
+- **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
 
 # Installation
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
@@ -126,7 +138,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH â€” this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -175,27 +187,27 @@ Use one of the following options to configure your `mcp.json`:
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated!
-    - ðŸ‘‰ [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+    - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
 ## What can you do with the Fabric MCP Server?
 
-âœ¨ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
+✨ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
-### ðŸ“Š Fabric Workloads & APIs
+### 📊 Fabric Workloads & APIs
 
 * "What are the available Fabric workload types I can work with?"
 * "Show me the OpenAPI operations for 'notebook' and give a sample creation body"
 * "Get the platform-level API specifications for Microsoft Fabric"
 * "List all supported Fabric item types"
 
-### ðŸ—ï¸ Resource Definitions & Schemas
+### 🏗️ Resource Definitions & Schemas
 
 * "Create a Lakehouse resource definition with a schema that enforces a string column and a datetime column"
 * "Show me the JSON schema for a Data Pipeline item definition"
 * "Generate a Semantic Model configuration with sample measures"
 * "What properties are required for creating a KQL Database?"
 
-### ðŸ“ Best Practices & Examples
+### 📝 Best Practices & Examples
 
 * "Show me best practices for handling API throttling in Fabric"
 * "How should I implement retry logic for Fabric API rate limits?"
@@ -204,7 +216,7 @@ Use one of the following options to configure your `mcp.json`:
 * "Get example request/response payloads for creating a Notebook"
 * "What are the pagination patterns for Fabric REST APIs?"
 
-### ðŸ”§ Development Workflows
+### 🔧 Development Workflows
 
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
@@ -224,38 +236,37 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `docs_get_api_spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
 | `docs_get_platform_api_spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
 | `docs_get_item_definition` | Retrieves JSON schema definitions for items in a Fabric workload API. |
-| `docs_get_best_practices` | Retrieves embedded best practice documentation for a specific Fabric topic. |
-| `docs_get_examples` | Retrieves example API request and response files for a Fabric workload. |
+| `docs_get_best_practices` | Retrieves best practice documentation and guidance for a specific topic. |
+| `docs_get_examples` | Retrieves example API request/response files for a specific workload. |
 
-### onelake - OneLake Storage Operations
+### onelake - OneLake Data Operations
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_workspaces` | Lists all Fabric workspaces accessible via OneLake data plane API. |
-| `onelake_list_items` | Lists OneLake items in a Fabric workspace using the high-level OneLake API. |
-| `onelake_list_items_dfs` | Lists items in a Fabric workspace using the DFS-style data API. |
-| `onelake_list_files` | Lists files and directories in OneLake storage. |
-| `onelake_download_file` | Downloads a file from OneLake storage. |
+| `onelake_list_workspaces` | Lists available Microsoft Fabric workspaces. |
+| `onelake_list_items` | Lists workspace items with high-level metadata. |
+| `onelake_list_items_dfs` | Lists Fabric items via the DFS endpoint. |
+| `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
+| `onelake_download_file` | Downloads a OneLake file. |
 | `onelake_upload_file` | Uploads a file to OneLake storage. |
-| `onelake_delete_file` | Deletes a file from OneLake storage. |
-| `onelake_create_directory` | Creates a directory in OneLake storage. |
-| `onelake_delete_directory` | Deletes a directory from OneLake storage. |
-| `onelake_get_table_config` | Retrieves table API configuration for OneLake. |
-| `onelake_list_table_namespaces` | Lists table namespaces in OneLake. |
-| `onelake_get_table_namespace` | Retrieves metadata for a specific table namespace. |
-| `onelake_list_tables` | Lists tables in OneLake. |
-| `onelake_get_table` | Retrieves table definition from OneLake. |
+| `onelake_delete_file` | Deletes individual files from OneLake storage. |
+| `onelake_create_directory` | Creates a directory via the DFS endpoint. |
+| `onelake_delete_directory` | Deletes a directory (optionally recursive). |
+| `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
+| `onelake_list_table_namespaces` | Lists table namespaces (schemas) exposed through the table API. |
+| `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
+| `onelake_list_tables` | Lists tables published within a namespace. |
+| `onelake_get_table` | Retrieves the definition for a specific table. |
 
 ### core - Core Fabric Operations
 
 | Tool Name | Description |
 |-----------|-------------|
-| `core_create_item` | Creates a new item in a Fabric workspace (Lakehouse, Notebook, etc.). |
+| `core_create_item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
 
-All OneLake commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`). Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Table commands also accept the schema via `--namespace` or its alias `--schema`.
 # Support and Reference
 
 ## Documentation
@@ -267,7 +278,7 @@ All OneLake commands accept either GUID identifiers (`--workspace-id`, `--item-i
 
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
-    - ðŸ‘‰ [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository â€” we'd love to hear from you!
+    - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
 
 ## Security
 
@@ -288,10 +299,10 @@ We welcome contributions to the Fabric MCP Server! Whether you're fixing bugs, a
 
 Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for guidelines on:
 
-* ðŸ› ï¸ Setting up your development environment
-* âœ¨ Adding new commands
-* ðŸ“ Code style and testing requirements
-* ðŸ”„ Making pull requests
+* 🛠️ Setting up your development environment
+* ✨ Adding new commands
+* 📝 Code style and testing requirements
+* 🔄 Making pull requests
 
 ## Code of Conduct
 This project has adopted the
@@ -305,4 +316,4 @@ with any additional questions or comments.
 
 # License
 
-This project is licensed under the MIT License â€” see the [LICENSE](https://github.com/microsoft/mcp/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](https://github.com/microsoft/mcp/blob/main/LICENSE) file for details.
