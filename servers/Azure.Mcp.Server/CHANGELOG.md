@@ -16,7 +16,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Enabled trimmed binary for Docker and HTTP transport support for all distributions. [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions, reducing the Azure MCP Docker image size by ~40% (arm64: 1.21 GB to ~648 MB, amd64: 1.31 GB to ~784 MB). [[#1760](https://github.com/microsoft/mcp/pull/1760)]
 
 ### Other Changes
 
