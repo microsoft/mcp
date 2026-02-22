@@ -6,10 +6,11 @@ using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
@@ -915,4 +916,315 @@ public class ServiceStartCommandTests
 
         return matching.Value;
     }
+
+    #region CORS Policy Tests
+
+    [Fact]
+    public void ConfigureCors_DevelopmentWithAuthDisabled_RestrictsToLocalhost()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            // Assert
+            var serviceProvider = services.BuildServiceProvider();
+            var corsService = serviceProvider.GetService<Microsoft.AspNetCore.Cors.Infrastructure.ICorsService>();
+            Assert.NotNull(corsService);
+
+            // Verify policy was registered
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            Assert.NotNull(corsOptions.Value);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Theory]
+    [InlineData("http://localhost:3000", true)]
+    [InlineData("http://localhost:5173", true)]
+    [InlineData("http://127.0.0.1:8080", true)]
+    [InlineData("http://[::1]:9000", true)]
+    [InlineData("https://localhost:443", true)]
+    [InlineData("http://example.com", false)]
+    [InlineData("https://evil.com", false)]
+    [InlineData("http://192.168.1.100", false)]
+    public void ConfigureCors_DevelopmentWithAuthDisabled_ValidatesOrigins(string origin, bool shouldBeAllowed)
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify origin validation
+            if (shouldBeAllowed)
+            {
+                Assert.True(policy.IsOriginAllowed(origin), $"Origin '{origin}' should be allowed in development mode with auth disabled");
+                Assert.True(policy.SupportsCredentials, "AllowCredentials should be true in development mode");
+            }
+            else
+            {
+                Assert.False(policy.IsOriginAllowed(origin), $"Origin '{origin}' should NOT be allowed in development mode with auth disabled");
+            }
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_DevelopmentWithAuthEnabled_AllowsAllOrigins()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = false
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true when authentication is enabled");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_ProductionWithAuthDisabled_AllowsAllOrigins()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set production environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Production");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true in production");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_ProductionWithAuthEnabled_AllowsAllOrigins()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = false
+        };
+
+        // Set production environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Production");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true in production with auth enabled");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_NoEnvironmentSet_DefaultsToAllowAllOrigins()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Ensure environment variable is not set
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+
+        try
+        {
+            // Arrange environment (not Development, simulating Staging or other non-dev environment)
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Staging");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed when environment is not Development
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true when ASPNETCORE_ENVIRONMENT is not set to Development");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_DevelopmentWithAuthDisabled_AllowsAnyMethodAndHeader()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServiceStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            var method = typeof(ServiceStartCommand).GetMethod("ConfigureCors",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            method!.Invoke(null, [services, environment, serverOptions]);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify methods and headers
+            Assert.True(policy.AllowAnyMethod, "AllowAnyMethod should be true");
+            Assert.True(policy.AllowAnyHeader, "AllowAnyHeader should be true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    #endregion
 }

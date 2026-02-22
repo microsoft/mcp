@@ -9,6 +9,12 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: true
+- name: PackagePyPI
+  type: boolean
+  default: true
+- name: PackageMCPB
+  type: boolean
+  default: true
 - name: IncludeNative
   type: boolean
   default: true
@@ -28,5 +34,7 @@ extends:
     RunLiveTests: true
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
+    PackagePyPI: ${{ parameters.PackagePyPI }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}

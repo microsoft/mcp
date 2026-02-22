@@ -28,5 +28,7 @@ extends:
     RunLiveTests: true
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
+    PackagePyPI: false
+    PackageMCPB: false
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}

@@ -17,6 +17,7 @@
             "properties": {
                 "requestId": {
                     "type": "string",
+                    "format": "uuid",
                     "description": "ID of the request associated with the error.",
                     "readOnly": true
                 },
@@ -73,6 +74,7 @@
             "description": "Represents an identity or a Microsoft Entra group.",
             "type": "object",
             "required": ["id", "type"],
+            "discriminator": "type",
             "properties": {
                 "id": {
                     "description": "The principal's ID.",
@@ -87,37 +89,54 @@
                 },
                 "type":{
                     "description": "The type of the principal. Additional principal types may be added over time.",
-                    "type": "string",
-                    "enum": ["User", "ServicePrincipal", "Group", "ServicePrincipalProfile", "EntireTenant"],
-                    "x-ms-enum": {
-                        "name": "PrincipalType",
-                        "modelAsString": true,
-                        "values": [
-                            {
-                                "value": "User",
-                                "description": "Principal is a Microsoft Entra user principal."
-                            },
-                            {
-                                "value": "ServicePrincipal",
-                                "description": "Principal is a Microsoft Entra service principal."
-                            },
-                            {
-                                "value": "Group",
-                                "description": "Principal is a security group."
-                            },
-                            {
-                                "value": "ServicePrincipalProfile",
-                                "description": "Principal is a service principal profile."
-                            },
-                            {
-                                "value": "EntireTenant",
-                                "description": "Principal represents all tenant users."
-                            }
-                        ]
-                    },
+                    "$ref": "#/definitions/PrincipalType",
                     "readOnly": false
-                },
-                "userDetails":{
+                }
+            }
+        },
+        "PrincipalType": {
+            "description": "The type of the principal. Additional principal types may be added over time.",
+            "type": "string",
+            "enum": ["User", "ServicePrincipal", "Group", "ServicePrincipalProfile", "EntireTenant"],
+            "x-ms-enum": {
+                "name": "PrincipalType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "User",
+                        "description": "Principal is a Microsoft Entra user principal."
+                    },
+                    {
+                        "value": "ServicePrincipal",
+                        "description": "Principal is a Microsoft Entra service principal."
+                    },
+                    {
+                        "value": "Group",
+                        "description": "Principal is a security group."
+                    },
+                    {
+                        "value": "ServicePrincipalProfile",
+                        "description": "Principal is a service principal profile."
+                    },
+                    {
+                        "value": "EntireTenant",
+                        "description": "Principal represents all tenant users."
+                    }
+                ]
+            },
+            "readOnly": false
+        },
+        "UserPrincipal": {
+            "description": "Represents a Microsoft Entra user principal.",
+            "type": "object",
+            "x-ms-discriminator-value": "User",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Principal"
+                }
+            ],
+            "properties": {
+                "userDetails": {
                     "description": "User principal specific details. Applicable when the principal type is `User`.",
                     "type": "object",
                     "properties": {
@@ -128,8 +147,20 @@
                         }
                     },
                     "readOnly": true
-                },
-                "servicePrincipalDetails":{
+                }
+            }
+        },
+        "ServicePrincipalPrincipal": {
+            "description": "Represents a Microsoft Entra service principal.",
+            "type": "object",
+            "x-ms-discriminator-value": "ServicePrincipal",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Principal"
+                }
+            ],
+            "properties": {
+                "servicePrincipalDetails": {
                     "description": "Service principal specific details. Applicable when the principal type is `ServicePrincipal`.",
                     "type": "object",
                     "properties": {
@@ -141,8 +172,20 @@
                         }
                     },
                     "readOnly": true
-                },
-                "groupDetails":{
+                }
+            }
+        },
+        "GroupPrincipal": {
+            "description": "Represents a security group.",
+            "type": "object",
+            "x-ms-discriminator-value": "Group",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Principal"
+                }
+            ],
+            "properties": {
+                "groupDetails": {
                     "description": "Group specific details. Applicable when the principal type is `Group`.",
                     "type": "object",
                     "properties": {
@@ -172,8 +215,20 @@
                         }
                     },
                     "readOnly": false
-                },
-                "servicePrincipalProfileDetails":{
+                }
+            }
+        },
+        "ServicePrincipalProfilePrincipal": {
+            "description": "Represents a service principal profile.",
+            "type": "object",
+            "x-ms-discriminator-value": "ServicePrincipalProfile",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Principal"
+                }
+            ],
+            "properties": {
+                "servicePrincipalProfileDetails": {
                     "description": "Service principal profile details. Applicable when the principal type is `ServicePrincipalProfile`.",
                     "type": "object",
                     "properties": {
@@ -186,8 +241,17 @@
                     },
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
+        },
+        "EntireTenantPrincipal": {
+            "description": "Represents a tenant principal",
+            "type": "object",
+            "x-ms-discriminator-value": "EntireTenant",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Principal"
+                }
+            ]
         },
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
@@ -812,60 +876,154 @@
             ],
             "x-ms-discriminator-value": "Domain"
         },
+        
         "ItemReference": {
-            "description": "An item reference object.",
-            "type": "object",
-            "required": ["referenceType"],
-            "discriminator": "referenceType",
-            "properties": {
-                "referenceType": {
-                    "description": "The item reference type.",
-                    "$ref": "#/definitions/ItemReferenceType"
-                }
-            }
-        },
-        "ItemReferenceType": {
-            "type": "string",
-            "description": "The Item reference type. Additional `ItemReferenceType` types may be added over time.",
-            "enum": ["ById"],
-            "x-ms-enum": {
-                "name": "ItemReferenceType",
-                "modelAsString": true,
-                "values": [
-                    {
-                        "value": "ById",
-                        "description": "The item is referenced by its ID."
-                    }
-                ]
-            }
-        },
-        "ItemReferenceById": {
-            "description": "An item reference by ID object.",
-            "type": "object",
-            "required": [
-                "itemId",
-                "workspaceId"
-            ],
-            "properties": {
-                "itemId": {
-                    "description": "The ID of the item.",
-                    "type": "string",
-                    "format": "uuid"
-                },
-                "workspaceId": {
-                    "description": "The workspace ID of the item.",
-                    "type": "string",
-                    "format": "uuid"
-                }
-            },
-            "allOf": [
-                {
-                    "$ref": "#/definitions/ItemReference"
-                }
-            ],
-            "x-ms-discriminator-value": "ById"
-        },
-        "Duration": {
+           "description": "An item reference object.",
+           "type": "object",
+           "required": ["referenceType"],
+           "discriminator": "referenceType",
+           "properties": {
+               "referenceType": {
+                   "description": "The item reference type.",
+                   "$ref": "#/definitions/ItemReferenceType"
+               }
+           }
+       },
+       "ItemReferenceType": {
+           "type": "string",
+           "description": "The item reference type. Additional `ItemReferenceType` types may be added over time.",
+           "enum": ["ById", "ByVariable"],
+           "x-ms-enum": {
+               "name": "ItemReferenceType",
+               "modelAsString": true,
+               "values": [
+                   {
+                       "value": "ById",
+                       "description": "The item is referenced by its ID."
+                   },
+                   {
+                       "value": "ByVariable",
+                       "description": "The item is referenced by a variable."
+                   }                   
+                   
+               ]
+           }
+       },
+       "ItemReferenceById": {
+           "description": "An item reference by ID object.",
+           "type": "object",
+           "required": [
+               "itemId",
+               "workspaceId"
+           ],
+           "properties": {
+               "itemId": {
+                   "description": "The ID of the item.",
+                   "type": "string",
+                   "format": "uuid"
+               },
+               "workspaceId": {
+                   "description": "The workspace ID of the item.",
+                   "type": "string",
+                   "format": "uuid"
+               }
+           },
+           "allOf": [
+               {
+                   "$ref": "#/definitions/ItemReference"
+               }
+           ],
+           "x-ms-discriminator-value": "ById"
+       },
+       "ItemReferenceByVariable": {
+           "description": "An item reference by variable.",
+           "type": "object",
+           "required": [
+               "variableReference"
+           ],
+           "properties": {
+               "variableReference": {
+                   "$ref": "../variableLibrary/definitions.json#/definitions/VariableReference"
+               }
+           },
+           "allOf": [
+               {
+                   "$ref": "#/definitions/ItemReference"
+               }
+           ],
+           "x-ms-discriminator-value": "ByVariable"
+       },
+       "ConnectionReference": {
+           "description": "A connection reference object.",
+           "type": "object",
+           "required": ["referenceType"],
+           "discriminator": "referenceType",
+           "properties": {
+               "referenceType": {
+                   "description": "The connection reference type.",
+                   "$ref": "#/definitions/ConnectionReferenceType"
+               }
+           }
+       },
+       "ConnectionReferenceType": {
+           "type": "string",
+           "description": "The connection reference type. Additional `ConnectionReferenceType` types may be added over time.",
+           "enum": ["ById", "ByVariable"],
+           "x-ms-enum": {
+               "name": "ConnectionReferenceType",
+               "modelAsString": true,
+               "values": [
+                   {
+                       "value": "ById",
+                       "description": "The connection is referenced by its ID."
+                   },
+                   {
+                       "value": "ByVariable",
+                       "description": "The connection is referenced by a variable."
+                   }                   
+                   
+               ]
+           }
+       },
+       "ConnectionReferenceById": {
+           "description": "A reference to a connection by Id.",
+           "type": "object",
+           "required": [
+               "connectionId"
+           ],
+           "properties": {
+               "connectionId": {
+                   "description": "The ID of the connection.",
+                   "type": "string",
+                   "format": "uuid"
+               }
+           },
+           "allOf": [
+               {
+                   "$ref": "#/definitions/ConnectionReference"
+               }
+           ],
+           "x-ms-discriminator-value": "ById"
+       },
+       "ConnectionReferenceByVariable": {
+           "description": "A connection reference by variable.",
+           "type": "object",
+           "required": [
+               "variableReference"
+           ],
+           "properties": {
+               "variableReference": {
+                   "$ref": "../variableLibrary/definitions.json#/definitions/VariableReference"
+               }
+           },
+           "allOf": [
+               {
+                   "$ref": "#/definitions/ConnectionReference"
+               }
+           ],
+           "x-ms-discriminator-value": "ByVariable"
+       },       
+       "Duration": {
             "description": "A duration.",
             "type": "object",
             "required": [

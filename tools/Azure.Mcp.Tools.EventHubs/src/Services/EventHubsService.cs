@@ -43,7 +43,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                     throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
                 }
 
-                await foreach (var namespaceResource in resourceGroupResource.Value.GetEventHubsNamespaces())
+                await foreach (var namespaceResource in resourceGroupResource.Value.GetEventHubsNamespaces().WithCancellation(cancellationToken))
                 {
                     namespaces.Add(ConvertToNamespace(namespaceResource.Data, resourceGroup));
                 }
@@ -51,9 +51,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             else
             {
                 // Get namespaces from all resource groups in subscription
-                await foreach (var rg in subscriptionResource.GetResourceGroups())
+                await foreach (var rg in subscriptionResource.GetResourceGroups().WithCancellation(cancellationToken))
                 {
-                    await foreach (var namespaceResource in rg.GetEventHubsNamespaces())
+                    await foreach (var namespaceResource in rg.GetEventHubsNamespaces().WithCancellation(cancellationToken))
                     {
                         namespaces.Add(ConvertToNamespace(namespaceResource.Data, rg.Data.Name));
                     }
@@ -313,7 +313,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
             var eventHubList = new List<EventHub>();
 
-            await foreach (var eventHub in namespaceResource.Value.GetEventHubs())
+            await foreach (var eventHub in namespaceResource.Value.GetEventHubs().WithCancellation(cancellationToken))
             {
                 eventHubList.Add(ConvertToEventHub(eventHub.Data, resourceGroup));
             }
@@ -692,7 +692,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
             var consumerGroups = new List<ConsumerGroup>();
 
-            await foreach (var consumerGroup in eventHubResource.Value.GetEventHubsConsumerGroups())
+            await foreach (var consumerGroup in eventHubResource.Value.GetEventHubsConsumerGroups().WithCancellation(cancellationToken))
             {
                 consumerGroups.Add(ConvertToConsumerGroup(consumerGroup.Data, resourceGroup, namespaceName, eventHubName));
             }
