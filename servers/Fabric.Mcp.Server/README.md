@@ -31,10 +31,10 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 - [Usage](#usage)
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-    - [📊 Fabric Workloads \& APIs](#-fabric-workloads--apis)
-    - [🏗️ Resource Definitions \& Schemas](#️-resource-definitions--schemas)
-    - [📝 Best Practices \& Examples](#-best-practices--examples)
-    - [🔧 Development Workflows](#-development-workflows)
+    - [Fabric Workloads \& APIs](#fabric-workloads--apis)
+    - [Resource Definitions \& Schemas](#resource-definitions--schemas)
+    - [Best Practices \& Examples](#best-practices--examples)
+    - [Development Workflows](#development-workflows)
   - [Available Tools](#available-tools)
     - [docs - API Documentation \& Best Practices](#docs---api-documentation--best-practices)
     - [onelake - OneLake Data Operations](#onelake---onelake-data-operations)
@@ -187,27 +187,27 @@ Use one of the following options to configure your `mcp.json`:
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated!
-    - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+    - [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
 ## What can you do with the Fabric MCP Server?
 
-✨ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
+The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
-### 📊 Fabric Workloads & APIs
+### Fabric Workloads & APIs
 
 * "What are the available Fabric workload types I can work with?"
 * "Show me the OpenAPI operations for 'notebook' and give a sample creation body"
 * "Get the platform-level API specifications for Microsoft Fabric"
 * "List all supported Fabric item types"
 
-### 🏗️ Resource Definitions & Schemas
+### Resource Definitions & Schemas
 
 * "Create a Lakehouse resource definition with a schema that enforces a string column and a datetime column"
 * "Show me the JSON schema for a Data Pipeline item definition"
 * "Generate a Semantic Model configuration with sample measures"
 * "What properties are required for creating a KQL Database?"
 
-### 📝 Best Practices & Examples
+### Best Practices & Examples
 
 * "Show me best practices for handling API throttling in Fabric"
 * "How should I implement retry logic for Fabric API rate limits?"
@@ -216,7 +216,7 @@ Use one of the following options to configure your `mcp.json`:
 * "Get example request/response payloads for creating a Notebook"
 * "What are the pagination patterns for Fabric REST APIs?"
 
-### 🔧 Development Workflows
+### Development Workflows
 
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
@@ -278,7 +278,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
-    - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
+    - [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
 
 ## Security
 
@@ -299,10 +299,10 @@ We welcome contributions to the Fabric MCP Server! Whether you're fixing bugs, a
 
 Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for guidelines on:
 
-* 🛠️ Setting up your development environment
-* ✨ Adding new commands
-* 📝 Code style and testing requirements
-* 🔄 Making pull requests
+* Setting up your development environment
+* Adding new commands
+* Code style and testing requirements
+* Making pull requests
 
 ## Code of Conduct
 This project has adopted the
