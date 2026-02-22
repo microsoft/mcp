@@ -41,6 +41,7 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Tool description evaluation failed"
+        $hasErrors = $true
     } else {
         Write-Host "✅ Tool description evaluation did not detect any issues."
     }
