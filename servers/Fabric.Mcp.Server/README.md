@@ -24,10 +24,10 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 - [Overview](#overview)
 - [Installation](#installation)
   - [IDE](#ide)
-    - [VS Code (Recommended)](#vs-code-recommended)
-    - [Manual Setup](#manual-setup)
-      - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
-      - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
+        - [VS Code (Recommended)](#vs-code-recommended)
+        - [Manual Setup](#manual-setup)
+            - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
+            - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
 - [Usage](#usage)
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
@@ -36,9 +36,9 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
     - [Best Practices \& Examples](#best-practices--examples)
     - [Development Workflows](#development-workflows)
   - [Available Tools](#available-tools)
-    - [docs - API Documentation \& Best Practices](#docs---api-documentation--best-practices)
-    - [onelake - OneLake Data Operations](#onelake---onelake-data-operations)
-    - [core - Core Fabric Operations](#core---core-fabric-operations)
+    - [API Documentation \& Best Practices](#api-documentation--best-practices)
+    - [OneLake Data Operations](#onelake-data-operations)
+    - [Core Fabric Operations](#core-fabric-operations)
 - [Support and Reference](#support-and-reference)
   - [Documentation](#documentation)
   - [Feedback and Support](#feedback-and-support)
@@ -228,7 +228,7 @@ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. He
 
 The Fabric MCP Server exposes tools organized into three categories:
 
-### docs - API Documentation & Best Practices
+### API Documentation & Best Practices
 
 | Tool Name | Description |
 |-----------|-------------|
@@ -239,7 +239,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `docs_get_best_practices` | Retrieves best practice documentation and guidance for a specific topic. |
 | `docs_get_examples` | Retrieves example API request/response files for a specific workload. |
 
-### onelake - OneLake Data Operations
+### OneLake Data Operations
 
 | Tool Name | Description |
 |-----------|-------------|
@@ -258,7 +258,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_list_tables` | Lists tables published within a namespace. |
 | `onelake_get_table` | Retrieves the definition for a specific table. |
 
-### core - Core Fabric Operations
+### Core Fabric Operations
 
 | Tool Name | Description |
 |-----------|-------------|
