@@ -56,7 +56,7 @@ public class FabricOneLakeSetupTests
         Assert.True(rootGroup.Commands.ContainsKey("delete_file"), "Should have delete_file command");
         Assert.True(rootGroup.Commands.ContainsKey("create_directory"), "Should have create_directory command");
         Assert.True(rootGroup.Commands.ContainsKey("delete_directory"), "Should have delete_directory command");
-        
+
         // Table commands
         Assert.True(rootGroup.Commands.ContainsKey("get_table_config"), "Should have get_table_config command");
         Assert.True(rootGroup.Commands.ContainsKey("list_tables"), "Should have list_tables command");
