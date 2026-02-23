@@ -44,7 +44,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(GetLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
@@ -75,7 +75,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(GetLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
 
         Response? getByCollectionResponse = null;
         bool loaded = false;
@@ -117,18 +117,18 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         };
     }
 
-    private Uri GetLedgerUri(string ledgerName)
+    private string GetLedgerUri(string ledgerName)
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri($"https://{ledgerName}.confidential-ledger.azure.com");
+                return $"https://{ledgerName}.confidential-ledger.azure.com";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri($"https://{ledgerName}.confidential-ledger.azure.cn");
+                return $"https://{ledgerName}.confidential-ledger.azure.cn";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri($"https://{ledgerName}.confidential-ledger.azure.us");
+                return $"https://{ledgerName}.confidential-ledger.azure.us";
             default:
-                return new Uri($"https://{ledgerName}.confidential-ledger.azure.com");
+                return $"https://{ledgerName}.confidential-ledger.azure.com";
         }
     }
 }

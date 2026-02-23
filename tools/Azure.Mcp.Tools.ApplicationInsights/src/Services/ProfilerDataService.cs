@@ -199,18 +199,18 @@ public class ProfilerDataService(
         return Guid.Parse(appId);
     }
 
-    private Uri GetDiagnosticServiceEndpoint()
+    private string GetDiagnosticServiceEndpoint()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://dataplane.diagnosticservices.azure.com");
+                return "https://dataplane.diagnosticservices.azure.com";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://dataplane.diagnosticservices.azure.cn");
+                return "https://dataplane.diagnosticservices.azure.cn";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://dataplane.diagnosticservices.azure.us");
+                return "https://dataplane.diagnosticservices.azure.us";
             default:
-                return new Uri("https://dataplane.diagnosticservices.azure.com");
+                return "https://dataplane.diagnosticservices.azure.com";
         }
     }
 

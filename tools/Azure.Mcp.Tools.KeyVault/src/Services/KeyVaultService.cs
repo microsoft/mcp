@@ -303,41 +303,41 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
     }
 
-    private Uri BuildVaultUri(string vaultName)
+    private string BuildVaultUri(string vaultName)
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri($"https://{vaultName}.vault.azure.net");
+                return $"https://{vaultName}.vault.azure.net";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri($"https://{vaultName}.vault.azure.cn");
+                return $"https://{vaultName}.vault.azure.cn";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri($"https://{vaultName}.vault.usgovcloudapi.net");
+                return $"https://{vaultName}.vault.usgovcloudapi.net";
             default:
-                return new Uri($"https://{vaultName}.vault.azure.net");
+                return $"https://{vaultName}.vault.azure.net";
         }
     }
 
 
-    private Uri GetHsmUri(string vaultName)
+    private string GetHsmUri(string vaultName)
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri($"https://{vaultName}.managedhsm.azure.net");
+                return $"https://{vaultName}.managedhsm.azure.net";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri($"https://{vaultName}.managedhsm.azure.cn");
+                return $"https://{vaultName}.managedhsm.azure.cn";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri($"https://{vaultName}.managedhsm.usgovcloudapi.net");
+                return $"https://{vaultName}.managedhsm.usgovcloudapi.net";
             default:
-                return new Uri($"https://{vaultName}.managedhsm.azure.net");
+                return $"https://{vaultName}.managedhsm.azure.net";
         }
     }
 
     // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
+        var vaultUri = new Uri(BuildVaultUri(vaultName));
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = vaultUri;
         var options = new KeyClientOptions();
@@ -348,7 +348,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
 
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
+        var vaultUri = new Uri(BuildVaultUri(vaultName));
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = vaultUri;
         var options = new SecretClientOptions();
@@ -359,7 +359,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
 
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var vaultUri = BuildVaultUri(vaultName);
+        var vaultUri = new Uri(BuildVaultUri(vaultName));
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = vaultUri;
         var options = new CertificateClientOptions();
@@ -377,7 +377,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
         var credential = await GetCredential(tenantId, cancellationToken);
-        var hsmUri = GetHsmUri(vaultName);
+        var hsmUri = new Uri(GetHsmUri(vaultName));
         try
         {
             var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);

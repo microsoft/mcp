@@ -371,7 +371,7 @@ public sealed class SearchService(
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var endpoint = GetSearchEndpoint(serviceName);
+            var endpoint = new Uri(GetSearchEndpoint(serviceName));
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
             await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients, cancellationToken);
         }
@@ -424,18 +424,18 @@ public sealed class SearchService(
         => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
             field.IsFacetable, field.IsHidden != true);
 
-    private Uri GetSearchEndpoint(string serviceName)
+    private string GetSearchEndpoint(string serviceName)
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri($"https://{serviceName}.search.windows.net");
+                return $"https://{serviceName}.search.windows.net";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri($"https://{serviceName}.search.azure.cn");
+                return $"https://{serviceName}.search.azure.cn";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri($"https://{serviceName}.search.azure.us");
+                return $"https://{serviceName}.search.azure.us";
             default:
-                return new Uri($"https://{serviceName}.search.windows.net");
+                return $"https://{serviceName}.search.windows.net";
         }
     }
 }
