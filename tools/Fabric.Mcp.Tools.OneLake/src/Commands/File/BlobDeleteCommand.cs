@@ -29,9 +29,9 @@ public sealed class BlobDeleteCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "48561b8d-6f19-45ae-86fa-9feeb8f75e8e";
-    public override string Name => "delete";
+    public override string Name => "delete_file";
     public override string Title => "Delete OneLake Blob";
-    public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
+    public override string Description => "Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. This action permanently removes the file.";
 
     public override ToolMetadata Metadata => new()
     {

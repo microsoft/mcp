@@ -23,7 +23,7 @@ public class TableNamespaceGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new TableNamespaceGetCommand(NullLogger<TableNamespaceGetCommand>.Instance, service);
 
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_table_namespace", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -38,7 +38,7 @@ public class TableNamespaceGetCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_table_namespace", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 

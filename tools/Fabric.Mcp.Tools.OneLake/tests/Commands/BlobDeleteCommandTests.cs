@@ -25,7 +25,7 @@ public class BlobDeleteCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobDeleteCommand(NullLogger<BlobDeleteCommand>.Instance, service);
 
-        Assert.Equal("delete", command.Name);
+        Assert.Equal("delete_file", command.Name);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
     }

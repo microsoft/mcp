@@ -27,7 +27,7 @@ public sealed class OneLakeItemDataListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "8925d0c4-becf-4b5a-8af1-3e998c1058ec";
-    public override string Name => "list-data";
+    public override string Name => "list_items_dfs";
     public override string Title => "List OneLake Items (Data API)";
     public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
 

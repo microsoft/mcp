@@ -76,8 +76,9 @@ internal class Program
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
-            new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
+            new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
+            new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
         ];
     }
 
