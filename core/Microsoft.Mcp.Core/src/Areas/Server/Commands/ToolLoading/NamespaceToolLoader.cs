@@ -380,13 +380,19 @@ public sealed class NamespaceToolLoader(
                 var childToolSpecJson = GetChildToolJson(request, namespaceName, command);
 
                 _logger.LogWarning("Namespace {Namespace} command {Command} requires additional parameters.", namespaceName, command);
+
+                // Extract the specific error message from the response
+                var errorMessage = string.IsNullOrEmpty(commandResponse.Message)
+                    ? $"The '{command}' command is missing required parameters."
+                    : commandResponse.Message;
+
                 var finalResponse = new CallToolResult
                 {
                     Content =
                     [
                         new TextContentBlock {
                                 Text = $"""
-                                    The '{command}' command is missing required parameters.
+                                    {errorMessage}
 
                                     - Review the following command spec and identify the required arguments from the input schema.
                                     - Omit any arguments that are not required or do not apply to your use case.

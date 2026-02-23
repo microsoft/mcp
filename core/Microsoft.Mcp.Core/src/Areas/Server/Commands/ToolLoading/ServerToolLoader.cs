@@ -283,7 +283,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         [
                             new TextContentBlock {
                                     Text = $"""
-                                        The '{command}' command is missing required parameters.
+                                        {textContent.Text}
 
                                         - Review the following command spec and identify the required arguments from the input schema.
                                         - Omit any arguments that are not required or do not apply to your use case.
