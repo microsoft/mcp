@@ -44,23 +44,63 @@ public class VisualStudioToolNameTests
 
         try
         {
-            // Wait for server to initialize
-            await Task.Delay(3000, TestContext.Current.CancellationToken);
+            // Wait for server to initialize by checking if it's ready to receive requests
+            // The server is ready when it starts listening on stdin
+            using var initializationTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                TestContext.Current.CancellationToken, 
+                initializationTimeout.Token);
+
+            // Attempt to read any startup output/errors to ensure process is running
+            // If the process exits immediately, this will help catch that
+            await Task.Delay(500, linkedCts.Token); // Brief delay to allow process to fail fast if misconfigured
+            Assert.False(process.HasExited, "Server process exited immediately after start");
+
+            // Send initialize request first (required by MCP protocol)
+            var initRequest = new JsonRpcRequest
+            {
+                Method = "initialize",
+                Params = JsonSerializer.SerializeToNode(new
+                {
+                    protocolVersion = "2024-11-05",
+                    capabilities = new { },
+                    clientInfo = new { name = "test-client", version = "1.0" }
+                }),
+                Id = new RequestId(1)
+            };
+
+            var initRequestJson = JsonSerializer.Serialize(initRequest);
+            await process.StandardInput.WriteLineAsync(initRequestJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
+
+            // Read initialize response
+            var initResponseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
+            Assert.NotNull(initResponseLine);
+
+            // Send initialized notification
+            var initializedNotification = new JsonRpcNotification
+            {
+                Method = "notifications/initialized"
+            };
+
+            var notificationJson = JsonSerializer.Serialize(initializedNotification);
+            await process.StandardInput.WriteLineAsync(notificationJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
 
             // Send tools/list request
             var request = new JsonRpcRequest
             {
                 Method = "tools/list",
                 Params = JsonSerializer.SerializeToNode(new ListToolsRequestParams()),
-                Id = new RequestId(1)
+                Id = new RequestId(2)
             };
 
             var requestJson = JsonSerializer.Serialize(request);
-            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), TestContext.Current.CancellationToken);
-            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
 
-            // Read response
-            var responseLine = await process.StandardOutput.ReadLineAsync(TestContext.Current.CancellationToken);
+            // Read response with timeout
+            var responseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
             Assert.NotNull(responseLine);
 
             var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
@@ -115,23 +155,63 @@ public class VisualStudioToolNameTests
 
         try
         {
-            // Wait for server to initialize
-            await Task.Delay(3000, TestContext.Current.CancellationToken);
+            // Wait for server to initialize by checking if it's ready to receive requests
+            // The server is ready when it starts listening on stdin
+            using var initializationTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                TestContext.Current.CancellationToken, 
+                initializationTimeout.Token);
+
+            // Attempt to read any startup output/errors to ensure process is running
+            // If the process exits immediately, this will help catch that
+            await Task.Delay(500, linkedCts.Token); // Brief delay to allow process to fail fast if misconfigured
+            Assert.False(process.HasExited, "Server process exited immediately after start");
+
+            // Send initialize request first (required by MCP protocol)
+            var initRequest = new JsonRpcRequest
+            {
+                Method = "initialize",
+                Params = JsonSerializer.SerializeToNode(new
+                {
+                    protocolVersion = "2024-11-05",
+                    capabilities = new { },
+                    clientInfo = new { name = "test-client", version = "1.0" }
+                }),
+                Id = new RequestId(3)
+            };
+
+            var initRequestJson = JsonSerializer.Serialize(initRequest);
+            await process.StandardInput.WriteLineAsync(initRequestJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
+
+            // Read initialize response
+            var initResponseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
+            Assert.NotNull(initResponseLine);
+
+            // Send initialized notification
+            var initializedNotification = new JsonRpcNotification
+            {
+                Method = "notifications/initialized"
+            };
+
+            var notificationJson = JsonSerializer.Serialize(initializedNotification);
+            await process.StandardInput.WriteLineAsync(notificationJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
 
             // Send tools/list request
             var request = new JsonRpcRequest
             {
                 Method = "tools/list",
                 Params = JsonSerializer.SerializeToNode(new ListToolsRequestParams()),
-                Id = new RequestId(2)
+                Id = new RequestId(4)
             };
 
             var requestJson = JsonSerializer.Serialize(request);
-            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), TestContext.Current.CancellationToken);
-            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), linkedCts.Token);
+            await process.StandardInput.FlushAsync(linkedCts.Token);
 
-            // Read response
-            var responseLine = await process.StandardOutput.ReadLineAsync(TestContext.Current.CancellationToken);
+            // Read response with timeout
+            var responseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
             Assert.NotNull(responseLine);
 
             var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
