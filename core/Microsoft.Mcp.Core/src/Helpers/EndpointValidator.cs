@@ -24,21 +24,25 @@ public static class EndpointValidator
         var isPublicCloud = armEnvironment.Equals(ArmEnvironment.AzurePublicCloud);
         var isChinaCloud = armEnvironment.Equals(ArmEnvironment.AzureChina);
         var isGovCloud = armEnvironment.Equals(ArmEnvironment.AzureGovernment);
+        var isGermanyCloud = armEnvironment.Equals(ArmEnvironment.AzureGermany);
 
         // Build cloud-specific suffixes for services that require validation
         var acrSuffix = isPublicCloud ? "azurecr.io"
             : isChinaCloud ? "azurecr.cn"
             : isGovCloud ? "azurecr.us"
+            : isGermanyCloud ? "azurecr.de"
             : "azurecr.io";
 
         var appConfigSuffix = isPublicCloud ? "azconfig.io"
             : isChinaCloud ? "azconfig.azure.cn"
             : isGovCloud ? "azconfig.azure.us"
+            : isGermanyCloud ? "azconfig.azure.de"
             : "azconfig.io";
 
         var commSuffix = isPublicCloud ? "communication.azure.com"
             : isChinaCloud ? "communication.azure.cn"
             : isGovCloud ? "communication.azure.us"
+            : isGermanyCloud ? "communication.azure.de"
             : "communication.azure.com";
 
         return new Dictionary<string, string[]>
@@ -123,6 +127,7 @@ public static class EndpointValidator
             var cloudName = armEnvironment.Equals(ArmEnvironment.AzurePublicCloud) ? "Azure Public Cloud"
                 : armEnvironment.Equals(ArmEnvironment.AzureChina) ? "Azure China Cloud"
                 : armEnvironment.Equals(ArmEnvironment.AzureGovernment) ? "Azure US Government Cloud"
+                : armEnvironment.Equals(ArmEnvironment.AzureGermany) ? "Azure Germany Cloud"
                 : "configured Azure cloud";
 
             throw new SecurityException(
