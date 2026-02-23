@@ -69,14 +69,22 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
 
+<<<<<<< copilot/sub-pr-1729
+        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
+=======
         var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSEndpoint()]);
+>>>>>>> jairmyree/sov-cloud-no-multicloud
         TokenCredential tokenCredential = await GetCredential(cancellationToken);
         AccessToken accessToken = await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
         return accessToken.Token;
     }
 
+<<<<<<< copilot/sub-pr-1729
+    private string GetOpenSourceRDBMSScope()
+=======
     private string GetOpenSourceRDBMSEndpoint()
+>>>>>>> jairmyree/sov-cloud-no-multicloud
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
