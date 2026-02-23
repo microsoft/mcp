@@ -94,7 +94,7 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
 
             // Get ARM token
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([GetManagementImpersonationEndpoint().ToString()]),
+                new TokenRequestContext([GetManagementImpersonationEndpoint()]),
                 cancellationToken);
 
             // Call the AppLens token endpoint
@@ -157,10 +157,10 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
                 // https://learn.microsoft.com/aspnet/core/signalr/configuration?view=aspnetcore-9.0&tabs=dotnet#jsonmessagepack-serialization-options
                 options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppLensJsonContext.Default);
             })
-            .WithUrl(GetConversationalDiagnosticsSignalREndpoint(), options =>
+            .WithUrl(new Uri(GetConversationalDiagnosticsSignalREndpoint()), options =>
             {
                 options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
-                options.Headers.Add("origin", GetDiagnosticsPortalEndpoint().ToString());
+                options.Headers.Add("origin", GetDiagnosticsPortalEndpoint());
             })
             .WithAutomaticReconnect()
             .Build();
@@ -347,47 +347,47 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
         return session;
     }
 
-    private Uri GetConversationalDiagnosticsSignalREndpoint()
+    private string GetConversationalDiagnosticsSignalREndpoint()
     {
         return _tenantService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://diagnosticschat.azure.com/chatHub"),
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://diagnosticschat.azure.cn/chatHub"),
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://diagnosticschat.azure.us/chatHub"),
-            _ => new Uri("https://diagnosticschat.azure.com/chatHub"),
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschat.azure.com/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschat.azure.cn/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschat.azure.us/chatHub",
+            _ => "https://diagnosticschat.azure.com/chatHub",
         };
     }
 
-    private Uri GetManagementImpersonationEndpoint()
+    private string GetManagementImpersonationEndpoint()
     {
         return _tenantService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://management.azure.com/user_impersonation"),
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://management.chinacloudapi.cn/user_impersonation"),
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://management.usgovcloudapi.net/user_impersonation"),
-            _ => new Uri("https://management.azure.com/user_impersonation"),
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://management.azure.com/user_impersonation",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://management.chinacloudapi.cn/user_impersonation",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://management.usgovcloudapi.net/user_impersonation",
+            _ => "https://management.azure.com/user_impersonation",
         };
     }
 
-    private Uri GetAppLensTokenEndpoint(string resourceId)
+    private string GetAppLensTokenEndpoint(string resourceId)
     {
         return _tenantService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri($"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri($"https://management.chinacloudapi.cn/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri($"https://management.usgovcloudapi.net/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
-            _ => new Uri($"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01"),
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
+            _ => $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
         };
     }
 
-    private Uri GetDiagnosticsPortalEndpoint()
+    private string GetDiagnosticsPortalEndpoint()
     {
         return _tenantService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://appservice-diagnostics.trafficmanager.net"),
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://appservice-diagnostics.azure.cn"),
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://appservice-diagnostics.azure.us"),
-            _ => new Uri("https://appservice-diagnostics.trafficmanager.net"),
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://appservice-diagnostics.trafficmanager.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://appservice-diagnostics.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://appservice-diagnostics.azure.us",
+            _ => "https://appservice-diagnostics.trafficmanager.net",
         };
     }
 }
