@@ -53,7 +53,7 @@ public class ServerCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
         var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
             executablePath,
-            [..arguments],
+            [.. arguments],
             envVars,
             process => _httpServerProcess = process,
             Output,
