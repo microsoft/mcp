@@ -6,9 +6,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| advisor_recommendations_list | List all recommendations in my subscription |
-| advisor_recommendations_list | Show me Advisor recommendations in the subscription <subscription> |
-| advisor_recommendations_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | List all recommendations in my subscription |
+| advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
 
 ## Azure AI Search
 
@@ -553,6 +553,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |

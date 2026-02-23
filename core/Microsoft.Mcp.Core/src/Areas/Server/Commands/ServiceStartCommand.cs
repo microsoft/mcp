@@ -4,33 +4,36 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command to start the MCP server with specified configuration options.
@@ -455,9 +458,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing and incoming authentication and authorization.
         //
         // Configure incoming authentication and authorization.
-        MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder = services
+        var azureAdSection = builder.Configuration.GetSection(Constants.AzureAd);
+        AuthenticationBuilder authBuilder = services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApi(builder.Configuration);
+            .AddMicrosoftIdentityWebApiAot(
+                options => azureAdSection.Bind(options),
+                JwtBearerDefaults.AuthenticationScheme,
+                null);
 
         // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
         services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -502,7 +509,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing authentication strategy
         if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
-            services.AddHttpOnBehalfOfTokenCredentialProvider(authBuilder);
+            services.AddHttpOnBehalfOfTokenCredentialProvider();
         }
         else
         {
@@ -541,10 +548,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
                 context.Request.Method == "GET")
             {
-                IOptionsMonitor<MicrosoftIdentityOptions> azureAdOptionsMonitor = context
+                IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
                     .RequestServices
-                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityOptions>>();
-                MicrosoftIdentityOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
+                MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
                 string baseUrl = $"{request.Scheme}://{request.Host}";
                 string? clientId = azureAdOptions.ClientId;

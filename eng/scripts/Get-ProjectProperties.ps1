@@ -60,7 +60,9 @@ $propertyList = @(
 
     'IsAotCompatible',
 
-    'McpRepositoryName'
+    'McpRepositoryName',
+
+    'McpbPlatforms'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

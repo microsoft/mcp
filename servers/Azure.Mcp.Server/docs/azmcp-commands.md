@@ -254,7 +254,8 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription
-azmcp advisor recommendations list --subscription <subscription>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation list --subscription <subscription>
 ```
 
 ### Azure AI Search Operations
@@ -2015,6 +2016,16 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
                                                   --action status
+   ```
+
+6. **Create Azure Migrate Project** (`--action createmigrateproject`)
+   ```bash
+   # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action createmigrateproject \
+                                                  --location <azure-region>
    ```
 
 ### Azure Native ISV Operations

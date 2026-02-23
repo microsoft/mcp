@@ -4,7 +4,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInformationProvider> logger)
     : MachineInformationProviderBase(logger)

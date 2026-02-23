@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Telemetry;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Discovery strategy that exposes command groups as MCP servers.
@@ -23,12 +22,17 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(
+    ICommandFactory commandFactory,
+    IServiceProvider serviceProvider,
+    IOptions<ServiceStartOptions> options,
+    IOptions<McpServerConfiguration> configurationOptions,
+    ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IOptions<ServiceStartOptions> _options = options;
-    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions = configurationOptions;
+    private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
 
     /// <summary>
@@ -222,7 +226,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFac
     /// <inheritdoc/>
     public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult<IEnumerable<IMcpServerProvider>>(new List<IMcpServerProvider>());
+        return Task.FromResult<IEnumerable<IMcpServerProvider>>([]);
     }
 
     /// <summary>

@@ -7,13 +7,14 @@ using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -33,7 +34,7 @@ public class CommandFactory : ICommandFactory
     private readonly Dictionary<string, IBaseCommand> _commandMap;
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
-    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions;
+    private readonly IOptions<McpServerConfiguration> _configurationOptions;
 
     // Add this new class inside CommandFactory
     private class StringConverter : JsonConverter<string>
@@ -54,7 +55,7 @@ public class CommandFactory : ICommandFactory
     public CommandFactory(IServiceProvider serviceProvider,
         IEnumerable<IAreaSetup> serviceAreas,
         ITelemetryService telemetryService,
-        IOptions<AzureMcpServerConfiguration> configurationOptions,
+        IOptions<McpServerConfiguration> configurationOptions,
         ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
@@ -211,7 +212,7 @@ public class CommandFactory : ICommandFactory
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
+                var isServiceStartCommand = implementation is ServiceStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));

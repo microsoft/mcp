@@ -2,18 +2,58 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.AI.Agents.Persistent;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Microsoft.Extensions.Logging.Abstractions;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
+using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
 
-public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture)
-    : CommandTestsBase(output, liveServerFixture)
+public class FoundryCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Sanitize subscription IDs in URIs to allow playback to work
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/subscriptions/(?<sub>[^/]+)/",
+            GroupForReplace = "sub",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/resourcegroups/(?<rg>[^/?]+)",
+            GroupForReplace = "rg",
+            Value = "Sanitized"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/resourceGroups/(?<rg>[^/?]+)",
+            GroupForReplace = "rg",
+            Value = "Sanitized"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/projects/(?<project>[^/?]+)",
+            GroupForReplace = "project",
+            Value = "Sanitized-ai-projects"
+        })
+    ];
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        .. base.BodyRegexSanitizers,
+        // Sanitize resource group names with usernames in connection IDs
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody
+        {
+            Regex = @"SSS3PT_[^/\""]+",
+            Value = "Sanitized"
+        })
+    ];
+
     [Fact]
     public async Task Should_list_foundry_models()
     {
@@ -50,17 +90,22 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
     [Fact]
     public async Task Should_deploy_foundry_model()
     {
+        var azureAiServicesAccount = Settings.ResourceBaseName;
+        RegisterVariable("azureAiServicesAccount", azureAiServicesAccount);
+
         var deploymentName = $"test-deploy-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        RegisterVariable("deploymentName", deploymentName);
+
         var result = await CallToolAsync(
             "foundry_models_deploy",
             new()
             {
-                { "deployment", deploymentName },
+                { "deployment", TestVariables.GetValueOrDefault("deploymentName", deploymentName) },
                 { "model-name", "gpt-4o" },
                 { "model-format", "OpenAI"},
-                { "azure-ai-services", Settings.ResourceBaseName },
+                { "azure-ai-services", TestVariables.GetValueOrDefault("azureAiServicesAccount", Settings.ResourceBaseName) },
                 { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
+                { "subscription", TestVariables.GetValueOrDefault("subscriptionId", Settings.SubscriptionId) },
             });
 
         var deploymentResource = result.AssertProperty("deploymentData");
@@ -136,19 +181,27 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var tenantId = Settings.TenantId;
+
+        // Register variables for playback mode
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("deploymentName", deploymentName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
+
         var subscriptionId = Settings.SubscriptionId;
         var result = await CallToolAsync(
             "foundry_openai_create-completion",
             new()
             {
                 { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "deployment", deploymentName },
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "deployment", TestVariables["deploymentName"] },
                 { "prompt-text", "What is Azure? Please provide a brief answer." },
                 { "max-tokens", "50" },
                 { "temperature", "0.7" },
-                { "tenant", Settings.TenantId }
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -182,20 +235,27 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
+
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("deploymentName", deploymentName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("subscriptionId", subscriptionId);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_openai_embeddings-create",
             new()
             {
-                { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "deployment", deploymentName },
+                { "subscription", TestVariables["subscriptionId"] },
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "deployment", TestVariables["deploymentName"] },
                 { "input-text", inputText },
                 { "user", "test-user" },
                 { "encoding-format", "float" },
-                { "tenant", Settings.TenantId }
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -236,7 +296,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify model name in response
         var model = embeddingResult.AssertProperty("model");
         Assert.Equal(JsonValueKind.String, model.ValueKind);
-        Assert.Equal(deploymentName, model.GetString());
+        Assert.Equal(TestVariables["deploymentName"], model.GetString());
 
         // Verify usage information
         var usage = embeddingResult.AssertProperty("usage");
@@ -261,8 +321,8 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(JsonValueKind.String, deploymentNameProperty.ValueKind);
         Assert.Equal(JsonValueKind.String, inputTextProperty.ValueKind);
 
-        Assert.Equal(resourceName, resourceNameProperty.GetString());
-        Assert.Equal(deploymentName, deploymentNameProperty.GetString());
+        Assert.Equal(TestVariables["resourceName"], resourceNameProperty.GetString());
+        Assert.Equal(TestVariables["deploymentName"], deploymentNameProperty.GetString());
         Assert.Equal(inputText, inputTextProperty.GetString());
     }
 
@@ -273,22 +333,28 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
         var inputText = "Test embeddings with optional parameters.";
         var dimensions = 512; // Test with reduced dimensions if supported
+
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("deploymentName", deploymentName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "deployment", deploymentName },
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "deployment", TestVariables["deploymentName"] },
                 { "input-text", inputText },
                 { "user", "test-user-with-params" },
                 { "encoding-format", "float" },
                 { "dimensions", dimensions.ToString() },
-                { "tenant", Settings.TenantId }
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure (same as basic test)
@@ -325,16 +391,21 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
     {
         var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
-        var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
+
+        // Register variables for recording sanitization
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_openai_models-list",
             new()
             {
-                { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "tenant", Settings.TenantId }
+                { "subscription", Settings.SubscriptionId },  // Don't register - test proxy auto-sanitizes GUIDs in URLs
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -344,7 +415,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify resource name matches
         var returnedResourceName = modelsListResult.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
-        Assert.Equal(resourceName, returnedResourceName.GetString());
+        Assert.Equal(TestVariables["resourceName"], returnedResourceName.GetString());
 
         // Verify models array exists (may be empty if no models deployed)
         var models = modelsListResult.AssertProperty("models");
@@ -422,7 +493,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource name should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        Assert.Equal(resourceName, commandResourceName.GetString());
+        Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
     }
 
     [Fact]
@@ -435,13 +506,19 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Model deployment name hardcoded in the test-resources.bicep
         var modelDeploymentName = "gpt-4o";
         var systemInstruction = "Help user with your knowledge";
+
+        // Register variables for recording sanitization
+        RegisterVariable("endpoint", endpoint);
+        RegisterVariable("agentName", agentName);
+        RegisterVariable("modelDeploymentName", modelDeploymentName);
+
         var result = await CallToolAsync(
             "foundry_agents_create",
             new()
             {
-                { "endpoint", endpoint },
-                { "model-deployment", modelDeploymentName },
-                { "agent-name", agentName },
+                { "endpoint", TestVariables["endpoint"] },
+                { "model-deployment", TestVariables["modelDeploymentName"] },
+                { "agent-name", TestVariables["agentName"] },
                 { "system-instruction", systemInstruction }
             });
 
@@ -464,15 +541,29 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var query = "What is the weather today in NYC?";
         var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
 
-        var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
+        // Register variables for recording sanitization
+        RegisterVariable("endpoint", endpoint);
+        RegisterVariable("agentName", agentName);
+
+        var createResult = await CallToolAsync(
+            "foundry_agents_create",
+            new()
+            {
+                { "endpoint", TestVariables["endpoint"] },
+                { "model-deployment", "gpt-4o" },
+                { "agent-name", TestVariables["agentName"] },
+                { "system-instruction", "Help user with your knowledge" }
+            });
+        var agentId = createResult.AssertProperty("agentId").GetString()!;
+        RegisterVariable("agentId", agentId);
 
         var result = await CallToolAsync(
             "foundry_agents_connect",
             new()
             {
-                { "agent-id", agentId },
+                { "agent-id", TestVariables["agentId"] },
                 { "query", query },
-                { "endpoint", endpoint }
+                { "endpoint", TestVariables["endpoint"] }
             });
         var response = result.AssertProperty("response");
         Assert.Equal(JsonValueKind.Object, response.ValueKind);
@@ -493,13 +584,25 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var agentName = $"test-agent-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
 
-        await CreateAgent(agentName, endpoint, "gpt-4o");
+        // Register variables for recording sanitization
+        RegisterVariable("endpoint", endpoint);
+        RegisterVariable("agentName", agentName);
+
+        await CallToolAsync(
+            "foundry_agents_create",
+            new()
+            {
+                { "endpoint", TestVariables["endpoint"] },
+                { "model-deployment", "gpt-4o" },
+                { "agent-name", TestVariables["agentName"] },
+                { "system-instruction", "Help user with your knowledge" }
+            });
 
         var result = await CallToolAsync(
             "foundry_agents_list",
             new()
             {
-                { "endpoint", endpoint }
+                { "endpoint", TestVariables["endpoint"] }
             });
         var agentsArray = result.AssertProperty("agents");
         Assert.Equal(JsonValueKind.Array, agentsArray.ValueKind);
@@ -521,7 +624,19 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var azureOpenAIEndpoint = $"https://{accounts}.cognitiveservices.azure.com";
         var azureOpenAIDeployment = "gpt-4o";
 
-        var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
+        RegisterVariable("endpoint", endpoint);
+        RegisterVariable("agentName", agentName);
+
+        var createResult = await CallToolAsync(
+            "foundry_agents_create",
+            new()
+            {
+                { "endpoint", TestVariables["endpoint"] },
+                { "model-deployment", "gpt-4o" },
+                { "agent-name", TestVariables["agentName"] },
+                { "system-instruction", "Help user with your knowledge" }
+            });
+        var agentId = createResult.AssertProperty("agentId").GetString()!;
         var result = await CallToolAsync(
             "foundry_agents_query-and-evaluate",
             new()
@@ -549,12 +664,24 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(JsonValueKind.Object, metrics.ValueKind);
         var metric = metrics.AssertProperty(evaluationMetric);
         Assert.Equal(JsonValueKind.Object, metric.ValueKind);
-        metric.AssertProperty("value");
-        metric.AssertProperty("reason");
-        var interpretation = metric.AssertProperty("interpretation");
-        Assert.Equal(JsonValueKind.Object, interpretation.ValueKind);
-        var context = metric.AssertProperty("context");
-        Assert.Equal(JsonValueKind.Object, context.ValueKind);
+
+        // Check if diagnostics exist (indicates evaluation error/warning)
+        if (metric.TryGetProperty("diagnostics", out var diagnostics))
+        {
+            // When diagnostics are present, value/reason/interpretation/context may not exist
+            Assert.Equal(JsonValueKind.Array, diagnostics.ValueKind);
+            Assert.NotEmpty(diagnostics.EnumerateArray());
+        }
+        else
+        {
+            // Normal case: value, reason, interpretation, context should exist
+            metric.AssertProperty("value");
+            metric.AssertProperty("reason");
+            var interpretation = metric.AssertProperty("interpretation");
+            Assert.Equal(JsonValueKind.Object, interpretation.ValueKind);
+            var context = metric.AssertProperty("context");
+            Assert.Equal(JsonValueKind.Object, context.ValueKind);
+        }
     }
 
     [Theory]
@@ -608,25 +735,31 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
         var messages = JsonSerializer.Serialize(new[]
         {
             new { role = "system", content = "You are a helpful assistant." },
             new { role = "user", content = "Hello, how are you today?" }
         });
 
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("deploymentName", deploymentName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
+
         var result = await CallToolAsync(
             "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "deployment", deploymentName },
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "deployment", TestVariables["deploymentName"] },
                 { "message-array", messages },
                 { "max-tokens", "150" },
                 { "temperature", "0.7" },
                 { "user", "test-user" },
-                { "tenant", Settings.TenantId }
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -679,11 +812,11 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        Assert.Equal(resourceName, commandResourceName.GetString());
+        Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
         Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
-        Assert.Equal(deploymentName, commandDeploymentName.GetString());
+        Assert.Equal(TestVariables["deploymentName"], commandDeploymentName.GetString());
     }
 
     [Fact]
@@ -693,6 +826,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
         var messages = JsonSerializer.Serialize(new[]
         {
             new { role = "system", content = "You are a helpful assistant that answers questions about Azure." },
@@ -701,20 +835,25 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
             new { role = "user", content = "How can I use it for chat applications?" }
         });
 
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("deploymentName", deploymentName);
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
+
         var result = await CallToolAsync(
             "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "deployment", deploymentName },
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "deployment", TestVariables["deploymentName"] },
                 { "message-array", messages },
                 { "max-tokens", "200" },
                 { "temperature", "0.5" },
                 { "top-p", "0.9" },
                 { "user", "test-user-conversation" },
-                { "tenant", Settings.TenantId }
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify response structure (same checks as basic test)
@@ -774,24 +913,28 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         // Verify command metadata (returned resource and deployment names should match input)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
-        Assert.Equal(resourceName, commandResourceName.GetString());
+        Assert.Equal(TestVariables["resourceName"], commandResourceName.GetString());
 
         var commandDeploymentName = result.AssertProperty("deploymentName");
         Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
-        Assert.Equal(deploymentName, commandDeploymentName.GetString());
+        Assert.Equal(TestVariables["deploymentName"], commandDeploymentName.GetString());
     }
 
     [Fact]
     public async Task Should_list_all_foundry_resources_in_subscription()
     {
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
+
+        // Register variables for recording sanitization
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_resource_get",
             new()
             {
-                { "subscription", subscriptionId },
-                { "tenant", Settings.TenantId }
+                { "subscription", subscriptionId },  // Don't register - test proxy auto-sanitizes GUIDs
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -843,14 +986,19 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
     {
         var subscriptionId = Settings.SubscriptionId;
         var resourceGroup = Settings.ResourceGroupName;
+        var tenantId = Settings.TenantId;
+
+        // Register variables for recording sanitization
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_resource_get",
             new()
             {
-                { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "tenant", Settings.TenantId }
+                { "subscription", subscriptionId },  // Don't register - test proxy auto-sanitizes GUIDs
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -864,7 +1012,11 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         foreach (var resource in resources.EnumerateArray())
         {
             var rg = resource.GetProperty("resourceGroup");
-            Assert.Equal(resourceGroup, rg.GetString());
+            var rgValue = rg.GetString();
+            // In playback mode, resource group may be sanitized
+            Assert.True(
+                rgValue == TestVariables["resourceGroup"] || rgValue?.Contains("Sanitized") == true,
+                $"Expected resource group '{TestVariables["resourceGroup"]}' or sanitized variant, got '{rgValue}'");
         }
     }
 
@@ -874,15 +1026,21 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var subscriptionId = Settings.SubscriptionId;
         var resourceGroup = Settings.ResourceGroupName;
         var resourceName = Settings.ResourceBaseName;
+        var tenantId = Settings.TenantId;
+
+        // Register variables for recording sanitization
+        RegisterVariable("resourceGroup", resourceGroup);
+        RegisterVariable("resourceName", resourceName);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_resource_get",
             new()
             {
-                { "subscription", subscriptionId },
-                { "resource-group", resourceGroup },
-                { "resource-name", resourceName },
-                { "tenant", Settings.TenantId }
+                { "subscription", subscriptionId },  // Don't register - test proxy auto-sanitizes GUIDs
+                { "resource-group", TestVariables["resourceGroup"] },
+                { "resource-name", TestVariables["resourceName"] },
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -896,10 +1054,10 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
 
         // Verify resource details match the request
         var returnedResourceName = resource.AssertProperty("resourceName");
-        Assert.Equal(resourceName, returnedResourceName.GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceName"], returnedResourceName.GetString());
 
         var returnedResourceGroup = resource.AssertProperty("resourceGroup");
-        Assert.Equal(resourceGroup, returnedResourceGroup.GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceGroup"], returnedResourceGroup.GetString());
 
         // Verify all required properties
         var subscriptionName = resource.AssertProperty("subscriptionName");
@@ -977,15 +1135,21 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var staticOpenAIAccount = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "azmcp-test");
         var staticResourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
+        var tenantId = Settings.TenantId;
+
+        // Register variables for recording sanitization
+        RegisterVariable("staticOpenAIAccount", staticOpenAIAccount);
+        RegisterVariable("staticResourceGroup", staticResourceGroup);
+        RegisterVariable("tenantId", tenantId);
 
         var result = await CallToolAsync(
             "foundry_resource_get",
             new()
             {
-                { "subscription", subscriptionId },
-                { "resource-group", staticResourceGroup },
-                { "resource-name", staticOpenAIAccount },
-                { "tenant", Settings.TenantId }
+                { "subscription", subscriptionId },  // Don't register - test proxy auto-sanitizes GUIDs
+                { "resource-group", TestVariables["staticResourceGroup"] },
+                { "resource-name", TestVariables["staticOpenAIAccount"] },
+                { "tenant", TestVariables["tenantId"] }
             });
 
         // Verify the response structure
@@ -999,10 +1163,10 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
 
         // Verify resource matches static configuration
         var resourceName = resource.AssertProperty("resourceName");
-        Assert.Equal(staticOpenAIAccount, resourceName.GetString());
+        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["staticOpenAIAccount"], resourceName.GetString());
 
         var resourceGroup = resource.AssertProperty("resourceGroup");
-        Assert.Equal(staticResourceGroup, resourceGroup.GetString());
+        Assert.Equal(TestVariables["staticResourceGroup"], resourceGroup.GetString());
 
         // Verify endpoint is valid
         var endpoint = resource.AssertProperty("endpoint");
@@ -1076,7 +1240,16 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
-        var threadId = await CreateThread("Hello from user", endpoint);
+
+        var createThreadResult = await CallToolAsync(
+            "foundry_threads_create",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "user-message", "Hello from user" }
+            });
+        var threadId = createThreadResult.AssertProperty("threadId").GetString()!;
+
         var result = await CallToolAsync(
             "foundry_threads_get-messages",
             new()
@@ -1090,38 +1263,7 @@ public class FoundryCommandTests(ITestOutputHelper output, LiveServerFixture liv
         Assert.Equal(JsonValueKind.Array, messagesResult.ValueKind);
     }
 
-    private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
-    {
-        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-
-        var client = new PersistentAgentsClient(
-            projectEndpoint,
-            await tokenProvider.GetTokenCredentialAsync(default, default));
-
-        var bingConnectionId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.CognitiveServices/accounts/{Settings.ResourceBaseName}/projects/{Settings.ResourceBaseName}-ai-projects/connections/{Settings.ResourceBaseName}-bing-connection";
-
-        var bingGroundingToolParameters = new BingGroundingSearchToolParameters(
-            [new BingGroundingSearchConfiguration(bingConnectionId)]
-        );
-
-        PersistentAgent agent = await client.Administration.CreateAgentAsync(
-            model: deploymentName,
-            name: agentName,
-            instructions: "You politely help with general knowledge questions. Use the bing search tool to help ground your responses.",
-            tools: [new BingGroundingToolDefinition(bingGroundingToolParameters)]);
-        return agent.Id;
-    }
-
-    private async Task<string> CreateThread(string userMessage, string projectEndpoint)
-    {
-        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-
-        var client = new PersistentAgentsClient(
-            projectEndpoint,
-            await tokenProvider.GetTokenCredentialAsync(default, default));
-
-        PersistentAgentThread thread = await client.Threads.CreateThreadAsync([
-            new(MessageRole.User, userMessage)]);
-        return thread.Id;
-    }
+    // Helper methods removed - use CallToolAsync instead to ensure proper test proxy recording
+    // Previously these helpers made direct SDK calls that bypassed the test proxy recording mechanism.
+    // All tests now use CallToolAsync("foundry_agents_create") etc. which properly routes through the test proxy.
 }

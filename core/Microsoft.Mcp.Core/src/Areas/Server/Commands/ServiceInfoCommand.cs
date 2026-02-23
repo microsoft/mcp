@@ -2,23 +2,23 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command that provides basic server information.
 /// </summary>
 [HiddenCommand]
-public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
 {
-    private static readonly EmptyOptions EmptyOptions = new EmptyOptions();
+    private static readonly EmptyOptions EmptyOptions = new();
 
-    private readonly IOptions<AzureMcpServerConfiguration> _serverOptions = serverOptions;
+    private readonly IOptions<McpServerConfiguration> _serverOptions = serverOptions;
     private readonly ILogger<ServiceInfoCommand> _logger = logger;
 
     public override string Id => "add0f6fe-258c-45c4-af74-0c165d4913cb";
@@ -29,7 +29,7 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
 
     public override string Title => "Server information.";
 
-    public override ToolMetadata Metadata => new ToolMetadata
+    public override ToolMetadata Metadata => new()
     {
         Destructive = false,
         Idempotent = true,

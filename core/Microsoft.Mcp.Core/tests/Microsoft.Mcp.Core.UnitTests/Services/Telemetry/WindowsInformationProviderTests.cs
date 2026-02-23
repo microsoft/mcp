@@ -3,25 +3,25 @@
 
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.LiveTests.Services.Telemetry;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
-[SupportedOSPlatform("linux")]
-public class LinuxInformationProviderTests
+[SupportedOSPlatform("windows")]
+public class WindowsInformationProviderTests
 {
     [Fact]
     public async Task GetOrCreateDeviceId_WorksCorrectly()
     {
-        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
-            "Only supported on Linux.");
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            "Only supported on Windows.");
 
         // Arrange
-        var _logger = Substitute.For<ILogger<LinuxMachineInformationProvider>>();
-        var provider = new LinuxMachineInformationProvider(_logger);
+        var _logger = Substitute.For<ILogger<WindowsMachineInformationProvider>>();
+        var provider = new WindowsMachineInformationProvider(_logger);
 
         // Act
         var deviceId = await provider.GetOrCreateDeviceId();

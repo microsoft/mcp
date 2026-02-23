@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
@@ -17,7 +17,7 @@ public class ServiceInfoCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ServiceInfoCommand> _logger;
-    private readonly AzureMcpServerConfiguration _mcpServerConfiguration;
+    private readonly McpServerConfiguration _mcpServerConfiguration;
     private readonly CommandContext _context;
     private readonly ServiceInfoCommand _command;
     private readonly Command _commandDefinition;
@@ -29,7 +29,7 @@ public class ServiceInfoCommandTests
 
         _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<ServiceInfoCommand>>();
-        _mcpServerConfiguration = new AzureMcpServerConfiguration
+        _mcpServerConfiguration = new McpServerConfiguration
         {
             Name = "Test-Name?",
             Version = "Test-Version?",

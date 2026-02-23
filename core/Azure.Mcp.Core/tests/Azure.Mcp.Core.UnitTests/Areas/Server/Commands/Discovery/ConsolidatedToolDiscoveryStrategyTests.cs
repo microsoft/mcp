@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Configuration;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -20,7 +20,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
         var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
+        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
             Version = "Test Version",
@@ -47,8 +47,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
 
         // Assert
         Assert.NotNull(result);
-        var providers = result.ToList();
-        Assert.Empty(providers);
+        Assert.Empty(result);
     }
 
     [Fact]
@@ -78,9 +77,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
         // Assert
         Assert.NotNull(factory);
         // Should only have storage-related consolidated commands
-        var allCommands = factory.AllCommands;
-        Assert.True(allCommands.Count > 0);
-        Assert.True(allCommands.Count < 10);
+        Assert.InRange(factory.AllCommands.Count, 1, 9);
     }
 
     [Fact]
@@ -96,7 +93,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
         // Assert
         Assert.NotNull(factory);
         var allCommands = factory.AllCommands;
-        Assert.True(allCommands.Count > 0);
+        Assert.NotEmpty(allCommands);
         // All commands should be read-only
         Assert.All(allCommands.Values, cmd => Assert.True(cmd.Metadata.ReadOnly));
     }
@@ -113,7 +110,6 @@ public class ConsolidatedToolDiscoveryStrategyTests
 
         // Assert
         Assert.NotNull(factory);
-        var allCommands = factory.AllCommands;
-        Assert.True(allCommands.Count > 0);
+        Assert.NotEmpty(factory.AllCommands);
     }
 }

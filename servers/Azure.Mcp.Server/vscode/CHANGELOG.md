@@ -1,5 +1,30 @@
 # Release History
 
+## 2.0.0-beta.21 (2026-02-19) (pre-release)
+
+### Added
+
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions. [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+
+### Changed
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
+
+## 2.0.0-beta.20 (2026-02-17) (pre-release)
+
+### Added
+
+- Added two new Azure Service Fabric managed clusters tools: [[#1696](https://github.com/microsoft/mcp/pull/1696)]
+  - `servicefabric_managedcluster_node_get`: List all nodes in a Service Fabric managed cluster
+  - `servicefabric_managedcluster_nodetype_restart`: Restart nodes from a Service Fabric managed cluster
+
+### Changed
+
+- Resolve gaps in the capture of certain telemetry tags. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
+- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using `.github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
+- Improved error message for tenant mismatch authentication errors with actionable resolution steps. [[#1737](https://github.com/microsoft/mcp/pull/1737)]
+
 ## 2.0.0-beta.19 (2026-02-12) (pre-release)
 
 ### Added
