@@ -69,25 +69,25 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
 
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSEndpoint().ToString()]);
+        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSEndpoint()]);
         TokenCredential tokenCredential = await GetCredential(cancellationToken);
         AccessToken accessToken = await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
         return accessToken.Token;
     }
 
-    private Uri GetOpenSourceRDBMSEndpoint()
+    private string GetOpenSourceRDBMSEndpoint()
     {
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://ossrdbms-aad.database.windows.net/.default");
+                return "https://ossrdbms-aad.database.windows.net/.default";
             case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://ossrdbms-aad.database.usgovcloudapi.net/.default");
+                return "https://ossrdbms-aad.database.usgovcloudapi.net/.default";
             case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://ossrdbms-aad.database.chinacloudapi.cn/.default");
+                return "https://ossrdbms-aad.database.chinacloudapi.cn/.default";
             default:
-                return new Uri("https://ossrdbms-aad.database.windows.net/.default");
+                return "https://ossrdbms-aad.database.windows.net/.default";
         }
     }
 
