@@ -3,8 +3,8 @@
 
 using System.Diagnostics;
 using System.Text.Json;
-using Microsoft.Mcp.Core.Protocol.Models.Requests;
-using Microsoft.Mcp.Core.Protocol.Models.Responses;
+using ModelContextProtocol.Protocol;
+using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 
@@ -45,50 +45,46 @@ public class VisualStudioToolNameTests
         try
         {
             // Wait for server to initialize
-            await Task.Delay(3000);
+            await Task.Delay(3000, TestContext.Current.CancellationToken);
 
             // Send tools/list request
-            var listToolsRequest = new ListToolsRequest
+            var request = new JsonRpcRequest
             {
                 Method = "tools/list",
-                Params = new ListToolsParams { }
+                Params = JsonSerializer.SerializeToNode(new ListToolsRequestParams()),
+                Id = new RequestId(1)
             };
 
-            var requestJson = JsonSerializer.Serialize(listToolsRequest);
-            await process.StandardInput.WriteLineAsync(requestJson);
-            await process.StandardInput.FlushAsync();
+            var requestJson = JsonSerializer.Serialize(request);
+            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), TestContext.Current.CancellationToken);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
 
             // Read response
-            var responseLine = await process.StandardOutput.ReadLineAsync();
+            var responseLine = await process.StandardOutput.ReadLineAsync(TestContext.Current.CancellationToken);
             Assert.NotNull(responseLine);
 
-            var response = JsonSerializer.Deserialize<ListToolsResponse>(responseLine);
+            var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
             Assert.NotNull(response);
             Assert.NotNull(response.Result);
-            Assert.NotNull(response.Result.Tools);
 
-            var toolNames = response.Result.Tools.Select(t => t.Name).ToList();
+            var result = JsonSerializer.Deserialize<ListToolsResult>(JsonSerializer.Serialize(response.Result));
+            Assert.NotNull(result);
+            Assert.NotNull(result.Tools);
+
+            var toolNames = result.Tools.Select(t => t.Name).ToList();
 
             // Assert - Verify the Azure Best Practices tool name exists and hasn't changed
-            Assert.Contains(AzureBestPracticesToolName, toolNames,
-                $"""
-                CRITICAL: The tool name '{AzureBestPracticesToolName}' was not found!
-                
-                Visual Studio has a hard-coded dependency on this exact tool name in FirstPartyToolsProvider.cs.
-                Changing this name will break Visual Studio's integration with Azure MCP Server.
-                
-                Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
-                
-                If this tool name must change, you MUST coordinate with the Visual Studio team first.
-                Available tools: {string.Join(", ", toolNames.Where(n => n.Contains("bestpractices", StringComparison.OrdinalIgnoreCase)))}
-                """);
+            // Visual Studio has a hard-coded dependency on this exact tool name in FirstPartyToolsProvider.cs
+            // Changing this name will break Visual Studio's integration with Azure MCP Server
+            // Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
+            Assert.Contains(AzureBestPracticesToolName, toolNames);
         }
         finally
         {
             if (!process.HasExited)
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync();
+                await process.WaitForExitAsync(TestContext.Current.CancellationToken);
             }
         }
     }
@@ -120,50 +116,46 @@ public class VisualStudioToolNameTests
         try
         {
             // Wait for server to initialize
-            await Task.Delay(3000);
+            await Task.Delay(3000, TestContext.Current.CancellationToken);
 
             // Send tools/list request
-            var listToolsRequest = new ListToolsRequest
+            var request = new JsonRpcRequest
             {
                 Method = "tools/list",
-                Params = new ListToolsParams { }
+                Params = JsonSerializer.SerializeToNode(new ListToolsRequestParams()),
+                Id = new RequestId(2)
             };
 
-            var requestJson = JsonSerializer.Serialize(listToolsRequest);
-            await process.StandardInput.WriteLineAsync(requestJson);
-            await process.StandardInput.FlushAsync();
+            var requestJson = JsonSerializer.Serialize(request);
+            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), TestContext.Current.CancellationToken);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
 
             // Read response
-            var responseLine = await process.StandardOutput.ReadLineAsync();
+            var responseLine = await process.StandardOutput.ReadLineAsync(TestContext.Current.CancellationToken);
             Assert.NotNull(responseLine);
 
-            var response = JsonSerializer.Deserialize<ListToolsResponse>(responseLine);
+            var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
             Assert.NotNull(response);
             Assert.NotNull(response.Result);
-            Assert.NotNull(response.Result.Tools);
 
-            var toolNames = response.Result.Tools.Select(t => t.Name).ToList();
+            var result = JsonSerializer.Deserialize<ListToolsResult>(JsonSerializer.Serialize(response.Result));
+            Assert.NotNull(result);
+            Assert.NotNull(result.Tools);
+
+            var toolNames = result.Tools.Select(t => t.Name).ToList();
 
             // Assert - Verify the Extension CLI Generate tool name exists and hasn't changed
-            Assert.Contains(ExtensionCliGenerateToolName, toolNames,
-                $"""
-                CRITICAL: The tool name '{ExtensionCliGenerateToolName}' was not found!
-                
-                Visual Studio has a hard-coded dependency on this exact tool name in FirstPartyToolsProvider.cs.
-                Changing this name will break Visual Studio's integration with Azure MCP Server.
-                
-                Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
-                
-                If this tool name must change, you MUST coordinate with the Visual Studio team first.
-                Available tools: {string.Join(", ", toolNames.Where(n => n.Contains("extension", StringComparison.OrdinalIgnoreCase) || n.Contains("cli", StringComparison.OrdinalIgnoreCase)))}
-                """);
+            // Visual Studio has a hard-coded dependency on this exact tool name in FirstPartyToolsProvider.cs
+            // Changing this name will break Visual Studio's integration with Azure MCP Server 
+            // Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
+            Assert.Contains(ExtensionCliGenerateToolName, toolNames);
         }
         finally
         {
             if (!process.HasExited)
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync();
+                await process.WaitForExitAsync(TestContext.Current.CancellationToken);
             }
         }
     }
