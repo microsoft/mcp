@@ -20,8 +20,7 @@ public class ResourceHealthSetup : IAreaSetup
     {
         services.AddSingleton<IResourceHealthService, ResourceHealthService>();
 
-        services.AddSingleton<AvailabilityStatusGetCommand>();
-        services.AddSingleton<AvailabilityStatusListCommand>();
+        services.AddSingleton<AvailabilityStatusCommand>();
 
         services.AddSingleton<ServiceHealthEventsListCommand>();
     }
@@ -29,7 +28,7 @@ public class ResourceHealthSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resourceHealth = new CommandGroup(Name,
-            "Resource Health operations – Commands to monitor and diagnose Azure resource health, including availability status, detailed health information, historical data, and service health events for troubleshooting and monitoring purposes.", Title);
+            "Resource Health operations – Commands to monitor and diagnose Azure resource health, including availability status and service health events for troubleshooting and monitoring purposes.", Title);
 
         // Create availability-status subgroup
         var availabilityStatus = new CommandGroup("availability-status",
@@ -42,10 +41,8 @@ public class ResourceHealthSetup : IAreaSetup
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
         // Register commands
-        var availabilityStatusGet = serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>();
-        availabilityStatus.AddCommand(availabilityStatusGet.Name, availabilityStatusGet);
-        var availabilityStatusList = serviceProvider.GetRequiredService<AvailabilityStatusListCommand>();
-        availabilityStatus.AddCommand(availabilityStatusList.Name, availabilityStatusList);
+        var availabilityStatusCmd = serviceProvider.GetRequiredService<AvailabilityStatusCommand>();
+        availabilityStatus.AddCommand(availabilityStatusCmd.Name, availabilityStatusCmd);
 
         var serviceHealthEventsList = serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>();
         serviceHealthEvents.AddCommand(serviceHealthEventsList.Name, serviceHealthEventsList);

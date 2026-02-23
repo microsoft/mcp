@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 
-public class AvailabilityStatusGetOptions : BaseResourceHealthOptions
+public class AvailabilityStatusOptions : BaseResourceHealthOptions
 {
     [JsonPropertyName(ResourceHealthOptionDefinitions.ResourceIdName)]
     public string? ResourceId { get; set; }

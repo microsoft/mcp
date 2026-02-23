@@ -2145,13 +2145,12 @@ azmcp group list --subscription <subscription>
 ### Azure Resource Health Operations
 
 ```bash
-# Get availability status for a specific resource
+# Get availability status for a specific resource or list all resources (dual-mode)
+# With --resource-id: Get availability status for a specific resource
+# Without --resource-id: List availability statuses for all resources in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth availability-status get --resourceId <resource-id>
-
-# List availability statuses for all resources in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth availability-status list --subscription <subscription> \
+azmcp resourcehealth availability-status get --subscription <subscription> \
+                                              [--resource-id <resource-id>] \
                                               [--resource-group <resource-group>]
 
 # List service health events in a subscription
