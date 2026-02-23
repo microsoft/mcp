@@ -24,9 +24,7 @@ public static class ServiceOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string[]?> Namespace = new(
-        $"--{NamespaceName}"
-    )
+    public static readonly Option<string[]?> Namespace = new($"--{NamespaceName}")
     {
         Description = "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
         Required = false,
@@ -35,9 +33,7 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => null
     };
 
-    public static readonly Option<string?> Mode = new Option<string?>(
-        $"--{ModeName}"
-    )
+    public static readonly Option<string?> Mode = new($"--{ModeName}")
     {
         Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.",
         Required = false,
@@ -45,9 +41,7 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => (string?)ModeTypes.NamespaceProxy
     };
 
-    public static readonly Option<string[]?> Tool = new Option<string[]?>(
-        $"--{ToolName}"
-    )
+    public static readonly Option<string[]?> Tool = new($"--{ToolName}")
     {
         Description = "Expose only specific tools by name (e.g., 'acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"acr_registry_list\" --tool \"group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
         Required = false,
@@ -56,54 +50,47 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => null
     };
 
-    public static readonly Option<bool?> ReadOnly = new(
-        $"--{ReadOnlyName}")
+    public static readonly Option<bool?> ReadOnly = new($"--{ReadOnlyName}")
     {
         Description = "Whether the MCP server should be read-only. If true, no write operations will be allowed.",
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> Debug = new(
-        $"--{DebugName}")
+    public static readonly Option<bool> Debug = new($"--{DebugName}")
     {
         Description = "Enable debug mode with verbose logging to stderr.",
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> DangerouslyDisableHttpIncomingAuth = new(
-        $"--{DangerouslyDisableHttpIncomingAuthName}")
+    public static readonly Option<bool> DangerouslyDisableHttpIncomingAuth = new($"--{DangerouslyDisableHttpIncomingAuthName}")
     {
         Required = false,
         Description = "Dangerously disables HTTP incoming authentication, exposing the server to unauthenticated access over HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> DangerouslyDisableElicitation = new(
-        $"--{DangerouslyDisableElicitationName}")
+    public static readonly Option<bool> DangerouslyDisableElicitation = new($"--{DangerouslyDisableElicitationName}")
     {
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<OutgoingAuthStrategy> OutgoingAuthStrategy = new(
-        $"--{OutgoingAuthStrategyName}")
+    public static readonly Option<OutgoingAuthStrategy> OutgoingAuthStrategy = new($"--{OutgoingAuthStrategyName}")
     {
         Required = false,
         Description = "Outgoing authentication strategy for Azure service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
         DefaultValueFactory = _ => Options.OutgoingAuthStrategy.NotSet
     };
 
-    public static readonly Option<string?> DangerouslyWriteSupportLogsToDir = new(
-        $"--{DangerouslyWriteSupportLogsToDirName}")
+    public static readonly Option<string?> DangerouslyWriteSupportLogsToDir = new($"--{DangerouslyWriteSupportLogsToDirName}")
     {
         Required = false,
         Description = "Dangerously enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). This may include sensitive information in logs. Use with extreme caution and only when requested by support.",
         DefaultValueFactory = _ => null
     };
 
-    public static readonly Option<string?> Cloud = new(
-        $"--{CloudName}")
+    public static readonly Option<string?> Cloud = new($"--{CloudName}")
     {
         Required = false,
         Description = "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, AzureUSGovernment, or a custom authority host URL starting with https://",

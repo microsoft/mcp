@@ -1,0 +1,79 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Areas.Server.Options;
+
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
+
+/// <summary>
+/// Configuration options for CLI tool calls.
+/// </summary>
+public class ServerOptions
+{
+    /// <summary>
+    /// Gets or sets the service namespaces to expose through the server.
+    /// When null, all available namespaces are exposed.
+    /// </summary>
+    [JsonPropertyName("namespace")]
+    public string[]? Namespace { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the mode mode for the server.
+    /// Defaults to 'namespace' mode which exposes one tool per service namespace.
+    /// </summary>
+    [JsonPropertyName("mode")]
+    public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
+
+    /// <summary>
+    /// Gets or sets the specific tool names to expose.
+    /// When specified, only these tools will be available.
+    /// </summary>
+    [JsonPropertyName("tool")]
+    public string[]? Tool { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether the server should operate in read-only mode.
+    /// When true, only tools marked as read-only will be available.
+    /// </summary>
+    [JsonPropertyName("readOnly")]
+    public bool? ReadOnly { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether debug mode is enabled.
+    /// When true, verbose logging will be sent to stderr.
+    /// </summary>
+    [JsonPropertyName("debug")]
+    public bool Debug { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (dangerous mode).
+    /// When true, elicitation will always be treated as accepted without user confirmation.
+    /// </summary>
+    [JsonPropertyName("dangerouslyDisableElicitation")]
+    public bool DangerouslyDisableElicitation { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the outgoing authentication strategy for Azure service requests.
+    /// Determines whether to use hosting environment identity or on-behalf-of flow.
+    /// </summary>
+    [JsonPropertyName("outgoingAuthStrategy")]
+    public OutgoingAuthStrategy OutgoingAuthStrategy { get; set; } = OutgoingAuthStrategy.NotSet;
+
+    /// <summary>
+    /// Gets or sets the folder path for support logging.
+    /// When specified, detailed debug-level logging is enabled and logs are written to
+    /// automatically generated files in this folder with timestamp-based filenames.
+    /// Warning: This may include sensitive information in logs.
+    /// </summary>
+    [JsonPropertyName("supportLoggingFolder")]
+    public string? SupportLoggingFolder { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the Azure cloud environment for authentication.
+    /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment)
+    /// or custom authority host URLs starting with https://.
+    /// </summary>
+    [JsonPropertyName("cloud")]
+    public string? Cloud { get; set; } = null;
+}

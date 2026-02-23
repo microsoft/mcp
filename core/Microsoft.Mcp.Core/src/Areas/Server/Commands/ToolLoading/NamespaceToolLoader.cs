@@ -6,10 +6,10 @@ using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -25,13 +25,13 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
-    IOptions<ServiceStartOptions> options,
+    IOptions<ServerOptions> options,
     IServiceProvider serviceProvider,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly IOptions<ServerOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>

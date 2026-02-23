@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Server;
@@ -13,7 +14,8 @@ namespace Azure.Mcp.Core.Areas.Server;
 /// </summary>
 public sealed class ServerSetup : IAreaSetup
 {
-    public string Name => "server";
+    public const string AreaName = "server";
+    public string Name => AreaName;
 
     public string Title => "MCP Server Management";
 
@@ -27,6 +29,7 @@ public sealed class ServerSetup : IAreaSetup
     {
         services.AddSingleton<ServiceStartCommand>();
         services.AddSingleton<ServiceInfoCommand>();
+        services.AddSingleton<CliToolCallCommand>();
     }
 
     /// <summary>
@@ -45,6 +48,9 @@ public sealed class ServerSetup : IAreaSetup
 
         var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
         mcpServer.AddCommand(infoCommand.Name, infoCommand);
+
+        var cliToolCallCommand = serviceProvider.GetRequiredService<CliToolCallCommand>();
+        mcpServer.AddCommand(cliToolCallCommand.Name, cliToolCallCommand);
 
         return mcpServer;
     }

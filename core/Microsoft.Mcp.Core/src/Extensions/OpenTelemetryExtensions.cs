@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Commands;
@@ -15,10 +17,10 @@ using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
 {
@@ -26,6 +28,7 @@ internal class Program
 
     private static async Task<int> Main(string[] args)
     {
+        args = ["storage", "account", "get", "--subscription", "4d042dc6-fe17-4698-a23f-ec6a8d1e98f4", "--tenant", "70a036f6-8e4d-4615-bad6-149c02e7720d"];
         try
         {
             // Fast path: Handle simple metadata requests without initializing service infrastructure
@@ -38,6 +41,9 @@ internal class Program
 
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+
+            CliToolCallCommand.ConfigureServices = ConfigureServices;
+            CliToolCallCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
 
@@ -55,7 +61,33 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var status = 0;
+            if (parseResult.CommandResult.Command.Name == "start")
+            {
+                // The "server start" command is handled differently because it starts the long-running server and
+                // binds everything up for telemetry when tools are called.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // For all other commands, get the CLI tool call command and have it handle the invocation so that
+                // telemetry is properly emitted for CLI tool calls even when not using the executable directly
+                // (e.g. "dotnet run -- storage account get ...").
+                var cliToolCallCommand = commandFactory.FindCommandByName($"{ServerSetup.AreaName}_cli-tool-call")!;
+
+                // CLI tool call requires a specific '--tool' argument to scope which tool is loaded. All other
+                // arguments are passed through as-is for the CLI tool call command to handle. All unmatched
+                // tokens (those that don't match anything defined by CliToolCallOptions) are assumed to be intended
+                // for the CLI tool and are passed through in the args array.
+                cliToolCallCommand.GetCommand().TreatUnmatchedTokensAsErrors = false;
+                var cliToolCallParseResult = cliToolCallCommand.GetCommand().Parse([
+                    "--tool", GetToolNameFromParseResult(commandFactory.RootCommand.Name, parseResult),
+                    ..args
+                ]);
+
+                status = await cliToolCallParseResult.InvokeAsync();
+            }
+
 
             if (status == 0)
             {
@@ -256,5 +288,20 @@ internal class Program
         }
 
         return null;
+    }
+
+    private static string GetToolNameFromParseResult(string rootCommandName, ParseResult parseResult)
+    {
+        var commandResult = parseResult.CommandResult;
+        var fullCommandName = commandResult.Command.Name;
+        while (commandResult.Parent is not null
+            && commandResult?.Parent is CommandResult
+            && (commandResult.Parent as CommandResult)?.Command.Name != rootCommandName)
+        {
+            commandResult = (commandResult.Parent as CommandResult)!;
+            fullCommandName = commandResult.Command.Name + "_" + fullCommandName;
+        }
+
+        return fullCommandName;
     }
 }
