@@ -595,20 +595,21 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Arrange
         // Service Bus commands require --subscription parameter
         // When calling without it, we should get a specific error message, not a generic one
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
         const string command = "servicebus_namespace_list";
-        var args = new Dictionary<string, object>(); // Missing required --subscription parameter
+        var args = new Dictionary<string, object?>(); // Missing required --subscription parameter
 
         var request = CreateCallToolRequest(command, args);
 
         // Act
-        var response = await _loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var response = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
         Assert.True(response.IsError);
         Assert.Single(response.Content);
 
-        var textContent = response.Content[0] as TextContent;
+        var textContent = response.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
 
         // Verify the specific error message is preserved (not the generic "missing required parameters")
