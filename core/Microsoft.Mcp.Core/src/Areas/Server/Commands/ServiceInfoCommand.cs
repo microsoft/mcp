@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command that provides basic server information.

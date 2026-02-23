@@ -4,8 +4,6 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
@@ -24,6 +22,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -33,7 +33,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command to start the MCP server with specified configuration options.
