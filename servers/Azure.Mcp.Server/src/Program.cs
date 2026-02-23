@@ -3,8 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
