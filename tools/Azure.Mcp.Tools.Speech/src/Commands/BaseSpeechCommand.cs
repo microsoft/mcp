@@ -38,16 +38,24 @@ public abstract class BaseSpeechCommand<
                 return;
             }
 
-            if (!uri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase))
+            // Accept sovereign cloud endpoint suffixes
+            string[] validSuffixes =
+            [
+                ".cognitiveservices.azure.com",
+                ".cognitiveservices.azure.cn",
+                ".cognitiveservices.azure.us"
+            ];
+            var matchedSuffix = Array.Find(validSuffixes, suffix => uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (matchedSuffix == null)
             {
-                commandResult.AddError($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com': {uri.Host}");
+                commandResult.AddError($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com' (or sovereign cloud equivalent): {uri.Host}");
                 return;
             }
 
-            var subdomain = uri.Host.Replace(".cognitiveservices.azure.com", "", StringComparison.OrdinalIgnoreCase);
+            var subdomain = uri.Host[..^matchedSuffix.Length];
             if (string.IsNullOrWhiteSpace(subdomain))
             {
-                commandResult.AddError($"Endpoint must include a valid service name before '.cognitiveservices.azure.com'");
+                commandResult.AddError($"Endpoint must include a valid service name before '{matchedSuffix}'");
             }
         });
     }

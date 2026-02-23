@@ -18,15 +18,7 @@ internal static class PlatformLandingZoneConstants
     /// </summary>
     public const string ArchetypeDefinitionsBaseUrl = "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones-Library/main/platform/alz/archetype_definitions";
 
-    /// <summary>
-    /// Azure Resource Manager base URL.
-    /// </summary>
-    public const string ArmBaseUrl = "https://management.azure.com";
 
-    /// <summary>
-    /// Azure Management API scope.
-    /// </summary>
-    public const string ManagementScope = "https://management.azure.com/.default";
 
     /// <summary>
     /// API version for Azure Migrate operations.

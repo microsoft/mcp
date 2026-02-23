@@ -5,6 +5,7 @@ using System.Text;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -26,6 +27,7 @@ public sealed class SearchService(
     ITenantService tenantService)
     : BaseAzureService(tenantService), ISearchService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "search";
@@ -369,7 +371,7 @@ public sealed class SearchService(
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var endpoint = new Uri($"https://{serviceName}.search.windows.net");
+            var endpoint = new Uri(GetSearchEndpoint(serviceName));
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
             await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients, cancellationToken);
         }
@@ -421,4 +423,15 @@ public sealed class SearchService(
     private static FieldInfo MapToFieldInfo(SearchField field)
         => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
             field.IsFacetable, field.IsHidden != true);
+
+    private string GetSearchEndpoint(string serviceName)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
+            _ => $"https://{serviceName}.search.windows.net"
+        };
+    }
 }

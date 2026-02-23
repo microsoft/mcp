@@ -20,4 +20,9 @@ public interface IAzureCloudConfiguration
     /// This determines the management endpoint used for Azure Resource Manager operations.
     /// </summary>
     ArmEnvironment ArmEnvironment { get; }
+
+    /// <summary>
+    /// Gets the type of Azure cloud environment.
+    /// </summary>
+    AzureCloudConfiguration.AzureCloud CloudType { get; }
 }

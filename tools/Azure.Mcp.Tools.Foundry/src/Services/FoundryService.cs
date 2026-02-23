@@ -78,8 +78,9 @@ public class FoundryService(
             }
 
             const string knownSuffix = ".services.ai.azure.com";
+            string[] validSuffixes = [knownSuffix, ".services.ai.azure.cn", ".services.ai.azure.us"];
             var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
+            if (!Array.Exists(validSuffixes, suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
             {
                 throw new ArgumentException("Host must end with Foundry service suffix");
             }
@@ -113,7 +114,7 @@ public class FoundryService(
                 throw new ArgumentException("Scheme must be https");
             }
 
-            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com"];
+            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com", ".openai.azure.cn", ".cognitiveservices.azure.cn", ".openai.azure.us", ".cognitiveservices.azure.us"];
             var host = parsedUri.Host;
             var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             if (matchedSuffix == null)

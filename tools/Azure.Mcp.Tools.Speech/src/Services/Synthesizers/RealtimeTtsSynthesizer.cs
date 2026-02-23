@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
@@ -19,6 +20,7 @@ namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<RealtimeTtsSynthesizer> logger)
     : BaseAzureService(tenantService), IRealtimeTtsSynthesizer
 {
+    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTtsSynthesizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -102,7 +104,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         var credential = await GetCredential(cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
-        var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
+        var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
         var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
         // Convert https endpoint to wss for WebSocket-based TTS
@@ -274,5 +276,16 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
         // If parsing fails, default to Riff24Khz16BitMonoPcm
         return SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
+    }
+
+    private string GetCognitiveServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
+            _ => "https://cognitiveservices.azure.com/.default"
+        };
     }
 }

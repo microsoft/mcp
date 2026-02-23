@@ -79,7 +79,6 @@ public sealed class KustoClient(
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromSeconds(240);
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
-    private static readonly string s_default_scope = "https://kusto.kusto.windows.net/.default";
 
     /// <summary>
     /// Validates that the cluster URI is a valid Azure Data Explorer endpoint.
@@ -193,6 +192,29 @@ public sealed class KustoClient(
         return true;
     }
 
+    /// <summary>
+    /// Determines the appropriate Kusto token scope based on the cluster URI domain.
+    /// </summary>
+    private string GetKustoScope()
+    {
+        var uri = new Uri(_clusterUri);
+        var host = uri.Host;
+
+        if (host.EndsWith(".chinacloudapi.cn", StringComparison.OrdinalIgnoreCase) ||
+            host.EndsWith(".azure.cn", StringComparison.OrdinalIgnoreCase))
+        {
+            return "https://kusto.kusto.chinacloudapi.cn/.default";
+        }
+
+        if (host.EndsWith(".usgovcloudapi.net", StringComparison.OrdinalIgnoreCase) ||
+            host.EndsWith(".azure.us", StringComparison.OrdinalIgnoreCase))
+        {
+            return "https://kusto.kusto.usgovcloudapi.net/.default";
+        }
+
+        return "https://kusto.kusto.windows.net/.default";
+    }
+
     public Task<KustoResult> ExecuteQueryCommandAsync(string database, string text, CancellationToken cancellationToken)
         => ExecuteCommandAsync("/v1/rest/query", database, text, cancellationToken);
 
@@ -213,7 +235,7 @@ public sealed class KustoClient(
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
         var scopes = new string[]
         {
-            s_default_scope
+            GetKustoScope()
         };
         var clientRequestId = s_clientRequestIdPrefix + Guid.NewGuid().ToString();
         var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
