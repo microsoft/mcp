@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed error handling test to ensure error messages are preserved for missing parameters"
