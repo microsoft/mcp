@@ -280,16 +280,12 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
     private string GetCognitiveServicesScope()
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://cognitiveservices.azure.com/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://cognitiveservices.azure.us/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://cognitiveservices.azure.cn/.default";
-            default:
-                return "https://cognitiveservices.azure.com/.default";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
+            _ => "https://cognitiveservices.azure.com/.default"
+        };
     }
 }

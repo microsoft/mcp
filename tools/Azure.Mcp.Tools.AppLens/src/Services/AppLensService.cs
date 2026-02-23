@@ -371,12 +371,13 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
 
     private string GetAppLensTokenEndpoint(string resourceId)
     {
+        const string detectorsTokenPath = "detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01";
         return _tenantService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
-            _ => $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01",
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/{detectorsTokenPath}",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{resourceId}/{detectorsTokenPath}",
+            _ => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
         };
     }
 

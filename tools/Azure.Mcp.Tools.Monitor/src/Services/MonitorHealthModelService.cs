@@ -129,16 +129,16 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private string GetHealthModelsDataApiScope()
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://data.healthmodels.azure.com/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://data.healthmodels.azure.cn/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://data.healthmodels.azure.us/.default";
-            default:
-                return "https://data.healthmodels.azure.com/.default";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                "https://data.healthmodels.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                "https://data.healthmodels.azure.cn/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                "https://data.healthmodels.azure.us/.default",
+            _ =>
+                "https://data.healthmodels.azure.com/.default"
+        };
     }
 }

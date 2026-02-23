@@ -69,51 +69,43 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
 
-<<<<<<< copilot/sub-pr-1729
         var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
-=======
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSEndpoint()]);
->>>>>>> jairmyree/sov-cloud-no-multicloud
         TokenCredential tokenCredential = await GetCredential(cancellationToken);
         AccessToken accessToken = await tokenCredential
             .GetTokenAsync(tokenRequestContext, cancellationToken);
         return accessToken.Token;
     }
 
-<<<<<<< copilot/sub-pr-1729
     private string GetOpenSourceRDBMSScope()
-=======
-    private string GetOpenSourceRDBMSEndpoint()
->>>>>>> jairmyree/sov-cloud-no-multicloud
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://ossrdbms-aad.database.windows.net/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://ossrdbms-aad.database.usgovcloudapi.net/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://ossrdbms-aad.database.chinacloudapi.cn/.default";
-            default:
-                return "https://ossrdbms-aad.database.windows.net/.default";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                "https://ossrdbms-aad.database.windows.net/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                "https://ossrdbms-aad.database.usgovcloudapi.net/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                "https://ossrdbms-aad.database.chinacloudapi.cn/.default",
+            _ =>
+                "https://ossrdbms-aad.database.windows.net/.default"
+        };
     }
 
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
         {
-            switch (_tenantService.CloudConfiguration.CloudType)
+            return _tenantService.CloudConfiguration.CloudType switch
             {
-                case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                    return server + ".mysql.database.azure.com";
-                case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                    return server + ".mysql.database.usgovcloudapi.net";
-                case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                    return server + ".mysql.database.chinacloudapi.cn";
-                default:
-                    return server + ".mysql.database.azure.com";
-            }
+                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                    server + ".mysql.database.azure.com",
+                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                    server + ".mysql.database.usgovcloudapi.net",
+                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                    server + ".mysql.database.chinacloudapi.cn",
+                _ =>
+                    server + ".mysql.database.azure.com"
+            };
         }
         return server;
     }

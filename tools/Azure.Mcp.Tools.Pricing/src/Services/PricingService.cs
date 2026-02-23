@@ -125,17 +125,13 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
 
     private Uri GetPricingEndpoint()
     {
-        switch (cloudConfiguration.CloudType)
+        return cloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return new Uri("https://prices.azure.com");
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return new Uri("https://prices.azure.cn");
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return new Uri("https://prices.azure.us");
-            default:
-                return new Uri("https://prices.azure.com");
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://prices.azure.com"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://prices.azure.cn"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://prices.azure.us"),
+            _ => new Uri("https://prices.azure.com")
+        };
     }
 
     private static PriceItem MapToPriceItem(RetailPriceItem item)

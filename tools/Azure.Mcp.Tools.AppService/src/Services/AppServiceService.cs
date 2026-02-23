@@ -193,16 +193,16 @@ public class AppServiceService(
 
     private string BuildCosmosConnectionString(string databaseServer, string databaseName)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return $"AccountEndpoint=https://{databaseServer}.documents.azure.cn:443/;AccountKey={{key}};Database={databaseName};";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return $"AccountEndpoint=https://{databaseServer}.documents.azure.us:443/;AccountKey={{key}};Database={databaseName};";
-            default:
-                throw new ArgumentException($"Unsupported Azure cloud type: {_tenantService.CloudConfiguration.CloudType}");
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                $"AccountEndpoint=https://{databaseServer}.documents.azure.cn:443/;AccountKey={{key}};Database={databaseName};",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                $"AccountEndpoint=https://{databaseServer}.documents.azure.us:443/;AccountKey={{key}};Database={databaseName};",
+            _ =>
+                $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};"
+        };
     }
 }

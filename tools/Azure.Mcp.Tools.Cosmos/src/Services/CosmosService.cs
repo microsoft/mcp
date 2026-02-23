@@ -79,7 +79,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new CosmosClient(
-                    string.Format(GetCosmosBaseUriFormat(), accountName),
+                    GetCosmosBaseUri(accountName),
                     keys.Value.PrimaryMasterKey,
                     clientOptions);
                 break;
@@ -87,7 +87,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             case AuthMethod.Credential:
             default:
                 cosmosClient = new CosmosClient(
-                    string.Format(GetCosmosBaseUriFormat(), accountName),
+                    GetCosmosBaseUri(accountName),
                     await GetCredential(cancellationToken),
                     clientOptions);
                 break;
@@ -99,19 +99,15 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         return cosmosClient;
     }
 
-    private string GetCosmosBaseUriFormat()
+    private string GetCosmosBaseUri(string accountName)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://{0}.documents.azure.com:443/";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://{0}.documents.azure.us:443/";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://{0}.documents.azure.cn:443/";
-            default:
-                return "https://{0}.documents.azure.com:443/";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{accountName}.documents.azure.com:443/",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{accountName}.documents.azure.us:443/",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{accountName}.documents.azure.cn:443/",
+            _ => $"https://{accountName}.documents.azure.com:443/"
+        };
     }
 
     private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)

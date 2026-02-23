@@ -48,16 +48,16 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
 
     private string GetCliCopilotEndpoint()
     {
-        switch (cloudConfiguration.CloudType)
+        return cloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot";
-            default:
-                return "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot",
+            _ =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot"
+        };
     }
 }

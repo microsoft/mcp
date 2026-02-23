@@ -201,31 +201,23 @@ public class ProfilerDataService(
 
     private string GetDiagnosticServiceEndpoint()
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://dataplane.diagnosticservices.azure.com";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://dataplane.diagnosticservices.azure.cn";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://dataplane.diagnosticservices.azure.us";
-            default:
-                return "https://dataplane.diagnosticservices.azure.com";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://dataplane.diagnosticservices.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://dataplane.diagnosticservices.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://dataplane.diagnosticservices.azure.us",
+            _ => "https://dataplane.diagnosticservices.azure.com"
+        };
     }
 
     private string GetDiagnosticServicesScope()
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "api://dataplane.diagnosticservices.azure.com/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "api://dataplane.diagnosticservices.azure.cn/.default";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "api://dataplane.diagnosticservices.azure.us/.default";
-            default:
-                return "api://dataplane.diagnosticservices.azure.com/.default";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "api://dataplane.diagnosticservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "api://dataplane.diagnosticservices.azure.cn/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "api://dataplane.diagnosticservices.azure.us/.default",
+            _ => "api://dataplane.diagnosticservices.azure.com/.default"
+        };
     }
 }

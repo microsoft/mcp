@@ -119,16 +119,16 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
     private string GetLedgerUri(string ledgerName)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return $"https://{ledgerName}.confidential-ledger.azure.com";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return $"https://{ledgerName}.confidential-ledger.azure.cn";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return $"https://{ledgerName}.confidential-ledger.azure.us";
-            default:
-                return $"https://{ledgerName}.confidential-ledger.azure.com";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.us",
+            _ =>
+                $"https://{ledgerName}.confidential-ledger.azure.com"
+        };
     }
 }

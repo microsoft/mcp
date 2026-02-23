@@ -426,16 +426,12 @@ public sealed class SearchService(
 
     private string GetSearchEndpoint(string serviceName)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return $"https://{serviceName}.search.windows.net";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return $"https://{serviceName}.search.azure.cn";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return $"https://{serviceName}.search.azure.us";
-            default:
-                return $"https://{serviceName}.search.windows.net";
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
+            _ => $"https://{serviceName}.search.windows.net"
         }
     }
 }

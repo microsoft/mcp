@@ -424,7 +424,9 @@ public class MonitorService(
     {
         var returnValue = new List<ActivityLogEventData>();
 
-        string endpoint = string.Format(GetLogActivityEndpointString(), subscriptionId);
+        string endpoint = GetLogActivityEndpointString(subscriptionId);
+
+        // Build the query parameters
         var uriBuilder = new UriBuilder(endpoint);
 
         // Build the query parameters
@@ -529,18 +531,15 @@ public class MonitorService(
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
     }
 
-    private string GetLogActivityEndpointString()
+    private string GetLogActivityEndpointString(string subscriptionId)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        string subscriptionPath = $"subscriptions/{subscriptionId}/providers/Microsoft.Insights/eventtypes/management/values";
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return "https://management.chinacloudapi.cn/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return "https://management.usgovcloudapi.net/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-            default:
-                return "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
+            _ => $"https://management.azure.com/{subscriptionPath}"
+        };
     }
 }

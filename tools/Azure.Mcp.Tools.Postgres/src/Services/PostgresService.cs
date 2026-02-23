@@ -51,16 +51,16 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         if (!server.Contains('.'))
         {
-            switch (_tenantService.CloudConfiguration.CloudType)
+            return _tenantService.CloudConfiguration.CloudType switch
             {
-                case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                    return server + ".postgres.database.azure.com";
-                case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                    return server + ".postgres.database.usgovcloudapi.net";
-                case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                    return server + ".postgres.database.chinacloudapi.cn";
-                default:
-                    return server + ".postgres.database.azure.com";
+                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                    server + ".postgres.database.azure.com",
+                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                    server + ".postgres.database.usgovcloudapi.net",
+                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                    server + ".postgres.database.chinacloudapi.cn",
+                _ =>
+                    server + ".postgres.database.azure.com"
             }
         }
         return server;

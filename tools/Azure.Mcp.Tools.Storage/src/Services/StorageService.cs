@@ -529,31 +529,23 @@ public class StorageService(
 
     private string GetBlobEndpoint(string account)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return $"https://{account}.blob.core.windows.net";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return $"https://{account}.blob.core.chinacloudapi.cn";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return $"https://{account}.blob.core.usgovcloudapi.net";
-            default:
-                return $"https://{account}.blob.core.windows.net";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.blob.core.usgovcloudapi.net",
+            _ => $"https://{account}.blob.core.windows.net"
+        };
     }
 
     private string GetTableEndpoint(string? account)
     {
-        switch (_tenantService.CloudConfiguration.CloudType)
+        return _tenantService.CloudConfiguration.CloudType switch
         {
-            case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
-                return $"https://{account}.table.core.windows.net";
-            case AzureCloudConfiguration.AzureCloud.AzureChinaCloud:
-                return $"https://{account}.table.core.chinacloudapi.cn";
-            case AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud:
-                return $"https://{account}.table.core.usgovcloudapi.net";
-            default:
-                return $"https://{account}.table.core.windows.net";
-        }
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.table.core.usgovcloudapi.net",
+            _ => $"https://{account}.table.core.windows.net"
+        };
     }
 }
