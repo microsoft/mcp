@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Kusto Web Explorer deeplink URL to kusto query responses, enabling one-click access to run queries in Azure Data Explorer Web UI. Supports public, US Government, and China cloud endpoints."

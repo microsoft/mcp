@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -63,11 +63,13 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         {
             (List<JsonElement> Items, JsonElement? Statistics) queryResult;
             var kusto = context.GetService<IKustoService>();
+            string? clusterUri;
 
             if (UseClusterUri(options))
             {
+                clusterUri = options.ClusterUri!;
                 queryResult = await kusto.QueryItemsWithStatisticsAsync(
-                    options.ClusterUri!,
+                    clusterUri,
                     options.Database!,
                     options.Query!,
                     options.ShowStats,
@@ -78,6 +80,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
+                clusterUri = null;
                 queryResult = await kusto.QueryItemsWithStatisticsAsync(
                     options.Subscription!,
                     options.ClusterName!,
@@ -90,8 +93,12 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
                     cancellationToken);
             }
 
+            var webExplorerUrl = clusterUri is not null
+                ? DeeplinkHelper.BuildWebExplorerUrl(clusterUri, options.Database!, options.Query!)
+                : null;
+
             context.Response.Results = ResponseResult.Create(
-                new(queryResult.Items ?? [], queryResult.Statistics),
+                new(queryResult.Items ?? [], queryResult.Statistics, webExplorerUrl),
                 KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
@@ -105,5 +112,6 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
     internal record QueryCommandResult(
         List<JsonElement> Items,
-        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] JsonElement? Statistics = null);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] JsonElement? Statistics = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? WebExplorerUrl = null);
 }

@@ -87,6 +87,15 @@ public sealed class QueryCommandTests
         var expectedJsonText = expectedJson[0].ToString();
         Assert.Equal(expectedJsonText, actualJson);
         Assert.Null(result.Statistics);
+        if (useClusterUri)
+        {
+            Assert.NotNull(result.WebExplorerUrl);
+            Assert.StartsWith("https://dataexplorer.azure.com/clusters/mycluster.kusto.windows.net/databases/db1?query=", result.WebExplorerUrl);
+        }
+        else
+        {
+            Assert.Null(result.WebExplorerUrl);
+        }
     }
 
     [Theory]
