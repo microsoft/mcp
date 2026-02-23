@@ -19,29 +19,33 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
+- [ Microsoft Fabric MCP Server ](#-microsoft-fabric-mcp-server-)
+  - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [Installation](#installation)
-    - [IDE](#ide)
-        - [VS Code (Recommended)](#vs-code-recommended)
-        - [Manual Setup](#manual-setup)
+  - [IDE](#ide)
+    - [VS Code (Recommended)](#vs-code-recommended)
+    - [Manual Setup](#manual-setup)
+      - [Option 1: Configure using .NET (build from source)](#option-1-configure-using-net-build-from-source)
+      - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
 - [Usage](#usage)
-    - [Getting Started](#getting-started)
-    - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-        - [Fabric Workloads & APIs](#fabric-workloads--apis)
-        - [Resource Definitions & Schemas](#resource-definitions--schemas)
-        - [Best Practices & Examples](#best-practices--examples)
-        - [Development Workflows](#development-workflows)
-    - [Available Tools](#available-tools)
-        - [API Documentation & Best Practices](#api-documentation--best-practices)
-        - [OneLake Data Operations](#onelake-data-operations)
-        - [Core Fabric Operations](#core-fabric-operations)
+  - [Getting Started](#getting-started)
+  - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+    - [Fabric Workloads \& APIs](#fabric-workloads--apis)
+    - [Resource Definitions \& Schemas](#resource-definitions--schemas)
+    - [Best Practices \& Examples](#best-practices--examples)
+    - [Development Workflows](#development-workflows)
+  - [Available Tools](#available-tools)
+    - [API Documentation \& Best Practices](#api-documentation--best-practices)
+    - [OneLake Data Operations](#onelake-data-operations)
+    - [Core Fabric Operations](#core-fabric-operations)
 - [Support and Reference](#support-and-reference)
-    - [Documentation](#documentation)
-    - [Feedback and Support](#feedback-and-support)
-    - [Security](#security)
-    - [Data Collection](#data-collection)
-    - [Contributing](#contributing)
-    - [Code of Conduct](#code-of-conduct)
+  - [Documentation](#documentation)
+  - [Feedback and Support](#feedback-and-support)
+  - [Security](#security)
+  - [Data Collection](#data-collection)
+  - [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
 # Overview
@@ -228,12 +232,12 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `docs_list_workloads` | Lists Fabric workload types that have public API specifications available. |
-| `docs_get_api_spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
-| `docs_get_platform_api_spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
-| `docs_get_item_definition` | Retrieves JSON schema definitions for items in a Fabric workload API. |
-| `docs_get_best_practices` | Retrieves best practice documentation and guidance for a specific topic. |
-| `docs_get_examples` | Retrieves example API request/response files for a specific workload. |
+| `docs_workloads` | Lists Fabric workload types that have public API specifications available. |
+| `docs_workload_api_spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
+| `docs_platform_api_spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
+| `docs_item_definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
+| `docs_best_practices` | Retrieves best practice documentation and guidance for a specific topic. |
+| `docs_api_examples` | Retrieves example API request/response files for a specific workload. |
 
 ### OneLake Data Operations
 

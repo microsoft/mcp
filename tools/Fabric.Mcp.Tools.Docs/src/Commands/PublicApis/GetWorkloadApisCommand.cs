@@ -15,12 +15,12 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
 public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
 {
-    private const string CommandTitle = "Get Workload API Specification";
+    private const string CommandTitle = "Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override string Id => "97229a98-c1ae-4255-a6e2-07631c2a42c5";
 
-    public override string Name => "get_api_spec";
+    public override string Name => "workload_api_spec";
 
     public override string Description =>
         "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.";

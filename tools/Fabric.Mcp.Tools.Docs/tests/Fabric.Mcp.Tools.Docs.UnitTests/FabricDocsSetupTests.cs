@@ -49,12 +49,12 @@ public class FabricDocsSetupTests
         var docsGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "docs");
         Assert.NotNull(docsGroup);
 
-        // Verify all 6 commands are registered with verb_object naming
-        Assert.Contains("list_workloads", docsGroup.Commands.Keys);
-        Assert.Contains("get_api_spec", docsGroup.Commands.Keys);
-        Assert.Contains("get_platform_api_spec", docsGroup.Commands.Keys);
-        Assert.Contains("get_item_definition", docsGroup.Commands.Keys);
-        Assert.Contains("get_best_practices", docsGroup.Commands.Keys);
-        Assert.Contains("get_examples", docsGroup.Commands.Keys);
+        // Verify all 6 commands are registered with noun-based naming
+        Assert.Contains("workloads", docsGroup.Commands.Keys);
+        Assert.Contains("workload_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("platform_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("item_definitions", docsGroup.Commands.Keys);
+        Assert.Contains("best_practices", docsGroup.Commands.Keys);
+        Assert.Contains("api_examples", docsGroup.Commands.Keys);
     }
 }

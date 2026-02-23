@@ -26,9 +26,9 @@ public class PublicApisCommandsTests
         var command = new ListWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("list_workloads", command.Name);
+        Assert.Equal("workloads", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("List Available Fabric Workloads", command.Title);
+        Assert.Equal("Available Fabric Workloads", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -45,7 +45,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_workloads", systemCommand.Name);
+        Assert.Equal("workloads", systemCommand.Name);
     }
 
     [Fact]
@@ -110,9 +110,9 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("get_platform_api_spec", command.Name);
+        Assert.Equal("platform_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Platform API Specification", command.Title);
+        Assert.Equal("Platform API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -129,7 +129,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_platform_api_spec", systemCommand.Name);
+        Assert.Equal("platform_api_spec", systemCommand.Name);
     }
 
     [Fact]
@@ -194,9 +194,9 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("get_api_spec", command.Name);
+        Assert.Equal("workload_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Workload API Specification", command.Title);
+        Assert.Equal("Workload API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -213,7 +213,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_api_spec", systemCommand.Name);
+        Assert.Equal("workload_api_spec", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -317,7 +317,7 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No workload of type 'invalid-workload' exists", result.Message);
-        Assert.Contains("list_workloads command", result.Message);
+        Assert.Contains("workloads command", result.Message);
     }
 
     [Fact]
