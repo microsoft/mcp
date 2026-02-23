@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Azure.Core;
@@ -219,12 +220,6 @@ public sealed class KustoService(
             RetryPolicyOptions? retryPolicy = null,
             CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(
-            (nameof(subscriptionId), subscriptionId),
-            (nameof(clusterName), clusterName),
-            (nameof(databaseName), databaseName),
-            (nameof(query), query));
-
         var result = await QueryItemsWithStatisticsAsync(
             subscriptionId,
             clusterName,
@@ -277,11 +272,6 @@ public sealed class KustoService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(
-            (nameof(clusterUri), clusterUri),
-            (nameof(databaseName), databaseName),
-            (nameof(query), query));
-
         var result = await QueryItemsWithStatisticsAsync(
             clusterUri,
             databaseName,
@@ -429,9 +419,19 @@ public sealed class KustoService(
                     return typeElement.GetString() ?? string.Empty;
                 });
 
-        var columnsDictJson = "{" + string.Join(",", columnsDict.Select(kvp =>
-            $"\"{JsonEncodedText.Encode(kvp.Key)}\":\"{JsonEncodedText.Encode(kvp.Value)}\"")) + "}";
-        using (var jsonDoc = JsonDocument.Parse(columnsDictJson))
+        var columnsBuffer = new ArrayBufferWriter<byte>();
+        using (var columnsWriter = new Utf8JsonWriter(columnsBuffer))
+        {
+            columnsWriter.WriteStartObject();
+            foreach (var column in columnsDict)
+            {
+                columnsWriter.WriteString(column.Key, column.Value);
+            }
+
+            columnsWriter.WriteEndObject();
+        }
+
+        using (var jsonDoc = JsonDocument.Parse(columnsBuffer.WrittenMemory))
         {
             result.Add(jsonDoc.RootElement.Clone());
         }
@@ -444,8 +444,7 @@ public sealed class KustoService(
 
         foreach (var row in rowsElement.EnumerateArray())
         {
-            using var jsonDoc = JsonDocument.Parse(row.GetRawText());
-            result.Add(jsonDoc.RootElement.Clone());
+            result.Add(row.Clone());
         }
 
         return result;
