@@ -4,7 +4,7 @@
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Base class for MCP server discovery strategies that provides common functionality.

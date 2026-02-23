@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections;
-using Azure.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
