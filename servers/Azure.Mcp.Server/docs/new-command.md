@@ -2421,7 +2421,7 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.RetryPolicy
+            options.RetryPolicy,
             cancellationToken);
 
         // Standard response format works for all transports
