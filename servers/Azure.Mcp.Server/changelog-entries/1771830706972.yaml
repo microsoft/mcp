@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed error handling to ensure error messages are preserved for missing parameters"
