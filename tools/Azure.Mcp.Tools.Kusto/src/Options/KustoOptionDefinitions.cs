@@ -11,6 +11,7 @@ public static class KustoOptionDefinitions
     public const string TableName = "table";
     public const string LimitName = "limit";
     public const string QueryText = "query";
+    public const string ShowStatsName = "show-stats";
 
 
     public static readonly Option<string> Cluster = new(
@@ -60,5 +61,14 @@ public static class KustoOptionDefinitions
     {
         Description = "Kusto query to execute. Uses KQL syntax.",
         Required = true
+    };
+
+    public static readonly Option<bool> ShowStats = new(
+        $"--{ShowStatsName}"
+    )
+    {
+        Description = "Include query execution statistics (CPU, memory, cache, network) in the response.",
+        DefaultValueFactory = _ => false,
+        Required = false
     };
 }
