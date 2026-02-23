@@ -205,6 +205,215 @@ public class McpServerElicitationExtensionsTests
             () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
     }
 
+    #region URL Elicitation Tests
+
+    [Fact]
+    public void SupportsElicitation_WithUrlCapabilityOnly_ReturnsTrue()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Url = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        // Act
+        var result = server.SupportsElicitation();
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void ShouldTriggerElicitation_WithUrlCapabilityOnly_SecretMetadataControlsResult(bool secretValue, bool expected)
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Url = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var metadata = new JsonObject
+        {
+            ["Secret"] = JsonValue.Create(secretValue)
+        };
+
+        // Act
+        var result = server.ShouldTriggerElicitation("tool1", metadata);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void ShouldTriggerElicitation_WithUrlCapabilityAndMissingSecret_ReturnsFalse()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Url = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var metadata = new JsonObject
+        {
+            ["Category"] = JsonValue.Create("password")
+        };
+
+        // Act
+        var result = server.ShouldTriggerElicitation("tool1", metadata);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    #endregion
+
+    #region Explicit Form Elicitation Tests
+
+    [Fact]
+    public void SupportsElicitation_WithExplicitFormCapabilityOnly_ReturnsTrue()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Form = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        // Act
+        var result = server.SupportsElicitation();
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldTriggerElicitation_WithExplicitFormCapabilityAndSecretMetadata_ReturnsTrue()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Form = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var metadata = new JsonObject
+        {
+            ["Secret"] = JsonValue.Create(true)
+        };
+
+        // Act
+        var result = server.ShouldTriggerElicitation("tool1", metadata);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldTriggerElicitation_WithExplicitFormCapabilityAndSecretFalse_ReturnsFalse()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Form = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var metadata = new JsonObject
+        {
+            ["Secret"] = JsonValue.Create(false)
+        };
+
+        // Act
+        var result = server.ShouldTriggerElicitation("tool1", metadata);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldTriggerElicitation_WithExplicitFormCapabilityAndNestedSecret_ReturnsFalse()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Form = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var metadata = new JsonObject
+        {
+            ["Nested"] = new JsonObject
+            {
+                ["Secret"] = JsonValue.Create(true)
+            }
+        };
+
+        // Act
+        var result = server.ShouldTriggerElicitation("tool1", metadata);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task RequestElicitationAsync_WithExplicitFormCapabilityAndInvalidMessage_ThrowsArgumentException()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        var clientCapabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability
+            {
+                Form = new()
+            }
+        };
+        server.ClientCapabilities.Returns(clientCapabilities);
+
+        var request = new ElicitationRequestParams
+        {
+            Message = ""
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
+    }
+
+    #endregion
+
     private static McpServer CreateMockServer()
     {
         // Create a mock server that we can configure without constructor issues
