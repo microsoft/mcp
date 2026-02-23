@@ -432,6 +432,6 @@ public sealed class SearchService(
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
             _ => $"https://{serviceName}.search.windows.net"
-        }
+        };
     }
 }

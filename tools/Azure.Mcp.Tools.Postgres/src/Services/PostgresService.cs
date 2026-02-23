@@ -61,7 +61,7 @@ public class PostgresService : BaseAzureService, IPostgresService
                     server + ".postgres.database.chinacloudapi.cn",
                 _ =>
                     server + ".postgres.database.azure.com"
-            }
+            };
         }
         return server;
     }
