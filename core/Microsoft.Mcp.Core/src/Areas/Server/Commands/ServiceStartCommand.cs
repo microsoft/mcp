@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
+using Microsoft.Extensions.Primitives;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
@@ -477,7 +478,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     if (!context.Response.HasStarted)
                     {
                         HttpRequest request = context.Request;
-                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                        string scheme = GetSchemeForOAuthProtectedResourceMetadata(request);
+                        string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
 
                         // Modify the WWW-Authenticate header to include resource_metadata
                         context.Response.Headers.WWWAuthenticate =
@@ -553,7 +555,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
                 MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
-                string baseUrl = $"{request.Scheme}://{request.Host}";
+                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request);
+                string baseUrl = $"{scheme}://{request.Host}";
                 string? clientId = azureAdOptions.ClientId;
                 string? tenantId = azureAdOptions.TenantId;
                 string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
@@ -607,6 +610,50 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .AllowAnonymous();
 
         return app;
+
+        string GetSchemeForOAuthProtectedResourceMetadata(HttpRequest request)
+        {
+            string scheme = request.Scheme;
+
+            // Default to "false" for enabling forwarded headers. The env var must be present,
+            // and it must be parsed to "true".
+            bool enableForwardedHeaders =
+                bool.TryParse(
+                    Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"),
+                    out bool parsedEnvVar)
+                && parsedEnvVar;
+
+            // Azure Container Apps setups usually use HTTP between the ACA platform's
+            // reverse proxy and the application container. Our OAuth claims challenge
+            // needs to match what the client will use as a scheme. So only in this
+            // case do we use the X-Forwarded-Proto header if present. We're also going
+            // to limit specifically to "http" and "https" values and use their
+            // lowercase forms rather than the casing in the header.
+            //
+            // Other reverse proxies or load balancers may also use X-Forwarded-Proto or
+            // may use something different. We only special case ACA here because it's
+            // part of the samples as of 2.0-beta.5. More thorough logic and any
+            // configuration options can be added later if needed, and that could use
+            // ASP.NET Core's Forwarded Headers Middleware. See:
+            // https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
+            if (enableForwardedHeaders
+                && request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+            {
+                if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+                {
+                    if (string.Equals(forwardedProtoValue, "https", StringComparison.OrdinalIgnoreCase))
+                    {
+                        scheme = "https";
+                    }
+                    else if (string.Equals(forwardedProtoValue, "http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        scheme = "http";
+                    }
+                }
+            }
+
+            return scheme;
+        }
     }
 
     /// <summary>
