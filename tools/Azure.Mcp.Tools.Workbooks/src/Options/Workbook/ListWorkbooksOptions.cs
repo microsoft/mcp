@@ -6,9 +6,8 @@ using Azure.Mcp.Tools.Workbooks.Models;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public class ListWorkbooksOptions : GlobalOptions
+public class ListWorkbooksOptions : SubscriptionOptions
 {
-    public string[]? Subscriptions { get; set; }
     public string[]? ResourceGroups { get; set; }
     public string? Kind { get; set; }
     public string? Category { get; set; }

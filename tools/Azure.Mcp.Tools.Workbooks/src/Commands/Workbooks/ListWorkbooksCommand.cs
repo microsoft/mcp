@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : GlobalCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : SubscriptionCommand<ListWorkbooksOptions>
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
@@ -54,7 +54,6 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.Subscription.AsOptional());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(WorkbooksOptionDefinitions.Kind);
         command.Options.Add(WorkbooksOptionDefinitions.Category);
@@ -69,9 +68,6 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-
-        var subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
-        options.Subscriptions = string.IsNullOrEmpty(subscription) ? null : [subscription];
 
         var resourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.ResourceGroups = string.IsNullOrEmpty(resourceGroup) ? null : [resourceGroup];
@@ -114,7 +110,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
             var filters = options.ToFilters();
 
             var result = await workbooksService.ListWorkbooksAsync(
-                options.Subscriptions,
+                string.IsNullOrEmpty(options.Subscription) ? null : [options.Subscription],
                 options.ResourceGroups,
                 filters,
                 options.MaxResults,
@@ -130,7 +126,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing workbooks");
+            _logger.LogError(ex, "Error listing workbooks for subscription: {Subscription}", options.Subscription);
             HandleException(context, ex);
         }
 

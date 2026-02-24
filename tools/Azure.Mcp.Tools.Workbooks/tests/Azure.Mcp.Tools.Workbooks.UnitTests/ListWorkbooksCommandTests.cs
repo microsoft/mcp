@@ -347,40 +347,19 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutSubscription_SearchesAllAccessibleWorkbooks()
+    public async Task ExecuteAsync_WithoutSubscription_ReturnsValidationError()
     {
-        // Arrange - omitting subscription should search all accessible
-        var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(listResult);
-
+        // Arrange - omitting subscription should fail validation with SubscriptionCommand
         var args = _command.GetCommand().Parse([]);
 
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
-        // Assert - subscriptions should be null when not provided
-        await _service.Received(1).ListWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>?>(s => s == null),
-            Arg.Is<IReadOnlyList<string>?>(rg => rg == null),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+        // Assert - should fail validation since subscription is required
+        Assert.NotNull(response);
+        Assert.Null(response.Results);
     }
 
     [Fact]
