@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.AppContainers;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class ContainerAppUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ContainerAppUsageChecker> logger) : AzureUsageChecker(credential, subscriptionId, logger)
+public class ContainerAppUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ContainerAppUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetime, IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -20,6 +20,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected LiveTestSettings Settings { get; set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
+    protected LiveServerFixture LiveServerFixture { get; } = liveServerFixture;
 
     public string[]? CustomArguments;
     public TestMode TestMode = TestMode.Live;
@@ -78,20 +79,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
     }
 
-    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    private Dictionary<string, string?> GetEnvironmentVariables(TestProxyFixture? proxy)
     {
-        await LoadSettingsAsync();
-
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
-
-        // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
-        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
-        var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
-        string[] defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug"]
-            : ["server", "start", "--mode", "all"];
-        var arguments = CustomArguments ?? defaultArgs;
-
         Dictionary<string, string?> envVarDictionary = [
             // Propagate playback signaling & sanitized identifiers to server process.
 
@@ -111,27 +100,38 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             }
         }
 
-        StdioClientTransportOptions transportOptions = new()
+        // Add any custom environment variables from settings
+        if (Settings?.EnvironmentVariables != null)
         {
-            Name = "Test Server",
-            Command = executablePath,
-            Arguments = arguments,
-            // Direct stderr to test output helper as required by task
-            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}"),
-            EnvironmentVariables = envVarDictionary
-        };
-
-        if (!string.IsNullOrEmpty(Settings.TestPackage))
-        {
-            Environment.CurrentDirectory = Settings.SettingsDirectory;
-            transportOptions.Command = "npx";
-            transportOptions.Arguments = ["-y", Settings.TestPackage, .. arguments];
+            foreach (var kvp in Settings.EnvironmentVariables)
+            {
+                envVarDictionary[kvp.Key] = kvp.Value;
+            }
         }
 
-        var clientTransport = new StdioClientTransport(transportOptions);
-        Output.WriteLine("Attempting to start MCP Client");
-        Client = await McpClient.CreateAsync(clientTransport);
-        Output.WriteLine("MCP client initialized successfully");
+        return envVarDictionary;
+    }
+
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    {
+        await LoadSettingsAsync();
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+
+        // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
+        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
+        var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
+        List<string> defaultArgs = enableDebug
+            ? ["server", "start", "--mode", "all", "--debug"]
+            : ["server", "start", "--mode", "all"];
+        var arguments = CustomArguments?.ToList() ?? defaultArgs;
+
+        LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
+        LiveServerFixture.Arguments = arguments;
+        LiveServerFixture.Output = Output;
+        LiveServerFixture.Settings = Settings;
+
+        await LiveServerFixture.EnsureStartedAsync();
+        Client = LiveServerFixture.GetMcpClient();
     }
 
     protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
@@ -209,6 +209,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     }
 
     // subclasses should override this method to dispose resources
+    // subclasses should override this method to dispose InitializeAsyncresources
     // overrides should still call base.Dispose(disposing)
     protected virtual void Dispose(bool disposing)
     {
@@ -217,12 +218,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             // No unmanaged resources to release, but if we had, we'd release them here.
             // _disposableResource?.Dispose();
             // _disposableResource = null;
-
-            // Handle things normally disposed in DisposeAsyncCore
-            if (Client is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
         }
 
         // Failure output may contain request and response details that should be output for failed tests.
@@ -234,8 +229,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
-    protected virtual async ValueTask DisposeAsyncCore()
+    protected virtual ValueTask DisposeAsyncCore()
     {
-        await Client.DisposeAsync().ConfigureAwait(false);
+        return ValueTask.CompletedTask;
     }
 }

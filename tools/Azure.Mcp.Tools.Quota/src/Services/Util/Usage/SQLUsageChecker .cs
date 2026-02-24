@@ -4,11 +4,12 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class SQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IHttpClientFactory httpClientFactory) : AzureUsageChecker(credential, subscriptionId, logger)
+public class SQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IHttpClientFactory httpClientFactory, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
 {
     private const string ServerQuotaMagicString = "ServerQuota";
 
@@ -27,7 +28,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
         try
         {
             var apiVersion = "2015-05-01-preview";
-            var requestUrl = $"{managementEndpoint}/subscriptions/{SubscriptionId}/providers/Microsoft.Sql/locations/{location}/usages?api-version={apiVersion}";
+            var requestUrl = $"{GetManagementEndpoint()}/subscriptions/{SubscriptionId}/providers/Microsoft.Sql/locations/{location}/usages?api-version={apiVersion}";
             using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
@@ -148,7 +149,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
     {
         try
         {
-            var token = await Credential.GetTokenAsync(new TokenRequestContext([$"{managementEndpoint}/.default"]), cancellationToken);
+            var token = await Credential.GetTokenAsync(new TokenRequestContext([$"{GetManagementEndpoint()}/.default"]), cancellationToken);
 
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);

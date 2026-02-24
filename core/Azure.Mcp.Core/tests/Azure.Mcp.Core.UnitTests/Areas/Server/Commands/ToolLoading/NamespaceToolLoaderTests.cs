@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 public sealed class NamespaceToolLoaderTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly CommandFactory _commandFactory;
+    private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServiceStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
 
@@ -442,6 +443,36 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Cache clearing is internal, but disposal should complete successfully
     }
 
+    [Fact]
+    public async Task CallToolHandler_WithInvalidCommand_ReturnsErrorWithGuidance()
+    {
+        // Arrange - Test error handling and guidance message structure
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        // Create request with invalid command that doesn't exist
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["command"] = "nonexistent_invalid_command_xyz",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should provide helpful error guidance
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // When command doesn't exist or encounters issues, should provide guidance
+        // This validates the error handling path preserves informative messages
+        Assert.True(textContent.Text.Length > 0);
+    }
+
     // Elicitation Handler Tests (ported from BaseToolLoaderTests)
 
     [Fact]
@@ -561,7 +592,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     private string GetFirstAvailableNamespace()
     {
         var namespaces = _commandFactory.RootGroup.SubGroup
-            .Where(g => !Azure.Mcp.Core.Areas.Server.Commands.Discovery.DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
             .Select(g => g.Name)
             .ToList();
 

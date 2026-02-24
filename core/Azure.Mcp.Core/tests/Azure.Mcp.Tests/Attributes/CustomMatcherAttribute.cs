@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Xunit;
+using Azure.Mcp.Tests.Helpers;
 using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client.Attributes;
@@ -47,48 +47,26 @@ public sealed class CustomMatcherAttribute : BeforeAfterTestAttribute
         Current.Value = null;
     }
 
-    internal static CustomMatcherAttribute? GetActive()
+    /// <summary>
+    /// Returns the active <see cref="CustomMatcherAttribute"/> for the current test, using the
+    /// pre-resolved <paramref name="methodInfo"/> to avoid redundant reflection.
+    /// </summary>
+    internal static CustomMatcherAttribute? GetActive(MethodInfo? methodInfo)
     {
         if (Current.Value is { } active)
         {
             return active;
         }
 
-        var methodInfo = TryResolveCurrentMethodInfo();
         return methodInfo?.GetCustomAttribute<CustomMatcherAttribute>();
     }
 
-    private static MethodInfo? TryResolveCurrentMethodInfo()
+    /// <summary>
+    /// Returns the active <see cref="CustomMatcherAttribute"/> for the current test.
+    /// Falls back to reflection when no pre-resolved <see cref="MethodInfo"/> is available.
+    /// </summary>
+    internal static CustomMatcherAttribute? GetActive()
     {
-        var test = TestContext.Current?.Test;
-        if (test == null)
-        {
-            return null;
-        }
-
-        var testCase = GetPropertyValue(test, "TestCase");
-        if (testCase == null)
-        {
-            return null;
-        }
-
-        var testMethod = GetPropertyValue(testCase, "TestMethod");
-        if (testMethod == null)
-        {
-            return null;
-        }
-
-        var method = GetPropertyValue(testMethod, "Method") as MethodInfo
-                     ?? GetPropertyValue(testMethod, "MethodInfo") as MethodInfo;
-
-        return method;
-    }
-
-    private static object? GetPropertyValue(object instance, string propertyName)
-    {
-        return instance
-            .GetType()
-            .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?
-            .GetValue(instance);
+        return GetActive(TestMethodResolver.TryResolveCurrentMethodInfo());
     }
 }
