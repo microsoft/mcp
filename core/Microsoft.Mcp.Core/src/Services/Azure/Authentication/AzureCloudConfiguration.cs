@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
@@ -14,6 +14,14 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </summary>
 public class AzureCloudConfiguration : IAzureCloudConfiguration
 {
+
+    public enum AzureCloud
+    {
+        AzurePublicCloud,
+        AzureChinaCloud,
+        AzureUSGovernmentCloud,
+    }
+
     private const string DefaultAuthorityHost = "https://login.microsoftonline.com";
 
     /// <summary>
@@ -37,7 +45,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
             ?? configuration["Cloud"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
-        (AuthorityHost, ArmEnvironment) = ParseCloudValue(cloudValue);
+        (AuthorityHost, ArmEnvironment, CloudType) = ParseCloudValue(cloudValue);
 
         logger?.LogDebug(
             "Azure cloud configuration initialized. Cloud value: '{CloudValue}', AuthorityHost: '{AuthorityHost}', ArmEnvironment: '{ArmEnvironment}'",
@@ -52,11 +60,13 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// <inheritdoc/>
     public ArmEnvironment ArmEnvironment { get; }
 
-    private static (Uri authorityHost, ArmEnvironment armEnvironment) ParseCloudValue(string? cloudValue)
+    public AzureCloud CloudType { get; }
+
+    private static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType) ParseCloudValue(string? cloudValue)
     {
         if (string.IsNullOrWhiteSpace(cloudValue))
         {
-            return (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud);
+            return (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
         }
 
         // Check if it's already a URL - in this case we only have authority host
@@ -64,19 +74,19 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         // additional configuration not currently supported)
         if (cloudValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            return (new Uri(cloudValue), ArmEnvironment.AzurePublicCloud);
+            return (new Uri(cloudValue), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
         }
 
         // Map common sovereign cloud names to authority hosts and ARM environments
         return cloudValue.ToLowerInvariant() switch
         {
             "azurecloud" or "azurepubliccloud" or "public" =>
-                (new Uri("https://login.microsoftonline.com"), ArmEnvironment.AzurePublicCloud),
+                (new Uri("https://login.microsoftonline.com"), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
             "azurechinacloud" or "china" =>
-                (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina),
+                (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
-                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment),
-            _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud) // Default to public cloud if unknown
+                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
+            _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud) // Default to public cloud if unknown
         };
     }
 }

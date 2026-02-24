@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using ModelContextProtocol.Client;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Provides an MCP server implementation based on registry configuration.

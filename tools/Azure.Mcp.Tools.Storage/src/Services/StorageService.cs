@@ -7,6 +7,7 @@ using Azure.Core.Pipeline;
 using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -26,6 +27,7 @@ public class StorageService(
     ILogger<StorageService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
@@ -381,7 +383,7 @@ public class StorageService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var uri = $"https://{account}.blob.core.windows.net";
+        var uri = GetBlobEndpoint(account);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
         return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken), options);
@@ -489,7 +491,7 @@ public class StorageService(
     {
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
-        var defaultUri = $"https://{account}.table.core.windows.net";
+        var defaultUri = GetTableEndpoint(account);
         return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
     }
 
@@ -524,5 +526,27 @@ public class StorageService(
         {
             throw new Exception($"Error listing tables: {ex.Message}", ex);
         }
+    }
+
+    private string GetBlobEndpoint(string account)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.blob.core.usgovcloudapi.net",
+            _ => $"https://{account}.blob.core.windows.net"
+        };
+    }
+
+    private string GetTableEndpoint(string? account)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.table.core.usgovcloudapi.net",
+            _ => $"https://{account}.table.core.windows.net"
+        };
     }
 }

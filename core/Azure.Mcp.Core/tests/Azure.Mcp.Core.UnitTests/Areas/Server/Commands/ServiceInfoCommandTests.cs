@@ -3,9 +3,9 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;

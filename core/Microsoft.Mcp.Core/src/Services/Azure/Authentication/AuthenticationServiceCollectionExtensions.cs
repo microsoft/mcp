@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
@@ -52,24 +54,20 @@ public static class AuthenticationServiceCollectionExtensions
     /// into the service collection, along with all required dependencies.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="authBuilder">
-    /// The authentication builder from <see cref="MicrosoftIdentityWebApiAuthenticationBuilderExtensions.AddMicrosoftIdentityWebApi"/>
-    /// that will be used to enable token acquisition for downstream API calls.
-    /// </param>
     /// <returns>The service collection.</returns>
     /// <remarks>
     /// This method will override any existing <see cref="IAzureTokenCredentialProvider"/> registration.
     /// </remarks>
     public static IServiceCollection AddHttpOnBehalfOfTokenCredentialProvider(
-        this IServiceCollection services,
-        MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder)
+        this IServiceCollection services)
     {
         // Dependencies - directly in constructor.
         services.AddHttpContextAccessor();
 
-        // Dependencies - indirectly required to get MicrosoftIdentityTokenCredential.
-        authBuilder.EnableTokenAcquisitionToCallDownstreamApi()
-            .AddInMemoryTokenCaches();
+        // With AddMicrosoftIdentityWebApiAot, OBO works automatically via AddTokenAcquisition
+        // (no EnableTokenAcquisitionToCallDownstreamApi needed).
+        services.AddTokenAcquisition();
+        services.AddInMemoryTokenCaches();
         services.AddMicrosoftIdentityAzureTokenCredential();
 
         // Register the OBO token provider. This uses AddSingleton (not TryAdd) to override

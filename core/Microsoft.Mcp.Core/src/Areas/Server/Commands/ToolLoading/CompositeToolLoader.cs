@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that combines multiple tool loaders into one.
@@ -17,7 +17,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, ILogger<CompositeToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
-    private readonly Dictionary<string, IToolLoader> _toolLoaderMap = new();
+    private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
     private List<Tool>? _cachedTools;

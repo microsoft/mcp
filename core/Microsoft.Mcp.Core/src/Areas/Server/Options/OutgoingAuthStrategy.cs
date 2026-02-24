@@ -3,7 +3,7 @@
 
 using Azure.Identity;
 
-namespace Azure.Mcp.Core.Areas.Server.Options;
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
 /// The strategy to use for authenticating outgoing requests to downstream services.
