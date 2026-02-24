@@ -8,26 +8,22 @@ using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Core.LiveTests.Areas.Server;
+namespace Azure.Mcp.Core.LiveTests.Services.Azure.Authentication;
 
 /// <summary>
 /// Integration tests for HTTP authentication behavior.
 /// Tests verify that authentication challenges return correct WWW-Authenticate headers
 /// with OAuth 2.0 protected resource metadata.
 /// </summary>
-public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
+public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
-    private readonly ITestOutputHelper _output;
+    protected ITestOutputHelper _output = output;
     private Process? _httpServerProcess;
     private string? _serverUrl;
     private HttpClient? _httpClient;
 
-    public HttpAuthenticationIntegrationTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         Assert.SkipWhen(TestExtensions.IsRunningFromDotnetTest(), TestExtensions.RunningFromDotnetTestReason);
 
@@ -53,14 +49,14 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         {
             "server",
             "start",
-            "--transport", "http",
             "--mode", "all"
         };
 
         var environmentVariables = new Dictionary<string, string?>
         {
             ["AzureAd__TenantId"] = tenantId,
-            ["AzureAd__ClientId"] = clientId
+            ["AzureAd__ClientId"] = clientId,
+            ["ASPNETCORE_ENVIRONMENT"] = "Development"
         };
 
         LiveTestSettings? settings = null;
@@ -73,7 +69,8 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
             process => _httpServerProcess = process,
             _output,
             settings?.TestPackage,
-            settings?.SettingsDirectory);
+            settings?.SettingsDirectory,
+            disableAuthentication: false);
 
         _serverUrl = serverUrl ?? throw new InvalidOperationException("Server URL was not set");
         _httpClient = new HttpClient { BaseAddress = new Uri(_serverUrl) };
@@ -81,7 +78,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         _output.WriteLine($"HTTP server started at {_serverUrl}");
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         _httpClient?.Dispose();
 
@@ -113,7 +110,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         _output.WriteLine("Testing unauthenticated request (no Authorization header)...");
 
         // Act - Make request to MCP endpoint without credentials
-        var response = await _httpClient!.GetAsync("/sse");
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // Assert
         _output.WriteLine($"Response status: {response.StatusCode}");
@@ -151,7 +148,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
             new AuthenticationHeaderValue("Bearer", "invalid-jwt-token-that-will-fail-validation");
 
         // Act
-        var response = await _httpClient.GetAsync("/sse");
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // Assert
         _output.WriteLine($"Response status: {response.StatusCode}");
@@ -189,7 +186,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
             new AuthenticationHeaderValue("Bearer", expiredToken);
 
         // Act
-        var response = await _httpClient.GetAsync("/sse");
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // Assert
         _output.WriteLine($"Response status: {response.StatusCode}");
@@ -218,13 +215,13 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         // Act
         _output.WriteLine("Testing OAuth protected resource metadata endpoint...");
 
-        var response = await _httpClient!.GetAsync("/.well-known/oauth-protected-resource");
+        var response = await _httpClient!.GetAsync("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
 
-        var json = await response.Content.ReadAsStringAsync();
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         _output.WriteLine($"Metadata response: {json}");
 
         // Verify key fields are present in the metadata
@@ -242,9 +239,9 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         // Test that the WWW-Authenticate header is consistent across multiple requests
         _output.WriteLine("Testing consistency of WWW-Authenticate header across multiple requests...");
 
-        var firstResponse = await _httpClient!.GetAsync("/sse");
-        var secondResponse = await _httpClient.GetAsync("/sse");
-        var thirdResponse = await _httpClient.GetAsync("/sse");
+        var firstResponse = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
+        var secondResponse = await _httpClient.GetAsync("/sse", TestContext.Current.CancellationToken);
+        var thirdResponse = await _httpClient.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // All should return 401
         Assert.Equal(HttpStatusCode.Unauthorized, firstResponse.StatusCode);
@@ -274,7 +271,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         // Arrange & Act
         _output.WriteLine("Testing that WWW-Authenticate header contains correct realm...");
 
-        var response = await _httpClient!.GetAsync("/sse");
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // Assert
         var authHeader = response.Headers.WwwAuthenticate.First().ToString();
@@ -295,7 +292,7 @@ public sealed class HttpAuthenticationIntegrationTests : IAsyncLifetime
         // Arrange & Act
         _output.WriteLine("Testing that resource_metadata parameter points to correct endpoint...");
 
-        var response = await _httpClient!.GetAsync("/sse");
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
 
         // Assert
         var authHeader = response.Headers.WwwAuthenticate.First().ToString();

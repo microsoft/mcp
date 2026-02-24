@@ -468,37 +468,40 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .AddMicrosoftIdentityWebApiAot(
                 options => azureAdSection.Bind(options),
                 JwtBearerDefaults.AuthenticationScheme,
-                null);
-
-        // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
-        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.Events = new JwtBearerEvents
-            {
-                OnChallenge = context =>
+                jwtOptions =>
                 {
-                    // Add resource_metadata parameter to WWW-Authenticate header
-                    if (!context.Response.HasStarted)
+                    // Only disable HTTPS metadata requirement in development environments.
+                    // Production environments should enforce HTTPS for metadata endpoints.
+                    // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
+                    jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+
+                    // Configure JWT Bearer events for OAuth protected resource metadata
+                    jwtOptions.Events = new JwtBearerEvents
                     {
-                        HttpRequest request = context.Request;
-                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                        OnChallenge = context =>
+                        {
+                            // Add resource_metadata parameter to WWW-Authenticate header
+                            if (!context.Response.HasStarted)
+                            {
+                                HttpRequest request = context.Request;
+                                string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
 
-                        context.Response.StatusCode = 401;
+                                context.Response.StatusCode = 401;
 
-                        var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
-                        if (!string.IsNullOrEmpty(context.Error))
-                            header += $", error=\"{context.Error}\"";
-                        if (!string.IsNullOrEmpty(context.ErrorDescription))
-                            header += $", error_description=\"{context.ErrorDescription}\"";
-                            
-                        // Modify the WWW-Authenticate header to include resource_metadata
-                        context.Response.Headers.WWWAuthenticate = header;
-                    }
-                    context.HandleResponse();
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                                if (!string.IsNullOrEmpty(context.Error))
+                                    header += $", error=\"{context.Error}\"";
+                                if (!string.IsNullOrEmpty(context.ErrorDescription))
+                                    header += $", error_description=\"{context.ErrorDescription}\"";
+
+                                // Modify the WWW-Authenticate header to include resource_metadata
+                                context.Response.Headers.WWWAuthenticate = header;
+                            }
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
 
         // Configure authorization policy for MCP access.
         services.AddAuthorizationBuilder()
