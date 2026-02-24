@@ -9,7 +9,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - The Azure MCP Server is now also available as an MCP Bundle (`.mcpb`), compatible with clients such as Claude Desktop and Claude Code. [[#1681](https://github.com/microsoft/mcp/pull/1681)]
 - Added sovereign cloud endpoint support for the AppLens, Application Insights, App Service, Azure Migrate, Confidential Ledger, Cosmos, Extension, Foundry, Key Vault, Kusto, Marketplace, Monitor, MySql, Postgres, Pricing, Quota, Resource Health, Search, Service Fabric, Speech, and Storage services. [[#1729](https://github.com/microsoft/mcp/pull/1729)]
 - Added endpoint validation for Azure Communication Services, App Configuration, and Container Registry. [[#1765](https://github.com/microsoft/mcp/pull/1765)]
-- Add the "createmigrateproject" action in the `azuremigrate_platformlandingzone_request` tool to create a new Azure Migrate project if one doesn't exist. [[#1724](https://github.com/microsoft/mcp/pull/1724)]
+- Added the "createmigrateproject" action in the `azuremigrate_platformlandingzone_request` tool to create a new Azure Migrate project if one doesn't exist. [[#1724](https://github.com/microsoft/mcp/pull/1724)]
 
 ### Breaking Changes
 
