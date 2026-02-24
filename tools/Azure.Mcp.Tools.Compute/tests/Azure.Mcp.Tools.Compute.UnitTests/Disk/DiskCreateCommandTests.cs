@@ -59,7 +59,7 @@ public class DiskCreateCommandTests
         var metadata = _command.Metadata;
 
         Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.Destructive);
+        Assert.True(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
@@ -92,6 +92,7 @@ public class DiskCreateCommandTests
             diskName,
             resourceGroup,
             subscription,
+            Arg.Any<string?>(),
             location,
             sizeGb,
             Arg.Any<string?>(),
@@ -161,6 +162,7 @@ public class DiskCreateCommandTests
             diskName,
             resourceGroup,
             subscription,
+            Arg.Any<string?>(),
             location,
             sizeGb,
             sku,
@@ -228,7 +230,8 @@ public class DiskCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -291,6 +294,7 @@ public class DiskCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -351,7 +355,8 @@ public class DiskCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -391,12 +396,151 @@ public class DiskCreateCommandTests
             "--sku", "Standard_LRS",
             "--os-type", "Linux",
             "--zone", "2",
-            "--hyper-v-generation", "V2"
+            "--hyper-v-generation", "V2",
+            "--source", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/snapshots/snap1"
         ]);
 
         // Act - use reflection or just verify parse doesn't throw
         // The BindOptions is called internally by ExecuteAsync
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromSourceResourceId_ReturnsSuccess()
+    {
+        // Arrange - create disk from a snapshot resource ID
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var source = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/snapshots/mysnapshot";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 128,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            source,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--source", source
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromBlobUri_ReturnsSuccess()
+    {
+        // Arrange - create disk from a VHD blob URI
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var source = "https://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "westus",
+            SkuName = "Standard_LRS",
+            DiskSizeGB = 256,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            source,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--source", source
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MissingSourceAndSizeGb_ReturnsBadRequest()
+    {
+        // Arrange - neither --source nor --size-gb specified
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-sub",
+            "--resource-group", "testrg",
+            "--disk", "testdisk"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

@@ -93,6 +93,7 @@ public interface IComputeService
         string diskName,
         string resourceGroup,
         string subscription,
+        string? source = null,
         string? location = null,
         int? sizeGb = null,
         string? sku = null,

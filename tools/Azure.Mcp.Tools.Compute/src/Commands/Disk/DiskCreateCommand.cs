@@ -26,10 +26,11 @@ public sealed class DiskCreateCommand(
     private const string CommandTitle = "Create Managed Disk";
     private const string CommandDescription =
         "Creates a new Azure managed disk in the specified resource group. "
+        + "Supports creating empty disks (specify --size-gb) or disks from a source such as a snapshot, "
+        + "another managed disk, or a blob URI (specify --source). "
         + "If location is not specified, defaults to the resource group's location. "
         + "Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), "
-        + "OS type, availability zone, and hypervisor generation. "
-        + "Use this command to create empty managed disks for attaching to virtual machines.";
+        + "OS type, availability zone, and hypervisor generation.";
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
@@ -50,7 +51,7 @@ public sealed class DiskCreateCommand(
     public override ToolMetadata Metadata => new()
     {
         OpenWorld = false,
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         ReadOnly = false,
         Secret = false,
@@ -62,8 +63,9 @@ public sealed class DiskCreateCommand(
     {
         base.RegisterOptions(command);
         command.Options.Add(ComputeOptionDefinitions.Disk.AsRequired());
+        command.Options.Add(ComputeOptionDefinitions.Source);
         command.Options.Add(ComputeOptionDefinitions.Location);
-        command.Options.Add(ComputeOptionDefinitions.SizeGb.AsRequired());
+        command.Options.Add(ComputeOptionDefinitions.SizeGb);
         command.Options.Add(ComputeOptionDefinitions.Sku);
         command.Options.Add(ComputeOptionDefinitions.OsType);
         command.Options.Add(ComputeOptionDefinitions.Zone);
@@ -75,6 +77,7 @@ public sealed class DiskCreateCommand(
     {
         var options = base.BindOptions(parseResult);
         options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
+        options.Source = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
         options.Location = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Location.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
 
@@ -104,14 +107,20 @@ public sealed class DiskCreateCommand(
                 throw new ArgumentException("Resource group is required for creating a disk.");
             }
 
+            if (string.IsNullOrEmpty(options.Source) && !options.SizeGb.HasValue)
+            {
+                throw new ArgumentException("Either --source or --size-gb must be specified.");
+            }
+
             _logger.LogInformation(
-                "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}",
-                options.Disk, options.ResourceGroup, options.Location ?? "(default)");
+                "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}, source {Source}",
+                options.Disk, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
 
             var disk = await _computeService.CreateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,
+                options.Source,
                 options.Location,
                 options.SizeGb,
                 options.Sku,

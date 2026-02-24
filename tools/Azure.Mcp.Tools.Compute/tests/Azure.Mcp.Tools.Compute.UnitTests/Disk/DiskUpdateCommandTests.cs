@@ -59,7 +59,7 @@ public class DiskUpdateCommandTests
         var metadata = _command.Metadata;
 
         Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.Destructive);
+        Assert.True(metadata.Destructive);
         Assert.True(metadata.Idempotent);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);

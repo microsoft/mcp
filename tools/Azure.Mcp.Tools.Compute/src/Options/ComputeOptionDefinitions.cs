@@ -20,6 +20,13 @@ public static class ComputeOptionDefinitions
     public const string MaxSharesName = "max-shares";
     public const string NetworkAccessPolicyName = "network-access-policy";
     public const string EnableBurstingName = "enable-bursting";
+    public const string SourceName = "source";
+
+    public static readonly Option<string> Source = new($"--{SourceName}")
+    {
+        Description = "Source to create the disk from, including a resource ID of a snapshot or disk, or a blob URI of a VHD. When a source is provided, --size-gb is optional and defaults to the source size.",
+        Required = false
+    };
 
     public static readonly Option<string> Disk = new($"--{DiskName}", "--name")
     {

@@ -790,6 +790,116 @@ azmcp compute disk get --subscription <subscription> \
 -   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
 -   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
+```bash
+# Create an empty managed disk (location defaults to resource group's location)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --size-gb <size>
+
+# Create a managed disk from a snapshot or another disk (by resource ID)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --source <snapshot-or-disk-resource-id>
+
+# Create a managed disk from a VHD blob URI
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --source <blob-uri>
+
+# Create a managed disk with a specific location, SKU, and all options
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --size-gb <size> \
+                          --location <location> \
+                          --sku <sku> \
+                          --os-type <os-type> \
+                          --zone <zone> \
+                          --hyper-v-generation <generation>
+```
+
+**Command Behavior:**
+- Creates a new Azure managed disk in the specified resource group.
+- Either `--size-gb` or `--source` (or both) must be specified.
+- When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
+- If `--location` is not specified, defaults to the resource group's location.
+- Supports configuring disk size, storage SKU, OS type, availability zone, and hypervisor generation.
+
+**Returns:**
+- Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--disk` | Yes | Name of the managed disk to create |
+| `--source` | Conditional | Source to create the disk from: a resource ID of a snapshot or managed disk, or a blob URI of a VHD. Required if `--size-gb` is not specified. |
+| `--size-gb` | Conditional | Size of the disk in GB. Required if `--source` is not specified. When used with `--source`, overrides the source size. |
+| `--location` | No | Azure region (defaults to the resource group's location if not specified) |
+| `--sku` | No | Storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |
+| `--os-type` | No | OS type for the disk (Windows or Linux) |
+| `--zone` | No | Availability zone for the disk |
+| `--hyper-v-generation` | No | Hypervisor generation (V1 or V2) |
+
+```bash
+# Update a managed disk's size
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --size-gb <size>
+
+# Update a managed disk without specifying resource group (resolved by searching subscription)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --disk <disk-name> \
+                          --sku <sku>
+
+# Update multiple properties of a managed disk
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk <disk-name> \
+                          --size-gb <size> \
+                          --sku <sku> \
+                          --disk-iops-read-write <iops> \
+                          --disk-mbps-read-write <mbps> \
+                          --max-shares <count> \
+                          --network-access-policy <policy> \
+                          --enable-bursting <true|false>
+```
+
+**Command Behavior:**
+- Updates properties of an existing Azure managed disk. Only specified properties are modified; unspecified properties remain unchanged.
+- If `--resource-group` is not specified, the disk is located by name within the subscription.
+- Disk size can only be increased, not decreased.
+- IOPS and throughput limits (`--disk-iops-read-write`, `--disk-mbps-read-write`) apply to UltraSSD disks only.
+
+**Returns:**
+- Updated disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--disk` | Yes | Name of the managed disk to update |
+| `--resource-group`, `-g` | No | Resource group name (if not provided, disk is located by searching the subscription) |
+| `--size-gb` | No | New size of the disk in GB (can only increase) |
+| `--sku` | No | New storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |
+| `--disk-iops-read-write` | No | IOPS limit for the disk (UltraSSD only) |
+| `--disk-mbps-read-write` | No | Throughput limit in MBps (UltraSSD only) |
+| `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
+| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
+| `--enable-bursting` | No | Enable on-demand bursting (true or false) |
+
 ### Azure Confidential Ledger Operations
 
 ```bash

@@ -50,7 +50,7 @@ public sealed class DiskUpdateCommand(
     public override ToolMetadata Metadata => new()
     {
         OpenWorld = false,
-        Destructive = false,
+        Destructive = true,
         Idempotent = true,
         ReadOnly = false,
         Secret = false,

@@ -14,6 +14,11 @@ public class DiskCreateOptions : BaseComputeOptions
     public string? Disk { get; set; }
 
     /// <summary>
+    /// Gets or sets the source to create the disk from (resource ID of a snapshot/disk, or a blob URI).
+    /// </summary>
+    public string? Source { get; set; }
+
+    /// <summary>
     /// Gets or sets the size of the disk in GB.
     /// </summary>
     public int? SizeGb { get; set; }

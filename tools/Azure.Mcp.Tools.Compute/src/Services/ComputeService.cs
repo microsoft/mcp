@@ -419,6 +419,7 @@ public class ComputeService(
         string diskName,
         string resourceGroup,
         string subscription,
+        string? source = null,
         string? location = null,
         int? sizeGb = null,
         string? sku = null,
@@ -437,9 +438,11 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
+        var creationData = CreateDiskCreationData(source);
+
         var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
         {
-            CreationData = new DiskCreationData(DiskCreateOption.Empty)
+            CreationData = creationData
         };
 
         if (sizeGb.HasValue)
@@ -549,5 +552,29 @@ public class ComputeService(
         var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
 
         return ConvertToDiskModel(result.Value, resourceGroup!);
+    }
+
+    private static DiskCreationData CreateDiskCreationData(string? source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            return new DiskCreationData(DiskCreateOption.Empty);
+        }
+
+        // Blob URIs start with http:// or https://
+        if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DiskCreationData(DiskCreateOption.Import)
+            {
+                SourceUri = new Uri(source)
+            };
+        }
+
+        // Otherwise treat as a resource ID (snapshot or managed disk)
+        return new DiskCreationData(DiskCreateOption.Copy)
+        {
+            SourceResourceId = new Azure.Core.ResourceIdentifier(source)
+        };
     }
 }
