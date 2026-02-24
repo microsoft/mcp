@@ -410,7 +410,9 @@
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "upload_azure_storage_blobs": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
+    "Upload a local file to my Azure blob storage container",
+    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
   ],
   "get_azure_cache_for_redis_details": [
     "Get Redis clusters",
