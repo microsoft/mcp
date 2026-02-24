@@ -30,19 +30,31 @@ internal class Program
     {
         try
         {
+            var cts = new CancellationTokenSource();
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true; // Prevent the process from terminating immediately
+                cts.Cancel();
+            };
+
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            var builder = Host.CreateApplicationBuilder();
-            builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
-            ConfigureServices(builder.Services);
+            ServiceCollection services = new();
 
-            using var host = builder.Build();
+            ConfigureServices(services);
 
-            await InitializeServicesAsync(host.Services);
-            await host.StartAsync();
+            services.AddLogging(builder =>
+            {
+                builder.AddConsole();
+                builder.SetMinimumLevel(LogLevel.Information);
+            });
 
-            var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+            var serviceProvider = services.BuildServiceProvider();
+            await InitializeServicesAsync(serviceProvider);
+            await InitializeHostedServicesAsync(serviceProvider, cts.Token);
+
+            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -170,5 +182,15 @@ internal class Program
         // invalid telemetry published.
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
         await telemetryService.InitializeAsync();
+    }
+
+    private static async Task InitializeHostedServicesAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        // Initialize hosted services to capture telemetry for command execution.
+        var hostedServices = serviceProvider.GetServices<IHostedService>();
+        foreach (var hostedService in hostedServices)
+        {
+            await hostedService.StartAsync(cancellationToken);
+        }
     }
 }
