@@ -22,7 +22,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Switch Docker base image to `runtime-deps:10.0-alpine`. Since the server binary is self-contained, the full ASP.NET runtime base is unnecessary. Expected ~20-25% image size reduction (for e.g. azure-mcp images arm64: 648MB to ~482MB, amd64: 784MB to ~624MB). [[#1782](https://github.com/microsoft/mcp/pull/1782)]
+- Switch Docker base image to `runtime-deps:10.0-alpine`. Since the server binary is self-contained, the full ASP.NET runtime base is unnecessary. Expected ~20-25% image size reduction (for example, azure-mcp images arm64: 648MB to ~482MB, amd64: 784MB to ~624MB). [[#1782](https://github.com/microsoft/mcp/pull/1782)]
 - Improved the `storage_table_list` tool description for better LLM tool selection. [[#1800](https://github.com/microsoft/mcp/pull/1800)]
 
 ## 2.0.0-beta.21 (2026-02-19)
