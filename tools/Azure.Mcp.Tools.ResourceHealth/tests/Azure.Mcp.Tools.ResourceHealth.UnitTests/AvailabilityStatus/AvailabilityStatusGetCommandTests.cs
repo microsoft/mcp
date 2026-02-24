@@ -52,7 +52,7 @@ public class AvailabilityStatusGetCommandTests
             .Returns(expectedStatus);
 
         var command = new AvailabilityStatusGetCommand(_logger);
-        var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
+        var args = command.GetCommand().Parse(["--resource-id", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -84,7 +84,7 @@ public class AvailabilityStatusGetCommandTests
 
         var command = new AvailabilityStatusGetCommand(_logger);
 
-        var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
+        var args = command.GetCommand().Parse(["--resource-id", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
