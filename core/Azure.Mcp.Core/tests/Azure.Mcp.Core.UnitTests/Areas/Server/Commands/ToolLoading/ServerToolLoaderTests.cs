@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -58,7 +58,7 @@ public class ServerToolLoaderTests
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
-        var discoveryStrategy = new RegistryDiscoveryStrategy(serviceStartOptions, discoveryLogger);
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
         var logger = loggerFactory.CreateLogger<ServerToolLoader>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
@@ -112,7 +112,7 @@ public class ServerToolLoaderTests
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
-        var discoveryStrategy = new RegistryDiscoveryStrategy(serviceStartOptions, discoveryLogger);
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
         var logger = loggerFactory.CreateLogger<ServerToolLoader>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);

@@ -33,6 +33,61 @@ param(
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
+# Maximum signature block size in bytes. The ZIP EOCD comment length is set to this
+# value before signing so that the final signed file remains a valid ZIP archive.
+# The signature block (MCPB_SIG_V1 + length + signature + padding + MCPB_SIG_END)
+# is padded with zeros to exactly this size.
+# Current ESRP signatures are ~4KB; 16384 provides ample headroom.
+$MAX_SIG_BLOCK_SIZE = 16384
+
+<#
+.SYNOPSIS
+    Updates the ZIP End of Central Directory (EOCD) comment length field.
+
+.DESCRIPTION
+    Sets the EOCD comment length to a fixed value so that after the MCPB signature
+    block is appended (and padded to this exact size), the file remains a valid ZIP.
+    This is necessary because some ZIP parsers (e.g., Claude Desktop) strictly
+    validate that file_size == EOCD_offset + 22 + comment_length.
+#>
+function Set-ZipEocdCommentLength {
+    param(
+        [Parameter(Mandatory)]
+        [string] $FilePath,
+
+        [Parameter(Mandatory)]
+        [uint16] $CommentLength
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    $len = $bytes.Length
+
+    # EOCD signature: 0x06054b50 (PK\x05\x06)
+    $eocdSig = @([byte]0x50, [byte]0x4B, [byte]0x05, [byte]0x06)
+    $eocdOffset = -1
+
+    # Search backwards from end of file (EOCD is at most 65557 bytes from end)
+    $searchStart = [Math]::Max(0, $len - 65557)
+    for ($i = $len - 22; $i -ge $searchStart; $i--) {
+        if ($bytes[$i] -eq $eocdSig[0] -and $bytes[$i+1] -eq $eocdSig[1] -and
+            $bytes[$i+2] -eq $eocdSig[2] -and $bytes[$i+3] -eq $eocdSig[3]) {
+            $eocdOffset = $i
+            break
+        }
+    }
+
+    if ($eocdOffset -lt 0) {
+        throw "ZIP EOCD signature not found in $FilePath"
+    }
+
+    # EOCD comment length is at offset 20-21 (2 bytes, little-endian)
+    $commentLenBytes = [BitConverter]::GetBytes($CommentLength)
+    $bytes[$eocdOffset + 20] = $commentLenBytes[0]
+    $bytes[$eocdOffset + 21] = $commentLenBytes[1]
+
+    [System.IO.File]::WriteAllBytes($FilePath, $bytes)
+}
+
 if (!(Test-Path $ArtifactsPath)) {
     LogError "MCPB directory not found: $ArtifactsPath"
     exit 1
@@ -59,14 +114,20 @@ foreach ($mcpb in $mcpbFiles) {
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
     }
     
-    # Copy original .mcpb
+    # Copy original .mcpb and update EOCD comment length.
+    # The comment length is set to MAX_SIG_BLOCK_SIZE so that after the signature
+    # block is appended (padded to this size), the file is a valid ZIP. ESRP signs
+    # this modified content, so mcpb verify still works because the "original content"
+    # extracted during verification matches what was signed.
     $mcpbDest = Join-Path $targetDir $mcpb.Name
     Copy-Item $mcpb.FullName $mcpbDest -Force
+    Set-ZipEocdCommentLength -FilePath $mcpbDest -CommentLength $MAX_SIG_BLOCK_SIZE
+    LogInfo "  Updated EOCD comment length to $MAX_SIG_BLOCK_SIZE for $($mcpb.Name)"
     
-    # Create .signature.p7s copy for ESRP to sign
+    # Create .signature.p7s copy for ESRP to sign (same modified content)
     $sigName = $mcpb.BaseName + ".signature.p7s"
     $sigDest = Join-Path $targetDir $sigName
-    Copy-Item $mcpb.FullName $sigDest -Force
+    Copy-Item $mcpbDest $sigDest -Force
     
     LogInfo "  Staged: $($mcpb.Name) -> $sigName"
 }

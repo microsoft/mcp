@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class ComputeUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ComputeUsageChecker> logger) : AzureUsageChecker(credential, subscriptionId, logger)
+public class ComputeUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ComputeUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
@@ -18,7 +19,7 @@ public class ComputeUsageChecker(TokenCredential credential, string subscription
             var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (ComputeUsage item in usages)
+            await foreach (ComputeUsage item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,

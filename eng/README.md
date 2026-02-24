@@ -204,7 +204,7 @@ Signing pipeline scripts:
 - [`Apply-McpbSignatures.ps1`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/scripts/Apply-McpbSignatures.ps1) - Applies PKCS#7 signatures to MCPB files
 - [`Verify-McpbSignatures.ps1`](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/eng/scripts/Verify-McpbSignatures.ps1) - Verifies signatures using mcpb CLI
 
-For design details, see [docs/mcpb-signing-via-esrp.md](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/docs/mcpb-signing-via-esrp.md).
+For design details, see [docs/mcpb-packaging-and-signing-via-esrp.md](https://github.com/microsoft/mcp/blob/vcolin7/test-mcpb-signing/docs/design/mcpb-packaging-and-signing-via-esrp.md).
 
 # Server release process
 

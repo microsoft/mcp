@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 using Xunit;
@@ -12,7 +12,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupServerProviderTests
 {
-    private readonly CommandFactory _commandFactory;
+    private readonly ICommandFactory _commandFactory;
     public CommandGroupServerProviderTests()
     {
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory();

@@ -14,9 +14,10 @@
     Path to the directory containing signed MCPB files.
 
 .PARAMETER FailOnError
-    If set, the script will exit with an error code if any verification fails.
-    Default is false because mcpb verify may return non-zero if the certificate
-    chain is not in the trust store (expected for Microsoft-signed packages).
+    If set, the script will exit with an error code if any verification fails,
+    including trust chain warnings. Without this flag, the script will still fail
+    on genuinely invalid signatures but will tolerate trust chain issues (expected
+    for Microsoft-signed packages when the certificate chain is not in the trust store).
 
 .EXAMPLE
     ./Verify-McpbSignatures.ps1 -ArtifactsPath "./signed"
@@ -39,11 +40,9 @@ if (!(Test-Path $ArtifactsPath)) {
     exit 1
 }
 
-# Ensure MCPB CLI is installed
-if (-not (Get-Command mcpb -ErrorAction SilentlyContinue)) {
-    Write-Host "Installing MCPB CLI..."
-    Invoke-LoggedCommand 'dotnet tool install --global Mcpb.Cli'
-}
+# Restore MCPB CLI from local tool manifest (.config/dotnet-tools.json)
+LogInfo "Restoring MCPB CLI..."
+Invoke-LoggedCommand "dotnet tool restore" -GroupOutput
 
 LogInfo "Verifying signed MCPB files..."
 
@@ -56,34 +55,53 @@ if ($mcpbFiles.Count -eq 0) {
 
 $passedCount = 0
 $warningCount = 0
+$failedCount = 0
 
 foreach ($mcpb in $mcpbFiles) {
     LogInfo "`n=== Verifying: $($mcpb.Name) ==="
     
     # Show bundle info
-    & mcpb info $mcpb.FullName
+    & dotnet mcpb info $mcpb.FullName
     
-    # Verify signature
-    & mcpb verify $mcpb.FullName
+    # Verify signature and capture output for classification
+    $verifyOutput = & dotnet mcpb verify $mcpb.FullName 2>&1 | Out-String
+    $verifyExitCode = $LASTEXITCODE
+
+    LogInfo $verifyOutput
     
-    if ($LASTEXITCODE -eq 0) {
+    if ($verifyExitCode -eq 0) {
         LogInfo "✓ $($mcpb.Name) - Signature verified"
         $passedCount++
     } else {
-        LogWarning "✗ $($mcpb.Name) - Verification returned exit code $LASTEXITCODE"
-        # Note: mcpb verify may return non-zero if certificate chain not in trust store
-        # This is acceptable for Microsoft-signed packages
-        $warningCount++
+        # Distinguish untrusted certificate chain (expected in CI for Microsoft-signed
+        # packages) from genuinely invalid or corrupt signatures.
+        $isTrustChainIssue = $verifyOutput -match '(?i)(untrusted|chain|trust|certificate.*not found|root.*not.*trusted|certificate.*expired)'
+        
+        if ($isTrustChainIssue) {
+            LogWarning "✗ $($mcpb.Name) - Certificate chain not trusted (exit code $verifyExitCode). This is expected for Microsoft-signed packages in CI."
+            $warningCount++
+        } else {
+            LogError "✗ $($mcpb.Name) - Signature verification failed (exit code $verifyExitCode)"
+            $failedCount++
+        }
     }
 }
 
 LogInfo "`n=== Verification Summary ==="
 LogInfo "  Passed: $passedCount"
-LogInfo "  Warnings: $warningCount"
+LogInfo "  Warnings (trust chain): $warningCount"
+LogInfo "  Failed (invalid signature): $failedCount"
 LogInfo "  Total: $($mcpbFiles.Count)"
 
+# Always fail on genuinely invalid signatures regardless of -FailOnError
+if ($failedCount -gt 0) {
+    LogError "Some MCPB files have invalid signatures"
+    exit 1
+}
+
+# Trust chain warnings are only fatal when -FailOnError is set
 if ($FailOnError -and $warningCount -gt 0) {
-    LogError "Some MCPB files failed verification"
+    LogError "Some MCPB files had trust chain warnings and -FailOnError is set"
     exit 1
 }
 

@@ -4,10 +4,10 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
@@ -18,7 +18,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
 public class CommandFactoryToolLoaderTests
 {
-    private static (CommandFactoryToolLoader toolLoader, CommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);

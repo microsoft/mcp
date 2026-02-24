@@ -32,22 +32,28 @@ jobs:
     displayName: "Download binaries_signed"
     artifact: binaries_signed
 
-  # Use .NET SDK 8.0.x to run the MCPB CLI, which currently targets .NET 8.0 for its tool and runtime
+  # Install .NET SDK 10.0.x (required by global.json for dotnet CLI commands)
   - task: UseDotNet@2
-    displayName: "Use .NET SDK 8.0.x"
+    displayName: "Install .NET SDK 10.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 10.0.x
+
+  # Install .NET SDK 8.0.x (required by MCPB CLI which targets .NET 8.0)
+  - task: UseDotNet@2
+    displayName: "Install .NET SDK 8.0.x"
     retryCountOnTaskFailure: 3
     inputs:
       packageType: sdk
       version: 8.0.x
 
   - pwsh: |
-      Write-Host "Installing MCPB CLI (.NET global tool)..."
-      dotnet tool install --global Mcpb.Cli
-      
-      # Add .NET tools to PATH for this session so we can use the 'mcpb' command directly
-      $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
-      mcpb --version
-    displayName: "Install MCPB CLI"
+      Write-Host "Restoring MCPB CLI from local tool manifest..."
+      dotnet tool restore
+      dotnet mcpb --version
+    displayName: "Restore MCPB CLI"
+    workingDirectory: $(Build.SourcesDirectory)
 
   - task: Powershell@2
     displayName: "Pack MCP bundles"

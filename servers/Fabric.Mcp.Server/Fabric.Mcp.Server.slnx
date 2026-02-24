@@ -17,6 +17,9 @@
   <Folder Name="/servers/Fabric.Mcp.Server/src/">
     <Project Path="./src/Fabric.Mcp.Server.csproj" />
   </Folder>
+  <Folder Name="/servers/Fabric.Mcp.Server/tests/">
+    <Project Path="./tests/Fabric.Mcp.Server.UnitTests/Fabric.Mcp.Server.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">

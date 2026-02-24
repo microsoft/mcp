@@ -26,6 +26,7 @@ public class AzureMigrateSetup : IAreaSetup
     {
         // Register shared helpers
         services.AddSingleton<AzureHttpHelper>();
+        services.AddSingleton<AzureMigrateProjectHelper>();
 
         // Register guidance service and command
         services.AddSingleton<IPlatformLandingZoneGuidanceService, PlatformLandingZoneGuidanceService>();
@@ -43,15 +44,7 @@ public class AzureMigrateSetup : IAreaSetup
         var azureMigrate = new CommandGroup(
             Name,
             """
-            Azure Landing Zone operations - Provides guidance and documentation for modifying Azure Landing Zone
-            templates and configurations, and supports generating new platform landing zones. Helps with policy changes, 
-            service configuration, resource naming, network topology, identity management, governance, and starter module 
-            customizations. Can generate complete platform landing zone deployments with customizable parameters including 
-            region types, firewall configuration, network architecture, and subscription assignments. This tool focuses
-            on providing best practices and recommendations for both platform and application landing zones across
-            different deployment methods (Bicep, Terraform, Portal). Use this tool when you need guidance on
-            implementing or customizing Azure Landing Zones, or when you need to generate a new platform landing zone
-            according to Microsoft's Cloud Adoption Framework.
+            Azure Landing Zone operations - Provides best-practice guidance and Terraform-ready generation for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module customization—aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform landing zone with configurable parameters (regions, connectivity, security, subscriptions).
             """,
             Title);
 

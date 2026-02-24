@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.16 (Unreleased)
+## 2.0.0-beta.22 (Unreleased)
 
 ### Features Added
 
@@ -12,12 +12,121 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+## 2.0.0-beta.21 (2026-02-19)
+
+### Features Added
+
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions, reducing the Azure MCP Docker image size by ~40% (arm64: 1.21 GB to ~648 MB, amd64: 1.31 GB to ~784 MB). [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+
+### Other Changes
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
+
+## 2.0.0-beta.20 (2026-02-17)
+
+### Features Added
+
+- Added two new Azure Service Fabric managed clusters tools: [[#1696](https://github.com/microsoft/mcp/pull/1696)]
+  - `servicefabric_managedcluster_node_get`: List all nodes in a Service Fabric managed cluster
+  - `servicefabric_managedcluster_nodetype_restart`: Restart nodes from a Service Fabric managed cluster
+
+### Other Changes
+
+- Resolve gaps in the capture of certain telemetry tags. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
+- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using `.github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
+- Improved error message for tenant mismatch authentication errors with actionable resolution steps. [[#1737](https://github.com/microsoft/mcp/pull/1737)]
+
+#### Dependency Updates
+
+- Updated .NET tooling to stable version: `10.0.100-preview.7+` → `10.0.103`. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
+- Updated Microsoft.Azure.Kusto.Data and Microsoft.Azure.Kusto.Ingest from version 14.0.1 to 14.0.3. [[#1740](https://github.com/microsoft/mcp/pull/1740)]
+
+## 2.0.0-beta.19 (2026-02-12)
+
+### Features Added
+
+- Added `compute_disk_get` tool to retrieve Azure managed disk information that supports listing all disks in a subscription, listing disks in a resource group, and getting specific disk details. [[#1559](https://github.com/microsoft/mcp/pull/1559)]
+- Added support for OAuth-protected registry servers by allowing `oauthScopes` in `registry.json` for HTTP-transport servers. [[#1509](https://github.com/microsoft/mcp/pull/1509)]
+
+### Breaking Changes
+
+- Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
+    - Removed keyvault_key_list - use keyvault_key_get without providing a key name
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
+- Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
+    - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
+    - Removed monitor_webtests_update – use monitor_webtests_createorupdate for both create and update scenarios
+- Consolidated MySQL and PostgreSQL list commands – separate server/database/table list tools removed: [[#1710](https://github.com/microsoft/mcp/pull/1710)]
+    - Removed postgres_server_list, postgres_database_list, postgres_table_list – use postgres_list with appropriate parameters to route hierarchically
+    - Removed mysql_server_list, mysql_database_list, mysql_table_list – use mysql_list with appropriate parameters to route hierarchically
+- Consolidated Load Testing TestRun commands – separate list/update commands removed: [[#1711](https://github.com/microsoft/mcp/pull/1711)]
+    - Removed loadtesting_testrun_list – use loadtesting_testrun_get for retrieving test runs
+    - Removed loadtesting_testrun_update – use loadtesting_testrun_createorupdate for both create and update scenarios
+
+### Other Changes
+
+- Added processor architecture to captured telemetry. [[#1691](https://github.com/microsoft/mcp/pull/1691)]
+
+## 2.0.0-beta.18 (2026-02-10)
+
+### Features Added
+
+- AMD64 and ARM64 Docker images of the Azure MCP Server are now available. [[#1651](https://github.com/microsoft/mcp/pull/1651)]
+
+### Bugs Fixed
+
+- Added CORS policy to restrict cross-origin requests to localhost when running in unauthenticated development environment. [[#1609](https://github.com/microsoft/mcp/pull/1609)]
+- Fixed elicitation prompts failing with 'Form mode elicitation requests require a requested schema' error by using simple accept/decline prompts instead of form-based schemas for sensitive tool confirmations. [[#1668](https://github.com/microsoft/mcp/pull/1668)]
+
+## 2.0.0-beta.17 (2026-02-05)
+
+### Features Added
+
+- Added log telemetry support for customer-owned AppInsights. [[#1638](https://github.com/microsoft/mcp/pull/1638)]
+- Added support for dangerous persistent logging configuration in VSIX extension, allowing users to specify a directory for detailed debug logs via the azureMcp.dangerouslyWriteSupportLogsToDir setting. [[#1639](https://github.com/microsoft/mcp/pull/1639)]
+
+### Bugs Fixed
+
+- Improved input validation in ResourceHealth and Kusto tools: [[#1634](https://github.com/microsoft/mcp/pull/1634)]
+  - ResourceHealth: Added resource ID validation using Azure.Core.ResourceIdentifier.Parse()
+  - Kusto: Added cluster URI validation with domain suffix and hostname allowlist
+
+### Other Changes
+
+- Added cancellation token support so deploy operations can be cancelled cleanly and consistently. [[#1627](https://github.com/microsoft/mcp/pull/1627)]
+- Improved cancellation behavior for async enumerators by adding support for `CancellationToken`, making it easier to correctly stop long-running or streaming async iteration. [[#1649](https://github.com/microsoft/mcp/pull/1649)]
+
+## 2.0.0-beta.16 (2026-02-03)
+
+### Features Added
+
+- Added Azure Compute VM operations with flexible compute vm get command that supports listing all VMs in a subscription, listing VMs in a resource group, getting specific VM details, and retrieving VM instance view with runtime status: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vm_get`
+- Added Virtual Machine Scale Set (VMSS) get operations to retrieve VMSS information including listing across subscriptions or resource groups, getting specific VMSS details, and retrieving individual VM instances within a scale set: [[#1482](https://github.com/microsoft/mcp/pull/1482)]
+  - `compute_vmss_get`
+- Added Azure Retail Pricing MCP tool for querying Azure service pricing information: [[#1621](https://github.com/microsoft/mcp/pull/1621)]
+  - `pricing_get`
+
+### Bugs Fixed
+
+- Added support for new versions of Azure AI Search knowledge bases and those set to 'minimal' reasoning effort. [[#1422](https://github.com/microsoft/mcp/pull/1422)]
+
+### Other Changes
+
+- Removed ErrorDetails from telemetry. [[#1625](https://github.com/microsoft/mcp/pull/1625)]
+- Updated bestpractices tool description to ask LLM to use azure skills. [[#1622](https://github.com/microsoft/mcp/pull/1622)]
+- Updated swa app deployment instructions in bestpractices tool. [[#1637](https://github.com/microsoft/mcp/pull/1637)]
+
 ## 2.0.0-beta.15 (2026-01-29)
 
 ### Features Added
+
 - Added host information to tools execution telemetry. [[#1604](https://github.com/microsoft/mcp/pull/1604)]
 
 ### Bugs Fixed
+
 - Fixed async disposal pattern in CosmosService by implementing IAsyncDisposable and replacing async void Dispose with proper async disposal. [[#1532](https://github.com/microsoft/mcp/pull/1532)]
 - Fixed a regression that disabled telemetry for remote Azure MCP server. [[#1602](https://github.com/microsoft/mcp/pull/1602)]
 
@@ -29,6 +138,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.14 (2026-01-27)
 
 ### Features Added
+
 - Added MCP tool for List Advisor Recommendations - `advisor_recommendations_list`. [[#1519](https://github.com/microsoft/mcp/pull/1519)]
 - Added new Azure Managed Lustre fileshare blob import management tools: [[#1492](https://github.com/microsoft/mcp/pull/1492)]
   - `managedlustre_fs_blob_import_create`
@@ -56,6 +166,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.12 (2026-01-20)
 
 ### Bugs Fixed
+
 - Update outdated schema version within `server.json` to `2025-12-11` [[#1527](https://github.com/microsoft/mcp/pull/1527)]
 
 ## 2.0.0-beta.11 (2026-01-16)

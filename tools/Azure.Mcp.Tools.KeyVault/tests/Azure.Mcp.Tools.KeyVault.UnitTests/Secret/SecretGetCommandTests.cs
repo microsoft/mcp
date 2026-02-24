@@ -81,27 +81,10 @@ public class SecretGetCommandTests
         var retrievedSecret = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretGetCommandResult);
 
         Assert.NotNull(retrievedSecret);
-        Assert.Equal(_knownSecretName, retrievedSecret.Name);
-        Assert.Equal(_knownSecretValue, retrievedSecret.Value);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfSecretNameIsEmpty()
-    {
-        // Arrange - No need to mock service since validation should fail before service is called
-        var args = _commandDefinition.Parse([
-            "--vault", _knownVaultName,
-            "--secret", "",
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert - Should return validation error response
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        Assert.NotNull(retrievedSecret.Secret);
+        Assert.Null(retrievedSecret.Secrets);
+        Assert.Equal(_knownSecretName, retrievedSecret.Secret.Name);
+        Assert.Equal(_knownSecretValue, retrievedSecret.Secret.Value);
     }
 
     [Fact]
@@ -123,6 +106,73 @@ public class SecretGetCommandTests
         var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--secret", _knownSecretName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsSecretsList_WhenSecretNameNotProvided()
+    {
+        // Arrange
+        var expectedSecrets = new List<string> { "secret1", "secret2", "secret3" };
+
+        _keyVaultService
+            .ListSecrets(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(expectedSecrets);
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Secrets);
+        Assert.Null(result.Secret);
+        Assert.Equal(expectedSecrets.Count, result.Secrets.Count);
+        Assert.Equal(expectedSecrets, result.Secrets);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException_WhenListingSecrets()
+    {
+        // Arrange
+        var expectedError = "List error";
+
+        _keyVaultService
+            .ListSecrets(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
 

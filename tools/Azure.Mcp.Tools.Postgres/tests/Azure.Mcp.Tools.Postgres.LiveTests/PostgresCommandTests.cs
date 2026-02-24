@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
-public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
@@ -145,7 +145,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListDatabases_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "postgres_database_list",
+            "postgres_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -173,7 +173,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListTables_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "postgres_table_list",
+            "postgres_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -387,7 +387,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListServers_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "postgres_server_list",
+            "postgres_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -434,7 +434,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         string serverName = Guid.NewGuid().ToString(); // <-- nonexistent_server
 
         JsonElement error = await this.CallToolAsyncWithErrorExpected(
-                "postgres_database_list",
+                "postgres_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -461,7 +461,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         string databaseName = Guid.NewGuid().ToString(); // <-- nonexistent_database
 
         JsonElement error = await this.CallToolAsyncWithErrorExpected(
-                "postgres_table_list",
+                "postgres_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

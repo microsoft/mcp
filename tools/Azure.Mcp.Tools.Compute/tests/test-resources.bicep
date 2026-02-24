@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
+param location string = 'westus2'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
@@ -20,7 +20,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_D2s_v6'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -63,7 +63,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 // Test Virtual Machine (Linux)
-resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: '${baseName}-vm'
   location: location
   properties: {
@@ -83,6 +83,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
           storageAccountType: 'Standard_LRS'
         }
       }
+      diskControllerType: 'NVMe'
     }
     osProfile: {
       computerName: '${baseName}-vm'
@@ -110,7 +111,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 }
 
 // Virtual Machine Scale Set for VMSS testing
-resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
+resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
   name: '${baseName}-vmss'
   location: location
   sku: {
@@ -137,6 +138,7 @@ resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
             storageAccountType: 'Standard_LRS'
           }
         }
+        diskControllerType: 'NVMe'
       }
       osProfile: {
         computerNamePrefix: '${baseName}-'
@@ -210,8 +212,45 @@ resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-0
   }
 }
 
+// Create a test managed disk
+resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
+  name: '${baseName}-disk'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 32
+  }
+  tags: {
+    Environment: 'Test'
+    Purpose: 'MCP-Testing'
+  }
+}
+
+// Assign Contributor role for managing disks
+resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // Contributor role
+  name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+}
+
+resource diskContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(contributorRoleDefinition.id, testApplicationOid, testDisk.id)
+  scope: testDisk
+  properties: {
+    roleDefinitionId: contributorRoleDefinition.id
+    principalId: testApplicationOid
+  }
+}
+
 // Output values for test consumption
 output vmName string = vm.name
 output vmssName string = vmss.name
 output vnetName string = vnet.name
 output resourceGroupName string = resourceGroup().name
+output diskName string = testDisk.name
+output location string = location

@@ -20,6 +20,11 @@ The test suite includes comprehensive coverage for OneLake MCP commands:
 - **FileDeleteCommandTests** - File deletion operations
 - **DirectoryCreateCommandTests** - Directory creation functionality
 - **DirectoryDeleteCommandTests** - Directory deletion functionality
+- **TableNamespaceListCommandTests** - Table namespace enumeration with schema alias handling
+- **TableNamespaceGetCommandTests** - Table namespace metadata retrieval
+- **TableListCommandTests** - Table listing across namespaces
+- **TableGetCommandTests** - Table metadata retrieval including column schemas
+- **TableConfigGetCommandTests** - Table configuration inspection
 - **OneLakeServiceTests** - Testable service architecture patterns
 
 ## Unit Tests
@@ -88,6 +93,11 @@ ONELAKE_INTEGRATION_TESTS=true dotnet test tools/Fabric.Mcp.Tools.OneLake/tests/
 - `FileDeleteCommandTests` - Tests file deletion operations
 - `DirectoryCreateCommandTests` - Tests directory creation functionality
 - `DirectoryDeleteCommandTests` - Tests directory deletion functionality
+- `TableNamespaceListCommandTests` - Tests namespace listing and schema alias handling
+- `TableNamespaceGetCommandTests` - Tests namespace metadata retrieval
+- `TableListCommandTests` - Tests table discovery across namespaces
+- `TableGetCommandTests` - Tests table detail retrieval including schema metadata
+- `TableConfigGetCommandTests` - Tests table configuration responses
 
 ### Service Tests
 - `OneLakeServiceTests` - Demonstrates testable architecture patterns with dependency injection and mocking

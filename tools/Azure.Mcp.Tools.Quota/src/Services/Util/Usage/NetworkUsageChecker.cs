@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Network;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class NetworkUsageChecker(TokenCredential credential, string subscriptionId, ILogger<NetworkUsageChecker> logger) : AzureUsageChecker(credential, subscriptionId, logger)
+public class NetworkUsageChecker(TokenCredential credential, string subscriptionId, ILogger<NetworkUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
@@ -17,7 +18,7 @@ public class NetworkUsageChecker(TokenCredential credential, string subscription
             var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
-            await foreach (var item in usages)
+            await foreach (var item in usages.WithCancellation(cancellationToken))
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,
