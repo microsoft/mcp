@@ -50,7 +50,7 @@ public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand>
     protected override AvailabilityStatusOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.ResourceId);
+        options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceHealthOptionDefinitions.ResourceId.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
