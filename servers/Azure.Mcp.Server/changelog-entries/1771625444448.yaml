@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Switch Docker base image to runtime-deps:10.0-alpine. Since the server binary is self-contained, the full ASP.NET runtime base is unnecessary. Expected ~20-25% image size reduction (for e.g. azure-mcp images arm64: 648MB to ~482MB, amd64: 784MB to ~624MB)."

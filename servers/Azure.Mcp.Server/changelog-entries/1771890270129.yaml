@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added endpoint validation for Azure Communication Services, App Configuration, and Container Registry."

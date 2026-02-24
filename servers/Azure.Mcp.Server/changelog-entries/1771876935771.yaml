@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Consolidated ResourceHealth availability-status commands: merged 'availability-status get' and 'availability-status list' into a single dual-mode 'availability-status get' command. The command now accepts an optional --resourceId parameter: when provided, it returns a single resource's availability status; when omitted, it lists all resources. Tool name changed from 'resourcehealth_availability-status_list' to use only 'resourcehealth_availability-status_get'."
