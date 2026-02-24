@@ -652,9 +652,7 @@
   "resourcehealth_availability-status_get": [
     "Get the availability status for resource <resource_name>",
     "Show me the health status of the storage account <storage_account_name>",
-    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?"
-  ],
-  "resourcehealth_availability-status_list": [
+    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
     "List availability status for all resources in my subscription",
     "Show me the health status of all my Azure resources",
     "What resources in resource group <resource_group_name> have health issues?"

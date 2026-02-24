@@ -331,7 +331,6 @@
         "monitor_webtests_get",
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
-        "resourcehealth_availability-status_list",
         "resourcehealth_health-events_list"
       ]
     },
