@@ -28,34 +28,9 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update, modify, scale, or change an existing Azure Virtual Machine Scale Set (VMSS) configuration.
-        Scale out or scale in instances, enable or disable features, add or remove tags, and configure upgrade policies.
-        Uses PATCH semantics - only specified properties are updated.
-
-        Updatable properties:
-        - --upgrade-policy: Change upgrade policy mode (Automatic, Manual, Rolling)
-        - --capacity: Scale out or scale in - change the number of VM instances
-        - --vm-size: Resize VMs, change the VM SKU size
-        - --overprovision: Enable or disable overprovisioning
-        - --enable-auto-os-upgrade: Enable or disable automatic OS image upgrades
-        - --scale-in-policy: Set scale-in policy (Default, OldestVM, NewestVM)
-        - --tags: Add, update, or remove tags in key=value,key2=value2 format
-
-        Required options:
-        - --vmss-name: Name of the VMSS to update
-        - --resource-group: Resource group name
-        - --subscription: Subscription ID or name
-
-        At least one update property must be specified.
-
-        Examples:
-        - Update upgrade policy: --upgrade-policy Automatic
-        - Scale out to 5 instances: --capacity 5
-        - Scale in to 2 instances: --capacity 2
-        - Resize VM size: --vm-size Standard_D4s_v3
-        - Enable auto OS upgrade: --enable-auto-os-upgrade true
-        - Set scale-in policy: --scale-in-policy OldestVM
-        - Add tags: --tags environment=prod,team=compute
+        Update an existing Azure Virtual Machine Scale Set configuration. Supports scaling instance count, resizing VMs,
+        changing upgrade policy, overprovisioning, automatic OS upgrades, scale-in policy, and tag management.
+        Uses PATCH semantics — only specified properties are modified.
         """;
 
     public override string Title => CommandTitle;

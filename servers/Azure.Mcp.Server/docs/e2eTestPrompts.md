@@ -188,7 +188,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_update | Add tags to VM <vm-name> in resource group <resource-group-name> |
 | compute_vm_update | Update virtual machine <vm-name> with environment=production tag |
 | compute_vm_update | Enable Azure Hybrid Benefit on VM <vm-name> |
-| compute_vm_update | Enable boot diagnostics for VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_update | Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name> |
 | compute_vm_update | Change the size of VM <vm-name> to Standard_D4s_v3 |
 | compute_vm_update | Disable Hybrid Benefit license on <vm-name> |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |

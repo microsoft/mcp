@@ -29,40 +29,10 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
     public override string Description =>
         """
-        Create an Azure Virtual Machine Scale Set (VMSS) with smart defaults based on workload requirements.
-        Supports automatic VM size selection based on workload type (development, web, database, compute, memory, gpu, general).
-        Creates necessary network resources (VNet, subnet) if not specified.
-        Supports both Linux and Windows with SSH key or password authentication.
-
-        Workload types and suggested configurations:
-        - development: Standard_B2s - Cost-effective burstable VM for dev/test
-        - web: Standard_D2s_v3 - General purpose for web servers
-        - database: Standard_E4s_v3 - Memory-optimized for databases
-        - compute: Standard_F4s_v2 - CPU-optimized for batch processing
-        - memory: Standard_E8s_v3 - High-memory for caching
-        - gpu: Standard_NC6s_v3 - GPU-enabled for ML/rendering
-        - general: Standard_D2s_v3 - Balanced general purpose
-
-        Required options:
-        - --vmss-name: Name of the VMSS to create
-        - --resource-group: Resource group name
-        - --subscription: Subscription ID or name
-        - --location: Azure region
-        - --admin-username: Admin username
-
-        Authentication requirements:
-        - For Windows VMSS: --admin-password is required
-        - For Linux VMSS: Either --ssh-public-key OR --admin-password is required
-
-        IMPORTANT for Linux VMSS with SSH authentication:
-        Before calling this tool, you must first read the user's SSH public key file (typically ~/.ssh/id_rsa.pub,
-        ~/.ssh/id_ed25519.pub, or similar) and pass the full key content to --ssh-public-key.
-        The SSH public key is safe to share - it contains no secrets.
-        Example: --ssh-public-key "ssh-ed25519 AAAAC3... user@host"
-
-        Optional:
-        - --instance-count: Number of VM instances (default: 2)
-        - --upgrade-policy: Upgrade policy mode: 'Automatic', 'Manual', or 'Rolling' (default: 'Manual')
+        Create an Azure Virtual Machine Scale Set with workload-based defaults. Supports automatic VM size selection by workload
+        type, Linux and Windows images, SSH key or password authentication,
+        and configurable instance count and upgrade policy. Creates networking resources (VNet, subnet) automatically when not specified.
+        For Linux VMSS with SSH, read the user's public key file and pass its content.
         """;
 
     public override string Title => CommandTitle;

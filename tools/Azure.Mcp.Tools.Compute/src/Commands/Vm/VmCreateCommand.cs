@@ -29,36 +29,9 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
     public override string Description =>
         """
-        Create an Azure Virtual Machine with smart defaults based on workload requirements.
-        Supports automatic VM size selection based on workload type (development, web, database, compute, memory, gpu, general).
-        Creates necessary network resources (VNet, subnet, NSG, NIC, public IP) if not specified.
-        Supports both Linux and Windows VMs with SSH key or password authentication.
-
-        Workload types and suggested configurations:
-        - development: Standard_B2s - Cost-effective burstable VM for dev/test
-        - web: Standard_D2s_v3 - General purpose for web servers
-        - database: Standard_E4s_v3 - Memory-optimized for databases
-        - compute: Standard_F4s_v2 - CPU-optimized for batch processing
-        - memory: Standard_E8s_v3 - High-memory for caching
-        - gpu: Standard_NC6s_v3 - GPU-enabled for ML/rendering
-        - general: Standard_D2s_v3 - Balanced general purpose
-
-        Required options:
-        - --vm-name: Name of the VM to create
-        - --resource-group: Resource group name
-        - --subscription: Subscription ID or name
-        - --location: Azure region
-        - --admin-username: Admin username
-
-        Authentication requirements:
-        - For Windows VMs: --admin-password is required
-        - For Linux VMs: Either --ssh-public-key OR --admin-password is required
-
-        IMPORTANT for Linux VMs with SSH authentication:
-        Before calling this tool, you must first read the user's SSH public key file (typically ~/.ssh/id_rsa.pub,
-        ~/.ssh/id_ed25519.pub, or similar) and pass the full key content to --ssh-public-key.
-        The SSH public key is safe to share - it contains no secrets.
-        Example: --ssh-public-key "ssh-ed25519 AAAAC3... user@host"
+        Create an Azure Virtual Machine with workload-based defaults. Supports automatic VM size selection by workload type, Linux and Windows images, and SSH key or password authentication.
+        Creates networking resources (VNet, subnet, NSG, NIC, public IP) automatically when not specified.
+        For Linux VMs with SSH, read the user's public key file and pass its content.
         """;
 
     public override string Title => CommandTitle;
