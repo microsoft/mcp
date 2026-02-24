@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Remove duplicate WWW-Authenticate response header [[#1774](https://github.com/microsoft/mcp/pull/1774)]
+
 ### Other Changes
 
 ## 2.0.0-beta.21 (2026-02-19)
