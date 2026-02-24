@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.ResourceHealth;
 
 public static class ResourceHealthOptionDefinitions
 {
-    public const string ResourceIdName = "resource-id";
+    public const string ResourceIdName = "resourceId";
     public const string EventTypeName = "event-type";
     public const string StatusName = "status";
     public const string TrackingIdName = "tracking-id";

@@ -2146,11 +2146,11 @@ azmcp group list --subscription <subscription>
 
 ```bash
 # Get availability status for a specific resource or list all resources (dual-mode)
-# With --resource-id: Get availability status for a specific resource
-# Without --resource-id: List availability statuses for all resources in a subscription
+# With --resourceId: Get availability status for a specific resource
+# Without --resourceId: List availability statuses for all resources in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resourcehealth availability-status get --subscription <subscription> \
-                                              [--resource-id <resource-id>] \
+                                              [--resourceId <resource-id>] \
                                               [--resource-group <resource-group>]
 
 # List service health events in a subscription

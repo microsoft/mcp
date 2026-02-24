@@ -71,7 +71,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
             List<Models.AvailabilityStatus> statuses;
 
-            // If resource-id is provided, get single resource status
+            // If resourceId is provided, get single resource status
             if (!string.IsNullOrEmpty(options.ResourceId))
             {
                 var status = await resourceHealthService.GetAvailabilityStatusAsync(
