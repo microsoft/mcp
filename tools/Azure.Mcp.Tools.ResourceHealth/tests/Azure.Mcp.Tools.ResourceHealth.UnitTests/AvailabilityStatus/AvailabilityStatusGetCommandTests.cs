@@ -65,11 +65,11 @@ public class AvailabilityStatusGetCommandTests
         var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.NotNull(result.Status);
-        Assert.Null(result.Statuses);
-        Assert.Equal(resourceId, result.Status.ResourceId);
-        Assert.Equal("Available", result.Status.AvailabilityState);
-        Assert.Equal("Resource is healthy", result.Status.Summary);
+        Assert.NotNull(result.Statuses);
+        Assert.Single(result.Statuses);
+        Assert.Equal(resourceId, result.Statuses[0].ResourceId);
+        Assert.Equal("Available", result.Statuses[0].AvailabilityState);
+        Assert.Equal("Resource is healthy", result.Statuses[0].Summary);
     }
 
     [Fact]
@@ -137,7 +137,6 @@ public class AvailabilityStatusGetCommandTests
         var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Null(result.Status);
         Assert.NotNull(result.Statuses);
         Assert.Equal(2, result.Statuses.Count);
         Assert.Equal("Available", result.Statuses[0].AvailabilityState);
@@ -177,7 +176,6 @@ public class AvailabilityStatusGetCommandTests
         var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Null(result.Status);
         Assert.NotNull(result.Statuses);
         Assert.Single(result.Statuses);
         Assert.Contains("test-rg", result.Statuses[0].ResourceId);

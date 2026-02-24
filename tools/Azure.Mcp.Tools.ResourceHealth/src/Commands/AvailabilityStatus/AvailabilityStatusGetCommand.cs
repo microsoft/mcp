@@ -69,6 +69,8 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             var resourceHealthService = context.GetService<IResourceHealthService>() ??
                 throw new InvalidOperationException("Resource Health service is not available.");
 
+            List<Models.AvailabilityStatus> statuses;
+
             // If resource-id is provided, get single resource status
             if (!string.IsNullOrEmpty(options.ResourceId))
             {
@@ -77,24 +79,22 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new AvailabilityStatusGetCommandResult(Status: status, Statuses: null),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+                statuses = [status];
             }
             // Otherwise, list all resources
             else
             {
-                var statuses = await resourceHealthService.ListAvailabilityStatusesAsync(
+                statuses = await resourceHealthService.ListAvailabilityStatusesAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
-
-                context.Response.Results = ResponseResult.Create(
-                    new AvailabilityStatusGetCommandResult(Status: null, Statuses: statuses ?? []),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+                    cancellationToken) ?? [];
             }
+
+            context.Response.Results = ResponseResult.Create(
+                new AvailabilityStatusGetCommandResult(statuses),
+                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -114,7 +114,5 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         return context.Response;
     }
 
-    internal record AvailabilityStatusGetCommandResult(
-        Models.AvailabilityStatus? Status,
-        List<Models.AvailabilityStatus>? Statuses);
+    internal record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
 }
