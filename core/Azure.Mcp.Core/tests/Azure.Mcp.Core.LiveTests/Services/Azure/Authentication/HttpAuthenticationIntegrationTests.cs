@@ -4,8 +4,11 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.Services.Azure.Authentication;
@@ -305,5 +308,124 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         Assert.Contains($"resource_metadata=\"{expectedMetadataUrl}\"", authHeader);
 
         _output.WriteLine($"✓ resource_metadata points to correct endpoint: {expectedMetadataUrl}");
+    }
+
+    [Fact]
+    public async Task Client_CanDiscoverAndUseMetadataForAuthentication()
+    {
+        // 1. Make unauthenticated request
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
+
+        // 2. Extract resource_metadata URL from WWW-Authenticate header
+        var metadataUrl = ExtractMetadataUrl(response.Headers.WwwAuthenticate);
+
+        // 3. Fetch metadata document
+        var metadata = await _httpClient!.GetFromJsonAsync<OAuthProtectedResourceMetadata>(metadataUrl, TestContext.Current.CancellationToken);
+
+        // 4. Verify metadata was retrieved
+        Assert.NotNull(metadata);
+
+        // 5. Use metadata to construct auth request
+        var authServer = metadata.AuthorizationServers.First();
+        var scope = metadata.ScopesSupported.First();
+
+        // 6. Verify client can use this information
+        Assert.NotNull(authServer);
+        Assert.Contains("Mcp.Tools.ReadWrite", scope);
+
+        _output.WriteLine($"✓ Client successfully discovered metadata from: {metadataUrl}");
+        _output.WriteLine($"  Authorization Server: {authServer}");
+        _output.WriteLine($"  Scope: {scope}");
+    }
+
+    [Fact]
+    public async Task MetadataDocument_ContainsAllRequiredFields()
+    {
+        var response = await _httpClient!.GetAsync("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var metadata = JsonSerializer.Deserialize<OAuthProtectedResourceMetadata>(json);
+
+        // Verify ALL fields per RFC 8705
+        Assert.NotNull(metadata);
+        Assert.NotEmpty(metadata.AuthorizationServers);
+        Assert.NotEmpty(metadata.ScopesSupported);
+        Assert.NotEmpty(metadata.BearerMethodsSupported);
+        Assert.Equal("https://github.com/Microsoft/mcp", metadata.ResourceDocumentation);
+
+        // Verify authorization server format
+        Assert.All(metadata.AuthorizationServers, server => Assert.Matches(@"https://login\.microsoftonline\.com/.+/v2\.0", server));
+    }
+
+    [Fact]
+    public async Task WwwAuthenticateMetadataUrl_MatchesActualEndpoint()
+    {
+        // Get metadata URL from WWW-Authenticate header
+        var response = await _httpClient!.GetAsync("/sse", TestContext.Current.CancellationToken);
+        var metadataUrl = ExtractMetadataUrl(response.Headers.WwwAuthenticate);
+
+        // Fetch metadata from that URL
+        var metadataResponse = await _httpClient!.GetAsync(metadataUrl, TestContext.Current.CancellationToken);
+
+        // Verify it's accessible and valid
+        Assert.Equal(HttpStatusCode.OK, metadataResponse.StatusCode);
+
+        // Verify the 'resource' field matches our server
+        var json = await metadataResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var metadata = JsonSerializer.Deserialize<OAuthProtectedResourceMetadata>(json);
+        Assert.Equal(_serverUrl, metadata?.Resource);
+    }
+
+    [Fact]
+    public async Task MetadataAuthorizationServer_ContainsCorrectTenantId()
+    {
+        var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+
+        var response = await _httpClient!.GetAsync("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        // Verify tenant ID appears in authorization server URL
+        Assert.Contains(tenantId!, json);
+        Assert.Contains($"https://login.microsoftonline.com/{tenantId}/v2.0", json);
+    }
+
+    [Fact]
+    public async Task MetadataScopes_ContainsCorrectClientId()
+    {
+        var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+
+        var response = await _httpClient!.GetAsync("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        // Verify scopes include client ID
+        Assert.Contains($"{clientId}/Mcp.Tools.ReadWrite", json);
+    }
+    /// <summary>
+    /// Extracts the resource_metadata URL from WWW-Authenticate header collection.
+    /// </summary>
+    private static string ExtractMetadataUrl(HttpHeaderValueCollection<AuthenticationHeaderValue> wwwAuthenticateHeaders)
+    {
+        var authHeader = wwwAuthenticateHeaders.FirstOrDefault()?.ToString()
+            ?? throw new InvalidOperationException("No WWW-Authenticate header found");
+
+        // WWW-Authenticate format: Bearer realm="...", resource_metadata="URL"
+        const string prefix = "resource_metadata=\"";
+
+        var startIndex = authHeader.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+        if (startIndex == -1)
+        {
+            throw new InvalidOperationException(
+                $"resource_metadata parameter not found in WWW-Authenticate header: {authHeader}");
+        }
+
+        startIndex += prefix.Length;
+        var endIndex = authHeader.IndexOf('"', startIndex);
+
+        if (endIndex == -1)
+        {
+            throw new InvalidOperationException(
+                $"Malformed resource_metadata parameter in WWW-Authenticate header: {authHeader}");
+        }
+
+        return authHeader.Substring(startIndex, endIndex - startIndex);
     }
 }
