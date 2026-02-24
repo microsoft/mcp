@@ -48,10 +48,20 @@ public static class RegistryServerServiceCollectionExtensions
             }
 
             services.AddHttpClient(RegistryServerHelper.GetRegistryServerHttpClientName(serverName))
-                .AddHttpMessageHandler((services) =>
+                .AddHttpMessageHandler((sp) =>
                 {
-                    var tokenCredentialProvider = services.GetRequiredService<IAzureTokenCredentialProvider>();
-                    return new AccessTokenHandler(tokenCredentialProvider, oauthScopes);
+                    var provider = sp.GetRequiredService<IAzureTokenCredentialProvider>();
+                    // Only force browser fallback for SingleIdentityTokenCredentialProvider
+                    // (stdio mode and UseHostingEnvironmentIdentity HTTP mode). In those scenarios
+                    // the user's own identity drives auth, so an interactive browser prompt is a
+                    // reasonable last resort when silent credentials (AzCLI, WAM, etc.) fail.
+                    // For UseOnBehalfOf (HttpOnBehalfOfTokenCredentialProvider) the OBO flow owns
+                    // the token exchange — delegate back to the provider as usual.
+                    if (provider is SingleIdentityTokenCredentialProvider)
+                    {
+                        return new AccessTokenHandler(new CustomChainedCredential(forceBrowserFallback: true), oauthScopes);
+                    }
+                    return new AccessTokenHandler(provider, oauthScopes);
                 });
         }
 

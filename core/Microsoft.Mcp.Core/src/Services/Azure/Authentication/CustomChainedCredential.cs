@@ -67,7 +67,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
-internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
+internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false) : TokenCredential
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
@@ -79,13 +79,13 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
         return _credential.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
         return _credential.GetTokenAsync(requestContext, cancellationToken);
     }
 
@@ -100,7 +100,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 
-    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
+    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
     {
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
@@ -150,8 +150,13 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
         // 2. AZURE_TOKEN_CREDENTIALS explicitly requests it
         // 3. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
+        // 4. forceBrowserFallback=true AND AZURE_TOKEN_CREDENTIALS is not "prod"
+        //    (registry server callers want interactive fallback for local/hosting-identity scenarios,
+        //     but must respect "prod" which means headless/CI — no browser popup)
         // Do NOT add it for "prod" or specific credential names (user wants only those credentials)
-        bool shouldAddBrowserFallback = !hasExplicitCredentialSetting ||
+        bool isProdMode = tokenCredentials?.Equals("prod", StringComparison.OrdinalIgnoreCase) ?? false;
+        bool shouldAddBrowserFallback = (!isProdMode && forceBrowserFallback) ||
+                                       !hasExplicitCredentialSetting ||
                                        (tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false) ||
                                        (tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false);
 
