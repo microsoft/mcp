@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -28,19 +29,16 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
-            ConfigureServices(services);
+            var builder = Host.CreateApplicationBuilder();
+            builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
+            ConfigureServices(builder.Services);
 
-            services.AddLogging(builder =>
-            {
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Information);
-            });
+            using var host = builder.Build();
 
-            var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
+            await InitializeServicesAsync(host.Services);
+            await host.StartAsync();
 
-            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();

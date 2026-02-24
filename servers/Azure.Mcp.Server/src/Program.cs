@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -12,6 +11,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -39,20 +39,16 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
+            var builder = Host.CreateApplicationBuilder();
+            builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
+            ConfigureServices(builder.Services);
 
-            ConfigureServices(services);
+            using var host = builder.Build();
 
-            services.AddLogging(builder =>
-            {
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Information);
-            });
+            await InitializeServicesAsync(host.Services);
+            await host.StartAsync();
 
-            var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
-
-            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();

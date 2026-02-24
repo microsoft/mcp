@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
@@ -404,42 +405,37 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.AddEventSourceLogger();
+        var builder = Host.CreateApplicationBuilder();
+        builder.Logging.ClearProviders().AddEventSourceLogger();
 
-                if (serverOptions.Debug)
+        if (serverOptions.Debug)
+        {
+            // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
+            builder.Logging.SetMinimumLevel(LogLevel.Debug)
+                .AddConsole(options =>
                 {
-                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
-                    logging.AddConsole(options =>
-                    {
-                        options.LogToStandardErrorThreshold = LogLevel.Debug;
-                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-                    });
-                    logging.AddSimpleConsole(simple =>
-                    {
-                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                        simple.IncludeScopes = false;
-                        simple.SingleLine = true;
-                        simple.TimestampFormat = "[HH:mm:ss] ";
-                    });
-                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
-                    logging.SetMinimumLevel(LogLevel.Debug);
-                }
+                    options.LogToStandardErrorThreshold = LogLevel.Debug;
+                    options.FormatterName = ConsoleFormatterNames.Simple;
+                })
+                .AddSimpleConsole(simple =>
+                {
+                    simple.ColorBehavior = LoggerColorBehavior.Disabled;
+                    simple.IncludeScopes = false;
+                    simple.SingleLine = true;
+                    simple.TimestampFormat = "[HH:mm:ss] ";
+                })
+                .AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+        }
 
-                ConfigureSupportLogging(logging, serverOptions);
-            })
-            .ConfigureServices(services =>
-            {
-                // Configure the outgoing authentication strategy.
-                services.AddSingleIdentityTokenCredentialProvider();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
 
-                ConfigureServices(services);
-                ConfigureMcpServer(services, serverOptions);
-            })
-            .Build();
+        // Configure the outgoing authentication strategy.
+        builder.Services.AddSingleIdentityTokenCredentialProvider();
+
+        ConfigureServices(builder.Services);
+        ConfigureMcpServer(builder.Services, serverOptions);
+
+        return builder.Build();
     }
 
     /// <summary>
@@ -607,8 +603,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Map non-MCP endpoints.
         // Health checks are anonymous (no authentication required)
-        app.MapHealthChecks("/health")
-            .AllowAnonymous();
+        app.MapHealthChecks("/health").AllowAnonymous();
 
         return app;
     }
@@ -725,9 +720,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="services">The service collection to configure.</param>
     /// <param name="options">The server configuration options.</param>
     private static void ConfigureMcpServer(IServiceCollection services, ServiceStartOptions options)
-    {
-        services.AddAzureMcpServer(options);
-    }
+        => services.AddAzureMcpServer(options);
 
     /// <summary>
     /// Initializes the URL for ASP.NET Core to bind to.
