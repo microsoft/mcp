@@ -6,7 +6,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Options;
 /// <summary>
 /// Defines the supported transport mechanisms for the MCP server.
 /// </summary>
-internal static class TransportTypes
+public static class TransportTypes
 {
     /// <summary>
     /// Standard Input/Output transport mechanism.
