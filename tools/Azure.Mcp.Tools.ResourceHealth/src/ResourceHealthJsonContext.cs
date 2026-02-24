@@ -20,6 +20,6 @@ namespace Azure.Mcp.Tools.ResourceHealth;
 [JsonSerializable(typeof(AvailabilityStatusListResponse))]
 [JsonSerializable(typeof(ServiceHealthEventResponse))]
 [JsonSerializable(typeof(ServiceHealthEventListResponse))]
-[JsonSerializable(typeof(AvailabilityStatusCommand.AvailabilityStatusCommandResult))]
+[JsonSerializable(typeof(AvailabilityStatusGetCommand.AvailabilityStatusGetCommandResult))]
 [JsonSerializable(typeof(ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult))]
 internal partial class ResourceHealthJsonContext : JsonSerializerContext;

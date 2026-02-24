@@ -20,7 +20,7 @@ public class ResourceHealthSetup : IAreaSetup
     {
         services.AddSingleton<IResourceHealthService, ResourceHealthService>();
 
-        services.AddSingleton<AvailabilityStatusCommand>();
+        services.AddSingleton<AvailabilityStatusGetCommand>();
 
         services.AddSingleton<ServiceHealthEventsListCommand>();
     }
@@ -41,7 +41,7 @@ public class ResourceHealthSetup : IAreaSetup
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
         // Register commands
-        var availabilityStatusCmd = serviceProvider.GetRequiredService<AvailabilityStatusCommand>();
+        var availabilityStatusCmd = serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>();
         availabilityStatus.AddCommand(availabilityStatusCmd.Name, availabilityStatusCmd);
 
         var serviceHealthEventsList = serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>();

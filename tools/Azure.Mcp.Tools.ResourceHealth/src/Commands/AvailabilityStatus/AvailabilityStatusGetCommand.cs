@@ -15,11 +15,11 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 /// <summary>
 /// Gets or lists availability status information for Azure resources.
 /// </summary>
-public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand> logger)
-    : BaseResourceHealthCommand<AvailabilityStatusOptions>()
+public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger)
+    : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
 {
     private const string CommandTitle = "Get/List Resource Availability Status";
-    private readonly ILogger<AvailabilityStatusCommand> _logger = logger;
+    private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
 
     public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
 
@@ -47,7 +47,7 @@ public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand>
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
-    protected override AvailabilityStatusOptions BindOptions(ParseResult parseResult)
+    protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceHealthOptionDefinitions.ResourceId.Name);
@@ -78,8 +78,8 @@ public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand>
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new AvailabilityStatusCommandResult(Status: status, Statuses: null),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusCommandResult);
+                    new AvailabilityStatusGetCommandResult(Status: status, Statuses: null),
+                    ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
             }
             // Otherwise, list all resources
             else
@@ -92,8 +92,8 @@ public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand>
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new AvailabilityStatusCommandResult(Status: null, Statuses: statuses ?? []),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusCommandResult);
+                    new AvailabilityStatusGetCommandResult(Status: null, Statuses: statuses ?? []),
+                    ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -114,7 +114,7 @@ public sealed class AvailabilityStatusCommand(ILogger<AvailabilityStatusCommand>
         return context.Response;
     }
 
-    internal record AvailabilityStatusCommandResult(
+    internal record AvailabilityStatusGetCommandResult(
         Models.AvailabilityStatus? Status,
         List<Models.AvailabilityStatus>? Statuses);
 }

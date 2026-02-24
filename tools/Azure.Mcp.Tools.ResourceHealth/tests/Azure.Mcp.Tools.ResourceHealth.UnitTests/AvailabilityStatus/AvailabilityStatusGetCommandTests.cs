@@ -16,16 +16,16 @@ using AvailabilityStatusModel = Azure.Mcp.Tools.ResourceHealth.Models.Availabili
 
 namespace Azure.Mcp.Tools.ResourceHealth.UnitTests.AvailabilityStatus;
 
-public class AvailabilityStatusCommandTests
+public class AvailabilityStatusGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IResourceHealthService _resourceHealthService;
-    private readonly ILogger<AvailabilityStatusCommand> _logger;
+    private readonly ILogger<AvailabilityStatusGetCommand> _logger;
 
-    public AvailabilityStatusCommandTests()
+    public AvailabilityStatusGetCommandTests()
     {
         _resourceHealthService = Substitute.For<IResourceHealthService>();
-        _logger = Substitute.For<ILogger<AvailabilityStatusCommand>>();
+        _logger = Substitute.For<ILogger<AvailabilityStatusGetCommand>>();
 
         var collection = new ServiceCollection();
         collection.AddSingleton(_resourceHealthService);
@@ -51,7 +51,7 @@ public class AvailabilityStatusCommandTests
         _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatus);
 
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -62,7 +62,7 @@ public class AvailabilityStatusCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusCommandResult);
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Status);
@@ -82,7 +82,7 @@ public class AvailabilityStatusCommandTests
         _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
 
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
@@ -123,7 +123,7 @@ public class AvailabilityStatusCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -134,7 +134,7 @@ public class AvailabilityStatusCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusCommandResult);
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Null(result.Status);
@@ -163,7 +163,7 @@ public class AvailabilityStatusCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -174,7 +174,7 @@ public class AvailabilityStatusCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusCommandResult);
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Null(result.Status);
@@ -192,7 +192,7 @@ public class AvailabilityStatusCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
 
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
@@ -212,7 +212,7 @@ public class AvailabilityStatusCommandTests
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var command = new AvailabilityStatusCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger);
         var argsList = new List<string>();
         if (missingParameter != "--subscription")
         {
