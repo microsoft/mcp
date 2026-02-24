@@ -19,4 +19,12 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<WebappDetails>> GetWebAppsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? appName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
