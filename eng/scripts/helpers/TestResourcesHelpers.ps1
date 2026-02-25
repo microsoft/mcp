@@ -15,6 +15,7 @@ function New-TestSettings {
         [string] $TenantId,
         [string] $TestApplicationId,
         [string] $ResourceGroupName,
+        [string] $Environment,
         [string] $BaseName,
         [hashtable] $DeploymentOutputs,
         [string] $OutputPath,
@@ -26,6 +27,7 @@ function New-TestSettings {
         Connect-AzAccount -ServicePrincipal `
             -TenantId $TenantId `
             -ApplicationId $TestApplicationId `
+            -Environment $Environment `
             -FederatedToken $env:ARM_OIDC_TOKEN
     }
 
