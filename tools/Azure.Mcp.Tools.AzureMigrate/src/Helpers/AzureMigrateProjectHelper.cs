@@ -48,7 +48,8 @@ public sealed class AzureMigrateProjectHelper(
                 MigrateProjectResourceType,
                 MigrateProjectApiVersion,
                 null,
-                retryPolicy);
+                retryPolicy,
+                cancellationToken);
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, cancellationToken: cancellationToken);
             ResourceIdentifier projectId = new ResourceIdentifier(
@@ -65,7 +66,8 @@ public sealed class AzureMigrateProjectHelper(
                 projectId,
                 location,
                 createContent,
-                AzureMigrateSerializerContext.Default.MigrateProjectCreateContent);
+                AzureMigrateSerializerContext.Default.MigrateProjectCreateContent,
+                cancellationToken);
 
             if (!result.HasData)
             {
