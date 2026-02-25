@@ -1106,6 +1106,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 ## Feedback and Support
 
 - Check the [Troubleshooting guide](https://aka.ms/azmcp/troubleshooting) to diagnose and resolve common issues with the Azure MCP Server.
+- Review the [Known Issues](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/KNOWN-ISSUES.md) for current limitations and workarounds.
 - For advanced troubleshooting, you can enable [support logging](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#support-logging) using the `--dangerously-write-support-logs-to-dir` option.
 - We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
     - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we’d love to hear from you!
