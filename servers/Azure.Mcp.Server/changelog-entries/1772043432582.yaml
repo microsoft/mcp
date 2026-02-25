@@ -1,0 +1,24 @@
+changes:
+  - section: "Breaking Changes"
+    description: |
+      Migrated Microsoft Foundry integration from in-process tools to the external Foundry MCP server at https://mcp.ai.azure.com.
+      
+      Removed tools (no longer available from Azure MCP Server):
+      - foundry agents connect, agents create, agents evaluate, agents get-sdk-sample, agents list, agents query-and-evaluate
+      - foundry deployments list
+      - foundry knowledge-index list, knowledge-index schema
+      - foundry model deployment, models list
+      - foundry openai chat-completions create, completions create, embeddings create, openai models list
+      - foundry resource get
+      - foundry thread create, thread get-messages, thread list
+      
+      Replaced by the external Foundry MCP server (https://mcp.ai.azure.com) with new tool names:
+      - agent_delete, agent_get, agent_update
+      - evaluation_comparison_create, evaluation_comparison_get, evaluation_create
+      - evaluation_dataset_create, evaluation_dataset_get, evaluation_get
+      - model_benchmark_get, model_benchmark_subset_get, model_catalog_list
+      - model_deprecation_info_get, model_deploy, model_deployment_delete, model_deployment_get
+      - model_details_get, model_monitoring_metrics_get, model_quota_list
+      - model_similar_models_get, model_switch_recommendations_get
+      
+      To use these tools, authenticate to https://mcp.ai.azure.com using Azure CLI, Azure Developer CLI, Interactive Browser (WAM), Environment Credential, Workload Identity, or Managed Identity.
