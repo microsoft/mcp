@@ -251,6 +251,6 @@ public class AppServiceService(
     }
 
     private static WebappDetails MapToWebappDetails(WebSiteData webapp)
-        => new(webapp.Name, webapp.ResourceType, webapp.Location, webapp.Kind, webapp.IsEnabled, webapp.State,
-            webapp.ResourceGroup, webapp.HostNames, webapp.LastModifiedTimeUtc, webapp.Sku);
+        => new(webapp.Name, webapp.ResourceType.ToString(), webapp.Location.Name, webapp.Kind, webapp.IsEnabled,
+            webapp.State, webapp.ResourceGroup, webapp.HostNames, webapp.LastModifiedTimeUtc, webapp.Sku);
 }

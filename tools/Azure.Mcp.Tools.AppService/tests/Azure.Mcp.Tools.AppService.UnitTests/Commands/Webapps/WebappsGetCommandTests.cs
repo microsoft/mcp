@@ -49,7 +49,7 @@ public class WebappsGetCommandTests
     {
         // Arrange
         List<WebappDetails> expectedWebappDetails = [
-            new("name", "type", "location", "kind", true, "state", "rg", ["hostname"], DateTime.UtcNow, "sku")
+            new("name", "type", "location", "kind", true, "state", "rg", ["hostname"], DateTimeOffset.UtcNow, "sku")
         ];
 
         // Set up the mock to return success for any arguments
@@ -75,7 +75,7 @@ public class WebappsGetCommandTests
         // Assert
         // Verify that the mock was called with the expected parameters
         await _appServiceService.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -107,7 +107,7 @@ public class WebappsGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -124,7 +124,7 @@ public class WebappsGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
