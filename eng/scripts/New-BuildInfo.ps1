@@ -19,6 +19,10 @@ $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
+$govTest = $env:GOVTEST -eq 'true'
+
+Write-Host "GovTest: $govTest" -ForegroundColor Cyan
+
 $architectures = @('x64', 'arm64')
 
 # Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
@@ -33,7 +37,7 @@ $excludedPlatforms = @(
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
     # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
-    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
+    # which allows shipping trimmed azmcp with http across all distributions (including Docker).
     # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
     # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
     # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
@@ -182,6 +186,20 @@ $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
     Write-Host "Getting paths to test"
+
+    if($govTest) {
+        Write-Host "GovTest environment detected. Limiting paths to test to Azure.Mcp.Server."
+        return @(
+            @{
+                path= "servers/Azure.Mcp.Server"
+                testResourcesPath= "servers/Azure.Mcp.Server/tests"
+                hasUnitTests= $true
+                hasTestResources= $true
+                hasRecordedTests= $false
+                hasLiveTests= $true
+            }
+        )
+    }
 
     # When "core" is modified, include storage and keyVault as the canary service tools.
     # TODO: These should be sourced from csproj files
