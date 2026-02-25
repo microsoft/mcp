@@ -15,7 +15,6 @@ namespace Azure.Mcp.Core.LiveTests.Areas.Server;
 /// </summary>
 public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 {
-    private string? _serverUrl;
     private Process? _httpServerProcess;
 
     protected ITestOutputHelper Output { get; } = output;
@@ -38,12 +37,11 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
 
         _httpServerProcess = null;
-        _serverUrl = null;
 
         return ValueTask.CompletedTask;
     }
 
-    private async Task<McpClient> CreateClientAsync(params string[] arguments)
+    private async Task<McpClient?> CreateClientAsync(params string[] arguments)
     {
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
@@ -60,7 +58,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
             settings?.TestPackage,
             settings?.SettingsDirectory);
 
-        _serverUrl = serverUrl;
         return client;
     }
 
@@ -73,7 +70,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -102,7 +99,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -128,7 +125,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var result = await client.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
+        var result = await client!.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
@@ -151,7 +148,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var result = await client.CallToolAsync("group_list", new Dictionary<string, object?> { },
+        var result = await client!.CallToolAsync("group_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
@@ -178,7 +175,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "all");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -211,7 +208,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "single");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(listResult);
@@ -231,7 +228,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--namespace", "storage");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         // Single proxy mode should still expose single azure tool regardless of namespace filter
@@ -248,7 +245,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--read-only");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(listResult);
@@ -280,7 +277,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -307,7 +304,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -347,7 +344,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "documentation");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -376,7 +373,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
             ["learn"] = true
         };
 
-        var result = await client.CallToolAsync("storage", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
+        var result = await client!.CallToolAsync("storage", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -414,7 +411,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -443,7 +440,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -470,7 +467,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--read-only");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -535,7 +532,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--namespace", "invalid-namespace", "--namespace", "another-invalid");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         // Should not crash, but may have fewer tools
@@ -561,7 +558,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "all");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         var toolNames = listResult.Select(t => t.Name).ToList();
@@ -579,7 +576,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         var toolNames = listResult.Select(t => t.Name).ToList();
@@ -601,7 +598,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -635,7 +632,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
             ["learn"] = true
         };
 
-        var result = await client.CallToolAsync("get_azure_databases_details", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
+        var result = await client!.CallToolAsync("get_azure_databases_details", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -670,7 +667,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -700,7 +697,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--read-only");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -742,7 +739,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
 
         // Act - Call the consolidated subscriptions and resource groups tool
-        var result = await client.CallToolAsync("get_azure_subscriptions_and_resource_groups",
+        var result = await client!.CallToolAsync("get_azure_subscriptions_and_resource_groups",
             new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -770,7 +767,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--tool", "group_list", "--tool", "subscription_list");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -790,7 +787,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "group_list");
 
         // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);

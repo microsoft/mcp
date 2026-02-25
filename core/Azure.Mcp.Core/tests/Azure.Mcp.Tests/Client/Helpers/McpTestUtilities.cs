@@ -52,14 +52,15 @@ public static class McpTestUtilities
     /// <param name="testPackage">Optional NPM test package name for STDIO mode.</param>
     /// <param name="settingsDirectory">Optional settings directory for NPM test package.</param>
     /// <returns>A tuple containing the initialized MCP client and optional server URL (for HTTP transport).</returns>
-    public static async Task<(McpClient Client, string? ServerUrl)> CreateMcpClientAsync(
+    public static async Task<(McpClient? Client, string? ServerUrl)> CreateMcpClientAsync(
         string executablePath,
         List<string> arguments,
         Dictionary<string, string?> environmentVariables,
         Action<Process>? storeHttpServerProcess = null,
         ITestOutputHelper? output = null,
         string? testPackage = null,
-        string? settingsDirectory = null)
+        string? settingsDirectory = null,
+        bool disableAuthentication = true)
     {
         bool useHttp = string.Equals(
             Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"),
@@ -73,7 +74,7 @@ public static class McpTestUtilities
                 arguments,
                 environmentVariables,
                 storeHttpServerProcess,
-                output);
+                output, disableAuthentication);
 
             var transport = new HttpClientTransport(new()
             {
@@ -81,7 +82,13 @@ public static class McpTestUtilities
                 TransportMode = HttpTransportMode.StreamableHttp
             });
 
-            var client = await McpClient.CreateAsync(transport);
+            McpClient? client = null;
+            if (disableAuthentication)
+            {
+                // Authenticated sessions should use HttpClient
+                client = await McpClient.CreateAsync(transport);
+            }
+
             output?.WriteLine($"HTTP test client initialized at {serverUrl}");
 
             return (client, serverUrl);
@@ -118,7 +125,7 @@ public static class McpTestUtilities
         List<string> arguments,
         Dictionary<string, string?> environmentVariables,
         Action<Process>? startHttpServerProcess,
-        ITestOutputHelper? output)
+        ITestOutputHelper? output, bool disableAuthentication = true)
     {
         var port = GetAvailablePort();
         var serverUrl = $"http://localhost:{port}";
@@ -129,7 +136,8 @@ public static class McpTestUtilities
             arguments,
             environmentVariables,
             serverUrl,
-            output);
+            output,
+            disableAuthentication: disableAuthentication);
 
         startHttpServerProcess?.Invoke(process);
 
@@ -199,6 +207,7 @@ public static class McpTestUtilities
     /// <param name="output">Optional test output helper for logging.</param>
     /// <param name="timeoutSeconds">Timeout in seconds to wait for server readiness.</param>
     /// <param name="pollIntervalMs">Poll interval in milliseconds.</param>
+    /// <param name="disableAuthentication">Whether authentication is disabled.</param>
     /// <returns>The started Process instance.</returns>
     public static async Task<Process> StartHttpServerProcessAndWaitForReadinessAsync(
         string executablePath,
@@ -207,15 +216,18 @@ public static class McpTestUtilities
         string serverUrl,
         ITestOutputHelper? output = null,
         int timeoutSeconds = 30,
-        int pollIntervalMs = 500)
+        int pollIntervalMs = 500,
+        bool disableAuthentication = true)
     {
         var process = StartHttpServerProcess(
             executablePath,
             processArguments,
             environmentVariables,
-            output);
+            output,
+            disableAuthentication);
 
-        await WaitForServerReadinessAsync(serverUrl, timeoutSeconds, pollIntervalMs);
+        // Invert: disableAuthentication=false means authenticationEnabled=true
+        await WaitForServerReadinessAsync(serverUrl, timeoutSeconds, pollIntervalMs, authenticationEnabled: !disableAuthentication);
 
         return process;
     }
@@ -226,10 +238,12 @@ public static class McpTestUtilities
     /// <param name="serverUrl">The server URL to check for readiness.</param>
     /// <param name="timeoutSeconds">Timeout in seconds to wait for server readiness.</param>
     /// <param name="pollIntervalMs">Poll interval in milliseconds.</param>
+    /// <param name="authenticationEnabled">Whether authentication is enabled on the server.</param>
     public static async Task WaitForServerReadinessAsync(
         string serverUrl,
         int timeoutSeconds = 30,
-        int pollIntervalMs = 500)
+        int pollIntervalMs = 500,
+        bool authenticationEnabled = false)
     {
         using var httpClient = new HttpClient();
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
@@ -260,7 +274,10 @@ public static class McpTestUtilities
                 requestMessage.Headers.Accept.Add(
                     new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/event-stream"));
                 using var resp = await httpClient.SendAsync(requestMessage);
-                if (resp.IsSuccessStatusCode)
+
+                // If authentication is enabled, 401 Unauthorized means server is ready
+                // If authentication is disabled, we need a success status code
+                if (resp.IsSuccessStatusCode || (authenticationEnabled && resp.StatusCode == System.Net.HttpStatusCode.Unauthorized))
                 {
                     return;
                 }
@@ -287,9 +304,13 @@ public static class McpTestUtilities
         string executablePath,
         List<string> processArguments,
         Dictionary<string, string?> environmentVariables,
-        ITestOutputHelper? output = null)
+        ITestOutputHelper? output = null, bool disableAuthentication = true)
     {
-        processArguments.AddRange(["--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity", "--dangerously-disable-http-incoming-auth"]);
+        processArguments.AddRange(["--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity"]);
+        if (disableAuthentication)
+        {
+            processArguments.Add("--dangerously-disable-http-incoming-auth");
+        }
 
         var processStartInfo = new System.Diagnostics.ProcessStartInfo(executablePath, string.Join(" ", processArguments))
         {
