@@ -298,7 +298,7 @@
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ResourceHealth
-# ServiceOwners:                           @shdesmu @ @microsoft/azure-mcp
+# ServiceOwners:                           @shdesmu @microsoft/azure-mcp
 
 # PRLabel: %tools-Search
 /tools/Azure.Mcp.Tools.Search/         @pablocastro @jongio @microsoft/azure-mcp
