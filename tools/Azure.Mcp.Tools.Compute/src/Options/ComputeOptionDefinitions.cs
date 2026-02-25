@@ -21,6 +21,11 @@ public static class ComputeOptionDefinitions
     public const string NetworkAccessPolicyName = "network-access-policy";
     public const string EnableBurstingName = "enable-bursting";
     public const string SourceName = "source";
+    public const string TagsName = "tags";
+    public const string DiskEncryptionSetName = "disk-encryption-set";
+    public const string EncryptionTypeName = "encryption-type";
+    public const string DiskAccessIdName = "disk-access";
+    public const string TierName = "tier";
 
     public static readonly Option<string> Source = new($"--{SourceName}")
     {
@@ -91,6 +96,36 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> EnableBursting = new($"--{EnableBurstingName}")
     {
         Description = "Enable on-demand bursting beyond the provisioned performance target of the disk. Does not apply to Ultra disks. Accepted values: true, false.",
+        Required = false
+    };
+
+    public static readonly Option<string> Tags = new($"--{TagsName}")
+    {
+        Description = "Space-separated tags in 'key=value' format. Use '' to clear existing tags.",
+        Required = false
+    };
+
+    public static readonly Option<string> DiskEncryptionSet = new($"--{DiskEncryptionSetName}")
+    {
+        Description = "Resource ID of the disk encryption set to use for enabling encryption at rest.",
+        Required = false
+    };
+
+    public static readonly Option<string> EncryptionType = new($"--{EncryptionTypeName}")
+    {
+        Description = "Encryption type of the disk. Accepted values: EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys, EncryptionAtRestWithPlatformKey.",
+        Required = false
+    };
+
+    public static readonly Option<string> DiskAccessId = new($"--{DiskAccessIdName}")
+    {
+        Description = "Resource ID of the disk access resource for using private endpoints on disks.",
+        Required = false
+    };
+
+    public static readonly Option<string> Tier = new($"--{TierName}")
+    {
+        Description = "Performance tier of the disk (e.g., P10, P15, P20, P30, P40, P50, P60, P70, P80). Applicable to Premium SSD disks only.",
         Required = false
     };
 

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added compute disk create and compute disk update commands for managing Azure managed disks"

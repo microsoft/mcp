@@ -28,7 +28,8 @@ public sealed class DiskUpdateCommand(
         "Updates properties of an existing Azure managed disk. "
         + "If resource group is not specified, the disk is located by name within the subscription. "
         + "Supports modifying disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), "
-        + "maximum shared attachments, network access policy, and on-demand bursting. "
+        + "maximum shared attachments, network access policy, on-demand bursting, tags, "
+        + "encryption settings, disk access, and performance tier. "
         + "Only specified properties are updated; unspecified properties remain unchanged.";
 
     private readonly ILogger<DiskUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -69,6 +70,11 @@ public sealed class DiskUpdateCommand(
         command.Options.Add(ComputeOptionDefinitions.MaxShares);
         command.Options.Add(ComputeOptionDefinitions.NetworkAccessPolicy);
         command.Options.Add(ComputeOptionDefinitions.EnableBursting);
+        command.Options.Add(ComputeOptionDefinitions.Tags);
+        command.Options.Add(ComputeOptionDefinitions.DiskEncryptionSet);
+        command.Options.Add(ComputeOptionDefinitions.EncryptionType);
+        command.Options.Add(ComputeOptionDefinitions.DiskAccessId);
+        command.Options.Add(ComputeOptionDefinitions.Tier);
     }
 
     /// <inheritdoc/>
@@ -94,6 +100,11 @@ public sealed class DiskUpdateCommand(
 
         options.NetworkAccessPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkAccessPolicy.Name);
         options.EnableBursting = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EnableBursting.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.DiskEncryptionSet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskEncryptionSet.Name);
+        options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
+        options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
+        options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
         return options;
     }
 
@@ -148,6 +159,11 @@ public sealed class DiskUpdateCommand(
                 options.MaxShares,
                 options.NetworkAccessPolicy,
                 options.EnableBursting,
+                options.Tags,
+                options.DiskEncryptionSet,
+                options.EncryptionType,
+                options.DiskAccessId,
+                options.Tier,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

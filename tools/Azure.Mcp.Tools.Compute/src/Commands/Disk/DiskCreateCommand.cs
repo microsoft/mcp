@@ -30,7 +30,8 @@ public sealed class DiskCreateCommand(
         + "another managed disk, or a blob URI (specify --source). "
         + "If location is not specified, defaults to the resource group's location. "
         + "Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), "
-        + "OS type, availability zone, and hypervisor generation.";
+        + "OS type, availability zone, hypervisor generation, tags, encryption settings, "
+        + "performance tier, shared disk, network access, and on-demand bursting.";
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
@@ -70,6 +71,14 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.OsType);
         command.Options.Add(ComputeOptionDefinitions.Zone);
         command.Options.Add(ComputeOptionDefinitions.HyperVGeneration);
+        command.Options.Add(ComputeOptionDefinitions.MaxShares);
+        command.Options.Add(ComputeOptionDefinitions.NetworkAccessPolicy);
+        command.Options.Add(ComputeOptionDefinitions.EnableBursting);
+        command.Options.Add(ComputeOptionDefinitions.Tags);
+        command.Options.Add(ComputeOptionDefinitions.DiskEncryptionSet);
+        command.Options.Add(ComputeOptionDefinitions.EncryptionType);
+        command.Options.Add(ComputeOptionDefinitions.DiskAccessId);
+        command.Options.Add(ComputeOptionDefinitions.Tier);
     }
 
     /// <inheritdoc/>
@@ -88,6 +97,17 @@ public sealed class DiskCreateCommand(
         options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
         options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
         options.HyperVGeneration = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.HyperVGeneration.Name);
+
+        var maxShares = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.MaxShares.Name);
+        options.MaxShares = maxShares > 0 ? maxShares : null;
+
+        options.NetworkAccessPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkAccessPolicy.Name);
+        options.EnableBursting = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EnableBursting.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.DiskEncryptionSet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskEncryptionSet.Name);
+        options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
+        options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
+        options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
         return options;
     }
 
@@ -127,6 +147,14 @@ public sealed class DiskCreateCommand(
                 options.OsType,
                 options.Zone,
                 options.HyperVGeneration,
+                options.MaxShares,
+                options.NetworkAccessPolicy,
+                options.EnableBursting,
+                options.Tags,
+                options.DiskEncryptionSet,
+                options.EncryptionType,
+                options.DiskAccessId,
+                options.Tier,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

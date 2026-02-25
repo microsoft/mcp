@@ -99,6 +99,11 @@ public class DiskUpdateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -160,6 +165,11 @@ public class DiskUpdateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -217,6 +227,11 @@ public class DiskUpdateCommandTests
             Arg.Any<long?>(),
             Arg.Any<long?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -282,6 +297,11 @@ public class DiskUpdateCommandTests
             Arg.Any<long?>(),
             Arg.Any<long?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -365,6 +385,11 @@ public class DiskUpdateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedDisk);
@@ -434,6 +459,11 @@ public class DiskUpdateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
@@ -470,6 +500,11 @@ public class DiskUpdateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundEx);
@@ -503,11 +538,248 @@ public class DiskUpdateCommandTests
             "--disk-mbps-read-write", "200",
             "--max-shares", "3",
             "--network-access-policy", "AllowPrivate",
-            "--enable-bursting", "true"
+            "--enable-bursting", "true",
+            "--tags", "env=staging team=dev",
+            "--disk-encryption-set", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskEncryptionSets/myDes",
+            "--encryption-type", "EncryptionAtRestWithPlatformAndCustomerKeys",
+            "--disk-access", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskAccesses/myAccess",
+            "--tier", "P50"
         ]);
 
         // Act - verify parse doesn't throw and has no errors
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateDiskWithTags_ReturnsSuccess()
+    {
+        // Arrange - update disk with tags
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var tags = "env=prod team=infra";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 128,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.UpdateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            tags,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--tags", tags
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        await _computeService.Received(1).UpdateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            tags,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateDiskWithEncryptionAndTier_ReturnsSuccess()
+    {
+        // Arrange - update disk with encryption settings, disk access, and tier
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var diskEncryptionSet = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/diskEncryptionSets/myDes";
+        var encryptionType = "EncryptionAtRestWithCustomerKey";
+        var diskAccess = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/diskAccesses/myAccess";
+        var tier = "P50";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 256,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.UpdateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            diskEncryptionSet,
+            encryptionType,
+            diskAccess,
+            tier,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--disk-encryption-set", diskEncryptionSet,
+            "--encryption-type", encryptionType,
+            "--disk-access", diskAccess,
+            "--tier", tier
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        await _computeService.Received(1).UpdateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            diskEncryptionSet,
+            encryptionType,
+            diskAccess,
+            tier,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateDiskWithAllTier1Parameters_ReturnsSuccess()
+    {
+        // Arrange - update disk with all new Tier 1 parameters at once
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 256,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.UpdateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--size-gb", "256",
+            "--sku", "Premium_LRS",
+            "--tags", "env=staging cost-center=123",
+            "--disk-encryption-set", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskEncryptionSets/myDes",
+            "--encryption-type", "EncryptionAtRestWithPlatformAndCustomerKeys",
+            "--disk-access", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskAccesses/myAccess",
+            "--tier", "P40",
+            "--network-access-policy", "AllowPrivate",
+            "--enable-bursting", "true"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
     }
 }

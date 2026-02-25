@@ -822,7 +822,15 @@ azmcp compute disk create --subscription <subscription> \
                           --sku <sku> \
                           --os-type <os-type> \
                           --zone <zone> \
-                          --hyper-v-generation <generation>
+                          --hyper-v-generation <generation> \
+                          --tags <space-separated-tags> \
+                          --disk-encryption-set <encryption-set-resource-id> \
+                          --encryption-type <encryption-type> \
+                          --disk-access <disk-access-resource-id> \
+                          --tier <performance-tier> \
+                          --max-shares <count> \
+                          --network-access-policy <policy> \
+                          --enable-bursting <true|false>
 ```
 
 **Command Behavior:**
@@ -830,7 +838,7 @@ azmcp compute disk create --subscription <subscription> \
 - Either `--size-gb` or `--source` (or both) must be specified.
 - When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
 - If `--location` is not specified, defaults to the resource group's location.
-- Supports configuring disk size, storage SKU, OS type, availability zone, and hypervisor generation.
+- Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.
 
 **Returns:**
 - Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
@@ -848,6 +856,14 @@ azmcp compute disk create --subscription <subscription> \
 | `--os-type` | No | OS type for the disk (Windows or Linux) |
 | `--zone` | No | Availability zone for the disk |
 | `--hyper-v-generation` | No | Hypervisor generation (V1 or V2) |
+| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
+| `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
+| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
+| `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
+| `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
+| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
+| `--enable-bursting` | No | Enable on-demand bursting (true or false) |
 
 ```bash
 # Update a managed disk's size
@@ -874,7 +890,12 @@ azmcp compute disk update --subscription <subscription> \
                           --disk-mbps-read-write <mbps> \
                           --max-shares <count> \
                           --network-access-policy <policy> \
-                          --enable-bursting <true|false>
+                          --enable-bursting <true|false> \
+                          --tags <space-separated-tags> \
+                          --disk-encryption-set <encryption-set-resource-id> \
+                          --encryption-type <encryption-type> \
+                          --disk-access <disk-access-resource-id> \
+                          --tier <performance-tier>
 ```
 
 **Command Behavior:**
@@ -899,6 +920,11 @@ azmcp compute disk update --subscription <subscription> \
 | `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
 | `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
 | `--enable-bursting` | No | Enable on-demand bursting (true or false) |
+| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
+| `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
+| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
+| `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 
 ### Azure Confidential Ledger Operations
 

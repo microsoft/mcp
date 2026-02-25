@@ -99,6 +99,14 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -169,6 +177,14 @@ public class DiskCreateCommandTests
             osType,
             zone,
             hyperVGeneration,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -237,6 +253,14 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -296,6 +320,14 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -362,6 +394,14 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -397,7 +437,15 @@ public class DiskCreateCommandTests
             "--os-type", "Linux",
             "--zone", "2",
             "--hyper-v-generation", "V2",
-            "--source", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/snapshots/snap1"
+            "--source", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/snapshots/snap1",
+            "--tags", "env=prod team=infra",
+            "--disk-encryption-set", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskEncryptionSets/myDes",
+            "--encryption-type", "EncryptionAtRestWithCustomerKey",
+            "--disk-access", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskAccesses/myAccess",
+            "--tier", "P30",
+            "--max-shares", "2",
+            "--network-access-policy", "AllowPrivate",
+            "--enable-bursting", "true"
         ]);
 
         // Act - use reflection or just verify parse doesn't throw
@@ -434,6 +482,14 @@ public class DiskCreateCommandTests
             source,
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -498,6 +554,14 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -524,6 +588,186 @@ public class DiskCreateCommandTests
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskWithTier1Parameters_ReturnsSuccess()
+    {
+        // Arrange - create disk with tags, encryption, tier, and performance options
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var location = "eastus";
+        var sizeGb = 256;
+        var tags = "env=prod team=infra";
+        var diskEncryptionSet = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/diskEncryptionSets/myDes";
+        var encryptionType = "EncryptionAtRestWithCustomerKey";
+        var diskAccess = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/diskAccesses/myAccess";
+        var tier = "P30";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = location,
+            SkuName = "Premium_LRS",
+            DiskSizeGB = sizeGb,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<string?>(),
+            location,
+            sizeGb,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            tags,
+            diskEncryptionSet,
+            encryptionType,
+            diskAccess,
+            tier,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--location", location,
+            "--size-gb", sizeGb.ToString(),
+            "--tags", tags,
+            "--disk-encryption-set", diskEncryptionSet,
+            "--encryption-type", encryptionType,
+            "--disk-access", diskAccess,
+            "--tier", tier
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+        Assert.Equal(sizeGb, result.Disk.DiskSizeGB);
+
+        await _computeService.Received(1).CreateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<string?>(),
+            location,
+            sizeGb,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            tags,
+            diskEncryptionSet,
+            encryptionType,
+            diskAccess,
+            tier,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskWithPerformanceOptions_ReturnsSuccess()
+    {
+        // Arrange - create disk with IOPS, throughput, shared disk, network, and bursting options
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "ultraDisk";
+        var location = "eastus";
+        var sizeGb = 512;
+        var sku = "UltraSSD_LRS";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = location,
+            SkuName = sku,
+            DiskSizeGB = sizeGb,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk", diskName,
+            "--location", location,
+            "--size-gb", sizeGb.ToString(),
+            "--sku", sku,
+            "--max-shares", "3",
+            "--network-access-policy", "AllowPrivate",
+            "--enable-bursting", "true"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+        Assert.Equal(sku, result.Disk.SkuName);
     }
 
     [Fact]

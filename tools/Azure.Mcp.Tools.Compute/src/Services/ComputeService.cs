@@ -426,6 +426,14 @@ public class ComputeService(
         string? osType = null,
         string? zone = null,
         string? hyperVGeneration = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -481,6 +489,57 @@ public class ComputeService(
             diskData.HyperVGeneration = new HyperVGeneration(hyperVGeneration);
         }
 
+        if (maxShares.HasValue)
+        {
+            diskData.MaxShares = maxShares.Value;
+        }
+
+        if (!string.IsNullOrEmpty(networkAccessPolicy))
+        {
+            diskData.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+        }
+
+        if (!string.IsNullOrEmpty(enableBursting))
+        {
+            diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var parts = pair.Split('=', 2);
+                if (parts.Length == 2)
+                {
+                    diskData.Tags[parts[0]] = parts[1];
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
+        {
+            diskData.Encryption ??= new DiskEncryption();
+            if (!string.IsNullOrEmpty(diskEncryptionSet))
+            {
+                diskData.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+            }
+
+            if (!string.IsNullOrEmpty(encryptionType))
+            {
+                diskData.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskAccessId))
+        {
+            diskData.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+        }
+
+        if (!string.IsNullOrEmpty(tier))
+        {
+            diskData.Tier = tier;
+        }
+
         _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
         var result = await rgResource.Value.GetManagedDisks()
@@ -500,6 +559,11 @@ public class ComputeService(
         int? maxShares = null,
         string? networkAccessPolicy = null,
         string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -545,6 +609,43 @@ public class ComputeService(
         if (!string.IsNullOrEmpty(enableBursting))
         {
             diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            diskPatch.Tags.Clear();
+            foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var parts = pair.Split('=', 2);
+                if (parts.Length == 2)
+                {
+                    diskPatch.Tags[parts[0]] = parts[1];
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
+        {
+            diskPatch.Encryption ??= new DiskEncryption();
+            if (!string.IsNullOrEmpty(diskEncryptionSet))
+            {
+                diskPatch.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+            }
+
+            if (!string.IsNullOrEmpty(encryptionType))
+            {
+                diskPatch.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskAccessId))
+        {
+            diskPatch.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+        }
+
+        if (!string.IsNullOrEmpty(tier))
+        {
+            diskPatch.Tier = tier;
         }
 
         _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);

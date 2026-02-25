@@ -47,4 +47,44 @@ public class DiskCreateOptions : BaseComputeOptions
     /// Gets or sets the hypervisor generation (V1 or V2).
     /// </summary>
     public string? HyperVGeneration { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum number of VMs that can attach to the disk.
+    /// </summary>
+    public int? MaxShares { get; set; }
+
+    /// <summary>
+    /// Gets or sets the network access policy.
+    /// </summary>
+    public string? NetworkAccessPolicy { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether on-demand bursting is enabled ("true" or "false").
+    /// </summary>
+    public string? EnableBursting { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tags for the disk in 'key=value' format.
+    /// </summary>
+    public string? Tags { get; set; }
+
+    /// <summary>
+    /// Gets or sets the resource ID of the disk encryption set.
+    /// </summary>
+    public string? DiskEncryptionSet { get; set; }
+
+    /// <summary>
+    /// Gets or sets the encryption type of the disk.
+    /// </summary>
+    public string? EncryptionType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the resource ID of the disk access resource.
+    /// </summary>
+    public string? DiskAccessId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the performance tier of the disk.
+    /// </summary>
+    public string? Tier { get; set; }
 }
