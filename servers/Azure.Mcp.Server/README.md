@@ -878,6 +878,9 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 ### 🕸️ Azure App Service
 
 * "Add a database connection for an App Service web app"
+* "List the web apps in my subscription"
+* "Show me the web apps in my 'my-resource-group' resource group"
+* "Get the details for web app 'my-webapp' in 'my-resource-group'"
 
 ### 🖥️ Azure CLI Generate
 
@@ -885,9 +888,6 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 
 Example prompts that generate Azure CLI commands:
 
-* "List the websites in my subscription"
-* "Show me the websites in my 'my-resource-group' resource group"
-* "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
 ### 🖥️ Azure CLI Install
