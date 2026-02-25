@@ -430,4 +430,71 @@ public class RegistryDiscoveryStrategyTests
         var serverIds = providers.Select(p => p.CreateMetadata().Id).ToList();
         Assert.Contains("documentation", serverIds);
     }
+
+    [Fact]
+    public async Task DiscoverServersAsync_FoundryServerIsDiscovered()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var foundryProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "foundry");
+
+        // Assert
+        Assert.NotNull(foundryProvider);
+
+        var metadata = foundryProvider.CreateMetadata();
+        Assert.Equal("foundry", metadata.Id);
+        Assert.Equal("foundry", metadata.Name);
+        Assert.NotEmpty(metadata.Description);
+
+        // Verify description contains key terms
+        var description = metadata.Description.ToLowerInvariant();
+        Assert.Contains("foundry", description);
+        Assert.Contains("mcp", description);
+    }
+
+    [Fact]
+    public async Task DiscoverServersAsync_FoundryServerHasExpectedProperties()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var foundryProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "foundry");
+
+        // Assert
+        Assert.NotNull(foundryProvider);
+
+        var metadata = foundryProvider.CreateMetadata();
+        Assert.Equal("foundry", metadata.Id);
+        Assert.Equal("foundry", metadata.Name);
+        
+        // Description should mention models, agents, and evaluation workflows
+        var description = metadata.Description.ToLowerInvariant();
+        Assert.Contains("models", description);
+        Assert.Contains("agents", description);
+    }
+
+    [Fact]
+    public async Task DiscoverServersAsync_AllExpectedServersArePresent()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var serverIds = result.Select(p => p.CreateMetadata().Id).ToList();
+
+        // Assert
+        // Verify all expected registry servers are discovered
+        Assert.Contains("documentation", serverIds);
+        Assert.Contains("azd", serverIds);
+        Assert.Contains("foundry", serverIds);
+        
+        // Should have exactly 3 servers in registry
+        Assert.Equal(3, serverIds.Count);
+    }
 }
