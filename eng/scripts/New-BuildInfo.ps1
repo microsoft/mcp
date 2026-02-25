@@ -564,15 +564,19 @@ function Get-BuildMatrices {
                 continue
             }
 
+            # Only linux-arm64 (non-special-purpose) needs actual ARM64 hardware.
+            # All other arm64 targets (windows-arm64, macos-arm64, linux-musl-arm64-docker) cross-compile on x64.
+            $needsArm64Hardware = $os -eq 'linux' -and $arch -like '*arm64*' -and !$platform.specialPurpose
+
             $pool = switch($os) {
                 'windows' { $windowsPool }
-                'linux' { if ($arch -like '*arm64*') { $linuxArm64Pool } else { $linuxPool } }
+                'linux' { if ($needsArm64Hardware) { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
                 'windows' { $windowsVmImage }
-                'linux' { if ($arch -like '*arm64*') { $linuxArm64VmImage } else { $linuxVmImage } }
+                'linux' { if ($needsArm64Hardware) { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
@@ -584,9 +588,9 @@ function Get-BuildMatrices {
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
             $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
-            $hostArchitecture = if ($arch -like '*arm64*') { 'Arm64' } else { '' }
+            $hostArchitecture = if ($needsArm64Hardware) { 'Arm64' } else { '' }
 
-            $architectureKey = if ($arch -like '*arm64*') { 'arm64' } else { 'x64' }
+            $architectureKey = if ($needsArm64Hardware) { 'arm64' } else { 'x64' }
             if (-not $buildMatricesByArch.Contains($architectureKey)) {
                 $buildMatricesByArch[$architectureKey] = [ordered]@{}
             }

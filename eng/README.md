@@ -99,7 +99,8 @@ To simplify the work of collection server and platform metadata in build scripts
           "Architecture": "x64",
           "Native": false,
           "RunUnitTests": true
-        }
+        },
+        "linux_musl_arm64_docker": { ... }
       },
       "arm64": {
         "linux_arm64": {
@@ -116,7 +117,8 @@ To simplify the work of collection server and platform metadata in build scripts
     },
     "macosBuildMatrices": {
       "x64": {
-        "macos_x64": {}
+        "macos_x64": {},
+        "macos_arm64": {}
       },
       "arm64": {}
     },
