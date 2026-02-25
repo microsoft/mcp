@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.Areas.Server.Models;
 
 /// <summary>
 /// Contains configuration information for an MCP server defined in the registry.

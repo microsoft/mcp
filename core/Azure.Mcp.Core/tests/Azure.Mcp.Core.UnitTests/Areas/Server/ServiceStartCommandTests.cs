@@ -4,16 +4,15 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
-using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -677,7 +676,7 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
+            Transport = TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,

@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Models;
+using Azure.Mcp.Core;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 
-namespace Azure.Mcp.Core.Areas.Server;
+namespace Microsoft.Mcp.Core.Areas.Server;
 
 /// <summary>
 /// Extension methods for configuring RegistryServer services.
@@ -65,7 +66,7 @@ public static class RegistryServerServiceCollectionExtensions
                 });
         }
 
-        services.AddSingleton<IRegistryRoot>(registry);
+        services.AddSingleton(registry);
 
         return services;
     }

@@ -553,6 +553,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |
@@ -646,9 +648,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_availability-status_get | Get the availability status for resource <resource_name> |
 | resourcehealth_availability-status_get | Show me the health status of the storage account <storage_account_name> |
 | resourcehealth_availability-status_get | What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>? |
-| resourcehealth_availability-status_list | List availability status for all resources in my subscription |
-| resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
-| resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| resourcehealth_availability-status_get | List availability status for all resources in my subscription |
+| resourcehealth_availability-status_get | Show me the health status of all my Azure resources |
+| resourcehealth_availability-status_get | What resources in resource group <resource_group_name> have health issues? |
 | resourcehealth_health-events_list | List all service health events in my subscription |
 | resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> |
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |

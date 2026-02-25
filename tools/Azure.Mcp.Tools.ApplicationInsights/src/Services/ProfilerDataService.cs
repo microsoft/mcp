@@ -8,6 +8,7 @@ using System.Web;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Models;
@@ -27,9 +28,7 @@ public class ProfilerDataService(
     ITenantService tenantService)
     : BaseAzureService(tenantService), IProfilerDataService
 {
-    private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
-    private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";
-
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -98,7 +97,7 @@ public class ProfilerDataService(
 
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
-        UriBuilder uriBuilder = new(Endpoint)
+        UriBuilder uriBuilder = new(GetDiagnosticServiceEndpoint())
         {
             Path = path
         };
@@ -119,7 +118,7 @@ public class ProfilerDataService(
 
         var scopes = new string[]
         {
-            DefaultScope
+            GetDiagnosticServicesScope()
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
@@ -198,5 +197,27 @@ public class ProfilerDataService(
         string appId = applicationInsightsComponentResource.Data.AppId;
         _logger.LogInformation("Resolving appId: {resourceId} => {appId}", resourceId, appId);
         return Guid.Parse(appId);
+    }
+
+    private string GetDiagnosticServiceEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://dataplane.diagnosticservices.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://dataplane.diagnosticservices.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://dataplane.diagnosticservices.azure.us",
+            _ => "https://dataplane.diagnosticservices.azure.com"
+        };
+    }
+
+    private string GetDiagnosticServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "api://dataplane.diagnosticservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "api://dataplane.diagnosticservices.azure.cn/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "api://dataplane.diagnosticservices.azure.us/.default",
+            _ => "api://dataplane.diagnosticservices.azure.com/.default"
+        };
     }
 }

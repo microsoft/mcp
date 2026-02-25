@@ -2017,6 +2017,16 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --action status
    ```
 
+6. **Create Azure Migrate Project** (`--action createmigrateproject`)
+   ```bash
+   # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action createmigrateproject \
+                                                  --location <azure-region>
+   ```
+
 ### Azure Native ISV Operations
 
 ```bash
@@ -2134,13 +2144,12 @@ azmcp group list --subscription <subscription>
 ### Azure Resource Health Operations
 
 ```bash
-# Get availability status for a specific resource
+# Get availability status for a specific resource or list all resources (dual-mode)
+# With --resourceId: Get availability status for a specific resource
+# Without --resourceId: List availability statuses for all resources in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth availability-status get --resourceId <resource-id>
-
-# List availability statuses for all resources in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth availability-status list --subscription <subscription> \
+azmcp resourcehealth availability-status get --subscription <subscription> \
+                                              [--resourceId <resource-id>] \
                                               [--resource-group <resource-group>]
 
 # List service health events in a subscription

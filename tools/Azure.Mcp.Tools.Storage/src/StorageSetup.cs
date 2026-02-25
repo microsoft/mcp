@@ -38,10 +38,12 @@ public class StorageSetup : IAreaSetup
     {
         var storage = new CommandGroup(Name,
             """
-            Storage operations – Commands to manage Azure Storage accounts and data services, including Blobs and Tables.
-            This is a hierarchical MCP command router where sub-commands are routed to MCP servers via the command field
-            and arguments are provided in parameters. Use learn=true to discover available sub-commands. Supports listing
-            storage accounts, working with blob containers and blobs, and listing tables for object storage scenarios.
+            Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts,
+            blob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage
+            account details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list
+            and get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage,
+            Azure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers,
+            Azure Container Registry, or Azure Managed Lustre file systems.
             """,
             Title);
 

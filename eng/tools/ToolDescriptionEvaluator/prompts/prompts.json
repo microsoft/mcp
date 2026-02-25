@@ -652,9 +652,7 @@
   "resourcehealth_availability-status_get": [
     "Get the availability status for resource <resource_name>",
     "Show me the health status of the storage account <storage_account_name>",
-    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?"
-  ],
-  "resourcehealth_availability-status_list": [
+    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
     "List availability status for all resources in my subscription",
     "Show me the health status of all my Azure resources",
     "What resources in resource group <resource_group_name> have health issues?"
@@ -782,7 +780,9 @@
     "Show me the blobs in the blob container <container> in the storage account <account>"
   ],
   "storage_blob_upload": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
+    "Upload a local file to my Azure blob storage container",
+    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
   ],
   "subscription_list": [
     "List all subscriptions for my account",
@@ -790,7 +790,7 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "azmcp_tables_list": [
+  "storage_table_list": [
     "List all tables in the storage account <storage-account>",
     "Show me the tables in the storage account <storage-account>"
   ],

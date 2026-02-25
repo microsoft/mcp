@@ -4,23 +4,20 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
 {
@@ -73,7 +70,7 @@ internal class Program
 
         return [
             // Register core areas
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
             new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
@@ -97,7 +94,7 @@ internal class Program
     /// <item>
     /// <see cref="Main"/>'s command picking: The container used to populate instances of
     /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// baesd on the command line input. This container is a local variable in
+    /// based on the command line input. This container is a local variable in
     /// <see cref="Main"/>, and it is not tied to
     /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
@@ -123,7 +120,7 @@ internal class Program
     /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overriden within
+    /// but such transport-specific registrations must be overridden within
     /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
@@ -145,16 +142,13 @@ internal class Program
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<IResourceGroupService, ResourceGroupService>();
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
-        // The http-traport-specific implementations and configurations must be registered
+        // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
-        services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
