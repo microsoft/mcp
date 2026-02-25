@@ -63,7 +63,7 @@
     <PackageVersion Include="Microsoft.Azure.Kusto.Ingest" Version="14.0.3" />
     <PackageVersion Include="Microsoft.CognitiveServices.Speech" Version="1.46.0" />
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.72.1" />
-    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.2.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.3.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="10.2.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Quality" Version="10.2.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
@@ -80,8 +80,8 @@
     <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.804" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.8.0-preview.1" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.8.0-preview.1" />
+    <PackageVersion Include="ModelContextProtocol" Version="1.0.0" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.0.0" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
     <PackageVersion Include="Npgsql" Version="10.0.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
