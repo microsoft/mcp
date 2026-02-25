@@ -20,6 +20,7 @@ public class AppServiceSetup : IAreaSetup
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
+        services.AddSingleton<WebappsGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)

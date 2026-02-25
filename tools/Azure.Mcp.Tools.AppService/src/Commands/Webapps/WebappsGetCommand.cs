@@ -25,8 +25,8 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
         """
         Retrieves detailed information about Azure App Service web apps, including app name, resource group, location,
         state, hostnames, etc. If a specific app name is not provided, the command will return details for all web apps
-        in a subscription. You can specify the app name, resource group name, and subscription to get details for a
-        specific web app.
+        in a subscription or resource group in a subscription. You can specify the app name, resource group name, and
+        subscription to get details for a specific web app.
         """;
 
     public override string Title => CommandTitle;
@@ -90,9 +90,17 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
         }
         catch (Exception ex)
         {
-            if (options.AppName is null)
+            if (options.AppName == null)
             {
-                _logger.LogError(ex, "Failed to list Web Apps in subscription {Subscription}", options.Subscription);
+                if (options.ResourceGroup == null)
+                {
+                    _logger.LogError(ex, "Failed to list Web Apps in subscription {Subscription}", options.Subscription);
+                }
+                else
+                {
+                    _logger.LogError(ex, "Failed to list Web Apps in resource group {ResourceGroup} and subscription {Subscription}",
+                        options.ResourceGroup, options.Subscription);
+                }
             }
             else
             {

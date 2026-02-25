@@ -43,6 +43,7 @@ public class WebappsGetCommandTests
 
     [Theory]
     [InlineData("sub123", null, null)]
+    [InlineData("sub123", "rg1", null)]
     [InlineData("sub123", "rg1", "test-app")]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string subscription, string? resourceGroup, string? appName)
     {
@@ -79,7 +80,7 @@ public class WebappsGetCommandTests
     }
 
     [Theory]
-    [InlineData("")] // Missing subscription
+    [InlineData("--resource-group", "rg1")] // Missing subscription
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {

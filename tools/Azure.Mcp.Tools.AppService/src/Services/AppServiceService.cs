@@ -219,9 +219,25 @@ public class AppServiceService(
             }
 
             var webAppCollection = resourceGroupResource.Value.GetWebSites();
-            await foreach (var webApp in webAppCollection.GetAllAsync(cancellationToken: cancellationToken))
+            var webApp = await webAppCollection.GetAsync(appName, cancellationToken: cancellationToken);
+            if (webApp != null)
             {
-                results.Add(MapToWebappDetails(webApp.Data));
+                results.Add(MapToWebappDetails(webApp.Value.Data));
+            }
+            
+        }
+        else if (!string.IsNullOrWhiteSpace(resourceGroup))
+        {
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (resourceGroupResource?.Value == null)
+            {
+                throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+            }
+
+            var webAppCollection = resourceGroupResource.Value.GetWebSites();
+            await foreach (var webapp in webAppCollection.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                results.Add(MapToWebappDetails(webapp.Data));
             }
         }
         else
@@ -232,7 +248,6 @@ public class AppServiceService(
             }
         }
 
-        _logger.LogInformation("Retrieved {Count} web apps from subscription {Subscription}", results.Count, subscription);
         return results;
     }
 
