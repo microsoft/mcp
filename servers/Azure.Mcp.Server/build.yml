@@ -10,6 +10,10 @@ parameters:
   displayName: Test Timeout In Minutes
   type: number
   default: 30
+- name: GovTest
+  displayName: Run Gov Test
+  type: boolean
+  default: false
 
 trigger: none
 pr: none
@@ -26,3 +30,4 @@ extends:
     PackageMCPB: true
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    GovTest: ${{ parameters.GovTest }}
