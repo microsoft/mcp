@@ -295,7 +295,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static void AddEnvironmentCredential(List<TokenCredential> credentials)
     {
-        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential"));
+        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential", normalizeScopes: true));
     }
 
     private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
@@ -309,7 +309,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             workloadOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential"));
+        credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential", normalizeScopes: true));
     }
 
     private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
@@ -337,7 +337,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             managedIdentityCredential = new ManagedIdentityCredential(options);
         }
 
-        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
+        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential", normalizeScopes: true));
     }
 
     private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
@@ -351,7 +351,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             vsOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential"));
+        credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential", normalizeScopes: true));
     }
 
     private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId)
@@ -365,7 +365,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             vscodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential"));
+        credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential", normalizeScopes: true));
     }
 
     private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId)
@@ -379,7 +379,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             cliOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential"));
+        credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential", normalizeScopes: true));
     }
 
     private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId)
@@ -393,7 +393,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             psOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential"));
+        credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential", normalizeScopes: true));
     }
 
     private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId)
@@ -407,7 +407,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             azdOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
+        credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential", normalizeScopes: true));
     }
 
     private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId)
@@ -432,14 +432,42 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 /// <summary>
 /// A wrapper that converts any exception from the underlying credential into a CredentialUnavailableException
 /// to ensure proper chaining behavior in ChainedTokenCredential.
+/// <para>
+/// When <paramref name="normalizeScopes"/> is <c>true</c>, any scope that is not already in
+/// <c>resource/.default</c> form (e.g. <c>https://mcp.ai.azure.com/Foundry.Mcp.Tools</c>) is
+/// normalized to <c>https://&lt;host&gt;/.default</c> before being forwarded to the inner
+/// credential. This is required for non-MSAL credentials (Azure CLI, Managed Identity, etc.)
+/// which derive the resource URL from the scope by stripping the <c>/.default</c> suffix, and
+/// do not understand arbitrary MSAL permission scopes.
+/// </para>
 /// </summary>
-internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName) : TokenCredential
+internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName, bool normalizeScopes = false) : TokenCredential
 {
     private readonly TokenCredential _innerCredential = innerCredential;
     private readonly string _credentialName = credentialName;
+    private readonly bool _normalizeScopes = normalizeScopes;
+
+    /// <summary>
+    /// Converts a permission scope to its <c>resource/.default</c> equivalent when it is not
+    /// already in that form. For example:
+    /// <list type="bullet">
+    ///   <item><c>https://mcp.ai.azure.com/Foundry.Mcp.Tools</c> → <c>https://mcp.ai.azure.com/.default</c></item>
+    ///   <item><c>https://management.azure.com/.default</c> → unchanged</item>
+    /// </list>
+    /// </summary>
+    private static string NormalizeScope(string scope) =>
+        scope.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
+            ? scope
+            : $"{new Uri(scope).GetLeftPart(UriPartial.Authority)}/.default";
+
+    private TokenRequestContext MaybeNormalize(TokenRequestContext ctx) =>
+        _normalizeScopes
+            ? new TokenRequestContext([.. ctx.Scopes.Select(NormalizeScope)], ctx.ParentRequestId, ctx.Claims, ctx.TenantId, ctx.IsCaeEnabled)
+            : ctx;
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
+        requestContext = MaybeNormalize(requestContext);
         try
         {
             return _innerCredential.GetToken(requestContext, cancellationToken);
@@ -456,6 +484,7 @@ internal class SafeTokenCredential(TokenCredential innerCredential, string crede
 
     public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
+        requestContext = MaybeNormalize(requestContext);
         try
         {
             return await _innerCredential.GetTokenAsync(requestContext, cancellationToken);

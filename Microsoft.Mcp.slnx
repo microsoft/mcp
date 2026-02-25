@@ -236,14 +236,7 @@
     <Project Path="tools/Azure.Mcp.Tools.FileShares/tests/Azure.Mcp.Tools.FileShares.LiveTests/Azure.Mcp.Tools.FileShares.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.FileShares/tests/Azure.Mcp.Tools.FileShares.UnitTests/Azure.Mcp.Tools.FileShares.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/tools/Azure.Mcp.Tools.Foundry/" />
-  <Folder Name="/tools/Azure.Mcp.Tools.Foundry/src/">
-    <Project Path="tools/Azure.Mcp.Tools.Foundry/src/Azure.Mcp.Tools.Foundry.csproj" />
-  </Folder>
-  <Folder Name="/tools/Azure.Mcp.Tools.Foundry/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Foundry/tests/Azure.Mcp.Tools.Foundry.LiveTests/Azure.Mcp.Tools.Foundry.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Foundry/tests/Azure.Mcp.Tools.Foundry.UnitTests/Azure.Mcp.Tools.Foundry.UnitTests.csproj" />
-  </Folder>
+
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/" />
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/src/">
     <Project Path="tools/Azure.Mcp.Tools.FunctionApp/src/Azure.Mcp.Tools.FunctionApp.csproj" />
