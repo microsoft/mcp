@@ -12,6 +12,8 @@ parameters:
   default: 30
 - name: RunVSCodeIntegrationTests
   displayName: Run VS Code Integration Tests (Outerloop Playwright)
+- name: GovTest
+  displayName: Run Gov Test
   type: boolean
   default: false
 
@@ -31,3 +33,4 @@ extends:
     PackageMCPB: true
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    GovTest: ${{ parameters.GovTest }}
