@@ -59,7 +59,7 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
     protected override WebappsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
+        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
         return options;
     }
 

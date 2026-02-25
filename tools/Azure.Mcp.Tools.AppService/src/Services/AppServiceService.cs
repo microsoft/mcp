@@ -224,7 +224,6 @@ public class AppServiceService(
             {
                 results.Add(MapToWebappDetails(webApp.Value.Data));
             }
-            
         }
         else if (!string.IsNullOrWhiteSpace(resourceGroup))
         {

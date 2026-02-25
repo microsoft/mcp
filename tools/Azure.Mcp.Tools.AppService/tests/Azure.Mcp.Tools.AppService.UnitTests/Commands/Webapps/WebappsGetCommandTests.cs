@@ -53,18 +53,30 @@ public class WebappsGetCommandTests
         ];
 
         // Set up the mock to return success for any arguments
-        _appServiceService.GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string>(),
+        _appServiceService.GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedWebappDetails);
 
-        var args = string.IsNullOrEmpty(appName)
-            ? _commandDefinition.Parse(["--subscription", subscription])
-            : _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup!, "--app", appName!]);
+        List<string> unparsedArgs = ["--subscription", subscription];
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            unparsedArgs.AddRange(["--resource-group", resourceGroup]);
+        }
+        if (!string.IsNullOrEmpty(appName))
+        {
+            unparsedArgs.AddRange(["--app", appName]);
+        }
+
+        var args = _commandDefinition.Parse(unparsedArgs);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
+        // Verify that the mock was called with the expected parameters
+        await _appServiceService.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -72,11 +84,7 @@ public class WebappsGetCommandTests
         var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappsGetResult);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedWebappDetails, result!.WebappDetails);
-
-        // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.WebappDetails));
     }
 
     [Theory]

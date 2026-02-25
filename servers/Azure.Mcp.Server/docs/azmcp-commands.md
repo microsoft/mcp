@@ -475,7 +475,7 @@ azmcp applicationinsights recommendation list --subscription <subscription> \
 
 ```bash
 # Add a database connection to an App Service
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription <subscription> \
                               --resource-group <resource-group> \
                               --app <app> \
@@ -487,7 +487,7 @@ azmcp appservice database add --subscription <subscription> \
 
 # Examples:
 # Add a SQL Server database connection
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -496,7 +496,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --database "mydb"
 
 # Add a MySQL database connection with custom connection string
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -506,7 +506,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
 
 # Add a PostgreSQL database connection
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -515,7 +515,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --database "mydb"
 
 # Add a Cosmos DB connection
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
