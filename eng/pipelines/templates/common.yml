@@ -30,6 +30,10 @@ parameters:
 - name: TestTimeoutInMinutes
   type: number
   default: 30
+- name: GovTest
+  displayName: Run Gov Test
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -57,6 +61,9 @@ extends:
       variables:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
+      - ${{ if parameters.GovTest }}:
+        - name: GovTest
+          value: 'true'
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
@@ -75,6 +82,9 @@ extends:
       variables:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
+      - ${{ if parameters.GovTest }}:
+        - name: GovTest
+          value: 'true'
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
 
@@ -110,12 +120,16 @@ extends:
         variables:
         - template: /eng/pipelines/templates/variables/image.yml
         - template: /eng/pipelines/templates/variables/globals.yml
+        - ${{ if parameters.GovTest }}:
+          - name: GovTest
+            value: 'true'
         jobs:
         - template: /eng/pipelines/templates/jobs/live-test.yml
           parameters:
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
             MaxParallel: 10
             TimeoutInMinutes: 75
+            GovTest: ${{ parameters.GovTest }}
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, true)) }}:
       - stage: VSCodeIntegration
