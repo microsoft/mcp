@@ -22,6 +22,8 @@ public class AppServiceService(
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;
 
+    private static readonly string[] supportedTypes = ["sqlserver", "mysql", "postgresql", "cosmosdb"];
+
     public async Task<DatabaseConnectionInfo> AddDatabaseAsync(
         string appName,
         string resourceGroup,
@@ -165,7 +167,7 @@ public class AppServiceService(
             "mysql" => ConnectionStringType.MySql,
             "postgresql" => ConnectionStringType.PostgreSql,
             "cosmosdb" => ConnectionStringType.Custom,
-            _ => throw new ArgumentException($"Unsupported database type: {databaseType}")
+            _ => throw new ArgumentException($"Unsupported database type: {databaseType}. Supported types: {string.Join(", ", supportedTypes)}")
         };
     }
 

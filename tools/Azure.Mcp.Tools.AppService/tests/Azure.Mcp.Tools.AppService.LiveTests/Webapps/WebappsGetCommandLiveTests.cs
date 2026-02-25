@@ -75,7 +75,7 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-" + webappName.Split('-')[1] : webappName;
+        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
