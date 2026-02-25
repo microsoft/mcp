@@ -33,7 +33,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = false,
+        OpenWorld = true,
         ReadOnly = false,
         Secret = false,
         LocalRequired = false

@@ -3198,7 +3198,7 @@
         "azuremigrate_platformlandingzone_getguidance"
       ]
     },
-        {
+    {
       "name": "get_azure_appservice_details",
       "description": "Get details about Azure App Service resources including Web Apps.",
       "toolMetadata": {

@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapps;
 
 public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseAppServiceCommand<WebappsGetOptions>()
 {
-    private const string CommandTitle = "Gets Web App Details";
+    private const string CommandTitle = "Gets Azure App Service Web App Details";
     private readonly ILogger<WebappsGetCommand> _logger = logger;
     public override string Id => "4412f1af-16e7-46db-8305-33e3d7ae06de";
     public override string Name => "get";
