@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Commands.Webapps;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -19,6 +20,7 @@ public class AppServiceSetup : IAreaSetup
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
+        services.AddSingleton<WebappsGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -34,6 +36,14 @@ public class AppServiceSetup : IAreaSetup
         // Register the 'add' command for database connections, allowing users to configure a new database connection for an App Service web app.
         var databaseAdd = serviceProvider.GetRequiredService<DatabaseAddCommand>();
         database.AddCommand(databaseAdd.Name, databaseAdd);
+
+        // Create webapps subgroup
+        var webapps = new CommandGroup("webapps", "Operations for managing Azure App Service web apps");
+        appService.AddSubGroup(webapps);
+
+        // Add webapps commands
+        var webappsGet = serviceProvider.GetRequiredService<WebappsGetCommand>();
+        webapps.AddCommand(webappsGet.Name, webappsGet);
 
         return appService;
     }
