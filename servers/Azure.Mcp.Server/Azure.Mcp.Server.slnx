@@ -19,10 +19,11 @@
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
   <Folder Name="/servers/Azure.Mcp.Server/src/">
-    <Project Path="./src/Azure.Mcp.Server.csproj" />
+    <Project Path="src/Azure.Mcp.Server.csproj" />
   </Folder>
   <Folder Name="/servers/Azure.Mcp.Server/tests/">
-    <Project Path="./tests/Azure.Mcp.Server.UnitTests/Azure.Mcp.Server.UnitTests.csproj" />
+    <Project Path="tests/Azure.Mcp.Server.LiveTests/Azure.Mcp.Server.LiveTests.csproj" />
+    <Project Path="tests/Azure.Mcp.Server.UnitTests/Azure.Mcp.Server.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/" />

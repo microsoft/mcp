@@ -5,6 +5,8 @@ parameters:
   type: number
 - name: TimeoutInMinutes
   type: number
+- name: GovTest
+  type: boolean
 
 jobs:
 - job: LiveTest
@@ -57,7 +59,7 @@ jobs:
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
 
@@ -67,7 +69,7 @@ jobs:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
-      azureSubscription: azure-sdk-tests-public
+      azureSubscription: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       azurePowerShellVersion: 'LatestVersion'
       scriptType: InlineScript
       Inline: |
@@ -82,7 +84,7 @@ jobs:
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
       AdditionalParameters: "@{ UseHttpTransport = true }"
@@ -93,7 +95,7 @@ jobs:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
-      azureSubscription: azure-sdk-tests-public
+      azureSubscription: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       azurePowerShellVersion: 'LatestVersion'
       scriptType: InlineScript
       Inline: |
@@ -117,6 +119,6 @@ jobs:
 
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       EnvVars:
         Pool: $(Pool)
