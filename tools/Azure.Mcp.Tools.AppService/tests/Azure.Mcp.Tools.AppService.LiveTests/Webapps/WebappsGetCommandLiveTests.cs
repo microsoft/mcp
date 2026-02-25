@@ -33,7 +33,8 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
     [Fact]
     public async Task ExecuteAsync_SubscriptionList_ReturnsExpectedWebApp()
     {
-        var webappName = RegisterOrRetrieveVariable("webappName", Settings.DeploymentOutputs["WEBAPPNAME"]);
+        var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
+        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
 
         var result = await CallToolAsync(
             "appservice_webapps_get",
@@ -45,13 +46,14 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == webappName), $"Expected to find web app with name '{webappName}' in the results.");
+        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
 
     [Fact]
     public async Task ExecuteAsync_ResourceGroupList_ReturnsExpectedWebApp()
     {
-        var webappName = RegisterOrRetrieveVariable("webappName", Settings.DeploymentOutputs["WEBAPPNAME"]);
+        var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
+        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -65,13 +67,15 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == webappName), $"Expected to find web app with name '{webappName}' in the results.");
+        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
 
     [Fact]
     public async Task ExecuteAsync_WebAppGet_ReturnsExpectedWebApp()
     {
-        var webappName = RegisterOrRetrieveVariable("webappName", Settings.DeploymentOutputs["WEBAPPNAME"]);
+        var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
+        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
+        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-" + webappName.Split('-')[1] : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -86,6 +90,6 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
         Assert.NotNull(getResult);
         Assert.Single(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.All(detail => detail.Name == webappName), $"Expected to find a single web app with name '{webappName}' in the results.");
+        Assert.True(getResult.WebappDetails.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
     }
 }
