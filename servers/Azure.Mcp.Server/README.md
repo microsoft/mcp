@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
 <!-- remove-section: end remove_note_ga -->
 
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->

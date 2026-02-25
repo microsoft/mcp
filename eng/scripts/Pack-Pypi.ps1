@@ -260,11 +260,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         }
 
         # Process and copy README
+        $insertPayload = @{
+            ToolTitle = 'PyPI Package'
+            MCPRepositoryMetadata = "<!-- mcp-name: $($server.mcpRepositoryName) -->"
+        }
+
         & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
             -Command "extract" `
             -InputReadMePath "$RepoRoot/$($server.readmePath)" `
             -PackageType "pypi" `
-            -InsertPayload @{ ToolTitle = 'PyPI Package' } `
+            -InsertPayload $insertPayload `
             -OutputDirectory $tempFolder
 
         Write-Host "  Copying LICENSE and NOTICE.txt"
