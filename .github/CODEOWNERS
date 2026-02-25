@@ -26,32 +26,18 @@
 /.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
 ##################
+# Servers
+##################
+
+# ServiceLabel: %server-Azure.Mcp
+# ServiceOwners:                       @microsoft/azure-mcp
+
+# ServiceLabel: %server-Fabric.Mcp
+# ServiceOwners:                       @microsoft/fabric-mcp
+
+##################
 # Services
 ##################
-# PRLabel: %tools-AKS
-/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @microsoft/azure-mcp
-
-# ServiceLabel: %tools-AKS
-# ServiceOwners:                       @feiskyer @gossion
-
-
-# PRLabel: %tools-AppConfig
-/tools/Azure.Mcp.Tools.AppConfig/      @JonathanCrd @conniey @microsoft/azure-mcp
-
-# ServiceLabel: %tools-AppConfig
-# ServiceOwners:                       @shenmuxiaosen @avanigupta
-
-# PRLabel: %area-AppLens
-/tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
-
-# ServiceLabel: %area-AppLens
-# ServiceOwners:                       @msalaman
-
-# PRLabel: %tools-ApplicationInsights
-/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
-
-# ServiceLabel: %tools-ApplicationInsights
-# ServiceOwners:                       @regexrowboat @xiaomi7732
 
 # PRLabel: %tools-ACR
 /tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp
@@ -66,53 +52,103 @@
 # ServiceOwners:                       @ankiga-MSFT
 
 # PRLabel: %tools-Aks
-/tools/Azure.Mcp.Tools.Aks/            @jongio @anuchandy @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Aks/            @anuchandy @feiskyer @gossion @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Aks
-# ServiceOwners:                       @jongio @anuchandy
+# ServiceOwners:                       @anuchandy @feiskyer @gossion @jongio 
+
+# PRLabel: %tools-AppConfig
+/tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AppConfig
+# ServiceOwners:                       @avanigupta @conniey @JonathanCrd @shenmuxiaosen
+
+# PRLabel: %tools-AppLens
+/tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AppLens
+# ServiceOwners:                       @msalaman
+
+# PRLabel: %tools-ApplicationInsights
+/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ApplicationInsights
+# ServiceOwners:                             @regexrowboat @xiaomi7732
 
 # PRLabel: %tools-AppService
 /tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AppService
-# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft
+# ServiceOwners:                       @ArthurMa1978 @KarishmaGhiya @weidongxu-microsoft
+
+# ServiceLabel: %tools-ARM
+# ServiceOwners:                       @ArthurMa1978 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Authentication
+# ServiceOwners:                       @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
+
+# PRLabel: %tools-Authorization
+/tools/Azure.Mcp.Tools.Authorization/  @jongio @vurhanau @xiangyan99 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Authorization
+# ServiceOwners:                       @vurhanau @xiangyan99
+
+# ServiceLabel: %tools-AzCLI
+# ServiceOwners:                       @JasonYeMSFT @microsoft/azure-mcp
+
+# PRLabel: %tools-Azd
+/tools/Azure.Mcp.Tools.Extension/      @wbreza @jongio @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Azd
+# ServiceOwners:                       @wbreza @jongio
 
 # PRLabel: %tools-AzureMigrate
-/tools/Azure.Mcp.Tools.AzureMigrate/      @akshayrohilla @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureMigrate/            @akshayrohilla @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AzureMigrate
-# ServiceOwners:                       @akshayrohilla @yeddlapurishivasai @mentaltraffic @andynski
+# ServiceOwners:                                @akshayrohilla @andynski @mentaltraffic @yeddlapurishivasai
 
 # PRLabel: %tools-BestPractices
-/tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @XiaofuHuang @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureBestPractices/      @conniey @fanyang-mono @g2vinay @XiaofuHuang @microsoft/azure-mcp
 
 # ServiceLabel: %tools-BestPractices
-# ServiceOwners:                       @g2vinay @conniey @fanyang-mono @XiaofuHuang
+# ServiceOwners:                                @conniey @fanyang-mono @g2vinay @XiaofuHuang
 
 # PRLabel: %tools-Bicep
 /tools/Azure.Mcp.Tools.BicepSchema/             @msalaman @saikoumudi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Bicep
-# ServiceOwners:                       @msalaman @saikoumudi
+# ServiceOwners:                                @msalaman @saikoumudi
 
 # PRLabel: %tools-CloudArchitect
 /tools/Azure.Mcp.Tools.CloudArchitect/                         @msalaman @microsoft/azure-mcp
 
 # ServiceLabel: %tools-CloudArchitect
-# ServiceOwners:                       @msalaman
+# ServiceOwners:                                @msalaman
 
 # PRLabel: %tools-Communication
 /tools/Azure.Mcp.Tools.Communication/         @KarishmaGhiya @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Communication
-# ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
+# ServiceOwners:                        @arazan @kagbakpem @KarishmaGhiya @kirill-linnik
 
 # PRLabel: %tools-Compute
-/tools/Azure.Mcp.Tools.Compute/         @g2vinay @haagha @audreytoney @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Compute/         @audreytoney @g2vinay @haagha @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Compute
-# ServiceOwners:                       @haagha @audreytoney @saakpan
+# ServiceOwners:                        @audreytoney @haagha @saakpan
 
+# PRLabel: %tools-ConfidentialLedger
+/tools/Azure.Mcp.Tools.ConfidentialLedger/      @ivarprudnikov @taicchoumsft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ConfidentialLedger
+# ServiceOwners:                                @ivarprudnikov @taicchoumsft
+
+# ServiceLabel: %tools-CopilotNetwork
+# ServiceOwners:                       @alzimmermsft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Core
+# ServiceOwners:                       @alzimmermsft @anannya03 @anuchandy @g2vinay @xiangyan99 @microsoft/azure-mcp
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
@@ -120,12 +156,35 @@
 # ServiceLabel: %tools-CosmosDB
 # ServiceOwners:                       @sajeetharan @xiangyan99
 
+# PRLabel: %tools-Deploy
+/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xiaofanzhou @microsoft/azure-mcp
 
-# PRLabel: %tools-Azd
-/tools/Azure.Mcp.Tools.Extension/      @wbreza @jongio @microsoft/azure-mcp
+# ServiceLabel: %tools-Deploy
+# ServiceOwners:                       @qianwens @xiaofanzhou
 
-# ServiceLabel: %tools-Azd
-# ServiceOwners:                       @wbreza @jongio
+# ServiceLabel: %tools-Docker
+# ServiceOwners:                       @conniey @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Eclipse
+# ServiceOwners:                       @srnagar @microsoft/azure-mcp
+
+# PRLabel: %tools-EventGrid
+/tools/Azure.Mcp.Tools.EventGrid/      @anannya03 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-EventGrid
+# ServiceOwners:                       @anannya03 @microsoft/azure-mcp
+
+# PRLabel: %tools-EventHubs
+/tools/Azure.Mcp.Tools.EventHubs/      @jairmyree @microsoft/azure-mcp
+
+# ServiceLabel: %tools-EventHubs
+# ServiceOwners:                       @jairmyree @microsoft/azure-mcp
+
+# PRLabel: %tools-FileShares
+/tools/Azure.Mcp.Tools.FileShares/     @ankushbindlish2 @kszobi @microsoft/azure-mcp
+
+# ServiceLabel: %tools-FileShares
+# ServiceOwners:                       @ankushbindlish2 @kszobi
 
 # PRLabel: %tools-Foundry
 /tools/Azure.Mcp.Tools.Foundry/        @jayzzh @xiangyan99 @microsoft/azure-mcp
@@ -145,24 +204,38 @@
 # ServiceLabel: %tools-Grafana
 # ServiceOwners:                       @weng5e @xiangyan99
 
-# PRLabel: %tools-KeyVault
-/tools/Azure.Mcp.Tools.KeyVault/       @vcolin7 @JonathanCrd @microsoft/azure-mcp
-
-# ServiceLabel: %tools-KeyVault
-# ServiceOwners:                       @vcolin7 @JonathanCrd
+# ServiceLabel: %tools-IntelliJ
+# ServiceOwners:                       @srnagar @microsoft/azure-mcp
 
 # PRLabel: %tools-ISV
-/tools/Azure.Mcp.Tools.AzureIsv/       @pachaturvedi @agrimayadav @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureIsv/       @agrimayadav @pachaturvedi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ISV
-# ServiceOwners:                       @pachaturvedi @agrimayadav
+# ServiceOwners:                       @agrimayadav @pachaturvedi
+
+# PRLabel: %tools-KeyVault
+/tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-KeyVault
+# ServiceOwners:                       @JonathanCrd @vcolin7
 
 # PRLabel: %tools-Kusto
-/tools/Azure.Mcp.Tools.Kusto/          @prvavill @danield137 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Kusto/          @danield137 @prvavill @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Kusto
-# ServiceOwners:                       @prvavill @danield137
+# ServiceOwners:                       @danield137 @prvavill
 
+# PRLabel: %tools-LoadTesting
+/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
+
+# ServiceLabel: %tools-LoadTesting
+# ServiceOwners:                       @nishtha489 @krisnaray @krishna1s @johnsta
+
+# PRLabel: %tools-ManagedLustre
+/tools/Azure.Mcp.Tools.ManagedLustre/  @rebecca-makar @wolfgang-desalvador @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ManagedLustre
+# ServiceOwners:                       @rebecca-makar @wolfgang-desalvador
 
 # PRLabel: %tools-Marketplace
 /tools/Azure.Mcp.Tools.Marketplace/    @meirloichter @microsoft/azure-mcp
@@ -170,29 +243,26 @@
 # ServiceLabel: %tools-Marketplace
 # ServiceOwners:                       @meirloichter
 
+# ServiceLabel: %tools-McpRegistry
+# ServiceOwners:                       @conniey @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-Monitor
-/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @jongio @zaaslam @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Monitor/        @jongio @smritiy @srnagar @zaaslam @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Monitor
-# ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
-
-# PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @rebecca-makar @microsoft/azure-mcp
-# ServiceLabel: %tools-ManagedLustre
-# ServiceOwners:                       @wolfgang-desalvador @rebecca-makar
+# ServiceOwners:                       @jongio @smritiy @srnagar @zaaslam
 
 # PRLabel: %tools-MySQL
-/tools/Azure.Mcp.Tools.MySql/          @ramnov @mattkohnms @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.MySql/          @mattkohnms @ramnov @microsoft/azure-mcp
 
 # ServiceLabel: %tools-MySQL
-# ServiceOwners:                       @ramnov @mattkohnms
+# ServiceOwners:                       @mattkohnms @ramnov
 
-# PRLabel: %tools-SQL
-/tools/Azure.Mcp.Tools.Sql/          @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms @microsoft/azure-mcp
+# ServiceLabel: %tools-npx
+# ServiceOwners:                       @KarishmaGhiya @hallipr @microsoft/azure-mcp
 
-# ServiceLabel: %tools-SQL
-# ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
+# ServiceLabel: %tools-NuGet
+# ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-Policy
 /tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp
@@ -201,35 +271,70 @@
 # ServiceOwners:                       @msalaman
 
 # PRLabel: %tools-Postgres
-/tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Postgres/       @kk-src @maxluk @shreyaaithal @xiangyan99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Postgres
-# ServiceOwners:                       @kk-src @shreyaaithal @maxluk
+# ServiceOwners:                       @kk-src @maxluk @shreyaaithal
+
+# PRLabel: %tools-Price
+/tools/Azure.Mcp.Tools.Pricing/      @anannya03 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Price
+# ServiceOwners:                     @anannya03 @microsoft/azure-mcp
+
+# PRLabel: %tools-Quota
+/tools/Azure.Mcp.Tools.Quota/          @qianwens @xiaofanzhou @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Quota
+# ServiceOwners:                       @qianwens @xiaofanzhou
+
+# PRLabel: %tools-Redis
+/tools/Azure.Mcp.Tools.Redis/           @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Redis
+# ServiceOwners:                        @carldc @philon-msft @xiangyan99
+
+# PRLabel: %tools-ResourceHealth
+/tools/Azure.Mcp.Tools.ResourceHealth/     @pkaza-msft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResourceHealth
+# ServiceOwners:                           @pkaza-msft @microsoft/azure-mcp
 
 # PRLabel: %tools-Search
 /tools/Azure.Mcp.Tools.Search/         @pablocastro @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Search
-# ServiceOwners:                       @pablocastro
-
+# ServiceOwners:                       @pablocastro @microsoft/azure-mcp
 
 # PRLabel: %tools-ServiceBus
 /tools/Azure.Mcp.Tools.ServiceBus/     @anuchandy @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ServiceBus
-# ServiceOwners:                       @shankarsama @EldertGrootenboer
+# ServiceOwners:                       @anuchandy @conniey @EldertGrootenboer @shankarsama
+
+# PRLabel: %tools-ServiceFabric
+/tools/Azure.Mcp.Tools.ServiceFabric/  @linmeng08 @jkochhar @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ServiceFabric
+# ServiceOwners:                       @linmeng08 @jkochhar
+
+# PRLabel: %tools-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @kenchennt @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SignalR
+# ServiceOwners:                       @HaofanLiao @JialinXin @kenchennt 
 
 # PRLabel: %tools-Speech
 /tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Speech
-# ServiceOwners:                       @dilin-MS2
+# ServiceOwners:                       @dilin-MS2 @JonathanCrd
 
-# PRLabel: %tools-Redis
-/tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
+# PRLabel: %tools-SQL
+/tools/Azure.Mcp.Tools.Sql/          @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp
 
-# ServiceLabel: %tools-Redis
-# ServiceOwners:                       @philon-msft @carldc
+# ServiceLabel: %tools-SQL
+# ServiceOwners:                     @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp
 
 # PRLabel: %tools-Storage
 /tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @xiangyan99 @microsoft/azure-mcp
@@ -237,36 +342,17 @@
 # ServiceLabel: %tools-Storage
 # ServiceOwners:                       @alzimmermsft  @jongio
 
-# PRLabel: %tools-FileShares
-/tools/Azure.Mcp.Tools.FileShares/     @ankushbindlish2 @kszobi @microsoft/azure-mcp
-
-# ServiceLabel: %tools-FileShares
-# ServiceOwners:                       @ankushbindlish2 @kszobi
-
 # PRLabel: %tools-StorageSync
 /tools/Azure.Mcp.Tools.StorageSync/    @ankushbindlish2 @kszobi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-StorageSync
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
-# PRLabel: %tools-Authorization
-/tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp
+# ServiceLabel: %tools-Telemetry
+# ServiceOwners:                       @alzimmermsft @conniey @microsoft/azure-mcp    
 
-# ServiceLabel: %tools-Authorization
-# ServiceOwners:                       @vurhanau
-
-# PRLabel: %tools-Deploy
-/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xiaofanzhou @microsoft/azure-mcp
-/tools/Azure.Mcp.Tools.Quota/          @qianwens @xiaofanzhou @microsoft/azure-mcp
-
-# ServiceLabel: %tools-Deploy
-# ServiceOwners:                       @qianwens @xiaofanzhou
-
-# PRLabel: %tools-LoadTesting
-/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
-
-# ServiceLabel: %tools-LoadTesting
-# ServiceOwners:                       @nishtha489 @krisnaray @krishna1s @johnsta
+# ServiceLabel: %tools-ToolSelection
+# ServiceOwners:                       @anannya03 @vcolin7 @microsoft/azure-mcp 
 
 # PRLabel: %tools-VirtualDesktop
 /tools/Azure.Mcp.Tools.VirtualDesktop/ @vladimisms @microsoft/azure-mcp
@@ -274,13 +360,8 @@
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
 
-
-# PRLabel: %tools-EventGrid
-/tools/Azure.Mcp.Tools.EventGrid/      @microsoft/azure-mcp
-
-# ServiceLabel: %tools-EventGrid
-# ServiceOwners:                       @microsoft/azure-mcp
-
+# ServiceLabel: %tools-VSIX
+# ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-Workbooks
 /tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp
@@ -288,34 +369,13 @@
 # ServiceLabel: %tools-Workbooks
 # ServiceOwners:                       @matteing
 
-# PRLabel: %tools-SignalR
-/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @microsoft/azure-mcp
-
-# ServiceLabel: %tools-SignalR
-# ServiceOwners:                       @kenchennt @JialinXin
-
-# PRLabel: %tools-ConfidentialLedger
-/tools/Azure.Mcp.Tools.ConfidentialLedger/          @taicchoumsft @ivarprudnikov @microsoft/azure-mcp
-
-# ServiceLabel: %tools-ConfidentialLedger
-# ServiceOwners:                       @taicchoumsft @ivarprudnikov
-
-# PRLabel: %tools-ResourceHealth
-/tools/Azure.Mcp.Tools.ResourceHealth/      @pkaza-msft @microsoft/azure-mcp
-
-# ServiceLabel: %tools-ResourceHealth
-# ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
-
-# PRLabel: %tools-Price
-/tools/Azure.Mcp.Tools.Pricing/      @anannya03 @microsoft/azure-mcp
-
-# ServiceLabel: %tools-Price
-# ServiceOwners:                     @anannya03
+# ServiceLabel: %remote-mcp
+# ServiceOwners:                       @anuchandy @g2vinay @JasonYeMSFT @srnagar @vukelich @microsoft/azure-mcp
 
 ##################
 # Fabric MCP
 ##################
-/core/Fabric.Mcp.Core/      @microsoft/fabric-mcp
+/core/Fabric.Mcp.Core/                @microsoft/fabric-mcp
 /servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.OneLake/      @microsoft/fabric-mcp

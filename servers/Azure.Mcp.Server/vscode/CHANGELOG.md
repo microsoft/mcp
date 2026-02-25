@@ -1,5 +1,85 @@
 # Release History
 
+## 2.0.0-beta.22 (2026-02-24) (pre-release)
+
+### Added
+
+- The Azure MCP Server is now also available as an MCP Bundle (`.mcpb`), compatible with clients such as Claude Desktop and Claude Code. [[#1681](https://github.com/microsoft/mcp/pull/1681)]
+- Added sovereign cloud endpoint support for the AppLens, Application Insights, App Service, Azure Migrate, Confidential Ledger, Cosmos, Extension, Foundry, Key Vault, Kusto, Marketplace, Monitor, MySql, Postgres, Pricing, Quota, Resource Health, Search, Service Fabric, Speech, and Storage services. [[#1729](https://github.com/microsoft/mcp/pull/1729)]
+- Added endpoint validation for Azure Communication Services, App Configuration, and Container Registry. [[#1765](https://github.com/microsoft/mcp/pull/1765)]
+- Added the "createmigrateproject" action in the `azuremigrate_platformlandingzone_request` tool to create a new Azure Migrate project if one doesn't exist. [[#1724](https://github.com/microsoft/mcp/pull/1724)]
+
+### Changed
+
+- **Breaking:** Consolidated Resource Health availability-status commands: merged `resourcehealth_availability-status_get` and `resourcehealth_availability-status_list` into a single dual-mode `resourcehealth_availability-status_get` command. The command now accepts an optional `--resourceId` parameter: when provided, it returns a single resource's availability status; when omitted, it lists all resources. Tool name changed from `resourcehealth_availability-status_list` to use only `resourcehealth_availability-status_get`. [[#1796](https://github.com/microsoft/mcp/pull/1796)]
+- Switched Docker base image to `runtime-deps:10.0-alpine`. Since the server binary is self-contained, the full ASP.NET runtime base is unnecessary. Expected ~20-25% image size reduction (for example, azure-mcp images arm64: 648MB to ~482MB, amd64: 784MB to ~624MB). [[#1782](https://github.com/microsoft/mcp/pull/1782)]
+- Improved the `storage_table_list` tool description for better LLM tool selection. [[#1800](https://github.com/microsoft/mcp/pull/1800)]
+
+### Fixed
+
+- (Undocumented fix from version `2.0.0-beta.21`) Added validation logic for endpoint parameters in Foundry tools. [[#1658](https://github.com/microsoft/mcp/pull/1658)]
+- Fixed error handling to ensure error messages are preserved for missing parameters. [[#1751](https://github.com/microsoft/mcp/pull/1751)]
+
+## 2.0.0-beta.21 (2026-02-19) (pre-release)
+
+### Added
+
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions. [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+
+### Changed
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
+
+## 2.0.0-beta.20 (2026-02-17) (pre-release)
+
+### Added
+
+- Added two new Azure Service Fabric managed clusters tools: [[#1696](https://github.com/microsoft/mcp/pull/1696)]
+  - `servicefabric_managedcluster_node_get`: List all nodes in a Service Fabric managed cluster
+  - `servicefabric_managedcluster_nodetype_restart`: Restart nodes from a Service Fabric managed cluster
+
+### Changed
+
+- Resolve gaps in the capture of certain telemetry tags. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Improved formatting of the `--help` CLI command and added examples. [[#1640](https://github.com/microsoft/mcp/pull/1640)]
+- Added prompt templates documentation (`docs/prompt-templates.md`) showing how to set tenant and subscription context once using `.github/copilot-instructions.md` or at the start of chat sessions, eliminating repetitive prompting. [[#1744](https://github.com/microsoft/mcp/pull/1744)]
+- Improved error message for tenant mismatch authentication errors with actionable resolution steps. [[#1737](https://github.com/microsoft/mcp/pull/1737)]
+
+## 2.0.0-beta.19 (2026-02-12) (pre-release)
+
+### Added
+
+- Added `compute_disk_get` tool to retrieve Azure managed disk information that supports listing all disks in a subscription, listing disks in a resource group, and getting specific disk details. [[#1559](https://github.com/microsoft/mcp/pull/1559)]
+- Added support for OAuth-protected registry servers by allowing `oauthScopes` in `registry.json` for HTTP-transport servers. [[#1509](https://github.com/microsoft/mcp/pull/1509)]
+
+### Changed
+
+- Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
+    - Removed keyvault_key_list - use keyvault_key_get without providing a key name
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
+- Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
+    - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
+    - Removed monitor_webtests_update – use monitor_webtests_createorupdate for both create and update scenarios
+- Consolidated MySQL and PostgreSQL list commands – separate server/database/table list tools removed: [[#1710](https://github.com/microsoft/mcp/pull/1710)]
+    - Removed postgres_server_list, postgres_database_list, postgres_table_list – use postgres_list with appropriate parameters to route hierarchically
+    - Removed mysql_server_list, mysql_database_list, mysql_table_list – use mysql_list with appropriate parameters to route hierarchically
+- Consolidated Load Testing TestRun commands – separate list/update commands removed: [[#1711](https://github.com/microsoft/mcp/pull/1711)]
+    - Removed loadtesting_testrun_list – use loadtesting_testrun_get for retrieving test runs
+    - Removed loadtesting_testrun_update – use loadtesting_testrun_createorupdate for both create and update scenarios
+- Added processor architecture to captured telemetry. [[#1691](https://github.com/microsoft/mcp/pull/1691)]
+
+## 2.0.0-beta.18 (2026-02-10) (pre-release)
+
+### Added
+
+- AMD64 and ARM64 Docker images of the Azure MCP Server are now available. [[#1651](https://github.com/microsoft/mcp/pull/1651)]
+
+### Fixed
+
+- Added CORS policy to restrict cross-origin requests to localhost when running in unauthenticated development environment. [[#1609](https://github.com/microsoft/mcp/pull/1609)]
+- Fixed elicitation prompts failing with 'Form mode elicitation requests require a requested schema' error by using simple accept/decline prompts instead of form-based schemas for sensitive tool confirmations. [[#1668](https://github.com/microsoft/mcp/pull/1668)]
+
 ## 2.0.0-beta.17 (2026-02-05) (pre-release)
 
 ### Added

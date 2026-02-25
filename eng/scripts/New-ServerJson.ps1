@@ -64,7 +64,9 @@ ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'name' -NewValue $s
 ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue $server.version
 
 foreach ($package in $jsonHashTable.packages) {
-    ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    if ($package.ContainsKey('version')) {
+        ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+    }
 
     switch ($package.registryType) {
         'nuget' {
@@ -76,8 +78,27 @@ foreach ($package in $jsonHashTable.packages) {
         'docker' {
             ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.dockerImageName
         }
+        'pypi' {
+            ReplacePropertyValue -HashTable $package -PropertyName 'identifier' -NewValue $server.pypiPackageName
+        }
         Default {
             LogWarning "Unknown package registry type '$($package.registryType)' in server.json."
+        }
+    }
+}
+
+# Generate MCPB package entries from the McpbPlatforms csproj property
+if ($server.mcpbPlatforms -and $server.mcpbPlatforms.Count -gt 0) {
+    foreach ($mcpbPlatform in $server.mcpbPlatforms) {
+        $mcpbFilename = "$($server.name)-$mcpbPlatform.mcpb"
+        $mcpbUrl = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$mcpbFilename"
+
+        $jsonHashTable.packages += @{
+            registryType = 'mcpb'
+            identifier = $mcpbUrl
+            # fileSha256 will be set by Update-ServerJsonMcpbHashes.ps1 after signing
+            fileSha256 = ''
+            transport = @{ type = 'stdio' }
         }
     }
 }

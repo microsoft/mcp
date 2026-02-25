@@ -116,7 +116,14 @@ function CreateTestSolution {
         Pop-Location
     }
 
-    return "$workPath/Tests.sln"
+    # .NET 10+ creates .slnx by default instead of .sln
+    $slnFile = Get-ChildItem -Path $workPath -Filter "Tests.sln*" -File | Select-Object -First 1
+    if (-not $slnFile) {
+        Write-Error "Failed to create temporary solution file in $workPath"
+        return $null
+    }
+
+    return $slnFile.FullName.Replace('\', '/')
 }
 
 function Create-CoverageReport {

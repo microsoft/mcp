@@ -18,6 +18,12 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: PackagePyPI
+  type: boolean
+  default: false
+- name: PackageMCPB
+  type: boolean
+  default: false
 - name: TestTimeoutInMinutes
   type: number
   default: 30
@@ -128,6 +134,8 @@ extends:
             ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
             PackageDocker: ${{ parameters.PackageDocker }}
             PackageVSIX: ${{ parameters.PackageVSIX }}
+            PackagePyPI: ${{ parameters.PackagePyPI }}
+            PackageMCPB: ${{ parameters.PackageMCPB }}
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
@@ -148,6 +156,8 @@ extends:
               IncludeNative: false
               PackageDocker: ${{ parameters.PackageDocker }}
               PackageVSIX: ${{ parameters.PackageVSIX }}
+              PackagePyPI: ${{ parameters.PackagePyPI }}
+              PackageMCPB: ${{ parameters.PackageMCPB }}
               IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
       - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
