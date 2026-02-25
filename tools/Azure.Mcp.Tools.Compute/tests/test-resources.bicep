@@ -239,11 +239,12 @@ resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018
 }
 
 resource diskContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(contributorRoleDefinition.id, testApplicationOid, testDisk.id)
-  scope: testDisk
+  name: guid(contributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
   properties: {
     roleDefinitionId: contributorRoleDefinition.id
     principalId: testApplicationOid
+    description: 'Contributor for testApplicationOid - allows creating and updating disks in the resource group'
   }
 }
 

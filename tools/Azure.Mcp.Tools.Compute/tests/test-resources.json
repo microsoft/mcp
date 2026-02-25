@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "14469809156686005433"
+      "version": "0.39.26.7824",
+      "templateHash": "3298352052149421057"
     }
   },
   "parameters": {
@@ -27,7 +27,6 @@
     },
     "testApplicationOid": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "The client OID to grant access to test resources."
       }
@@ -256,15 +255,12 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "scope": "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]",
-      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c'), parameters('testApplicationOid'), resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName'))))]",
+      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c'), parameters('testApplicationOid'), resourceGroup().id)]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[parameters('testApplicationOid')]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]"
-      ]
+        "principalId": "[parameters('testApplicationOid')]",
+        "description": "Contributor for testApplicationOid - allows creating and updating disks in the resource group"
+      }
     }
   ],
   "outputs": {
