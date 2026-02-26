@@ -456,4 +456,11 @@
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/tests/">
     <Project Path="tools/Fabric.Mcp.Tools.Docs/tests/Fabric.Mcp.Tools.Docs.UnitTests/Fabric.Mcp.Tools.Docs.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/src/">
+    <Project Path="tools/Fabric.Mcp.Tools.Core/src/Fabric.Mcp.Tools.Core.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
+    <Project Path="tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
+  </Folder>
 </Solution>

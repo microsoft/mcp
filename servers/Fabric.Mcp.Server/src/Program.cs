@@ -75,6 +75,7 @@ internal class Program
             // Register Fabric areas
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
+            new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
         ];
     }
 
