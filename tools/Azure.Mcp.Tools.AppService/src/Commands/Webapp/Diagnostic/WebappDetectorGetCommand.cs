@@ -22,10 +22,10 @@ public sealed class WebappDetectorGetCommand(ILogger<WebappDetectorGetCommand> l
 
     public override string Description =>
         """
-        Retrieves detailed information about a diagnostic category's detectors, returning the name, kind, type,
-        description, whether the detector is enabled, and the rank for the detector. If a detector name is provided the
-        details for that specific detector is returned. Otherwise all detectors for the diagnostic category are
-        returned.
+        Retrieves detailed information about site detector for the specified diagnostic category, returning the name,
+        kind, type, description, whether the detector is enabled, and the rank for each detector. Optionally, a
+        detector name can be provided to retrieve a single detector; otherwise, all detectors for the diagnostic
+        category are returned.
         """;
 
     public override string Title => CommandTitle;

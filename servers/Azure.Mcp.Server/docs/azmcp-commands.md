@@ -591,13 +591,13 @@ azmcp appservice webapp diagnostic get-category --subscription "my-subscription"
 azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
                                                 --resource-group "my-resource-group" \
                                                 --app "my-web-app" \
-                                                --category-name "category-name"
+                                                --diagnostic-category "diagnostic-category"
 ```
 
 ```bash
 # Get analysis for a diagnostic category
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic get-anaylsis --subscription <subscription> \
+azmcp appservice webapp diagnostic get-analysis --subscription <subscription> \
                                                 --resource-group <resource-group> \
                                                 --app <app> \
                                                 --diagnostic-category <diagnostic-category> \
@@ -609,15 +609,15 @@ azmcp appservice webapp diagnostic get-anaylsis --subscription <subscription> \
 azmcp appservice webapp diagnostic get-analysis --subscription "my-subscription" \
                                                 --resource-group "my-resource-group" \
                                                 --app "my-web-app" \
-                                                --category-name "category-name"
+                                                --diagnostic-category "diagnostic-category"
 
 
 # Get an analysis for a diagnostic category
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+azmcp appservice webapp diagnostic get-analysis --subscription "my-subscription" \
                                                 --resource-group "my-resource-group" \
                                                 --app "my-web-app" \
-                                                --category-name "category-name" \
+                                                --diagnostic-category "diagnostic-category" \
                                                 --analysis-name "analysis-name"
 ```
 
@@ -633,18 +633,18 @@ azmcp appservice webapp diagnostic get-detector --subscription <subscription> \
 # Examples:
 # List detectors for a diagnostic category
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic get-analysis --subscription "my-subscription" \
+azmcp appservice webapp diagnostic get-detector --subscription "my-subscription" \
                                                 --resource-group "my-resource-group" \
                                                 --app "my-web-app" \
-                                                --category-name "category-name"
+                                                --diagnostic-category "diagnostic-category"
 
 
 # Get a detector for a diagnostic category
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+azmcp appservice webapp diagnostic get-detector --subscription "my-subscription" \
                                                 --resource-group "my-resource-group" \
                                                 --app "my-web-app" \
-                                                --category-name "category-name" \
+                                                --diagnostic-category "diagnostic-category" \
                                                 --detector-name "detector-name"
 ```
 

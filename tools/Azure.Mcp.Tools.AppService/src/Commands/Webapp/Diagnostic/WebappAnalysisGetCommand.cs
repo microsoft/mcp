@@ -22,9 +22,9 @@ public sealed class WebappAnalysisGetCommand(ILogger<WebappAnalysisGetCommand> l
 
     public override string Description =>
         """
-        Retrieves detailed information about diagnostic category's analysis, returning the name,
-        kind, type, and description for each category. If a diagnostic category is provided the details for that
-        specific category is returned. Otherwise all diagnostic categories are returned.
+        Retrieves detailed information about site analysis for the specified diagnostic category, returning the name,
+        kind, type, and description for each analysis. Optionally, an analysis name can be provided to retrieve a
+        single analysis; otherwise, all analyses for the diagnostic category are returned.
         """;
 
     public override string Title => CommandTitle;
@@ -88,7 +88,7 @@ public sealed class WebappAnalysisGetCommand(ILogger<WebappAnalysisGetCommand> l
             }
             else
             {
-                _logger.LogError(ex, "Failed to get diagnostic category analysis '{Analtsis}' for diagnostic category '{DiagnosticCategory}' and Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
+                _logger.LogError(ex, "Failed to get diagnostic category analysis '{Analysis}' for diagnostic category '{DiagnosticCategory}' and Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
                     options.AnalysisName, options.DiagnosticCategory, options.AppName, options.Subscription, options.ResourceGroup);
             }
             HandleException(context, ex);

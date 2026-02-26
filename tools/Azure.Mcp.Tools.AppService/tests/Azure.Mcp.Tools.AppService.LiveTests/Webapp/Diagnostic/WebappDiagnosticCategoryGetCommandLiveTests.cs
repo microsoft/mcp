@@ -83,7 +83,7 @@ public class WebappDiagnosticCategoryGetCommandLiveTests(ITestOutputHelper outpu
                 { "app", webappName },
                 { "diagnostic-category", categoryName }
             });
-        
+
         var categoryGetResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappDiagnosticCategoryGetResult);
         Assert.NotNull(categoryGetResult);
         Assert.Single(categoryGetResult.WebappDiagnosticCategories);

@@ -33,7 +33,7 @@ public class WebappDetectorGetCommandLiveTests(ITestOutputHelper output, TestPro
     ];
 
     [Fact(Skip = "Need to figure out test resource deployment.")]
-    public async Task ExecuteAsync_AnalysesList_ReturnsAnalyses()
+    public async Task ExecuteAsync_DetectorsList_ReturnsDetectors()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
@@ -43,7 +43,7 @@ public class WebappDetectorGetCommandLiveTests(ITestOutputHelper output, TestPro
     }
 
     [Fact(Skip = "Need to figure out test resource deployment.")]
-    public async Task ExecuteAsync_AnalysisGet_ReturnsExpectedAnalysis()
+    public async Task ExecuteAsync_DetectorGet_ReturnsExpectedDetector()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
@@ -63,10 +63,10 @@ public class WebappDetectorGetCommandLiveTests(ITestOutputHelper output, TestPro
                 { "detector-name", detectorName }
             });
 
-        var analysisResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappDetectorGetResult);
-        Assert.NotNull(analysisResult);
-        Assert.Single(analysisResult.WebappDetectors);
-        Assert.Equal(detectorName, analysisResult.WebappDetectors[0].Name);
+        var detectorResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappDetectorGetResult);
+        Assert.NotNull(detectorResult);
+        Assert.Single(detectorResult.WebappDetectors);
+        Assert.Equal(detectorName, detectorResult.WebappDetectors[0].Name);
     }
 
     private async Task<(List<WebappDetectorDetails>, string)> ListDetectorsAsync(string subscription, string resourceGroupName, string webappName)

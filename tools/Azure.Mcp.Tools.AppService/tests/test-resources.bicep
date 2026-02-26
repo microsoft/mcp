@@ -30,7 +30,6 @@ var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
 var cosmosAccountName = '${baseName}-cosmos'
 var cosmosDatabaseName = '${baseName}cosmosdb'
-var cosmosContributorRoleId = '00000000-0000-0000-0000-000000000002' // Built-in Contributor role
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
@@ -288,7 +287,7 @@ resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignment
   scope: webApp
   properties: {
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions','de139f84-1756-47ae-9be6-808fbbe84772') // Website Contributor
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772') // Website Contributor
   }
 }
 

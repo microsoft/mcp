@@ -19,7 +19,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Diagnostic;
 
 [Trait("Command", "WebappDiagnosticCategoryGet")]
-public class WebappDiagnositcCategoryGetCommandTests
+public class WebappDiagnosticCategoryGetCommandTests
 {
     private readonly IAppServiceService _appServiceService;
     private readonly IServiceProvider _serviceProvider;
@@ -28,7 +28,7 @@ public class WebappDiagnositcCategoryGetCommandTests
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public WebappDiagnositcCategoryGetCommandTests()
+    public WebappDiagnosticCategoryGetCommandTests()
     {
         _appServiceService = Substitute.For<IAppServiceService>();
         _logger = Substitute.For<ILogger<WebappDiagnosticCategoryGetCommand>>();
