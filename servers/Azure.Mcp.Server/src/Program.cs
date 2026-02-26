@@ -133,6 +133,7 @@ internal class Program
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
+            new Azure.Mcp.Tools.WellArchitected.WellArchitectedSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
             // IMPORTANT: DO NOT MODIFY OR ADD EXCLUSIONS IN THIS SECTION

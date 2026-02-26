@@ -1,0 +1,35 @@
+{
+  "recommendations": {
+    "RE:01": {
+      "id": "RE:01",
+      "title": "Design for redundancy",
+      "description": "Design your workload to be redundant across zones and regions as appropriate. Build in redundancy to eliminate single points of failure.",
+      "pillar": "Reliability",
+      "content": "Design your application architecture to be zone-redundant when possible and region-redundant when necessary. Set up redundancy for single points of failure including management and control plane components. Implement automated failover mechanisms and test them regularly to ensure they work as expected during actual outages.",
+      "service": null
+    },
+    "RE:02": {
+      "id": "RE:02",
+      "title": "Identify flows",
+      "description": "Identify and catalog critical system flows to understand dependencies and failure modes.",
+      "pillar": "Reliability",
+      "content": "Document all critical system flows including data flows, API call chains, and inter-service dependencies. Use this catalog to perform failure mode analysis and identify potential weak points in your architecture.",
+      "service": null
+    }
+  },
+  "checklists": {
+    "reliability": {
+      "pillar": "Reliability",
+      "items": [
+        { "id": "RE:01", "title": "Design for redundancy", "description": "Build redundancy across zones and regions" }
+      ]
+    }
+  },
+  "serviceGuides": {
+    "azure-kubernetes-service": {
+      "service": "azure-kubernetes-service",
+      "content": "Azure Kubernetes Service (AKS) Well-Architected guidance covering cluster design, node pool configuration, networking, security, and operational excellence for containerized workloads.",
+      "recommendationIds": ["RE:01"]
+    }
+  }
+}

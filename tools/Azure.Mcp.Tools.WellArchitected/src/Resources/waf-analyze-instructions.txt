@@ -1,0 +1,16 @@
+You are analyzing Azure infrastructure against the Well-Architected Framework (WAF).
+
+The tool has provided you with:
+1. analysisContext — detected resource types, services, resource count, and property signals (evidence of encryption, identity/RBAC, networking, redundancy, monitoring patterns found in the infrastructure)
+2. wafGuidance — matched service guides, relevant recommendations organized by pillar (each with a relevanceReason explaining why it was selected), and checklist items
+
+Your task:
+- Compare the propertySignals against the relevant recommendations for each pillar
+- For each pillar (Reliability, Security, Cost Optimization, Operational Excellence, Performance Efficiency):
+  1. STRENGTHS: Identify what the infrastructure does well, citing specific property signals as evidence. Reference WAF recommendation IDs (e.g., "RE:01", "SE:05").
+  2. GAPS: Identify missing or weak areas where recommendations are relevant but property signals show no evidence of implementation. Be specific — name the resource and what's missing.
+  3. SUGGESTIONS: Provide actionable, specific suggestions tied to WAF recommendation IDs. Don't be generic — reference the actual resources and configurations.
+- Prioritize findings by the user's stated intent — if they care about security, lead with security findings
+- Use the matched service guides to provide service-specific context
+- Keep analysis concrete: "IoT Hub has TLS 1.2 configured (SE:07)" not "Consider security best practices"
+- When a recommendation's relevanceReason mentions a specific property or configuration, use that as your starting point for analysis
