@@ -37,6 +37,7 @@ public class FabricDocsSetupTests
         var setup = new FabricDocsSetup();
         var rootGroup = new CommandGroup("root", "Root command group");
         var services = new ServiceCollection();
+        services.AddLogging();
         setup.ConfigureServices(services);
         var serviceProvider = services.BuildServiceProvider();
 
@@ -44,15 +45,16 @@ public class FabricDocsSetupTests
         var commands = setup.RegisterCommands(serviceProvider);
         rootGroup.AddSubGroup(commands);
 
-        // Assert
-        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "docs");
-        Assert.NotNull(publicApisGroup);
+        // Assert - flat structure under docs
+        var docsGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "docs");
+        Assert.NotNull(docsGroup);
 
-        var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "bestpractices");
-        Assert.NotNull(bestPracticesGroup);
-
-        Assert.Contains("list", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", publicApisGroup.Commands.Keys);
-        Assert.Contains("get", bestPracticesGroup.Commands.Keys);
+        // Verify all 6 commands are registered with noun-based naming
+        Assert.Contains("workloads", docsGroup.Commands.Keys);
+        Assert.Contains("workload_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("platform_api_spec", docsGroup.Commands.Keys);
+        Assert.Contains("item_definitions", docsGroup.Commands.Keys);
+        Assert.Contains("best_practices", docsGroup.Commands.Keys);
+        Assert.Contains("api_examples", docsGroup.Commands.Keys);
     }
 }

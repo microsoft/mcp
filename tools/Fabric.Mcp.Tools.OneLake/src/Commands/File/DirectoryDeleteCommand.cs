@@ -24,9 +24,9 @@ public sealed class DirectoryDeleteCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "86991cd6-75fa-4870-9d99-f986ba9f5f73";
-    public override string Name => "delete";
+    public override string Name => "delete_directory";
     public override string Title => "Delete OneLake Directory";
-    public override string Description => "Delete a directory from OneLake storage. Use --recursive to delete non-empty directories.";
+    public override string Description => "Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories.";
 
     public override ToolMetadata Metadata => new()
     {

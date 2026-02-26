@@ -24,63 +24,45 @@ public class FabricDocsSetup : IAreaSetup
 
         services.AddSingleton<ListWorkloadsCommand>();
         services.AddSingleton<GetWorkloadApisCommand>();
-
         services.AddSingleton<GetPlatformApisCommand>();
-
         services.AddSingleton<GetBestPracticesCommand>();
-
         services.AddSingleton<GetExamplesCommand>();
-
         services.AddSingleton<GetWorkloadDefinitionCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var fabricPublicApis = new CommandGroup(Name,
+        var fabricDocs = new CommandGroup(Name,
             """
-            Microsoft Fabric Public API Access - Retrieve OpenAPI specifications and example files 
-            from Microsoft Fabric's official API documentation. Use this tool when you need to:
-            - Build applications that integrate with Microsoft Fabric APIs
-            - Understand API endpoints, request/response schemas, and authentication requirements
-            - Generate client SDKs or API wrappers for Fabric services
-            - Review example API calls and responses for development guidance
-            - Explore available APIs across different Fabric workloads
-            This tool provides read-only access to Microsoft Fabric's public API documentation 
-            repository on GitHub. It does NOT interact with live Fabric resources or require 
-            authentication - it only retrieves API specifications and examples.
+            Microsoft Fabric Documentation Tools - Access OpenAPI specifications, best practices,
+            and example files for Microsoft Fabric APIs. Use this tool when you need to:
+            - Discover available Fabric workload types and their API specifications
+            - Retrieve detailed OpenAPI documentation for specific workloads
+            - Access best practice guidance for Fabric development
+            - Get example API request/response files for implementation reference
+            This tool provides read-only access to Microsoft Fabric documentation and does NOT
+            interact with live Fabric resources or require authentication.
             """, Title);
 
-        // Create public apis subgroups
-        var platform = new CommandGroup("platform", "Platform API Operations - Commands for accessing Microsoft Fabric platform-level APIs, including authentication, user management, and tenant configuration.");
-        fabricPublicApis.AddSubGroup(platform);
-
-        var bestPractices = new CommandGroup("bestpractices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
-        fabricPublicApis.AddSubGroup(bestPractices);
-
-        // Create Best Practices subgroups
-        var examples = new CommandGroup("examples", "Example API Files - Commands for retrieving example API request/response files for specific Microsoft Fabric workloads from the official documentation repository.");
-        bestPractices.AddSubGroup(examples);
-
-        var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
-        bestPractices.AddSubGroup(itemDefinition);
-
+        // Register all commands directly at the docs level (flat structure)
         var listWorkloads = serviceProvider.GetRequiredService<ListWorkloadsCommand>();
-        fabricPublicApis.AddCommand(listWorkloads.Name, listWorkloads);
-        var getWorkloads = serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
-        fabricPublicApis.AddCommand(getWorkloads.Name, getWorkloads);
+        fabricDocs.AddCommand(listWorkloads.Name, listWorkloads);
 
-        var getPlatform = serviceProvider.GetRequiredService<GetPlatformApisCommand>();
-        platform.AddCommand(getPlatform.Name, getPlatform);
+        var getApiSpec = serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
+        fabricDocs.AddCommand(getApiSpec.Name, getApiSpec);
 
-        var getBestPractices = serviceProvider.GetRequiredService<GetBestPracticesCommand>();
-        bestPractices.AddCommand(getBestPractices.Name, getBestPractices);
-
-        var getExamples = serviceProvider.GetRequiredService<GetExamplesCommand>();
-        examples.AddCommand(getExamples.Name, getExamples);
+        var getPlatformApiSpec = serviceProvider.GetRequiredService<GetPlatformApisCommand>();
+        fabricDocs.AddCommand(getPlatformApiSpec.Name, getPlatformApiSpec);
 
         var getItemDefinition = serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
-        itemDefinition.AddCommand(getItemDefinition.Name, getItemDefinition);
+        fabricDocs.AddCommand(getItemDefinition.Name, getItemDefinition);
 
-        return fabricPublicApis;
+        var getBestPractices = serviceProvider.GetRequiredService<GetBestPracticesCommand>();
+        fabricDocs.AddCommand(getBestPractices.Name, getBestPractices);
+
+        var getExamples = serviceProvider.GetRequiredService<GetExamplesCommand>();
+        fabricDocs.AddCommand(getExamples.Name, getExamples);
+
+        return fabricDocs;
     }
 }

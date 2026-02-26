@@ -17,7 +17,7 @@ namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 public class PublicApisCommandsTests
 {
     [Fact]
-    public void DiscoverPublicWorkloadsCommand_HasCorrectProperties()
+    public void ListWorkloadsCommand_HasCorrectProperties()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -26,15 +26,15 @@ public class PublicApisCommandsTests
         var command = new ListWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("list", command.Name);
+        Assert.Equal("workloads", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("List Available Fabric Workloads", command.Title);
+        Assert.Equal("Available Fabric Workloads", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
-    public void DiscoverPublicWorkloadsCommand_GetCommand_ReturnsValidCommand()
+    public void ListWorkloadsCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -45,11 +45,11 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
+        Assert.Equal("workloads", systemCommand.Name);
     }
 
     [Fact]
-    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_ReturnsWorkloads()
+    public async Task ListWorkloadsCommand_ExecuteAsync_ReturnsWorkloads()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -76,7 +76,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_HandlesException()
+    public async Task ListWorkloadsCommand_ExecuteAsync_HandlesException()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -101,7 +101,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public void GetPlatformApisCommand_HasCorrectProperties()
+    public void GetPlatformApiSpecCommand_HasCorrectProperties()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -110,15 +110,15 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("platform_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Platform API Specification", command.Title);
+        Assert.Equal("Platform API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
-    public void GetPlatformApisCommand_GetCommand_ReturnsValidCommand()
+    public void GetPlatformApiSpecCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -129,11 +129,11 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("platform_api_spec", systemCommand.Name);
     }
 
     [Fact]
-    public async Task GetPlatformApisCommand_ExecuteAsync_ReturnsPlatformApis()
+    public async Task GetPlatformApiSpecCommand_ExecuteAsync_ReturnsPlatformApis()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -160,7 +160,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetPlatformApisCommand_ExecuteAsync_HandlesException()
+    public async Task GetPlatformApiSpecCommand_ExecuteAsync_HandlesException()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -185,7 +185,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public void GetWorkloadApisCommand_HasCorrectProperties()
+    public void GetApiSpecCommand_HasCorrectProperties()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -194,15 +194,15 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("workload_api_spec", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Workload API Specification", command.Title);
+        Assert.Equal("Workload API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
-    public void GetWorkloadApisCommand_GetCommand_ReturnsValidCommand()
+    public void GetApiSpecCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -213,12 +213,12 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("workload_api_spec", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithValidWorkloadType_ReturnsApis()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithValidWorkloadType_ReturnsApis()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -245,7 +245,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -269,7 +269,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithCommonWorkloadType_ReturnsNotFound()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithCommonWorkloadType_ReturnsNotFound()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -294,7 +294,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpNotFoundError_ReturnsNotFound()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithHttpNotFoundError_ReturnsNotFound()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -317,11 +317,11 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No workload of type 'invalid-workload' exists", result.Message);
-        Assert.Contains("discover-workloads command", result.Message);
+        Assert.Contains("workloads command", result.Message);
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpError_ReturnsMappedStatusCode()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithHttpError_ReturnsMappedStatusCode()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -347,7 +347,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithGeneralException_ReturnsInternalServerError()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithGeneralException_ReturnsInternalServerError()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();

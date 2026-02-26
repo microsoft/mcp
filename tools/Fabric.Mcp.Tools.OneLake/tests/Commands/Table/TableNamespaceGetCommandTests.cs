@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Fabric.Mcp.Tools.OneLake.Commands.Table;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 
@@ -23,7 +25,7 @@ public class TableNamespaceGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new TableNamespaceGetCommand(NullLogger<TableNamespaceGetCommand>.Instance, service);
 
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_table_namespace", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -38,7 +40,7 @@ public class TableNamespaceGetCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_table_namespace", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 

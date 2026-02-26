@@ -23,9 +23,9 @@ public sealed class OneLakeWorkspaceListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "5f005a27-9838-4c09-9785-55ce49963c97";
-    public override string Name => "list";
+    public override string Name => "list_workspaces";
     public override string Title => "List OneLake Workspaces";
-    public override string Description => "List all OneLake workspaces using the OneLake data plane API.";
+    public override string Description => "Lists all Fabric workspaces accessible via OneLake data plane API. Use this when the user needs to view available workspaces or select a workspace for data operations. Returns workspace names and IDs.";
 
     public override ToolMetadata Metadata => new()
     {

@@ -27,9 +27,9 @@ public class BestPracticesCommandsTests
         var command = new GetBestPracticesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("best_practices", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get API Examples", command.Title);
+        Assert.Equal("Best Practices", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -46,7 +46,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("best_practices", systemCommand.Name);
         // Options are registered dynamically, not statically in the Options collection
     }
 
@@ -165,9 +165,9 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("api_examples", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get API Examples", command.Title);
+        Assert.Equal("API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
@@ -184,7 +184,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("api_examples", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -273,7 +273,7 @@ public class BestPracticesCommandsTests
     #region GetWorkloadDefinitionCommand Tests
 
     [Fact]
-    public void GetWorkloadDefinitionCommand_HasCorrectProperties()
+    public void GetItemDefinitionCommand_HasCorrectProperties()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -282,15 +282,15 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("item_definitions", command.Name);
         Assert.NotEmpty(command.Description);
-        Assert.Equal("Get Workload Item Definition", command.Title);
+        Assert.Equal("Item Definitions", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
-    public void GetWorkloadDefinitionCommand_GetCommand_ReturnsValidCommand()
+    public void GetItemDefinitionCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -301,12 +301,12 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("item_definitions", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithValidWorkloadType_ReturnsDefinition()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithValidWorkloadType_ReturnsDefinition()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -333,7 +333,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -357,7 +357,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithInvalidWorkloadType_ReturnsNotFound()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithInvalidWorkloadType_ReturnsNotFound()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -382,7 +382,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
