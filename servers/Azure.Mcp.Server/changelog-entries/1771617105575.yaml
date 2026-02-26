@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added sovereign cloud endpoint support for AppLens, ApplicationInsights, AppService, AzureMigrate, ConfidentialLedger, Cosmos, Extension, Foundry, KeyVault, Kusto, Marketplace, Monitor, MySql, Postgres, Pricing, Quota, ResourceHealth, Search, ServiceFabric, Speech, and Storage services"

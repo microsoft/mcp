@@ -101,7 +101,7 @@ public class CognitiveServicesRegionChecker : AzureRegionChecker
         {
             try
             {
-                var quotas = subscription.GetModelsAsync(region);
+                var quotas = subscription.GetModelsAsync(region, cancellationToken);
 
                 await foreach (CognitiveServicesModel modelElement in quotas.WithCancellation(cancellationToken))
                 {
@@ -152,7 +152,7 @@ public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId,
         {
             try
             {
-                AsyncPageable<PostgreSqlFlexibleServerCapabilityProperties> result = subscription.ExecuteLocationBasedCapabilitiesAsync(region);
+                AsyncPageable<PostgreSqlFlexibleServerCapabilityProperties> result = subscription.ExecuteLocationBasedCapabilitiesAsync(region, cancellationToken);
                 await foreach (var capability in result.WithCancellation(cancellationToken))
                 {
                     if (capability.SupportedServerEditions?.Any() == true)

@@ -22,6 +22,8 @@ public class AppServiceService(
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;
 
+    private static readonly string[] supportedTypes = ["sqlserver", "mysql", "postgresql", "cosmosdb"];
+
     public async Task<DatabaseConnectionInfo> AddDatabaseAsync(
         string appName,
         string resourceGroup,
@@ -47,8 +49,7 @@ public class AppServiceService(
                 (nameof(databaseType), databaseType),
                 (nameof(databaseServer), databaseServer),
                 (nameof(databaseName), databaseName),
-                (nameof(subscription), subscription)
-                );
+                (nameof(subscription), subscription));
 
             // Get Azure resources
             var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
@@ -118,7 +119,7 @@ public class AppServiceService(
         }
 
         // Prepare connection strings collection
-        var connectionStrings = config.Value.Data.ConnectionStrings?.ToList() ?? new List<ConnStringInfo>();
+        var connectionStrings = config.Value.Data.ConnectionStrings?.ToList() ?? [];
 
         // Remove existing connection string with the same name if it exists
         connectionStrings.RemoveAll(cs =>
@@ -136,7 +137,7 @@ public class AppServiceService(
         var configData = config.Value.Data;
         configData.ConnectionStrings = connectionStrings;
 
-        var updatedConfig = await configResource.CreateOrUpdateAsync(Azure.WaitUntil.Completed, configData, cancellationToken);
+        var updatedConfig = await configResource.CreateOrUpdateAsync(WaitUntil.Completed, configData, cancellationToken);
         if (updatedConfig?.Value == null)
         {
             throw new InvalidOperationException($"Failed to update configuration for web app '{webApp.Data.Name}'.");
@@ -158,15 +159,6 @@ public class AppServiceService(
         };
     }
 
-    private static void ValidateDatabaseType(string databaseType)
-    {
-        var supportedTypes = new[] { "sqlserver", "mysql", "postgresql", "cosmosdb" };
-        if (!supportedTypes.Contains(databaseType, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException($"Unsupported database type: {databaseType}. Supported types: {string.Join(", ", supportedTypes)}");
-        }
-    }
-
     private static ConnectionStringType GetConnectionStringType(string databaseType)
     {
         return databaseType.ToLowerInvariant() switch
@@ -175,7 +167,7 @@ public class AppServiceService(
             "mysql" => ConnectionStringType.MySql,
             "postgresql" => ConnectionStringType.PostgreSql,
             "cosmosdb" => ConnectionStringType.Custom,
-            _ => throw new ArgumentException($"Unsupported database type: {databaseType}")
+            _ => throw new ArgumentException($"Unsupported database type: {databaseType}. Supported types: {string.Join(", ", supportedTypes)}")
         };
     }
 
@@ -201,8 +193,66 @@ public class AppServiceService(
                 $"AccountEndpoint=https://{databaseServer}.documents.azure.cn:443/;AccountKey={{key}};Database={databaseName};",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
                 $"AccountEndpoint=https://{databaseServer}.documents.azure.us:443/;AccountKey={{key}};Database={databaseName};",
-            _ =>
-                $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};"
+            _ => $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};"
         };
     }
+
+    public async Task<List<WebappDetails>> GetWebAppsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? appName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+
+        var results = new List<WebappDetails>();
+
+        if (!string.IsNullOrWhiteSpace(appName))
+        {
+            ValidateRequiredParameters((nameof(resourceGroup), resourceGroup));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (resourceGroupResource?.Value == null)
+            {
+                throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+            }
+
+            var webAppCollection = resourceGroupResource.Value.GetWebSites();
+            var webApp = await webAppCollection.GetAsync(appName, cancellationToken: cancellationToken);
+            if (webApp != null)
+            {
+                results.Add(MapToWebappDetails(webApp.Value.Data));
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(resourceGroup))
+        {
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (resourceGroupResource?.Value == null)
+            {
+                throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+            }
+
+            var webAppCollection = resourceGroupResource.Value.GetWebSites();
+            await foreach (var webapp in webAppCollection.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                results.Add(MapToWebappDetails(webapp.Data));
+            }
+        }
+        else
+        {
+            await foreach (var webapp in subscriptionResource.GetWebSitesAsync(cancellationToken))
+            {
+                results.Add(MapToWebappDetails(webapp.Data));
+            }
+        }
+
+        return results;
+    }
+
+    private static WebappDetails MapToWebappDetails(WebSiteData webapp)
+        => new(webapp.Name, webapp.ResourceType.ToString(), webapp.Location.Name, webapp.Kind, webapp.IsEnabled,
+            webapp.State, webapp.ResourceGroup, webapp.HostNames, webapp.LastModifiedTimeUtc, webapp.Sku);
 }
