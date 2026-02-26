@@ -33,10 +33,8 @@ public class TableListCommandTests
         _storageService = Substitute.For<IStorageService>();
         _logger = Substitute.For<ILogger<TableListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_storageService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _storageService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

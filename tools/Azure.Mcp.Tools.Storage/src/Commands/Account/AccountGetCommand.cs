@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
 
@@ -65,11 +66,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
             // Call service operation with required parameters
-            var accounts = await storageService.GetAccountDetails(
+            var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
