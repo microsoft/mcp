@@ -475,5 +475,132 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         }
     }
 
+    [Fact]
+    public async Task Should_list_private_endpoint_connections()
+    {
+        var result = await CallToolAsync(
+            "fileshares_fileshare_privateendpointconnection_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "file-share-name", FileShare1Name }
+            });
+
+        var connections = result.AssertProperty("connections");
+        Assert.Equal(JsonValueKind.Array, connections.ValueKind);
+
+        // Should have at least one connection from test infrastructure
+        var connectionArray = connections.EnumerateArray().ToList();
+        Assert.True(connectionArray.Count > 0, "At least one private endpoint connection should exist from test infrastructure");
+    }
+
+    [Fact]
+    public async Task Should_get_specific_private_endpoint_connection()
+    {
+        // First list to get the connection name
+        string? connectionName = null;
+        {
+            var listResult = await CallToolAsync(
+                "fileshares_fileshare_privateendpointconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name }
+                });
+
+            var connections = listResult.AssertProperty("connections");
+            var connectionArray = connections.EnumerateArray().ToList();
+
+            if (connectionArray.Count > 0)
+            {
+                var firstConnection = connectionArray[0];
+                if (firstConnection.TryGetProperty("name", out var nameElement))
+                {
+                    connectionName = nameElement.GetString();
+                }
+            }
+        }
+
+        Assert.NotNull(connectionName);
+
+        // Get specific connection
+        {
+            var result = await CallToolAsync(
+                "fileshares_fileshare_privateendpointconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name },
+                    { "connection-name", connectionName }
+                });
+
+            var connections = result.AssertProperty("connections");
+            Assert.Equal(JsonValueKind.Array, connections.ValueKind);
+
+            var connectionArray = connections.EnumerateArray().ToList();
+            Assert.Single(connectionArray);
+
+            var connection = connectionArray[0];
+            var name = connection.GetProperty("name");
+            Assert.Equal(connectionName, name.GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Should_update_private_endpoint_connection_status()
+    {
+        // First list to get the connection name
+        string? connectionName = null;
+        {
+            var listResult = await CallToolAsync(
+                "fileshares_fileshare_privateendpointconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name }
+                });
+
+            var connections = listResult.AssertProperty("connections");
+            var connectionArray = connections.EnumerateArray().ToList();
+
+            if (connectionArray.Count > 0)
+            {
+                var firstConnection = connectionArray[0];
+                if (firstConnection.TryGetProperty("name", out var nameElement))
+                {
+                    connectionName = nameElement.GetString();
+                }
+            }
+        }
+
+        Assert.NotNull(connectionName);
+
+        // Update connection status to Approved with description
+        {
+            var result = await CallToolAsync(
+                "fileshares_fileshare_privateendpointconnection_update",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name },
+                    { "connection-name", connectionName },
+                    { "status", "Approved" },
+                    { "description", "Connection approved by live test" }
+                });
+
+            var connection = result.AssertProperty("connection");
+            Assert.NotEqual(JsonValueKind.Null, connection.ValueKind);
+
+            // Verify status was updated
+            var connectionState = connection.GetProperty("connectionState");
+            Assert.Equal("Approved", connectionState.GetString());
+        }
+    }
+
     private new const string TenantNameReason = "Tenant name resolution is not supported for service principals";
 }
