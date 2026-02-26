@@ -347,19 +347,49 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutSubscription_ReturnsValidationError()
+    public async Task ExecuteAsync_WithoutSubscription_SucceedsForCrossScopeDiscovery()
     {
-        // Arrange - omitting subscription should fail validation with SubscriptionCommand
+        // Arrange - subscription is optional for cross-scope discovery
         var args = _command.GetCommand().Parse([]);
+        var expectedWorkbooks = new List<WorkbookInfo>
+        {
+            new(
+                WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
+                DisplayName: "Workbook 1",
+                Description: null,
+                Category: null,
+                Location: null,
+                Kind: null,
+                Tags: null,
+                SerializedData: null,
+                Version: null,
+                TimeModified: null,
+                UserId: null,
+                SourceId: null)
+        };
+
+        var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
+
+        _service.ListWorkbooksAsync(
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Any<WorkbookFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<bool>(),
+            Arg.Any<OutputFormat>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(listResult);
 
         var context = new CommandContext(_serviceProvider);
 
         // Act
         var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
-        // Assert - should fail validation since subscription is required
+        // Assert - should succeed without subscription
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]

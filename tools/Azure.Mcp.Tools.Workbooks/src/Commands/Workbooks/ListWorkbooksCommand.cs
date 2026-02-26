@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : SubscriptionCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : GlobalCommand<ListWorkbooksOptions>
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
@@ -54,6 +55,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.Subscription.AsOptional());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(WorkbooksOptionDefinitions.Kind);
         command.Options.Add(WorkbooksOptionDefinitions.Category);
@@ -68,6 +70,12 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+
+        options.Subscription = CommandHelper.GetSubscription(parseResult);
+        if (!string.IsNullOrEmpty(options.Subscription))
+        {
+            options.Subscription = options.Subscription.Trim('"', '\'');
+        }
 
         var resourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.ResourceGroups = string.IsNullOrEmpty(resourceGroup) ? null : [resourceGroup];
