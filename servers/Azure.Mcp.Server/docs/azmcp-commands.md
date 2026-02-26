@@ -547,25 +547,25 @@ azmcp appservice database add --subscription "my-subscription" \
 ```bash
 # Get App Service Web App details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription <subscription> \
-                             [--resource-group <resource-group>] \
-                             [--app <app>]
+azmcp appservice webapp get --subscription <subscription> \
+                            [--resource-group <resource-group>] \
+                            [--app <app>]
 
 # Examples:
 # List the App Service Web Apps details in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription"
+azmcp appservice webapp get --subscription "my-subscription"
 
 # List the App Service Web Apps details in a resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group"
 
 # Get the details for a specific App Service Web App
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group" \
-                             --app "my-app"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group" \
+                            --app "my-app"
 ```
 
 ### Azure CLI Operations

@@ -105,9 +105,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
-| appservice_webapps_get | List the web apps in my subscription |
-| appservice_webapps_get | Show me the web apps in my <resource_group> resource group |
-| appservice_webapps_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_get | List the web apps in my subscription |
+| appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
+| appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
 
 ## Azure Application Insights
 
