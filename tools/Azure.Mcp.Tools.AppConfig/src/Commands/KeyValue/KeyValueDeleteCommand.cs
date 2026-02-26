@@ -9,10 +9,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
-public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger) : BaseKeyValueCommand<KeyValueDeleteOptions>()
+public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService)
+    : BaseKeyValueCommand<KeyValueDeleteOptions>()
 {
     private const string CommandTitle = "Delete App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override string Id => "f885a499-82ec-4897-a788-fb6b4615ab06";
 
@@ -48,8 +50,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
 
         try
         {
-            var appConfigService = context.GetService<IAppConfigService>();
-            await appConfigService.DeleteKeyValue(
+            await _appConfigService.DeleteKeyValue(
                 options.Account!,
                 options.Key!,
                 options.Subscription!,
