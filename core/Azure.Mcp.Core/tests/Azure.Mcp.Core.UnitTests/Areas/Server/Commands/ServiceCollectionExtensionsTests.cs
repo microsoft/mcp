@@ -22,7 +22,7 @@ public class ServiceCollectionExtensionsTests
         var services = CommandFactoryHelpers.SetupCommonServices();
         services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
         services.AddSingleIdentityTokenCredentialProvider();
-        services.AddRegistryRoot();
+        services.AddRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
         return services;
     }
 

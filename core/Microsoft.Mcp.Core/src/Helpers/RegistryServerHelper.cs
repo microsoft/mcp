@@ -15,12 +15,8 @@ public sealed class RegistryServerHelper
         return $"{typeof(RegistryServerProvider).FullName}.{serverName}";
     }
 
-    public static IRegistryRoot? GetRegistryRoot()
+    public static IRegistryRoot? GetRegistryRoot(Assembly assembly, string resourceName)
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = assembly
-            .GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("registry.json", StringComparison.OrdinalIgnoreCase));
         if (resourceName is null)
         {
             return null;

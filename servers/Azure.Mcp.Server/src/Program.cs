@@ -17,10 +17,13 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
+
+namespace Azure.Mcp.Server;
 
 internal class Program
 {
@@ -206,6 +209,9 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
+        var thisAssembly = typeof(Program).Assembly;
+        var resourceNamespace = "Azure.Mcp.Server.Resources";
+
         services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
 
@@ -230,7 +236,13 @@ internal class Program
             area.ConfigureServices(services);
         }
 
-        services.AddRegistryRoot();
+        services.AddRegistryRoot(thisAssembly, $"{resourceNamespace}.registry.json");
+
+        services.AddSingleton<IServerInstructionsProvider>(
+            new ResourceServerInstructionsProvider(thisAssembly, $"{resourceNamespace}.azure-rules.txt"));
+
+        services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
+            ActivatorUtilities.CreateInstance<AssemblyResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"{resourceNamespace}.consolidated-tools.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

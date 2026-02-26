@@ -82,6 +82,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>

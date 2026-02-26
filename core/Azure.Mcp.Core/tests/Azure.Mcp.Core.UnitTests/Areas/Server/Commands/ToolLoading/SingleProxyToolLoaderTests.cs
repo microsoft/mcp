@@ -20,7 +20,7 @@ public class SingleProxyToolLoaderTests
     {
         var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        var registryRoot = RegistryServerHelper.GetRegistryRoot();
+        var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
         return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
     }
 
