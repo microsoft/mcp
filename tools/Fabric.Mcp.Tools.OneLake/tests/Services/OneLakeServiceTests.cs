@@ -10,10 +10,10 @@ using NSubstitute;
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
 
 /// <summary>
-/// Tests for OneLakeService using testable architecture patterns following the Fabric.Mcp.Tools.PublicApi pattern.
+/// Tests for OneLakeService using testable architecture patterns following the Fabric.Mcp.Tools.Docs pattern.
 /// This demonstrates how the service could be tested with dependency injection and mocking.
 /// 
-/// Key Learning: Fabric.Mcp.Tools.PublicApi succeeds in testing because they:
+/// Key Learning: Fabric.Mcp.Tools.Docs succeeds in testing because they:
 /// 1. Inject abstractions (IResourceProviderService) instead of concrete implementations
 /// 2. Mock the dependencies that handle external calls
 /// 3. Test the business logic without hitting real Azure APIs
@@ -29,7 +29,7 @@ public class OneLakeServiceTests
         Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpMethod method, string url, CancellationToken cancellationToken = default);
     }
 
-    // Example testable service following the PublicApi pattern
+    // Example testable service following the Docs pattern
     public class TestableOneLakeService
     {
         private readonly IOneLakeApiClient _apiClient;
@@ -228,7 +228,7 @@ public class OneLakeServiceTests
     /// - Cannot mock authentication layer
     /// - Requires Azure credentials for testing
     /// 
-    /// Fabric.PublicApi Service Pattern:
+    /// Fabric.Docs Service Pattern:
     /// - Injects IResourceProviderService abstraction
     /// - Validation happens before external calls
     /// - Dependencies can be mocked

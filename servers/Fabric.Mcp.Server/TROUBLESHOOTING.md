@@ -34,13 +34,13 @@ dotnet clean servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
 dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
 
 # Verify resource files exist
-ls tools/Fabric.Mcp.Tools.PublicApi/src/Resources/
+ls tools/Fabric.Mcp.Tools.Docs/src/Resources/
 ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 ```
 
 **Common causes:**
 - SDK version mismatch with `global.json`
-- Missing resource files in `tools/Fabric.Mcp.Tools.PublicApi/src/Resources/`
+- Missing resource files in `tools/Fabric.Mcp.Tools.Docs/src/Resources/`
 - Missing resource files in `tools/Fabric.Mcp.Tools.OneLake/src/Resources/`
 
 ### Server Starts But Tools Aren't Available
@@ -201,7 +201,7 @@ chmod +x bin/Release/net10.0/{your-rid}/publish/Fabric.Mcp.Server
 ```
 
 **Verification:**
-- Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.PublicApi/src/Resources/`
+- Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.Docs/src/Resources/`
 - Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/`
 - Test server startup with `--help` flag
 
