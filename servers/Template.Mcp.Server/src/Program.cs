@@ -10,9 +10,12 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
@@ -139,6 +142,7 @@ internal class Program
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddSingleton<IConsolidatedToolDefinitionProvider, NullConsolidatedToolDefinitionProvider>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.
@@ -151,6 +155,15 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        // Until there are external servers to register, just use an empty registry
+        services.AddSingleton<IRegistryRoot>(new RegistryRoot());
+
+        // Until there are server instructions to provide, just use an empty provider
+        services.AddSingleton<IServerInstructionsProvider>(new NullServerInstructionsProvider());
+
+        // Until there is a consolidated tool list, just use an empty provider
+        services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

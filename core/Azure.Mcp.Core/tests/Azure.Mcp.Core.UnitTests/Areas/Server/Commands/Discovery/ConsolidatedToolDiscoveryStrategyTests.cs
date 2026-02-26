@@ -3,9 +3,12 @@
 
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Configuration;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -27,8 +30,14 @@ public class ConsolidatedToolDiscoveryStrategyTests
             DisplayName = "Test Display",
             RootCommandGroupName = "azmcp"
         });
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, configurationOptions, logger);
+        var logger = Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
+
+        AssemblyResourceConsolidatedToolDefinitionProvider definitionProvider = new(
+            NullLogger<AssemblyResourceConsolidatedToolDefinitionProvider>.Instance,
+            typeof(Azure.Mcp.Server.Program).Assembly,
+            "Azure.Mcp.Server.Resources.consolidated-tools.json");
+
+        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, startOptions, configurationOptions, logger);
         if (entryPoint != null)
         {
             strategy.EntryPoint = entryPoint;
