@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -14,11 +13,14 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
 {
@@ -84,7 +86,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
@@ -162,7 +164,7 @@ internal class Program
     /// <item>
     /// <see cref="Main"/>'s command picking: The container used to populate instances of
     /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// baesd on the command line input. This container is a local variable in
+    /// based on the command line input. This container is a local variable in
     /// <see cref="Main"/>, and it is not tied to
     /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
@@ -188,7 +190,7 @@ internal class Program
     /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overriden within
+    /// but such transport-specific registrations must be overridden within
     /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
@@ -216,7 +218,7 @@ internal class Program
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
-        // The http-traport-specific implementations and configurations must be registered
+        // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
@@ -233,6 +235,15 @@ internal class Program
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {
+        ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+
+        if (options != null)
+        {
+            // Update the UserAgentPolicy for all Azure service calls to include the transport type.
+            var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
+            BaseAzureService.InitializeUserAgentPolicy(transport);
+        }
+
         // Perform any initialization before starting the service.
         // If the initialization operation fails, do not continue because we do not want
         // invalid telemetry published.

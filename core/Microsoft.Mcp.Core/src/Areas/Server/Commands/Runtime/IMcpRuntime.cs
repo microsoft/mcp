@@ -3,7 +3,7 @@
 
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Runtime;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 
 /// <summary>
 /// Defines the core functionality for a Model Context Protocol (MCP) runtime.

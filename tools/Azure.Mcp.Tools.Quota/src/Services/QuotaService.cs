@@ -32,6 +32,7 @@ public class QuotaService(
             resourceTypes,
             subscriptionId,
             location,
+            TenantService,
             loggerFactory,
             _httpClientFactory,
             cancellationToken);

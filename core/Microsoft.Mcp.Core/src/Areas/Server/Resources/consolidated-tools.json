@@ -331,7 +331,6 @@
         "monitor_webtests_get",
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
-        "resourcehealth_availability-status_list",
         "resourcehealth_health-events_list"
       ]
     },
@@ -3265,6 +3264,39 @@
       },
       "mappedToolList": [
         "azuremigrate_platformlandingzone_getguidance"
+      ]
+    },
+    {
+      "name": "get_azure_appservice_details",
+      "description": "Get details about Azure App Service resources including Web Apps.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "appservice_webapps_get"
       ]
     }
   ]

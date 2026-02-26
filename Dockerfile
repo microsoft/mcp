@@ -1,5 +1,5 @@
 # Build the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine AS runtime
 
 # Add build argument for publish directory
 ARG PUBLISH_DIR

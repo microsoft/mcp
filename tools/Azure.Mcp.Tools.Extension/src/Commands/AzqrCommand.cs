@@ -96,11 +96,6 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             var jsonReportFilePath = $"{reportFileName}.json";
             command += $" --output-name \"{reportFileName}\"";
 
-            // Azure Quick Review CLI can easily get throttle errors when scanning subscriptions with many resources with costs enabled.
-            // Unfortunately, getting such an error will abort the entire job and waste all the partial results.
-            // To reduce the chance of throttling, we disable costs reporting by default.
-            command += " --costs=false";
-
             // Also generate a JSON report for users who don't have access to Excel.
             command += " --json";
 

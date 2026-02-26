@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added appservice_webapps_get command to retrieve details about Web Apps"
