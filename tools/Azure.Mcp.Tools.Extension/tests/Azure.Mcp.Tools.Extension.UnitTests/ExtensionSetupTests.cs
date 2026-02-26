@@ -27,9 +27,9 @@ public sealed class ExtensionSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_HttpOboMode_ExcludesAzqrCommand()
+    public void RegisterCommands_RemoteHttpOboMode_ExcludesAzqrCommand()
     {
-        // Arrange
+        // Arrange: HTTP (remote) + OBO auth mode
         var options = new ServiceStartOptions
         {
             Transport = TransportTypes.Http,
@@ -42,15 +42,37 @@ public sealed class ExtensionSetupTests
         var commandGroup = setup.RegisterCommands(provider);
 
         // Assert
+        // In remote mode the azqr command that shells out to an external process is excluded.
         Assert.DoesNotContain("azqr", commandGroup.Commands.Keys);
         // cli subgroup and its commands should still be present
         Assert.Contains(commandGroup.SubGroup, g => g.Name == "cli");
     }
 
     [Fact]
-    public void RegisterCommands_StdioMode_IncludesAzqrCommand()
+    public void RegisterCommands_RemoteHttpHostIdentityMode_ExcludesAzqrCommand()
     {
-        // Arrange – stdio transport (default), no OBO
+        // Arrange: HTTP (remote) + HostIdentity auth mode
+        var options = new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http,
+            OutgoingAuthStrategy = OutgoingAuthStrategy.UseHostingEnvironmentIdentity,
+        };
+        var provider = BuildServiceProvider(options);
+        var setup = new ExtensionSetup();
+
+        // Act
+        var commandGroup = setup.RegisterCommands(provider);
+
+        // Assert
+        // In remote mode the azqr command that shells out to an external process is excluded.
+        Assert.DoesNotContain("azqr", commandGroup.Commands.Keys);
+        Assert.Contains(commandGroup.SubGroup, g => g.Name == "cli");
+    }
+
+    [Fact]
+    public void RegisterCommands_LocalStdioMode_IncludesAzqrCommand()
+    {
+        // Arrange: stdio transport
         var options = new ServiceStartOptions
         {
             Transport = TransportTypes.StdIo,
@@ -62,6 +84,7 @@ public sealed class ExtensionSetupTests
         var commandGroup = setup.RegisterCommands(provider);
 
         // Assert
+        // In local mode the azqr command that shells out to an external process is allowed.
         Assert.Contains("azqr", commandGroup.Commands.Keys);
         Assert.Contains(commandGroup.SubGroup, g => g.Name == "cli");
     }

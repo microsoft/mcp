@@ -58,9 +58,9 @@ public sealed class ExtensionSetup : IAreaSetup
     /// <summary>
     /// Determines whether extension commands that use external process execution should be exposed.
     /// External process commands (like azqr) use <see cref="IExternalProcessService"/> to spawn
-    /// local processes. In HTTP + On-Behalf-Of mode, spawning child processes on a remote server is a security
-    /// risk: processes run under the server's host identity (not the OBO user's context), and malicious or
-    /// excessive requests could exhaust resources.
+    /// local processes. In HTTP (remote) mode, spawning child processes on a remote server is a security
+    /// risk: processes run under the server's host identity (not the caller's context), and malicious or
+    /// excessive requests could exhaust resources leading to denial-of-service.
     /// </summary>
     /// <param name="serviceProvider">The service provider to resolve ServiceStartOptions from.</param>
     /// <returns>True if external process commands should be exposed; false otherwise.</returns>
@@ -68,7 +68,7 @@ public sealed class ExtensionSetup : IAreaSetup
     {
         if (serviceProvider.GetService<ServiceStartOptions>() is ServiceStartOptions startOptions)
         {
-            return !startOptions.IsHttpOnBehalfOfMode;
+            return !startOptions.IsHttpMode;
         }
 
         // ServiceStartOptions is unavailable in the first DI container (CLI routing), where all commands

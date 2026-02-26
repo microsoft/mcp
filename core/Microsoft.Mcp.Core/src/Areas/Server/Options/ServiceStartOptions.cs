@@ -91,9 +91,8 @@ public class ServiceStartOptions
     public string? Cloud { get; set; } = null;
 
     /// <summary>
-    /// Gets a value indicating whether the server is running in HTTP mode with On-Behalf-Of authentication.
+    /// Gets a value indicating whether the server is running in HTTP (remote) mode.
     /// </summary>
     [JsonIgnore]
-    public bool IsHttpOnBehalfOfMode => Transport == TransportTypes.Http
-        && OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf;
+    public bool IsHttpMode => Transport == TransportTypes.Http;
 }
