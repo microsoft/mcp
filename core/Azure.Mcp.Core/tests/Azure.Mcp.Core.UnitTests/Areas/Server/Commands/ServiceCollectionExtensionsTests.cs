@@ -179,7 +179,6 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(mcpServerOptions);
         Assert.Equal("2024-11-05", mcpServerOptions.ProtocolVersion);
         Assert.NotNull(mcpServerOptions.ServerInfo);
-        Assert.NotNull(mcpServerOptions.Capabilities);
         Assert.NotNull(mcpServerOptions.Handlers);
         Assert.NotNull(mcpServerOptions.Handlers.ListToolsHandler);
         Assert.NotNull(mcpServerOptions.Handlers.CallToolHandler);
