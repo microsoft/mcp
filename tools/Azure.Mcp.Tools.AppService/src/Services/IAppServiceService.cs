@@ -28,31 +28,10 @@ public interface IAppServiceService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<WebappDiagnosticCategoryDetails>> GetWebAppDiagnosticCategoriesAsync(
+    Task<List<WebappDetectorDetails>> ListWebAppDetectorsAsync(
         string subscription,
         string resourceGroup,
         string appName,
-        string? diagnosticCategory = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    Task<List<WebappDetectorDetails>> GetWebAppDetectorsAsync(
-        string subscription,
-        string resourceGroup,
-        string appName,
-        string diagnosticCategory,
-        string? detectorName = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
-
-    Task<List<WebappAnalysisDetails>> GetWebAppAnalysesAsync(
-        string subscription,
-        string resourceGroup,
-        string appName,
-        string diagnosticCategory,
-        string? analysisName = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

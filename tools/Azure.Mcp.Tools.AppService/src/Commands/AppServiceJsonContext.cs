@@ -12,11 +12,7 @@ namespace Azure.Mcp.Tools.AppService.Commands;
 [JsonSerializable(typeof(DatabaseAddCommand.DatabaseAddResult))]
 [JsonSerializable(typeof(DatabaseConnectionInfo))]
 [JsonSerializable(typeof(WebappDetails))]
-[JsonSerializable(typeof(WebappAnalysisDetails))]
 [JsonSerializable(typeof(WebappDetectorDetails))]
-[JsonSerializable(typeof(WebappDiagnosticCategoryDetails))]
-[JsonSerializable(typeof(WebappAnalysisGetCommand.WebappAnalysisGetResult))]
-[JsonSerializable(typeof(WebappDetectorGetCommand.WebappDetectorGetResult))]
-[JsonSerializable(typeof(WebappDiagnosticCategoryGetCommand.WebappDiagnosticCategoryGetResult))]
+[JsonSerializable(typeof(WebappDetectorListCommand.WebappDetectorListResult))]
 [JsonSerializable(typeof(WebappGetCommand.WebappGetResult))]
 public partial class AppServiceJsonContext : JsonSerializerContext;

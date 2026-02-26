@@ -13,5 +13,4 @@ public sealed record WebappDetectorDetails(
     [property: JsonPropertyName("type")] string Type,
     [property: JsonPropertyName("kind")] string Kind,
     [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("enabled")] bool? Enabled,
-    [property: JsonPropertyName("rank")] double? Rank);
+    [property: JsonPropertyName("category")] string Category);

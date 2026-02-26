@@ -3200,7 +3200,7 @@
     },
     {
       "name": "get_azure_appservice_details",
-      "description": "Get details about Azure App Service resources including Web Apps, Web App diagnostic categories, diagnostic category analyses, and diagnostic category detectors.",
+      "description": "Get details about Azure App Service resources including listing Web Apps, listing Web App detectors, and getting Web App detector diagnostic data.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -3229,9 +3229,7 @@
       },
       "mappedToolList": [
         "appservice_webapp_get",
-        "appservice_webapp_diagnostic_get-analysis",
-        "appservice_webapp_diagnostic_get-category",
-        "appservice_webapp_diagnostic_get-detector"
+        "appservice_webapp_diagnostic_list"
       ]
     }
   ]

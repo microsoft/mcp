@@ -18,20 +18,20 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Diagnostic;
 
-[Trait("Command", "WebappDiagnosticCategoryGet")]
-public class WebappDiagnosticCategoryGetCommandTests
+[Trait("Command", "WebappDetectorList")]
+public class WebappDetectorListCommandTests
 {
     private readonly IAppServiceService _appServiceService;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<WebappDiagnosticCategoryGetCommand> _logger;
-    private readonly WebappDiagnosticCategoryGetCommand _command;
+    private readonly ILogger<WebappDetectorListCommand> _logger;
+    private readonly WebappDetectorListCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public WebappDiagnosticCategoryGetCommandTests()
+    public WebappDetectorListCommandTests()
     {
         _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<WebappDiagnosticCategoryGetCommand>>();
+        _logger = Substitute.For<ILogger<WebappDetectorListCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_appServiceService);
         _serviceProvider = collection.BuildServiceProvider();
@@ -41,52 +41,46 @@ public class WebappDiagnosticCategoryGetCommandTests
         _commandDefinition = _command.GetCommand();
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("category1")]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string? diagnosticCategory)
+    [Fact]
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
     {
         // Arrange
-        List<WebappDiagnosticCategoryDetails> expectedDiagnosticCategories = [new("name", "type", "kind", "description")];
+        List<WebappDetectorDetails> expectedDetectors = [new("name", "type", "kind", "description", "category")];
 
         // Set up the mock to return success for any arguments
-        _appServiceService.GetWebAppDiagnosticCategoriesAsync("sub123", "rg1", "test-app", diagnosticCategory,
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(expectedDiagnosticCategories);
+        _appServiceService.ListWebAppDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedDetectors);
 
-        List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"];
-        if (!string.IsNullOrEmpty(diagnosticCategory))
-        {
-            unparsedArgs.AddRange(["--diagnostic-category", diagnosticCategory]);
-        }
-
-        var args = _commandDefinition.Parse(unparsedArgs);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).GetWebAppDiagnosticCategoriesAsync("sub123", "rg1", "test-app",
-            diagnosticCategory, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _appServiceService.Received(1).ListWebAppDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappDiagnosticCategoryGetResult);
+        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappDetectorListResult);
 
         Assert.NotNull(result);
-        Assert.Equal(JsonSerializer.Serialize(expectedDiagnosticCategories), JsonSerializer.Serialize(result.WebappDiagnosticCategories));
+        Assert.Equal(JsonSerializer.Serialize(expectedDetectors), JsonSerializer.Serialize(result.WebappDetectors));
     }
 
     [Theory]
     [InlineData("")] // Missing subscription, resource group, and app
     [InlineData("--subscription", "sub123")] // Missing resource group and app
-    [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app
     [InlineData("--resource-group", "rg1")] // Missing subscription and app
     [InlineData("--app", "test-app")] // Missing subscription and resource group
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group
+    [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription
+    [InlineData("--resource-group", "rg1", "--diagnostic-category", "category1")] // Missing subscription and app
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
         // Arrange
@@ -99,11 +93,10 @@ public class WebappDiagnosticCategoryGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().GetWebAppDiagnosticCategoriesAsync(
+        await _appServiceService.DidNotReceive().ListWebAppDetectorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -113,21 +106,16 @@ public class WebappDiagnosticCategoryGetCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _appServiceService.GetWebAppDiagnosticCategoriesAsync(
+        _appServiceService.ListWebAppDetectorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var args = _commandDefinition.Parse([
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--app", "test-app"
-        ]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -136,11 +124,10 @@ public class WebappDiagnosticCategoryGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).GetWebAppDiagnosticCategoriesAsync(
+        await _appServiceService.Received(1).ListWebAppDetectorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

@@ -22,9 +22,7 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
         services.AddSingleton<WebappGetCommand>();
-        services.AddSingleton<WebappDiagnosticCategoryGetCommand>();
-        services.AddSingleton<WebappDetectorGetCommand>();
-        services.AddSingleton<WebappAnalysisGetCommand>();
+        services.AddSingleton<WebappDetectorListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -54,14 +52,8 @@ public class AppServiceSetup : IAreaSetup
         webapp.AddSubGroup(diagnostic);
 
         // Add diagnostic commands
-        var diagnosticCategoryGet = serviceProvider.GetRequiredService<WebappDiagnosticCategoryGetCommand>();
-        diagnostic.AddCommand(diagnosticCategoryGet.Name, diagnosticCategoryGet);
-
-        var detectorGet = serviceProvider.GetRequiredService<WebappDetectorGetCommand>();
-        diagnostic.AddCommand(detectorGet.Name, detectorGet);
-
-        var analysisGet = serviceProvider.GetRequiredService<WebappAnalysisGetCommand>();
-        diagnostic.AddCommand(analysisGet.Name, analysisGet);
+        var detectorList = serviceProvider.GetRequiredService<WebappDetectorListCommand>();
+        diagnostic.AddCommand(detectorList.Name, detectorList);
 
         return appService;
     }
