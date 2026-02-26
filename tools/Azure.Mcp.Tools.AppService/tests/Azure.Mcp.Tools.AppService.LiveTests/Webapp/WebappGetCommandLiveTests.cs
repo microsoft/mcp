@@ -10,8 +10,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapps;
 
-[Trait("Command", "WebappsGetCommand")]
-public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+[Trait("Command", "WebappGetCommand")]
+public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
@@ -37,16 +37,16 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
 
         var result = await CallToolAsync(
-            "appservice_webapps_get",
+            "appservice_webapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
-        Assert.NotEmpty(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
+        Assert.NotEmpty(getResult.Webapps);
+        Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
 
     [Fact]
@@ -57,17 +57,17 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
-            "appservice_webapps_get",
+            "appservice_webapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
-        Assert.NotEmpty(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
+        Assert.NotEmpty(getResult.Webapps);
+        Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
-            "appservice_webapps_get",
+            "appservice_webapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -87,9 +87,9 @@ public class WebappsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtu
                 { "app", webappName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappsGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
-        Assert.Single(getResult.WebappDetails);
-        Assert.True(getResult.WebappDetails.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
+        Assert.Single(getResult.Webapps);
+        Assert.True(getResult.Webapps.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
     }
 }

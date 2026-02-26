@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
-using Azure.Mcp.Tools.AppService.Options.Webapps;
+using Azure.Mcp.Tools.AppService.Options.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -12,12 +12,12 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Tools.AppService.Commands.Webapps;
+namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseAppServiceCommand<WebappsGetOptions>()
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseAppServiceCommand<WebappGetOptions>()
 {
     private const string CommandTitle = "Gets Azure App Service Web App Details";
-    private readonly ILogger<WebappsGetCommand> _logger = logger;
+    private readonly ILogger<WebappGetCommand> _logger = logger;
     public override string Id => "4412f1af-16e7-46db-8305-33e3d7ae06de";
     public override string Name => "get";
 
@@ -56,7 +56,7 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
         });
     }
 
-    protected override WebappsGetOptions BindOptions(ParseResult parseResult)
+    protected override WebappGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
@@ -86,7 +86,7 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(webappsDetails), AppServiceJsonContext.Default.WebappsGetResult);
+            context.Response.Results = ResponseResult.Create(new(webappsDetails), AppServiceJsonContext.Default.WebappGetResult);
         }
         catch (Exception ex)
         {
@@ -113,5 +113,5 @@ public sealed class WebappsGetCommand(ILogger<WebappsGetCommand> logger) : BaseA
         return context.Response;
     }
 
-    public record WebappsGetResult(List<WebappDetails> WebappDetails);
+    public record WebappGetResult(List<WebappDetails> Webapps);
 }

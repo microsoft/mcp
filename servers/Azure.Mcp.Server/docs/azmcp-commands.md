@@ -547,25 +547,105 @@ azmcp appservice database add --subscription "my-subscription" \
 ```bash
 # Get App Service Web App details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription <subscription> \
-                             [--resource-group <resource-group>] \
-                             [--app <app>]
+azmcp appservice webapp get --subscription <subscription> \
+                            [--resource-group <resource-group>] \
+                            [--app <app>]
 
 # Examples:
 # List the App Service Web Apps details in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription"
+azmcp appservice webapp get --subscription "my-subscription"
 
 # List the App Service Web Apps details in a resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group"
 
 # Get the details for a specific App Service Web App
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group" \
-                             --app "my-app"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group" \
+                            --app "my-app"
+```
+
+
+#### Web App Diagnostics
+
+```bash
+# Get diagnostic categories for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-category --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --app <app> \
+                                                [--diagnostic-category <diagnostic-category>]
+
+# Examples:
+# List diagnostic categories for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app"
+
+# Get the diagnostic category for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app" \
+                                                --category-name "category-name"
+```
+
+```bash
+# Get analysis for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-anaylsis --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --app <app> \
+                                                --diagnostic-category <diagnostic-category> \
+                                                [--analysis-name <analysis-name>]
+
+# Examples:
+# List analyses for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-analysis --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app" \
+                                                --category-name "category-name"
+
+
+# Get an analysis for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app" \
+                                                --category-name "category-name" \
+                                                --analysis-name "analysis-name"
+```
+
+```bash
+# Get detector for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-detector --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --app <app> \
+                                                --diagnostic-category <diagnostic-category> \
+                                                [--detector-name <detector-name>]
+
+# Examples:
+# List detectors for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-analysis --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app" \
+                                                --category-name "category-name"
+
+
+# Get a detector for a diagnostic category
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic get-category --subscription "my-subscription" \
+                                                --resource-group "my-resource-group" \
+                                                --app "my-web-app" \
+                                                --category-name "category-name" \
+                                                --detector-name "detector-name"
 ```
 
 ### Azure CLI Operations

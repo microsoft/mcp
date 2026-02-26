@@ -221,10 +221,10 @@ public class AppServiceService(
             }
 
             var webAppCollection = resourceGroupResource.Value.GetWebSites();
-            var webApp = await webAppCollection.GetAsync(appName, cancellationToken: cancellationToken);
-            if (webApp != null)
+            var webApp = await webAppCollection.GetIfExistsAsync(appName, cancellationToken: cancellationToken);
+            if (webApp.HasValue)
             {
-                results.Add(MapToWebappDetails(webApp.Value.Data));
+                results.Add(MapToWebappDetails(webApp.Value!.Data));
             }
         }
         else if (!string.IsNullOrWhiteSpace(resourceGroup))
@@ -255,4 +255,138 @@ public class AppServiceService(
     private static WebappDetails MapToWebappDetails(WebSiteData webapp)
         => new(webapp.Name, webapp.ResourceType.ToString(), webapp.Location.Name, webapp.Kind, webapp.IsEnabled,
             webapp.State, webapp.ResourceGroup, webapp.HostNames, webapp.LastModifiedTimeUtc, webapp.Sku);
+
+    public async Task<List<WebappDiagnosticCategoryDetails>> GetWebAppDiagnosticCategoriesAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? diagnosticCategory = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        if (resourceGroupResource?.Value == null)
+        {
+            throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+        }
+
+        var webApp = await resourceGroupResource.Value.GetWebSiteAsync(appName, cancellationToken: cancellationToken);
+
+        var results = new List<WebappDiagnosticCategoryDetails>();
+
+        if (!string.IsNullOrEmpty(diagnosticCategory))
+        {
+            var diagnostic = await webApp.Value.GetSiteDiagnosticAsync(diagnosticCategory, cancellationToken: cancellationToken);
+            results.Add(MapToWebappDiagnosticCategoryDetails(diagnostic.Value.Data));
+        }
+        else
+        {
+            await foreach (var diagnostic in webApp.Value.GetSiteDiagnostics().GetAllAsync(cancellationToken))
+            {
+                results.Add(MapToWebappDiagnosticCategoryDetails(diagnostic.Data));
+            }
+        }
+
+        return results;
+    }
+
+    private static WebappDiagnosticCategoryDetails MapToWebappDiagnosticCategoryDetails(DiagnosticCategoryData diagnostic)
+        => new(diagnostic.Name, diagnostic.ResourceType.ToString(), diagnostic.Kind, diagnostic.Description);
+
+    public async Task<List<WebappDetectorDetails>> GetWebAppDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string diagnosticCategory,
+        string? detectorName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(diagnosticCategory), diagnosticCategory));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        if (resourceGroupResource?.Value == null)
+        {
+            throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+        }
+
+        var webApp = await resourceGroupResource.Value.GetWebSiteAsync(appName, cancellationToken: cancellationToken);
+        var diagnostic = await webApp.Value.GetSiteDiagnosticAsync(diagnosticCategory, cancellationToken: cancellationToken);
+
+        var results = new List<WebappDetectorDetails>();
+
+        if (!string.IsNullOrEmpty(detectorName))
+        {
+            var detector = await diagnostic.Value.GetSiteDiagnosticDetectorAsync(detectorName, cancellationToken: cancellationToken);
+            results.Add(MapToWebappDetectorDetails(detector.Value.Data));
+        }
+        else
+        {
+            await foreach (var detector in diagnostic.Value.GetSiteDiagnosticDetectors().GetAllAsync(cancellationToken))
+            {
+                results.Add(MapToWebappDetectorDetails(detector.Data));
+            }
+        }
+
+        return results;
+    }
+
+    private static WebappDetectorDetails MapToWebappDetectorDetails(DetectorDefinitionResourceData detector)
+        => new(detector.Name, detector.ResourceType.ToString(), detector.Kind, detector.Description,
+            detector.IsEnabled, detector.Rank);
+
+    public async Task<List<WebappAnalysisDetails>> GetWebAppAnalysesAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string diagnosticCategory,
+        string? analysisName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(diagnosticCategory), diagnosticCategory));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        if (resourceGroupResource?.Value == null)
+        {
+            throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+        }
+
+        var webApp = await resourceGroupResource.Value.GetWebSiteAsync(appName, cancellationToken: cancellationToken);
+        var diagnostic = await webApp.Value.GetSiteDiagnosticAsync(diagnosticCategory, cancellationToken: cancellationToken);
+
+        var results = new List<WebappAnalysisDetails>();
+
+        if (!string.IsNullOrEmpty(analysisName))
+        {
+            var analysis = await diagnostic.Value.GetSiteDiagnosticAnalysisAsync(analysisName, cancellationToken: cancellationToken);
+            results.Add(MapToWebappAnalysisDetails(analysis.Value.Data));
+        }
+        else
+        {
+            await foreach (var analysis in diagnostic.Value.GetSiteDiagnosticAnalyses().GetAllAsync(cancellationToken))
+            {
+                results.Add(MapToWebappAnalysisDetails(analysis.Data));
+            }
+        }
+
+        return results;
+    }
+
+    private static WebappAnalysisDetails MapToWebappAnalysisDetails(WebSiteAnalysisDefinitionData analysis)
+        => new(analysis.Name, analysis.ResourceType.ToString(), analysis.Kind, analysis.Description);
 }

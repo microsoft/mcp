@@ -10,6 +10,9 @@ public static class AppServiceOptionDefinitions
     public const string DatabaseServer = "database-server";
     public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
+    public const string DiagnosticCategoryName = "diagnostic-category";
+    public const string DetectorNameName = "detector-name";
+    public const string AnalysisNameName = "analysis-name";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -38,6 +41,24 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> ConnectionStringOption = new($"--{ConnectionString}")
     {
         Description = "The connection string for the database. If not provided, a default will be generated.",
+        Required = false
+    };
+
+    public static readonly Option<string> DiagnosticCategory = new($"--{DiagnosticCategoryName}")
+    {
+        Description = "The diagnostic category.",
+        Required = false
+    };
+
+    public static readonly Option<string> DetectorName = new($"--{DetectorNameName}")
+    {
+        Description = "The detector name.",
+        Required = false
+    };
+
+    public static readonly Option<string> AnalysisName = new($"--{AnalysisNameName}")
+    {
+        Description = "The analysis name.",
         Required = false
     };
 }

@@ -33,7 +33,7 @@ public static partial class OptionDefinitions
             Required = false
         };
 
-        public static readonly Option<string> ResourceGroup = new($"--{ResourceGroupName}")
+        public static readonly Option<string>  ResourceGroup = new($"--{ResourceGroupName}")
         {
             Description = "The name of the Azure resource group. This is a logical container for Azure resources.",
             Required = false

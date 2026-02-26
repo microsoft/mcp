@@ -6,7 +6,7 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands;
-using Azure.Mcp.Tools.AppService.Commands.Webapps;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,22 +16,22 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapps;
+namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp;
 
-[Trait("Command", "WebappsGet")]
-public class WebappsGetCommandTests
+[Trait("Command", "WebappGet")]
+public class WebappGetCommandTests
 {
     private readonly IAppServiceService _appServiceService;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<WebappsGetCommand> _logger;
-    private readonly WebappsGetCommand _command;
+    private readonly ILogger<WebappGetCommand> _logger;
+    private readonly WebappGetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public WebappsGetCommandTests()
+    public WebappGetCommandTests()
     {
         _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<WebappsGetCommand>>();
+        _logger = Substitute.For<ILogger<WebappGetCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_appServiceService);
         _serviceProvider = collection.BuildServiceProvider();
@@ -81,10 +81,10 @@ public class WebappsGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappsGetResult);
+        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappGetResult);
 
         Assert.NotNull(result);
-        Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.WebappDetails));
+        Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.Webapps));
     }
 
     [Theory]
