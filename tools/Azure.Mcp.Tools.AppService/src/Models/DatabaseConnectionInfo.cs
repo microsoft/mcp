@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.AppService.Models;
 /// <summary>
 /// Represents a database connection configured for an Azure App Service.
 /// </summary>
-public class DatabaseConnectionInfo
+public sealed class DatabaseConnectionInfo
 {
     /// <summary>
     /// The type of database (e.g., "SqlServer", "MySQL", "PostgreSQL", "CosmosDB").

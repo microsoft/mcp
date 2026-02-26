@@ -19,16 +19,17 @@ param sqlAdminLogin string = 'mcptestadmin'
 param sqlAdminPassword string = newGuid()
 
 @description('The SKU for the App Service Plan.')
-param appServicePlanSku string = 'B1'
+param appServicePlanSku string = 'S1'
 
 // Variables
 var webAppName = '${baseName}-webapp'
 var appServicePlanName = '${baseName}-plan'
+var logAnalyticsWorkspaceName = '${baseName}-law'
+var appInsightsName = '${baseName}-ai'
 var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
 var cosmosAccountName = '${baseName}-cosmos'
 var cosmosDatabaseName = '${baseName}cosmosdb'
-var cosmosContributorRoleId = '00000000-0000-0000-0000-000000000002' // Built-in Contributor role
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
@@ -36,9 +37,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   location: 'westus2'
   sku: {
     name: appServicePlanSku
-    tier: 'Basic'
+    tier: 'Standard'
     size: appServicePlanSku
-    family: 'B'
+    family: 'S'
     capacity: 1
   }
   properties: {
@@ -84,7 +85,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     siteConfig: {
       numberOfWorkers: 1
       acrUseManagedIdentityCreds: false
-      alwaysOn: false
+      alwaysOn: true
       http20Enabled: false
       functionAppScaleLimit: 0
       minimumElasticInstanceCount: 0
@@ -100,6 +101,66 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     redundancyMode: 'None'
     storageAccountRequired: false
     keyVaultReferenceIdentity: 'SystemAssigned'
+  }
+
+  resource logs 'config' = {
+    name: 'logs'
+    properties: {
+      applicationLogs: {
+        fileSystem: {
+          level: 'Warning'
+        }
+      }
+      detailedErrorMessages: {
+        enabled: true
+      }
+      failedRequestsTracing: {
+        enabled: true
+      }
+      httpLogs: {
+        fileSystem: {
+          enabled: true
+          retentionInDays: 7
+          retentionInMb: 35
+        }
+      }
+    }
+  }
+}
+
+// Log Analytics Workspace (required by Application Insights)
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: logAnalyticsWorkspaceName
+  location: 'westus2'
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
+// Application Insights
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: appInsightsName
+  location: 'westus2'
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+// Connect Application Insights to the Web App
+resource webAppAppSettings 'Microsoft.Web/sites/config@2023-01-01' = {
+  parent: webApp
+  name: 'appsettings'
+  properties: {
+    APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+    ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
   }
 }
 
@@ -241,9 +302,23 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
+// Role assignment for test application - Monitoring Contributor
+// See https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#monitoring-contributor
+resource appInsightsContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(appInsights.id, testApplicationOid, '749f88d5-cbae-40b8-bcfc-e573ddc772fa')
+  scope: appInsights
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '749f88d5-cbae-40b8-bcfc-e573ddc772fa') // Monitoring Contributor
+  }
+}
+
 // Outputs for test usage
 output webAppName string = webApp.name
 output webAppResourceGroup string = resourceGroup().name
+output appInsightsName string = appInsights.name
+output appInsightsConnectionString string = appInsights.properties.ConnectionString
+output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'

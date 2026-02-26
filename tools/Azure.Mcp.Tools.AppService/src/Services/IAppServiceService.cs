@@ -27,4 +27,12 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<WebappDetectorDetails>> ListWebAppDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

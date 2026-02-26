@@ -221,10 +221,10 @@ public class AppServiceService(
             }
 
             var webAppCollection = resourceGroupResource.Value.GetWebSites();
-            var webApp = await webAppCollection.GetAsync(appName, cancellationToken: cancellationToken);
-            if (webApp != null)
+            var webApp = await webAppCollection.GetIfExistsAsync(appName, cancellationToken: cancellationToken);
+            if (webApp.HasValue)
             {
-                results.Add(MapToWebappDetails(webApp.Value.Data));
+                results.Add(MapToWebappDetails(webApp.Value!.Data));
             }
         }
         else if (!string.IsNullOrWhiteSpace(resourceGroup))
@@ -255,4 +255,37 @@ public class AppServiceService(
     private static WebappDetails MapToWebappDetails(WebSiteData webapp)
         => new(webapp.Name, webapp.ResourceType.ToString(), webapp.Location.Name, webapp.Kind, webapp.IsEnabled,
             webapp.State, webapp.ResourceGroup, webapp.HostNames, webapp.LastModifiedTimeUtc, webapp.Sku);
+
+    public async Task<List<WebappDetectorDetails>> ListWebAppDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        if (resourceGroupResource?.Value == null)
+        {
+            throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+        }
+
+        var webApp = await resourceGroupResource.Value.GetWebSiteAsync(appName, cancellationToken: cancellationToken);
+
+        var results = new List<WebappDetectorDetails>();
+
+        await foreach (var diagnostic in webApp.Value.GetSiteDetectors().GetAllAsync(cancellationToken))
+        {
+            results.Add(MapToWebappDetectorDetails(diagnostic.Data));
+        }
+
+        return results;
+    }
+
+    private static WebappDetectorDetails MapToWebappDetectorDetails(AppServiceDetectorData detector)
+        => new(detector.Name, detector.ResourceType.ToString(), detector.Kind, detector.Metadata.Description,
+            detector.Metadata.Category);
 }

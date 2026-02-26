@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
-using Azure.Mcp.Tools.AppService.Commands.Webapps;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -20,7 +21,8 @@ public class AppServiceSetup : IAreaSetup
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
-        services.AddSingleton<WebappsGetCommand>();
+        services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<WebappDetectorListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -37,13 +39,21 @@ public class AppServiceSetup : IAreaSetup
         var databaseAdd = serviceProvider.GetRequiredService<DatabaseAddCommand>();
         database.AddCommand(databaseAdd.Name, databaseAdd);
 
-        // Create webapps subgroup
-        var webapps = new CommandGroup("webapps", "Operations for managing Azure App Service web apps");
-        appService.AddSubGroup(webapps);
+        // Create webapp subgroup
+        var webapp = new CommandGroup("webapp", "Operations for managing Azure App Service web apps");
+        appService.AddSubGroup(webapp);
 
-        // Add webapps commands
-        var webappsGet = serviceProvider.GetRequiredService<WebappsGetCommand>();
-        webapps.AddCommand(webappsGet.Name, webappsGet);
+        // Add webapp commands
+        var webappsGet = serviceProvider.GetRequiredService<WebappGetCommand>();
+        webapp.AddCommand(webappsGet.Name, webappsGet);
+
+        // Create diagnostic subgroup under webapps
+        var diagnostic = new CommandGroup("diagnostic", "Operations for retrieving diagnostics information for Azure App Service web apps");
+        webapp.AddSubGroup(diagnostic);
+
+        // Add diagnostic commands
+        var detectorList = serviceProvider.GetRequiredService<WebappDetectorListCommand>();
+        diagnostic.AddCommand(detectorList.Name, detectorList);
 
         return appService;
     }
