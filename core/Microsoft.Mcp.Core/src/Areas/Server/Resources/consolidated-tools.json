@@ -3228,7 +3228,7 @@
         }
       },
       "mappedToolList": [
-        "appservice_webapps_get"
+        "appservice_webapp_get"
       ]
     }
   ]
