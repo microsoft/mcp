@@ -938,8 +938,8 @@ public sealed class FileSharesService(
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
-            // Get existing connection
-            var existingConnection = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+            // Get existing connection (validate existence)
+            _ = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
                 .GetAsync(connectionName, cancellationToken);
 
             // Create updated connection data
