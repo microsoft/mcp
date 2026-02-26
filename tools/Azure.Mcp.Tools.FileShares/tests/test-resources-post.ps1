@@ -43,7 +43,7 @@ try {
     # Verify the private endpoint connection exists
     Write-Host "Verifying private endpoint connections..." -ForegroundColor Yellow
 
-    # Use Azure CLI to get private endpoint connections for the FileShare
+    # Use Azure Resource Manager REST API to get private endpoint connections for the FileShare
     $subscriptionId = $DeploymentOutputs['subscriptionId']
     if ([string]::IsNullOrEmpty($subscriptionId)) {
         $subscriptionId = (Get-AzContext).Subscription.Id
