@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Add App Service Diagnostic get commands (get-catetory, get-analysis, get-detector)"
