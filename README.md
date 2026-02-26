@@ -190,7 +190,7 @@ Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awes
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
 - [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/docs/sdk)
-- [MCP Specification](https://modelcontextprotocol.io/specification/2025-11-25)
+- [MCP Specification](https://modelcontextprotocol.io/specification/latest)
 
 ## Contributing
 
