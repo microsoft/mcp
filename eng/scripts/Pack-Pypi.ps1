@@ -262,6 +262,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         # Process and copy README
         $insertPayload = @{
             ToolTitle = 'PyPI Package'
+            # The mcp-name HTML comment is required by the MCP registry for package ownership validation.
+            # It must appear as 'mcp-name: <server-name>' in the package README or publishing will fail with a 400 error.
             MCPRepositoryMetadata = "<!-- mcp-name: $($server.mcpRepositoryName) -->"
         }
 
