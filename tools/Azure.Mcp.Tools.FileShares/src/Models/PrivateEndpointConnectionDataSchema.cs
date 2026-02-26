@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Models;
