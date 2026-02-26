@@ -1,8 +1,8 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
-# <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
-<!-- remove-section: start nuget;vsix;npm remove_note_ga -->
+# <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
 > Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
 <!-- remove-section: end remove_note_ga -->
@@ -10,7 +10,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
-<!-- remove-section: start nuget;vsix;npm remove_install_links -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
@@ -20,7 +20,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
@@ -102,7 +102,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.}} -->
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
-<!-- remove-section: start nuget;npm remove_ide_sub_section -->
+<!-- remove-section: start nuget;npm;pypi remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
 > [!IMPORTANT]
@@ -157,7 +157,7 @@ Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients
 
 Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: end remove_ide_sub_section -->
-<!-- remove-section: start npm remove_dotnet_config_sub_section -->
+<!-- remove-section: start npm;pypi remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
@@ -185,7 +185,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     }
     ```
 <!-- remove-section: end remove_dotnet_config_sub_section -->
-<!-- remove-section: start nuget remove_node_config_sub_section -->
+<!-- remove-section: start nuget;pypi remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
 - To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
@@ -208,7 +208,8 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
 <!-- remove-section: start nuget;npm remove_uvx_config_sub_section -->
-#### Option 3: Configure using Python (uvx)
+<!-- remove-section: start pypi remove_pypi_config_sub_header -->
+#### Option 3: Configure using Python (uvx)<!-- remove-section: end remove_pypi_config_sub_header -->
 - To use Azure MCP server from Python, you must have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed. uv is a fast Python package installer and resolver. To verify your installation run: `uv --version` and `uvx --version`.
 -  Configure the `mcp.json` file with the following:
 
@@ -246,7 +247,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
 | **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 <!-- remove-section: end remove_custom_client_config_table -->
-<!-- remove-section: start nuget;npm remove_package_manager_section -->
+<!-- remove-section: start nuget;npm;pypi remove_package_manager_section -->
 </details>
 
 ## Package Manager
