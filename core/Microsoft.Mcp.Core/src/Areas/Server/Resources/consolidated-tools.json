@@ -144,10 +144,8 @@
         "sql_db_show",
         "sql_server_list",
         "sql_server_show",
-        "cosmos_account_list",
-        "cosmos_database_container_item_query",
-        "cosmos_database_container_list",
-        "cosmos_database_list"
+        "cosmos_list",
+        "cosmos_database_container_item_query"
       ]
     },
     {

@@ -871,9 +871,13 @@ azmcp acr registry repository list --subscription <subscription> \
 ### Azure Cosmos DB Operations
 
 ```bash
-# List Cosmos DB accounts in a subscription
+# List Cosmos DB resources (accounts, databases, or containers) in a subscription.
+# Omit --account to list accounts. Provide --account to list databases.
+# Provide --account and --database to list containers.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos account list --subscription <subscription>
+azmcp cosmos list --subscription <subscription> \
+                  [--account <account>] \
+                  [--database <database>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -882,17 +886,6 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --database <database> \
                                            --container <container> \
                                            [--query "SELECT * FROM c"]
-
-# List containers in a Cosmos DB database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos database container list --subscription <subscription> \
-                                     --account <account> \
-                                     --database <database>
-
-# List databases in a Cosmos DB account
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos database list --subscription <subscription> \
-                           --account <account>
 ```
 
 ### Azure Data Explorer Operations

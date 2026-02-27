@@ -217,14 +217,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cosmos_account_list | List all cosmosdb accounts in my subscription |
-| cosmos_account_list | Show me my cosmosdb accounts |
-| cosmos_account_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all cosmosdb accounts in my subscription |
+| cosmos_list | Show me my cosmosdb accounts |
+| cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | Show me the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_list | List all the databases in the cosmosdb account <account_name> |
-| cosmos_database_list | Show me the databases in the cosmosdb account <account_name> |
 
 ## Azure Data Explorer
 
