@@ -1,4 +1,0 @@
-pr: 1815
-changes:
-  - section: "Other Changes"
-    description: "AppConfig: Improve testability by removing dependeny on CommandContext.ServiceProvider in ExecuteAsync"
