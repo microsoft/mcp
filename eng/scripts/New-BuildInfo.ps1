@@ -581,10 +581,13 @@ function Get-BuildMatrices {
             }
 
             # we do not currently have a method to get an arm64 mac or windows agent at this time, so we will have to skip $runUnitTests for those platforms
-            $runUnitTests = !$platform.native `
-                -and !$platform.specialPurpose `
-                -and ($pathsToTest | Where-Object { $_.hasUnitTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0 `
-                -and !($os -ne 'linux' -and $arch -like '*arm64*')
+            # if a set of unit tests exists, we should run them
+            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests })
+
+            # except for certain platforms
+            if ($platform.native -or $platform.specialPurpose -or ($arch -like '*arm64*' -and $os -ne 'linux')) {
+                $runUnitTests = $false
+            }
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
             $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
