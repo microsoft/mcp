@@ -2,12 +2,19 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.23 (2026-02-26)
+## 2.0.0-beta.23 (2026-02-27)
 
 ### Features Added
 
 - Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
 - Added the `appservice_webapp_get` tool to retrieve details about Web Apps. [[#1810](https://github.com/microsoft/mcp/pull/1810)]
+- Added the following App Service Web App settings tools: [[#1831](https://github.com/microsoft/mcp/pull/1831)]
+  - `appservice_webapp_settings_get-appsettings`: Get application settings for an App Service Web App
+  - `appservice_webapp_settings_update-appsettings`: Update application settings for an App Service Web App
+
+### Breaking Changes
+
+- Consolidated the `cosmos_account_list`, `cosmos_database_list`, and `cosmos_database_container_list` commands into a single `cosmos_list` command. [[#1821](https://github.com/microsoft/mcp/pull/1821)]
 
 ### Bugs Fixed
 
@@ -15,6 +22,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed OAuth Protected Resource Metadata flows in Azure Container Apps (ACA) by reading the `X-Forwarded-Proto` header (opt-in via `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS`) to correctly construct the scheme in `WWW-Authenticate` challenge responses and the OAuth PRM endpoint. [[#1820](https://github.com/microsoft/mcp/pull/1820)]
 
 ### Other Changes
+
+- Improve testability by removing dependency on `CommandContext.ServiceProvider` in the `ExecuteAsync()` method for App Configuration `*Command` classes. [[#1815](https://github.com/microsoft/mcp/pull/1815)]
 
 #### Dependency Updates
 
