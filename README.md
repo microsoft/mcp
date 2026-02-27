@@ -96,6 +96,41 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Microsoft 365 Agents Toolkit in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/TeamsDevApp.ms-teams-vscode-extension) [![Install Microsoft 365 Agents Toolkit in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/TeamsDevApp.ms-teams-vscode-extension)
 
+### 📅 Microsoft 365 Calendar
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_CalendarTools)
+- **DESCRIPTION**: Calendar tools for creating, updating, deleting events, managing invites, and checking availability. Integrates with Microsoft Graph Calendar APIs.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_CalendarTools`
+- **INSTALL**: [![Install Microsoft 365 Calendar MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-calendartools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_CalendarTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Calendar MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-calendartools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_CalendarTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 💬 Microsoft 365 Copilot Chat
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_M365Copilot)
+- **DESCRIPTION**: Search across M365 content including documents, emails, sites, files, and chats. Provides tools for starting and maintaining rich chat conversations against Microsoft Graph.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_M365Copilot`
+- **INSTALL**: [![Install Microsoft 365 Copilot Chat MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-m365copilot&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_M365Copilot%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Copilot Chat MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-m365copilot&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_M365Copilot%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📧 Microsoft 365 Mail
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_MailTools)
+- **DESCRIPTION**: Email tools for creating, sending, replying, updating, deleting, and searching messages. Integrates with Microsoft Graph Mail APIs.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_MailTools`
+- **INSTALL**: [![Install Microsoft 365 Mail MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-mailtools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MailTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Mail MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-mailtools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MailTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 👤 Microsoft 365 User
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_MeServer)
+- **DESCRIPTION**: Tools for retrieving user details, manager, team, or direct reportees from Microsoft Graph. Serves as the agent's self-knowledge and organizational awareness layer.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_MeServer`
+- **INSTALL**: [![Install Microsoft 365 User MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 User MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### ⚙️ Microsoft Admin Center
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_AdminTools)
+- **DESCRIPTION**: MCP Server containing tools relating to Microsoft Admin Center. Integrates with Microsoft Admin Center APIs to provide admin action capabilities.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_AdminTools`
+- **INSTALL**: [![Install Microsoft Admin Center MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-admintools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_AdminTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Admin Center MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-admintools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_AdminTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
 ### 📊 Microsoft Clarity
 - **REPOSITORY**: [microsoft/clarity-mcp-server](https://github.com/microsoft/clarity-mcp-server)
 - **DESCRIPTION**: This is a Model Context Protocol (MCP) server for the Microsoft Clarity data export API. It allows you to fetch analytics data from Clarity using Claude for Desktop or other MCP-compatible clients.
@@ -152,12 +187,40 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
 
+### 💬 Microsoft Teams
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_TeamsServer)
+- **DESCRIPTION**: Manage Microsoft Teams chats, channels, users, and messages via Graph API. Features server-side filtering, pagination, and token optimization.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_TeamsServer`
+- **INSTALL**: [![Install Microsoft Teams MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-teamsserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_TeamsServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Teams MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-teamsserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_TeamsServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📄 Microsoft Word
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_WordServer)
+- **DESCRIPTION**: MCP Server containing tools to work with Microsoft Word documents. Enables reading and understanding documents, creating new ones, and collaborating through comments.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_WordServer`
+- **INSTALL**: [![Install Microsoft Word MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-wordserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_WordServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Word MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-wordserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_WordServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
 ### 💻 NuGet MCP Server
 - **REPOSITORY**: [NuGet/Home](https://github.com/NuGet/Home)
 - **DESCRIPTION**: This is a Model Context Protocol (MCP) server for NuGet, enabling advanced tooling and automation scenarios for NuGet package management.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 - **INSTALL**: [Nuget MCP Server](https://www.nuget.org/packages/NuGet.Mcp.Server)
+
+### 📁 OneDrive and SharePoint
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/FileBased/mcp_ODSPRemoteServer)
+- **DESCRIPTION**: OneDrive and SharePoint Remote MCP Server. All tools supporting OneDrive and SharePoint files integration exposed by the ODSP MCP endpoint are automatically discovered and made available.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_ODSPRemoteServer`
+- **INSTALL**: [![Install OneDrive and SharePoint MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-odspremoteserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_ODSPRemoteServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install OneDrive and SharePoint MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-odspremoteserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_ODSPRemoteServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📋 SharePoint Lists
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/FileBased/mcp_SharepointListsTools)
+- **DESCRIPTION**: MCP server providing Microsoft Graph SharePoint tools for Lists. Includes site management, document libraries, lists, and collaboration features.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_SharePointListsTools`
+- **INSTALL**: [![Install SharePoint Lists MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-sharepointliststools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_SharePointListsTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install SharePoint Lists MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-sharepointliststools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_SharePointListsTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
 
 ### 🎭 Playwright
 - **REPOSITORY**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
