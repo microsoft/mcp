@@ -28,9 +28,8 @@ public class ResourceDiagnoseCommandTests
         _appLensService = Substitute.For<IAppLensService>();
         _logger = Substitute.For<ILogger<ResourceDiagnoseCommand>>();
 
-        _command = new(_logger);
+        _command = new(_logger, _appLensService);
         _serviceProvider = new ServiceCollection()
-            .AddSingleton(_appLensService)
             .BuildServiceProvider();
         _context = new(_serviceProvider);
     }
