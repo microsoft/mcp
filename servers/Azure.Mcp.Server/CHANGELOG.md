@@ -4,7 +4,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 2.0.0-beta.23 (2026-02-27)
 
-
 ### Features Added
 
 - Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
