@@ -171,6 +171,13 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.LiveTests/Azure.Mcp.Tools.Deploy.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.UnitTests/Azure.Mcp.Tools.Deploy.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/src/Azure.Mcp.Tools.EventGrid.csproj" />
