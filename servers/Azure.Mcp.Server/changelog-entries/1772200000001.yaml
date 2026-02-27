@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "AppLens: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
