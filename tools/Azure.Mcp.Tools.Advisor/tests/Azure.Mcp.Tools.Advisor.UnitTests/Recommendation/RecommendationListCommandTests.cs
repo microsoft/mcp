@@ -31,7 +31,7 @@ public class RecommendationListCommandTests
 
         var collection = new ServiceCollection().AddSingleton(_advisorService);
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _advisorService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
