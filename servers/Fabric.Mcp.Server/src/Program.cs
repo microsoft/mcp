@@ -146,7 +146,6 @@ internal class Program
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
-        services.AddSingleton<IConsolidatedToolDefinitionProvider, NullConsolidatedToolDefinitionProvider>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
