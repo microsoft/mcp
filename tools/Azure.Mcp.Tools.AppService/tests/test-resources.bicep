@@ -19,10 +19,11 @@ param sqlAdminLogin string = 'mcptestadmin'
 param sqlAdminPassword string = newGuid()
 
 @description('The SKU for the App Service Plan.')
-param appServicePlanSku string = 'B1'
+param appServicePlanSku string = 'S1'
 
 // Variables
 var webAppName = '${baseName}-webapp'
+var deploymentName = '${baseName}-deployment'
 var appServicePlanName = '${baseName}-plan'
 var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
@@ -36,9 +37,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   location: 'westus2'
   sku: {
     name: appServicePlanSku
-    tier: 'Basic'
+    tier: 'Standard'
     size: appServicePlanSku
-    family: 'B'
+    family: 'S'
     capacity: 1
   }
   properties: {
@@ -101,6 +102,12 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     storageAccountRequired: false
     keyVaultReferenceIdentity: 'SystemAssigned'
   }
+}
+
+resource deployment 'Microsoft.Web/sites/deployments@2025-03-01' = {
+  parent: webApp
+  kind: 'zip'
+  name: deploymentName
 }
 
 // SQL Server
@@ -243,6 +250,7 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 
 // Outputs for test usage
 output webAppName string = webApp.name
+output deploymentName string = deployment.name
 output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName

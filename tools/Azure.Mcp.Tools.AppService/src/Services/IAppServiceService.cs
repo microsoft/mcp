@@ -27,4 +27,13 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<DeploymentDetails>> GetDeploymentsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? deploymentId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

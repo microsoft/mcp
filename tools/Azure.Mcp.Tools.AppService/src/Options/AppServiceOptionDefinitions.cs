@@ -10,6 +10,7 @@ public static class AppServiceOptionDefinitions
     public const string DatabaseServer = "database-server";
     public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
+    public const string DeploymentIdName = "deployment-id";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -38,6 +39,12 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> ConnectionStringOption = new($"--{ConnectionString}")
     {
         Description = "The connection string for the database. If not provided, a default will be generated.",
+        Required = false
+    };
+
+    public static readonly Option<string> DeploymentIdOption = new($"--{DeploymentIdName}")
+    {
+        Description = "The ID of the deployment.",
         Required = false
     };
 }

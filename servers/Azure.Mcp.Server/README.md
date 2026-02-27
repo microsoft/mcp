@@ -882,6 +882,8 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "List the web apps in my subscription"
 * "Show me the web apps in my 'my-resource-group' resource group"
 * "Get the details for web app 'my-webapp' in 'my-resource-group'"
+* "List the deployments for web app 'my-webapp' in 'my-resource-group'"
+* "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
 
 ### 🖥️ Azure CLI Generate
 

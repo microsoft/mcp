@@ -108,6 +108,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_get | List the web apps in my subscription |
 | appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
 | appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | List the deployments for web app <webapp> in <resourc_group> |
+| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in <resourc_group> |
 
 ## Azure Application Insights
 
