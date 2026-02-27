@@ -1,5 +1,17 @@
 # Release History
 
+## 2.0.0-beta.23 (2026-02-26) (pre-release)
+
+### Added
+
+- Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
+- Added the `appservice_webapp_get` tool to retrieve details about Web Apps. [[#1810](https://github.com/microsoft/mcp/pull/1810)]
+
+### Fixed
+
+- Fixed `azqr` tool calls failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed OAuth Protected Resource Metadata flows in Azure Container Apps (ACA) by reading the `X-Forwarded-Proto` header (opt-in via `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS`) to correctly construct the scheme in `WWW-Authenticate` challenge responses and the OAuth PRM endpoint. [[#1820](https://github.com/microsoft/mcp/pull/1820)]
+
 ## 2.0.0-beta.22 (2026-02-24) (pre-release)
 
 ### Added

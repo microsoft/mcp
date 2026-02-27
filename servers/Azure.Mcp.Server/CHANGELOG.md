@@ -2,17 +2,27 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.23 (Unreleased)
+## 2.0.0-beta.23 (2026-02-26)
 
 ### Features Added
 
-### Breaking Changes
+- Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
+- Added the `appservice_webapp_get` tool to retrieve details about Web Apps. [[#1810](https://github.com/microsoft/mcp/pull/1810)]
 
 ### Bugs Fixed
 
-- Fixed `azqr` call failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed `azqr` tool calls failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed OAuth Protected Resource Metadata flows in Azure Container Apps (ACA) by reading the `X-Forwarded-Proto` header (opt-in via `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS`) to correctly construct the scheme in `WWW-Authenticate` challenge responses and the OAuth PRM endpoint. [[#1820](https://github.com/microsoft/mcp/pull/1820)]
 
 ### Other Changes
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[#1819](https://github.com/microsoft/mcp/pull/1819)]
+  - `ModelContextProtocol`: `0.8.0-preview.1` to `1.0.0`
+  - `ModelContextProtocol.AspNetCore`: `0.8.0-preview.1` to `1.0.0`
+  - `Microsoft.Extensions.AI.Abstractions`: `10.2.0` to `10.3.0`
+- Updated `Azure.Security.ConfidentialLedger` from version `1.4.1-beta.2` to `1.4.1-beta.3`. [[#1814](https://github.com/microsoft/mcp/pull/1814)]
 
 ## 2.0.0-beta.22 (2026-02-24)
 
