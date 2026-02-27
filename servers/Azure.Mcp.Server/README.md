@@ -882,6 +882,10 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "List the web apps in my subscription"
 * "Show me the web apps in my 'my-resource-group' resource group"
 * "Get the details for web app 'my-webapp' in 'my-resource-group'"
+* "Get the application settings for my web app 'my-webapp' in 'my-resource-group'"
+* "Add application setting 'LogLevel' with value 'INFO' to my 'my-webapp' in 'my-resource-group'"
+* "Set application setting 'LogLevel' to 'WARNING' to my 'my-webapp' in 'my-resource-group'"
+* "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
 
 ### 🖥️ Azure CLI Generate
 

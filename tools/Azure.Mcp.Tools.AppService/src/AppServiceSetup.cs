@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -21,6 +22,8 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
         services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<AppSettingsGetCommand>();
+        services.AddSingleton<AppSettingsUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -44,6 +47,17 @@ public class AppServiceSetup : IAreaSetup
         // Add webapp commands
         var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
         webapp.AddCommand(webappGet.Name, webappGet);
+
+        // Add settings subgroup under webapp
+        var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");
+        webapp.AddSubGroup(settings);
+
+        // Add settings commands
+        var appSettingsGet = serviceProvider.GetRequiredService<AppSettingsGetCommand>();
+        settings.AddCommand(appSettingsGet.Name, appSettingsGet);
+
+        var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
+        settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
 
         return appService;
     }
