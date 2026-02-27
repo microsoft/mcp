@@ -5,6 +5,8 @@ using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
@@ -45,6 +47,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
+using NSubstitute;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -160,7 +163,10 @@ internal class CommandFactoryHelpers
 
         var builder = new ServiceCollection()
             .AddLogging()
-            .AddSingleton<ITelemetryService, NoOpTelemetryService>();
+            .AddSingleton<ITelemetryService, NoOpTelemetryService>()
+            .AddSingleton(Substitute.For<ISubscriptionService>())
+            .AddSingleton(Substitute.For<ITenantService>())
+            .AddSingleton(Substitute.For<IHttpClientFactory>());
 
         foreach (var area in areaSetups)
         {
