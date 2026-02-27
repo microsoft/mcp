@@ -308,7 +308,7 @@ public class AppServiceService(
         string updateResultMessage = string.Empty;
         if ("add".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
         {
-            if (!configResource.Value.Properties.TryAdd(settingName, settingValue))
+            if (!configResource.Value.Properties.TryAdd(settingName, settingValue!))
             {
                 // Can early out here because the setting already exists.
                 return $"Failed to add application setting '{settingName}' because it already exists.";
@@ -318,7 +318,7 @@ public class AppServiceService(
         }
         else if ("set".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
         {
-            configResource.Value.Properties[settingName] = settingValue;
+            configResource.Value.Properties[settingName] = settingValue!;
             updateResultMessage = $"Application setting '{settingName}' set successfully.";
         }
         else if ("delete".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))

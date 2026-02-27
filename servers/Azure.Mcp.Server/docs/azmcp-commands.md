@@ -589,7 +589,7 @@ azmcp appservice webapp settings get-appsettings --subscription "my-subscription
 # Update application settings for an App Service Web App
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp settings update-appsettings --subscription <subscription> \
-                                                    --resource-group <resource-group>] \
+                                                    --resource-group <resource-group> \
                                                     --app <app> \
                                                     --setting-name <setting-name> \
                                                     --setting-update-type <add/set/delete> \

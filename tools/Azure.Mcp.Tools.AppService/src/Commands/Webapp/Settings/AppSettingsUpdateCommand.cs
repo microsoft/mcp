@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -15,14 +16,14 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
 {
     private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
-    public override string Id => "825ef21f-392f-4cd4-8272-7e7dce12e293";
+    public override string Id => "08ca52a3-f766-4c62-9597-702f629efaf6";
     public override string Name => "update-appsettings";
 
     public override string Description =>
         """
         Updates the application setting for an App Service web app. Three types of updating are available:
         
-        - Add: adds a new application setting with the specified name and value. If the application setting already exists, an error will be thrown.
+        - Add: adds a new application setting with the specified name and value. If the application setting already exists, the operation will fail and return an error message.
         - Set: sets the value of an application setting. If the application setting does not exist, this is equivalent to add. If the application setting already exists, the value will be overwritten.
         - Delete: deletes an application setting with the specified name. If the application setting does not exist, nothing happens.
 

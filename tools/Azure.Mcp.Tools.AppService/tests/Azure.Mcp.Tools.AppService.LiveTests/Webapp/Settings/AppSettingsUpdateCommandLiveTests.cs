@@ -75,7 +75,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "add" }
             });
-        
+
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -118,7 +118,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "set" }
             });
-        
+
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -160,7 +160,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-name", settingName },
                 { "setting-update-type", "delete" }
             });
-        
+
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -168,7 +168,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeleteSettings_DeletingDoesNotWorkOnNonExistantSetting()
+    public async Task ExecuteAsync_DeleteSettings_DeletingDoesNotWorkOnNonExistentSetting()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;

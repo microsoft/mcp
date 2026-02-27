@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands;

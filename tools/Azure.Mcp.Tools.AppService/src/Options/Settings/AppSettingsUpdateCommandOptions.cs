@@ -3,11 +3,10 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.AppService.Options;
+namespace Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 
 public sealed class AppSettingsUpdateCommandOptions : BaseAppServiceOptions
 {
-
     [JsonPropertyName(AppServiceOptionDefinitions.AppSettingNameName)]
     public string? SettingName { get; set; }
 
