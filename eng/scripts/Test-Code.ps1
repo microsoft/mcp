@@ -155,7 +155,7 @@ function Create-CoverageReport {
         " -reports:'$coverageFile'" +
         " -targetdir:'$reportDirectory'" +
         " -reporttypes:'Html;HtmlSummary;Cobertura'" +
-        " -assemblyfilters:'+azmcp'" +
+        " -assemblyfilters:'+*mcp*'" +
         " -classfilters:'-*Tests*;-*Program'" +
         " -filefilters:'-*JsonSourceGenerator*;-*LibraryImportGenerator*'")
 
@@ -191,7 +191,7 @@ function Create-CoverageReport {
         $xml = [xml](Get-Content $coverageFile.FullName)
 
         $classes = $xml.coverage.packages.package.classes.class |
-            Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
+            Where-Object { $_.name -match '.*Mcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
 
         $fileGroups = $classes |
             Group-Object { $_.filename } |
