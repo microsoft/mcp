@@ -22,7 +22,6 @@ namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
 public class RegistryListCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IAcrService _service;
     private readonly ILogger<RegistryListCommand> _logger;
     private readonly RegistryListCommand _command;
@@ -34,10 +33,8 @@ public class RegistryListCommandTests
         _service = Substitute.For<IAcrService>();
         _logger = Substitute.For<ILogger<RegistryListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _service);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 
