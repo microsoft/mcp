@@ -17,7 +17,8 @@ public sealed class RegistryServerHelper
 
     public static IRegistryRoot? GetRegistryRoot(Assembly assembly, string resourcePattern)
     {
-        var json = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourcePattern);
+        var resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourcePattern);
+        var json = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
         var registry = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
         if (registry?.Servers is null)
         {
