@@ -30,9 +30,9 @@ public class ClusterGetCommandTests
         _aksService = Substitute.For<IAksService>();
         _logger = Substitute.For<ILogger<ClusterGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_aksService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _aksService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
