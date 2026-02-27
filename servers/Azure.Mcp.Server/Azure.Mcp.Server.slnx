@@ -177,6 +177,7 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.LiveTests/Azure.Mcp.Tools.DeviceRegistry.LiveTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
