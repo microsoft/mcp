@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
@@ -15,6 +16,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
@@ -157,7 +160,14 @@ internal class Program
             area.ConfigureServices(services);
         }
 
-        services.AddRegistryRoot();
+        // There's no need to use assembly resource based registration if we know we have an empty registry.
+        services.AddSingleton<IRegistryRoot>(new RegistryRoot());
+
+        // Until there are server instructions to provide, just use an empty provider
+        services.AddSingleton<IServerInstructionsProvider>(new NullServerInstructionsProvider());
+
+        // Until there is a consolidated tool list, just use an empty provider
+        services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

@@ -12,6 +12,7 @@ obj/
 .idea/
 TestResults/
 *.binlog
+*.user
 
 node_modules/
 .npmrc
