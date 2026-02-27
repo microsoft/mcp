@@ -1,5 +1,0 @@
-pr: 1814
-changes:
-  - section: "Other Changes"
-    description: "Updated Azure.Security.ConfidentialLedger from version 1.4.1-beta.2 to 1.4.1-beta.3."
-    subsection: "Dependency Updates"
