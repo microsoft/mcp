@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Disable external process commands (azqr) in HTTP remote mode for security"
