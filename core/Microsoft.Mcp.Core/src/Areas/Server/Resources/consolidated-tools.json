@@ -3228,6 +3228,72 @@
       "mappedToolList": [
         "appservice_webapp_get"
       ]
+    },
+    {
+      "name": "get_azure_appservice_sensitive_details",
+      "description": "Get details about Azure App Service resources with sensitive information including Web App application settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "appservice_webapp_settings_get-appsettings"
+      ]
+    },
+    {
+      "name": "update_azure_appservice_resources",
+      "description": "Update Azure App Service resources including Web App application settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "appservice_webapp_settings_update-appsettings"
+      ]
     }
   ]
 }

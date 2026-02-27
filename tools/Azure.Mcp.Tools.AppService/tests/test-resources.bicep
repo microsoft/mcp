@@ -103,6 +103,15 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
+resource webAppAppSettings 'Microsoft.Web/sites/config@2023-01-01' = {
+  parent: webApp
+  name: 'appsettings'
+  properties: {
+    foo: 'bar'
+    fizz: 'buzz'
+  }
+}
+
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
@@ -247,8 +256,6 @@ output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'
-
 output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
-output baseName string = baseName
