@@ -568,6 +568,61 @@ azmcp appservice webapp get --subscription "my-subscription" \
                             --app "my-app"
 ```
 
+#### Web App Application Settings
+
+```bash
+# Get application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription <subscription> \
+                                                 --resource-group <resource-group> \
+                                                 --app <app>
+
+# Examples:
+# Get the application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription "my-subscription" \
+                                                 --resource-group "my-resource-group" \
+                                                 --app "my-app"
+```
+
+```bash
+# Update application settings for an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription <subscription> \
+                                                    --resource-group <resource-group>] \
+                                                    --app <app> \
+                                                    --setting-name <setting-name> \
+                                                    --setting-update-type <add/set/delete> \
+                                                    [--setting-value <setting-value>]
+
+# Examples:
+# Add the application setting 'foo' with value 'bar' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "foo" \
+                                                    --setting-update-type "add" \
+                                                    --setting-value "bar"
+
+# Set the application setting 'fizz' with value 'buzz' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "fizz" \
+                                                    --setting-update-type "set" \
+                                                    --setting-value "buzz"
+
+# Delete the application setting 'baz' from an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "baz" \
+                                                    --setting-update-type "delete"
+```
+
 ### Azure CLI Operations
 
 #### Generate

@@ -10,6 +10,9 @@ public static class AppServiceOptionDefinitions
     public const string DatabaseServer = "database-server";
     public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
+    public const string AppSettingNameName = "setting-name";
+    public const string AppSettingValueName = "setting-value";
+    public const string AppSettingUpdateTypeName = "setting-update-type";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -39,5 +42,23 @@ public static class AppServiceOptionDefinitions
     {
         Description = "The connection string for the database. If not provided, a default will be generated.",
         Required = false
+    };
+
+    public static readonly Option<string> AppSettingName = new($"--{AppSettingNameName}")
+    {
+        Description = "The name of the application setting.",
+        Required = true
+    };
+
+    public static readonly Option<string> AppSettingValue = new($"--{AppSettingValueName}")
+    {
+        Description = "The value of the application setting. Required for add and set update types.",
+        Required = false
+    };
+
+    public static readonly Option<string> AppSettingUpdateType = new($"--{AppSettingUpdateTypeName}")
+    {
+        Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.",
+        Required = true
     };
 }

@@ -108,6 +108,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_get | List the web apps in my subscription |
 | appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
 | appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
 ## Azure Application Insights
 
