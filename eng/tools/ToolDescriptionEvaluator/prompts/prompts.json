@@ -233,21 +233,17 @@
     "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
     "Get transaction <transaction_id> from ledger <ledger_name>"
   ],
-  "cosmos_account_list": [
+  "cosmos_list": [
     "List all cosmosdb accounts in my subscription",
     "Show me my cosmosdb accounts",
-    "Show me the cosmosdb accounts in my subscription"
-  ],
-  "cosmos_database_container_item_query": [
-    "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
-  ],
-  "cosmos_database_container_list": [
+    "Show me the cosmosdb accounts in my subscription",
+    "List all the databases in the cosmosdb account <account_name>",
+    "Show me the databases in the cosmosdb account <account_name>",
     "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the containers in the database <database_name> for the cosmosdb account <account_name>"
   ],
-  "cosmos_database_list": [
-    "List all the databases in the cosmosdb account <account_name>",
-    "Show me the databases in the cosmosdb account <account_name>"
+  "cosmos_database_container_item_query": [
+    "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
   ],
   "kusto_cluster_get": [
     "Show me the details of the Data Explorer cluster <cluster_name>"

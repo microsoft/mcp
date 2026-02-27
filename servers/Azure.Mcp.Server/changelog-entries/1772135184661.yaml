@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Consolidated cosmos_account_list, cosmos_database_list, and cosmos_database_container_list commands into a single cosmos_list command"
