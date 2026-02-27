@@ -12,12 +12,12 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 public class ResourceServerInstructionsProvider : IServerInstructionsProvider
 {
     private readonly Assembly _assembly;
-    private readonly string _resourceName;
+    private readonly string _resourcePattern;
 
-    public ResourceServerInstructionsProvider(Assembly assembly, string resourceName)
+    public ResourceServerInstructionsProvider(Assembly assembly, string resourcePattern)
     {
         _assembly = assembly;
-        _resourceName = resourceName;
+        _resourcePattern = resourcePattern;
     }
 
     public string GetServerInstructions()
@@ -26,14 +26,15 @@ public class ResourceServerInstructionsProvider : IServerInstructionsProvider
 
         try
         {
-            string content = EmbeddedResourceHelper.FindEmbeddedResource(_assembly, _resourceName);
+            string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(_assembly, _resourcePattern);
+            string content = EmbeddedResourceHelper.ReadEmbeddedResource(_assembly, resourceName);
             azureRulesContent.AppendLine(content);
             azureRulesContent.AppendLine();
         }
         catch (Exception)
         {
             // Log the error but continue processing other files
-            azureRulesContent.AppendLine($"### Error loading {_resourceName}");
+            azureRulesContent.AppendLine($"### Error loading {_resourcePattern}");
             azureRulesContent.AppendLine("An error occurred while loading this section.");
             azureRulesContent.AppendLine();
         }

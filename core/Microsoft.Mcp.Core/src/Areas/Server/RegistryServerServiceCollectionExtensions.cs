@@ -18,9 +18,9 @@ public static class RegistryServerServiceCollectionExtensions
     /// <summary>
     /// Add HttpClient for each registry server with OAuthScopes that knows how to fetch its access token.
     /// </summary>
-    public static IServiceCollection AddRegistryRoot(this IServiceCollection services, Assembly sourceAssembly, string resourceName)
+    public static IServiceCollection AddRegistryRoot(this IServiceCollection services, Assembly sourceAssembly, string resourcePattern)
     {
-        var registry = RegistryServerHelper.GetRegistryRoot(sourceAssembly, resourceName);
+        var registry = RegistryServerHelper.GetRegistryRoot(sourceAssembly, resourcePattern);
         if (registry?.Servers is null)
         {
             // Add an empty RegistryRoot

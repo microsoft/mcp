@@ -30,12 +30,12 @@ public class ConsolidatedToolDiscoveryStrategyTests
             DisplayName = "Test Display",
             RootCommandGroupName = "azmcp"
         });
-        var logger = Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
 
-        AssemblyResourceConsolidatedToolDefinitionProvider definitionProvider = new(
-            NullLogger<AssemblyResourceConsolidatedToolDefinitionProvider>.Instance,
-            typeof(Azure.Mcp.Server.Program).Assembly,
-            "Azure.Mcp.Server.Resources.consolidated-tools.json");
+        var logger = Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
+        var providerLogger = Substitute.For<Microsoft.Extensions.Logging.ILogger<ResourceConsolidatedToolDefinitionProvider>>();
+        var serverAssembly = typeof(Azure.Mcp.Server.Program).Assembly;
+
+        ResourceConsolidatedToolDefinitionProvider definitionProvider = new(providerLogger, serverAssembly, "consolidated-tools.json");
 
         var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, startOptions, configurationOptions, logger);
         if (entryPoint != null)

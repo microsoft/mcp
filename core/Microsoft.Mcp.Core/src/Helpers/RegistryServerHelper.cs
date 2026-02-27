@@ -15,19 +15,10 @@ public sealed class RegistryServerHelper
         return $"{typeof(RegistryServerProvider).FullName}.{serverName}";
     }
 
-    public static IRegistryRoot? GetRegistryRoot(Assembly assembly, string resourceName)
+    public static IRegistryRoot? GetRegistryRoot(Assembly assembly, string resourcePattern)
     {
-        if (resourceName is null)
-        {
-            return null;
-        }
-
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream is null)
-        {
-            return null;
-        }
-        var registry = JsonSerializer.Deserialize(stream, ServerJsonContext.Default.RegistryRoot);
+        var json = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourcePattern);
+        var registry = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
         if (registry?.Servers is null)
         {
             return null;

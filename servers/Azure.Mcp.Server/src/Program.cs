@@ -210,7 +210,6 @@ internal class Program
     internal static void ConfigureServices(IServiceCollection services)
     {
         var thisAssembly = typeof(Program).Assembly;
-        var resourceNamespace = "Azure.Mcp.Server.Resources";
 
         services.InitializeConfigurationAndOptions();
         services.ConfigureOpenTelemetry();
@@ -236,13 +235,13 @@ internal class Program
             area.ConfigureServices(services);
         }
 
-        services.AddRegistryRoot(thisAssembly, $"{resourceNamespace}.registry.json");
+        services.AddRegistryRoot(thisAssembly, $"registry.json");
 
         services.AddSingleton<IServerInstructionsProvider>(
-            new ResourceServerInstructionsProvider(thisAssembly, $"{resourceNamespace}.azure-rules.txt"));
+            new ResourceServerInstructionsProvider(thisAssembly, $"azure-rules.txt"));
 
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
-            ActivatorUtilities.CreateInstance<AssemblyResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"{resourceNamespace}.consolidated-tools.json"));
+            ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
