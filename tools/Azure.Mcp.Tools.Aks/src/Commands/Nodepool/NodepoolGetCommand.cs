@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
-public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : BaseAksCommand<NodepoolGetOptions>
+public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions>
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
+    private readonly IAksService _aksService = aksService;
 
     public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
 
@@ -65,8 +66,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 
         try
         {
-            var aksService = context.GetService<IAksService>();
-            var nodePools = await aksService.GetNodePools(
+            var nodePools = await _aksService.GetNodePools(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.ClusterName!,
