@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using ModelContextProtocol.Server;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
@@ -167,6 +168,8 @@ public class ServiceCollectionExtensionsTests
         {
             Transport = TransportTypes.StdIo,
         };
+
+        services.AddSingleton<IServerInstructionsProvider, NullServerInstructionsProvider>();
 
         // Act
         services.AddAzureMcpServer(options);
@@ -365,7 +368,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddAzureMcpServer_ConfiguresServerInstructions()
+    public void AddAzureMcpServer_WithNullProvider_ConfiguresNullServerInstructions()
     {
         // Arrange
         var services = SetupBaseServices();
@@ -373,6 +376,35 @@ public class ServiceCollectionExtensionsTests
         {
             Transport = TransportTypes.StdIo
         };
+
+        services.AddSingleton<IServerInstructionsProvider, NullServerInstructionsProvider>();
+
+        // Act
+        services.AddAzureMcpServer(options);
+
+        // Assert
+        var provider = services.BuildServiceProvider();
+        var mcpServerOptions = provider.GetService<IOptions<McpServerOptions>>()?.Value;
+
+        // Verify server instructions are configured
+        Assert.NotNull(mcpServerOptions);
+        Assert.Null(mcpServerOptions.ServerInstructions);
+    }
+
+
+    [Fact]
+    public void AddAzureMcpServer_WithProvider_ConfiguresServerInstructions()
+    {
+        // Arrange
+        var services = SetupBaseServices();
+        var options = new ServiceStartOptions
+        {
+            Transport = TransportTypes.StdIo
+        };
+
+        var instructionsProvider = Substitute.For<IServerInstructionsProvider>();
+        instructionsProvider.GetServerInstructions().Returns("Server specific instructions here\nThese instructions are specific to each server");
+        services.AddSingleton(instructionsProvider);
 
         // Act
         services.AddAzureMcpServer(options);
@@ -390,8 +422,7 @@ public class ServiceCollectionExtensionsTests
         var instructions = mcpServerOptions.ServerInstructions;
 
         // Verify the instructions contain expected sections
-        Assert.Contains("Azure MCP server usage rules:", instructions);
-        Assert.Contains("Use Azure Code Gen Best Practices:", instructions);
-        Assert.Contains("Use Azure AI App Code Generation Best Practices", instructions);
+        Assert.Contains("Server specific instructions here", instructions);
+        Assert.Contains("These instructions are specific to each server", instructions);
     }
 }
