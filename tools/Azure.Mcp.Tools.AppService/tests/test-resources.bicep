@@ -104,6 +104,15 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
+resource webAppAppSettings 'Microsoft.Web/sites/config@2023-01-01' = {
+  parent: webApp
+  name: 'appsettings'
+  properties: {
+    foo: 'bar'
+    fizz: 'buzz'
+  }
+}
+
 resource deployment 'Microsoft.Web/sites/deployments@2025-03-01' = {
   parent: webApp
   kind: 'zip'
@@ -233,7 +242,10 @@ resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignment
   scope: webApp
   properties: {
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772') // Website Contributor
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'de139f84-1756-47ae-9be6-808fbbe84772'
+    ) // Website Contributor
   }
 }
 
@@ -244,7 +256,10 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   scope: sqlServer
   properties: {
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec') // SQL DB Contributor
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
+    ) // SQL DB Contributor
   }
 }
 
@@ -255,8 +270,6 @@ output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'
-
 output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
-output baseName string = baseName

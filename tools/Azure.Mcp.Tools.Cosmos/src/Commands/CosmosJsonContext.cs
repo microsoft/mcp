@@ -5,11 +5,11 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-[JsonSerializable(typeof(ContainerListCommand.ContainerListCommandResult))]
-[JsonSerializable(typeof(AccountListCommand.AccountListCommandResult))]
-[JsonSerializable(typeof(DatabaseListCommand.DatabaseListCommandResult))]
+[JsonSerializable(typeof(CosmosListCommand.CosmosListCommandResult))]
 [JsonSerializable(typeof(ItemQueryCommand.ItemQueryCommandResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class CosmosJsonContext : JsonSerializerContext
 {
 }

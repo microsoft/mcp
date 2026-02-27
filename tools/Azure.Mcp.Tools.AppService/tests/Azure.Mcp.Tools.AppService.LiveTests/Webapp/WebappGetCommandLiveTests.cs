@@ -26,7 +26,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
@@ -47,7 +47,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "resource-group", resourceGroupName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
@@ -70,7 +70,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "app", webappName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value.ToString(), AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
         Assert.Single(getResult.Webapps);
         Assert.True(getResult.Webapps.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
