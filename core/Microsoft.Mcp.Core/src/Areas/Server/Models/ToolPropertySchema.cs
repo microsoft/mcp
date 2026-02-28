@@ -31,4 +31,12 @@ public sealed class ToolPropertySchema
     [JsonPropertyName("items")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ToolPropertySchema? Items { get; init; }
+
+    /// <summary>
+    /// The allowed values for this property when it represents an enumeration.
+    /// Used to provide models with valid value guidance for constrained options.
+    /// </summary>
+    [JsonPropertyName("enum")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string[]? Enum { get; init; }
 }

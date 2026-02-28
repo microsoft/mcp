@@ -593,20 +593,27 @@ public sealed class NamespaceToolLoader(
             string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
+    internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
-        if (args == null || !args.TryGetValue("parameters", out var paramsElem))
+        if (args == null)
         {
             return [];
         }
 
-        if (paramsElem.ValueKind == JsonValueKind.Object)
+        // Primary: extract from nested "parameters" key
+        if (args.TryGetValue("parameters", out var paramsElem) && paramsElem.ValueKind == JsonValueKind.Object)
         {
             return paramsElem.EnumerateObject()
                 .ToDictionary(prop => prop.Name, prop => prop.Value);
         }
 
-        return [];
+        // Fallback: treat all non-meta args as parameters (Codex compatibility)
+        var metaKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
+        var flatParams = args
+            .Where(kvp => !metaKeys.Contains(kvp.Key))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return flatParams;
     }
 
     private static bool SupportsSampling(McpServer server)

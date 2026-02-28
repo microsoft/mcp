@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed flaky VisualStudioToolNameTests by using in-process CommandFactory instead of external process with timeout"

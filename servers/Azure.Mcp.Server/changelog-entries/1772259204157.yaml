@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed JSON Schema generation for OpenAI Codex model compatibility: added `additionalProperties: false`, enum types now emit as `string` with named values, added `enum` array to enum properties, empty descriptions are omitted instead of serialized as empty strings"

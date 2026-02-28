@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps"
