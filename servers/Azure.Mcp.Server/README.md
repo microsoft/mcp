@@ -27,6 +27,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
+        - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
@@ -149,6 +150,22 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
 1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
 
+### Claude Code
+
+The Azure plugin packages the Azure MCP Server along with Azure-related agents and skills, bringing Azure integration to Claude Code in one installation.
+
+1. Install [Claude Code](https://code.claude.com/).
+1. Add the `github-copilot-for-azure` marketplace to Claude Code by running the following command in Claude Code:
+   ```
+   /plugin marketplace add https://github.com/microsoft/github-copilot-for-azure
+   ```
+1. Install the Azure plugin from the marketplace by running:
+   ```
+   /plugin install azure@github-copilot-for-azure
+   ```
+
+For more information on adding plugin marketplaces, see the [Claude Code Plugin Marketplaces documentation](https://code.claude.com/docs/en/plugin-marketplaces).
+
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
 
@@ -239,7 +256,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
 | **GitHub Copilot CLI** | `~/.copilot/mcp-config.json` | [Copilot CLI MCP Configuration](#github-copilot-cli-configuration) |
-| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
+| **Claude Code** | Plugin-based installation | [Claude Code Installation Instructions](#claude-code) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
