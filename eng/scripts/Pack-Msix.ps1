@@ -119,26 +119,19 @@ if ($exitCode -ne 0) {
     exit $exitCode
 }
 
-# Check for WinAppCli (preferred) or MakeAppx.exe (fallback)
-# Use SDK 10.0.22621.0 - the 10.0.26100.0 SDK forces TrustedLaunch for ODR extensions,
-# which requires Store-level signing. ESRP Authenticode signing does not satisfy
-# TrustedLaunch CI policy, so we use the older SDK which does not enforce it.
-$useWinAppCli = $false
+# Always use MakeAppx.exe from SDK 10.0.22621.0 directly (NOT WinAppCli).
+# WinAppCli bundles a newer MakeAppx internally (10.0.26100.0+) which forces TrustedLaunch
+# for ODR extensions. TrustedLaunch requires Store-level signing, but ESRP Authenticode
+# signing produces SignatureKind: Developer which does not satisfy TrustedLaunch CI policy.
+# SDK 10.0.22621.0 MakeAppx does not enforce TrustedLaunch, matching known-working ODR samples.
+$makeAppxPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\makeappx.exe"
 
-if (Get-Command winapp -ErrorAction SilentlyContinue) {
-    $useWinAppCli = $true
-    Write-Host "Using WinAppCli for MSIX packaging"
-} else {
-    # Use MakeAppx.exe from Windows SDK 10.0.22621.0 (10.0.26100.0 forces TrustedLaunch for ODR)
-    $makeAppxPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\makeappx.exe"
-
-    if (-not (Test-Path $makeAppxPath)) {
-        LogError "MakeAppx.exe not found. Please install Windows SDK 10.0.22621.0: winget install Microsoft.WindowsSDK.10.0.22621"
-        exit 1
-    }
-
-    Write-Host "Using MakeAppx.exe from: $makeAppxPath"
+if (-not (Test-Path $makeAppxPath)) {
+    LogError "MakeAppx.exe not found. Please install Windows SDK 10.0.22621.0: winget install Microsoft.WindowsSDK.10.0.22621"
+    exit 1
 }
+
+Write-Host "Using MakeAppx.exe from: $makeAppxPath"
 
 # Always use SignTool for signing (WinAppCli has issues with complex Publisher DNs)
 $signToolPath = $null
@@ -316,7 +309,7 @@ Processing MSIX packaging:
 
     # Copy MCP manifest.json (for ODR registration) - reuse MCPB manifest with Windows-specific modifications
     Write-Host "Processing MCP manifest from $mcpManifestPath..."
-    $mcpManifest = Get-Content $mcpManifestPath -Raw | ConvertFrom-Json
+    $mcpManifest = Get-Content $mcpManifestPath -Raw | ConvertFrom-Json -Depth 100
 
     # Update version to match package
     $mcpManifest.version = $server.version
@@ -441,25 +434,11 @@ Processing MSIX packaging:
 
     Write-Host "Packing MSIX to $msixFilePath..."
     
-    if ($useWinAppCli) {
-        # Use WinAppCli for packaging (handles TrustedLaunch and other modern requirements)
-        # Note: We don't use WinAppCli's built-in signing because it has issues with complex Publisher DNs
-        $winappArgs = @("pack", $stagingDir, "--output", $msixFilePath, "--manifest", "$stagingDir/AppxManifest.xml")
-        
-        & winapp @winappArgs
-        if ($LASTEXITCODE -ne 0) {
-            LogError "MSIX packing failed for $($server.name)"
-            $exitCode = 1
-            continue
-        }
-    } else {
-        # Fallback to MakeAppx.exe
-        & $makeAppxPath pack /d $stagingDir /p $msixFilePath /o
-        if ($LASTEXITCODE -ne 0) {
-            LogError "MSIX packing failed for $($server.name)"
-            $exitCode = 1
-            continue
-        }
+    & $makeAppxPath pack /d $stagingDir /p $msixFilePath /o
+    if ($LASTEXITCODE -ne 0) {
+        LogError "MSIX packing failed for $($server.name)"
+        $exitCode = 1
+        continue
     }
 
     # Sign with SignTool if certificate is provided

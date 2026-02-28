@@ -83,7 +83,7 @@ jobs:
       inlineOperation: |
         [
           {
-            "KeyCode": "CP-230012",
+            "KeyCode": "CP-230072",
             "OperationCode": "SigntoolSign",
             "ToolName": "sign",
             "ToolVersion": "1.0",
@@ -91,6 +91,7 @@ jobs:
               "OpusName": "Microsoft",
               "OpusInfo": "https://www.microsoft.com",
               "FileDigest": "/fd SHA256",
+              "PageHash": "/NPH",
               "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
             }
           },

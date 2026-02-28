@@ -220,6 +220,36 @@ Processing MCPB packaging:
             continue
         }
 
+        # Verify tool discovery succeeded. The mcpb CLI can exit 0 even when it
+        # discovers 0 tools. If that happens, retry once — a second attempt typically
+        # succeeds (could it be the OS disk cache warming the server binary?).
+        $stagingManifest = Get-Content "$stagingDir/manifest.json" -Raw |
+            ConvertFrom-Json -Depth 200
+        $discoveredToolCount = 0
+        if ($stagingManifest.tools) { $discoveredToolCount = $stagingManifest.tools.Count }
+        if ($discoveredToolCount -eq 0) {
+            LogWarning "Tool discovery returned 0 tools on first attempt. Retrying..."
+            Remove-Item $mcpbFilePath -Force -ErrorAction SilentlyContinue
+            & dotnet mcpb pack $stagingDir $mcpbFilePath --update
+            if ($LASTEXITCODE -ne 0) {
+                LogError "MCPB packing failed on retry for $($server.name) on $platformName"
+                $exitCode = 1
+                continue
+            }
+            # Re-check tool count after retry
+            $stagingManifest = Get-Content "$stagingDir/manifest.json" -Raw |
+                ConvertFrom-Json -Depth 200
+            $discoveredToolCount = 0
+            if ($stagingManifest.tools) { $discoveredToolCount = $stagingManifest.tools.Count }
+            if ($discoveredToolCount -eq 0) {
+                LogWarning "Tool discovery still returned 0 tools after retry. The MCPB will have an empty tools list."
+            } else {
+                LogInfo "Retry succeeded: discovered $discoveredToolCount tools"
+            }
+        } else {
+            LogInfo "Discovered $discoveredToolCount tools"
+        }
+
         # Get file size for reporting
         $fileSize = (Get-Item $mcpbFilePath).Length
         $fileSizeMB = [math]::Round($fileSize / 1MB, 2)
