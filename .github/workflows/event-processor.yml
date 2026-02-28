@@ -11,6 +11,8 @@ on:
   # pull request merged is the closed event with github.event.pull_request.merged = true
   pull_request_target:
     types: [closed, labeled, opened, reopened, review_requested, synchronize, unlabeled]
+  label:
+    types: [created, edited, deleted]
 
 # This removes all unnecessary permissions, the ones needed will be set below.
 # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -29,6 +31,7 @@ jobs:
       id-token: write
       contents: read
     name: Handle ${{ github.event_name }} ${{ github.event.action }} event with azure login
+    if: github.event_name != 'label'
     runs-on: ubuntu-latest
     steps:
       - name: 'Az CLI login'
@@ -112,3 +115,43 @@ jobs:
         with:
           name: event
           path: ${{ github.event_path }}
+  
+  label-sync-event-handler:
+    permissions:
+      contents: read
+      id-token: write
+    name: Sync GitHub Labels to Azure Storage 
+    runs-on: ubuntu-latest
+    if: github.event_name == 'label'
+    steps:
+      - name: 'Az CLI login'
+        uses: azure/login@v2
+        with:
+            client-id: a6dd2dfe-7352-41a7-9020-05301c3bca1a
+            tenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+            allow-no-subscriptions: true
+
+      - name: 'Checkout azure-sdk-tools repository'
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-sdk-tools
+          ref: mcp-gh-issue-labeler  # TODO: Update to main after testing
+          path: azure-sdk-tools
+      
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 'Build SearchIndexCreator'
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+        working-directory: azure-sdk-tools/tools/issue-labeler/src/SearchIndexCreator
+
+      - name: 'Run SearchIndexCreator to sync labels'
+        run: |
+          dotnet run --configuration Release --no-build -- sync-labels --repo-owner microsoft --repo-name mcp
+        env:
+          GithubKey: ${{ secrets.GITHUB_TOKEN }}
+          IssueStorageName: issuelabeler8c97
