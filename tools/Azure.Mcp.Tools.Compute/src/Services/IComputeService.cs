@@ -40,6 +40,32 @@ public interface IComputeService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<VmCreateResult> CreateVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string adminUsername,
+        string? vmSize = null,
+        string? image = null,
+        string? adminPassword = null,
+        string? sshPublicKey = null,
+        string? workload = null,
+        string? osType = null,
+        string? virtualNetwork = null,
+        string? subnet = null,
+        string? publicIpAddress = null,
+        string? networkSecurityGroup = null,
+        bool? noPublicIp = null,
+        string? zone = null,
+        int? osDiskSizeGb = null,
+        string? osDiskType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    WorkloadConfiguration GetWorkloadConfiguration(string? workload);
+
     // Virtual Machine Scale Set operations
     Task<VmssInfo> GetVmssAsync(
         string vmssName,
@@ -69,6 +95,57 @@ public interface IComputeService
         string instanceId,
         string resourceGroup,
         string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<VmssCreateResult> CreateVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string adminUsername,
+        string? vmSize = null,
+        string? image = null,
+        string? adminPassword = null,
+        string? sshPublicKey = null,
+        string? workload = null,
+        string? osType = null,
+        string? virtualNetwork = null,
+        string? subnet = null,
+        int? instanceCount = null,
+        string? upgradePolicy = null,
+        string? zone = null,
+        int? osDiskSizeGb = null,
+        string? osDiskType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<VmssUpdateResult> UpdateVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        string? vmSize = null,
+        int? capacity = null,
+        string? upgradePolicy = null,
+        bool? overprovision = null,
+        bool? enableAutoOsUpgrade = null,
+        string? scaleInPolicy = null,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<VmUpdateResult> UpdateVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string? vmSize = null,
+        string? tags = null,
+        string? licenseType = null,
+        string? bootDiagnostics = null,
+        string? userData = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

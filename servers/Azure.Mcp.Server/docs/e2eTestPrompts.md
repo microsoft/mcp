@@ -173,6 +173,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
+| compute_vm_create | Create a virtual machine for development workload in <resource-group-name> |
+| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
+| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication |
+| compute_vm_create | Deploy a new VM for web workload in resource group <resource-group-name> |
+| compute_vm_create | Create a database VM with memory-optimized size in <resource-group-name> |
 | compute_vm_get | List all virtual machines in my subscription |
 | compute_vm_get | Show me all VMs in my subscription |
 | compute_vm_get | What virtual machines do I have? |
@@ -187,6 +193,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_get | What is the power state of virtual machine <vm-name> in resource group <resource-group-name>? |
 | compute_vm_get | Get VM <vm-name> status and provisioning state in resource group <resource-group-name> |
 | compute_vm_get | Show me the current status of VM <vm-name> |
+| compute_vm_update | Add tags to VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_update | Update virtual machine <vm-name> with environment=production tag |
+| compute_vm_update | Enable Azure Hybrid Benefit on VM <vm-name> |
+| compute_vm_update | Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name> |
+| compute_vm_update | Change the size of VM <vm-name> to Standard_D4s_v3 |
+| compute_vm_update | Disable Hybrid Benefit license on <vm-name> |
+| compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
+| compute_vmss_create | Deploy a scale set for web workload with automatic upgrades |
+| compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
 | compute_vmss_get | What scale sets are in resource group <resource-group-name>? |
@@ -194,6 +210,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_get | Show me VMSS <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_get | Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_get | What is the status of instance <instance-id> in scale set <vmss-name>? |
+| compute_vmss_update | Scale VMSS <vmss-name> to 5 instances |
+| compute_vmss_update | Update the capacity of scale set <vmss-name> to 10 |
+| compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> |
+| compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> |
+| compute_vmss_update | Set scale-in policy to OldestVM for VMSS <vmss-name> |
+| compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> |
 
 ## Azure Confidential Ledger
 

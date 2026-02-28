@@ -796,6 +796,148 @@ azmcp compute vm get --subscription "my-subscription" \
 | `--vm-name`, `--name` | No | Name of the virtual machine |
 | `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
 
+```bash
+# Create Virtual Machine with smart defaults based on workload requirements
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        --location <location> \
+                        --admin-username <admin-username> \
+                        [--admin-password <admin-password>] \
+                        [--ssh-public-key <ssh-public-key>] \
+                        [--vm-size <vm-size>] \
+                        [--image <image>] \
+                        [--workload <workload>] \
+                        [--os-type <os-type>] \
+                        [--virtual-network <virtual-network>] \
+                        [--subnet <subnet>] \
+                        [--public-ip-address <public-ip-address>] \
+                        [--network-security-group <network-security-group>] \
+                        [--no-public-ip] \
+                        [--zone <zone>] \
+                        [--os-disk-size-gb <os-disk-size-gb>] \
+                        [--os-disk-type <os-disk-type>]
+
+# Examples:
+
+# Create Linux VM with SSH key (development workload)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-linux-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --ssh-public-key "ssh-ed25519 AAAAC3..." \
+                        --workload "development"
+
+# Create Windows VM with password
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-win-vm" \
+                        --location "eastus" \
+                        --admin-username "adminuser" \
+                        --admin-password "ComplexPassword123!" \
+                        --image "Win2022Datacenter" \
+                        --workload "web"
+
+# Create VM with specific size and no public IP
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-private-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --ssh-public-key "ssh-ed25519 AAAAC3..." \
+                        --vm-size "Standard_D4s_v3" \
+                        --no-public-ip
+```
+
+**Workload Types:**
+- `development`: Standard_B2s - Cost-effective burstable VM for dev/test
+- `web`: Standard_D2s_v3 - General purpose for web servers
+- `database`: Standard_E4s_v3 - Memory-optimized for databases
+- `compute`: Standard_F4s_v2 - CPU-optimized for batch processing
+- `memory`: Standard_E8s_v3 - High-memory for caching
+- `gpu`: Standard_NC6s_v3 - GPU-enabled for ML/rendering
+- `general`: Standard_D2s_v3 - Balanced general purpose (default)
+
+**Image Aliases:**
+- Linux: `Ubuntu2404`, `Ubuntu2204`, `Ubuntu2004`, `Debian11`, `Debian12`, `RHEL9`, `CentOS8`
+- Windows: `Win2022Datacenter`, `Win2019Datacenter`, `Win11Pro`, `Win10Pro`
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine |
+| `--location` | Yes | Azure region |
+| `--admin-username` | Yes | Admin username |
+| `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
+| `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
+| `--vm-size` | No | VM size (defaults based on workload) |
+| `--image` | No | Image alias or URN (default: Ubuntu2404) |
+| `--workload` | No | Workload type for smart defaults |
+| `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
+| `--virtual-network` | No | Virtual network name |
+| `--subnet` | No | Subnet name |
+| `--public-ip-address` | No | Public IP address name |
+| `--network-security-group` | No | Network security group name |
+| `--no-public-ip` | No | Do not create a public IP address |
+| `--zone` | No | Availability zone |
+| `--os-disk-size-gb` | No | OS disk size in GB |
+| `--os-disk-type` | No | OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' |
+
+```bash
+# Update Virtual Machine configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--vm-size <vm-size>] \
+                        [--tags <tags>] \
+                        [--license-type <license-type>] \
+                        [--boot-diagnostics <boot-diagnostics>] \
+                        [--user-data <user-data>]
+
+# Examples:
+
+# Add tags to a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --tags "environment=prod,team=compute"
+
+# Enable Azure Hybrid Benefit
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --license-type "Windows_Server"
+
+# Enable boot diagnostics
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --boot-diagnostics "true"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine |
+| `--vm-size` | No | New VM size (may require VM to be deallocated) |
+| `--tags` | No | Tags in key=value,key2=value2 format |
+| `--license-type` | No | License type: 'Windows_Server', 'RHEL_BYOS', 'SLES_BYOS', 'None' |
+| `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
+| `--user-data` | No | Base64-encoded user data |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -848,6 +990,126 @@ azmcp compute vmss get --subscription "my-subscription" \
 | `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vmss-name`) |
 | `--vmss-name` | No | Name of the virtual machine scale set |
 | `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
+
+```bash
+# Create Virtual Machine Scale Set with smart defaults based on workload requirements
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          --location <location> \
+                          --admin-username <admin-username> \
+                          [--admin-password <admin-password>] \
+                          [--ssh-public-key <ssh-public-key>] \
+                          [--vm-size <vm-size>] \
+                          [--image <image>] \
+                          [--workload <workload>] \
+                          [--os-type <os-type>] \
+                          [--virtual-network <virtual-network>] \
+                          [--subnet <subnet>] \
+                          [--instance-count <instance-count>] \
+                          [--upgrade-policy <upgrade-policy>] \
+                          [--zone <zone>] \
+                          [--os-disk-size-gb <os-disk-size-gb>] \
+                          [--os-disk-type <os-disk-type>]
+
+# Examples:
+
+# Create Linux VMSS with SSH key
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --location "eastus" \
+                          --admin-username "azureuser" \
+                          --ssh-public-key "ssh-ed25519 AAAAC3..." \
+                          --instance-count 3
+
+# Create Windows VMSS with automatic upgrade policy
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-win-vmss" \
+                          --location "eastus" \
+                          --admin-username "adminuser" \
+                          --admin-password "ComplexPassword123!" \
+                          --image "Win2022Datacenter" \
+                          --upgrade-policy "Automatic"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS (max 9 chars for Windows) |
+| `--location` | Yes | Azure region |
+| `--admin-username` | Yes | Admin username |
+| `--admin-password` | Conditional | Admin password (required for Windows) |
+| `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
+| `--vm-size` | No | VM size (defaults based on workload) |
+| `--image` | No | Image alias or URN (default: Ubuntu2404) |
+| `--workload` | No | Workload type for smart defaults |
+| `--os-type` | No | OS type: 'linux' or 'windows' |
+| `--virtual-network` | No | Virtual network name |
+| `--subnet` | No | Subnet name |
+| `--instance-count` | No | Number of VM instances (default: 2) |
+| `--upgrade-policy` | No | Upgrade policy: 'Automatic', 'Manual', 'Rolling' (default: 'Manual') |
+| `--zone` | No | Availability zone |
+| `--os-disk-size-gb` | No | OS disk size in GB |
+| `--os-disk-type` | No | OS disk type |
+
+```bash
+# Update Virtual Machine Scale Set configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--capacity <capacity>] \
+                          [--vm-size <vm-size>] \
+                          [--upgrade-policy <upgrade-policy>] \
+                          [--overprovision] \
+                          [--enable-auto-os-upgrade] \
+                          [--scale-in-policy <scale-in-policy>] \
+                          [--tags <tags>]
+
+# Examples:
+
+# Scale VMSS to 5 instances
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --capacity 5
+
+# Enable automatic OS upgrades
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --enable-auto-os-upgrade true
+
+# Set scale-in policy to remove oldest VMs first
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --scale-in-policy "OldestVM"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS |
+| `--capacity` | No | Number of VM instances |
+| `--vm-size` | No | VM size |
+| `--upgrade-policy` | No | Upgrade policy: 'Automatic', 'Manual', 'Rolling' |
+| `--overprovision` | No | Enable or disable overprovisioning |
+| `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
+| `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
+| `--tags` | No | Tags in key=value,key2=value2 format |
 
 #### Disks
 

@@ -20,6 +20,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
+    // Enable --dangerously-disable-elicitation for commands with Secret = true (vm create)
+    public override async ValueTask InitializeAsync()
+    {
+        SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
+        await base.InitializeAsync();
+    }
+
     // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
@@ -54,6 +61,15 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         {
             Regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
             Value = "00000000-0000-0000-0000-000000000000",
+        })
+    ];
+
+    // Sanitize admin password in request bodies
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..adminPassword")
+        {
+            Value = "REDACTED",
         })
     ];
 
@@ -215,6 +231,140 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var returnedInstanceId = vm.GetProperty("instanceId");
         Assert.Equal("0", returnedInstanceId.GetString());
     }
+
+    #region VM Update Tests
+
+    [Fact]
+    public async Task Should_create_vm_with_password_auth()
+    {
+        var createVmName = RegisterOrRetrieveVariable("createVmName", $"testvm{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", createVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "workload", "development" },
+                { "no-public-ip", true }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var vmSize = vm.GetProperty("vmSize");
+        Assert.Equal("Standard_B2s", vmSize.GetString());
+
+        var osType = vm.GetProperty("osType");
+        Assert.Equal("linux", osType.GetString());
+    }
+
+    [Fact]
+    public async Task Should_update_vm_tags()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "tags", "testkey=testvalue,environment=livetests" }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        // Verify tags were applied
+        var tags = vm.GetProperty("tags");
+        Assert.Equal(JsonValueKind.Object, tags.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_update_vm_boot_diagnostics()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "boot-diagnostics", "true" }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+    }
+
+    #endregion
+
+    #region VMSS Update Tests
+
+    [Fact]
+    public async Task Should_update_vmss_tags()
+    {
+        var result = await CallToolAsync(
+            "compute_vmss_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", VmssName },
+                { "tags", "testkey=testvalue,environment=livetests" }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        // Verify tags were applied
+        var tags = vmss.GetProperty("tags");
+        Assert.Equal(JsonValueKind.Object, tags.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_update_vmss_upgrade_policy()
+    {
+        var result = await CallToolAsync(
+            "compute_vmss_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", VmssName },
+                { "upgrade-policy", "Manual" }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var upgradePolicy = vmss.GetProperty("upgradePolicy");
+        Assert.Equal("Manual", upgradePolicy.GetString());
+    }
+
+    #endregion
+
+    #region Disk Tests
 
     [Fact]
     public async Task DiskGet_SpecificDisk_ReturnsValidDiskDetails()
@@ -380,4 +530,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             Assert.NotNull(disk.GetProperty("Name").GetString()); // Name is sanitized during playback
         }
     }
+
+    #endregion
 }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure Compute tools for Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Includes VM get (list, details, instance view), VMSS get (list, details, VM instances), VM create/update with smart workload-based defaults, and VMSS create/update operations"

@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'westus2'
+param location string = resourceGroup().location
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
@@ -20,7 +20,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_D2s_v6'
+param vmSize string = 'Standard_B2s'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -63,7 +63,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 // Test Virtual Machine (Linux)
-resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: '${baseName}-vm'
   location: location
   properties: {
@@ -83,7 +83,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
           storageAccountType: 'Standard_LRS'
         }
       }
-      diskControllerType: 'NVMe'
+      diskControllerType: 'SCSI'
     }
     osProfile: {
       computerName: '${baseName}-vm'
@@ -111,7 +111,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 }
 
 // Virtual Machine Scale Set for VMSS testing
-resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
+resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
   name: '${baseName}-vmss'
   location: location
   sku: {
@@ -138,7 +138,7 @@ resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
             storageAccountType: 'Standard_LRS'
           }
         }
-        diskControllerType: 'NVMe'
+        diskControllerType: 'SCSI'
       }
       osProfile: {
         computerNamePrefix: '${baseName}-'
@@ -212,6 +212,34 @@ resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-0
   }
 }
 
+// Network Contributor role for creating network resources (NSG, VNet, NIC, Public IP)
+resource networkContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Network Contributor role
+  // Lets you manage networks, but not access to them
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor
+  name: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+}
+
+// Assign Network Contributor role to test application for VM create tests
+resource appNetworkContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(networkContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: networkContributorRoleDefinition.id
+    description: 'Network Contributor for testApplicationOid - required for VM create tests'
+  }
+}
+
+// Output values for test consumption
+output vmName string = vm.name
+output vmssName string = vmss.name
+output vnetName string = vnet.name
+output resourceGroupName string = resourceGroup().name
+output diskName string = testDisk.name
+output location string = location
+
 // Create a test managed disk
 resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
   name: '${baseName}-disk'
@@ -232,25 +260,17 @@ resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
 }
 
 // Assign Contributor role for managing disks
-resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+resource diskContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   // Contributor role
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 }
 
 resource diskContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(contributorRoleDefinition.id, testApplicationOid, testDisk.id)
+  name: guid(diskContributorRoleDefinition.id, testApplicationOid, testDisk.id)
   scope: testDisk
   properties: {
-    roleDefinitionId: contributorRoleDefinition.id
+    roleDefinitionId: diskContributorRoleDefinition.id
     principalId: testApplicationOid
   }
 }
-
-// Output values for test consumption
-output vmName string = vm.name
-output vmssName string = vmss.name
-output vnetName string = vnet.name
-output resourceGroupName string = resourceGroup().name
-output diskName string = testDisk.name
-output location string = location
