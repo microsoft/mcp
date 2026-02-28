@@ -981,7 +981,8 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
-                  --query <kql-query>
+                  --query <kql-query> \
+                  [--show-stats]
 
 ```
 

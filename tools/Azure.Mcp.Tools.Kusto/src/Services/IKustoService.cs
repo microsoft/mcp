@@ -46,11 +46,32 @@ public interface IKustoService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<(List<JsonElement> Items, JsonElement? Statistics)> QueryItemsWithStatisticsAsync(
+        string clusterUri,
+        string databaseName,
+        string query,
+        bool showStats = false,
+        string? tenant = null,
+        AuthMethod? authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     Task<List<JsonElement>> QueryItemsAsync(
         string subscriptionId,
         string clusterName,
         string databaseName,
         string query,
+        string? tenant = null,
+        AuthMethod? authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<(List<JsonElement> Items, JsonElement? Statistics)> QueryItemsWithStatisticsAsync(
+        string subscriptionId,
+        string clusterName,
+        string databaseName,
+        string query,
+        bool showStats = false,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
