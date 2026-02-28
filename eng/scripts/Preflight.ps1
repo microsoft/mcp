@@ -1,4 +1,4 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 <#
@@ -14,6 +14,7 @@
     4. Tool metadata validation (descriptions, name lengths, duplicate IDs)
     5. Documentation validation (README annotations)
     6. Unit tests
+    7. AOT compatibility analysis (when -IncludeAot is specified)
 
     Use -Quick to skip tests and spelling for a fast feedback loop.
     Use -IncludeAot to add AOT compatibility analysis (slow, linux-x64 only).
