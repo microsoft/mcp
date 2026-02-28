@@ -14,20 +14,17 @@ namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
 public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
 {
-    private const string CommandTitle = "Get API Examples";
+    private const string CommandTitle = "Get Fabric API Examples";
 
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
 
-    public override string Name => "get";
+    public override string Name => "get_examples";
 
     public override string Description =>
         """
-        Retrieve all example API request/response files for a specific Microsoft Fabric workload.
-        Requires the workload type (e.g., 'notebook', 'report'). Returns a dictionary mapping
-        file paths to their contents, containing sample API calls, responses, and implementation
-        examples to help with API integration and development.
+        Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents.
         """;
 
     public override string Title => CommandTitle;

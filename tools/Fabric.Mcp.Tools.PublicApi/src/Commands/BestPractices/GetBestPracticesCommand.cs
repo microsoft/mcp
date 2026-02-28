@@ -15,20 +15,17 @@ namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
 public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
 {
-    private const string CommandTitle = "Get API Examples";
+    private const string CommandTitle = "Get Fabric Best Practices";
 
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
 
-    public override string Name => "get";
+    public override string Name => "get_best_practices";
 
     public override string Description =>
         """
-        Retrieves embedded best practice documentation and guidance for a specific Microsoft Fabric topic.
-        Use this command when you need detailed recommendations, guidelines, or best practices for
-        implementing or working with specific Fabric features, APIs, or development patterns.
-        The topic parameter should match available embedded resource names for Fabric best practices.
+        Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.
         """;
 
     public override string Title => CommandTitle;

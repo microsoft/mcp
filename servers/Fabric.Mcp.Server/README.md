@@ -218,12 +218,22 @@ The Fabric MCP Server exposes the following tools for AI agents:
 
 | Tool | Tool Name | Description |
 |------|-----------|-------------|
-| List Public APIs | `publicapis_list` | List all Microsoft Fabric workload types that have public API specifications available |
-| Get Public API | `publicapis_get` | Retrieve the complete OpenAPI/Swagger specification for a specific Microsoft Fabric workload |
-| Get Platform API | `publicapis_platform_get` | Retrieve the OpenAPI/Swagger specification for Microsoft Fabric platform APIs |
-| Get Best Practices | `publicapis_bestpractices_get` | Retrieve embedded best practice documentation and guidance for a specific Microsoft Fabric topic |
-| Get Best Practices Examples | `publicapis_bestpractices_examples_get` | Retrieve all example API request/response files for a specific Microsoft Fabric workload |
-| Get Item Definition | `publicapis_bestpractices_itemdefinition_get` | Retrieve the JSON schema definitions for specific items within a Microsoft Fabric workload's API |
+| List Fabric API Workloads | `list_workloads` | Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform. |
+| Get Fabric API Spec | `get_api_spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format. |
+| Get Fabric Platform API Spec | `get_platform_api_spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-workload platform APIs like workspace management. Returns complete platform API specification. |
+| Get Fabric Best Practices | `get_best_practices` | Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content. |
+| Get Fabric API Examples | `get_examples` | Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents. |
+| Get Fabric Item Schema | `schema` | Retrieves JSON schema definitions for items in a Fabric workload API. Use this when the user needs to understand item structure or validate item definitions. Returns schema definitions for the specified workload. |
+| List OneLake Workspaces | `list_workspaces` | Lists all Fabric workspaces accessible via OneLake data plane API. Use this when the user needs to view available workspaces or select a workspace for data operations. Returns workspace names and IDs. |
+| List OneLake Items | `list_items` | Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata. |
+| List OneLake Items (DFS) | `list_items_dfs` | Lists items in a Fabric workspace using the DFS-style data API. Use this when detailed filesystem-level access is needed for workspace items. Provides lower-level data plane view than standard item listing. |
+| Create Fabric Item | `create_item` | Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type. |
+| List OneLake Files | `list_files` | Lists files and directories in OneLake storage using hierarchical DFS-style view. Use this when the user needs to explore OneLake content in a filesystem format. Supports path filtering and recursive traversal. |
+| Create OneLake Directory | `create_directory` | Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths. |
+| Delete OneLake Directory | `delete_directory` | Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories. |
+| Upload OneLake File | `upload_file` | Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification. |
+| Download OneLake File | `download_file` | Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable. |
+| Delete OneLake File | `delete_file` | Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. This action permanently removes the file. |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
