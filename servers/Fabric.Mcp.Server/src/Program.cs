@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
@@ -11,6 +10,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -27,10 +27,18 @@ internal class Program
     {
         try
         {
+            var cts = new CancellationTokenSource();
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true; // Prevent the process from terminating immediately
+                cts.Cancel();
+            };
+
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
+
             ConfigureServices(services);
 
             services.AddLogging(builder =>
@@ -41,6 +49,7 @@ internal class Program
 
             var serviceProvider = services.BuildServiceProvider();
             await InitializeServicesAsync(serviceProvider);
+            await InitializeHostedServicesAsync(serviceProvider, cts.Token);
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
@@ -167,5 +176,15 @@ internal class Program
         // invalid telemetry published.
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
         await telemetryService.InitializeAsync();
+    }
+
+    private static async Task InitializeHostedServicesAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        // Initialize hosted services to capture telemetry for command execution.
+        var hostedServices = serviceProvider.GetServices<IHostedService>();
+        foreach (var hostedService in hostedServices)
+        {
+            await hostedService.StartAsync(cancellationToken);
+        }
     }
 }
