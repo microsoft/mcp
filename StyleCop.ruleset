@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Microsoft MCP Analyzer Rules" Description="Code analysis rules for Microsoft MCP projects." ToolsVersion="16.0">
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <!-- Documentation Rules -->
+    <Rule Id="SA1600" Action="Warning" /> <!-- Elements should be documented -->
+    <Rule Id="SA1601" Action="Warning" /> <!-- Partial elements should be documented -->
+    <Rule Id="SA1602" Action="None" /> <!-- Enumeration items should be documented (disabled for internal enums) -->
+    <Rule Id="SA1633" Action="None" /> <!-- File should have header (handled by file templates) -->
+    
+    <!-- Layout Rules -->
+    <Rule Id="SA1500" Action="Warning" /> <!-- Braces for multi-line statements should not share line -->
+    <Rule Id="SA1501" Action="Warning" /> <!-- Statement should not be on a single line -->
+    <Rule Id="SA1502" Action="Warning" /> <!-- Element should not be on a single line -->
+    
+    <!-- Naming Rules -->
+    <Rule Id="SA1300" Action="Warning" /> <!-- Element should begin with upper-case letter -->
+    <Rule Id="SA1303" Action="Warning" /> <!-- Const field names should begin with upper-case letter -->
+    <Rule Id="SA1304" Action="Warning" /> <!-- Non-private readonly fields should begin with upper-case letter -->
+    <Rule Id="SA1306" Action="Warning" /> <!-- Field names should begin with lower-case letter -->
+    <Rule Id="SA1307" Action="Warning" /> <!-- Accessible fields should begin with upper-case letter -->
+    <Rule Id="SA1308" Action="Warning" /> <!-- Variable names should not be prefixed -->
+    <Rule Id="SA1309" Action="None" /> <!-- Field names should not begin with underscore (allow _ for private fields) -->
+    <Rule Id="SA1310" Action="Warning" /> <!-- Field names should not contain underscore -->
+    <Rule Id="SA1311" Action="Warning" /> <!-- Static readonly fields should begin with upper-case letter -->
+    
+    <!-- Ordering Rules -->
+    <Rule Id="SA1200" Action="None" /> <!-- Using directives should be placed correctly (handled by .editorconfig) -->
+    <Rule Id="SA1201" Action="Warning" /> <!-- Elements should appear in the correct order -->
+    <Rule Id="SA1202" Action="Warning" /> <!-- Elements should be ordered by access -->
+    <Rule Id="SA1203" Action="Warning" /> <!-- Constants should appear before fields -->
+    <Rule Id="SA1204" Action="Warning" /> <!-- Static elements should appear before instance elements -->
+    
+    <!-- Readability Rules -->
+    <Rule Id="SA1101" Action="None" /> <!-- Prefix local calls with this (optional) -->
+    <Rule Id="SA1116" Action="None" /> <!-- Split parameters should start on line after declaration (allow flexibility) -->
+    <Rule Id="SA1117" Action="None" /> <!-- Parameters should be on same line or separate lines (allow flexibility) -->
+    <Rule Id="SA1120" Action="Warning" /> <!-- Comments should contain text -->
+    <Rule Id="SA1121" Action="Warning" /> <!-- Use built-in type alias -->
+    <Rule Id="SA1122" Action="Warning" /> <!-- Use string.Empty for empty strings -->
+    <Rule Id="SA1124" Action="Warning" /> <!-- Do not use regions -->
+    <Rule Id="SA1133" Action="Warning" /> <!-- Do not combine attributes -->
+    <Rule Id="SA1134" Action="Warning" /> <!-- Attributes should not share line -->
+    
+    <!-- Spacing Rules -->
+    <Rule Id="SA1000" Action="Warning" /> <!-- Keywords should be spaced correctly -->
+    <Rule Id="SA1001" Action="Warning" /> <!-- Commas should be spaced correctly -->
+    <Rule Id="SA1002" Action="Warning" /> <!-- Semicolons should be spaced correctly -->
+  </Rules>
+  
+  <Rules AnalyzerId="Microsoft.CodeAnalysis.NetAnalyzers" RuleNamespace="Microsoft.CodeAnalysis.NetAnalyzers">
+    <!-- Design Rules -->
+    <Rule Id="CA1000" Action="Warning" /> <!-- Do not declare static members on generic types -->
+    <Rule Id="CA1001" Action="Warning" /> <!-- Types that own disposable fields should be disposable -->
+    <Rule Id="CA1010" Action="Warning" /> <!-- Generic interface should also be implemented -->
+    <Rule Id="CA1012" Action="Warning" /> <!-- Abstract types should not have public constructors -->
+    <Rule Id="CA1014" Action="None" /> <!-- Mark assemblies with CLSCompliant (optional for internal code) -->
+    <Rule Id="CA1016" Action="Warning" /> <!-- Mark assemblies with assembly version -->
+    <Rule Id="CA1017" Action="None" /> <!-- Mark assemblies with ComVisible (not needed for .NET Core) -->
+    <Rule Id="CA1018" Action="Warning" /> <!-- Mark attributes with AttributeUsageAttribute -->
+    
+    <!-- Globalization Rules -->
+    <Rule Id="CA1303" Action="None" /> <!-- Do not pass literals as localized parameters (disabled for now) -->
+    <Rule Id="CA1304" Action="Warning" /> <!-- Specify CultureInfo -->
+    <Rule Id="CA1305" Action="Warning" /> <!-- Specify IFormatProvider -->
+    <Rule Id="CA1307" Action="Warning" /> <!-- Specify StringComparison for clarity -->
+    <Rule Id="CA1308" Action="Warning" /> <!-- Normalize strings to uppercase -->
+    <Rule Id="CA1309" Action="Warning" /> <!-- Use ordinal string comparison -->
+    
+    <!-- Naming Rules -->
+    <Rule Id="CA1707" Action="None" /> <!-- Identifiers should not contain underscores (allow for test methods) -->
+    <Rule Id="CA1710" Action="Warning" /> <!-- Identifiers should have correct suffix -->
+    <Rule Id="CA1711" Action="Warning" /> <!-- Identifiers should not have incorrect suffix -->
+    <Rule Id="CA1712" Action="Warning" /> <!-- Do not prefix enum values with type name -->
+    <Rule Id="CA1715" Action="Warning" /> <!-- Identifiers should have correct prefix -->
+    <Rule Id="CA1716" Action="Warning" /> <!-- Identifiers should not match keywords -->
+    <Rule Id="CA1720" Action="Warning" /> <!-- Identifiers should not contain type names -->
+    <Rule Id="CA1721" Action="Warning" /> <!-- Property names should not match get methods -->
+    <Rule Id="CA1724" Action="Warning" /> <!-- Type names should not match namespaces -->
+    
+    <!-- Performance Rules -->
+    <Rule Id="CA1805" Action="Warning" /> <!-- Do not initialize unnecessarily -->
+    <Rule Id="CA1806" Action="Warning" /> <!-- Do not ignore method results -->
+    <Rule Id="CA1810" Action="Warning" /> <!-- Initialize reference type static fields inline -->
+    <Rule Id="CA1812" Action="Warning" /> <!-- Avoid uninstantiated internal classes -->
+    <Rule Id="CA1813" Action="Warning" /> <!-- Avoid unsealed attributes -->
+    <Rule Id="CA1814" Action="Warning" /> <!-- Prefer jagged arrays over multidimensional -->
+    <Rule Id="CA1815" Action="Warning" /> <!-- Override equals and operator equals on value types -->
+    <Rule Id="CA1819" Action="Warning" /> <!-- Properties should not return arrays -->
+    <Rule Id="CA1820" Action="Warning" /> <!-- Test for empty strings using string length -->
+    <Rule Id="CA1821" Action="Warning" /> <!-- Remove empty finalizers -->
+    <Rule Id="CA1822" Action="Warning" /> <!-- Mark members as static -->
+    <Rule Id="CA1823" Action="Warning" /> <!-- Avoid unused private fields -->
+    <Rule Id="CA1824" Action="Warning" /> <!-- Mark assemblies with NeutralResourcesLanguageAttribute -->
+    <Rule Id="CA1825" Action="Warning" /> <!-- Avoid zero-length array allocations -->
+    
+    <!-- Reliability Rules -->
+    <Rule Id="CA2000" Action="Warning" /> <!-- Dispose objects before losing scope -->
+    <Rule Id="CA2002" Action="Warning" /> <!-- Do not lock on objects with weak identity -->
+    <Rule Id="CA2007" Action="None" /> <!-- Do not directly await a Task (allow in library code) -->
+    <Rule Id="CA2008" Action="Warning" /> <!-- Do not create tasks without passing a TaskScheduler -->
+    <Rule Id="CA2009" Action="Warning" /> <!-- Do not call ToImmutableCollection on an ImmutableCollection value -->
+    <Rule Id="CA2011" Action="Warning" /> <!-- Do not assign property within its setter -->
+    <Rule Id="CA2012" Action="Warning" /> <!-- Use ValueTasks correctly -->
+    <Rule Id="CA2013" Action="Warning" /> <!-- Do not use ReferenceEquals with value types -->
+    <Rule Id="CA2014" Action="Warning" /> <!-- Do not use stackalloc in loops -->
+    <Rule Id="CA2015" Action="Warning" /> <!-- Do not define finalizers for types derived from MemoryManager<T> -->
+    <Rule Id="CA2016" Action="Warning" /> <!-- Forward the CancellationToken parameter to methods that take one -->
+    
+    <!-- Security Rules -->
+    <Rule Id="CA2100" Action="Warning" /> <!-- Review SQL queries for security vulnerabilities -->
+    <Rule Id="CA2109" Action="Warning" /> <!-- Review visible event handlers -->
+    <Rule Id="CA2119" Action="Warning" /> <!-- Seal methods that satisfy private interfaces -->
+    <Rule Id="CA2153" Action="Warning" /> <!-- Do not catch corrupted state exceptions -->
+    
+    <!-- Usage Rules -->
+    <Rule Id="CA2200" Action="Warning" /> <!-- Rethrow to preserve stack details -->
+    <Rule Id="CA2201" Action="Warning" /> <!-- Do not raise reserved exception types -->
+    <Rule Id="CA2207" Action="Warning" /> <!-- Initialize value type static fields inline -->
+    <Rule Id="CA2208" Action="Warning" /> <!-- Instantiate argument exceptions correctly -->
+    <Rule Id="CA2211" Action="Warning" /> <!-- Non-constant fields should not be visible -->
+    <Rule Id="CA2213" Action="Warning" /> <!-- Disposable fields should be disposed -->
+    <Rule Id="CA2214" Action="Warning" /> <!-- Do not call overridable methods in constructors -->
+    <Rule Id="CA2215" Action="Warning" /> <!-- Dispose methods should call base class dispose -->
+    <Rule Id="CA2216" Action="Warning" /> <!-- Disposable types should declare finalizer -->
+    <Rule Id="CA2217" Action="Warning" /> <!-- Do not mark enums with FlagsAttribute -->
+    <Rule Id="CA2218" Action="Warning" /> <!-- Override GetHashCode on overriding Equals -->
+    <Rule Id="CA2219" Action="Warning" /> <!-- Do not raise exceptions in exception clauses -->
+    <Rule Id="CA2225" Action="Warning" /> <!-- Operator overloads have named alternates -->
+    <Rule Id="CA2226" Action="Warning" /> <!-- Operators should have symmetrical overloads -->
+    <Rule Id="CA2227" Action="Warning" /> <!-- Collection properties should be read only -->
+    <Rule Id="CA2229" Action="Warning" /> <!-- Implement serialization constructors -->
+    <Rule Id="CA2231" Action="Warning" /> <!-- Overload operator equals on overriding ValueType.Equals -->
+    <Rule Id="CA2234" Action="Warning" /> <!-- Pass System.Uri objects instead of strings -->
+    <Rule Id="CA2235" Action="Warning" /> <!-- Mark all non-serializable fields -->
+    <Rule Id="CA2237" Action="Warning" /> <!-- Mark ISerializable types with SerializableAttribute -->
+    <Rule Id="CA2241" Action="Warning" /> <!-- Provide correct arguments to formatting methods -->
+    <Rule Id="CA2242" Action="Warning" /> <!-- Test for NaN correctly -->
+    <Rule Id="CA2243" Action="Warning" /> <!-- Attribute string literals should parse correctly -->
+    <Rule Id="CA2244" Action="Warning" /> <!-- Do not duplicate indexed element initializations -->
+    <Rule Id="CA2245" Action="Warning" /> <!-- Do not assign a property to itself -->
+    <Rule Id="CA2246" Action="Warning" /> <!-- Do not assign a symbol and its member in the same statement -->
+    <Rule Id="CA2247" Action="Warning" /> <!-- Argument passed to TaskCompletionSource constructor should be TaskCreationOptions enum instead of TaskContinuationOptions enum -->
+    <Rule Id="CA2248" Action="Warning" /> <!-- Provide correct enum argument to Enum.HasFlag -->
+    <Rule Id="CA2249" Action="Warning" /> <!-- Consider using String.Contains instead of String.IndexOf -->
+  </Rules>
+</RuleSet>

@@ -107,5 +107,9 @@
     <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <!-- Roslyn Analyzers for code quality and style enforcement -->
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.100" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
   </ItemGroup>
 </Project>

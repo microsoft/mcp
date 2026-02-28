@@ -1,0 +1,68 @@
+// This file is used by Code Analysis to maintain SuppressMessage
+// attributes that are applied to this project.
+// Project-level suppressions either have no target or are given
+// a specific target and scoped to a namespace, type, member, etc.
+//
+// To add a suppression to this project:
+// 1. Copy this file to your project root as "GlobalSuppressions.cs"
+// 2. Add suppression attributes using one of the patterns below
+// 3. Document WHY the suppression is needed in the Justification parameter
+//
+// IMPORTANT: Use suppressions sparingly. Only suppress warnings when:
+// - The rule doesn't apply to your specific context
+// - You have a legitimate reason that cannot be fixed by code changes
+// - The warning is a false positive
+//
+// Always provide a clear justification explaining why the suppression is needed.
+
+using System.Diagnostics.CodeAnalysis;
+
+// Example: Suppress a specific rule for the entire assembly
+// [assembly: SuppressMessage("Category", "RuleId:RuleName", Justification = "Explanation here")]
+
+// Example: Suppress CA1014 (Mark assemblies with CLSCompliant) for the entire assembly
+// [assembly: SuppressMessage("Design", "CA1014:Mark assemblies with CLSCompliant", 
+//     Justification = "This assembly is not intended for CLS-compliant consumption")]
+
+// Example: Suppress CA1303 (Do not pass literals as localized parameters) for specific namespace
+// [assembly: SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", 
+//     Scope = "namespace", 
+//     Target = "~N:YourNamespace", 
+//     Justification = "This namespace does not require localization")]
+
+// Example: Suppress CA1031 (Do not catch general exception types) for a specific type
+// [assembly: SuppressMessage("Design", "CA1031:Do not catch general exception types", 
+//     Scope = "type", 
+//     Target = "~T:YourNamespace.YourClass", 
+//     Justification = "Top-level exception handler requires catching all exceptions")]
+
+// Example: Suppress CA1062 (Validate arguments of public methods) for a specific member
+// [assembly: SuppressMessage("Design", "CA1062:Validate arguments of public methods", 
+//     Scope = "member", 
+//     Target = "~M:YourNamespace.YourClass.YourMethod(System.String)", 
+//     Justification = "Argument validation is performed by caller")]
+
+// Example: Suppress StyleCop SA1600 (Elements should be documented) for internal types
+// [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", 
+//     Scope = "type", 
+//     Target = "~T:YourNamespace.InternalHelperClass", 
+//     Justification = "Internal implementation detail, documentation not required")]
+
+// Common suppressions you might need:
+
+// Suppress documentation requirements for test projects
+// [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", 
+//     Justification = "Test methods do not require XML documentation")]
+
+// Suppress async suffix requirements for test methods
+// [assembly: SuppressMessage("Naming", "VSTHRD200:Use Async suffix for async methods", 
+//     Scope = "namespaceanddescendants", 
+//     Target = "~N:YourNamespace.Tests", 
+//     Justification = "Test method names follow different conventions")]
+
+// For more information on suppression attributes:
+// https://learn.microsoft.com/dotnet/fundamentals/code-analysis/suppress-warnings
+//
+// Target syntax reference:
+// https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Rule%20Suppression%20Attributes.md
+
