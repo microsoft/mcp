@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.AppLens.Models;
 [JsonSerializable(typeof(ChatMessage))]
 [JsonSerializable(typeof(ChatMessageRequestBody))]
 [JsonSerializable(typeof(ChatMessageResponseBody))]
-[JsonSerializable(typeof(DiagnosticResult))]
+[JsonSerializable(typeof(AppLensInsights))]
 [JsonSerializable(typeof(ResourceDiagnoseCommandResult))]
 [JsonSerializable(typeof(JsonElement[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
