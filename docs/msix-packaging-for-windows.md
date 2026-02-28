@@ -416,6 +416,7 @@ For ESRP, use:
 | Large package size | Low | Use trimmed binaries; single architecture |
 | Store submission complexity | Medium | Start with sideloading; Store is future phase |
 | **Auto-discovery blocked with dev cert** | **High** | **ESRP Store signing required for production** |
+| **TrustedLaunch hash mismatch** | **High** | **Ensure signing agent uses SDK 10.0.26100.0+; remove `/NPH`** |
 
 ---
 
@@ -456,7 +457,11 @@ TrustedLaunch relies on **AppxSip-based signing** to:
 - Embed `PackageFullName` into the catalog
 - Define which binaries are considered "inside" the package
 
-Standard MSIX signing (including ESRP) is compatible as long as AppxSip is used.
+Standard MSIX signing (including ESRP) is compatible as long as:
+1. **AppxSip is used** (automatic when signing `.msix` files with SignTool)
+2. **`/NPH` is NOT specified** — page hashes should be generated for TrustedLaunch
+3. **Windows SDK 10.0.26100.0+** is available on the signing agent for compatible SIP version
+4. The signing certificate chains to a **Microsoft Trusted Root Key**
 
 ### Enforcement
 
@@ -469,6 +474,46 @@ Any EXE not covered will fail to launch under the MSIX identity.
 ### External Binaries (Not Applicable for Azure MCP Server)
 
 For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegrityExternal.cat` is required. Azure MCP Server includes all binaries inside the package, so this is not needed.
+
+### Troubleshooting TrustedLaunch Failures
+
+If the MSIX installs but fails to launch with "Error in parsing the app package," check:
+
+1. **Package Status**: Run `Get-AppxPackage -Name "Microsoft.Azure.Mcp.Server" | Select Status`.
+   If it shows `Modified, NeedsRemediation`, the CodeIntegrity enforcement failed.
+
+2. **Code Integrity Event Log**: Check `Microsoft-Windows-CodeIntegrity/Operational` for Event ID 3033:
+   ```powershell
+   Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-CodeIntegrity/Operational'; ID=3033} -MaxEvents 5
+   ```
+   Look for `STATUS_INVALID_IMAGE_HASH` (status code `3221226536` / `0xC0000428`).
+
+3. **Correlated Signature Info**: Check Event ID 3089 for details:
+   - `PageHash: false` — page hashes missing from CodeIntegrity.cat
+   - `ValidatedSigningLevel` — certificate chain trust level
+
+#### Common Causes
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `STATUS_INVALID_IMAGE_HASH` | PE hash mismatch between catalog and OS SIP | Ensure signing agent uses Windows SDK 10.0.26100.0+ |
+| `PageHash: false` | `/NPH` flag used during signing | Remove `/NPH` from ESRP signing parameters |
+| Package status `NeedsRemediation` | CodeIntegrity enforcement blocked launch | Fix the catalog hash generation (see above) |
+| Catalog verification passes in SignTool but fails at runtime | SIP version mismatch between signing and target OS | Sign on matching Windows build or use SDK 10.0.26100.0+ |
+
+#### SIP Version Compatibility
+
+The CodeIntegrity.cat contains PE image hashes computed by the AppxSip during signing. If the
+signing machine's SIP version differs from the target machine's SIP version, the hashes may not
+match at runtime. This manifests as `STATUS_INVALID_IMAGE_HASH` even though SignTool verification
+passes (SignTool uses its bundled SIP, not the OS SIP).
+
+**Requirements:**
+- Signing agent must have **Windows SDK 10.0.26100.0** or later installed
+- Signing agent should ideally run **Windows 11 24H2+** (build 26100+) to ensure SIP compatibility
+- Do **NOT** use `/NPH` (No Page Hash) when signing MSIX packages with TrustedLaunch
+- Package integrity enforcement (`uap10:PackageIntegrity Enforcement="on"`) only activates for
+  packages signed with Microsoft Trusted Root Keys
 
 ---
 

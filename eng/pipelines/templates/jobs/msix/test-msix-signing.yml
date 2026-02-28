@@ -87,7 +87,6 @@ jobs:
               "OpusName": "Microsoft",
               "OpusInfo": "https://www.microsoft.com",
               "FileDigest": "/fd SHA256",
-              "PageHash": "/NPH",
               "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
             }
           },
@@ -118,6 +117,78 @@ jobs:
           exit 1
       }
     displayName: "Inspect signing results"
+
+  - pwsh: |
+      Write-Host "Validating CodeIntegrity.cat for TrustedLaunch compatibility..."
+      $toSignPath = "$(Build.ArtifactStagingDirectory)/to_sign"
+      $msixFile = Get-ChildItem -Path $toSignPath -Filter "*.msix" | Select-Object -First 1
+
+      if (-not $msixFile) {
+          Write-Error "No .msix file found!"
+          exit 1
+      }
+
+      # Extract CodeIntegrity.cat and PE files from the signed MSIX
+      $extractDir = "$(Build.ArtifactStagingDirectory)/ci_validate"
+      New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
+      Add-Type -Assembly System.IO.Compression.FileSystem
+      [System.IO.Compression.ZipFile]::ExtractToDirectory($msixFile.FullName, $extractDir)
+
+      $catPath = Join-Path $extractDir "AppxMetadata\CodeIntegrity.cat"
+      if (-not (Test-Path $catPath)) {
+          Write-Error "CodeIntegrity.cat not found in signed MSIX! TrustedLaunch requires this file."
+          exit 1
+      }
+
+      $catSize = (Get-Item $catPath).Length
+      Write-Host "CodeIntegrity.cat size: $catSize bytes"
+
+      # Verify the catalog is validly signed
+      $catSig = Get-AuthenticodeSignature -FilePath $catPath
+      Write-Host "CodeIntegrity.cat signature status: $($catSig.Status)"
+      if ($catSig.Status -ne "Valid") {
+          Write-Error "CodeIntegrity.cat is not validly signed! Status: $($catSig.Status)"
+          exit 1
+      }
+
+      # Find SignTool for catalog verification
+      $signToolPaths = @(
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe",
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe",
+          "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe"
+      )
+      $signTool = $signToolPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+      if (-not $signTool) {
+          $signTool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter "signtool.exe" -Recurse |
+                      Where-Object { $_.Directory.Name -eq "x64" } |
+                      Select-Object -First 1 -ExpandProperty FullName
+      }
+
+      if ($signTool) {
+          # Verify key PE files are covered by the catalog
+          $peFiles = Get-ChildItem -Path "$extractDir\server" -Include "*.exe","*.dll" -Recurse | Select-Object -First 10
+          $failCount = 0
+          foreach ($pe in $peFiles) {
+              $result = & $signTool verify /pa /c $catPath $pe.FullName 2>&1
+              if ($LASTEXITCODE -eq 0) {
+                  Write-Host "  ✓ $($pe.Name) - covered by catalog"
+              } else {
+                  Write-Warning "  ✗ $($pe.Name) - NOT covered by catalog!"
+                  $failCount++
+              }
+          }
+          if ($failCount -gt 0) {
+              Write-Error "$failCount PE file(s) not covered by CodeIntegrity.cat. TrustedLaunch will fail!"
+              exit 1
+          }
+          Write-Host "`n✓ CodeIntegrity.cat validation PASSED - all sampled PE files are covered"
+      } else {
+          Write-Warning "SignTool not found. Skipping catalog coverage validation."
+      }
+
+      # Clean up
+      Remove-Item -Path $extractDir -Recurse -Force -ErrorAction SilentlyContinue
+    displayName: "Validate CodeIntegrity.cat for TrustedLaunch"
 
   - pwsh: |
       Write-Host "Verifying MSIX signature with SignTool..."
