@@ -26,7 +26,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
     public override string Description =>
         """
-        Generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services.
+        Entry point to help the agent deploy a service to the cloud. Agent should read its output and generate a deploy plan in '.azure/plan.${COPILOT_MD_EXTENSION}' for execution steps, recommended Azure services based on the information agent detected from project. Before calling this tool, scan this workspace to detect the services to deploy and their dependent services. If user has existing resources and only wants to deploy to existing resources, agent MUST first help user to pick existing Azure resources's ARM ID with Az CLI command or prompt user to provide!
         """;
 
     public override string Title => CommandTitle;
@@ -47,7 +47,10 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.PlanGet.ProjectName);
         command.Options.Add(DeployOptionDefinitions.PlanGet.TargetAppService);
         command.Options.Add(DeployOptionDefinitions.PlanGet.ProvisioningTool);
-        command.Options.Add(DeployOptionDefinitions.PlanGet.AzdIacOptions);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.IacOptions);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.SourceType);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.DeployOption);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.ResourceGroupName);
     }
 
     protected override GetOptions BindOptions(ParseResult parseResult)
@@ -58,7 +61,10 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             ProjectName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProjectName.Name) ?? string.Empty,
             TargetAppService = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.TargetAppService.Name) ?? string.Empty,
             ProvisioningTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProvisioningTool.Name) ?? string.Empty,
-            AzdIacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.AzdIacOptions.Name) ?? string.Empty
+            IacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.IacOptions.Name) ?? string.Empty,
+            SourceType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.SourceType.Name) ?? string.Empty,
+            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty,
+            ResourceGroupName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ResourceGroupName.Name) ?? string.Empty
         };
     }
 
@@ -81,9 +87,11 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             context.Activity?
                     .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
                     .AddTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)
-                    .AddTag(DeployTelemetryTags.IacType, options.AzdIacOptions ?? string.Empty);
+                    .AddTag(DeployTelemetryTags.IacType, options.IacOptions ?? string.Empty)
+                    .AddTag(DeployTelemetryTags.DeployOption, options.DeployOption ?? string.Empty)
+                    .AddTag(DeployTelemetryTags.SourceType, options.SourceType ?? string.Empty);
 
-            var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
+            var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.SourceType ?? string.Empty, options.DeployOption ?? string.Empty, options.IacOptions, options.Subscription, options.ResourceGroupName);
 
             context.Response.Message = planTemplate;
             context.Response.Status = HttpStatusCode.OK;

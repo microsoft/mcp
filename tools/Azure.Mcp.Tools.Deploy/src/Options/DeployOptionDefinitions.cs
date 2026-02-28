@@ -56,53 +56,49 @@ public static class DeployOptionDefinitions
 
     public class PipelineGenerateOptions : SubscriptionOptions
     {
-        public const string UseAZDPipelineConfigName = "use-azd-pipeline-config";
-        public const string OrganizationNameName = "organization-name";
-        public const string RepositoryNameName = "repository-name";
-        public const string GithubEnvironmentNameName = "github-environment-name";
+        public const string isAZDProjectName = "is-azd-project";
+        public const string PipelinePlatformName = "pipeline-platform";
 
-        public static readonly Option<bool> UseAZDPipelineConfig = new(
-            $"--{UseAZDPipelineConfigName}"
+        public const string DeployOptionName = "deploy-option";
+
+        public static readonly Option<bool> isAZDProject = new(
+            $"--{isAZDProjectName}"
         )
         {
-            Description = "Whether to use azd tool to set up the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
+            Description = "Whether to use azd tool in the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
             DefaultValueFactory = _ => false,
-            Required = false
+            Required = true
         };
 
-        public static readonly Option<string> OrganizationName = new(
-            $"--{OrganizationNameName}"
+        public static readonly Option<string> pipelinePlatform = new(
+            $"--{PipelinePlatformName}"
         )
         {
-            Description = "The name of the organization or the user account name of the current Github repository. DO NOT fill this in if you're not sure.",
-            Required = false
+            Description = "The platform for the deployment pipeline. Valid values: github-actions, azure-devops.",
+            DefaultValueFactory = _ => "github-actions",
+            Required = true,
         };
 
-        public static readonly Option<string> RepositoryName = new(
-            $"--{RepositoryNameName}"
+        public static readonly Option<string> deployOption = new(
+            $"--{DeployOptionName}"
         )
         {
-            Description = "The name of the current Github repository. DO NOT fill this in if you're not sure.",
-            Required = false
+            Description = "Valid values: deploy-only, provision-and-deploy. Default to deploy-only. Set to 'provision-and-deploy' ONLY WHEN user explicitly wants infra provisioning pipeline using local provisioning scripts.",
+            DefaultValueFactory = _ => "deploy-only",
+            Required = true
         };
-
-        public static readonly Option<string> GithubEnvironmentName = new(
-            $"--{GithubEnvironmentNameName}"
-        )
-        {
-            Description = "The name of the environment to which the deployment pipeline will be deployed. DO NOT fill this in if you're not sure.",
-            Required = false
-        };
-
     }
 
-    public static class PlanGet
+    public class PlanGet : SubscriptionOptions
     {
         public const string WorkspaceFolderName = "workspace-folder";
         public const string ProjectNameName = "project-name";
         public const string TargetAppServiceName = "target-app-service";
         public const string ProvisioningToolName = "provisioning-tool";
-        public const string AzdIacOptionsName = "azd-iac-options";
+        public const string IacOptionsName = "iac-options";
+        public const string SourceTypeName = "source-type";
+        public const string DeployOptionName = "deploy-option";
+        public const string ResourceGroupNameName = "resource-group-name";
 
         public static readonly Option<string> WorkspaceFolder = new(
             $"--{WorkspaceFolderName}"
@@ -132,15 +128,42 @@ public static class DeployOptionDefinitions
             $"--{ProvisioningToolName}"
         )
         {
-            Description = "The tool to use for provisioning Azure resources. Valid values: AZD, AzCli. Use AzCli if TargetAppService is AKS.",
+            Description = "The tool to use for provisioning Azure resources. Valid values: AzCli, AZD.",
+            Required = true,
+            DefaultValueFactory = _ => "AzCli"
+        };
+
+        public static readonly Option<string> IacOptions = new(
+            $"--{IacOptionsName}"
+        )
+        {
+            Description = "The Infrastructure as Code option. Valid values: bicep, terraform. Leave empty if user wants to use azcli command script.",
+            Required = false
+        };
+
+        public static readonly Option<string> SourceType = new(
+            $"--{SourceTypeName}"
+        )
+        {
+            Description = "The source of the plan to generate from. Valid values: 'from-project', 'from-azure', 'from-context'. If user doesn't have existing resources, set 'from-project' and generating deploy plan based on the project files in the workspace. If user mentions Azure resources exist, set 'from-azure' and ask for existing Azure resources details to generate plan. If the user have no existing resource but declare the expected Azure resources, use 'from-context' and the deploy plan should be based on the user's input.",
+            DefaultValueFactory = _ => "from-project",
             Required = true
         };
 
-        public static readonly Option<string> AzdIacOptions = new(
-            $"--{AzdIacOptionsName}"
+        public static readonly Option<string> DeployOption = new(
+            $"--{DeployOptionName}"
         )
         {
-            Description = "The Infrastructure as Code option for azd. Valid values: bicep, terraform. Leave empty if Deployment tool is AzCli.",
+            Description = "Set the value based on project and user's input. Valid values: 'provision-and-deploy', 'deploy-only', 'provision-only'. Use 'deploy-only' if user mentions they want to deploy to existing Azure resources or Iac files already exist in project, get Azure resource group from project files or from user. Use 'provision-only' if user only wants to provision Azure resource. Use 'provision-and-deploy' if user wants to deploy application and doesn't have existing infrastructure resources, or are starting from an empty resource group.",
+            DefaultValueFactory = _ => "provision-and-deploy",
+            Required = true
+        };
+
+        public static readonly Option<string> ResourceGroupName = new(
+            $"--{ResourceGroupNameName}"
+        )
+        {
+            Description = "The Azure resource group name to use for the deployment. If user has existing resources, agent must use existing resource's resource group, ask for user's confirmation before using its resource group name. Don't use a placeholder or mock a value.",
             Required = false
         };
     }
@@ -150,7 +173,7 @@ public static class DeployOptionDefinitions
         public static readonly Option<string> DeploymentTool = new(
             "--deployment-tool")
         {
-            Description = "The deployment tool to use. Valid values: AZD, AzCli",
+            Description = "The deployment tool to use. Valid values: AzCli, AZD",
             Required = true
         };
 
@@ -158,16 +181,14 @@ public static class DeployOptionDefinitions
             "--iac-type"
             )
         {
-            Description = "The Infrastructure as Code type. Valid values: bicep, terraform. Leave empty if deployment-tool is AzCli.",
+            Description = "The type of IaC file used for deployment. Valid values: bicep, terraform. Leave empty ONLY if user wants to use AzCli command script and no IaC file.",
             Required = false
-
-
         };
 
         public static readonly Option<string> ResourceTypes = new(
             "--resource-types")
         {
-            Description = "Specifies the Azure resource types to retrieve IaC rules for. It should be comma-separated. Supported values are: 'appservice', 'containerapp', 'function', 'aks', 'storage'. If none of these services are used, this parameter can be left empty.",
+            Description = "List of Azure resource types to generate rules for. Get the value from context and use the same resources defined in plan. Valid value: 'appservice','containerapp','function','aks','azuredatabaseforpostgresql','azuredatabaseformysql','azuresqldatabase','azurecosmosdb','azurestorageaccount','azurekeyvault'",
             Required = false,
             AllowMultipleArgumentsPerToken = true
         };

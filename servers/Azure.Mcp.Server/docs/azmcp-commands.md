@@ -1120,10 +1120,9 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy pipeline guidance get [--use-azd-pipeline-config <use-azd-pipeline-config>] \
-                                   [--organization-name <organization-name>] \
-                                   [--repository-name <repository-name>] \
-                                   [--github-environment-name <github-environment-name>]
+azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
+                                   [--pipeline-platform <pipeline-platform>] \
+                                   [--deploy-option <deploy-option>] 
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1131,7 +1130,7 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       --project-name <project-name> \
                       --target-app-service <target-app-service> \
                       --provisioning-tool <provisioning-tool> \
-                      [--azd-iac-options <azd-iac-options>]
+                      [--iac-options <iac-options>]
 ```
 
 ### Azure Event Grid Operations

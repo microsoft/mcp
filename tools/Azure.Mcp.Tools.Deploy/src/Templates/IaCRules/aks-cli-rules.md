@@ -1,0 +1,3 @@
+﻿- Attach ACR to AKS cluster for pulling images using 'az aks update --attach-acr'.
+- Set up AKS workload identity with user-assigned managed identity by creating aks with '--enable-oidc-issuer --enable-workload-identity' AND CREATE a federated identity credential to link the managed identity with the Kubernetes service account.
+- Use existing workspace resource needs '--enable-addons monitoring'.

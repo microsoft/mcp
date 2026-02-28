@@ -8,15 +8,12 @@ namespace Azure.Mcp.Tools.Deploy.Options.Pipeline;
 
 public class GuidanceGetOptions : SubscriptionOptions
 {
-    [JsonPropertyName("useAZDPipelineConfig")]
-    public bool UseAZDPipelineConfig { get; set; }
+    [JsonPropertyName("isAZDProject")]
+    public bool IsAZDProject { get; set; }
 
-    [JsonPropertyName("organizationName")]
-    public string? OrganizationName { get; set; }
+    [JsonPropertyName("pipelinePlatform")]
+    public string? PipelinePlatform { get; set; }
 
-    [JsonPropertyName("repositoryName")]
-    public string? RepositoryName { get; set; }
-
-    [JsonPropertyName("githubEnvironmentName")]
-    public string? GithubEnvironmentName { get; set; }
+    [JsonPropertyName("deployOption")]
+    public string? DeployOption { get; set; }
 }

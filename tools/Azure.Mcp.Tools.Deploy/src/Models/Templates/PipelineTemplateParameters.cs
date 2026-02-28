@@ -8,30 +8,19 @@ namespace Azure.Mcp.Tools.Deploy.Models.Templates;
 /// </summary>
 public sealed class PipelineTemplateParameters
 {
-    /// <summary>
-    /// Environment name prompt text.
-    /// </summary>
-    public string EnvironmentNamePrompt { get; set; } = string.Empty;
+    public string DeploymentTool { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Subscription ID prompt text.
-    /// </summary>
-    public string SubscriptionIdPrompt { get; set; } = string.Empty;
+    public string PipelinePlatform { get; set; } = string.Empty;
 
-    /// <summary>
-    /// GitHub environment create command.
-    /// </summary>
-    public string EnvironmentCreateCommand { get; set; } = string.Empty;
+    public string PrerequisiteChecksPrompt { get; set; } = string.Empty;
 
-    /// <summary>
-    /// JSON parameters for federated credentials.
-    /// </summary>
-    public string JsonParameters { get; set; } = string.Empty;
+    public string PipelineFilePrompt { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Environment argument for GitHub CLI commands.
-    /// </summary>
-    public string EnvironmentArg { get; set; } = string.Empty;
+    public string SetupMethodPrompt { get; set; } = string.Empty;
+
+    public string AzureAuthConfigPrompt { get; set; } = string.Empty;
+
+    public string EnvironmentSetupPrompt { get; set; } = string.Empty;
 
     /// <summary>
     /// Converts the parameters to a dictionary for template processing.
@@ -41,11 +30,13 @@ public sealed class PipelineTemplateParameters
     {
         return new Dictionary<string, string>
         {
-            { nameof(EnvironmentNamePrompt), EnvironmentNamePrompt },
-            { nameof(SubscriptionIdPrompt), SubscriptionIdPrompt },
-            { nameof(EnvironmentCreateCommand), EnvironmentCreateCommand },
-            { nameof(JsonParameters), JsonParameters },
-            { nameof(EnvironmentArg), EnvironmentArg }
+            { nameof(DeploymentTool), DeploymentTool },
+            { nameof(PipelinePlatform), PipelinePlatform },
+            { nameof(PrerequisiteChecksPrompt), PrerequisiteChecksPrompt },
+            { nameof(PipelineFilePrompt), PipelineFilePrompt },
+            { nameof(SetupMethodPrompt), SetupMethodPrompt },
+            { nameof(AzureAuthConfigPrompt), AzureAuthConfigPrompt },
+            { nameof(EnvironmentSetupPrompt), EnvironmentSetupPrompt }
         };
     }
 }

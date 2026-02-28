@@ -131,7 +131,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("If creating AzCli script, the script should stop if any command fails.", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("The script should be idempotent", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -175,8 +175,30 @@ public class RulesGetCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Resources: appservice, containerapp, function", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("App Service Rules", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Additional requirements for App Service", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Additional requirements for Container Apps", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Additional requirements for Function Apps", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_handle_azcli_terraform_all_resource_types()
+    {
+        // arrange
+        var args = _commandDefinition.Parse([
+            "--deployment-tool", "AzCli",
+            "--iac-type", "terraform",
+            "--resource-types", "appservice,containerapp,function,aks,azuredatabaseforpostgresql,azuredatabaseformysql,azuresqldatabase,azurecosmosdb,azurestorageaccount,azurekeyvault"
+        ]);
+
+        // act
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Message);
+        Assert.Contains("Resources: appservice, containerapp, function, aks, azuredatabaseforpostgresql, azuredatabaseformysql, azuresqldatabase, azurecosmosdb, azurestorageaccount, azurekeyvault", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("{{", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("}}", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

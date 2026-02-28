@@ -287,9 +287,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | deploy_app_logs_get | Show me the log of the application deployed by azd  |
 | deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules to generate bicep scripts  |
-| deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
-| deploy_plan_get | Create a plan to deploy this application to azure |
+| deploy_iac_rules_get | Show me the rules to generate bicep scripts for \<resource-type>  |
+| deploy_pipeline_guidance_get | Help me set up a CI/CD pipeline to deploy to Azure. |
+| deploy_plan_get | Scan my project carefully to identify all Azure-relevant resources, programming languages, frameworks, dependencies, and configuration files needed for deployment. Develop a provision-and-deploy plan and follow it to deploy my application to Azure. deployTool: azcli, IacType: Terraform, hosting service: Container Apps.|
 
 ## Azure Event Grid
 
