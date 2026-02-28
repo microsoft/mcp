@@ -526,20 +526,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| get_azure_bestpractices_get | Get the latest Azure code generation best practices |
-| get_azure_bestpractices_get | Get the latest Azure deployment best practices |
-| get_azure_bestpractices_get | Get the latest Azure best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions deployment best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions best practices |
-| get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| get_azure_bestpractices_get | What are azure function best practices? |
-| get_azure_bestpractices_get | configure azure mcp in coding agent for my repo |
-| get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure |
-| get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
-| get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+| get-azure-bestpractices_get | Get the latest Azure code generation best practices |
+| get-azure-bestpractices_get | Get the latest Azure deployment best practices |
+| get-azure-bestpractices_get | Get the latest Azure best practices |
+| get-azure-bestpractices_get | Get the latest Azure Functions code generation best practices |
+| get-azure-bestpractices_get | Get the latest Azure Functions deployment best practices |
+| get-azure-bestpractices_get | Get the latest Azure Functions best practices |
+| get-azure-bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| get-azure-bestpractices_get | What are azure function best practices? |
+| get-azure-bestpractices_get | configure azure mcp in coding agent for my repo |
+| get-azure-bestpractices_ai-app | Get best practices for building AI applications in Azure |
+| get-azure-bestpractices_ai-app | Show me the best practices for Microsoft Foundry agents code generation |
+| get-azure-bestpractices_ai-app | Get guidance for building agents with Microsoft Foundry |
+| get-azure-bestpractices_ai-app | Create an AI app that helps me to manage travel queries. |
+| get-azure-bestpractices_ai-app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
 
 ## Azure Migrate
 
