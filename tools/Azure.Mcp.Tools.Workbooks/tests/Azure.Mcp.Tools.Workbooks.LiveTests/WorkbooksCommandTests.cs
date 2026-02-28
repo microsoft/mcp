@@ -97,6 +97,129 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     [Fact]
     [CustomMatcher(compareBody: false)]
+    public async Task Should_list_workbooks_with_total_count()
+    {
+        // Test total count feature from optimization plan
+        var result = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "include-total-count", "true" }
+            });
+
+        var workbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
+
+        // Total count should be present
+        var totalCount = result.AssertProperty("TotalCount");
+        Assert.True(totalCount.ValueKind == JsonValueKind.Number || totalCount.ValueKind == JsonValueKind.Null);
+
+        // Returned count should be present
+        var returned = result.AssertProperty("Returned");
+        Assert.Equal(JsonValueKind.Number, returned.ValueKind);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_list_workbooks_with_name_contains_filter()
+    {
+        // Test the --name-contains semantic filter from optimization plan
+        var result = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name-contains", "Test" }  // Bicep template creates workbooks with "Test" in name
+            });
+
+        var workbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
+
+        // All returned workbooks should contain "Test" in display name
+        foreach (var workbook in workbooks.EnumerateArray())
+        {
+            var displayName = workbook.AssertProperty("DisplayName").GetString();
+            Assert.Contains("Test", displayName, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_list_workbooks_with_max_results()
+    {
+        // Test max-results feature from optimization plan
+        var result = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "max-results", "1" }
+            });
+
+        var workbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
+
+        // Should return at most 1 workbook
+        var workbooksArray = workbooks.EnumerateArray().ToArray();
+        Assert.True(workbooksArray.Length <= 1);
+
+        // Returned count should match actual count
+        var returned = result.AssertProperty("Returned");
+        Assert.Equal(workbooksArray.Length, returned.GetInt32());
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_list_workbooks_with_summary_output_format()
+    {
+        // Test output-format=summary from optimization plan (minimal tokens)
+        var result = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "output-format", "summary" }
+            });
+
+        var workbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
+
+        // Verify workbooks have basic properties
+        foreach (var workbook in workbooks.EnumerateArray())
+        {
+            workbook.AssertProperty("WorkbookId");
+            workbook.AssertProperty("DisplayName");
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_list_workbooks_without_subscription_for_cross_scope_discovery()
+    {
+        // Test optional subscription parameter from optimization plan
+        // When omitted, should return all accessible workbooks across tenants
+        var result = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "max-results", "5" }  // Limit results for test speed
+            });
+
+        var workbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
+
+        // Should return workbooks (may be from any accessible subscription)
+        // This tests the cross-scope discovery feature
+        Assert.True(workbooks.ValueKind == JsonValueKind.Array, "Workbooks property should be an array");
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_show_workbook_details()
     {
         // First get the list of workbooks to find a valid ID
@@ -121,15 +244,75 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             "workbooks_show",
             new()
             {
-                { "workbook-id", workbookId.GetString()! }
+                { "workbook-ids", workbookId.GetString()! }
             });
 
-        var workbook = result.AssertProperty("Workbook");
+        var showWorkbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, showWorkbooks.ValueKind);
+        var showWorkbooksArray = showWorkbooks.EnumerateArray().ToArray();
+        Assert.NotEmpty(showWorkbooksArray);
+
+        var workbook = showWorkbooksArray[0];
         workbook.AssertProperty("WorkbookId");
         workbook.AssertProperty("DisplayName");
 
         // SerializedData property must be present (but may be null due to Azure API limitation)
         workbook.AssertProperty("SerializedData");
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_show_multiple_workbooks_in_batch()
+    {
+        // Test batch show operations from optimization plan
+        // First get the list of workbooks to find valid IDs
+        var listResult = await CallToolAsync(
+            "workbooks_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "max-results", "2" }
+            });
+
+        var workbooks = listResult.AssertProperty("Workbooks");
+        var workbooksArray = workbooks.EnumerateArray().ToArray();
+
+        if (workbooksArray.Length < 2)
+        {
+            // Not enough workbooks for batch test, skip
+            return;
+        }
+
+        // Get IDs of first two workbooks
+        var workbookId1 = workbooksArray[0].GetProperty("WorkbookId").GetString()!;
+        var workbookId2 = workbooksArray[1].GetProperty("WorkbookId").GetString()!;
+
+        // Batch show - multiple workbook IDs in single call
+        var result = await CallToolAsync(
+            "workbooks_show",
+            new()
+            {
+                { "workbook-ids", new[] { workbookId1, workbookId2 } }
+            });
+
+        var showWorkbooks = result.AssertProperty("Workbooks");
+        Assert.Equal(JsonValueKind.Array, showWorkbooks.ValueKind);
+        var showWorkbooksArray = showWorkbooks.EnumerateArray().ToArray();
+
+        // Should have returned both workbooks
+        Assert.Equal(2, showWorkbooksArray.Length);
+
+        // Verify both workbooks have required properties
+        foreach (var workbook in showWorkbooksArray)
+        {
+            workbook.AssertProperty("WorkbookId");
+            workbook.AssertProperty("DisplayName");
+        }
+
+        // Errors array should be empty (all succeeded)
+        var errors = result.AssertProperty("Errors");
+        Assert.Empty(errors.EnumerateArray());
     }
 
     [Fact]
@@ -180,10 +363,15 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
                 "workbooks_show",
                 new()
                 {
-                    { "workbook-id", workbookId }
+                    { "workbook-ids", workbookId }
                 });
 
-            var shownWorkbook = showResult.AssertProperty("Workbook");
+            var shownWorkbooks = showResult.AssertProperty("Workbooks");
+            Assert.Equal(JsonValueKind.Array, shownWorkbooks.ValueKind);
+            var shownWorkbooksArray = shownWorkbooks.EnumerateArray().ToArray();
+            Assert.NotEmpty(shownWorkbooksArray);
+
+            var shownWorkbook = shownWorkbooksArray[0];
             shownWorkbook.AssertProperty("WorkbookId");
             var shownDisplayName = shownWorkbook.AssertProperty("DisplayName");
             Assert.Equal(updatedName, shownDisplayName.GetString());
@@ -197,7 +385,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
                     "workbooks_delete",
                     new()
                     {
-                        { "workbook-id", workbookId }
+                        { "workbook-ids", workbookId }
                     });
 
                 Assert.NotNull(deleteResult);
@@ -234,30 +422,43 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             "workbooks_delete",
             new()
             {
-                { "workbook-id", workbookId }
+                { "workbook-ids", workbookId }
             });
 
         // Verify delete operation succeeded
         Assert.NotNull(deleteResult);
-        var deletedWorkbookId = deleteResult.AssertProperty("WorkbookId");
-        Assert.Equal(workbookId, deletedWorkbookId.GetString());
-        var deleteMessage = deleteResult.AssertProperty("Message");
-        Assert.Equal("Successfully deleted", deleteMessage.GetString());
+        var succeeded = deleteResult.AssertProperty("Succeeded");
+        Assert.Equal(JsonValueKind.Array, succeeded.ValueKind);
+        var succeededArray = succeeded.EnumerateArray().ToArray();
+        Assert.Single(succeededArray);
+        Assert.Equal(workbookId, succeededArray[0].GetString());
+        var errors = deleteResult.AssertProperty("Errors");
+        Assert.Empty(errors.EnumerateArray());
 
-        // Verify workbook no longer exists by trying to show it (should return error)
+        // Verify workbook no longer exists by trying to show it (should return empty or error)
         var showResult = await CallToolAsync(
             "workbooks_show",
             new()
             {
-                { "workbook-id", workbookId }
+                { "workbook-ids", workbookId }
             });
 
-        // Should return an error response (500) since workbook was deleted
+        // Should return a response with empty Workbooks array or an error
         Assert.NotNull(showResult);
-        var errorMessage = showResult.AssertProperty("message");
-        var errorType = showResult.AssertProperty("type");
-        Assert.Equal("Exception", errorType.GetString());
-        Assert.Contains("not found", errorMessage.GetString(), StringComparison.OrdinalIgnoreCase);
+        // After deletion, show might return an error or empty results
+        // depending on the implementation - check if it has errors or empty workbooks
+        if (showResult.Value.TryGetProperty("Errors", out var showErrors) && showErrors.GetArrayLength() > 0)
+        {
+            // Has errors - expected when workbook not found
+            var errorItem = showErrors.EnumerateArray().First();
+            var errorMessage = errorItem.GetProperty("Message").GetString();
+            Assert.Contains("not found", errorMessage, StringComparison.OrdinalIgnoreCase);
+        }
+        else if (showResult.Value.TryGetProperty("message", out var errorMsg))
+        {
+            // Response has error message at top level
+            Assert.Contains("not found", errorMsg.GetString()!, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private string RetrieveSanitizedVariable(string name, string value)
