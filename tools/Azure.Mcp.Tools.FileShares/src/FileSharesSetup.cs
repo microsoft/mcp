@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Commands.Informational;
+using Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,9 @@ public class FileSharesSetup : IAreaSetup
         services.AddSingleton<SnapshotCreateCommand>();
         services.AddSingleton<SnapshotUpdateCommand>();
         services.AddSingleton<SnapshotDeleteCommand>();
+
+        services.AddSingleton<PrivateEndpointConnectionGetCommand>();
+        services.AddSingleton<PrivateEndpointConnectionUpdateCommand>();
 
         services.AddSingleton<FileShareGetLimitsCommand>();
         services.AddSingleton<FileShareGetProvisioningRecommendationCommand>();
@@ -73,6 +77,15 @@ public class FileSharesSetup : IAreaSetup
 
         var snapshotDelete = serviceProvider.GetRequiredService<SnapshotDeleteCommand>();
         snapshot.AddCommand(snapshotDelete.Name, snapshotDelete);
+
+        var privateEndpoint = new CommandGroup("privateendpointconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
+        fileShare.AddSubGroup(privateEndpoint);
+
+        var privateEndpointGet = serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>();
+        privateEndpoint.AddCommand(privateEndpointGet.Name, privateEndpointGet);
+
+        var privateEndpointUpdate = serviceProvider.GetRequiredService<PrivateEndpointConnectionUpdateCommand>();
+        privateEndpoint.AddCommand(privateEndpointUpdate.Name, privateEndpointUpdate);
 
         // Register informational commands directly under fileshares
         var limits = serviceProvider.GetRequiredService<FileShareGetLimitsCommand>();

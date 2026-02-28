@@ -22,9 +22,9 @@ public sealed record PrivateEndpointConnectionDataSchema(
     public PrivateEndpointConnectionDataSchema() : this(null, null, null, null, null) { }
 
     /// <summary>
-    /// Creates a PrivateEndpointConnectionDataSchema from a FileSharePrivateEndpointConnection.
+    /// Creates a PrivateEndpointConnectionDataSchema from a FileSharePrivateEndpointConnectionData.
     /// </summary>
-    public static PrivateEndpointConnectionDataSchema FromModel(FileSharePrivateEndpointConnection connection)
+    public static PrivateEndpointConnectionDataSchema FromModel(FileSharePrivateEndpointConnectionData connection)
     {
         var props = connection.Properties;
 
