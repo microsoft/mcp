@@ -120,18 +120,20 @@ if ($exitCode -ne 0) {
 }
 
 # Check for WinAppCli (preferred) or MakeAppx.exe (fallback)
-# TrustedLaunch requires SDK 10.0.26100.0+ for proper Code Integrity catalog generation
+# Use SDK 10.0.22621.0 - the 10.0.26100.0 SDK forces TrustedLaunch for ODR extensions,
+# which requires Store-level signing. ESRP Authenticode signing does not satisfy
+# TrustedLaunch CI policy, so we use the older SDK which does not enforce it.
 $useWinAppCli = $false
 
 if (Get-Command winapp -ErrorAction SilentlyContinue) {
     $useWinAppCli = $true
     Write-Host "Using WinAppCli for MSIX packaging"
 } else {
-    # Use MakeAppx.exe from Windows SDK 10.0.26100.0 (required for TrustedLaunch and MCP ODR)
-    $makeAppxPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe"
+    # Use MakeAppx.exe from Windows SDK 10.0.22621.0 (10.0.26100.0 forces TrustedLaunch for ODR)
+    $makeAppxPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\makeappx.exe"
 
     if (-not (Test-Path $makeAppxPath)) {
-        LogError "MakeAppx.exe not found. Please install Windows SDK 10.0.26100.0: winget install Microsoft.WindowsSDK.10.0.26100"
+        LogError "MakeAppx.exe not found. Please install Windows SDK 10.0.22621.0: winget install Microsoft.WindowsSDK.10.0.22621"
         exit 1
     }
 
@@ -141,10 +143,10 @@ if (Get-Command winapp -ErrorAction SilentlyContinue) {
 # Always use SignTool for signing (WinAppCli has issues with complex Publisher DNs)
 $signToolPath = $null
 if ($CertificatePath) {
-    $signToolPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe"
+    $signToolPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
 
     if (-not (Test-Path $signToolPath)) {
-        LogError "SignTool.exe not found. Please install the Windows SDK: winget install Microsoft.WindowsSDK.10.0.26100"
+        LogError "SignTool.exe not found. Please install the Windows SDK: winget install Microsoft.WindowsSDK.10.0.22621"
         exit 1
     }
 

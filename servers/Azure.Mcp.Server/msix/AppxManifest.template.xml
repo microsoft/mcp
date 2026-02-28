@@ -13,17 +13,23 @@
   with Name="com.microsoft.windows.ai.mcpServer" - this is a fixed identifier that Windows
   uses to discover MCP servers.
 
-  TrustedLaunch is REQUIRED for MCP server apps to prevent identity spoofing. It ensures
-  only executables covered by the CodeIntegrity.cat catalog can run under the package identity.
+  TrustedLaunch / PackageIntegrity:
+    These elements are intentionally OMITTED. MakeAppx from Windows SDK 10.0.26100.0+
+    forces TrustedLaunch for ODR extensions, but TrustedLaunch enforcement requires
+    Store-level signing (SignatureKind: Store). ESRP Authenticode signing (CP-230012)
+    produces SignatureKind: Developer, which does NOT satisfy TrustedLaunch CI policy,
+    causing STATUS_INVALID_IMAGE_HASH at launch.
+
+    To avoid this, we pack with MakeAppx from SDK 10.0.22621.0, which does NOT enforce
+    TrustedLaunch for ODR extensions. This matches the pattern used by known-working
+    Windows MCP ODR sample packages (AgentSessionServer, UserSessionAsAgentServer).
 -->
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
          xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
          xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
-         xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-         xmlns:trustedlaunch="http://schemas.microsoft.com/appx/manifest/trustedlaunch/windows10"
-         IgnorableNamespaces="uap uap3 uap5 uap10 rescap trustedlaunch">
+         IgnorableNamespaces="uap uap3 uap5 rescap">
 
   <Identity Name="Microsoft.Azure.Mcp.Server"
             Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
@@ -37,28 +43,17 @@
     <Logo>Assets\StoreLogo.png</Logo>
 
     <!--
-      TrustedLaunch: Required for MCP server apps
-      
-      Ensures only executables whose hashes appear in CodeIntegrity.cat can run
-      under the package identity. This prevents identity spoofing and is enforced
-      by Windows Code Integrity at process creation time.
-      
-      Both elements are MANDATORY for TrustedLaunch to be active:
-      - trustedlaunch:TrustedLaunch = opt-in to TrustedLaunch enforcement
-      - uap10:PackageIntegrity = enables Code Integrity catalog validation
+      TrustedLaunch and PackageIntegrity are intentionally NOT included here.
+      See the header comment for details on why these are omitted.
     -->
-    <trustedlaunch:TrustedLaunch>true</trustedlaunch:TrustedLaunch>
-    <uap10:PackageIntegrity>
-      <uap10:Content Enforcement="on" />
-    </uap10:PackageIntegrity>
   </Properties>
 
   <Dependencies>
     <!-- 
-      MinVersion 10.0.26100.0 (Windows 11 24H2) - MCP ODR and TrustedLaunch require latest Windows
-      MCP server registration via ODR is only available on Windows 11 24H2+ (Canary/Dev builds)
+      MinVersion 10.0.22621.0 (Windows 11 22H2) - MCP ODR requires Windows 11
+      MaxVersionTested 10.0.26100.0 (Windows 11 24H2)
     -->
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26100.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>

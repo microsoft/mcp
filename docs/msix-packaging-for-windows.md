@@ -163,8 +163,8 @@ Each server needs an `AppxManifest.xml` that:
   </Properties>
 
   <Dependencies>
-    <!-- MinVersion 10.0.26100.0 - MCP ODR and TrustedLaunch require Windows 11 24H2+ -->
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26100.0" MaxVersionTested="10.0.26100.0" />
+    <!-- MinVersion 10.0.22621.0 - MCP ODR requires Windows 11 -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>
@@ -416,104 +416,58 @@ For ESRP, use:
 | Large package size | Low | Use trimmed binaries; single architecture |
 | Store submission complexity | Medium | Start with sideloading; Store is future phase |
 | **Auto-discovery blocked with dev cert** | **High** | **ESRP Store signing required for production** |
-| **TrustedLaunch hash mismatch** | **High** | **Ensure signing agent uses SDK 10.0.26100.0+; remove `/NPH`** |
 
 ---
 
-## TrustedLaunch Requirements
+## TrustedLaunch (Intentionally Omitted)
 
-**TrustedLaunch is REQUIRED for MCP server apps** to prevent identity spoofing and ensure secure agent execution.
+> **TrustedLaunch and PackageIntegrity are NOT included in our MSIX manifest.** MakeAppx from
+> Windows SDK 10.0.26100.0+ forces TrustedLaunch for ODR extensions, but TrustedLaunch
+> enforcement requires Store-level signing (`SignatureKind: Store`). ESRP Authenticode signing
+> (CP-230012) produces `SignatureKind: Developer`, which does NOT satisfy TrustedLaunch CI
+> policy, causing `STATUS_INVALID_IMAGE_HASH` at launch.
+>
+> To avoid this, we pack with MakeAppx from **SDK 10.0.22621.0**, which does NOT enforce
+> TrustedLaunch for ODR extensions. This matches the pattern used by known-working Windows
+> MCP ODR sample packages (AgentSessionServer, UserSessionAsAgentServer).
 
-### What TrustedLaunch Does
+### Background
 
-TrustedLaunch restricts which executables can run under an MSIX package's identity to **only** those explicitly covered by the package's `CodeIntegrity.cat` catalog. This:
+TrustedLaunch restricts which executables can run under an MSIX package's identity to **only**
+those explicitly covered by the package's `CodeIntegrity.cat` catalog. When present in the
+manifest, Windows Code Integrity enforces signing level requirements at process creation time.
 
-- Prevents package identity spoofing
-- Ensures agent/MCP processes cannot be impersonated
-- Makes identity-bearing execution cryptographically enforceable
+### Why We Don't Use It
 
-### Required Manifest Elements
+| Signing Method | SignatureKind | TrustedLaunch Works? | Notes |
+|---------------|---------------|---------------------|-------|
+| Microsoft Store | Store | Yes | Full CI policy compliance |
+| ESRP CP-230012 | Developer | **No** | `ValidatedPolicy: 1` — blocked by CI |
+| ESRP CP-230072 | Developer | **No** | Same result as CP-230012 |
+| Self-signed | Developer | **No** | Same result |
 
-Both elements are **MANDATORY** in `<Package><Properties>`:
+When TrustedLaunch is enabled with Developer signing:
+1. Package installs with `Status: Ok`
+2. On first launch, Code Integrity blocks execution (`STATUS_INVALID_IMAGE_HASH`)
+3. Package transitions to `Modified, NeedsRemediation`
+4. Event 3033 logs `RequestedPolicy: 3`, `ValidatedPolicy: 1`
 
-```xml
-<Package xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
-         xmlns:trustedlaunch="http://schemas.microsoft.com/appx/manifest/trustedlaunch/windows10">
-  <Properties>
-    <trustedlaunch:TrustedLaunch>true</trustedlaunch:TrustedLaunch>
-    <uap10:PackageIntegrity>
-      <uap10:Content Enforcement="on" />
-    </uap10:PackageIntegrity>
-  </Properties>
-</Package>
-```
+### MakeAppx SDK Version Behavior
 
-If either is missing, TrustedLaunch is **not active**.
+| SDK Version | TrustedLaunch Enforcement for ODR | Our Approach |
+|------------|----------------------------------|--------------|
+| 10.0.22621.0 | Not enforced | **Used** — allows ODR without TrustedLaunch |
+| 10.0.26100.0+ | **Forced** for `com.microsoft.windows.ai.mcpServer` | Not used |
 
-### Signing Requirements
+### Future Considerations
 
-TrustedLaunch relies on **AppxSip-based signing** to:
-- Generate `CodeIntegrity.cat` containing hashes of all package executables
-- Embed `PackageFullName` into the catalog
-- Define which binaries are considered "inside" the package
-
-Standard MSIX signing (including ESRP) is compatible as long as:
-1. **AppxSip is used** (automatic when signing `.msix` files with SignTool)
-2. **`/NPH` is NOT specified** — page hashes should be generated for TrustedLaunch
-3. **Windows SDK 10.0.26100.0+** is available on the signing agent for compatible SIP version
-4. The signing certificate chains to a **Microsoft Trusted Root Key**
-
-### Enforcement
-
-At process creation time, Windows Code Integrity verifies:
-- The EXE hash exists in `CodeIntegrity.cat`
-- The process can run under the package identity
-
-Any EXE not covered will fail to launch under the MSIX identity.
-
-### External Binaries (Not Applicable for Azure MCP Server)
-
-For sparse packages that launch binaries outside the MSIX layout, a `CodeIntegrityExternal.cat` is required. Azure MCP Server includes all binaries inside the package, so this is not needed.
-
-### Troubleshooting TrustedLaunch Failures
-
-If the MSIX installs but fails to launch with "Error in parsing the app package," check:
-
-1. **Package Status**: Run `Get-AppxPackage -Name "Microsoft.Azure.Mcp.Server" | Select Status`.
-   If it shows `Modified, NeedsRemediation`, the CodeIntegrity enforcement failed.
-
-2. **Code Integrity Event Log**: Check `Microsoft-Windows-CodeIntegrity/Operational` for Event ID 3033:
-   ```powershell
-   Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-CodeIntegrity/Operational'; ID=3033} -MaxEvents 5
-   ```
-   Look for `STATUS_INVALID_IMAGE_HASH` (status code `3221226536` / `0xC0000428`).
-
-3. **Correlated Signature Info**: Check Event ID 3089 for details:
-   - `PageHash: false` — page hashes missing from CodeIntegrity.cat
-   - `ValidatedSigningLevel` — certificate chain trust level
-
-#### Common Causes
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `STATUS_INVALID_IMAGE_HASH` | PE hash mismatch between catalog and OS SIP | Ensure signing agent uses Windows SDK 10.0.26100.0+ |
-| `PageHash: false` | `/NPH` flag used during signing | Remove `/NPH` from ESRP signing parameters |
-| Package status `NeedsRemediation` | CodeIntegrity enforcement blocked launch | Fix the catalog hash generation (see above) |
-| Catalog verification passes in SignTool but fails at runtime | SIP version mismatch between signing and target OS | Sign on matching Windows build or use SDK 10.0.26100.0+ |
-
-#### SIP Version Compatibility
-
-The CodeIntegrity.cat contains PE image hashes computed by the AppxSip during signing. If the
-signing machine's SIP version differs from the target machine's SIP version, the hashes may not
-match at runtime. This manifests as `STATUS_INVALID_IMAGE_HASH` even though SignTool verification
-passes (SignTool uses its bundled SIP, not the OS SIP).
-
-**Requirements:**
-- Signing agent must have **Windows SDK 10.0.26100.0** or later installed
-- Signing agent should ideally run **Windows 11 24H2+** (build 26100+) to ensure SIP compatibility
-- Do **NOT** use `/NPH` (No Page Hash) when signing MSIX packages with TrustedLaunch
-- Package integrity enforcement (`uap10:PackageIntegrity Enforcement="on"`) only activates for
-  packages signed with Microsoft Trusted Root Keys
+If Store-level signing becomes available through ESRP (or via Microsoft Store submission),
+TrustedLaunch can be re-enabled by:
+1. Switching MakeAppx to SDK 10.0.26100.0+
+2. Adding `<trustedlaunch:TrustedLaunch>true</trustedlaunch:TrustedLaunch>` and
+   `<uap10:PackageIntegrity><uap10:Content Enforcement="on" /></uap10:PackageIntegrity>`
+   back to the manifest Properties
+3. Adding the `trustedlaunch` and `uap10` namespace declarations
 
 ---
 
@@ -550,7 +504,7 @@ The `MsixMcpCatalog` only auto-loads MCP servers from MSIX packages that Windows
 | Source | Package identity + AppExtension | Explicit user registration |
 | Registration | Automatic on install | Manual command |
 | Execution | **Contained** agent session | **Not contained** |
-| TrustedLaunch | Enforced | Not enforced |
+| TrustedLaunch | Not used (omitted) | Not enforced |
 | Visibility | All MCP hosts automatically | Hosts that accept user-registered servers |
 | Signing | **Microsoft-trusted required** | Any (manifest path only) |
 
