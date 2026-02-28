@@ -139,6 +139,8 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)] // Recording was made when camelCase params were silently dropped (no-op update).
+                                        // Params now correctly map to kebab-case options. Re-record to remove this (#1895).
     public async Task Should_Crud_storage_sync_service()
     {
         {
@@ -175,9 +177,9 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "name", $"{Settings.ResourceBaseName}-test" },
-                    { "incomingTrafficPolicy", $"AllowVirtualNetworksOnly" },
+                    { "incoming-traffic-policy", "AllowVirtualNetworksOnly" },
                     { "tags", "{\"Environment\":\"Test\"}" },
-                    { "identityType", $"SystemAssigned" }
+                    { "identity-type", "SystemAssigned" }
                 });
             var service = result.AssertProperty("result");
             Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
