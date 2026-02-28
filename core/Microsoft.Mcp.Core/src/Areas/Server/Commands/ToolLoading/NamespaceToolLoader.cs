@@ -600,8 +600,9 @@ public sealed class NamespaceToolLoader(
             return [];
         }
 
-        // Primary: extract from nested "parameters" key
-        if (args.TryGetValue("parameters", out var paramsElem) && paramsElem.ValueKind == JsonValueKind.Object)
+        // Primary: extract from nested "parameters" key (case-insensitive)
+        var parametersKey = args.Keys.FirstOrDefault(k => string.Equals(k, "parameters", StringComparison.OrdinalIgnoreCase));
+        if (parametersKey != null && args.TryGetValue(parametersKey, out var paramsElem) && paramsElem.ValueKind == JsonValueKind.Object)
         {
             return paramsElem.EnumerateObject()
                 .ToDictionary(prop => prop.Name, prop => prop.Value);
