@@ -91,7 +91,7 @@ jobs:
             }
           },
           {
-            "KeyCode": "CP-230012",
+            "KeyCode": "CP-230072",
             "OperationCode": "SigntoolVerify",
             "ToolName": "sign",
             "ToolVersion": "1.0",
