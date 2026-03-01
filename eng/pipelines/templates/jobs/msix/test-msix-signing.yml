@@ -91,7 +91,7 @@ jobs:
               "OpusName": "Microsoft",
               "OpusInfo": "https://www.microsoft.com",
               "FileDigest": "/fd SHA256",
-              "PageHash": "/NPH",
+              "PageHash": "/PH",
               "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
             }
           },
