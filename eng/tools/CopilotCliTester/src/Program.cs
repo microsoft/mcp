@@ -8,23 +8,24 @@ using CopilotCliTester.Models;
 namespace CopilotCliTester;
 
 /// <summary>
-/// E2E Test Runner for Azure MCP tools using Copilot SDK.
-/// Runs prompts from e2eTestPrompts.md and verifies correct tools are invoked.
+/// E2E Test Runner for Azure MCP tools using Copilot SDK. Runs prompts from e2eTestPrompts.md and verifies correct tools are invoked.
 /// </summary>
-class Program
+static class Program
 {
     private static readonly TimeSpan PerAttemptTimeout = TimeSpan.FromMinutes(5);
 
+    private static readonly Lock _consoleLock = new();
+    private static readonly Lock _reportLock = new();
+
     static async Task<int> Main(string[] args)
     {
-        // Simple command line parsing
         var command = args.Length > 0 ? args[0].ToLowerInvariant() : "run";
 
         return command switch
         {
             "run" => await RunE2ETestsFromArgs(args.Skip(1).ToArray()),
             "--help" or "-h" => ShowHelp(),
-            _ => await RunE2ETestsFromArgs(args) // Default to run
+            _ => await RunE2ETestsFromArgs(args)
         };
     }
 
@@ -44,14 +45,16 @@ class Program
               --one-per-tool      Test only one prompt per tool
               --output <dir>      Output directory for reports
               --model <name>      Model to use (default: claude-sonnet-4.5)
+              --parallel <n>      Number of prompts to test concurrently (default: 1)
+              --prompts-file <path>  Custom prompts file (markdown format)
             """);
         return 0;
     }
 
     static async Task<int> RunE2ETestsFromArgs(string[] args)
     {
-        string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-sonnet-4.5";
-        int max = 0, retries = 3;
+        string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-sonnet-4.5", promptsFile = null;
+        int max = 0, retries = 3, parallel = 1;
         bool onePerTool = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -79,20 +82,26 @@ class Program
                 case "--model" when i + 1 < args.Length:
                     model = args[++i];
                     break;
+                case "--parallel" when i + 1 < args.Length:
+                    int.TryParse(args[++i], out parallel);
+                    break;
+                case "--prompts-file" when i + 1 < args.Length:
+                    promptsFile = args[++i];
+                    break;
             }
         }
 
-        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model);
+        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
     }
 
-    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model)
+    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null)
     {
         Console.WriteLine("--------------------------------------------");
         Console.WriteLine("Azure MCP E2E Test Runner (Copilot SDK)");
         Console.WriteLine("--------------------------------------------");
         Console.WriteLine();
 
-        var (testContextPath, promptsPath) = LoadFiles();
+        var (testContextPath, defaultPromptsPath) = LoadFiles();
 
         // Load test context
         var testContext = testContextPath is not null ? File.ReadAllText(testContextPath).Trim() : "";
@@ -100,18 +109,18 @@ class Program
         {
             Console.WriteLine("SUCCESS: Loaded test context");
         }
-
-        // Load prompts
-        if (promptsPath is null)
+        
+        var promptsPath = promptsFile ?? defaultPromptsPath;
+        if (promptsPath is null || !File.Exists(promptsPath))
         {
-            Console.Error.WriteLine("ERROR: e2eTestPrompts.md not found");
+            Console.Error.WriteLine($"ERROR: Prompts file not found: {promptsPath ?? "e2eTestPrompts.md"}");
             return 1;
         }
         Console.WriteLine($"SUCCESS: Loading prompts from: {promptsPath}");
         var allPrompts = PromptParser.ParseFile(promptsPath);
         Console.WriteLine($"  Found {allPrompts.Count} total prompts");
 
-        // Apply filters
+        // Apply different filters
         if (!string.IsNullOrWhiteSpace(namespaceFilter))
         {
             allPrompts = allPrompts
@@ -149,20 +158,14 @@ class Program
             return 0;
         }
 
-        // Group by namespace
-        var groupedByNamespace = allPrompts
-            .GroupBy(p => p.Namespace)
-            .Select(g => (Namespace: g.Key, Prompts: g.ToList()))
-            .OrderBy(g => g.Namespace)
-            .ToList();
+        var namespaceCount = allPrompts.Select(p => p.Namespace).Distinct().Count();
 
         Console.WriteLine();
-        Console.WriteLine($"Testing {allPrompts.Count} prompts across {groupedByNamespace.Count} namespaces");
+        Console.WriteLine($"Testing {allPrompts.Count} prompts across {namespaceCount} namespaces");
         Console.WriteLine($"Retries: {retries}, Model: {model}");
         Console.WriteLine("--------------------------------------------------------------------------------");
         Console.WriteLine();
 
-        var results = new List<TestResult>();
         var totalStopwatch = Stopwatch.StartNew();
 
         Directory.CreateDirectory(outputDir);
@@ -170,30 +173,36 @@ class Program
         var title = !string.IsNullOrWhiteSpace(namespaceFilter) ? $"-{namespaceFilter}" : "";
         var reportFile = Path.Combine(outputDir, $"e2e-report{title}-{timestamp}.md");
         InitializeMarkdownReport(reportFile);
-        Console.WriteLine($"Live report: {reportFile}");
+        Console.WriteLine($"Report: {reportFile}");
+        Console.WriteLine($"Parallel workers: {parallel}");
         Console.WriteLine();
 
-        await using var runner = new AgentRunner();
+        using var semaphore = new SemaphoreSlim(parallel);
 
-        foreach (var (namespaceName, prompts) in groupedByNamespace)
+        var tasks = allPrompts.Select(async prompt =>
         {
-            Console.WriteLine($"------ {namespaceName} ({prompts.Count} prompts) -----");
-
-            foreach (var prompt in prompts)
+            await semaphore.WaitAsync();
+            try
             {
-                var result = await ProcessPromptAsync(runner, prompt, namespaceName, testContext, model, retries);
-                results.Add(result);
+                await using var runner = new AgentRunner();
+                var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
                 AppendResultToMarkdown(reportFile, result);
+                return result;
             }
+            finally
+            {
+                semaphore.Release();
+            }
+        }).ToList();
 
-            Console.WriteLine();
-        }
+        var taskResults = await Task.WhenAll(tasks);
+        var results = taskResults.OrderBy(r => r.Tool).ThenBy(r => r.Prompt).ToList();
 
         totalStopwatch.Stop();
 
-        // Generate summary
         var passed = results.Count(r => r.Status == TestStatus.PASS);
-        var failed = results.Count(r => r.Status != TestStatus.PASS);
+        var failed = results.Count(r => r.Status == TestStatus.FAIL);
+        var skipped = results.Count(r => r.Status == TestStatus.ERROR);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         Console.WriteLine(new string('═', 64));
@@ -202,11 +211,11 @@ class Program
         Console.WriteLine($"  Total:     {results.Count}");
         Console.WriteLine($"  Passed:    {passed}");
         Console.WriteLine($"  Failed:    {failed}");
+        Console.WriteLine($"  Skipped:   {skipped}");
         Console.WriteLine($"  Pass Rate: {passRate:F1}%");
         Console.WriteLine($"  Duration:  {totalStopwatch.Elapsed.TotalSeconds:F1}s");
         Console.WriteLine(new string('═', 64));
 
-        // Write final JSON results
         var resultsFile = Path.Combine(outputDir, $"e2e-results{title}-{timestamp}.json");
         var resultsJson = JsonSerializer.Serialize(results.ToArray(), JsonContext.Default.TestResultArray);
         File.WriteAllText(resultsFile, resultsJson);
@@ -233,7 +242,8 @@ class Program
         var allAttemptTools = new List<List<string>>();
         var attempts = 0;
 
-        Console.Write($"  [{prompt.Tool}] - {prompt.Prompt} ");
+        var toolTag = $"[{prompt.Tool}]";
+        WriteLineLock($"  {toolTag} {prompt.Prompt}");
 
         for (var attempt = 1; attempt <= retries; attempt++)
         {
@@ -257,13 +267,13 @@ class Program
             }
             catch (Exception e)
             {
-                Console.Write($"WARNING: Attempt {attempt} failed with error: {e.Message}");
+                WriteLineLock($"  {toolTag} WARNING: Attempt {attempt} failed: {e.Message}");
                 if (attempt < retries)
                 {
                     continue;
                 }
                 // Final attempt failed
-                Console.WriteLine($" X ERROR: {e.Message}");
+                WriteLineLock($"  {toolTag} X ERROR: {e.Message}");
                 return new TestResult
                 {
                     Tool = prompt.Tool,
@@ -282,7 +292,7 @@ class Program
             {
                 var toolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray();
                 var retryIndicator = attempts > 1 ? $" (attempt {attempts})" : "";
-                Console.WriteLine($" ✓ PASS{retryIndicator} [{stopwatch.Elapsed.TotalSeconds:F1}s]");
+                WriteLineLock($"  {toolTag} ✓ PASS{retryIndicator} [{stopwatch.Elapsed.TotalSeconds:F1}s]");
                 return new TestResult
                 {
                     Tool = prompt.Tool,
@@ -296,13 +306,13 @@ class Program
 
             if (attempt < retries)
             {
-                Console.Write($"RETRYING (attempt {attempt + 1})... ");
+                WriteLineLock($"  {toolTag} RETRY (attempt {attempt + 1})...");
             }
         }
 
         // All retries exhausted without invoking the expected tool
         var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray();
-        Console.WriteLine($" X FAIL (tools: {string.Join(", ", allToolsCalled)})");
+        WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
         return new TestResult
         {
             Tool = prompt.Tool,
@@ -336,16 +346,25 @@ class Program
     /// </summary>
     static void AppendResultToMarkdown(string filePath, TestResult result)
     {
-        try
+        lock (_reportLock)
         {
-            var status = result.Status == TestStatus.PASS ? "✓" : "✗";
-            var promptShort = result.Prompt.Length > 40 ? result.Prompt[..40] + "..." : result.Prompt;
-            var line = $"| {status} | `{result.Tool}` | {promptShort} | {result.Duration:F1}s | {result.Attempts} |";
-            File.AppendAllText(filePath, line + Environment.NewLine);
-        }
-        catch (IOException ex)
-        {
-            Console.Error.WriteLine($"Warning: Failed to write to report: {ex.Message}");
+            try
+            {
+                var status = result.Status switch 
+                {
+                    TestStatus.PASS => "✓",
+                    TestStatus.FAIL => "X",
+                    TestStatus.ERROR => "--",
+                    _ => "--"
+                };
+                var promptShort = result.Prompt.Length > 40 ? result.Prompt[..40] + "..." : result.Prompt;
+                var line = $"| {status} | `{result.Tool}` | {promptShort} | {result.Duration:F1}s | {result.Attempts} |";
+                File.AppendAllText(filePath, line + Environment.NewLine);
+            }
+            catch (IOException ex)
+            {
+                Console.Error.WriteLine($"Warning: Failed to write to report: {ex.Message}");
+            }
         }
     }
 
@@ -386,6 +405,13 @@ class Program
         }
     }
 
+    static void WriteLineLock(string message)
+    {
+        lock(_consoleLock)
+        {
+            Console.WriteLine(message);
+        }
+    }
 
     static (string? TestContextPath, string? PromptsPath) LoadFiles()
     {

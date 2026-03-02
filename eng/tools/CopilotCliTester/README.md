@@ -26,7 +26,7 @@ e2eTestPrompts.md
        ▼
   CopilotClient (GitHub.Copilot.SDK)
        │
-       ├── mcpServers: { azure: azmcp.exe }
+       ├── mcpServers: { azure: npx -y @azure/mcp }
        └── session.SendAsync({ prompt })
               │
               ▼
@@ -40,11 +40,6 @@ e2eTestPrompts.md
 
 ```
 CopilotCliTester/
-├── config/
-│   └── test-context.md           # Default Azure parameters (subscription, RG, etc.)
-├── scripts/
-│   ├── Invoke-CopilotTests.ps1   # Test invocation utilities
-│   └── Run-CopilotCliTester.ps1  # PowerShell wrapper script
 ├── src/
 │   ├── Program.cs                # CLI entry point
 │   ├── CopilotCliTester.csproj   # Project file (.NET 10, AOT-compatible)
@@ -58,7 +53,6 @@ CopilotCliTester/
 │   │   └── JsonContext.cs        # AOT-compatible JSON serialization
 │   ├── test-context.md           # Runtime copy of test context
 │   └── reports/                  # Generated test reports
-├── Run-E2ETests.ps1              # Top-level convenience script
 └── README.md
 ```
 
@@ -73,16 +67,9 @@ CopilotCliTester/
    ```bash
    az login
    ```
-
-### Build Azure MCP Server
-
-The tool requires the Azure MCP Server executable. Build it first:
-
-```bash
-dotnet build servers/Azure.Mcp.Server/src
-```
-
-This creates `azmcp.exe` at `servers/Azure.Mcp.Server/bin/Debug/net10.0/azmcp.exe`
+5. **Node.js 20+** — Required to run Azure MCP via npx
+   - [Download Node.js](https://nodejs.org/)
+   - The tool uses `npx -y @azure/mcp server start` to invoke the Azure MCP server
 
 ## Usage
 
@@ -259,12 +246,6 @@ Ensure you're authenticated with GitHub Copilot:
 - VS Code: Sign in to GitHub Copilot extension
 - CLI: Run `gh auth login` and ensure Copilot access
 
-### "Azure MCP Server not found"
-
-Build the server first:
-```bash
-dotnet build servers/Azure.Mcp.Server/src
-```
 
 ### "Test context not found"
 

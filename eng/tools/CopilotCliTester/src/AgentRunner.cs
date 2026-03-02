@@ -78,7 +78,8 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                         Type = "stdio",
                         Command = "npx",
                         Args = ["-y", "@azure/mcp", "server", "start"],
-                        Tools = ["*"],
+                        // Args = ["-y", "@azure/mcp", "server", "start", "--mode", "all"],
+                        Tools = ["*"]
                     },
                 },
                 SystemMessage = systemMessage
@@ -165,7 +166,10 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                     Directory.Delete(workspace, recursive: true);
                 }
             }
-            catch{}
+            catch
+            {
+                // Ignore cleanup failures 
+            }
         }
     }
 
