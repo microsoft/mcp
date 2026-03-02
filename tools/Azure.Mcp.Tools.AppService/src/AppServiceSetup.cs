@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
-using Azure.Mcp.Tools.AppService.Commands.Webapps;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -20,7 +21,9 @@ public class AppServiceSetup : IAreaSetup
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
-        services.AddSingleton<WebappsGetCommand>();
+        services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<AppSettingsGetCommand>();
+        services.AddSingleton<AppSettingsUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -37,13 +40,24 @@ public class AppServiceSetup : IAreaSetup
         var databaseAdd = serviceProvider.GetRequiredService<DatabaseAddCommand>();
         database.AddCommand(databaseAdd.Name, databaseAdd);
 
-        // Create webapps subgroup
-        var webapps = new CommandGroup("webapps", "Operations for managing Azure App Service web apps");
-        appService.AddSubGroup(webapps);
+        // Create webapp subgroup
+        var webapp = new CommandGroup("webapp", "Operations for managing Azure App Service web apps");
+        appService.AddSubGroup(webapp);
 
-        // Add webapps commands
-        var webappsGet = serviceProvider.GetRequiredService<WebappsGetCommand>();
-        webapps.AddCommand(webappsGet.Name, webappsGet);
+        // Add webapp commands
+        var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
+        webapp.AddCommand(webappGet.Name, webappGet);
+
+        // Add settings subgroup under webapp
+        var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");
+        webapp.AddSubGroup(settings);
+
+        // Add settings commands
+        var appSettingsGet = serviceProvider.GetRequiredService<AppSettingsGetCommand>();
+        settings.AddCommand(appSettingsGet.Name, appSettingsGet);
+
+        var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
+        settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
 
         return appService;
     }

@@ -6,8 +6,7 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands;
-using Azure.Mcp.Tools.AppService.Commands.Webapps;
-using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,22 +15,22 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapps;
+namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Settings;
 
-[Trait("Command", "WebappsGet")]
-public class WebappsGetCommandTests
+[Trait("Command", "AppSettingsGet")]
+public class AppSettingsGetCommandTests
 {
     private readonly IAppServiceService _appServiceService;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<WebappsGetCommand> _logger;
-    private readonly WebappsGetCommand _command;
+    private readonly ILogger<AppSettingsGetCommand> _logger;
+    private readonly AppSettingsGetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public WebappsGetCommandTests()
+    public AppSettingsGetCommandTests()
     {
         _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<WebappsGetCommand>>();
+        _logger = Substitute.For<ILogger<AppSettingsGetCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_appServiceService);
         _serviceProvider = collection.BuildServiceProvider();
@@ -41,55 +40,49 @@ public class WebappsGetCommandTests
         _commandDefinition = _command.GetCommand();
     }
 
-    [Theory]
-    [InlineData("sub123", null, null)]
-    [InlineData("sub123", "rg1", null)]
-    [InlineData("sub123", "rg1", "test-app")]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string subscription, string? resourceGroup, string? appName)
+    [Fact]
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
     {
         // Arrange
-        List<WebappDetails> expectedWebappDetails = [
-            new("name", "type", "location", "kind", true, "state", "rg", ["hostname"], DateTimeOffset.UtcNow, "sku")
-        ];
+        IDictionary<string, string> expectedSettings = new Dictionary<string, string>()
+        {
+            {"Setting1", "Value1"},
+            {"Setting2", "Value2"}
+        };
 
         // Set up the mock to return success for any arguments
-        _appServiceService.GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
+        _appServiceService.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(expectedWebappDetails);
+            .Returns(expectedSettings);
 
-        List<string> unparsedArgs = ["--subscription", subscription];
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            unparsedArgs.AddRange(["--resource-group", resourceGroup]);
-        }
-        if (!string.IsNullOrEmpty(appName))
-        {
-            unparsedArgs.AddRange(["--app", appName]);
-        }
-
-        var args = _commandDefinition.Parse(unparsedArgs);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
+        await _appServiceService.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappsGetResult);
+        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.AppSettingsGetResult);
 
         Assert.NotNull(result);
-        Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.WebappDetails));
+        Assert.Equal(JsonSerializer.Serialize(expectedSettings), JsonSerializer.Serialize(result.AppSettings));
     }
 
     [Theory]
-    [InlineData("--resource-group", "rg1")] // Missing subscription
+    [InlineData()] // Missing all parameters
+    [InlineData("--subscription", "sub123")] // Missing resource group and app name
+    [InlineData("--resource-group", "rg1")] // Missing subscription and app name
+    [InlineData("--app", "app")] // Missing subscription and resource group
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app name
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group
+    [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
         // Arrange
@@ -102,10 +95,10 @@ public class WebappsGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().GetWebAppsAsync(
+        await _appServiceService.DidNotReceive().GetAppSettingsAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -115,24 +108,11 @@ public class WebappsGetCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var appName = "test-app";
-
-        _appServiceService.GetWebAppsAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _appServiceService.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--app", appName
-        ]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -140,5 +120,8 @@ public class WebappsGetCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+
+        await _appServiceService.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }
