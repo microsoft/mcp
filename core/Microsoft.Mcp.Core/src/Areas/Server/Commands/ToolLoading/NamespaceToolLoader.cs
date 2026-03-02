@@ -4,19 +4,19 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that exposes Azure command groups as hierarchical namespace tools with direct in-process execution.
@@ -47,7 +47,7 @@ public sealed class NamespaceToolLoader(
                                options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
         }
 
-        return allSubGroups.Select(group => group.Name).ToList();
+        return [.. allSubGroups.Select(group => group.Name)];
     });
 
     private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
@@ -380,13 +380,19 @@ public sealed class NamespaceToolLoader(
                 var childToolSpecJson = GetChildToolJson(request, namespaceName, command);
 
                 _logger.LogWarning("Namespace {Namespace} command {Command} requires additional parameters.", namespaceName, command);
+
+                // Extract the specific error message from the response
+                var errorMessage = string.IsNullOrEmpty(commandResponse.Message)
+                    ? $"The '{command}' command is missing required parameters."
+                    : commandResponse.Message;
+
                 var finalResponse = new CallToolResult
                 {
                     Content =
                     [
                         new TextContentBlock {
                                 Text = $"""
-                                    The '{command}' command is missing required parameters.
+                                    {errorMessage}
 
                                     - Review the following command spec and identify the required arguments from the input schema.
                                     - Omit any arguments that are not required or do not apply to your use case.

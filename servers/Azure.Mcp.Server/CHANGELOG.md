@@ -2,6 +2,51 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 2.0.0-beta.23 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+- Fixed `azqr` call failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+
+### Other Changes
+
+## 2.0.0-beta.22 (2026-02-24)
+
+### Features Added
+
+- The Azure MCP Server is now also available as an MCP Bundle (`.mcpb`), compatible with clients such as Claude Desktop and Claude Code. [[#1681](https://github.com/microsoft/mcp/pull/1681)]
+- Added sovereign cloud endpoint support for the AppLens, Application Insights, App Service, Azure Migrate, Confidential Ledger, Cosmos, Extension, Foundry, Key Vault, Kusto, Marketplace, Monitor, MySql, Postgres, Pricing, Quota, Resource Health, Search, Service Fabric, Speech, and Storage services. [[#1729](https://github.com/microsoft/mcp/pull/1729)]
+- Added endpoint validation for Azure Communication Services, App Configuration, and Container Registry. [[#1765](https://github.com/microsoft/mcp/pull/1765)]
+- Added the "createmigrateproject" action in the `azuremigrate_platformlandingzone_request` tool to create a new Azure Migrate project if one doesn't exist. [[#1724](https://github.com/microsoft/mcp/pull/1724)]
+
+### Breaking Changes
+
+- Consolidated Resource Health availability-status commands: merged `resourcehealth_availability-status_get` and `resourcehealth_availability-status_list` into a single dual-mode `resourcehealth_availability-status_get` command. The command now accepts an optional `--resourceId` parameter: when provided, it returns a single resource's availability status; when omitted, it lists all resources. Tool name changed from `resourcehealth_availability-status_list` to use only `resourcehealth_availability-status_get`. [[#1796](https://github.com/microsoft/mcp/pull/1796)]
+
+### Bugs Fixed
+
+- (Undocumented fix from version `2.0.0-beta.21`) Added validation logic for endpoint parameters in Foundry tools. [[#1658](https://github.com/microsoft/mcp/pull/1658)]
+- Fixed error handling to ensure error messages are preserved for missing parameters. [[#1751](https://github.com/microsoft/mcp/pull/1751)]
+
+### Other Changes
+
+- Switched Docker base image to `runtime-deps:10.0-alpine`. Since the server binary is self-contained, the full ASP.NET runtime base is unnecessary. Expected ~20-25% image size reduction (for example, azure-mcp images arm64: 648MB to ~482MB, amd64: 784MB to ~624MB). [[#1782](https://github.com/microsoft/mcp/pull/1782)]
+- Improved the `storage_table_list` tool description for better LLM tool selection. [[#1800](https://github.com/microsoft/mcp/pull/1800)]
+
+## 2.0.0-beta.21 (2026-02-19)
+
+### Features Added
+
+- Enabled trimmed binary for Docker and HTTP transport support for all distributions, reducing the Azure MCP Docker image size by ~40% (arm64: 1.21 GB to ~648 MB, amd64: 1.31 GB to ~784 MB). [[#1760](https://github.com/microsoft/mcp/pull/1760)]
+
+### Other Changes
+
+- Add `McpServerName` to telemetry. [[#1755](https://github.com/microsoft/mcp/pull/1755)]
+
 ## 2.0.0-beta.20 (2026-02-17)
 
 ### Features Added

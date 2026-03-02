@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Fabric.Mcp.Tools.OneLake.Commands.Table;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 

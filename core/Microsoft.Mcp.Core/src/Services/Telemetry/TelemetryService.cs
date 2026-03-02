@@ -3,9 +3,9 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using ModelContextProtocol.Protocol;

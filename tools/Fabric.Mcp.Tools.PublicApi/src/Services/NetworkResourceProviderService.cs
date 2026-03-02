@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Security;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Fabric.Mcp.Tools.PublicApi.Services
 {
@@ -18,7 +20,25 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
 
             if (resourceJson.TryGetProperty("download_url", out var downloadUrl) && !string.IsNullOrEmpty(downloadUrl.GetString()))
             {
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, downloadUrl.GetString());
+                var urlString = downloadUrl.GetString()!;
+
+                var allowedGitHubHosts = new[]
+                {
+                    "raw.githubusercontent.com",
+                    "github.com"
+                };
+
+                try
+                {
+                    EndpointValidator.ValidateExternalUrl(urlString, allowedGitHubHosts);
+                }
+                catch (SecurityException ex)
+                {
+                    _logger.LogError(ex, "Security validation failed for download URL: {Url}", urlString);
+                    throw;
+                }
+
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, urlString);
                 requestMessage.Headers.Add("User-Agent", "request");
 
                 var client = _httpClientFactory.CreateClient();

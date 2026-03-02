@@ -30,7 +30,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var namespaces = new List<Namespace>();
 
             if (!string.IsNullOrEmpty(resourceGroup))
@@ -108,7 +108,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -155,7 +155,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -250,8 +250,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var subscriptionId = subscriptionResource.Data.SubscriptionId;
+            var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+                ? subscription
+                : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
 
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
             var namespaceId = EventHubsNamespaceResource.CreateResourceIdentifier(subscriptionId, resourceGroup, namespaceName);
@@ -296,7 +297,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -342,7 +343,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -407,7 +408,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -470,7 +471,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
 
             try
             {
@@ -536,8 +537,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName, cancellationToken);
             var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName, cancellationToken);
@@ -596,8 +596,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
 
             try
             {
@@ -668,7 +667,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -722,7 +721,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource?.Value == null)
@@ -776,4 +775,23 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             UpdatedTime: consumerGroupData.UpdatedOn);
     }
 
+    /// <summary>
+    /// Returns a SubscriptionResource handle for ARM navigation without making an HTTP call.
+    /// This avoids the cache-dependent GET /subscriptions/{id} that GetSubscription() makes,
+    /// which caused non-deterministic test proxy recordings.
+    /// </summary>
+    private async Task<ResourceManager.Resources.SubscriptionResource> ResolveSubscriptionResourceAsync(
+        string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        return armClient.GetSubscriptionResource(
+            ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscriptionId));
+    }
 }

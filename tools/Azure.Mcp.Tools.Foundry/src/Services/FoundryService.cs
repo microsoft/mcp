@@ -55,6 +55,112 @@ public class FoundryService(
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
+    /// <summary>
+    /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
+    /// </summary>
+    private static void ValidateProjectEndpoint(string endpoint)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
+
+        try
+        {
+
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
+            {
+                throw new ArgumentException("Invalid Uri");
+            }
+
+            // Example: https://{foundry-resource-name}.services.ai.azure.com/api/projects/{project-name}
+
+            if (parsedUri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ArgumentException("Scheme must be https");
+            }
+
+            const string knownSuffix = ".services.ai.azure.com";
+            string[] validSuffixes = [knownSuffix, ".services.ai.azure.cn", ".services.ai.azure.us"];
+            var host = parsedUri.Host;
+            if (!Array.Exists(validSuffixes, suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException("Host must end with Foundry service suffix");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException(
+            $"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
+            nameof(endpoint), ex);
+        }
+    }
+
+    /// <summary>
+    /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
+    /// </summary>
+    private static void ValidateAzureOpenAiEndpoint(string endpoint)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
+
+        try
+        {
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
+            {
+                throw new ArgumentException("Invalid Uri");
+            }
+
+            // Example: https://{Azure-OpenAI-resource-name}.openai.azure.com/
+            // Example: https://{Azure-OpenAI-resource-name}.cognitiveservices.azure.com/
+            if (parsedUri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ArgumentException("Scheme must be https");
+            }
+
+            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com", ".openai.azure.cn", ".cognitiveservices.azure.cn", ".openai.azure.us", ".cognitiveservices.azure.us"];
+            var host = parsedUri.Host;
+            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (matchedSuffix == null)
+            {
+                throw new ArgumentException("Host must end with Azure OpenAI service suffix");
+            }
+
+            var azureOpenAIResourceName = host.Substring(0, host.Length - matchedSuffix.Length);
+
+            // Validate Azure OpenAI resource name: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
+            if (azureOpenAIResourceName.Length < 2 || azureOpenAIResourceName.Length > 64)
+            {
+                throw new ArgumentException("Azure OpenAI resource name must be between 2 and 64 characters");
+            }
+
+            if (azureOpenAIResourceName.StartsWith('-') || azureOpenAIResourceName.EndsWith('-'))
+            {
+                throw new ArgumentException("Azure OpenAI resource name cannot start or end with a hyphen");
+            }
+
+            if (!azureOpenAIResourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
+            {
+                throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
+            }
+
+            // Validate path: should be empty or just "/" (root path)
+            var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (paths.Length != 0)
+            {
+                throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException(
+            $"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+            nameof(endpoint), ex);
+        }
+    }
+
+    private static string TruncateForLogging(string value)
+    {
+        const int maxLength = 100;
+        return value.Length > maxLength ? value[..maxLength] + "..." : value;
+    }
+
     public async Task<List<ModelInformation>> ListModels(
         bool searchForFreePlayground = false,
         string publisherName = "",
@@ -177,6 +283,7 @@ public class FoundryService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateProjectEndpoint(endpoint);
 
         try
         {
@@ -224,7 +331,7 @@ public class FoundryService(
         try
         {
             // Create ArmClient for deployments
-            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01", null, retryPolicy);
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01", null, retryPolicy, cancellationToken);
 
             // Retrieve the Cognitive Services account
             var cognitiveServicesAccount = await GetGenericResourceAsync(
@@ -262,7 +369,8 @@ public class FoundryService(
                 deploymentId,
                 cognitiveServicesAccount.Data.Location,
                 deploymentData,
-                FoundryJsonContext.Default.CognitiveServicesAccountDeploymentData);
+                FoundryJsonContext.Default.CognitiveServicesAccountDeploymentData,
+                cancellationToken);
             if (!result.HasData)
             {
                 return new ModelDeploymentResult
@@ -297,6 +405,7 @@ public class FoundryService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateProjectEndpoint(endpoint);
 
         try
         {
@@ -346,6 +455,7 @@ public class FoundryService(
         ValidateRequiredParameters(
             (nameof(endpoint), endpoint),
             (nameof(indexName), indexName));
+        ValidateProjectEndpoint(endpoint);
 
         try
         {
@@ -860,6 +970,7 @@ public class FoundryService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateProjectEndpoint(endpoint);
 
         try
         {
@@ -896,6 +1007,8 @@ public class FoundryService(
             (nameof(modelDeploymentName), modelDeploymentName),
             (nameof(agentName), agentName),
             (nameof(systemInstruction), systemInstruction));
+        ValidateProjectEndpoint(projectEndpoint);
+
         var (projectClient, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
         // Validate if the model deployment exists
@@ -933,12 +1046,14 @@ public class FoundryService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(
+            (nameof(agentId), agentId),
+            (nameof(query), query),
+            (nameof(endpoint), endpoint));
+        ValidateProjectEndpoint(endpoint);
+
         try
         {
-            ValidateRequiredParameters(
-                (nameof(agentId), agentId),
-                (nameof(query), query),
-                (nameof(endpoint), endpoint));
 
             var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(endpoint, tenantId, cancellationToken);
 
@@ -1027,13 +1142,15 @@ public class FoundryService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(
+            (nameof(agentId), agentId),
+            (nameof(query), query),
+            (nameof(endpoint), endpoint));
+        ValidateProjectEndpoint(endpoint);
+        ValidateAzureOpenAiEndpoint(azureOpenAIEndpoint);
+
         try
         {
-            ValidateRequiredParameters(
-                (nameof(agentId), agentId),
-                (nameof(query), query),
-                (nameof(endpoint), endpoint));
-
             var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy, cancellationToken: cancellationToken);
 
             var credential = await GetCredential(tenant, cancellationToken: cancellationToken);
@@ -1105,6 +1222,8 @@ public class FoundryService(
             (nameof(evaluatorName), evaluatorName),
             (nameof(query), query),
             (nameof(agentResponse), agentResponse));
+        ValidateAzureOpenAiEndpoint(azureOpenAIEndpoint);
+
         try
         {
             if (!AgentEvaluatorDictionary.ContainsKey(evaluatorName.ToLowerInvariant()))
@@ -1151,6 +1270,7 @@ public class FoundryService(
     {
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint));
+        ValidateProjectEndpoint(projectEndpoint);
 
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
@@ -1187,6 +1307,7 @@ public class FoundryService(
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(userMessage), userMessage));
+        ValidateProjectEndpoint(projectEndpoint);
 
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 
@@ -1219,6 +1340,7 @@ public class FoundryService(
         ValidateRequiredParameters(
             (nameof(projectEndpoint), projectEndpoint),
             (nameof(threadId), threadId));
+        ValidateProjectEndpoint(projectEndpoint);
 
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
 

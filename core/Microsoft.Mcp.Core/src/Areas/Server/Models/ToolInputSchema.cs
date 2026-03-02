@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.Areas.Server.Models;
 
 /// <summary>
 /// Represents the JSON schema for a tool's input parameters.

@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// A discovery strategy that combines multiple discovery strategies into one.

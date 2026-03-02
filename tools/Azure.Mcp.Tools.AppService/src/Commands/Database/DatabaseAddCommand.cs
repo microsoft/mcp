@@ -29,7 +29,15 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,9 +87,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new Result(connectionInfo),
-                AppServiceJsonContext.Default.Result);
+            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
         }
         catch (Exception ex)
         {
@@ -92,5 +98,5 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
         return context.Response;
     }
 
-    public record Result(DatabaseConnectionInfo ConnectionInfo);
+    public record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
 }

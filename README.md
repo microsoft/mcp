@@ -173,8 +173,18 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [microsoft/wassette](https://github.com/microsoft/wassette)
 
+## 🔌 Azure Plugin
+Get started with the Azure plugin, which connects [GitHub Copilot CLI](https://github.com/github/copilot-cli) or Claude Code to your Azure account. This integration lets you manage resources, deploy applications, and monitor services directly from your development environment using tools from the Azure MCP server and extended Azure knowledge skills.
+
+To install the Azure plugin into Copilot CLI and Claude Code:
+
+1. Add the marketplace with `/plugin marketplace add microsoft/skills`
+2. Install the plugin with `/plugin install azure-skills@skills`
+3. Update the plugin with `/plugin update azure-skills@skills`
+
 ## 🏗️ Looking for starter templates that use MCP? 
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
+
 
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
