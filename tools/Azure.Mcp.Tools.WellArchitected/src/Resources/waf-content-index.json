@@ -1,87 +1,946 @@
 {
   "recommendations": {
-    "RE:01": {"id": "RE:01", "title": "Design for redundancy", "description": "Design your workload to be redundant across zones and regions as appropriate. Build in redundancy to eliminate single points of failure.", "pillar": "Reliability", "content": "Design your application architecture to be zone-redundant when possible and region-redundant when necessary. Set up redundancy for single points of failure including management and control plane components. Implement automated failover mechanisms and test them regularly to ensure they work as expected during actual outages.", "service": null },
-    "RE:02": {"id": "RE:02", "title": "Identify flows", "description": "Identify and catalog critical system flows to understand dependencies and failure modes.", "pillar": "Reliability", "content": "Document all critical system flows including data flows, API call chains, and inter-service dependencies. Use this catalog to perform failure mode analysis and identify potential weak points in your architecture.", "service": null },
-    "RE:03": {"id": "RE:03", "title": "Use failure mode analysis", "description": "Conduct failure mode analysis to identify and mitigate potential failure points.", "pillar": "Reliability", "content": "Perform comprehensive failure mode and effects analysis (FMEA) on your system. Identify single points of failure, cascading failure scenarios, and implement mitigations such as circuit breakers, bulkheads, and graceful degradation patterns.", "service": null },
-    "RE:04": {"id": "RE:04", "title": "Define reliability targets", "description": "Establish clear reliability targets including SLOs, SLAs, and SLIs for your workload.", "pillar": "Reliability", "content": "Define service level objectives (SLOs), service level agreements (SLAs), and service level indicators (SLIs) for your workload. Set recovery time objectives (RTO) and recovery point objectives (RPO) based on business requirements. Monitor these metrics continuously and adjust your architecture to meet them.", "service": null },
-    "RE:05": {"id": "RE:05", "title": "Strengthen resiliency and recoverability", "description": "Implement patterns and practices that strengthen system resiliency and enable rapid recovery.", "pillar": "Reliability", "content": "Implement retry policies with exponential backoff, circuit breakers, and timeout strategies. Design for graceful degradation when dependencies fail. Implement health checks and automated recovery procedures. Test recovery procedures regularly through chaos engineering.", "service": null },
-    "RE:06": {"id": "RE:06", "title": "Use data replication", "description": "Implement appropriate data replication strategies to ensure data durability and availability.", "pillar": "Reliability", "content": "Configure data replication across availability zones and regions based on your RPO and RTO requirements. Use geo-replication for critical data. Implement proper backup strategies with automated testing of restore procedures. Consider using Azure Site Recovery for disaster recovery scenarios.", "service": null },
-    "RE:07": {"id": "RE:07", "title": "Use background jobs", "description": "Offload long-running and non-critical operations to background jobs to improve responsiveness.", "pillar": "Reliability", "content": "Use message queues and background workers to handle asynchronous operations. Implement idempotent message processing. Use dead-letter queues for failed messages. Monitor queue depths and processing times to identify bottlenecks.", "service": null },
-    "RE:08": {"id": "RE:08", "title": "Design a reliability testing strategy", "description": "Implement comprehensive testing including chaos engineering to validate reliability.", "pillar": "Reliability", "content": "Conduct regular reliability testing including load testing, stress testing, and chaos engineering experiments. Test failover procedures, backup and restore operations, and disaster recovery plans. Use Azure Chaos Studio to inject failures and validate system behavior.", "service": null },
-    "RE:09": {"id": "RE:09", "title": "Implement disaster recovery", "description": "Design and implement disaster recovery procedures to handle regional outages.", "pillar": "Reliability", "content": "Establish disaster recovery procedures for regional failures. Implement automated failover to secondary regions. Regularly test DR procedures to ensure they work as expected. Document runbooks for disaster recovery scenarios and train operations teams.", "service": null },
-    "RE:10": {"id": "RE:10", "title": "Monitor infrastructure", "description": "Implement comprehensive monitoring to detect and respond to reliability issues.", "pillar": "Reliability", "content": "Use Azure Monitor to track system health, availability metrics, and performance indicators. Set up alerts for anomalies and threshold breaches. Implement distributed tracing to diagnose issues across microservices. Use Application Insights for application-level monitoring.", "service": null },
-    "SE:01": {"id": "SE:01", "title": "Establish a security baseline", "description": "Define and enforce a security baseline for your workload aligned with organizational policies.", "pillar": "Security", "content": "Establish security baselines using Azure Policy and Microsoft Defender for Cloud. Implement Azure security benchmarks. Regularly review and update security baselines to address evolving threats. Use Microsoft Defender for Cloud Secure Score to track security posture.", "service": null },
-    "SE:02": {"id": "SE:02", "title": "Maintain a secure development lifecycle", "description": "Integrate security practices throughout the software development lifecycle.", "pillar": "Security", "content": "Implement secure coding practices and conduct security code reviews. Use static application security testing (SAST) and dynamic application security testing (DAST). Scan dependencies for vulnerabilities. Implement security gates in CI/CD pipelines using tools like GitHub Advanced Security.", "service": null },
-    "SE:03": {"id": "SE:03", "title": "Classify and protect data", "description": "Classify data based on sensitivity and apply appropriate protection mechanisms.", "pillar": "Security", "content": "Classify data based on sensitivity and compliance requirements. Apply appropriate encryption for data at rest and in transit. Use Azure Information Protection for data classification and protection. Implement data loss prevention (DLP) policies. Regularly audit data access and usage.", "service": null },
-    "SE:04": {"id": "SE:04", "title": "Create segmentation and perimeters", "description": "Implement network segmentation and security perimeters to limit blast radius.", "pillar": "Security", "content": "Use virtual networks, subnets, and network security groups to create security boundaries. Implement micro-segmentation using application security groups. Use Azure Firewall or third-party network virtual appliances. Follow zero-trust principles with explicit verification at each layer.", "service": null },
-    "SE:05": {"id": "SE:05", "title": "Manage identity and access", "description": "Implement robust identity and access management with least privilege principles.", "pillar": "Security", "content": "Use Microsoft Entra ID (Azure AD) for identity management. Implement role-based access control (RBAC) with least privilege. Use managed identities for Azure resources. Enforce multi-factor authentication (MFA). Implement Privileged Identity Management (PIM) for privileged access. Regularly review access rights.", "service": null },
-    "SE:06": {"id": "SE:06", "title": "Isolate network traffic", "description": "Implement network isolation to protect sensitive workloads and data.", "pillar": "Security", "content": "Use virtual network peering and private endpoints to isolate traffic. Implement Azure Private Link for PaaS services. Use service endpoints where private endpoints are not available. Avoid exposing services directly to the internet. Use application gateways and load balancers as security choke points.", "service": null },
-    "SE:07": {"id": "SE:07", "title": "Encrypt data", "description": "Implement encryption for data at rest, in transit, and in use.", "pillar": "Security", "content": "Enable encryption for all Azure services. Use TLS 1.2 or higher for data in transit. Use Azure Key Vault for key management. Consider using customer-managed keys for sensitive data. Implement Azure Disk Encryption for VM disks. Use transparent data encryption (TDE) for databases.", "service": null },
-    "SE:08": {"id": "SE:08", "title": "Harden resources", "description": "Apply security hardening to all resources following industry best practices.", "pillar": "Security", "content": "Apply OS hardening using CIS benchmarks. Disable unnecessary services and ports. Keep systems patched using Azure Update Management. Use just-in-time (JIT) VM access. Implement endpoint protection using Microsoft Defender for Endpoint. Regular vulnerability assessments.", "service": null },
-    "SE:09": {"id": "SE:09", "title": "Protect application secrets", "description": "Store and manage application secrets securely using proper secret management services.", "pillar": "Security", "content": "Store secrets, certificates, and keys in Azure Key Vault. Use managed identities to access Key Vault. Never store secrets in code or configuration files. Rotate secrets regularly. Use Key Vault references in App Service and Function Apps. Implement secret scanning in repositories.", "service": null },
-    "SE:10": {"id": "SE:10", "title": "Monitor and detect threats", "description": "Implement comprehensive security monitoring and threat detection.", "pillar": "Security", "content": "Enable Microsoft Defender for Cloud for all subscriptions. Use Azure Sentinel for security information and event management (SIEM). Configure diagnostic logging for all resources. Monitor for suspicious activities and anomalies. Implement threat intelligence integration. Set up automated response for common threats.", "service": null },
-    "SE:11": {"id": "SE:11", "title": "Establish incident response procedures", "description": "Define and test incident response procedures for security events.", "pillar": "Security", "content": "Develop and document incident response plans. Define roles and responsibilities for security incidents. Establish communication protocols. Conduct regular tabletop exercises. Use Azure Sentinel playbooks for automated response. Maintain forensic capabilities for post-incident analysis.", "service": null },
-    "SE:12": {"id": "SE:12", "title": "Test security defenses", "description": "Regularly test security controls through penetration testing and security assessments.", "pillar": "Security", "content": "Conduct regular penetration testing and vulnerability assessments. Perform red team/blue team exercises. Test incident response procedures. Use Azure Security Center recommendations to identify weaknesses. Implement bug bounty programs for external security researchers.", "service": null },
-    "CO:01": {"id": "CO:01", "title": "Create a culture of financial responsibility", "description": "Establish organizational practices that promote cost awareness and accountability.", "pillar": "Cost Optimization", "content": "Foster cost awareness across development and operations teams. Implement cost tagging strategies for resource attribution. Establish cost budgets and alerts. Create showback or chargeback models. Hold regular cost review meetings with stakeholders.", "service": null },
-    "CO:02": {"id": "CO:02", "title": "Establish a cost model", "description": "Create a comprehensive cost model for your workload to track and predict spending.", "pillar": "Cost Optimization", "content": "Build detailed cost models that map resources to business units and applications. Use Azure Cost Management to track spending. Implement resource tagging for cost allocation. Create forecasts and budgets based on historical data and growth projections.", "service": null },
-    "CO:03": {"id": "CO:03", "title": "Collect and review cost data", "description": "Regularly collect and analyze cost data to identify optimization opportunities.", "pillar": "Cost Optimization", "content": "Use Azure Cost Management and Azure Advisor for cost insights. Export cost data for detailed analysis. Review spending trends monthly. Identify cost anomalies and investigate promptly. Use Azure Cost Management APIs for custom reporting.", "service": null },
-    "CO:04": {"id": "CO:04", "title": "Set spending guardrails", "description": "Implement policies and controls to prevent unexpected cost overruns.", "pillar": "Cost Optimization", "content": "Use Azure Policy to enforce resource SKU restrictions. Implement spending limits and alerts. Use Azure Cost Management budgets with action groups. Restrict who can create expensive resources. Implement approval workflows for large resource provisioning.", "service": null },
-    "CO:05": {"id": "CO:05", "title": "Get the best rates from providers", "description": "Leverage pricing models and commitments to reduce infrastructure costs.", "pillar": "Cost Optimization", "content": "Use Azure Reservations for predictable workloads (1-year or 3-year commitments). Leverage Azure Hybrid Benefit for Windows Server and SQL Server. Use Azure Savings Plans for compute. Take advantage of spot VMs for interruptible workloads. Negotiate enterprise agreements for volume discounts.", "service": null },
-    "CO:06": {"id": "CO:06", "title": "Align usage to billing increments", "description": "Optimize resource usage to match billing units and minimize waste.", "pillar": "Cost Optimization", "content": "Understand billing increments for Azure services. Consolidate workloads to reduce per-unit costs. Use auto-scaling to match demand. Shut down non-production resources during off-hours. Right-size resources to avoid paying for unused capacity.", "service": null },
-    "CO:07": {"id": "CO:07", "title": "Optimize component costs", "description": "Review and optimize costs for individual Azure components and services.", "pillar": "Cost Optimization", "content": "Use Azure Advisor recommendations for cost optimization. Right-size VMs based on actual utilization. Use cheaper storage tiers for infrequently accessed data. Optimize database configurations. Delete unused resources like unattached disks and old snapshots.", "service": null },
-    "CO:08": {"id": "CO:08", "title": "Optimize environment costs", "description": "Reduce costs by optimizing non-production environments.", "pillar": "Cost Optimization", "content": "Use smaller SKUs for non-production environments. Shut down dev/test resources outside business hours using Azure Automation. Use Azure Dev/Test subscriptions for discounted rates. Share resources across environments where possible. Use ephemeral environments that are created and destroyed on demand.", "service": null },
-    "CO:09": {"id": "CO:09", "title": "Optimize flow costs", "description": "Reduce costs associated with data movement and network traffic.", "pillar": "Cost Optimization", "content": "Minimize cross-region data transfers. Use Azure CDN to reduce origin traffic. Implement data compression. Use Azure Front Door for global routing efficiency. Optimize API call patterns to reduce unnecessary requests. Use caching to minimize backend calls.", "service": null },
-    "CO:10": {"id": "CO:10", "title": "Optimize data costs", "description": "Implement strategies to reduce data storage and processing costs.", "pillar": "Cost Optimization", "content": "Use appropriate storage tiers (Hot, Cool, Archive) based on access patterns. Implement lifecycle management policies to automatically transition data. Delete obsolete data. Compress data where appropriate. Use Azure Blob Storage reserved capacity for predictable storage needs.", "service": null },
-    "CO:11": {"id": "CO:11", "title": "Optimize code costs", "description": "Improve code efficiency to reduce compute and resource consumption.", "pillar": "Cost Optimization", "content": "Profile application performance to identify inefficiencies. Optimize database queries. Reduce memory footprint. Use asynchronous operations to improve throughput. Optimize container image sizes. Use serverless compute where appropriate to pay only for actual usage.", "service": null },
-    "CO:12": {"id": "CO:12", "title": "Optimize scaling costs", "description": "Implement cost-effective scaling strategies that match demand patterns.", "pillar": "Cost Optimization", "content": "Use auto-scaling based on metrics that reflect actual demand. Implement scheduled scaling for predictable patterns. Use scale-to-zero for serverless services. Consider using Azure Functions consumption plan for event-driven workloads. Use application-level caching to reduce backend scaling needs.", "service": null },
-    "CO:13": {"id": "CO:13", "title": "Optimize personnel time", "description": "Reduce operational costs by improving team efficiency and automation.", "pillar": "Cost Optimization", "content": "Automate repetitive tasks to free up team capacity. Use infrastructure as code to improve deployment efficiency. Implement self-service capabilities for developers. Use Azure Automation and Logic Apps for operational tasks. Invest in monitoring and alerting to reduce mean time to recovery (MTTR).", "service": null },
-    "CO:14": {"id": "CO:14", "title": "Consolidate resources", "description": "Reduce costs through resource consolidation and multi-tenancy where appropriate.", "pillar": "Cost Optimization", "content": "Consolidate multiple small databases into elastic pools. Use multi-tenant architectures where appropriate. Share infrastructure across applications. Use container orchestration to improve resource utilization. Consolidate monitoring and logging infrastructure.", "service": null },
-    "OE:01": {"id": "OE:01", "title": "Determine workload team members needs", "description": "Identify and provide resources, training, and tools needed by the workload team.", "pillar": "Operational Excellence", "content": "Assess team skills and identify training needs. Provide access to necessary tools and resources. Establish clear roles and responsibilities. Foster a culture of continuous learning. Invest in certifications and professional development for team members.", "service": null },
-    "OE:02": {"id": "OE:02", "title": "Formalize the way you run routine and nonroutine tasks", "description": "Document and standardize operational procedures and runbooks.", "pillar": "Operational Excellence", "content": "Create comprehensive runbooks for operational tasks. Document incident response procedures. Standardize deployment processes. Establish change management processes. Use Azure Automation for routine tasks. Maintain up-to-date operational documentation.", "service": null },
-    "OE:03": {"id": "OE:03", "title": "Formalize software development management practices", "description": "Implement structured software development lifecycle practices.", "pillar": "Operational Excellence", "content": "Adopt agile development practices. Implement code review processes. Use version control for all artifacts. Establish branching strategies. Define definition of done criteria. Use work item tracking systems. Conduct regular retrospectives.", "service": null },
-    "OE:04": {"id": "OE:04", "title": "Optimize software development and quality assurance processes", "description": "Continuously improve development and testing practices for better quality.", "pillar": "Operational Excellence", "content": "Implement automated testing (unit, integration, end-to-end). Use continuous integration to catch issues early. Implement test-driven development (TDD) practices. Conduct load and performance testing. Use code quality tools and enforce standards. Implement shift-left security practices.", "service": null },
-    "OE:05": {"id": "OE:05", "title": "Prepare resources and their configurations", "description": "Use infrastructure as code and configuration management for consistency.", "pillar": "Operational Excellence", "content": "Use infrastructure as code (Bicep, Terraform, ARM templates). Store IaC in version control. Implement automated validation and testing of infrastructure code. Use Azure Policy for governance. Implement configuration drift detection. Use Azure Blueprints for standardized environments.", "service": null },
-    "OE:06": {"id": "OE:06", "title": "Design a workload supply chain", "description": "Establish secure and reliable pipelines for building and deploying software.", "pillar": "Operational Excellence", "content": "Implement CI/CD pipelines using Azure DevOps or GitHub Actions. Secure the software supply chain. Use artifact management. Implement dependency scanning. Sign and verify artifacts. Use separate pipelines for different environments. Implement approval gates for production deployments.", "service": null },
-    "OE:07": {"id": "OE:07", "title": "Design a deployment failure mitigation strategy", "description": "Implement strategies to detect and mitigate deployment failures quickly.", "pillar": "Operational Excellence", "content": "Implement blue-green or canary deployments. Use feature flags to control rollout. Implement automated rollback capabilities. Monitor key metrics during deployments. Use deployment rings to gradually roll out changes. Test rollback procedures regularly.", "service": null },
-    "OE:08": {"id": "OE:08", "title": "Design an emergency response strategy", "description": "Establish procedures for responding to critical incidents and outages.", "pillar": "Operational Excellence", "content": "Develop incident response plans for various scenarios. Establish on-call rotations and escalation procedures. Use incident management tools. Conduct post-incident reviews (blameless post-mortems). Maintain communication channels for incidents. Practice emergency procedures through game days.", "service": null },
-    "OE:09": {"id": "OE:09", "title": "Automate all tasks", "description": "Identify and automate manual operational tasks to reduce errors and improve efficiency.", "pillar": "Operational Excellence", "content": "Identify repetitive manual tasks for automation. Use Azure Automation for operational tasks. Implement self-healing capabilities. Use Azure Logic Apps for workflow automation. Automate scaling operations. Create automated reports and dashboards.", "service": null },
-    "OE:10": {"id": "OE:10", "title": "Design and implement automation", "description": "Build robust automation that is maintainable and testable.", "pillar": "Operational Excellence", "content": "Write automation code with the same rigor as application code. Use version control for automation scripts. Implement error handling in automation. Test automation in non-production environments. Document automation workflows. Use idempotent operations. Implement logging and monitoring for automation.", "service": null },
-    "OE:11": {"id": "OE:11", "title": "Use safe deployment practices", "description": "Implement deployment strategies that minimize risk and enable quick recovery.", "pillar": "Operational Excellence", "content": "Use progressive exposure deployment patterns (canary, blue-green, ring-based). Implement automated testing in deployment pipelines. Monitor key metrics during rollout. Have rollback procedures ready. Use feature flags for runtime control. Deploy during low-traffic periods. Communicate deployment schedules to stakeholders.", "service": null },
-    "PE:01": {"id": "PE:01", "title": "Negotiate realistic performance targets", "description": "Establish measurable and achievable performance targets based on business requirements.", "pillar": "Performance Efficiency", "content": "Define performance requirements early in the design phase. Establish latency, throughput, and concurrency targets. Set realistic SLOs based on business needs and technical constraints. Document performance requirements for each critical flow. Balance performance targets with cost considerations.", "service": null },
-    "PE:02": {"id": "PE:02", "title": "Conduct capacity planning", "description": "Plan for current and future capacity needs to ensure performance at scale.", "pillar": "Performance Efficiency", "content": "Analyze current and projected workload patterns. Plan for growth and seasonal variations. Conduct load testing to understand capacity limits. Monitor resource utilization trends. Use Azure Monitor capacity planning features. Plan for burst capacity needs.", "service": null },
-    "PE:03": {"id": "PE:03", "title": "Select the right services", "description": "Choose Azure services that best match your performance requirements.", "pillar": "Performance Efficiency", "content": "Evaluate Azure services based on performance characteristics. Use premium SKUs when performance justifies the cost. Choose appropriate compute options (VMs, containers, serverless). Select database services that match access patterns. Use Azure service SLAs as a guide for reliability and performance expectations.", "service": null },
-    "PE:04": {"id": "PE:04", "title": "Collect performance data", "description": "Implement comprehensive performance monitoring and telemetry.", "pillar": "Performance Efficiency", "content": "Use Azure Monitor and Application Insights for performance telemetry. Track key performance indicators (response time, throughput, error rates). Implement distributed tracing for microservices. Use performance counters and metrics. Set up dashboards for real-time performance visibility. Establish baselines for normal performance.", "service": null },
-    "PE:05": {"id": "PE:05", "title": "Optimize scaling", "description": "Implement effective scaling strategies to maintain performance under varying load.", "pillar": "Performance Efficiency", "content": "Use auto-scaling based on appropriate metrics (CPU, memory, queue depth, custom metrics). Implement horizontal scaling for stateless components. Use vertical scaling judiciously for stateful components. Pre-warm resources for predictable load spikes. Use Azure Front Door or Traffic Manager for global load distribution.", "service": null },
-    "PE:06": {"id": "PE:06", "title": "Optimize data usage", "description": "Implement efficient data access patterns and storage strategies.", "pillar": "Performance Efficiency", "content": "Use appropriate data storage services for access patterns. Implement data partitioning and sharding strategies. Use read replicas for read-heavy workloads. Minimize data movement across regions. Implement appropriate indexing strategies. Use data compression where appropriate.", "service": null },
-    "PE:07": {"id": "PE:07", "title": "Optimize code", "description": "Write efficient code that minimizes resource consumption and maximizes throughput.", "pillar": "Performance Efficiency", "content": "Profile application code to identify bottlenecks. Optimize expensive operations and algorithms. Use asynchronous programming patterns. Minimize blocking operations. Optimize memory usage and garbage collection. Use connection pooling for database and HTTP connections. Implement efficient serialization.", "service": null },
-    "PE:08": {"id": "PE:08", "title": "Optimize data access", "description": "Implement caching and efficient data access patterns to reduce latency.", "pillar": "Performance Efficiency", "content": "Implement caching at multiple levels (CDN, application, database). Use Azure Cache for Redis for distributed caching. Implement cache-aside pattern for database access. Use appropriate cache eviction policies. Minimize database round trips through batching. Use stored procedures or materialized views for complex queries.", "service": null },
-    "PE:09": {"id": "PE:09", "title": "Prioritize network performance", "description": "Optimize network architecture and configuration for low latency and high throughput.", "pillar": "Performance Efficiency", "content": "Use Azure regions closest to users. Implement Azure Front Door or CDN for global distribution. Use ExpressRoute for consistent network performance. Enable accelerated networking on VMs. Optimize network topology to minimize hops. Use private endpoints to avoid internet routing.", "service": null },
-    "PE:10": {"id": "PE:10", "title": "Optimize operational tasks", "description": "Ensure operational activities don't negatively impact application performance.", "pillar": "Performance Efficiency", "content": "Schedule maintenance tasks during low-traffic periods. Use snapshot backups to minimize impact. Implement index maintenance strategies that don't block operations. Use read replicas for reporting queries. Optimize log collection and retention. Use sampling for high-volume telemetry.", "service": null },
-    "PE:11": {"id": "PE:11", "title": "Respond to live performance issues", "description": "Establish processes to detect and respond quickly to performance degradation.", "pillar": "Performance Efficiency", "content": "Set up performance alerts with appropriate thresholds. Implement automated responses for common issues. Have runbooks ready for performance incidents. Use Azure Monitor autoscale for automatic adjustments. Maintain performance baselines to detect anomalies. Practice performance incident response through game days.", "service": null },
-    "PE:12": {"id": "PE:12", "title": "Continuously optimize performance", "description": "Establish a culture of continuous performance improvement and optimization.", "pillar": "Performance Efficiency", "content": "Regularly review performance metrics and trends. Conduct periodic load testing and performance reviews. Stay updated on Azure service improvements and new features. Optimize based on actual usage patterns. Implement performance regression testing in CI/CD. Share performance insights across teams.", "service": null }
+    "CO:01": {
+      "id": "CO:01",
+      "title": "Financial responsibility",
+      "description": "Get recommendations for creating a culture of financial responsibility in your organization.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected-Framework Cost Optimization checklist recommendation: This guide describes the recommendations for creating a culture of financial responsibility in an organization. Creating a culture of financial responsibility is where the workload team is equipped and motivated to make prudent financial decisions. It drives the team to proactively seek out and implement strategies that enhance efficiency and reduce unnecessary expenses."
+    },
+    "CO:02": {
+      "id": "CO:02",
+      "title": "Cost model",
+      "description": "Learn how to create an estimate that focuses on predicting the combined costs of services and their associated expenses.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the best practices for creating a cost model for your workload. A cost model is an estimate that predicts the combined costs of services and their associated expenses. It\u0027s foundational for expense forecasting and budget planning. A cost model provides scenario analysis, which allows you to assess the cost implications of potential workload changes."
+    },
+    "CO:03": {
+      "id": "CO:03",
+      "title": "Cost data and reporting",
+      "description": "Learn how to collect and review cost data for a workload.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for collecting and reviewing cost data for your workload. Gather cost data to paint a holistic picture of your workload and ensure spending is optimized. Data collection includes all indicators of cost optimization, like billing data, resource utilization, and usage patterns."
+    },
+    "CO:04": {
+      "id": "CO:04",
+      "title": "Spending guardrails",
+      "description": "Learn best practices for setting spending guardrails.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for setting spending guardrails. Spending guardrails are measures to control and manage costs within a specified budget. They help prevent unexpected or excessive spending and promote cost-effective utilization of resources."
+    },
+    "CO:05": {
+      "id": "CO:05",
+      "title": "Rate optimization",
+      "description": "Learn how to get the best rates from providers for your workload without modifying architecture, resources, or functionality.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for getting the best rates from providers for your workload. Getting the best rates is the practice of finding and securing the most cost-efficient pricing options for cloud and software resources without modifying architecture, resources, or functionality. By optimizing rates, you can reduce cloud costs without changing the workload."
+    },
+    "CO:06": {
+      "id": "CO:06",
+      "title": "Usage and billing increments",
+      "description": "Learn how to align usage to billing increments by adapting a resource to your workload usage or adapting your workload to the resource billing increments.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for aligning resource usage to billing increments. Resources are billed at specific increments, such as per hour or per instance. To optimize costs, you need to align your usage to those increments. You must either adapt a resource to your workload usage or adapt your workload to the resource billing increments, also called meters."
+    },
+    "CO:07": {
+      "id": "CO:07",
+      "title": "Component costs",
+      "description": "Learn how to optimize component costs by eliminating sources of wasted spending from an existing workload.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for optimizing workload component costs. Optimizing component costs refers to the process of evaluating and improving the cost-efficiency of individual elements within a workload."
+    },
+    "CO:08": {
+      "id": "CO:08",
+      "title": "Environment costs",
+      "description": "Learn how to optimize environment costs by tailoring each environment to its specific purpose and optimize it for cost effectiveness.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for cost optimizing workload environments. Each environment should be tailored for its specific purpose and optimized for cost effectiveness. It\u0027s important to make strategic tradeoffs and allocate resources where they matter the most, without compromising on critical components."
+    },
+    "CO:09": {
+      "id": "CO:09",
+      "title": "Flow costs",
+      "description": "Learn about Azure Well-Architected Framework recommendations for strategically optimizing the cost of each of your workload",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for optimizing the cost of each of the flows in your workload. Cost-optimizing the flows in a workload involves strategically allocating and managing resources to minimize expenses while maintaining performance."
+    },
+    "CO:10": {
+      "id": "CO:10",
+      "title": "Data costs",
+      "description": "Learn how to optimize data costs for a workload by aligning data spending to data priority.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for optimizing data costs for a workload. Optimizing data costs involves minimizing the expenses related to the storage and management of data according to its significance and access frequency. Appropriate data management can significantly reduce overhead costs and align spending with data utility."
+    },
+    "CO:11": {
+      "id": "CO:11",
+      "title": "Code costs",
+      "description": "Learn how to optimize costs related to code with specific recommendations.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for optimizing code costs. Code optimization is the process of improving the efficiency, performance, and cost-effectiveness of application code. Effective code optimization involves making changes to the code to reduce resource consumption, minimize execution time, and improve overall performance."
+    },
+    "CO:12": {
+      "id": "CO:12",
+      "title": "Scaling costs",
+      "description": "Learn how to optimize scaling costs using specific strategies.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide provides recommendations for optimizing scaling costs. Cost optimizing scaling is the process of removing inefficiencies in workload scaling. The goal is to reduce scaling costs while still meeting all nonfunctional requirements. Spending less to get the same result. Optimizing scaling allows you to avoid unnecessary expenses, overprovisioning, and waste."
+    },
+    "CO:13": {
+      "id": "CO:13",
+      "title": "Personnel time",
+      "description": "Learn about Azure Well-Architected Framework recommendations for maximizing the productivity and efficiency of employees.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for optimizing personnel time. This optimization is a strategic process of maximizing the productivity and efficiency of employees that design, implement, and operate the workload during their working hours. It involves aligning their skills, strengths, and tasks in a manner that ensures that every hour they spend at work is used most effectively."
+    },
+    "CO:14": {
+      "id": "CO:14",
+      "title": "Consolidation",
+      "description": "Learn how to use consolidation to restructure your workloads, resources, and team roles to achieve maximum cost efficiency.",
+      "pillar": "Cost Optimization",
+      "content": "Applies to this Azure Well-Architected Framework Cost Optimization checklist recommendation: This guide describes the recommendations for consolidating resources and responsibilities to optimize workload costs. Consolidating resources is a nuanced task that differs from simply eliminating waste. Consolidation involves combining components of a workload, such as servers, databases, applications, and responsibilities."
+    },
+    "OE:01": {
+      "id": "OE:01",
+      "title": "DevOps culture",
+      "description": "Learn how to embrace DevOps culture principles and practices in your workload team to strengthen the team.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: Operating a workload with a DevOps mindset requires more than tools and processes. There are two core components. The first is culture: shared ownership, accountability, continuous learning, and a focus on quality."
+    },
+    "OE:02": {
+      "id": "OE:02",
+      "title": "Task execution process",
+      "description": "Learn how to formalize routine and nonroutine tasks by using documentation, checklists, or automation.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: Predictable processes lead to predictable outcomes. Teams must standardize how work is done and follow those patterns consistently. Where needed, they should implement automation intentionally to reduce variability. This guide explains how teams should define and maintain standard processes across reliability, security, cost optimization, performance, and daily operations."
+    },
+    "OE:03": {
+      "id": "OE:03",
+      "title": "Software development practices",
+      "description": "Learn how to establish standards for managing your workload team",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: Software development is more than just producing code. Developers need to clearly understand what to build and why, while product owners and managers maintain visibility into what work is being done and how it is progressing. By establishing consistent practices, teams can deliver with  quality, surface risks early and manage expectations, and track progress."
+    },
+    "OE:04": {
+      "id": "OE:04",
+      "title": "Tools and processes",
+      "description": "Learn how to optimize development practices by standardizing tools and processes. Define consistent practices to optimize efficiency and quality of work.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: This guide describes the recommendations for defining standards for software development tools and processes. Defining consistent practices leads to an efficient workload team and high-quality work. High-performing teams use industry-proven tools and processes to minimize wasted effort and potential code errors."
+    },
+    "OE:05": {
+      "id": "OE:05",
+      "title": "Infrastructure as code",
+      "description": "Learn how to use infrastructure as code (IaC) as the standard for all of your infrastructure deployments.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: This guide describes the recommendations for using IaC as the standard for your infrastructure deployments. Using IaC enables you to integrate your infrastructure deployments and management into your existing software development practices. It provides a consistent, standard methodology for development and deployment for all components of your workload."
+    },
+    "OE:06": {
+      "id": "OE:06",
+      "title": "Supply chain for workload development",
+      "description": "Learn how to design a workload development supply chain based on CI/CD pipelines that ensure a predictable, efficient workload lifecycle.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: To provide a predictable, standardized way to maintain your workload, design your workload development supply chain around continuous integration and continuous delivery (CI/CD). Maintain a single, standardized supply chain and implement it with automated CI/CD pipelines; you can use multiple pipelines as long as they all adhere to the same supply chain."
+    },
+    "OE:07": {
+      "id": "OE:07",
+      "title": "Monitoring system",
+      "description": "Learn the recommendations for designing and creating an observability system. The system provides a foundation for monitoring, detection, and alerting.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: Related guide: Recommendations for instrumenting an application Observability or monitoring is a key operational practice that provides the workload team the ability to understand the internal state of a system based on the external data it produces. Unlike the functional stack, which implements business logic and core features, the monitoring stack runs in parallel."
+    },
+    "OE:08": {
+      "id": "OE:08",
+      "title": "Incident response",
+      "description": "Learn how to set up emergency response processes and procedures that your team can follow to ensure that an issue is handled in a calm, orderly manner.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: When incidents occur, the workload team should be prepared with clear, structured procedures. There are two key aspects to incident response. The first is architectural, focusing on designing systems that support effective response procedures and prevent failures from cascading across components."
+    },
+    "OE:09": {
+      "id": "OE:09",
+      "title": "Task automation",
+      "description": "Learn how to automate tasks that are repetitive and prone to human error to gain efficiency, adhere to standards, and create consistency.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Well-Architected Framework Operational Excellence checklist recommendation: This guide describes the recommendations for adopting automation in your workload. You can automate tasks that are repetitive and prone to human error to help your teams gain efficiency and adhere to standards. Automate tasks to make your workload streamlined and consistent."
+    },
+    "OE:10": {
+      "id": "OE:10",
+      "title": "Automation design",
+      "description": "Learn how to design your workload to enable automation. Automation simplifies maintenance tasks, allowing you to update, patch, and upgrade your systems more efficiently and reliably.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operation Excellence checklist recommendation: This guide describes the recommendations for designing and implementing your workload to enable automation. Design your workload with automation in mind to ensure that routine tasks such as provisioning resources, scaling, and deployments are performed quickly and reliably. Automation simplifies maintenance tasks and allows you to update, patch, and upgrade your systems more efficiently."
+    },
+    "OE:11": {
+      "id": "OE:11",
+      "title": "Safe deployment practices",
+      "description": "Learn about recommendations for safe deployment practices (SDP). Define how to safely make any change to your workload through deployments.",
+      "pillar": "Operational Excellence",
+      "content": "Applies to this Azure Well-Architected Framework Operational Excellence checklist recommendation: This guide describes the recommendations for using safe deployment practices (SDP). Safe deployment processes and procedures define how to safely make and deploy changes to your workload. Implementing SDP requires you to think about deployments through the lens of managing risk."
+    },
+    "PE:01": {
+      "id": "PE:01",
+      "title": "Performance targets",
+      "description": "Learn how to drive continuous improvement by setting and exposing performance targets for your workload. Identify workload objectives, key metrics, and performance targets. Monitor performance and evaluate customer feedback to drive improvement.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for establishing and exposing performance targets. Performance targets are metrics that define performance objectives. These metrics are expressed as a single numerical value or a numerical range. They\u0027re clear and specific metrics that drive continuous improvement."
+    },
+    "PE:02": {
+      "id": "PE:02",
+      "title": "Capacity planning",
+      "description": "Learn about Well-Architected Framework recommendations for implementing capacity planning in your workloads.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for capacity planning. Capacity planning refers to the process of determining the resources required to meet workload performance targets. It involves estimating the amount of computing resources such as CPU, memory, storage, and network bandwidth needed to support the workload\u0027s performance requirements."
+    },
+    "PE:03": {
+      "id": "PE:03",
+      "title": "Selecting services",
+      "description": "Learn how to select the appropriate services that best meet the requirements and demands of your workload.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for selecting appropriate services for your workload. The following recommendations help you choose services that best meet the requirements and demands of your workload. When you use services that are designed to handle your workload\u0027s requirements, you can ensure that your workload meets your performance targets."
+    },
+    "PE:04": {
+      "id": "PE:04",
+      "title": "Metrics and logs",
+      "description": "Learn recommendations for collecting performance data (metrics and logs) to help you assess the performance of a workload.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: Collecting performance data is the process of gathering metrics and logs that provide information about the performance of a workload. This data includes numerical values, which are known as metrics. Metrics describe the state of the system at a particular point in time. It also includes logs that contain different types of data organized into records."
+    },
+    "PE:05": {
+      "id": "PE:05",
+      "title": "Scaling and partitioning",
+      "description": "Learn best practices for optimizing scaling and partitioning to achieve performance efficiency in workloads.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for scaling and partitioning a workload. Scaling is the ability to increase or decrease the resources allocated to a workload based on demand. Partitioning involves dividing the workload into smaller, manageable units to distribute data and processing across multiple resources."
+    },
+    "PE:06": {
+      "id": "PE:06",
+      "title": "Performance testing",
+      "description": "Learn best practices for performance testing. See how to select tools, configure environments, and take other steps to help workloads meet performance targets.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for testing. Performance testing helps you evaluate the functionality of a workload in various scenarios. It involves testing the workload\u0027s response time, throughput, resource utilization, and stability to help ensure that the workload meets its performance requirements. Testing helps to prevent performance issues."
+    },
+    "PE:07": {
+      "id": "PE:07",
+      "title": "Code and infrastructure",
+      "description": "Learn how to optimize your code and infrastructure by using components only for their core purpose and only when necessary.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for optimizing code and infrastructure performance. To optimize your code and infrastructure, you should use your components only for their core purpose and only when necessary. When you overuse code and infrastructure, it creates unnecessary resource consumption, bottlenecks, and slow responses."
+    },
+    "PE:08": {
+      "id": "PE:08",
+      "title": "Data performance",
+      "description": "Learn how to optimize data access, retrieval, storage, and processing operations to enhance the overall performance of your workload.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for optimizing data performance. Optimizing data performance is about refining the efficiency with which the workload processes and stores data. Every workload operation, transaction, or computation typically relies on the quick and accurate retrieval, processing, and storage of data. When data performance is optimized, the workload runs smoothly."
+    },
+    "PE:09": {
+      "id": "PE:09",
+      "title": "Critical flows",
+      "description": "Learn about recommendations for prioritizing the performance of critical flows. Ensure that critical flows get the resources they need before lower-priority flows get those resources.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for prioritizing the performance of critical flows in a workload. Critical flows represent crucial business processes that generate revenue or drive high-priority operations. When you prioritize the performance of critical flows, you ensure the flows that have the most impact get the resources they need before lower priority flows."
+    },
+    "PE:10": {
+      "id": "PE:10",
+      "title": "Operational tasks",
+      "description": "Learn about Well-Architected Framework recommendations for optimizing operational tasks.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for optimizing operational tasks. Optimizing operational tasks is the process of minimizing the effects of tasks that you perform as part of routine workload operations. Operational activities use the same compute resources as the workload itself. Failure to consider the effects of operational tasks can cause the workload to miss its performance targets."
+    },
+    "PE:11": {
+      "id": "PE:11",
+      "title": "Live-issues responses",
+      "description": "Review recommendations for responding to live-site performance issues. See how to use root cause analysis, triage plans, and other steps to resolve problems.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the best practices for responding to live performance issues. Live performance issues refer to real-time challenges and bottlenecks that can hinder the optimal functioning of a workload."
+    },
+    "PE:12": {
+      "id": "PE:12",
+      "title": "Continuous performance optimization",
+      "description": "Get recommendations for continuous performance optimization.",
+      "pillar": "Performance Efficiency",
+      "content": "Applies to this Azure Well-Architected Framework Performance Efficiency checklist recommendation: This guide describes the recommendations for continuous performance optimization. Continuous performance optimization is the process of constantly monitoring, analyzing, and improving performance efficiency. Performance efficiency adapts to increases and decreases in demand. Performance optimization needs to be an ongoing activity throughout the life of the workload."
+    },
+    "RE:01": {
+      "id": "RE:01",
+      "title": "Simplicity and efficiency",
+      "description": "Learn how to minimize unnecessary complexity and overhead by keeping your workloads simple and efficient.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for minimizing unnecessary complexity and overhead to keep your workloads simple and efficient. Choose the best components to perform the necessary workload tasks to optimize the reliability of your workload. To lessen your development and management burdens, take advantage of efficiencies that platform-provided services offer."
+    },
+    "RE:02": {
+      "id": "RE:02",
+      "title": "Critical flows",
+      "description": "Learn how to create a catalog of user and system flows for your workload to better understand the basis for your design decisions as they relate to reliability.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for identifying and prioritizing workload flows. Identifying and prioritizing workload flows involves mapping user flows and system flows to determine their criticality to the organization. This practice ensures you identify and prioritize the most critical workload functionality to reduce the risk of damaging failures."
+    },
+    "RE:03": {
+      "id": "RE:03",
+      "title": "Failure mode analysis",
+      "description": "Learn how to identify potential points of failure within your workload and the associated flows, and plan mitigation actions accordingly.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the best practices for performing failure mode analysis (FMA) for your workload. FMA is the practice of identifying potential points of failure within your workload and the associated flows and planning mitigation actions accordingly."
+    },
+    "RE:04": {
+      "id": "RE:04",
+      "title": "Target metrics",
+      "description": "Learn how to define reliability targets for your critical workloads, and discover key design strategies that prioritize operations.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for defining availability and recovery target metrics for critical workloads and flows. You should derive reliability targets from workshop exercises with business stakeholders. Then refine those targets by monitoring and testing your workloads. Set realistic expectations with your internal stakeholders about workload reliability."
+    },
+    "RE:05": {
+      "id": "RE:05",
+      "title": "Redundancy",
+      "description": "Learn how to design for redundancy in your workload to meet your reliability targets and to keep problems contained to a single resource.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for adding redundancy throughout critical flows at different workload layers, which optimizes resiliency. Meet the requirements of your defined reliability targets by applying the proper levels of redundancy to your compute, data, networking, and other infrastructure tiers. Apply this redundancy to give your workload a strong, reliable foundation to build on."
+    },
+    "RE:06": {
+      "id": "RE:06",
+      "title": "Scaling",
+      "description": "Learn about recommendations for designing a reliable scaling strategy, including Azure facilitation and tradeoff considerations.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for designing a reliable scaling strategy. Definitions"
+    },
+    "RE:07": {
+      "id": "RE:07",
+      "title": "Self-preservation",
+      "description": "Learn how to build self-healing and self-preservation capabilities into your application architecture to optimize reliability.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for building self-preservation and self-healing capabilities into your application architecture to optimize reliability. Self-preservation capabilities add resilience to your workload. They reduce the likelihood of a full outage and allow your workload to operate normally, or in a degraded state, when failures occur."
+    },
+    "RE:08": {
+      "id": "RE:08",
+      "title": "Testing",
+      "description": "Learn how to design a reliability testing strategy that focuses on validating and optimizing the reliability of your workload.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for designing a reliability testing strategy to validate and optimize the reliability of your workload. Reliability testing focuses on the resiliency and availability of your workload, specifically the critical flows that you identify when you design your solution."
+    },
+    "RE:09": {
+      "id": "RE:09",
+      "title": "Disaster recovery",
+      "description": "Learn how to design a disaster recovery strategy for a workload.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: Disasters are significant incidents that require careful planning and proactive preparation by workloads and operations teams. This article outlines the key strategies for disaster recovery, emphasizing resilient workload design, data integrity, and clearly defined objectives for failover and recovery. It focuses on the purpose and guiding principles of DR rather than step-by-step procedures."
+    },
+    "RE:10": {
+      "id": "RE:10",
+      "title": "Monitoring and alerting",
+      "description": "Learn how to design a reliable monitoring and alerting strategy to ensure that your workload operates reliably and operations teams are aware of changes.",
+      "pillar": "Reliability",
+      "content": "Applies to this Azure Well-Architected Framework Reliability checklist recommendation: This guide describes the recommendations for designing a reliable monitoring and alerting strategy. Implement this strategy to keep your operations teams informed of your environment\u0027s health status and ensure that you meet the established reliability targets for your workload. Definitions"
+    },
+    "SE:01": {
+      "id": "SE:01",
+      "title": "Security baseline",
+      "description": "Learn about hardening resources recommendations for security. Reduce the attack surface and increase attackers",
+      "pillar": "Security",
+      "content": "Applies to Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for establishing a security baseline. A security baseline is a document that specifies your organization\u0027s bare minimum security requirements and expectations across a range of areas. A good security baseline helps you: - Keep your data and systems secure. - Comply with regulatory requirements. - Minimize risk of oversight."
+    },
+    "SE:02": {
+      "id": "SE:02",
+      "title": "Secure development lifecycle",
+      "description": "Learn about Well-Architected Framework Security recommendations for securing a development lifecycle.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: Related guide: Threat analysis This guide describes the recommendations for hardening your code, development environment, and software supply chain by applying security best practices throughout the development cycle. To understand this guidance, you should have knowledge of DevSecOps."
+    },
+    "SE:03": {
+      "id": "SE:03",
+      "title": "Data classification",
+      "description": "Learn about data classification and how to apply it to your workloads. Categorize data based on its sensitivity levels, information type, and scope of compliance so that you can apply the correct level of protection.",
+      "pillar": "Security",
+      "content": "Applies to Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for data classification. Most workloads store various types of data. Not all data is equally sensitive. Data classification helps you categorize data based on its sensitivity level, information type, and scope of compliance so you can apply the correct level of protection. Protection includes access controls, retention policies for different information types, and so on."
+    },
+    "SE:04": {
+      "id": "SE:04",
+      "title": "Segmentation",
+      "description": "Learn about the recommendations for building a unified segmentation strategy using perimeters and isolation boundaries.",
+      "pillar": "Security",
+      "content": "Applies to Well-Architected Framework Security checklist recommendation: A segment is a logical section of your solution that needs to be secured as one unit. A segmentation strategy defines how one unit should be separated from other units with its own set of security requirements and measures. This guide describes the recommendations for building a unified segmentation strategy. Using perimeters and isolation boundaries in workloads, you can design a security approach that works for you."
+    },
+    "SE:05": {
+      "id": "SE:05",
+      "title": "Identity and access management",
+      "description": "Learn about recommendations for authenticating and authorizing identities that are attempting to access workload resources.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for authenticating and authorizing identities that are attempting to access your workload resources. From a technical control perspective, identity is always the primary perimeter. This scope doesn\u0027t just include the edges of your workload. It also includes individual components that are inside your workload. Typical identities include:"
+    },
+    "SE:06": {
+      "id": "SE:06",
+      "title": "Network controls",
+      "description": "Learn about network security controls that can filter, block, and detect adversaries who cross network boundaries at various depths of your architecture.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for network design. The focus is on security controls that can filter, block, and detect adversaries crossing network boundaries at various depths of your architecture. You can strengthen your identity controls by implementing network-based access control measures. Along with identity-based access control, network security is a high priority for protecting assets."
+    },
+    "SE:07": {
+      "id": "SE:07",
+      "title": "Encryption",
+      "description": "Learn about recommendations for encryption, including encryption mechanisms, encryption keys, encryption algorithms, hashes, checksums, and secret management.",
+      "pillar": "Security",
+      "content": "Applies to Well-Architected Framework Security checklist recommendation: If your data isn\u0027t protected, it can be maliciously modified, which leads to loss of integrity and confidentiality. This guide describes the recommendations for encrypting and protecting your data. Encryption is the process of using cryptography algorithms to make the data unreadable and lock the data with a key. In the encrypted state, data can\u0027t be deciphered."
+    },
+    "SE:08": {
+      "id": "SE:08",
+      "title": "Hardening resources",
+      "description": "Learn how to reduce an attack surface and increase attackers",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for hardening resources by developing localized controls within a workload and maintaining them to withstand repeated attacks. Security hardening is an intentional self-preservation exercise. The goal is to reduce an attack surface and increase attackers\u0027 costs in other areas, which limits opportunities for malicious actors to exploit vulnerabilities."
+    },
+    "SE:09": {
+      "id": "SE:09",
+      "title": "Application secrets",
+      "description": "Learn about recommendations for managing application secrets. Find out how to create, store, and distribute secrets securely.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for securing sensitive information in applications. Proper management of secrets is crucial for maintaining the security and integrity of your application, workload, and associated data. Improper handling of secrets can lead to data breaches, service disruption, regulatory violations, and other issues."
+    },
+    "SE:10": {
+      "id": "SE:10",
+      "title": "Monitoring and threat detection",
+      "description": "Learn how to get information about events, capture information about the workload, and gain awareness of suspicious activities.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for monitoring and threat detection. Monitoring is fundamentally a process of getting information about events that have already occurred. Security monitoring is a practice of capturing information at different altitudes of the workload (infrastructure, application, operations) to gain awareness of suspicious activities."
+    },
+    "SE:11": {
+      "id": "SE:11",
+      "title": "Testing and validation",
+      "description": "Learn about the Architecture strategies for security testing, including the tools and methodologies you can use to test the security posture of your workload.",
+      "pillar": "Security",
+      "content": "Applies to this Azure Well-Architected Framework Security checklist recommendation: Rigorous testing is the foundation of good security design. Testing is a tactical form of validation to make sure controls are working as intended. Testing is also a proactive way to detect vulnerabilities in the system. Establish testing rigor through cadence and verification from multiple perspectives."
+    },
+    "SE:12": {
+      "id": "SE:12",
+      "title": "Incident response",
+      "description": "Learn how to reduce the time that",
+      "pillar": "Security",
+      "content": "Applies to Azure Well-Architected Framework Security checklist recommendation: This guide describes the recommendations for implementing a security incident response for a workload. If there\u0027s a security compromise to a system, a systematic incident response approach helps to reduce the time that it takes to identify, manage, and mitigate security incidents. These incidents can threaten the confidentiality, integrity, and availability of software systems and data."
+    }
   },
   "checklists": {
-    "reliability": {"pillar": "Reliability", "items": [{"id": "RE:01", "title": "Design for redundancy", "description": "Build redundancy across zones and regions"}, {"id": "RE:02", "title": "Identify flows", "description": "Catalog critical system flows"}, {"id": "RE:03", "title": "Use failure mode analysis", "description": "Identify and mitigate failure points"}, {"id": "RE:04", "title": "Define reliability targets", "description": "Establish SLOs, SLAs, and SLIs"}, {"id": "RE:05", "title": "Strengthen resiliency", "description": "Implement resilience patterns"}, {"id": "RE:06", "title": "Use data replication", "description": "Ensure data durability"}, {"id": "RE:07", "title": "Use background jobs", "description": "Offload long-running operations"}, {"id": "RE:08", "title": "Design testing strategy", "description": "Validate reliability through testing"}, {"id": "RE:09", "title": "Implement disaster recovery", "description": "Handle regional outages"}, {"id": "RE:10", "title": "Monitor infrastructure", "description": "Detect reliability issues"}]},
-    "security": {"pillar": "Security", "items": [{"id": "SE:01", "title": "Establish security baseline", "description": "Define security standards"}, {"id": "SE:02", "title": "Secure development lifecycle", "description": "Integrate security in SDLC"}, {"id": "SE:03", "title": "Classify and protect data", "description": "Apply data protection"}, {"id": "SE:04", "title": "Create segmentation", "description": "Implement network boundaries"}, {"id": "SE:05", "title": "Manage identity and access", "description": "Enforce least privilege"}, {"id": "SE:06", "title": "Isolate network traffic", "description": "Protect with network isolation"}, {"id": "SE:07", "title": "Encrypt data", "description": "Encrypt at rest and in transit"}, {"id": "SE:08", "title": "Harden resources", "description": "Apply security hardening"}, {"id": "SE:09", "title": "Protect secrets", "description": "Secure secret management"}, {"id": "SE:10", "title": "Monitor threats", "description": "Detect security threats"}, {"id": "SE:11", "title": "Incident response", "description": "Handle security incidents"}, {"id": "SE:12", "title": "Test security", "description": "Validate security controls"}]},
-    "cost optimization": {"pillar": "Cost Optimization", "items": [{"id": "CO:01", "title": "Financial responsibility", "description": "Foster cost awareness"}, {"id": "CO:02", "title": "Establish cost model", "description": "Track and predict spending"}, {"id": "CO:03", "title": "Review cost data", "description": "Analyze spending trends"}, {"id": "CO:04", "title": "Set spending guardrails", "description": "Prevent cost overruns"}, {"id": "CO:05", "title": "Get best rates", "description": "Leverage pricing models"}, {"id": "CO:06", "title": "Align to billing", "description": "Match billing units"}, {"id": "CO:07", "title": "Optimize components", "description": "Reduce component costs"}, {"id": "CO:08", "title": "Optimize environments", "description": "Reduce non-prod costs"}, {"id": "CO:09", "title": "Optimize flows", "description": "Reduce data transfer costs"}, {"id": "CO:10", "title": "Optimize data", "description": "Reduce storage costs"}, {"id": "CO:11", "title": "Optimize code", "description": "Improve code efficiency"}, {"id": "CO:12", "title": "Optimize scaling", "description": "Cost-effective scaling"}, {"id": "CO:13", "title": "Optimize personnel", "description": "Improve team efficiency"}, {"id": "CO:14", "title": "Consolidate resources", "description": "Reduce through consolidation"}]},
-    "operational excellence": {"pillar": "Operational Excellence", "items": [{"id": "OE:01", "title": "Determine team needs", "description": "Provide resources and training"}, {"id": "OE:02", "title": "Formalize tasks", "description": "Document operational procedures"}, {"id": "OE:03", "title": "Formalize development", "description": "Structured SDLC practices"}, {"id": "OE:04", "title": "Optimize development", "description": "Improve quality practices"}, {"id": "OE:05", "title": "Prepare resources", "description": "Use infrastructure as code"}, {"id": "OE:06", "title": "Design supply chain", "description": "Secure build pipelines"}, {"id": "OE:07", "title": "Mitigate deployment failures", "description": "Handle deployment issues"}, {"id": "OE:08", "title": "Emergency response", "description": "Handle critical incidents"}, {"id": "OE:09", "title": "Automate tasks", "description": "Reduce manual operations"}, {"id": "OE:10", "title": "Implement automation", "description": "Build robust automation"}, {"id": "OE:11", "title": "Safe deployment", "description": "Minimize deployment risk"}]},
-    "performance efficiency": {"pillar": "Performance Efficiency", "items": [{"id": "PE:01", "title": "Negotiate targets", "description": "Set performance goals"}, {"id": "PE:02", "title": "Capacity planning", "description": "Plan for scale"}, {"id": "PE:03", "title": "Select services", "description": "Choose right Azure services"}, {"id": "PE:04", "title": "Collect performance data", "description": "Monitor performance"}, {"id": "PE:05", "title": "Optimize scaling", "description": "Effective auto-scaling"}, {"id": "PE:06", "title": "Optimize data usage", "description": "Efficient data patterns"}, {"id": "PE:07", "title": "Optimize code", "description": "Write efficient code"}, {"id": "PE:08", "title": "Optimize data access", "description": "Implement caching"}, {"id": "PE:09", "title": "Network performance", "description": "Optimize network"}, {"id": "PE:10", "title": "Optimize operations", "description": "Minimize operational impact"}, {"id": "PE:11", "title": "Respond to issues", "description": "Handle performance problems"}, {"id": "PE:12", "title": "Continuous optimization", "description": "Ongoing performance improvement"}]}
+    "reliability": {
+      "pillar": "Reliability",
+      "items": [
+        {
+          "id": "RE:01",
+          "title": "Simplicity and efficiency",
+          "description": "Learn how to minimize unnecessary complexity and overhead by keeping your worklo..."
+        },
+        {
+          "id": "RE:02",
+          "title": "Critical flows",
+          "description": "Learn how to create a catalog of user and system flows for your workload to bett..."
+        },
+        {
+          "id": "RE:03",
+          "title": "Failure mode analysis",
+          "description": "Learn how to identify potential points of failure within your workload and the a..."
+        },
+        {
+          "id": "RE:04",
+          "title": "Target metrics",
+          "description": "Learn how to define reliability targets for your critical workloads, and discove..."
+        },
+        {
+          "id": "RE:05",
+          "title": "Redundancy",
+          "description": "Learn how to design for redundancy in your workload to meet your reliability tar..."
+        },
+        {
+          "id": "RE:06",
+          "title": "Scaling",
+          "description": "Learn about recommendations for designing a reliable scaling strategy, including..."
+        },
+        {
+          "id": "RE:07",
+          "title": "Self-preservation",
+          "description": "Learn how to build self-healing and self-preservation capabilities into your app..."
+        },
+        {
+          "id": "RE:08",
+          "title": "Testing",
+          "description": "Learn how to design a reliability testing strategy that focuses on validating an..."
+        },
+        {
+          "id": "RE:09",
+          "title": "Disaster recovery",
+          "description": "Learn how to design a disaster recovery strategy for a workload."
+        },
+        {
+          "id": "RE:10",
+          "title": "Monitoring and alerting",
+          "description": "Learn how to design a reliable monitoring and alerting strategy to ensure that y..."
+        }
+      ]
+    },
+    "security": {
+      "pillar": "Security",
+      "items": [
+        {
+          "id": "SE:01",
+          "title": "Security baseline",
+          "description": "Learn about hardening resources recommendations for security. Reduce the attack..."
+        },
+        {
+          "id": "SE:02",
+          "title": "Secure development lifecycle",
+          "description": "Learn about Well-Architected Framework Security recommendations for securing a d..."
+        },
+        {
+          "id": "SE:03",
+          "title": "Data classification",
+          "description": "Learn about data classification and how to apply it to your workloads. Categoriz..."
+        },
+        {
+          "id": "SE:04",
+          "title": "Segmentation",
+          "description": "Learn about the recommendations for building a unified segmentation strategy usi..."
+        },
+        {
+          "id": "SE:05",
+          "title": "Identity and access management",
+          "description": "Learn about recommendations for authenticating and authorizing identities that a..."
+        },
+        {
+          "id": "SE:06",
+          "title": "Network controls",
+          "description": "Learn about network security controls that can filter, block, and detect adversa..."
+        },
+        {
+          "id": "SE:07",
+          "title": "Encryption",
+          "description": "Learn about recommendations for encryption, including encryption mechanisms, enc..."
+        },
+        {
+          "id": "SE:08",
+          "title": "Hardening resources",
+          "description": "Learn how to reduce an attack surface and increase attackers"
+        },
+        {
+          "id": "SE:09",
+          "title": "Application secrets",
+          "description": "Learn about recommendations for managing application secrets. Find out how to cr..."
+        },
+        {
+          "id": "SE:10",
+          "title": "Monitoring and threat detection",
+          "description": "Learn how to get information about events, capture information about the workloa..."
+        },
+        {
+          "id": "SE:11",
+          "title": "Testing and validation",
+          "description": "Learn about the Architecture strategies for security testing, including the tool..."
+        },
+        {
+          "id": "SE:12",
+          "title": "Incident response",
+          "description": "Learn how to reduce the time that"
+        }
+      ]
+    },
+    "cost optimization": {
+      "pillar": "Cost Optimization",
+      "items": [
+        {
+          "id": "CO:01",
+          "title": "Financial responsibility",
+          "description": "Get recommendations for creating a culture of financial responsibility in your o..."
+        },
+        {
+          "id": "CO:02",
+          "title": "Cost model",
+          "description": "Learn how to create an estimate that focuses on predicting the combined costs of..."
+        },
+        {
+          "id": "CO:03",
+          "title": "Cost data and reporting",
+          "description": "Learn how to collect and review cost data for a workload."
+        },
+        {
+          "id": "CO:04",
+          "title": "Spending guardrails",
+          "description": "Learn best practices for setting spending guardrails."
+        },
+        {
+          "id": "CO:05",
+          "title": "Rate optimization",
+          "description": "Learn how to get the best rates from providers for your workload without modifyi..."
+        },
+        {
+          "id": "CO:06",
+          "title": "Usage and billing increments",
+          "description": "Learn how to align usage to billing increments by adapting a resource to your wo..."
+        },
+        {
+          "id": "CO:07",
+          "title": "Component costs",
+          "description": "Learn how to optimize component costs by eliminating sources of wasted spending..."
+        },
+        {
+          "id": "CO:08",
+          "title": "Environment costs",
+          "description": "Learn how to optimize environment costs by tailoring each environment to its spe..."
+        },
+        {
+          "id": "CO:09",
+          "title": "Flow costs",
+          "description": "Learn about Azure Well-Architected Framework recommendations for strategically o..."
+        },
+        {
+          "id": "CO:10",
+          "title": "Data costs",
+          "description": "Learn how to optimize data costs for a workload by aligning data spending to dat..."
+        },
+        {
+          "id": "CO:11",
+          "title": "Code costs",
+          "description": "Learn how to optimize costs related to code with specific recommendations."
+        },
+        {
+          "id": "CO:12",
+          "title": "Scaling costs",
+          "description": "Learn how to optimize scaling costs using specific strategies."
+        },
+        {
+          "id": "CO:13",
+          "title": "Personnel time",
+          "description": "Learn about Azure Well-Architected Framework recommendations for maximizing the..."
+        },
+        {
+          "id": "CO:14",
+          "title": "Consolidation",
+          "description": "Learn how to use consolidation to restructure your workloads, resources, and tea..."
+        }
+      ]
+    },
+    "operational excellence": {
+      "pillar": "Operational Excellence",
+      "items": [
+        {
+          "id": "OE:01",
+          "title": "DevOps culture",
+          "description": "Learn how to embrace DevOps culture principles and practices in your workload te..."
+        },
+        {
+          "id": "OE:02",
+          "title": "Task execution process",
+          "description": "Learn how to formalize routine and nonroutine tasks by using documentation, chec..."
+        },
+        {
+          "id": "OE:03",
+          "title": "Software development practices",
+          "description": "Learn how to establish standards for managing your workload team"
+        },
+        {
+          "id": "OE:04",
+          "title": "Tools and processes",
+          "description": "Learn how to optimize development practices by standardizing tools and processes..."
+        },
+        {
+          "id": "OE:05",
+          "title": "Infrastructure as code",
+          "description": "Learn how to use infrastructure as code (IaC) as the standard for all of your in..."
+        },
+        {
+          "id": "OE:06",
+          "title": "Supply chain for workload development",
+          "description": "Learn how to design a workload development supply chain based on CI/CD pipelines..."
+        },
+        {
+          "id": "OE:07",
+          "title": "Monitoring system",
+          "description": "Learn the recommendations for designing and creating an observability system. Th..."
+        },
+        {
+          "id": "OE:08",
+          "title": "Incident response",
+          "description": "Learn how to set up emergency response processes and procedures that your team c..."
+        },
+        {
+          "id": "OE:09",
+          "title": "Task automation",
+          "description": "Learn how to automate tasks that are repetitive and prone to human error to gain..."
+        },
+        {
+          "id": "OE:10",
+          "title": "Automation design",
+          "description": "Learn how to design your workload to enable automation. Automation simplifies ma..."
+        },
+        {
+          "id": "OE:11",
+          "title": "Safe deployment practices",
+          "description": "Learn about recommendations for safe deployment practices (SDP). Define how to s..."
+        }
+      ]
+    },
+    "performance efficiency": {
+      "pillar": "Performance Efficiency",
+      "items": [
+        {
+          "id": "PE:01",
+          "title": "Performance targets",
+          "description": "Learn how to drive continuous improvement by setting and exposing performance ta..."
+        },
+        {
+          "id": "PE:02",
+          "title": "Capacity planning",
+          "description": "Learn about Well-Architected Framework recommendations for implementing capacity..."
+        },
+        {
+          "id": "PE:03",
+          "title": "Selecting services",
+          "description": "Learn how to select the appropriate services that best meet the requirements and..."
+        },
+        {
+          "id": "PE:04",
+          "title": "Metrics and logs",
+          "description": "Learn recommendations for collecting performance data (metrics and logs) to help..."
+        },
+        {
+          "id": "PE:05",
+          "title": "Scaling and partitioning",
+          "description": "Learn best practices for optimizing scaling and partitioning to achieve performa..."
+        },
+        {
+          "id": "PE:06",
+          "title": "Performance testing",
+          "description": "Learn best practices for performance testing. See how to select tools, configure..."
+        },
+        {
+          "id": "PE:07",
+          "title": "Code and infrastructure",
+          "description": "Learn how to optimize your code and infrastructure by using components only for..."
+        },
+        {
+          "id": "PE:08",
+          "title": "Data performance",
+          "description": "Learn how to optimize data access, retrieval, storage, and processing operations..."
+        },
+        {
+          "id": "PE:09",
+          "title": "Critical flows",
+          "description": "Learn about recommendations for prioritizing the performance of critical flows...."
+        },
+        {
+          "id": "PE:10",
+          "title": "Operational tasks",
+          "description": "Learn about Well-Architected Framework recommendations for optimizing operationa..."
+        },
+        {
+          "id": "PE:11",
+          "title": "Live-issues responses",
+          "description": "Review recommendations for responding to live-site performance issues. See how t..."
+        },
+        {
+          "id": "PE:12",
+          "title": "Continuous performance optimization",
+          "description": "Get recommendations for continuous performance optimization."
+        }
+      ]
+    }
   },
   "serviceGuides": {
-    "azure-kubernetes-service": {"service": "azure-kubernetes-service", "content": "Azure Kubernetes Service (AKS) Well-Architected guidance covering cluster design, node pool configuration, networking, security, and operational excellence for containerized workloads.", "recommendationIds": ["RE:01", "RE:05", "RE:10", "SE:04", "SE:05", "SE:06", "CO:07", "OE:05", "OE:10", "PE:03", "PE:05"]},
-    "azure-blob-storage": {"service": "azure-blob-storage", "content": "Azure Blob Storage Well-Architected guidance for optimal performance, security, and cost management of object storage workloads.", "recommendationIds": ["RE:06", "SE:03", "SE:07", "CO:10", "PE:06", "PE:08"]},
-    "azure-virtual-machines": {"service": "azure-virtual-machines", "content": "Azure Virtual Machines Well-Architected guidance covering VM sizing, availability sets, managed disks, and operational best practices.", "recommendationIds": ["RE:01", "RE:04", "SE:08", "CO:06", "CO:07", "OE:05", "PE:02", "PE:03"]},
-    "azure-sql-database": {"service": "azure-sql-database", "content": "Azure SQL Database Well-Architected guidance for high availability, disaster recovery, security, and performance optimization of relational database workloads.", "recommendationIds": ["RE:04", "RE:06", "RE:09", "SE:03", "SE:07", "CO:07", "PE:06", "PE:08"]},
-    "azure-app-service": {"service": "azure-app-service", "content": "Azure App Service Well-Architected guidance for web applications covering scaling, deployment slots, security, and monitoring.", "recommendationIds": ["RE:05", "SE:05", "SE:09", "CO:06", "OE:06", "OE:07", "PE:05"]},
-    "azure-functions": {"service": "azure-functions", "content": "Azure Functions Well-Architected guidance for serverless compute including consumption plans, durable functions, and event-driven architectures.", "recommendationIds": ["RE:07", "SE:09", "CO:11", "CO:12", "OE:09", "PE:07"]},
-    "azure-cosmos-db": {"service": "azure-cosmos-db", "content": "Azure Cosmos DB Well-Architected guidance for globally distributed databases covering consistency models, partitioning, and cost optimization.", "recommendationIds": ["RE:04", "RE:06", "SE:03", "CO:07", "CO:10", "PE:06", "PE:08"]},
-    "azure-key-vault": {"service": "azure-key-vault", "content": "Azure Key Vault Well-Architected guidance for secrets management, key rotation, access policies, and integration with managed identities.", "recommendationIds": ["SE:05", "SE:07", "SE:09", "OE:05"]},
-    "azure-front-door": {"service": "azure-front-door", "content": "Azure Front Door Well-Architected guidance for global routing, CDN, WAF, and SSL offloading for high-performance web applications.", "recommendationIds": ["RE:01", "SE:04", "CO:09", "PE:08", "PE:09"]},
-    "azure-application-gateway": {"service": "azure-application-gateway", "content": "Azure Application Gateway Well-Architected guidance for layer 7 load balancing, WAF, and SSL termination.", "recommendationIds": ["RE:05", "SE:04", "SE:06", "PE:09"]},
-    "azure-firewall": {"service": "azure-firewall", "content": "Azure Firewall Well-Architected guidance for network security, threat intelligence, and centralized policy management.", "recommendationIds": ["SE:04", "SE:06", "SE:10", "OE:05"]},
-    "azure-monitor": {"service": "azure-monitor", "content": "Azure Monitor Well-Architected guidance for comprehensive observability including metrics, logs, and application insights.", "recommendationIds": ["RE:10", "SE:10", "OE:02", "PE:04", "PE:11"]},
-    "azure-virtual-network": {"service": "azure-virtual-network", "content": "Azure Virtual Network Well-Architected guidance for network design, subnetting, NSGs, and hybrid connectivity.", "recommendationIds": ["RE:01", "SE:04", "SE:06", "PE:09"]},
-    "azure-load-balancer": {"service": "azure-load-balancer", "content": "Azure Load Balancer Well-Architected guidance for layer 4 load balancing, health probes, and high availability.", "recommendationIds": ["RE:01", "RE:05", "PE:05", "PE:09"]},
-    "azure-container-apps": {"service": "azure-container-apps", "content": "Azure Container Apps Well-Architected guidance for serverless container workloads, KEDA-based scaling, and Dapr integration.", "recommendationIds": ["RE:05", "SE:05", "CO:12", "OE:09", "PE:05", "PE:07"]}
+    "application-insights": {
+      "service": "application-insights",
+      "content": "Application Insights is an extensible application performance management service that you can use to monitor live applications and automatically detect performance anomalies. It includes powerful analytics tools to help you diagnose problems and understand how users interact with your application.",
+      "recommendationIds": []
+    },
+    "azure-api-management": {
+      "service": "azure-api-management",
+      "content": "Azure API Management is a management platform and gateway for APIs across all environments, including hybrid and multicloud. As a platform as a service (PaaS) solution, API Management helps support your workload\u0027s API lifecycle.",
+      "recommendationIds": [
+        "OE:05"
+      ]
+    },
+    "azure-app-service": {
+      "service": "azure-app-service",
+      "content": "Azure App Service is a platform as a service (PaaS) that provides a fully managed hosting environment for building, deploying, and scaling web applications. As a PaaS solution, App Service abstracts the underlying infrastructure, which enables you to focus on your application development.",
+      "recommendationIds": []
+    },
+    "azure-application-gateway": {
+      "service": "azure-application-gateway",
+      "content": "Azure Application Gateway v2 is a web traffic load balancer that operates at the application layer. Application Gateway manages traffic to your web applications based on the attributes of an HTTP request.",
+      "recommendationIds": [
+        "CO:12",
+        "OE:07",
+        "PE:02"
+      ]
+    },
+    "azure-blob-storage": {
+      "service": "azure-blob-storage",
+      "content": "Azure Blob Storage is a Microsoft object storage solution for the cloud. Blob Storage is optimized to store massive amounts of unstructured data. Unstructured data is data that doesn\u0027t adhere to a specific data model or definition, such as text or binary data.",
+      "recommendationIds": [
+        "RE:03",
+        "RE:09"
+      ]
+    },
+    "azure-container-apps": {
+      "service": "azure-container-apps",
+      "content": "Azure Container Apps is a fully managed serverless container service that runs microservices and containerized applications on Azure. It provides built-in autoscaling, including scale to zero, and supports multiple programming languages and frameworks.",
+      "recommendationIds": [
+        "SE:05"
+      ]
+    },
+    "azure-cosmos-db": {
+      "service": "azure-cosmos-db",
+      "content": "Azure Cosmos DB is a fully managed database solution that can host multiple database types like NoSQL, relational, vector, and table databases. It can accommodate most use cases for your workload. The recommendations in this guide focus on the Azure Cosmos DB for NoSQL variant.",
+      "recommendationIds": []
+    },
+    "azure-database-for-mysql": {
+      "service": "azure-database-for-mysql",
+      "content": "Azure Database for MySQL flexible server is a fully managed, production-ready relational database service based on the MySQL Community Edition. It provides zone-redundant and local-redundant high availability (HA), managed maintenance windows, automatic backups with point-in-time restore, and elasti...",
+      "recommendationIds": []
+    },
+    "azure-database-for-postgresql": {
+      "service": "azure-database-for-postgresql",
+      "content": "Azure Database for PostgreSQL is a relational database service in Azure that\u0027s based on the PostgreSQL open-source relational database. It\u0027s a fully managed, cloud-based database solution that supports mission-critical workloads with predictable performance, security, high availability, and dynamic...",
+      "recommendationIds": []
+    },
+    "azure-databricks": {
+      "service": "azure-databricks",
+      "content": "Azure Databricks is an Apache Spark-based analytics platform that data teams can use to collaborate efficiently. Use it to build and deploy data engineering, machine learning, and analytics workloads at scale.",
+      "recommendationIds": [
+        "PE:03",
+        "PE:04",
+        "RE:03",
+        "RE:09",
+        "RE:10",
+        "SE:05"
+      ]
+    },
+    "azure-disk-storage": {
+      "service": "azure-disk-storage",
+      "content": "Azure managed disks are a type of Azure Disk Storage that simplify the management of storage for Azure Virtual Machines. Managed disks are block-level storage volumes that Azure manages. They\u0027re similar to physical disks in an on-premises server, but they operate in a virtual environment.",
+      "recommendationIds": [
+        "RE:04"
+      ]
+    },
+    "azure-event-grid": {
+      "service": "azure-event-grid",
+      "content": "Azure Event Grid is a scalable, managed publish-subscribe service that distributes messages. Event Grid provides flexible message consumption patterns. It uses the Message Queuing Telemetry Transport (MQTT) and HTTP protocols to enable event-driven serverless architectures, data pipelines, and appli...",
+      "recommendationIds": []
+    },
+    "azure-event-hubs": {
+      "service": "azure-event-hubs",
+      "content": "Azure Event Hubs is a real-time data streaming platform and event ingestion service that can receive and process millions of events per second. It provides a unified streaming platform with time-retention buffer, decoupling event producers from event consumers.",
+      "recommendationIds": []
+    },
+    "azure-expressroute": {
+      "service": "azure-expressroute",
+      "content": "Azure ExpressRoute enables you to create private connections between Azure data-centers and infrastructure that\u0027s on your premises or in a colocation facility.",
+      "recommendationIds": [
+        "OE:07",
+        "PE:04",
+        "PE:05"
+      ]
+    },
+    "azure-files": {
+      "service": "azure-files",
+      "content": "Azure Files is a Microsoft file storage solution for the cloud. Azure Files provides server message block (SMB) and network file system (NFS) file shares that you can mount to clients in the cloud, on-premises, or to both.",
+      "recommendationIds": [
+        "RE:03",
+        "RE:09"
+      ]
+    },
+    "azure-firewall": {
+      "service": "azure-firewall",
+      "content": "Azure Firewall is a cloud-native and intelligent network firewall security service that provides best-of-breed threat protection for your cloud workloads that run in Azure. It\u0027s a fully stateful, managed firewall service that has built-in high availability and unrestricted cloud scalability.",
+      "recommendationIds": [
+        "PE:07",
+        "SE:04",
+        "SE:06",
+        "SE:10"
+      ]
+    },
+    "azure-front-door": {
+      "service": "azure-front-door",
+      "content": "Azure Front Door is a global load balancer and content delivery network (CDN) that routes HTTP and HTTPS traffic. Azure Front Door delivers and distributes traffic that\u0027s closest to the application users.",
+      "recommendationIds": []
+    },
+    "azure-functions": {
+      "service": "azure-functions",
+      "content": "Azure Functions is a serverless compute service that you can use to run event-driven code without having to manage the infrastructure directly. Azure Functions is a function as a service offering that abstracts the underlying infrastructure. This abstraction allows you to focus on your code.",
+      "recommendationIds": []
+    },
+    "azure-kubernetes-service": {
+      "service": "azure-kubernetes-service",
+      "content": "Azure Kubernetes Service (AKS) is a managed Kubernetes service that you can use to deploy and manage containerized applications. Similar to other managed services, AKS offloads much of the operational overhead to Azure while providing high availability, scalability, and portability features to the w...",
+      "recommendationIds": [
+        "OE:07",
+        "PE:05",
+        "RE:04",
+        "SE:04",
+        "SE:05"
+      ]
+    },
+    "azure-load-balancer": {
+      "service": "azure-load-balancer",
+      "content": "The load balancing process distributes network traffic to a group of two or more back-end servers. Azure Load Balancer is an Azure-native service that does Layer-4 load balancing for User Datagram Protocol (UDP) and Transmission Control Protocol (TCP).",
+      "recommendationIds": []
+    },
+    "azure-local": {
+      "service": "azure-local",
+      "content": "Azure Local extends Azure to customer-owned infrastructure using Azure Arc, enabling modern and traditional applications to run consistently across distributed or edge locations.",
+      "recommendationIds": [
+        "RE:04",
+        "RE:05",
+        "SE:04"
+      ]
+    },
+    "azure-log-analytics": {
+      "service": "azure-log-analytics",
+      "content": "Log Analytics workspaces in Azure Monitor are centralized repositories for collecting, storing, and analyzing log and performance data from various sources across your Azure environment.",
+      "recommendationIds": [
+        "OE:11",
+        "RE:02"
+      ]
+    },
+    "azure-machine-learning": {
+      "service": "azure-machine-learning",
+      "content": "Azure Machine Learning is a managed cloud service that you can use to train, deploy, and manage machine learning models. There are a wide range of choices and configurations for both training and deploying models, including compute SKUs and configurations.",
+      "recommendationIds": []
+    },
+    "azure-netapp-files": {
+      "service": "azure-netapp-files",
+      "content": "Azure NetApp Files is an Azure-native, enterprise-class service that you can use to run file workloads in the cloud and store files. Use this fully managed, cloud-based service to: - Choose and dynamically adjust capacity and performance levels. - Manage data protection and resiliency.",
+      "recommendationIds": []
+    },
+    "azure-service-bus": {
+      "service": "azure-service-bus",
+      "content": "Azure Service Bus is a fully managed enterprise message broker that enables reliable messaging between distributed applications and services. Service Bus provides message queues and publish-subscribe topics with features like sessions, duplicate detection, dead letter queues, and advanced routing ca...",
+      "recommendationIds": []
+    },
+    "azure-service-fabric": {
+      "service": "azure-service-fabric",
+      "content": "Azure Service Fabric is a distributed systems platform that makes it easy to package, deploy, and manage scalable and reliable microservices and containers. These resources are deployed onto a network-connected set of virtual or physical machines, known as a cluster.",
+      "recommendationIds": []
+    },
+    "azure-sql-database": {
+      "service": "azure-sql-database",
+      "content": "Azure SQL Database is a fully managed platform as a service database engine that handles most database management functions without user involvement. Management functions include upgrades, patches, backups, and monitoring. The single database resource type creates a database in SQL Database.",
+      "recommendationIds": []
+    },
+    "azure-sql-managed-instance": {
+      "service": "azure-sql-managed-instance",
+      "content": "Azure SQL Managed Instance is the intelligent, scalable cloud database service that combines the broadest SQL Server database engine compatibility with all the benefits of a fully managed and evergreen platform as a service.",
+      "recommendationIds": []
+    },
+    "azure-traffic-manager": {
+      "service": "azure-traffic-manager",
+      "content": "Azure Traffic Manager is a global load balancer that can distribute traffic across multiple Azure regions, zones within a region, or datacenters within those zones. It uses the Domain Name System (DNS) protocol to establish a communication path between a client and your workload\u0027s endpoints.",
+      "recommendationIds": []
+    },
+    "azure-virtual-machines": {
+      "service": "azure-virtual-machines",
+      "content": "Azure Virtual Machines is a type of compute service that you can use to create and run virtual machines (VMs) on the Azure platform. It provides flexibility in different SKUs, operating systems, and configurations with various billing models.",
+      "recommendationIds": []
+    },
+    "azure-virtual-network": {
+      "service": "azure-virtual-network",
+      "content": "Azure Virtual Network is a fundamental building block for establishing a private network on Azure. You can use it to enable communication between Azure resources and provide internet connectivity. Virtual Network also integrates with on-premises systems.",
+      "recommendationIds": []
+    },
+    "azure-virtual-wan": {
+      "service": "azure-virtual-wan",
+      "content": "Azure Virtual WAN is a networking service that provides unified connectivity, security, and routing. It connects branches and users globally through virtual private network (VPN) connections and Azure ExpressRoute connections, supports encrypted private links, and integrates with Azure Firewall for...",
+      "recommendationIds": []
+    }
   }
 }

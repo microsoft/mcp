@@ -639,7 +639,7 @@ public class WellArchitectedServiceTests
 
         Assert.NotNull(recommendation);
         Assert.Equal("RE:01", recommendation.Id);
-        Assert.Equal("Design for redundancy", recommendation.Title);
+        Assert.Equal("Simplicity and efficiency", recommendation.Title);
         Assert.Equal("Reliability", recommendation.Pillar);
     }
 
