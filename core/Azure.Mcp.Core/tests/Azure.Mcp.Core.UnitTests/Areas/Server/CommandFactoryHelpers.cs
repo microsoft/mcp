@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
+using Azure.Mcp.Tools.AppService;
 using Azure.Mcp.Tools.AppLens;
 using Azure.Mcp.Tools.Authorization;
 using Azure.Mcp.Tools.AzureBestPractices;
@@ -64,6 +65,7 @@ internal class CommandFactoryHelpers
             new AcrSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
@@ -128,6 +130,7 @@ internal class CommandFactoryHelpers
             new AcrSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
