@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed the tool description for the `search index query` tool to be more accurate about the search capabilities and limitations. The updated description clarifies that the tool automatically determines the appropriate search method (keyword, vector, or hybrid) based on the index configuration, but does not support multimodal search or semantic ranking. [[#1822](https://github.com/microsoft/mcp/pull/1822)]
+
 ### Other Changes
 
 ## 2.0.0-beta.23 (2026-02-27)
