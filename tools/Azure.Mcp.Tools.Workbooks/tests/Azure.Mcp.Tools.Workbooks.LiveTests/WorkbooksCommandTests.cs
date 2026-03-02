@@ -199,27 +199,6 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_list_workbooks_without_subscription_for_cross_scope_discovery()
-    {
-        // Test optional subscription parameter from optimization plan
-        // When omitted, should return all accessible workbooks across tenants
-        var result = await CallToolAsync(
-            "workbooks_list",
-            new()
-            {
-                { "max-results", "5" }  // Limit results for test speed
-            });
-
-        var workbooks = result.AssertProperty("Workbooks");
-        Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
-
-        // Should return workbooks (may be from any accessible subscription)
-        // This tests the cross-scope discovery feature
-        Assert.True(workbooks.ValueKind == JsonValueKind.Array, "Workbooks property should be an array");
-    }
-
-    [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task Should_show_workbook_details()
     {
         // First get the list of workbooks to find a valid ID
