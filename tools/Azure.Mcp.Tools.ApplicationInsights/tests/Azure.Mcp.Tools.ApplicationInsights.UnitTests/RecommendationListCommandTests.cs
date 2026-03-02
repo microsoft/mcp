@@ -1,3 +1,4 @@
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Options;
@@ -17,6 +18,7 @@ public class RecommendationListCommandTests
     private readonly IApplicationInsightsService _serviceMock;
     private readonly RecommendationListCommand _command;
     private readonly CommandContext _context;
+    private readonly Command _commandDefinition;
 
     public RecommendationListCommandTests()
     {
@@ -25,6 +27,7 @@ public class RecommendationListCommandTests
         var logger = Substitute.For<ILogger<RecommendationListCommand>>();
         _serviceProvider = sc.BuildServiceProvider();
         _command = new RecommendationListCommand(logger, _serviceMock);
+        _commandDefinition = _command.GetCommand();
         _context = new(_serviceProvider);
     }
 
@@ -43,7 +46,7 @@ public class RecommendationListCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(insights!));
-        var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub1"]);
         await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(_context.Response.Results);
         var json = JsonSerializer.Serialize(_context.Response.Results);
@@ -63,7 +66,7 @@ public class RecommendationListCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
-        var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub1"]);
         await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Null(_context.Response.Results);
     }
