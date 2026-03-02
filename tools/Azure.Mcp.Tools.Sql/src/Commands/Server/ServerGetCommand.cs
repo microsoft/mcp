@@ -29,10 +29,11 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
 
     public override string Description =>
         """
-        Get Azure SQL Servers in a resource group. If a server name is specified, retrieves details for that
-        specific server. Otherwise, lists all SQL servers in the specified resource group. Equivalent to
-        'az sql server show' or 'az sql server list'.
-        Returns server information including configuration details and current state.
+        Show, get, or list Azure SQL servers in a resource group. Shows details for a specific Azure SQL server
+        by name, or lists all Azure SQL servers in the specified resource group. Use to show, display, or
+        retrieve Azure SQL server information. Equivalent to 'az sql server show' (show one Azure SQL server) or
+        'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
+        including configuration details and current state.
         """;
 
     public override string Title => CommandTitle;

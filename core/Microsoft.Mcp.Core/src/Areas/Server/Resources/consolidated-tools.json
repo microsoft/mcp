@@ -102,7 +102,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Show me my cosmosdb accounts, list all cosmosdb accounts in my subscription, show cosmosdb accounts. List databases in a cosmosdb account, list containers in a database for a cosmosdb account, and query items in a Cosmos DB container. Comprehensive Azure database management for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. Retrieve MySQL and PostgreSQL server configurations and parameters, explore table schemas, and execute database queries. List and view detailed SQL server and database information across all Azure database services.",
+      "description": "List, show, display, or get details of Azure SQL databases and Azure SQL servers. Lists all Azure SQL databases in a server, shows Azure SQL database details and properties, lists all Azure SQL servers in a resource group, shows Azure SQL server details and properties. Also lists and shows Cosmos DB accounts, databases, containers, and items. Lists and shows MySQL and PostgreSQL servers, databases, and tables.",
       "toolMetadata": {
         "destructive": {
           "value": false,

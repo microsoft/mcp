@@ -25,10 +25,11 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
 
     public override string Description =>
         """
-        Get Azure SQL Databases on a SQL Server. If a database name is specified, retrieves details for that
-        specific database. Otherwise, lists all databases on the specified SQL Server. Equivalent to
-        'az sql db show' or 'az sql db list'.
-        Returns database information including configuration details and current status.
+        Show, get, or list Azure SQL databases in a SQL Server. Shows details for a specific Azure SQL database
+        by name, or lists all Azure SQL databases in the specified SQL Server. Use to show or retrieve Azure SQL
+        database information. Equivalent to 'az sql db show' (show one Azure SQL database) or 'az sql db list'
+        (list all Azure SQL databases in a server). Returns database information including configuration details
+        and current status.
         """;
 
     public override string Title => CommandTitle;
