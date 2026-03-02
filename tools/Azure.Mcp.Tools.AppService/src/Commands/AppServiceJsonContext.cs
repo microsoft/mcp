@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
+using Azure.ResourceManager.AppService.Models;
 
 namespace Azure.Mcp.Tools.AppService.Commands;
 
@@ -15,7 +16,11 @@ namespace Azure.Mcp.Tools.AppService.Commands;
 [JsonSerializable(typeof(DatabaseAddCommand.DatabaseAddResult))]
 [JsonSerializable(typeof(DatabaseConnectionInfo))]
 [JsonSerializable(typeof(DetectorDiagnoseCommand.DetectorDiagnoseResult))]
+[JsonSerializable(typeof(DetectorDetails))]
+[JsonSerializable(typeof(DetectorInfo))]
 [JsonSerializable(typeof(DetectorListCommand.DetectorListResult))]
+[JsonSerializable(typeof(DiagnosesResults))]
+[JsonSerializable(typeof(IList<DiagnosticDataset>))]
 [JsonSerializable(typeof(WebappDetails))]
 [JsonSerializable(typeof(WebappGetCommand.WebappGetResult))]
 public partial class AppServiceJsonContext : JsonSerializerContext;

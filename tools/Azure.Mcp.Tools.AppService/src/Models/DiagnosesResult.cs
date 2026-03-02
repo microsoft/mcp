@@ -10,5 +10,5 @@ namespace Azure.Mcp.Tools.AppService.Models;
 /// Represents diagnoses results after running a Web App detector.
 /// </summary>
 public sealed record DiagnosesResults(
-    [property: JsonPropertyName("dataset")] DiagnosticDataset[] Dataset,
+    [property: JsonPropertyName("dataset")] IList<DiagnosticDataset> Dataset,
     [property: JsonPropertyName("metadata")] DetectorInfo Metadata);

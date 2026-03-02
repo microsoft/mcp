@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
@@ -18,7 +15,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
 {
     private const string CommandTitle = "List the Diagnostic Detectors for an App Service Web App";
     private readonly ILogger<DetectorListCommand> _logger = logger;
-    public override string Id => "a8aa0966-4c0c-4e22-8854-cced583f0fb2";
+    public override string Id => "b39bd5d6-be14-44b2-9162-998c8a5876d8";
     public override string Name => "list";
 
     public override string Description =>

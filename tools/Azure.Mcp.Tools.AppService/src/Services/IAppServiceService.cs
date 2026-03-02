@@ -60,6 +60,9 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string detectorName,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

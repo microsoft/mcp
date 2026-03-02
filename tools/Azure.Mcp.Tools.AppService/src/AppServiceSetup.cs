@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,8 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
         services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<DetectorDiagnoseCommand>();
+        services.AddSingleton<DetectorListCommand>();
         services.AddSingleton<AppSettingsGetCommand>();
         services.AddSingleton<AppSettingsUpdateCommand>();
     }
@@ -47,6 +50,17 @@ public class AppServiceSetup : IAreaSetup
         // Add webapp commands
         var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
         webapp.AddCommand(webappGet.Name, webappGet);
+
+        // Add diagnostic subgroup under webapp
+        var diagnostic = new CommandGroup("diagnostic", "Operations for diagnosing Azure App Service web apps");
+        webapp.AddSubGroup(diagnostic);
+
+        // Add diagnostic commands
+        var detectorDiagnose = serviceProvider.GetRequiredService<DetectorDiagnoseCommand>();
+        diagnostic.AddCommand(detectorDiagnose.Name, detectorDiagnose);
+
+        var detectorList = serviceProvider.GetRequiredService<DetectorListCommand>();
+        diagnostic.AddCommand(detectorList.Name, detectorList);
 
         // Add settings subgroup under webapp
         var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");

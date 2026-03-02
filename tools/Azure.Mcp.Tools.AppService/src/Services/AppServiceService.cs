@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http.Headers;
+using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
@@ -334,5 +337,94 @@ public class AppServiceService(
         await webAppResource.UpdateApplicationSettingsAsync(configResource.Value, cancellationToken: cancellationToken);
 
         return updateResultMessage;
+    }
+
+    public async Task<List<DetectorDetails>> ListDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
+
+        // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
+        // use WebSiteResource.GetSiteDetectors().GetAllAsync instead of using a direct HttpClient.
+        // var results = new List<DetectorDetails>();
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // await foreach (var detector = await webAppResource.GetSiteDetectors().GetAllAsync(cancellationToken))
+        // {
+        //     results.Add(MapToDetectorDetails(detector.Data));
+        // }
+        return await ListDetectorsAsync(tenant, subscription, resourceGroup, appName, cancellationToken);
+    }
+
+    private async Task<List<DetectorDetails>> ListDetectorsAsync(string? tenant, string subscription, string resourceGroup, string appName, CancellationToken cancellationToken)
+    {
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, ListDetectorsEndpoint(subscription, resourceGroup, appName));
+        var scopes = new string[]
+        {
+            _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope
+        };
+        var clientRequestId = "AzMcp" + Guid.NewGuid().ToString();
+        var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
+
+        var tokenCredential = await _tenantService.GetTokenCredentialAsync(tenant, cancellationToken: cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("bearer", accessToken.Token);
+        httpRequest.Headers.Add("User-Agent", UserAgent);
+        httpRequest.Headers.Add("x-ms-client-request-id", clientRequestId);
+        httpRequest.Headers.Add("x-ms-app", "AzureMCP");
+        httpRequest.Headers.Add("x-ms-client-version", "AppService.Client.Light");
+        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        using var httpResponse = await TenantService.GetClient().SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            string errorContent = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Request failed with status code {httpResponse.StatusCode}: {errorContent}");
+        }
+
+        using var contentStream = await httpResponse.Content.ReadAsStreamAsync(cancellationToken);
+        using var jsonDoc = await JsonDocument.ParseAsync(contentStream, cancellationToken: cancellationToken);
+
+        return [];
+    }
+
+    private string ListDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName)
+    {
+        string subscriptionPath = $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01";
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
+            _ => $"https://management.azure.com/{subscriptionPath}"
+        };
+    }
+
+    public async Task<DiagnosesResults> DiagnoseDetectorAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string detectorName,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(detectorName), detectorName));
+
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
+
+        return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
     }
 }

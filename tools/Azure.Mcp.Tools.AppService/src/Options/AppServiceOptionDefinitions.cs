@@ -14,6 +14,9 @@ public static class AppServiceOptionDefinitions
     public const string AppSettingValueName = "setting-value";
     public const string AppSettingUpdateTypeName = "setting-update-type";
     public const string DetectorNameName = "detector-name";
+    public const string StartTimeName = "start-time";
+    public const string EndTimeName = "end-time";
+    public const string IntervalName = "interval";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -67,5 +70,25 @@ public static class AppServiceOptionDefinitions
     {
         Description = "The name of the diagnostic detector to run (e.g., Availability, CpuAnalysis, MemoryAnalysis).",
         Required = true
+    };
+
+    public static readonly Option<DateTimeOffset> StartTime = new($"--{StartTimeName}")
+    {
+        Description = "The start time in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to 24 hours ago.",
+        DefaultValueFactory = _ => DateTime.UtcNow.AddHours(-24),
+        Required = false
+    };
+
+    public static readonly Option<DateTimeOffset> EndTime = new($"--{EndTimeName}")
+    {
+        Description = "The end time in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to now.",
+        DefaultValueFactory = _ => DateTime.UtcNow,
+        Required = false
+    };
+
+    public static readonly Option<string> Interval = new($"--{IntervalName}")
+    {
+        Description = "The time interval (e.g., PT1H for 1 hour, PT5M for 5 minutes).",
+        Required = false
     };
 }
