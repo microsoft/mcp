@@ -23,7 +23,6 @@ param appServicePlanSku string = 'S1'
 
 // Variables
 var webAppName = '${baseName}-webapp'
-var deploymentName = '${baseName}-deployment'
 var appServicePlanName = '${baseName}-plan'
 var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
