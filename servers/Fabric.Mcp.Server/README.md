@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Microsoft Fabric MCP Server is currently in **Public Preview**.
 <!-- remove-section: end remove_note_preview -->
 
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->

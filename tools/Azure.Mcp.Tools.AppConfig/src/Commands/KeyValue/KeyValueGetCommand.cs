@@ -14,10 +14,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
-public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : BaseAppConfigCommand<KeyValueGetOptions>()
+public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService)
+    : BaseAppConfigCommand<KeyValueGetOptions>()
 {
     private const string CommandTitle = "Gets App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override string Id => "abc28800-ae4a-4369-9ec0-2653a578e82a";
 
@@ -82,8 +84,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
 
         try
         {
-            var appConfigService = context.GetService<IAppConfigService>();
-            var settings = await appConfigService.GetKeyValues(
+            var settings = await _appConfigService.GetKeyValues(
                 options.Account!,
                 options.Subscription!,
                 options.Key,

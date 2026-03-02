@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 using Microsoft.Mcp.Core.Areas.Server.Models;
@@ -447,6 +448,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
+        // Read once at host setup time — this env var is process-wide and effectively static,
+        // so there is no need to re-read it on every incoming request.
+        // Default to false; the env var must be present and parse to "true" to enable.
+        bool enableForwardedHeaders =
+            bool.TryParse(
+                Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"),
+                out bool parsedEnvVar)
+            && parsedEnvVar;
+
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddEventSourceLogger();
@@ -477,7 +487,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     if (!context.Response.HasStarted)
                     {
                         HttpRequest request = context.Request;
-                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                        string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                        string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
 
                         // Modify the WWW-Authenticate header to include resource_metadata
                         context.Response.Headers.WWWAuthenticate =
@@ -553,7 +564,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
                 MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
-                string baseUrl = $"{request.Scheme}://{request.Host}";
+                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                string baseUrl = $"{scheme}://{request.Host}";
                 string? clientId = azureAdOptions.ClientId;
                 string? tenantId = azureAdOptions.TenantId;
                 string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
@@ -657,6 +669,52 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         app.MapMcp();
 
         return app;
+    }
+
+    /// <summary>
+    /// Resolves the effective HTTP scheme for use in OAuth Protected Resource Metadata URLs,
+    /// optionally honouring the <c>X-Forwarded-Proto</c> header when the server runs behind a
+    /// reverse proxy (e.g. Azure Container Apps).
+    /// </summary>
+    /// <param name="request">The current HTTP request.</param>
+    /// <param name="enableForwardedHeaders">
+    /// When <c>true</c>, the value of the <c>X-Forwarded-Proto</c> header (if present and equal
+    /// to "http" or "https", case-insensitive) overrides the request scheme.
+    /// </param>
+    /// <returns>"https" or "http".</returns>
+    /// <remarks>
+    /// Azure Container Apps setups typically use plain HTTP between the ACA platform's reverse
+    /// proxy and the application container. The OAuth claims challenge URL must match the scheme
+    /// the client will use, so in that case we inspect <c>X-Forwarded-Proto</c>.
+    /// Only "http" and "https" values are accepted; any other value is ignored.
+    /// See also: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
+    /// </remarks>
+    private static string GetSchemeForOAuthProtectedResourceMetadata(HttpRequest request, bool enableForwardedHeaders)
+    {
+        string scheme = request.Scheme;
+
+        if (enableForwardedHeaders
+            && request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+        {
+            if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+            {
+                // X-Forwarded-Proto can be a comma-separated list when the request passes through
+                // multiple proxies (e.g., "https, http"). The leftmost value is the scheme used
+                // by the original client, so take the first segment and trim any whitespace before
+                // comparing. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
+                string firstProto = forwardedProtoValue.Split(',')[0].Trim();
+                if (string.Equals(firstProto, "https", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "https";
+                }
+                else if (string.Equals(firstProto, "http", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "http";
+                }
+            }
+        }
+
+        return scheme;
     }
 
     /// <summary>
