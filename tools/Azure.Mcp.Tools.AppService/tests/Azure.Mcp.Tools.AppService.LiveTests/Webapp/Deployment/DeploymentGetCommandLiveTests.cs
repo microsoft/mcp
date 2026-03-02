@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tools.AppService.Commands;
 using Xunit;
 
@@ -13,6 +14,17 @@ namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Deployment;
 public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override CustomDefaultMatcher? TestMatcher
+    {
+        get
+        {
+            var matcher = base.TestMatcher ?? new CustomDefaultMatcher();
+            matcher.IgnoredHeaders = string.IsNullOrEmpty(matcher.IgnoredHeaders) ? "Cookie" : $"{matcher.IgnoredHeaders},Cookie";
+            matcher.ExcludedHeaders = string.IsNullOrEmpty(matcher.ExcludedHeaders) ? "Cookie" : $"{matcher.ExcludedHeaders},Cookie";
+            return matcher;
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeploymentList_ReturnsDeployments()
     {
