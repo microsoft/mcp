@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseAppServiceCommand<BaseAppServiceOptions>()
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServiceService appServiceService) : BaseAppServiceCommand<BaseAppServiceOptions>()
 {
     private const string CommandTitle = "Gets Azure App Service Web App Details";
     private readonly ILogger<WebappGetCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
     public override string Id => "4412f1af-16e7-46db-8305-33e3d7ae06de";
     public override string Name => "get";
 
@@ -76,8 +77,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseApp
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var webapps = await appServiceService.GetWebAppsAsync(
+            var webapps = await _appServiceService.GetWebAppsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.AppName,

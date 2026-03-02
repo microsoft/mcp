@@ -21,7 +21,6 @@ namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Settings;
 public class AppSettingsGetCommandTests
 {
     private readonly IAppServiceService _appServiceService;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AppSettingsGetCommand> _logger;
     private readonly AppSettingsGetCommand _command;
     private readonly CommandContext _context;
@@ -32,11 +31,8 @@ public class AppSettingsGetCommandTests
         _appServiceService = Substitute.For<IAppServiceService>();
         _logger = Substitute.For<ILogger<AppSettingsGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_appServiceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _appServiceService);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 
