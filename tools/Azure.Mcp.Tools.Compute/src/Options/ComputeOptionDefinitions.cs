@@ -9,7 +9,7 @@ public static class ComputeOptionDefinitions
     public const string VmssNameName = "vmss-name";
     public const string InstanceIdName = "instance-id";
     public const string LocationName = "location";
-    public const string DiskName = "disk";
+    public const string DiskName = "disk-name";
     public const string SizeGbName = "size-gb";
     public const string SkuName = "sku";
     public const string OsTypeName = "os-type";

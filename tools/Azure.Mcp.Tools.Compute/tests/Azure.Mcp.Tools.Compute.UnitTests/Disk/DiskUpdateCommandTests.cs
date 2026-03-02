@@ -111,7 +111,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", newSizeGb.ToString()
         ]);
 
@@ -177,7 +177,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--sku", newSku
         ]);
 
@@ -242,7 +242,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", "512",
             "--sku", "UltraSSD_LRS",
             "--disk-iops-read-write", "5000",
@@ -312,7 +312,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", "64"
         ]);
 
@@ -396,7 +396,7 @@ public class DiskUpdateCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", "256"
         ]);
 
@@ -431,7 +431,7 @@ public class DiskUpdateCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
-            "--disk", "nonexistent",
+            "--disk-name", "nonexistent",
             "--size-gb", "256"
         ]);
 
@@ -471,7 +471,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "testdisk",
+            "--disk-name", "testdisk",
             "--size-gb", "256"
         ]);
 
@@ -512,7 +512,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "nonexistentdisk",
+            "--disk-name", "nonexistentdisk",
             "--size-gb", "256"
         ]);
 
@@ -531,7 +531,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "testdisk",
+            "--disk-name", "testdisk",
             "--size-gb", "512",
             "--sku", "UltraSSD_LRS",
             "--disk-iops-read-write", "5000",
@@ -596,7 +596,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--tags", tags
         ]);
 
@@ -676,7 +676,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--disk-encryption-set", diskEncryptionSet,
             "--encryption-type", encryptionType,
             "--disk-access", diskAccess,
@@ -755,7 +755,7 @@ public class DiskUpdateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", "256",
             "--sku", "Premium_LRS",
             "--tags", "env=staging cost-center=123",

@@ -782,11 +782,11 @@ azmcp compute disk get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk get --subscription <subscription> \
                        --resource-group <resource-group> \
-                       --disk <disk-name>
+                       --disk-name <disk-name>
 ```
 
 **Options:**
--   `--disk`: The name of the managed disk (optional - if not provided, lists all disks)
+-   `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
 -   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
 -   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
@@ -795,28 +795,28 @@ azmcp compute disk get --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --size-gb <size>
 
 # Create a managed disk from a snapshot or another disk (by resource ID)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --source <snapshot-or-disk-resource-id>
 
 # Create a managed disk from a VHD blob URI
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --source <blob-uri>
 
 # Create a managed disk with a specific location, SKU, and all options
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --size-gb <size> \
                           --location <location> \
                           --sku <sku> \
@@ -848,7 +848,7 @@ azmcp compute disk create --subscription <subscription> \
 |-----------|----------|-------------|
 | `--subscription` | Yes | Azure subscription ID or name |
 | `--resource-group`, `-g` | Yes | Resource group name |
-| `--disk` | Yes | Name of the managed disk to create |
+| `--disk-name` | Yes | Name of the managed disk to create |
 | `--source` | Conditional | Source to create the disk from: a resource ID of a snapshot or managed disk, or a blob URI of a VHD. Required if `--size-gb` is not specified. |
 | `--size-gb` | Conditional | Size of the disk in GB. Required if `--source` is not specified. When used with `--source`, overrides the source size. |
 | `--location` | No | Azure region (defaults to the resource group's location if not specified) |
@@ -870,20 +870,20 @@ azmcp compute disk create --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk update --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --size-gb <size>
 
 # Update a managed disk without specifying resource group (resolved by searching subscription)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk update --subscription <subscription> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --sku <sku>
 
 # Update multiple properties of a managed disk
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk update --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk <disk-name> \
+                          --disk-name <disk-name> \
                           --size-gb <size> \
                           --sku <sku> \
                           --disk-iops-read-write <iops> \
@@ -911,7 +911,7 @@ azmcp compute disk update --subscription <subscription> \
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `--subscription` | Yes | Azure subscription ID or name |
-| `--disk` | Yes | Name of the managed disk to update |
+| `--disk-name` | Yes | Name of the managed disk to update |
 | `--resource-group`, `-g` | No | Resource group name (if not provided, disk is located by searching the subscription) |
 | `--size-gb` | No | New size of the disk in GB (can only increase) |
 | `--sku` | No | New storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |

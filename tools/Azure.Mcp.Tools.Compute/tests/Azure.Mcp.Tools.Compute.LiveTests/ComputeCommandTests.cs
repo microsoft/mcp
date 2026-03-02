@@ -232,7 +232,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", subscription },
                 { "resource-group", resourceGroup },
-                { "disk", diskName }
+                { "disk-name", diskName }
             });
 
         // Assert
@@ -315,7 +315,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", subscription },
                 { "resource-group", resourceGroup },
-                { "disk", invalidDiskName }
+                { "disk-name", invalidDiskName }
             });
 
         // Assert
@@ -342,7 +342,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", subscription },
                 { "resource-group", invalidResourceGroup },
-                { "disk", diskName }
+                { "disk-name", diskName }
             });
 
         // Assert
@@ -366,7 +366,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             new()
             {
                 { "subscription", subscription },
-                { "disk", diskName }
+                { "disk-name", diskName }
             });
 
         // Assert
@@ -399,7 +399,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -437,7 +437,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 64 },
                     { "sku", "Standard_LRS" },
                     { "location", "westus2" },
@@ -478,7 +478,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk", newDiskName },
+                { "disk-name", newDiskName },
                 { "sku", "Standard_LRS" }
             });
 
@@ -502,7 +502,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -518,7 +518,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName }
+                    { "disk-name", newDiskName }
                 });
 
             Assert.NotNull(getResult);
@@ -558,7 +558,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -570,7 +570,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 64 }
                 });
 
@@ -604,7 +604,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -616,7 +616,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "sku", "StandardSSD_LRS" }
                 });
 
@@ -649,7 +649,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -661,7 +661,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "tags", "environment=test,updated=true" }
                 });
 
@@ -693,7 +693,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk", invalidDiskName },
+                { "disk-name", invalidDiskName },
                 { "size-gb", 64 }
             });
 
@@ -717,7 +717,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 32 },
                     { "sku", "Standard_LRS" }
                 });
@@ -733,7 +733,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName },
+                    { "disk-name", newDiskName },
                     { "size-gb", 64 },
                     { "sku", "StandardSSD_LRS" },
                     { "tags", "environment=test,lifecycle=full" }
@@ -753,7 +753,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", newDiskName }
+                    { "disk-name", newDiskName }
                 });
 
             Assert.NotNull(getResult);
@@ -792,7 +792,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "disk", diskName }
+                    { "disk-name", diskName }
                 });
 
             // Log that the disk still exists and should be cleaned up

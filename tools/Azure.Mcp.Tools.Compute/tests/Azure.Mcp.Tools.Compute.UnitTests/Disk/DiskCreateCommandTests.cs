@@ -115,7 +115,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--location", location,
             "--size-gb", sizeGb.ToString()
         ]);
@@ -193,7 +193,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--location", location,
             "--size-gb", sizeGb.ToString(),
             "--sku", sku,
@@ -269,7 +269,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--location", location,
             "--size-gb", "64"
         ]);
@@ -340,7 +340,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--size-gb", "128"
         ]);
 
@@ -366,7 +366,7 @@ public class DiskCreateCommandTests
         // Arrange - no resource-group specified
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
-            "--disk", "testdisk",
+            "--disk-name", "testdisk",
             "--location", "eastus",
             "--size-gb", "128"
         ]);
@@ -410,7 +410,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "testdisk",
+            "--disk-name", "testdisk",
             "--location", "eastus",
             "--size-gb", "128"
         ]);
@@ -430,7 +430,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "testdisk",
+            "--disk-name", "testdisk",
             "--location", "eastus",
             "--size-gb", "256",
             "--sku", "Standard_LRS",
@@ -502,7 +502,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--source", source
         ]);
 
@@ -570,7 +570,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--source", source
         ]);
 
@@ -644,7 +644,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--location", location,
             "--size-gb", sizeGb.ToString(),
             "--tags", tags,
@@ -744,7 +744,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--disk", diskName,
+            "--disk-name", diskName,
             "--location", location,
             "--size-gb", sizeGb.ToString(),
             "--sku", sku,
@@ -777,7 +777,7 @@ public class DiskCreateCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk", "testdisk"
+            "--disk-name", "testdisk"
         ]);
 
         // Act
