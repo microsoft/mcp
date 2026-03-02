@@ -23,7 +23,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
     public override string Description =>
         """
-        Queries an Azure AI Search index, returning the results of the query.
+        Queries an Azure AI Search index and returns the query results. Depending on the index's configuration, the tool automatically uses keyword, vector, or hybrid search. Multimodal search and semantic ranking aren't supported.
         """;
 
     public override string Title => CommandTitle;
