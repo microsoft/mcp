@@ -8,17 +8,20 @@ Parses test prompts from `e2eTestPrompts.md`, executes them through a Copilot SD
 
 ### How It Works
 
-1. **PromptParser** reads the markdown file and extracts `{ namespace, tool, prompt }` tuples
-2. **AgentRunner** creates a Copilot SDK session with Azure MCP server configured
-3. Each prompt is sent to the agent, and tool invocation events are captured
-4. **Early termination** aborts the session once the expected tool is called (saves time)
-5. Results are written to markdown reports with pass/fail status
+1. **PromptParser** reads the markdown file and extracts `{ section, tool, prompt, namespace }` tuples
+2. **AgentRunner** creates a `CopilotClient` session with the Azure MCP server configured as a stdio MCP server
+3. Each prompt is sent to the agent, and tool invocation events are captured via `session.On` event handler
+4. **Early termination** aborts the session once the expected tool is called (saves time and cost)
+5. Results are written to both markdown reports and JSON result files
 
 ```
-e2eTestPrompts.md
+e2eTestPrompts.md  (from servers/Azure.Mcp.Server/docs/)
        │
        ▼
   PromptParser.cs  ──→  List<TestPrompt>
+       │
+       ▼
+  Program.cs  (orchestrator, parallel execution, report generation)
        │
        ▼
   AgentRunner.cs
@@ -26,13 +29,16 @@ e2eTestPrompts.md
        ▼
   CopilotClient (GitHub.Copilot.SDK)
        │
-       ├── mcpServers: { azure: npx -y @azure/mcp }
+       ├── mcpServers: { azure: npx -y @azure/mcp server start }
        └── session.SendAsync({ prompt })
               │
               ▼
-         AgentSessionEvent[]
+         session.On(event handler)
               │
               ├── tool.execution_start  ←  Does toolName match expected?
+              ├── tool.execution_complete
+              ├── assistant.message / assistant.reasoning
+              ├── session.error
               └── session.idle
 ```
 
@@ -40,34 +46,32 @@ e2eTestPrompts.md
 
 ```
 CopilotCliTester/
-├── src/
-│   ├── Program.cs                # CLI entry point
-│   ├── CopilotCliTester.csproj   # Project file (.NET 10, AOT-compatible)
-│   ├── PromptParser.cs           # Parses e2eTestPrompts.md
-│   ├── AgentRunner.cs            # Copilot SDK agent session management
-│   ├── AgentRunnerUtils.cs       # Tool invocation detection utilities
-│   ├── Models/
-│   │   ├── TestPrompt.cs         # Test prompt record
-│   │   ├── TestResult.cs         # Test result record + TestStatus enum
-│   │   ├── AgentModels.cs        # Agent session config and event types
-│   │   └── JsonContext.cs        # AOT-compatible JSON serialization
-│   ├── test-context.md           # Runtime copy of test context
-│   └── reports/                  # Generated test reports
-└── README.md
+├── README.md
+└── src/
+    ├── Program.cs                # CLI entry point, orchestration, report generation
+    ├── CopilotCliTester.csproj   # Project file (.NET 10, AOT-compatible)
+    ├── PromptParser.cs           # Parses e2eTestPrompts.md markdown tables
+    ├── AgentRunner.cs            # Copilot SDK client/session lifecycle, event mapping
+    ├── AgentRunnerUtils.cs       # Tool invocation detection and matching utilities
+    ├── Models/
+    │   ├── TestPrompt.cs         # Test prompt record (Section, Tool, Prompt, Namespace)
+    │   ├── TestResult.cs         # Test result record + TestStatus enum (PASS/FAIL/ERROR)
+    │   ├── AgentModels.cs        # AgentRunConfig, AgentMetadata, AgentSessionEvent, SystemPromptConfig
+    │   └── JsonContext.cs        # AOT-compatible JSON serialization context
+    ├── test-context.md           # Default Azure test context (subscription, resource group, etc.)
+    └── reports/                  # Generated test reports (markdown + JSON)
 ```
 
 ## Prerequisites
 
-### Required
-
 1. **.NET 10 SDK** — [Download](https://dotnet.microsoft.com/download/dotnet/10.0)
 2. **GitHub Copilot subscription** — Required for Copilot SDK authentication
-3. **GitHub Copilot CLI** — Authenticated (`gh copilot` or VS Code Copilot extension)
+3. **GitHub Copilot CLI** — Authenticated (`gh auth login` or VS Code Copilot extension sign-in)
 4. **Azure CLI** — Authenticated for MCP tool execution
    ```bash
    az login
    ```
-5. **Node.js 20+** — Required to run Azure MCP via npx
+5. **Node.js 20+** — Required to run the Azure MCP server via npx
    - [Download Node.js](https://nodejs.org/)
    - The tool uses `npx -y @azure/mcp server start` to invoke the Azure MCP server
 
@@ -93,13 +97,15 @@ Usage:
   CopilotCliTester run [options]
 
 Options:
-  --namespace <name>   Filter by namespace (partial match, e.g., "storage", "keyvault")
-  --tool <name>        Filter by tool name (exact match, e.g., "subscription_list")
-  --max <n>            Maximum number of prompts to test (0 = all)
-  --retries <n>        Maximum retry attempts per prompt (default: 3)
-  --one-per-tool       Test only one prompt per tool
-  --output <dir>       Output directory for reports (default: reports)
-  --model <name>       LLM model to use (default: claude-sonnet-4.5)
+  --namespace <name>      Filter by namespace (partial match, e.g., "storage", "keyvault")
+  --tool <name>           Filter by tool name (exact match, e.g., "subscription_list")
+  --max <n>               Maximum number of prompts to test (0 = all)
+  --retries <n>           Maximum retry attempts per prompt (default: 3)
+  --one-per-tool          Test only one prompt per tool
+  --output <dir>          Output directory for reports (default: reports)
+  --model <name>          LLM model to use (default: claude-sonnet-4.5)
+  --parallel <n>          Number of prompts to test concurrently (default: 1)
+  --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
 ```
 
 ### Examples
@@ -120,13 +126,25 @@ dotnet run -- run --tool subscription_list
 # One prompt per tool (quick validation)
 dotnet run -- run --one-per-tool --max 20
 
+# Run 5 prompts concurrently
+dotnet run -- run --namespace storage --parallel 5
+
 # Use a different model
 dotnet run -- run --namespace keyvault --model gpt-4o
+
+# Use a custom prompts file
+dotnet run -- run --prompts-file ./my-prompts.md
 ```
 
 ## Test Context Configuration
 
-Edit `config/test-context.md` (or `src/test-context.md`) with your Azure environment defaults. This context is prepended to every prompt to prevent the agent from wasting time discovering resources.
+Edit `src/test-context.md` with your Azure environment defaults. This context is appended to every prompt as a system message to prevent the agent from wasting time discovering resources.
+
+The default test context includes:
+
+- **Default Azure values** — subscription, tenant, resource group, and location
+- **Tool selection rules** — forces the agent to use MCP tools instead of PowerShell or built-in skills
+- **Placeholder substitution** — maps common placeholders (e.g., `<storage_account_name>`) to reasonable test values so the agent never asks for clarification
 
 ```markdown
 # Test Context for Copilot CLI
@@ -136,8 +154,6 @@ Edit `config/test-context.md` (or `src/test-context.md`) with your Azure environ
 - **Resource Group:** your-test-resource-group
 - **Location:** eastus2
 ```
-
-The context also instructs the agent to substitute placeholder values (e.g., `<storage_account_name>`) with reasonable test values instead of asking for clarification.
 
 ## Output
 
@@ -149,18 +165,22 @@ Reports are written to `src/reports/` by default:
 reports/
 ├── test-run-{timestamp}/
 │   ├── {namespace}/
-│   │   ├── {tool}-{time}.md    # Individual test transcript
+│   │   ├── {tool}-{time}.md           # Individual test transcript (prompt, tool calls, responses)
 │   │   └── ...
 │   └── ...
-└── e2e-report-{namespace}-{timestamp}.md   # Summary report
+├── e2e-report-{namespace}-{timestamp}.md   # Summary report (markdown table)
+└── e2e-results-{namespace}-{timestamp}.json # Machine-readable results (JSON array)
 ```
+
+Individual transcripts include the user prompt, assistant messages/reasoning, tool calls with arguments and responses, and any session errors. Secrets (JWTs, bearer tokens, API keys) are automatically redacted.
 
 ### Test Status
 
 | Status | Description |
 |--------|-------------|
 | ✅ **PASS** | Expected tool was invoked |
-| ❌ **FAIL** | Expected tool was not invoked (after all retry attempts) |
+| ❌ **FAIL** | Expected tool was not invoked after all retry attempts |
+| ⚠️ **ERROR** | Agent session threw an exception on all attempts |
 
 ### Console Output
 
@@ -178,20 +198,26 @@ Testing 8 prompts across 1 namespaces
 Retries: 3, Model: claude-sonnet-4.5
 --------------------------------------------------------------------------------
 
-Live report: reports\e2e-report-redis-20260227-123456.md
+Report: reports/e2e-report-redis-20260227-123456.md
+Parallel workers: 1
 
------- redis (8 prompts) -----
-  [redis_cache_get] - Show me ...  ✓ PASS [12.3s]
-  [redis_cache_list] - List ...    ✓ PASS [8.7s]
-  [redis_cache_keys] - Get ...     RETRYING (attempt 2)...  ✓ PASS (attempt 2) [45.2s]
+  [redis_cache_get] Show me ...      ✓ PASS [12.3s]
+  [redis_cache_list] List ...        ✓ PASS [8.7s]
+  [redis_cache_keys] Get ...         RETRY (attempt 2)...  ✓ PASS (attempt 2) [45.2s]
 
 ════════════════════════════════════════════════════════════════
 SUMMARY
-  Total:  8
-  Passed: 8 (100.0%)
-  Failed: 0
-  Time:   2m 15s
+────────────────────────────────────────────────────────────────
+  Total:     8
+  Passed:    8
+  Failed:    0
+  Skipped:   0
+  Pass Rate: 100.0%
+  Duration:  135.0s
 ════════════════════════════════════════════════════════════════
+
+✓ Final results: reports/e2e-results-redis-20260227-123456.json
+✓ Report finalized: reports/e2e-report-redis-20260227-123456.md
 ```
 
 ## Architecture
@@ -200,32 +226,50 @@ SUMMARY
 
 | File | Purpose |
 |------|---------|
-| `Program.cs` | CLI argument parsing, test orchestration, report generation |
-| `PromptParser.cs` | Parses `e2eTestPrompts.md` markdown tables into `TestPrompt` records |
-| `AgentRunner.cs` | Manages Copilot SDK client and session lifecycle |
-| `AgentRunnerUtils.cs` | Tool invocation detection and event processing |
+| `Program.cs` | CLI argument parsing, parallel test orchestration, markdown/JSON report generation |
+| `PromptParser.cs` | Parses `e2eTestPrompts.md` markdown tables into `TestPrompt` records. Extracts namespace from tool name prefix. |
+| `AgentRunner.cs` | Creates `CopilotClient` and session, maps SDK events to `AgentSessionEvent`, writes per-test markdown transcripts with secret redaction |
+| `AgentRunnerUtils.cs` | Tool invocation detection: matches by exact name, namespace-prefixed name, `mcpToolName`, or `command` argument |
 
 ### Models
 
 | Type | Description |
 |------|-------------|
-| `TestPrompt` | Parsed prompt with namespace, tool name, and prompt text |
-| `TestResult` | Test execution result with status, duration, attempts, and tool calls |
-| `AgentRunConfig` | Configuration for a single agent session |
-| `AgentMetadata` | Collected events from an agent session |
-| `AgentSessionEvent` | Normalized event from Copilot SDK (tool calls, messages, errors) |
+| `TestPrompt` | Parsed prompt: `Section`, `Tool`, `Prompt`, `Namespace` |
+| `TestResult` | Execution result: `Tool`, `Prompt`, `Duration`, `ToolsCalled`, `Attempts`, `Status`, `Error` |
+| `TestStatus` | Enum: `PASS`, `FAIL`, `ERROR` |
+| `AgentRunConfig` | Session config: `Prompt`, `ToolName`, `Namespace`, `ShouldEarlyTerminate`, `SystemPrompt`, `Debug`, `Model` |
+| `AgentMetadata` | Collected `AgentSessionEvent` list from a session |
+| `AgentSessionEvent` | Normalized event with `Type` and `Data` dictionary. Types: `session.idle`, `session.error`, `tool.execution_start`, `tool.execution_complete`, `assistant.message`, `assistant.message_delta`, `assistant.reasoning`, `assistant.reasoning_delta` |
+| `SystemPromptConfig` | System prompt with `Mode` (`Append`/`Replace`) and `Content` |
+| `JsonContext` | AOT-compatible `JsonSerializerContext` for `TestPrompt`, `TestResult`, and supporting types |
+
+### Tool Matching
+
+`AgentRunnerUtils.WasToolInvoked` checks multiple matching strategies to handle different MCP server modes:
+
+1. **Exact match** on `mcpToolName` (from SDK event data)
+2. **Exact match** on `toolName`
+3. **Namespace-prefixed match** — e.g., `azure_storage_account_list` matches `storage_account_list`
+4. **Command argument match** — checks if `arguments.command` equals the expected tool name (for namespace/single modes)
+
+Internal tools like `report_intent` are excluded from matching.
 
 ### Early Termination
 
-Once the expected tool is invoked, the agent session is terminated early to save time. This is controlled by the `ShouldEarlyTerminate` callback in `AgentRunConfig`.
+Once the expected tool is invoked, `session.AbortAsync()` is called to terminate the session early. This is controlled by the `ShouldEarlyTerminate` callback in `AgentRunConfig`, reducing both time and token cost.
 
 ### Retry Logic
 
-Prompts are retried up to `--retries` times (default: 3) to handle LLM's non-determinism. Each retry creates a fresh agent session.
+Prompts are retried up to `--retries` times (default: 3) to handle LLM non-determinism. Each retry creates a fresh agent session. Individual attempts have a 5-minute timeout.
+
+### Parallelism
+
+The `--parallel` flag controls concurrent test execution using a `SemaphoreSlim`. Each parallel worker gets its own `AgentRunner` instance. Console and report file writes are thread-safe via locks.
 
 ## Namespace Examples
 
-The `--namespace` option filters prompts by their section in `e2eTestPrompts.md`:
+The `--namespace` option filters prompts by the namespace derived from tool name prefixes (e.g., `storage_account_list` → `storage`):
 
 | Namespace | Description |
 |-----------|-------------|
@@ -243,16 +287,16 @@ The `--namespace` option filters prompts by their section in `e2eTestPrompts.md`
 ### "Copilot SDK authentication failed"
 
 Ensure you're authenticated with GitHub Copilot:
-- VS Code: Sign in to GitHub Copilot extension
+- VS Code: Sign in to the GitHub Copilot extension
 - CLI: Run `gh auth login` and ensure Copilot access
 
+### "Prompts file not found"
 
-### "Test context not found"
-
-Copy `config/test-context.md` to `src/test-context.md` or run from the `src/` directory.
+The tool looks for `e2eTestPrompts.md` at `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` relative to the repo root. Run from the `src/` directory so the repo root is auto-detected, or pass `--prompts-file` with an explicit path.
 
 ### Tool not invoked (false negatives)
 
 - Increase `--retries` for flaky prompts
 - Check if the prompt is ambiguous — the agent might call a different tool
-- Review the generated transcript in `reports/` for debugging
+- Review the generated transcript in `reports/test-run-*/` for debugging
+- Set the `DEBUG` environment variable to see raw SDK event types in console output

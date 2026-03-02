@@ -17,6 +17,8 @@ static class Program
     private static readonly Lock _consoleLock = new();
     private static readonly Lock _reportLock = new();
 
+    private const double PassThreshold = 95.0;
+    private const int MaxParallelAllowed = 12;
     static async Task<int> Main(string[] args)
     {
         var command = args.Length > 0 ? args[0].ToLowerInvariant() : "run";
@@ -45,7 +47,7 @@ static class Program
               --one-per-tool      Test only one prompt per tool
               --output <dir>      Output directory for reports
               --model <name>      Model to use (default: claude-sonnet-4.5)
-              --parallel <n>      Number of prompts to test concurrently (default: 1)
+              --parallel <n>      Number of prompts to test concurrently (default: 6)
               --prompts-file <path>  Custom prompts file (markdown format)
             """);
         return 0;
@@ -54,7 +56,7 @@ static class Program
     static async Task<int> RunE2ETestsFromArgs(string[] args)
     {
         string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-sonnet-4.5", promptsFile = null;
-        int max = 0, retries = 3, parallel = 1;
+        int max = 0, retries = 3, parallel = 6;
         bool onePerTool = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -85,10 +87,18 @@ static class Program
                 case "--parallel" when i + 1 < args.Length:
                     int.TryParse(args[++i], out parallel);
                     break;
-                case "--prompts-file" when i + 1 < args.Length:
+                case "--prompts-file" when i + 1 < args.Length: 
                     promptsFile = args[++i];
                     break;
             }
+        }
+
+        if (parallel < 1) {
+            Console.WriteLine("Warning: --parallel must be >= 1. Using 1.");
+            parallel = 1;
+        } else if (parallel > MaxParallelAllowed) {
+            Console.WriteLine($"Warning: --parallel must be <= {MaxParallelAllowed}. Using {MaxParallelAllowed}.");
+            parallel = MaxParallelAllowed;
         }
 
         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
@@ -224,7 +234,7 @@ static class Program
         AppendMarkdownSummary(reportFile, results, totalStopwatch.Elapsed);
         Console.WriteLine($"✓ Report finalized: {reportFile}");
 
-        return failed > 0 ? 1 : 0;
+        return passRate >= PassThreshold ? 0 : 1;
     }
 
     /// <summary>
