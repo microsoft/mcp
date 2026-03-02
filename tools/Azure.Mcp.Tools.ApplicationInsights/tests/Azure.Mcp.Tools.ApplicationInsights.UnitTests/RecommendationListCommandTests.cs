@@ -22,10 +22,9 @@ public class RecommendationListCommandTests
     {
         var sc = new ServiceCollection();
         _serviceMock = Substitute.For<IApplicationInsightsService>();
-        sc.AddSingleton(_serviceMock);
         var logger = Substitute.For<ILogger<RecommendationListCommand>>();
         _serviceProvider = sc.BuildServiceProvider();
-        _command = new RecommendationListCommand(logger);
+        _command = new RecommendationListCommand(logger, _serviceMock);
         _context = new(_serviceProvider);
     }
 
