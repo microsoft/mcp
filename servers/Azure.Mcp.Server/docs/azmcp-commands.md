@@ -220,14 +220,17 @@ The `azmcp server start` command supports the following options:
 
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
-| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
+| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -241,6 +244,41 @@ The `azmcp server start` command supports the following options:
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
+>
+> This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
+> - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
+> - Logs may contain sensitive data that could be useful for support troubleshooting
+> - Only use this option when specifically requested by support for diagnosing issues
+> - Remove log files after troubleshooting is complete
+>
+> **Example usage:**
+> ```bash
+> # For support troubleshooting only
+> azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+> ```
+
+> **Note on `--outgoing-auth-strategy`:**
+>
+> This option controls how the server authenticates when making requests to downstream Azure services:
+> - `NotSet` (default): A safe default is chosen based on other settings
+> - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
+> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
+
+> **Note on `--cloud`:**
+>
+> Use this option to target sovereign cloud environments:
+> - `AzureCloud` (default): Azure public cloud
+> - `AzureChinaCloud`: Azure China (operated by 21Vianet)
+> - `AzureUSGovernment`: Azure US Government
+> - Custom URL: A custom authority host URL starting with `https://`
+>
+> **Example usage:**
+> ```bash
+> # Connect to Azure US Government cloud
+> azmcp server start --cloud AzureUSGovernment
 > ```
 
 #### Server Info
