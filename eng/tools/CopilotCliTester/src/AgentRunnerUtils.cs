@@ -51,7 +51,7 @@ internal static class AgentRunnerUtils
 
             if (string.Equals(toolName, expectedTool, StringComparison.OrdinalIgnoreCase)) return true;
 
-            // Namespace-prefixed match - helps when running local MCP server
+            // Namespace-prefixed matches
             if (toolName.EndsWith($"_{expectedTool}", StringComparison.OrdinalIgnoreCase) ||
                 toolName.EndsWith($"-{expectedTool}", StringComparison.OrdinalIgnoreCase))
                 return true;
