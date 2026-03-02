@@ -368,6 +368,6 @@ public class AppServiceService(
     }
 
     private static DeploymentDetails MapToDeploymentDetails(WebAppDeploymentData deployment)
-        => new(deployment.Name, deployment.ResourceType.ToString(), deployment.Kind, deployment.IsActive,
+        => new(deployment.Id.Name, deployment.ResourceType.ToString(), deployment.Kind, deployment.IsActive,
             deployment.Status, deployment.Author, deployment.Deployer, deployment.StartOn, deployment.EndOn);
 }

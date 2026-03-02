@@ -113,12 +113,6 @@ resource webAppAppSettings 'Microsoft.Web/sites/config@2023-01-01' = {
   }
 }
 
-resource deployment 'Microsoft.Web/sites/deployments@2025-03-01' = {
-  parent: webApp
-  kind: 'zip'
-  name: deploymentName
-}
-
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
@@ -265,7 +259,6 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 
 // Outputs for test usage
 output webAppName string = webApp.name
-output deploymentName string = deployment.name
 output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName

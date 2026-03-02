@@ -19,6 +19,7 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var deploymentId = RegisterOrRetrieveDeploymentOutputVariable("deploymentId", "DEPLOYMENTID");
 
         var result = await CallToolAsync(
             "appservice_webapp_deployment_get",
@@ -32,6 +33,7 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.Deployments);
+        Assert.Contains(getResult.Deployments, d => d.Id == deploymentId);
     }
 
     [Fact]
@@ -40,23 +42,9 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var deploymentId = RegisterOrRetrieveDeploymentOutputVariable("deploymentId", "DEPLOYMENTID");
 
         var result = await CallToolAsync(
-            "appservice_webapp_deployment_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName },
-                { "app", webappName }
-            });
-
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
-        Assert.NotNull(getResult);
-        Assert.NotEmpty(getResult.Deployments);
-
-        var deploymentId = getResult.Deployments[0].Name;
-
-        result = await CallToolAsync(
             "appservice_webapp_deployment_get",
             new()
             {
@@ -66,9 +54,9 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
                 { "deployment-id", deploymentId }
             });
 
-        getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
+        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.NotNull(getResult);
         Assert.Single(getResult.Deployments);
-        Assert.Equal(deploymentId, getResult.Deployments[0].Name);
+        Assert.Equal(deploymentId, getResult.Deployments[0].Id);
     }
 }

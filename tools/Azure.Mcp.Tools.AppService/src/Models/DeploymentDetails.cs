@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.AppService.Models;
 /// Represents details about a Web App.
 /// </summary>
 public sealed record DeploymentDetails(
-    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("type")] string Type,
     [property: JsonPropertyName("kind")] string Kind,
     [property: JsonPropertyName("active")] bool? Active,
