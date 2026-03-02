@@ -345,15 +345,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? |
-| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> in location <location> |
-| fileshares_fileshare_limits_get | What are the file share limits in my subscription for location <location>? |
-| fileshares_fileshare_limits_get | Show me the file share service limits in location <location> |
-| fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
-| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
-| fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
-| fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |
+| fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
+| fileshares_limits | What are the file share limits in my subscription for location <location>? |
+| fileshares_limits | Show me the file share service limits in location <location> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
+| fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |
 | fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> |
@@ -368,9 +368,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
 | fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
-| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
-| fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
-| fileshares_fileshare_usage_get | What is the current usage of file share <file_share_name>? |
+| fileshares_usage | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_usage | Show me the usage statistics for file share <file_share_name> |
+| fileshares_usage | What is the current usage of file share <file_share_name>? |
 
 ## Azure Function App
 

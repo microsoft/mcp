@@ -107,5 +107,6 @@
     <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="0.1.26" />
   </ItemGroup>
 </Project>
