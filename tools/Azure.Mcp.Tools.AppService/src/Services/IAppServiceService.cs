@@ -46,4 +46,21 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<DetectorDetails>> ListDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DiagnosesResults> DiagnoseDetectorAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string detectorName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

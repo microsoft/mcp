@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
 public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger)
-    : BaseAppServiceCommand<AppSettingsUpdateCommandOptions>(resourceGroupRequired: true)
+    : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true)
 {
     private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
@@ -91,7 +91,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         return true;
     }
 
-    protected override AppSettingsUpdateCommandOptions BindOptions(ParseResult parseResult)
+    protected override AppSettingsUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);

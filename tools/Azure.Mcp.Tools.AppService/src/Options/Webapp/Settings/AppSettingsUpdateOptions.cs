@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 
-public sealed class AppSettingsUpdateCommandOptions : BaseAppServiceOptions
+public sealed class AppSettingsUpdateOptions : BaseAppServiceOptions
 {
     [JsonPropertyName(AppServiceOptionDefinitions.AppSettingNameName)]
     public string? SettingName { get; set; }

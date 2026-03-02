@@ -13,6 +13,7 @@ public static class AppServiceOptionDefinitions
     public const string AppSettingNameName = "setting-name";
     public const string AppSettingValueName = "setting-value";
     public const string AppSettingUpdateTypeName = "setting-update-type";
+    public const string DetectorNameName = "detector-name";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -59,6 +60,12 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> AppSettingUpdateType = new($"--{AppSettingUpdateTypeName}")
     {
         Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.",
+        Required = true
+    };
+
+    public static readonly Option<string> DetectorName = new($"--{DetectorNameName}")
+    {
+        Description = "The name of the diagnostic detector to run (e.g., Availability, CpuAnalysis, MemoryAnalysis).",
         Required = true
     };
 }
