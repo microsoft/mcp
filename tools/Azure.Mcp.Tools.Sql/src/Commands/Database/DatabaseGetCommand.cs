@@ -81,8 +81,8 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new([database], false),
-                    SqlJsonContext.Default.DatabaseGetResult);
+                    new List<SqlDatabase> { database },
+                    SqlJsonContext.Default.ListSqlDatabase);
             }
             else
             {
@@ -94,8 +94,8 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(result?.Results ?? [], result?.AreResultsTruncated ?? false),
-                    SqlJsonContext.Default.DatabaseGetResult);
+                    result?.Results ?? [],
+                    SqlJsonContext.Default.ListSqlDatabase);
             }
         }
         catch (Exception ex)
@@ -119,5 +119,4 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseGetResult(List<SqlDatabase> Databases, bool AreResultsTruncated);
 }

@@ -47,7 +47,7 @@ public class DatabaseGetCommandTests
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Get Azure SQL Database", command.Description);
+        Assert.Contains("Azure SQL database", command.Description);
     }
 
     [Fact]

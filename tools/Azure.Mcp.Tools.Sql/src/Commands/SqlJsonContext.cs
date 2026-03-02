@@ -12,7 +12,7 @@ using Azure.Mcp.Tools.Sql.Services.Models;
 
 namespace Azure.Mcp.Tools.Sql.Commands;
 
-[JsonSerializable(typeof(DatabaseGetCommand.DatabaseGetResult))]
+[JsonSerializable(typeof(List<SqlDatabase>))]
 [JsonSerializable(typeof(DatabaseCreateCommand.DatabaseCreateResult))]
 [JsonSerializable(typeof(DatabaseUpdateCommand.DatabaseUpdateResult))]
 [JsonSerializable(typeof(DatabaseRenameCommand.DatabaseRenameResult))]
@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(FirewallRuleListCommand.FirewallRuleListResult))]
 [JsonSerializable(typeof(FirewallRuleCreateCommand.FirewallRuleCreateResult))]
 [JsonSerializable(typeof(FirewallRuleDeleteCommand.FirewallRuleDeleteResult))]
-[JsonSerializable(typeof(ServerGetCommand.ServerGetResult))]
+[JsonSerializable(typeof(List<SqlServer>))]
 [JsonSerializable(typeof(ServerCreateCommand.ServerCreateResult))]
 [JsonSerializable(typeof(ServerDeleteCommand.ServerDeleteResult))]
 [JsonSerializable(typeof(ElasticPoolListCommand.ElasticPoolListResult))]

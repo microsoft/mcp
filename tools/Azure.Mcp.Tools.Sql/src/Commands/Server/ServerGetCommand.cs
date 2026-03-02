@@ -86,8 +86,8 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new([server]),
-                    SqlJsonContext.Default.ServerGetResult);
+                    new List<SqlServer> { server },
+                    SqlJsonContext.Default.ListSqlServer);
             }
             else
             {
@@ -98,8 +98,8 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(servers ?? []),
-                    SqlJsonContext.Default.ServerGetResult);
+                    servers ?? [],
+                    SqlJsonContext.Default.ListSqlServer);
             }
         }
         catch (Exception ex)
@@ -123,5 +123,4 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ServerGetResult(List<SqlServer> Servers);
 }
