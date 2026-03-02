@@ -183,20 +183,70 @@ When using the Azure MCP Server with an MCP client (like Claude Desktop), config
 
 ### Remote HTTP Mode
 
-For remote HTTP deployments, configure the cloud environment using one of these methods:
+When running the Azure MCP Server as a remote HTTP service (`--run-as-remote-http-service`), sovereign cloud support requires additional configuration beyond `--cloud`. The remote server authenticates incoming client requests by validating JWT tokens issued by the Entra ID authority for the target cloud.
 
-**Application Settings (Azure App Service):**
+#### How it works
+
+Setting `--cloud AzureChinaCloud` (or the equivalent environment variable / config key) now automatically configures the Microsoft Identity token validation to use the matching authority host, **provided `AzureAd:Instance` is not explicitly set**. This means:
+
+- Incoming JWT validation uses the sovereign cloud authority (e.g., `https://login.chinacloudapi.cn/`)
+- OBO token acquisition (when using `--outgoing-auth-strategy UseOnBehalfOf`) targets the correct authority
+- The `/.well-known/oauth-protected-resource` metadata endpoint returns the sovereign cloud authority URL
+
+If `AzureAd:Instance` is explicitly configured, it takes priority over `--cloud` so operator-supplied values are never overridden.
+
+#### Required configuration
+
+For remote HTTP mode on a sovereign cloud you must configure:
+
+| Setting | Required | Description |
+|---------|----------|-------------|
+| `AzureAd:TenantId` | Yes | Tenant ID in the sovereign cloud |
+| `AzureAd:ClientId` | Yes | App registration client ID in the sovereign cloud |
+| `--cloud` or `AZURE_CLOUD` | Yes | Sets the authority host for both incoming and outgoing auth |
+| `AzureAd:Instance` | Optional | Overrides `--cloud` for incoming JWT validation only |
+
+#### Example: Azure China Cloud (OBO mode)
+
+```bash
+dotnet azmcp.dll server start \
+  --run-as-remote-http-service \
+  --outgoing-auth-strategy UseOnBehalfOf \
+  --cloud AzureChinaCloud
+```
+
+With `appsettings.json`:
 
 ```json
 {
-  "cloud": "AzureChinaCloud"
+  "AzureAd": {
+    "TenantId": "<your-china-tenant-id>",
+    "ClientId": "<your-china-app-client-id>"
+  }
 }
 ```
 
-**Environment Variables:**
+#### Example: Azure US Government (HostingEnvironmentIdentity mode)
 
 ```bash
-AZURE_CLOUD=AzureChinaCloud
+dotnet azmcp.dll server start \
+  --run-as-remote-http-service \
+  --outgoing-auth-strategy UseHostingEnvironmentIdentity \
+  --cloud AzureUSGovernment
+```
+
+With environment variables:
+
+```bash
+AZURE_CLOUD=AzureUSGovernment
+AzureAd__TenantId=<your-gov-tenant-id>
+AzureAd__ClientId=<your-gov-app-client-id>
+```
+
+**Command Line (original content):**
+
+```bash
+dotnet azmcp.dll server start --run-as-remote-http-service --cloud AzureChinaCloud
 ```
 
 **Command Line:**

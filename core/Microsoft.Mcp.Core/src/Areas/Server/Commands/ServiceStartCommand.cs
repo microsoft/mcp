@@ -527,6 +527,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             services.AddSingleIdentityTokenCredentialProvider();
         }
 
+        // When sovereign cloud is configured via --cloud or AZURE_CLOUD, automatically apply
+        // the corresponding authority host to MicrosoftIdentityApplicationOptions.Instance if
+        // it was not explicitly set in the AzureAd configuration section. This ensures incoming
+        // JWT validation, OBO token acquisition, and the OAuth protected resource metadata
+        // endpoint all target the correct sovereign cloud authority.
+        services.AddSovereignCloudMicrosoftIdentityOptions(azureAdSection, JwtBearerDefaults.AuthenticationScheme);
+
         // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
         services.AddHttpServiceCacheService();
 
