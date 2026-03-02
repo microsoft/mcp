@@ -60,7 +60,7 @@ public class AppServiceSetup : IAreaSetup
 
         var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
         settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
-        
+
         // Add deployment subgroup
         var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
         webapp.AddSubGroup(deployment);

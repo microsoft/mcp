@@ -363,7 +363,7 @@ public class AppServiceService(
             var deployment = await webAppResource.GetSiteDeploymentAsync(deploymentId, cancellationToken: cancellationToken);
             results.Add(MapToDeploymentDetails(deployment.Value.Data));
         }
-        
+
         return results;
     }
 
