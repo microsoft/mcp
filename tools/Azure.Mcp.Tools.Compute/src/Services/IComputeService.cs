@@ -50,7 +50,6 @@ public interface IComputeService
         string? image = null,
         string? adminPassword = null,
         string? sshPublicKey = null,
-        string? workload = null,
         string? osType = null,
         string? virtualNetwork = null,
         string? subnet = null,
@@ -63,8 +62,6 @@ public interface IComputeService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
-
-    WorkloadConfiguration GetWorkloadConfiguration(string? workload);
 
     // Virtual Machine Scale Set operations
     Task<VmssInfo> GetVmssAsync(
@@ -109,7 +106,6 @@ public interface IComputeService
         string? image = null,
         string? adminPassword = null,
         string? sshPublicKey = null,
-        string? workload = null,
         string? osType = null,
         string? virtualNetwork = null,
         string? subnet = null,

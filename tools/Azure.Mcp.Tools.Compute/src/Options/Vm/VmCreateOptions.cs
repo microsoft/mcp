@@ -19,8 +19,6 @@ public class VmCreateOptions : BaseComputeOptions
 
     public string? SshPublicKey { get; set; }
 
-    public string? Workload { get; set; }
-
     public string? OsType { get; set; }
 
     public string? VirtualNetwork { get; set; }

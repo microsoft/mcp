@@ -59,7 +59,6 @@ public class VmCreateCommandTests
     [Theory]
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", true)] // All required + password
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --ssh-public-key ssh-rsa-key", true)] // All required + ssh key
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123! --workload development", true)] // With workload
     [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", false)] // Missing auth - Linux requires SSH key or password
     [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing vm-name
     [InlineData("--vm-name test-vm --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing resource-group
@@ -75,19 +74,13 @@ public class VmCreateCommandTests
                 Name: _knownVmName,
                 Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
                 Location: _knownLocation,
-                VmSize: "Standard_D2s_v3",
+                VmSize: "Standard_DS1_v2",
                 ProvisioningState: "Succeeded",
                 OsType: "linux",
                 PublicIpAddress: "40.71.11.2",
                 PrivateIpAddress: "10.0.0.4",
                 Zones: null,
-                Tags: null,
-                WorkloadConfiguration: new WorkloadConfiguration(
-                    WorkloadType: "general",
-                    SuggestedVmSize: "Standard_D2s_v3",
-                    SuggestedOsDiskType: "StandardSSD_LRS",
-                    SuggestedOsDiskSizeGb: 128,
-                    Description: "General purpose VM balanced for compute, memory, and storage"));
+                Tags: null);
 
             _computeService.CreateVmAsync(
                 Arg.Any<string>(),
@@ -95,7 +88,6 @@ public class VmCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -149,19 +141,13 @@ public class VmCreateCommandTests
             Name: _knownVmName,
             Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
             Location: _knownLocation,
-            VmSize: "Standard_D2s_v3",
+            VmSize: "Standard_DS1_v2",
             ProvisioningState: "Succeeded",
             OsType: "linux",
             PublicIpAddress: "40.71.11.2",
             PrivateIpAddress: "10.0.0.4",
             Zones: new List<string> { "1" },
-            Tags: new Dictionary<string, string> { { "env", "test" } },
-            WorkloadConfiguration: new WorkloadConfiguration(
-                WorkloadType: "general",
-                SuggestedVmSize: "Standard_D2s_v3",
-                SuggestedOsDiskType: "StandardSSD_LRS",
-                SuggestedOsDiskSizeGb: 128,
-                Description: "General purpose VM balanced for compute, memory, and storage"));
+            Tags: new Dictionary<string, string> { { "env", "test" } });
 
         _computeService.CreateVmAsync(
             Arg.Is(_knownVmName),
@@ -173,7 +159,6 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Is<string?>(x => !string.IsNullOrEmpty(x)), // SSH key
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -216,81 +201,6 @@ public class VmCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesVmWithWorkload()
-    {
-        // Arrange
-        var expectedResult = new VmCreateResult(
-            Name: _knownVmName,
-            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
-            Location: _knownLocation,
-            VmSize: "Standard_B2s",
-            ProvisioningState: "Succeeded",
-            OsType: "linux",
-            PublicIpAddress: "40.71.11.2",
-            PrivateIpAddress: "10.0.0.4",
-            Zones: null,
-            Tags: null,
-            WorkloadConfiguration: new WorkloadConfiguration(
-                WorkloadType: "development",
-                SuggestedVmSize: "Standard_B2s",
-                SuggestedOsDiskType: "StandardSSD_LRS",
-                SuggestedOsDiskSizeGb: 64,
-                Description: "Cost-effective burstable VM for development and testing workloads"));
-
-        _computeService.CreateVmAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Is("development"), // Workload
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
-
-        var parseResult = _commandDefinition.Parse([
-            "--vm-name", _knownVmName,
-            "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--location", _knownLocation,
-            "--admin-username", _knownAdminUsername,
-            "--admin-password", _knownPassword,
-            "--workload", "development"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmCreateCommandResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result.Vm);
-        Assert.NotNull(result.Vm.WorkloadConfiguration);
-        Assert.Equal("development", result.Vm.WorkloadConfiguration.WorkloadType);
-        Assert.Equal("Standard_B2s", result.Vm.WorkloadConfiguration.SuggestedVmSize);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_RequiresPasswordForWindows()
     {
         // Arrange
@@ -324,7 +234,6 @@ public class VmCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -381,7 +290,6 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
@@ -416,19 +324,13 @@ public class VmCreateCommandTests
             Name: _knownVmName,
             Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
             Location: _knownLocation,
-            VmSize: "Standard_D2s_v3",
+            VmSize: "Standard_DS1_v2",
             ProvisioningState: "Succeeded",
             OsType: "linux",
             PublicIpAddress: "40.71.11.2",
             PrivateIpAddress: "10.0.0.4",
             Zones: null,
-            Tags: null,
-            WorkloadConfiguration: new WorkloadConfiguration(
-                WorkloadType: "general",
-                SuggestedVmSize: "Standard_D2s_v3",
-                SuggestedOsDiskType: "StandardSSD_LRS",
-                SuggestedOsDiskSizeGb: 128,
-                Description: "General purpose VM balanced for compute, memory, and storage"));
+            Tags: null);
 
         _computeService.CreateVmAsync(
             Arg.Any<string>(),
@@ -436,7 +338,6 @@ public class VmCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -476,6 +377,5 @@ public class VmCreateCommandTests
         Assert.NotNull(result);
         Assert.NotNull(result.Vm);
         Assert.Equal(_knownVmName, result.Vm.Name);
-        Assert.NotNull(result.Vm.WorkloadConfiguration);
     }
 }

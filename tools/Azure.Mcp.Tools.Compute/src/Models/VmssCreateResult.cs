@@ -15,5 +15,4 @@ public sealed record VmssCreateResult(
     [property: JsonPropertyName("capacity")] int Capacity,
     [property: JsonPropertyName("upgradePolicy")] string? UpgradePolicy,
     [property: JsonPropertyName("zones")] IReadOnlyList<string>? Zones,
-    [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags,
-    [property: JsonPropertyName("workloadConfiguration")] WorkloadConfiguration? WorkloadConfiguration);
+    [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags);

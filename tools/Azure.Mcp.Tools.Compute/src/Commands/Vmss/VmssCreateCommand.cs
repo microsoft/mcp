@@ -29,10 +29,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
     public override string Description =>
         """
-        Create an Azure Virtual Machine Scale Set with workload-based defaults. Supports automatic VM size selection by workload
-        type, Linux and Windows images, SSH key or password authentication,
-        and configurable instance count and upgrade policy. Creates networking resources (VNet, subnet) automatically when not specified.
-        For Linux VMSS with SSH, read the user's public key file and pass its content.
+        Create, deploy, or provision an Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
+        Use this to deploy workloads that need horizontal scaling, load balancing, or high availability across instances.
+        Equivalent to 'az vmss create'. Defaults to 2 instances, Standard_DS1_v2 size, and Ubuntu 24.04 LTS.
+        For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
+        Do not use this for creating a single standalone VM (use VM create instead).
         """;
 
     public override string Title => CommandTitle;
@@ -63,7 +64,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
         command.Options.Add(ComputeOptionDefinitions.Image);
-        command.Options.Add(ComputeOptionDefinitions.Workload);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // VMSS-specific options
@@ -100,7 +100,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         options.SshPublicKey = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name);
         options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
         options.Image = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
-        options.Workload = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Workload.Name);
         options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
         options.InstanceCount = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.InstanceCount.Name);
         options.UpgradePolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name);
@@ -168,7 +167,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
                 options.Image,
                 options.AdminPassword,
                 options.SshPublicKey,
-                options.Workload,
                 options.OsType,
                 options.VirtualNetwork,
                 options.Subnet,
@@ -188,8 +186,8 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating VMSS. VmssName: {VmssName}, ResourceGroup: {ResourceGroup}, Location: {Location}, Subscription: {Subscription}, Workload: {Workload}",
-                options.VmssName, options.ResourceGroup, options.Location, options.Subscription, options.Workload);
+                "Error creating VMSS. VmssName: {VmssName}, ResourceGroup: {ResourceGroup}, Location: {Location}, Subscription: {Subscription}",
+                options.VmssName, options.ResourceGroup, options.Location, options.Subscription);
             HandleException(context, ex);
         }
 

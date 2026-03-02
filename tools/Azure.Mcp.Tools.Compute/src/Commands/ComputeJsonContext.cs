@@ -32,7 +32,6 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(VmInstanceView))]
 [JsonSerializable(typeof(VmssInfo))]
 [JsonSerializable(typeof(VmssVmInfo))]
-[JsonSerializable(typeof(WorkloadConfiguration))]
 [JsonSerializable(typeof(List<VmInfo>))]
 [JsonSerializable(typeof(List<VmssInfo>))]
 [JsonSerializable(typeof(List<VmssVmInfo>))]

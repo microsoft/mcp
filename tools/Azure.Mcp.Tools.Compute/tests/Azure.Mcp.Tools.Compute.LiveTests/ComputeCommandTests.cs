@@ -250,7 +250,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
-                { "workload", "development" },
                 { "no-public-ip", true }
             });
 
@@ -261,10 +260,86 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
+        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("linux", osType.GetString());
+    }
+
+    /// <summary>
+    /// Based on Azure CLI example:
+    /// az vm create -n MyVm -g MyResourceGroup --public-ip-address "" --image Win2012R2Datacenter
+    /// Creates a Windows Server VM with no public IP address.
+    /// </summary>
+    [Fact]
+    public async Task Should_create_windows_vm_with_password_auth()
+    {
+        var createVmName = RegisterOrRetrieveVariable("createWinVmName", $"winvm{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", createVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "WinTestP@ss123!" },
+                { "image", "Win2022Datacenter" },
+                { "no-public-ip", true }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var vmSize = vm.GetProperty("vmSize");
+        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
+
+        var osType = vm.GetProperty("osType");
+        Assert.Equal("windows", osType.GetString());
+    }
+
+    /// <summary>
+    /// Based on Azure CLI example:
+    /// az vm create -n MyVm -g MyResourceGroup --image Win2019Datacenter --size Standard_DS2_v2
+    /// Creates a Windows Server 2019 VM with a specific VM size and OS disk type.
+    /// </summary>
+    [Fact]
+    public async Task Should_create_windows_vm_with_custom_size()
+    {
+        var createVmName = RegisterOrRetrieveVariable("createWinVm2Name", $"wv2{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", createVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "WinTestP@ss456!" },
+                { "image", "Win2019Datacenter" },
+                { "vm-size", "Standard_DS2_v2" },
+                { "os-disk-type", "StandardSSD_LRS" },
+                { "no-public-ip", true }
+            });
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var vmSize = vm.GetProperty("vmSize");
+        Assert.Equal("Standard_DS2_v2", vmSize.GetString());
+
+        var osType = vm.GetProperty("osType");
+        Assert.Equal("windows", osType.GetString());
     }
 
     [Fact]
@@ -315,6 +390,78 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     #region VMSS Update Tests
 
+    /// <summary>
+    /// Based on Azure CLI example:
+    /// az vmss create -n MyVmss -g MyResourceGroup --instance-count 5 --image Win2016Datacenter --os-disk-size-gb 40
+    /// Creates a Windows VMSS with a specific instance count and custom OS disk size.
+    /// </summary>
+    [Fact]
+    public async Task Should_create_windows_vmss_with_instance_count()
+    {
+        var createVmssName = RegisterOrRetrieveVariable("createWinVmssName", $"wvs{DateTime.UtcNow:HHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vmss_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", createVmssName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "WinTestP@ss789!" },
+                { "image", "Win2022Datacenter" },
+                { "instance-count", 2 },
+                { "os-disk-size-gb", 40 }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var capacity = vmss.GetProperty("capacity");
+        Assert.Equal(2, capacity.GetInt32());
+    }
+
+    /// <summary>
+    /// Based on Azure CLI example:
+    /// az vmss create -n MyVmss -g MyResourceGroup --image Ubuntu2204 --vm-sku Standard_DS2_v2 --upgrade-policy-mode Manual
+    /// Creates a Linux VMSS with a custom VM size and Manual upgrade policy.
+    /// </summary>
+    [Fact]
+    public async Task Should_create_linux_vmss_with_custom_size_and_upgrade_policy()
+    {
+        var createVmssName = RegisterOrRetrieveVariable("createLinuxVmssName", $"lnxvmss{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_vmss_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", createVmssName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "LinuxTestP@ss321!" },
+                { "image", "Ubuntu2404" },
+                { "vm-size", "Standard_DS2_v2" },
+                { "instance-count", 1 },
+                { "upgrade-policy", "Manual" },
+                { "os-disk-type", "StandardSSD_LRS" }
+            });
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+
+        var upgradePolicy = vmss.GetProperty("upgradePolicy");
+        Assert.Equal("Manual", upgradePolicy.GetString());
+    }
+
     [Fact]
     public async Task Should_update_vmss_tags()
     {
@@ -349,7 +496,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", VmssName },
-                { "upgrade-policy", "Manual" }
+                { "upgrade-policy", "Automatic" }
             });
 
         var vmss = result.AssertProperty("Vmss");
@@ -359,7 +506,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var upgradePolicy = vmss.GetProperty("upgradePolicy");
-        Assert.Equal("Manual", upgradePolicy.GetString());
+        Assert.Equal("Automatic", upgradePolicy.GetString());
     }
 
     #endregion

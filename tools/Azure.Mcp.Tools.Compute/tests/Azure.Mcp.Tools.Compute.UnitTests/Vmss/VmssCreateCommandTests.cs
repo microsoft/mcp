@@ -74,19 +74,13 @@ public class VmssCreateCommandTests
                 Name: _knownVmssName,
                 Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
                 Location: _knownLocation,
-                VmSize: "Standard_D2s_v3",
+                VmSize: "Standard_DS1_v2",
                 ProvisioningState: "Succeeded",
                 OsType: "linux",
                 Capacity: 2,
                 UpgradePolicy: "Manual",
                 Zones: null,
-                Tags: null,
-                WorkloadConfiguration: new WorkloadConfiguration(
-                    WorkloadType: "general",
-                    SuggestedVmSize: "Standard_D2s_v3",
-                    SuggestedOsDiskType: "StandardSSD_LRS",
-                    SuggestedOsDiskSizeGb: 128,
-                    Description: "General purpose VM balanced for compute, memory, and storage"));
+                Tags: null);
 
             _computeService.CreateVmssAsync(
                 Arg.Any<string>(),
@@ -94,7 +88,6 @@ public class VmssCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -139,19 +132,13 @@ public class VmssCreateCommandTests
             Name: _knownVmssName,
             Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
             Location: _knownLocation,
-            VmSize: "Standard_D2s_v3",
+            VmSize: "Standard_DS1_v2",
             ProvisioningState: "Succeeded",
             OsType: "linux",
             Capacity: 3,
             UpgradePolicy: "Manual",
             Zones: ["1"],
-            Tags: new Dictionary<string, string> { { "env", "test" } },
-            WorkloadConfiguration: new WorkloadConfiguration(
-                WorkloadType: "general",
-                SuggestedVmSize: "Standard_D2s_v3",
-                SuggestedOsDiskType: "StandardSSD_LRS",
-                SuggestedOsDiskSizeGb: 128,
-                Description: "General purpose VM balanced for compute, memory, and storage"));
+            Tags: new Dictionary<string, string> { { "env", "test" } });
 
         _computeService.CreateVmssAsync(
             Arg.Any<string>(),
@@ -159,7 +146,6 @@ public class VmssCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -245,7 +231,6 @@ public class VmssCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -281,19 +266,13 @@ public class VmssCreateCommandTests
             Name: _knownVmssName,
             Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
             Location: _knownLocation,
-            VmSize: "Standard_D2s_v3",
+            VmSize: "Standard_DS1_v2",
             ProvisioningState: "Succeeded",
             OsType: "linux",
             Capacity: 2,
             UpgradePolicy: "Manual",
             Zones: null,
-            Tags: null,
-            WorkloadConfiguration: new WorkloadConfiguration(
-                WorkloadType: "general",
-                SuggestedVmSize: "Standard_D2s_v3",
-                SuggestedOsDiskType: "StandardSSD_LRS",
-                SuggestedOsDiskSizeGb: 128,
-                Description: "General purpose VM balanced for compute, memory, and storage"));
+            Tags: null);
 
         _computeService.CreateVmssAsync(
             Arg.Any<string>(),
@@ -301,7 +280,6 @@ public class VmssCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -339,6 +317,5 @@ public class VmssCreateCommandTests
         Assert.NotNull(result);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
-        Assert.NotNull(result.Vmss.WorkloadConfiguration);
     }
 }

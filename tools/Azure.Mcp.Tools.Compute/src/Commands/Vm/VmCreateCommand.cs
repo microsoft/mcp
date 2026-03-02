@@ -29,9 +29,12 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
     public override string Description =>
         """
-        Create an Azure Virtual Machine with workload-based defaults. Supports automatic VM size selection by workload type, Linux and Windows images, and SSH key or password authentication.
-        Creates networking resources (VNet, subnet, NSG, NIC, public IP) automatically when not specified.
-        For Linux VMs with SSH, read the user's public key file and pass its content.
+        Create, deploy, or provision a single Azure Virtual Machine (VM).
+        Use this to launch a new Linux or Windows VM with SSH key or password authentication.
+        Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
+        Equivalent to 'az vm create'. Defaults to Standard_DS1_v2 size and Ubuntu 24.04 LTS if not specified.
+        For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
+        Do not use this for creating Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """;
 
     public override string Title => CommandTitle;
@@ -62,7 +65,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
         command.Options.Add(ComputeOptionDefinitions.Image);
-        command.Options.Add(ComputeOptionDefinitions.Workload);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // Network options
@@ -98,7 +100,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         options.SshPublicKey = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name);
         options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
         options.Image = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
-        options.Workload = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Workload.Name);
         options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
         options.VirtualNetwork = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VirtualNetwork.Name);
         options.Subnet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Subnet.Name);
@@ -167,7 +168,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
                 options.Image,
                 options.AdminPassword,
                 options.SshPublicKey,
-                options.Workload,
                 options.OsType,
                 options.VirtualNetwork,
                 options.Subnet,
@@ -188,8 +188,8 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating VM. VmName: {VmName}, ResourceGroup: {ResourceGroup}, Location: {Location}, Subscription: {Subscription}, Workload: {Workload}",
-                options.VmName, options.ResourceGroup, options.Location, options.Subscription, options.Workload);
+                "Error creating VM. VmName: {VmName}, ResourceGroup: {ResourceGroup}, Location: {Location}, Subscription: {Subscription}",
+                options.VmName, options.ResourceGroup, options.Location, options.Subscription);
             HandleException(context, ex);
         }
 

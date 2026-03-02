@@ -28,8 +28,10 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update an existing Azure Virtual Machine. Supports resizing, tag management,
-        boot diagnostics, user data updates and other VM configurations. Uses PATCH semantics — only specified properties are modified.
+        Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
+        Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
+        Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
         """;
 
     public override string Title => CommandTitle;

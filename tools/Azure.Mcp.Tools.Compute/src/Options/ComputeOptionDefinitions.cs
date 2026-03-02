@@ -15,7 +15,6 @@ public static class ComputeOptionDefinitions
     public const string AdminUsernameName = "admin-username";
     public const string AdminPasswordName = "admin-password";
     public const string SshPublicKeyName = "ssh-public-key";
-    public const string WorkloadName = "workload";
     public const string OsTypeName = "os-type";
     public const string VirtualNetworkName = "virtual-network";
     public const string SubnetName = "subnet";
@@ -64,7 +63,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). If not specified, will be determined based on workload",
+        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_DS1_v2 if not specified",
         Required = false
     };
 
@@ -89,12 +88,6 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> SshPublicKey = new($"--{SshPublicKeyName}")
     {
         Description = "SSH public key for Linux VMs. Can be the key content or path to a file",
-        Required = false
-    };
-
-    public static readonly Option<string> Workload = new($"--{WorkloadName}", "-w")
-    {
-        Description = "The type of workload to run. Used to suggest appropriate VM size and configuration. Options: development, web, database, compute, memory, gpu, general",
         Required = false
     };
 

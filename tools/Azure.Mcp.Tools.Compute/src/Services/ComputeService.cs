@@ -26,58 +26,8 @@ public class ComputeService(
 {
     private readonly ILogger<ComputeService> _logger = logger;
 
-    private static readonly Dictionary<string, WorkloadConfiguration> s_workloadConfigurations = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["development"] = new WorkloadConfiguration(
-            WorkloadType: "development",
-            SuggestedVmSize: "Standard_B2s",
-            SuggestedOsDiskType: "StandardSSD_LRS",
-            SuggestedOsDiskSizeGb: 64,
-            Description: "Cost-effective burstable VM for development and testing workloads",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["web"] = new WorkloadConfiguration(
-            WorkloadType: "web",
-            SuggestedVmSize: "Standard_D2s_v5",
-            SuggestedOsDiskType: "Premium_LRS",
-            SuggestedOsDiskSizeGb: 128,
-            Description: "General purpose VM optimized for web servers and small to medium applications",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["database"] = new WorkloadConfiguration(
-            WorkloadType: "database",
-            SuggestedVmSize: "Standard_E4s_v5",
-            SuggestedOsDiskType: "Premium_LRS",
-            SuggestedOsDiskSizeGb: 256,
-            Description: "Memory-optimized VM for database workloads with high memory-to-CPU ratio",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["compute"] = new WorkloadConfiguration(
-            WorkloadType: "compute",
-            SuggestedVmSize: "Standard_F4s_v2",
-            SuggestedOsDiskType: "Premium_LRS",
-            SuggestedOsDiskSizeGb: 128,
-            Description: "Compute-optimized VM for CPU-intensive workloads like batch processing and analytics",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["memory"] = new WorkloadConfiguration(
-            WorkloadType: "memory",
-            SuggestedVmSize: "Standard_E8s_v5",
-            SuggestedOsDiskType: "Premium_LRS",
-            SuggestedOsDiskSizeGb: 256,
-            Description: "High-memory VM for in-memory databases, caching, and memory-intensive applications",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["gpu"] = new WorkloadConfiguration(
-            WorkloadType: "gpu",
-            SuggestedVmSize: "Standard_NC6s_v3",
-            SuggestedOsDiskType: "Premium_LRS",
-            SuggestedOsDiskSizeGb: 256,
-            Description: "GPU-enabled VM for machine learning, rendering, and GPU-accelerated workloads",
-            Requirements: VmRequirements.WindowsComputerName),
-        ["general"] = new WorkloadConfiguration(
-            WorkloadType: "general",
-            SuggestedVmSize: "Standard_D4s_v5",
-            SuggestedOsDiskType: "StandardSSD_LRS",
-            SuggestedOsDiskSizeGb: 128,
-            Description: "General purpose VM balanced for compute, memory, and storage",
-            Requirements: VmRequirements.WindowsComputerName)
-    };
+    // Default VM size matching Azure CLI (az vm create --size default)
+    private const string DefaultVmSize = "Standard_DS1_v2";
 
     private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -94,15 +44,6 @@ public class ComputeService(
         ["Win10Pro"] = ("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
     };
 
-    public WorkloadConfiguration GetWorkloadConfiguration(string? workload)
-    {
-        if (string.IsNullOrEmpty(workload) || !s_workloadConfigurations.TryGetValue(workload, out var config))
-        {
-            return s_workloadConfigurations["general"];
-        }
-        return config;
-    }
-
     public async Task<VmCreateResult> CreateVmAsync(
         string vmName,
         string resourceGroup,
@@ -113,7 +54,6 @@ public class ComputeService(
         string? image = null,
         string? adminPassword = null,
         string? sshPublicKey = null,
-        string? workload = null,
         string? osType = null,
         string? virtualNetwork = null,
         string? subnet = null,
@@ -134,17 +74,14 @@ public class ComputeService(
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var resourceGroupResource = rgResource.Value;
 
-        // Get workload configuration
-        var workloadConfig = GetWorkloadConfiguration(workload);
-
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Determine VM size based on workload or explicit parameter
-        var effectiveVmSize = vmSize ?? workloadConfig.SuggestedVmSize;
+        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        var effectiveVmSize = vmSize ?? DefaultVmSize;
 
-        // Determine disk settings
-        var effectiveOsDiskType = osDiskType ?? workloadConfig.SuggestedOsDiskType;
+        // Determine disk settings - let Azure choose disk type based on VM size when not specified
+        var effectiveOsDiskType = osDiskType;
         // Only use explicit disk size if provided; otherwise let Azure use image's default size
         var effectiveOsDiskSizeGb = osDiskSizeGb;
 
@@ -177,10 +114,7 @@ public class ComputeService(
                 {
                     Name = $"{vmName}-osdisk",
                     Caching = CachingType.ReadWrite,
-                    ManagedDisk = new VirtualMachineManagedDisk
-                    {
-                        StorageAccountType = new StorageAccountType(effectiveOsDiskType)
-                    },
+                    ManagedDisk = new VirtualMachineManagedDisk(),
                     DiskSizeGB = effectiveOsDiskSizeGb
                 },
                 ImageReference = new ImageReference
@@ -208,6 +142,12 @@ public class ComputeService(
                 }
             }
         };
+
+        // Set disk type only if explicitly specified; otherwise let Azure choose based on VM size
+        if (effectiveOsDiskType != null)
+        {
+            vmData.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new StorageAccountType(effectiveOsDiskType);
+        }
 
         // Configure authentication based on OS type
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase))
@@ -284,8 +224,7 @@ public class ComputeService(
             PublicIpAddress: publicIp,
             PrivateIpAddress: privateIp,
             Zones: createdVm.Data.Zones?.ToList(),
-            Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>,
-            WorkloadConfiguration: workloadConfig);
+            Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
     private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
@@ -738,7 +677,6 @@ public class ComputeService(
         string? image = null,
         string? adminPassword = null,
         string? sshPublicKey = null,
-        string? workload = null,
         string? osType = null,
         string? virtualNetwork = null,
         string? subnet = null,
@@ -758,17 +696,14 @@ public class ComputeService(
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var resourceGroupResource = rgResource.Value;
 
-        // Get workload configuration
-        var workloadConfig = GetWorkloadConfiguration(workload);
-
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Determine VM size based on workload or explicit parameter
-        var effectiveVmSize = vmSize ?? workloadConfig.SuggestedVmSize;
+        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        var effectiveVmSize = vmSize ?? DefaultVmSize;
 
-        // Determine disk settings
-        var effectiveOsDiskType = osDiskType ?? workloadConfig.SuggestedOsDiskType;
+        // Determine disk settings - let Azure choose disk type based on VM size when not specified
+        var effectiveOsDiskType = osDiskType;
         var effectiveOsDiskSizeGb = osDiskSizeGb;
         var effectiveInstanceCount = instanceCount ?? 2;
         var effectiveUpgradePolicy = ParseUpgradePolicy(upgradePolicy);
@@ -806,10 +741,7 @@ public class ComputeService(
                     OSDisk = new VirtualMachineScaleSetOSDisk(DiskCreateOptionType.FromImage)
                     {
                         Caching = CachingType.ReadWrite,
-                        ManagedDisk = new VirtualMachineScaleSetManagedDisk
-                        {
-                            StorageAccountType = new StorageAccountType(effectiveOsDiskType)
-                        },
+                        ManagedDisk = new VirtualMachineScaleSetManagedDisk(),
                         DiskSizeGB = effectiveOsDiskSizeGb
                     },
                     ImageReference = new ImageReference
@@ -846,6 +778,12 @@ public class ComputeService(
                 }
             }
         };
+
+        // Set disk type only if explicitly specified; otherwise let Azure choose based on VM size
+        if (effectiveOsDiskType != null)
+        {
+            vmssData.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new StorageAccountType(effectiveOsDiskType);
+        }
 
         // Configure authentication based on OS type
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase))
@@ -910,8 +848,7 @@ public class ComputeService(
             Capacity: (int)(createdVmss.Data.Sku?.Capacity ?? effectiveInstanceCount),
             UpgradePolicy: createdVmss.Data.UpgradePolicy?.Mode?.ToString(),
             Zones: createdVmss.Data.Zones?.ToList(),
-            Tags: createdVmss.Data.Tags as IReadOnlyDictionary<string, string>,
-            WorkloadConfiguration: workloadConfig);
+            Tags: createdVmss.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
     public async Task<VmssUpdateResult> UpdateVmssAsync(

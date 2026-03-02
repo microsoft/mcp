@@ -28,9 +28,10 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update an existing Azure Virtual Machine Scale Set configuration. Supports scaling instance count, resizing VMs,
-        changing upgrade policy, overprovisioning, automatic OS upgrades, scale-in policy, and tag management.
-        Uses PATCH semantics — only specified properties are modified.
+        Update, modify, or reconfigure an existing Azure Virtual Machine Scale Set (VMSS).
+        Use this to scale instance count, resize VMs, change upgrade policy, or update tags on a scale set.
+        Equivalent to 'az vmss update'. Changes may require 'update-instances' to roll out to existing VMs.
+        Do not use this to create a new VMSS (use VMSS create) or to update a single VM (use VM update).
         """;
 
     public override string Title => CommandTitle;
