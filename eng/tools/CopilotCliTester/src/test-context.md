@@ -14,7 +14,7 @@ Use these values unless the prompt explicitly specifies otherwise. Do NOT spend 
 
 - **Subscription:** 4d042dc6-fe17-4698-a23f-ec6a8d1e98f4
 - **Tenant:** 70a036f6-8e4d-4615-bad6-149c02e7720d
-- **Resource Group:** copilot_cli_test
+- **Resource Group:** SSS3PT_Copilot_Cli_Test
 - **Location:** eastus2
 
 **Placeholder Substitution:**
