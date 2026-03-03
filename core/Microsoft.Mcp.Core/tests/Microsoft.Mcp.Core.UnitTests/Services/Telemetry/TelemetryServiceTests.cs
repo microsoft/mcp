@@ -428,7 +428,7 @@ public class TelemetryServiceTests
             ("USGov", AzureCloud.AzureUSGovernmentCloud)
         ];
 
-        return configNames.SelectMany(configName => cloudStringToCloud.Select(cloudData => new object?[] {configName, cloudData.Item1, cloudData.Item2}));
+        return configNames.SelectMany(configName => cloudStringToCloud.Select(cloudData => new object?[] { configName, cloudData.Item1, cloudData.Item2 }));
     }
 
     private static void AssertDefaultTags<T>(
