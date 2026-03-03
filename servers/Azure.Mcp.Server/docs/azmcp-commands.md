@@ -2433,11 +2433,12 @@ azmcp sql db delete --subscription <subscription> \
                     --server <server-name> \
                     --database <database-name>
 
-# Gets a list of all databases in a SQL server
+# Gets a list of all databases in a SQL server, or shows details of a specific database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db list --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name>
+azmcp sql db get --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --server <server-name> \
+                 [--database <database-name>]
 
 # Rename an existing SQL database to a new name within the same server
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2446,13 +2447,6 @@ azmcp sql db rename --subscription <subscription> \
                     --server <server-name> \
                     --database <current-database-name> \
                     --new-database-name <new-database-name>
-
-# Show details of a specific SQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db show --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name> \
-                  --database <database>
 
 # Update an existing SQL database (applies only the provided configuration changes)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2528,16 +2522,11 @@ azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
 
-# List SQL servers in a resource group
+# List SQL servers in a resource group, or show details of a specific SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
-# Show details of a specific SQL server
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server show --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --server <server-name>
+azmcp sql server get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     [--server <server-name>]
 ```
 
 ### Azure Storage Operations
