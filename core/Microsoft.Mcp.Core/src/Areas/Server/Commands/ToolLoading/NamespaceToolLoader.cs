@@ -8,10 +8,8 @@ using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
@@ -353,7 +351,7 @@ public sealed class NamespaceToolLoader(
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
-            if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+            if (realCommand.Options.Count == 1 && InputSchemaGenerator.IsRawMcpToolInputOption(realCommand.Options[0]))
             {
                 commandOptions = realCommand.ParseFromRawMcpToolInput(parameters);
             }
@@ -555,29 +553,15 @@ public sealed class NamespaceToolLoader(
             tool.Meta = new JsonObject { ["SecretHint"] = metadata.Secret };
         }
 
-        var schema = new ToolInputSchema();
         var options = command.GetCommand().Options;
 
-        if (options?.Count > 0)
-        {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
-        }
+        tool.InputSchema = InputSchemaGenerator.Generate(options);
 
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+        // Raw MCP tool input options carry their own schema; skip output schema generation
+        if (options is { Count: 1 } && InputSchemaGenerator.IsRawMcpToolInputOption(options[0]))
+        {
+            return tool;
+        }
 
         // Set output schema if the command provides result type info
         if (command.ResultTypeInfo is { } typeInfo)
@@ -588,17 +572,7 @@ public sealed class NamespaceToolLoader(
         return tool;
     }
 
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
 
-        return option.Aliases.Any(alias =>
-            string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
-    }
 
     private static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {

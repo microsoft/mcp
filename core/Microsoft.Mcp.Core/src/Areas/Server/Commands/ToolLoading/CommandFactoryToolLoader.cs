@@ -7,9 +7,7 @@ using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
@@ -35,25 +33,11 @@ public sealed class CommandFactoryToolLoader(
 
     private ListToolsResult? _cachedListToolsResult;
 
-    public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        foreach (var alias in option.Aliases)
-        {
-            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    /// <summary>
+    /// The well-known option name used to pass raw MCP tool input as a single JSON object.
+    /// Forwarded from <see cref="InputSchemaGenerator.RawMcpToolInputOptionName"/> for backwards compatibility.
+    /// </summary>
+    public const string RawMcpToolInputOptionName = InputSchemaGenerator.RawMcpToolInputOptionName;
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -175,7 +159,7 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+        if (realCommand.Options.Count == 1 && InputSchemaGenerator.IsRawMcpToolInputOption(realCommand.Options[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -257,30 +241,13 @@ public sealed class CommandFactoryToolLoader(
 
         var options = command.GetCommand().Options;
 
-        var schema = new ToolInputSchema();
+        tool.InputSchema = InputSchemaGenerator.Generate(options);
 
-        if (options != null && options.Count > 0)
+        // Raw MCP tool input options carry their own schema; skip output schema generation
+        if (options is { Count: 1 } && InputSchemaGenerator.IsRawMcpToolInputOption(options[0]))
         {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    // Use the CreatePropertySchema method to properly handle array types with items
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
+            return tool;
         }
-
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
 
         // Set output schema if the command provides result type info
         if (command.ResultTypeInfo is { } typeInfo)
