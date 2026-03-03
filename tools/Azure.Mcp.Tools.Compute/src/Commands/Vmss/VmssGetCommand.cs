@@ -15,11 +15,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
+public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssGetOptions>()
 {
     private const string CommandTitle = "Get Virtual Machine Scale Set(s)";
     private readonly ILogger<VmssGetCommand> _logger = logger;
+    private readonly IComputeService _computeService = computeService;
 
     public override string Id => "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g";
 
@@ -86,14 +87,12 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
             return context.Response;
         }
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             // Scenario 1: Get specific VM instance in VMSS
             if (!string.IsNullOrEmpty(options.InstanceId))
             {
-                var vmInstance = await computeService.GetVmssVmAsync(
+                var vmInstance = await _computeService.GetVmssVmAsync(
                     options.VmssName!,
                     options.InstanceId,
                     options.ResourceGroup!,
@@ -109,7 +108,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
             // Scenario 2: Get specific VMSS
             else if (!string.IsNullOrEmpty(options.VmssName))
             {
-                var vmss = await computeService.GetVmssAsync(
+                var vmss = await _computeService.GetVmssAsync(
                     options.VmssName,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -124,7 +123,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger)
             // Scenario 3: List VMSS in resource group
             else
             {
-                var vmssList = await computeService.ListVmssAsync(
+                var vmssList = await _computeService.ListVmssAsync(
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
