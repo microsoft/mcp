@@ -3,4 +3,6 @@
 
 namespace Azure.Mcp.Tools.Sql.Options.Database;
 
-public class DatabaseListOptions : BaseSqlOptions;
+public class DatabaseGetOptions : BaseDatabaseOptions
+{
+}

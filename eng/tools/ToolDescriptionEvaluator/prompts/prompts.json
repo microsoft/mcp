@@ -687,17 +687,15 @@
     "Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name>",
     "Delete the database called <database_name> on server <server_name>"
   ],
-  "sql_db_list": [
+  "sql_db_get": [
+    "List all Azure SQL databases in server <server_name>",
     "List all databases in the Azure SQL server <server_name>",
-    "Show me all the databases configuration details in the Azure SQL server <server_name>"
+    "Show me the Azure SQL database <database_name> details in server <server_name>",
+    "Show me the Azure SQL database <database_name> in server <server_name>"
   ],
   "sql_db_rename": [
     "Rename the SQL database <database_name> on server <server_name> to <new_database_name>",
     "Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name>"
-  ],
-  "sql_db_show": [
-    "Get the configuration details for the SQL database <database_name> on server <server_name>",
-    "Show me the details of SQL database <database_name> in server <server_name>"
   ],
   "sql_db_update": [
     "Update the performance tier of SQL database <database_name> on server <server_name>",
@@ -738,14 +736,12 @@
     "Show me the firewall rules for SQL server <server_name>",
     "What firewall rules are configured for my SQL server <server_name>?"
   ],
-  "sql_server_list": [
+  "sql_server_get": [
     "List all Azure SQL servers in resource group <resource_group_name>",
-    "Show me every SQL server available in resource group <resource_group_name>"
-  ],
-  "sql_server_show": [
-    "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
-    "Get the configuration details for SQL server <server_name>",
-    "Display the properties of SQL server <server_name>"
+    "Show me every Azure SQL server in resource group <resource_group_name>",
+    "Show me the Azure SQL server <server_name> details",
+    "Get Azure SQL server <server_name> info",
+    "Display the properties of Azure SQL server <server_name>"
   ],
   "storage_account_create": [
     "Create a new storage account called testaccount123 in East US region",
