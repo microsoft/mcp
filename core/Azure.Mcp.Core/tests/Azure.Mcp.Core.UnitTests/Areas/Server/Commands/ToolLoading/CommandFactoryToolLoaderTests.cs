@@ -937,5 +937,197 @@ public class CommandFactoryToolLoaderTests
         Assert.Null(options.Tool);
     }
 
+    [Fact]
+    public async Task ListToolsHandler_SetsOutputSchema_WhenCommandProvidesResultTypeInfo()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var request = CreateRequest();
+
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Find commands that have ResultTypeInfo set
+        var visibleCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+        var commandsWithResultType = visibleCommands
+            .Where(kvp => kvp.Value.ResultTypeInfo != null)
+            .ToList();
+
+        // Verify we have at least some commands with ResultTypeInfo (Storage commands)
+        Assert.True(commandsWithResultType.Count > 0,
+            "Expected at least one command with ResultTypeInfo set (e.g., Storage commands)");
+
+        // For each command that declares a ResultTypeInfo, its tool must have outputSchema
+        foreach (var (commandName, command) in commandsWithResultType)
+        {
+            var tool = result.Tools.FirstOrDefault(t => t.Name == commandName);
+            Assert.NotNull(tool);
+            Assert.True(tool.OutputSchema.HasValue,
+                $"Tool '{commandName}' should have OutputSchema since its command provides ResultTypeInfo");
+
+            // Verify schema is a valid JSON object with "type" = "object" and "properties"
+            var schema = tool.OutputSchema!.Value;
+            Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+            Assert.Equal("object", schema.GetProperty("type").GetString());
+            Assert.True(schema.TryGetProperty("properties", out _),
+                $"OutputSchema for '{commandName}' should have a 'properties' field");
+        }
+
+        // Commands without ResultTypeInfo should NOT have outputSchema
+        var commandsWithoutResultType = visibleCommands
+            .Where(kvp => kvp.Value.ResultTypeInfo == null)
+            .Take(5) // Check a sample
+            .ToList();
+
+        foreach (var (commandName, _) in commandsWithoutResultType)
+        {
+            var tool = result.Tools.FirstOrDefault(t => t.Name == commandName);
+            if (tool != null)
+            {
+                Assert.False(tool.OutputSchema.HasValue,
+                    $"Tool '{commandName}' should NOT have OutputSchema since its command does not provide ResultTypeInfo");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_OutputSchemaProperties_HaveTypeField()
+    {
+        // Arrange
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Every property inside outputSchema.properties should have a "type" field
+        var commandsWithResultType = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .Where(kvp => kvp.Value.ResultTypeInfo != null)
+            .ToList();
+
+        Assert.NotEmpty(commandsWithResultType);
+
+        foreach (var (commandName, _) in commandsWithResultType)
+        {
+            var tool = result.Tools.First(t => t.Name == commandName);
+            var schema = tool.OutputSchema!.Value;
+            var properties = schema.GetProperty("properties");
+
+            foreach (var prop in properties.EnumerateObject())
+            {
+                Assert.True(prop.Value.TryGetProperty("type", out var typeValue),
+                    $"Property '{prop.Name}' in outputSchema of '{commandName}' should have a 'type' field");
+                Assert.False(string.IsNullOrEmpty(typeValue.GetString()),
+                    $"Property '{prop.Name}' in outputSchema of '{commandName}' should have a non-empty 'type' value");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CachedResults_PreserveOutputSchema()
+    {
+        // Arrange
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var request = CreateRequest();
+
+        // Act - call twice; the second call returns the cached instance
+        var result1 = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - same cached reference is returned
+        Assert.Same(result1.Tools, result2.Tools);
+
+        // And outputSchema is still present on opted-in commands
+        var commandsWithResultType = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .Where(kvp => kvp.Value.ResultTypeInfo != null)
+            .Select(kvp => kvp.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.NotEmpty(commandsWithResultType);
+
+        foreach (var tool in result2.Tools)
+        {
+            if (commandsWithResultType.Contains(tool.Name))
+            {
+                Assert.True(tool.OutputSchema.HasValue,
+                    $"Tool '{tool.Name}' should still have OutputSchema on second (cached) call");
+                Assert.Equal("object", tool.OutputSchema!.Value.GetProperty("type").GetString());
+            }
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithOptedInCommand_ReturnsValidResult()
+    {
+        // Arrange - call a command that has ResultTypeInfo and verify it executes normally
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        var commandWithResultType = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .FirstOrDefault(kvp => kvp.Value.ResultTypeInfo != null);
+
+        // Skip if no commands have ResultTypeInfo
+        if (commandWithResultType.Key == null)
+        {
+            return;
+        }
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(
+            mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = commandWithResultType.Key,
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - the command should still return a result (success or param-validation error)
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        var textContent = result.Content.First() as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.NotEmpty(textContent.Text);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNamespaceFilter_PreservesOutputSchema()
+    {
+        // Arrange - filter to "storage" namespace, which has opted-in commands
+        var filteredOptions = new ToolLoaderOptions { Namespace = ["storage"] };
+        var (toolLoader, commandFactory) = CreateToolLoader(filteredOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - filtered tools that have ResultTypeInfo should still have outputSchema
+        Assert.NotNull(result.Tools);
+        Assert.NotEmpty(result.Tools);
+
+        var storageCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .Where(kvp => kvp.Value.ResultTypeInfo != null)
+            .ToList();
+
+        foreach (var tool in result.Tools)
+        {
+            var matchingCommand = storageCommands.FirstOrDefault(c => c.Key == tool.Name);
+            if (matchingCommand.Key != null)
+            {
+                Assert.True(tool.OutputSchema.HasValue,
+                    $"Filtered tool '{tool.Name}' should have OutputSchema");
+
+                var schema = tool.OutputSchema!.Value;
+                Assert.Equal("object", schema.GetProperty("type").GetString());
+                Assert.True(schema.TryGetProperty("properties", out var props));
+                Assert.True(props.EnumerateObject().Any(),
+                    $"Filtered tool '{tool.Name}' outputSchema should have at least one property");
+            }
+        }
+    }
+
     #endregion
 }

@@ -578,6 +578,13 @@ public sealed class NamespaceToolLoader(
         }
 
         tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+
+        // Set output schema if the command provides result type info
+        if (command.ResultTypeInfo is { } typeInfo)
+        {
+            tool.OutputSchema = OutputSchemaGenerator.Generate(typeInfo);
+        }
+
         return tool;
     }
 

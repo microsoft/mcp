@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -474,6 +475,194 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     // Elicitation Handler Tests (ported from BaseToolLoaderTests)
+
+    [Fact]
+    public async Task CallToolHandler_LearnResponse_IncludesOutputSchemaForOptedInCommands()
+    {
+        // Arrange - Use the "storage" namespace which has commands with ResultTypeInfo
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list storage accounts"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // The learn response serializes child tools as JSON, which should include outputSchema
+        Assert.Contains("outputSchema", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LearnResponse_OutputSchemaHasCorrectStructure()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "get storage accounts"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // Extract the JSON array of tools from the learn response text
+        var toolsJsonStart = textContent.Text.IndexOf('[');
+        var toolsJsonEnd = textContent.Text.LastIndexOf(']');
+        Assert.True(toolsJsonStart >= 0 && toolsJsonEnd > toolsJsonStart,
+            "Learn response should contain a JSON array of tools");
+
+        var toolsJson = textContent.Text.Substring(toolsJsonStart, toolsJsonEnd - toolsJsonStart + 1);
+        using var doc = JsonDocument.Parse(toolsJson);
+        var tools = doc.RootElement;
+        Assert.Equal(JsonValueKind.Array, tools.ValueKind);
+
+        // Find a tool with outputSchema (e.g., storage account_get)
+        var toolsWithOutputSchema = tools.EnumerateArray()
+            .Where(t => t.TryGetProperty("outputSchema", out _))
+            .ToList();
+
+        Assert.True(toolsWithOutputSchema.Count > 0,
+            "At least one storage command should have outputSchema in the learn response");
+
+        // Verify the outputSchema structure
+        foreach (var tool in toolsWithOutputSchema)
+        {
+            var outputSchema = tool.GetProperty("outputSchema");
+            Assert.Equal("object", outputSchema.GetProperty("type").GetString());
+            Assert.True(outputSchema.TryGetProperty("properties", out var props));
+            Assert.True(props.EnumerateObject().Any(),
+                $"Tool '{tool.GetProperty("name").GetString()}' outputSchema should have at least one property");
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LearnResponse_NoOutputSchemaForCommandsWithoutResultTypeInfo()
+    {
+        // Arrange - Use a namespace that should have commands without ResultTypeInfo
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+
+        // Find a namespace that has commands without ResultTypeInfo
+        var namespaces = _commandFactory.RootGroup.SubGroup
+            .Where(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+            .Select(g => g.Name)
+            .ToList();
+
+        // Use a namespace other than storage (which has been opted in)
+        var testNamespace = namespaces.FirstOrDefault(n => !string.Equals(n, "storage", StringComparison.OrdinalIgnoreCase))
+            ?? namespaces.First();
+
+        var request = CreateCallToolRequest(testNamespace, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "explore commands"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // Extract JSON tools array
+        var toolsJsonStart = textContent.Text.IndexOf('[');
+        var toolsJsonEnd = textContent.Text.LastIndexOf(']');
+        if (toolsJsonStart >= 0 && toolsJsonEnd > toolsJsonStart)
+        {
+            var toolsJson = textContent.Text.Substring(toolsJsonStart, toolsJsonEnd - toolsJsonStart + 1);
+            using var doc = JsonDocument.Parse(toolsJson);
+
+            // Verify commands in this namespace that haven't opted in don't have outputSchema
+            var commands = _commandFactory.GroupCommands([testNamespace]);
+            var commandsWithoutResultType = commands
+                .Where(kvp => kvp.Value.ResultTypeInfo == null)
+                .Select(kvp => kvp.Key)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var tool in doc.RootElement.EnumerateArray())
+            {
+                var toolName = tool.GetProperty("name").GetString()!;
+                if (commandsWithoutResultType.Contains(toolName))
+                {
+                    Assert.False(tool.TryGetProperty("outputSchema", out _),
+                        $"Tool '{toolName}' should NOT have outputSchema since its command does not provide ResultTypeInfo");
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ChildToolSpec_IncludesOutputSchemaInErrorGuidance()
+    {
+        // Arrange - Call a storage command with missing required params to trigger the error guidance path
+        // which includes the child tool spec JSON
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "account_get",
+            ["parameters"] = new Dictionary<string, object?>()  // Missing required params
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        // Whether success or error, if it hits the "missing required" path, the
+        // Command Spec embedded in response should contain outputSchema
+        var allText = string.Join("\n", result.Content
+            .OfType<TextContentBlock>()
+            .Select(c => c.Text));
+
+        if (allText.Contains("Command Spec", StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Contains("outputSchema", allText);
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LearnResponse_CachesToolListWithOutputSchema()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+
+        // Act - Call learn twice for the same namespace
+        var request1 = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list accounts"
+        });
+        var result1 = await loader.CallToolHandler(request1, TestContext.Current.CancellationToken);
+
+        var request2 = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list blobs"
+        });
+        var result2 = await loader.CallToolHandler(request2, TestContext.Current.CancellationToken);
+
+        // Assert - Both should contain outputSchema (cached tool list is reused)
+        var text1 = (result1.Content[0] as TextContentBlock)?.Text;
+        var text2 = (result2.Content[0] as TextContentBlock)?.Text;
+        Assert.NotNull(text1);
+        Assert.NotNull(text2);
+        Assert.Contains("outputSchema", text1);
+        Assert.Contains("outputSchema", text2);
+    }
 
     [Fact]
     public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationHandler()

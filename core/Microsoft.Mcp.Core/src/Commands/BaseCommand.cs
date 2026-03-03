@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
@@ -31,6 +32,12 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     public abstract string Description { get; }
     public abstract string Title { get; }
     public abstract ToolMetadata Metadata { get; }
+
+    /// <summary>
+    /// Gets the JsonTypeInfo for this command's result type, if available.
+    /// Override in derived commands to enable outputSchema generation.
+    /// </summary>
+    public virtual JsonTypeInfo? ResultTypeInfo => null;
 
     protected virtual void RegisterOptions(Command command)
     {

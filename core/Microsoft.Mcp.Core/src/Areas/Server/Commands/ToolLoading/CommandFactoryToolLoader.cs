@@ -33,6 +33,8 @@ public sealed class CommandFactoryToolLoader(
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(options.Value.Namespace);
 
+    private ListToolsResult? _cachedListToolsResult;
+
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
     private static bool IsRawMcpToolInputOption(Option option)
@@ -61,6 +63,11 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
+        if (_cachedListToolsResult != null)
+        {
+            return ValueTask.FromResult(_cachedListToolsResult);
+        }
+
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
@@ -82,6 +89,7 @@ public sealed class CommandFactoryToolLoader(
 
         _logger.LogInformation("Listing {NumberOfTools} tools.", tools.Count);
 
+        _cachedListToolsResult = listToolsResult;
         return ValueTask.FromResult(listToolsResult);
     }
 
@@ -273,6 +281,12 @@ public sealed class CommandFactoryToolLoader(
         }
 
         tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+
+        // Set output schema if the command provides result type info
+        if (command.ResultTypeInfo is { } typeInfo)
+        {
+            tool.OutputSchema = OutputSchemaGenerator.Generate(typeInfo);
+        }
 
         return tool;
     }

@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -40,6 +41,12 @@ public interface IBaseCommand
     /// This metadata helps MCP clients understand how the tool operates and its potential effects.
     /// </summary>
     ToolMetadata Metadata { get; }
+
+    /// <summary>
+    /// Gets the JsonTypeInfo for this command's result type, if available.
+    /// Used to auto-generate outputSchema for MCP tool definitions.
+    /// </summary>
+    JsonTypeInfo? ResultTypeInfo => null;
 
     /// <summary>
     /// Gets the command definition
