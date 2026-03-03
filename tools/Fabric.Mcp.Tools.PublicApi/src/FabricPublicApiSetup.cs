@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.PublicApi;
 
 public class FabricPublicApiSetup : IAreaSetup
 {
-    public string Name => "publicapis";
+    public string Name => "api";
 
     public string Title => "Microsoft Fabric Public APIs";
 
@@ -61,7 +61,7 @@ public class FabricPublicApiSetup : IAreaSetup
         var examples = new CommandGroup("examples", "Example API Files - Commands for retrieving example API request/response files for specific Microsoft Fabric workloads from the official documentation repository.");
         bestPractices.AddSubGroup(examples);
 
-        var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
+        var itemDefinition = new CommandGroup("itemdef", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
         bestPractices.AddSubGroup(itemDefinition);
 
         var listWorkloads = serviceProvider.GetRequiredService<ListWorkloadsCommand>();

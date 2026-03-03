@@ -15,17 +15,17 @@ namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
 public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
 {
-    private const string CommandTitle = "Get Workload Item Definition";
+    private const string CommandTitle = "Get Fabric Item Schema";
 
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override string Id => "445c49f3-2a5d-478a-82ca-87fde1a7943e";
 
-    public override string Name => "get";
+    public override string Name => "get_item_schema";
 
     public override string Description =>
         """
-        Retrieve the JSON schema definitions for specific items within a Microsoft Fabric workload's API.
+        Retrieves JSON schema definitions for items in a Fabric workload API. Use this when the user needs to understand item structure or validate item definitions. Returns schema definitions for the specified workload.
         """;
 
     public override string Title => CommandTitle;

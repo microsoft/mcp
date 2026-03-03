@@ -21,23 +21,16 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 public sealed class PathListCommand(ILogger<PathListCommand> logger)
     : GlobalCommand<PathListOptions>()
 {
-    private const string CommandTitle = "List OneLake Path Structure";
+    private const string CommandTitle = "List OneLake Files";
     private readonly ILogger<PathListCommand> _logger = logger;
 
     public override string Id => "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3";
 
-    public override string Name => "list";
+    public override string Name => "list_files";
 
     public override string Description =>
         """
-        List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. 
-        Shows directory structure with paths, sizes, timestamps, and metadata. Use this to explore OneLake content in a filesystem format 
-        rather than flat blob listing. Supports optional path filtering and recursive directory traversal.
-        
-        If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically,
-        providing comprehensive visibility across all top-level OneLake folders.
-        
-        Use --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.
+        Lists files and directories in OneLake storage using hierarchical DFS-style view. Use this when the user needs to explore OneLake content in a filesystem format. Supports path filtering and recursive traversal.
         """;
 
     public override string Title => CommandTitle;
