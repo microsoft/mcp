@@ -95,6 +95,13 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             Assert.True(properties.TryGetProperty("command", out _));
             Assert.True(properties.TryGetProperty("parameters", out _));
             Assert.True(properties.TryGetProperty("learn", out _));
+
+            // Verify namespace tools have default outputSchema
+            Assert.NotNull(tool.OutputSchema);
+            Assert.Equal("object", tool.OutputSchema.Value.GetProperty("type").GetString());
+            Assert.True(tool.OutputSchema.Value.TryGetProperty("properties", out var outputProps));
+            Assert.True(outputProps.TryGetProperty("status", out _));
+            Assert.True(outputProps.TryGetProperty("results", out _));
         }
     }
 

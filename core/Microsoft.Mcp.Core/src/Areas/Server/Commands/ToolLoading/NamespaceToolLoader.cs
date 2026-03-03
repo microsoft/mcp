@@ -123,6 +123,7 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                OutputSchema = OutputSchemaGenerator.Generate(),
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
