@@ -4,6 +4,11 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="temp_test\**" />
+    <EmbeddedResource Remove="temp_test\**" />
+    <None Remove="temp_test\**" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
     <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
   </ItemGroup>
