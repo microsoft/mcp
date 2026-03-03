@@ -14,7 +14,6 @@ namespace Azure.Mcp.Tools.Communication.UnitTests.Sms;
 
 public class SmsSendCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ICommunicationService _communicationService;
     private readonly ILogger<SmsSendCommand> _logger;
     private readonly SmsSendCommand _command;
@@ -26,10 +25,8 @@ public class SmsSendCommandTests
         _communicationService = Substitute.For<ICommunicationService>();
         _logger = Substitute.For<ILogger<SmsSendCommand>>();
 
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
         _command = new(_logger, _communicationService);
-        _context = new CommandContext(_serviceProvider);
+        _context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 
