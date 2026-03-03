@@ -12,6 +12,7 @@ The application:
 1. Tests prompt-to-tool matching using vector similarity search with cosine similarity
 1. Generates confidence scores and analysis reports to identify gaps in tool selection accuracy
 
+
 ## Project Structure
 
 ```text
@@ -354,7 +355,7 @@ dotnet run -- --area "sql,cosmos,functionapp"  # Matches SQL, Cosmos, and Functi
 dotnet run -- --area "azmcp_keyvault"
 ```
 
-Common service names (automatically prefixed with `azmcp_`) include: `foundry`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
+Common service names (automatically prefixed with `azmcp_`) include: `foundry`, `foundryextensions`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
 
 #### JSON Format (Alternative)
 

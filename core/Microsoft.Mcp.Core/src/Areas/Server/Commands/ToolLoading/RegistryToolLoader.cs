@@ -172,6 +172,19 @@ public sealed class RegistryToolLoader(
             return;
         }
 
+        // When running under a test proxy (TEST_PROXY_URL is set by the test infrastructure),
+        // every outgoing HTTP request is redirected through the proxy by RecordingRedirectHandler.
+        // External registry server connections (e.g. mcp.ai.azure.com) would therefore hit the
+        // test proxy during an active recording/playback session, either producing unrecorded
+        // traffic in playback mode or polluting the recording sequence in record mode. Skip
+        // registry initialization entirely so only the local in-process tools are loaded.
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEST_PROXY_URL")))
+        {
+            _logger.LogDebug("Skipping registry server initialization: TEST_PROXY_URL is set (running under test proxy).");
+            _isInitialized = true;
+            return;
+        }
+
         await _initializationSemaphore.WaitAsync(cancellationToken);
         try
         {

@@ -111,7 +111,6 @@ internal class Program
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
-            new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
