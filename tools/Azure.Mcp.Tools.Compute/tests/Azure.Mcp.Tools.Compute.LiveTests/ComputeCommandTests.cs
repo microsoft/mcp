@@ -539,6 +539,188 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         }
     }
 
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task DiskCreate_FromGalleryImage_CreatesSuccessfully()
+    {
+        var newDiskName = RegisterOrRetrieveVariable("createGalleryDiskName", $"{Settings.ResourceBaseName}-gallery-test");
+        var galleryImageVersionId = Settings.DeploymentOutputs["GALLERYIMAGEVERSIONID"];
+
+        try
+        {
+            // Act - create disk from gallery image (OS disk, no LUN)
+            // Use westus2 location to match gallery image replication target region
+            JsonElement? result = await CallToolAsync(
+                "compute_disk_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "disk-name", newDiskName },
+                    { "gallery-image-reference", galleryImageVersionId },
+                    { "sku", "Standard_LRS" },
+                    { "location", "westus2" }
+                });
+
+            // Assert
+            Assert.NotNull(result);
+            JsonElement disk = result.Value.AssertProperty("Disk");
+            Assert.Equal(JsonValueKind.Object, disk.ValueKind);
+
+            Assert.NotNull(disk.AssertProperty("Name").GetString());
+            Assert.NotNull(disk.AssertProperty("Location").GetString());
+            Assert.Equal("Standard_LRS", disk.AssertProperty("SkuName").GetString());
+            Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+        }
+        finally
+        {
+            await CleanupDiskAsync(newDiskName);
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task DiskCreate_FromGalleryImageWithLun_CreatesDataDisk()
+    {
+        var newDiskName = RegisterOrRetrieveVariable("createGalleryLunDiskName", $"{Settings.ResourceBaseName}-gallery-lun-test");
+        var galleryImageVersionId = Settings.DeploymentOutputs["GALLERYIMAGEVERSIONID"];
+
+        try
+        {
+            // Act - create disk from gallery image data disk at LUN 0
+            // Use westus2 location to match gallery image replication target region
+            JsonElement? result = await CallToolAsync(
+                "compute_disk_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "disk-name", newDiskName },
+                    { "gallery-image-reference", galleryImageVersionId },
+                    { "gallery-image-reference-lun", 0 },
+                    { "sku", "Standard_LRS" },
+                    { "location", "westus2" }
+                });
+
+            // Assert
+            Assert.NotNull(result);
+            JsonElement disk = result.Value.AssertProperty("Disk");
+            Assert.Equal(JsonValueKind.Object, disk.ValueKind);
+
+            Assert.NotNull(disk.AssertProperty("Name").GetString());
+            Assert.NotNull(disk.AssertProperty("Location").GetString());
+            Assert.Equal("Standard_LRS", disk.AssertProperty("SkuName").GetString());
+            Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+        }
+        finally
+        {
+            await CleanupDiskAsync(newDiskName);
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task DiskCreate_WithUploadType_CreatesReadyToUploadDisk()
+    {
+        var newDiskName = RegisterOrRetrieveVariable("createUploadDiskName", $"{Settings.ResourceBaseName}-upload-test");
+
+        try
+        {
+            // Act - create a disk ready for upload with Upload type
+            // 20972032 bytes = 20 MB VHD + 512 byte footer
+            JsonElement? result = await CallToolAsync(
+                "compute_disk_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "disk-name", newDiskName },
+                    { "upload-type", "Upload" },
+                    { "upload-size-bytes", 20972032L },
+                    { "sku", "Standard_LRS" }
+                });
+
+            // Assert
+            Assert.NotNull(result);
+            JsonElement disk = result.Value.AssertProperty("Disk");
+            Assert.Equal(JsonValueKind.Object, disk.ValueKind);
+
+            Assert.NotNull(disk.AssertProperty("Name").GetString());
+            Assert.NotNull(disk.AssertProperty("Location").GetString());
+            Assert.Equal("Standard_LRS", disk.AssertProperty("SkuName").GetString());
+            Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+            Assert.Equal("ReadyToUpload", disk.AssertProperty("DiskState").GetString());
+        }
+        finally
+        {
+            await CleanupDiskAsync(newDiskName);
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task DiskCreate_WithUploadTypeUploadWithSecurityData_CreatesReadyToUploadDisk()
+    {
+        var newDiskName = RegisterOrRetrieveVariable("createUploadSecDiskName", $"{Settings.ResourceBaseName}-uploadsec-test");
+
+        try
+        {
+            // Act - create a disk ready for upload with security data
+            // Requires security-type to be set for UploadWithSecurityData
+            JsonElement? result = await CallToolAsync(
+                "compute_disk_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "disk-name", newDiskName },
+                    { "upload-type", "UploadWithSecurityData" },
+                    { "upload-size-bytes", 20972032L },
+                    { "sku", "Standard_LRS" },
+                    { "security-type", "TrustedLaunch" },
+                    { "hyper-v-generation", "V2" }
+                });
+
+            // Assert
+            Assert.NotNull(result);
+            JsonElement disk = result.Value.AssertProperty("Disk");
+            Assert.Equal(JsonValueKind.Object, disk.ValueKind);
+
+            Assert.NotNull(disk.AssertProperty("Name").GetString());
+            Assert.NotNull(disk.AssertProperty("Location").GetString());
+            Assert.Equal("Standard_LRS", disk.AssertProperty("SkuName").GetString());
+            Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+            Assert.Equal("ReadyToUpload", disk.AssertProperty("DiskState").GetString());
+        }
+        finally
+        {
+            await CleanupDiskAsync(newDiskName);
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task DiskCreate_WithUploadTypeButNoUploadSizeBytes_ReturnsError()
+    {
+        var newDiskName = RegisterOrRetrieveVariable("createUploadNoSizeName", $"{Settings.ResourceBaseName}-uploadnosize-test");
+
+        // Act - upload-type without upload-size-bytes should fail
+        JsonElement? result = await CallToolAsync(
+            "compute_disk_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "disk-name", newDiskName },
+                { "upload-type", "Upload" },
+                { "sku", "Standard_LRS" }
+            });
+
+        // Assert - should return an error response
+        Assert.NotNull(result);
+        Assert.True(result.Value.TryGetProperty("message", out _));
+    }
+
     #endregion
 
     #region Disk Update Tests
@@ -710,7 +892,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         try
         {
-            // Create a disk
+            // Create a disk at 64GB (must match or exceed any previous run's final size
+            // since CleanupDiskAsync cannot delete disks and Azure disallows downsizing)
             JsonElement? createResult = await CallToolAsync(
                 "compute_disk_create",
                 new()
@@ -718,7 +901,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "disk-name", newDiskName },
-                    { "size-gb", 32 },
+                    { "size-gb", 64 },
                     { "sku", "Standard_LRS" }
                 });
 
@@ -726,7 +909,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             JsonElement createdDisk = createResult.Value.AssertProperty("Disk");
             Assert.Equal("Succeeded", createdDisk.AssertProperty("ProvisioningState").GetString());
 
-            // Update multiple properties at once
+            // Update multiple properties at once (resize up to 128GB)
             JsonElement? updateResult = await CallToolAsync(
                 "compute_disk_update",
                 new()
@@ -734,7 +917,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "disk-name", newDiskName },
-                    { "size-gb", 64 },
+                    { "size-gb", 128 },
                     { "sku", "StandardSSD_LRS" },
                     { "tags", "environment=test,lifecycle=full" }
                 });
@@ -742,7 +925,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             Assert.NotNull(updateResult);
             JsonElement updatedDisk = updateResult.Value.AssertProperty("Disk");
             Assert.Equal(JsonValueKind.Object, updatedDisk.ValueKind);
-            Assert.Equal(64, updatedDisk.AssertProperty("DiskSizeGB").GetInt32());
+            Assert.Equal(128, updatedDisk.AssertProperty("DiskSizeGB").GetInt32());
             Assert.Equal("StandardSSD_LRS", updatedDisk.AssertProperty("SkuName").GetString());
             Assert.Equal("Succeeded", updatedDisk.AssertProperty("ProvisioningState").GetString());
 
@@ -762,7 +945,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             Assert.Single(diskList);
 
             JsonElement verifiedDisk = diskList[0];
-            Assert.Equal(64, verifiedDisk.AssertProperty("DiskSizeGB").GetInt32());
+            Assert.Equal(128, verifiedDisk.AssertProperty("DiskSizeGB").GetInt32());
             Assert.Equal("StandardSSD_LRS", verifiedDisk.AssertProperty("SkuName").GetString());
         }
         finally

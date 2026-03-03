@@ -19,8 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// Command to update an Azure managed disk.
 /// </summary>
 public sealed class DiskUpdateCommand(
-    ILogger<DiskUpdateCommand> logger,
-    IComputeService computeService)
+    ILogger<DiskUpdateCommand> logger)
     : BaseComputeCommand<DiskUpdateOptions>
 {
     private const string CommandTitle = "Update Managed Disk";
@@ -33,7 +32,6 @@ public sealed class DiskUpdateCommand(
         + "Only specified properties are updated; unspecified properties remain unchanged.";
 
     private readonly ILogger<DiskUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     /// <inheritdoc/>
     public override string Id => "4a9b2c3d-6e7f-5b8c-9d0e-1f2a3b4c5d6e";
@@ -119,6 +117,8 @@ public sealed class DiskUpdateCommand(
         var options = BindOptions(parseResult);
         try
         {
+            var computeService = context.GetService<IComputeService>();
+
             // If resource group is not provided, search for the disk by name in the subscription
             if (string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -126,7 +126,7 @@ public sealed class DiskUpdateCommand(
                     "Resource group not specified, searching for disk {DiskName} in subscription {Subscription}",
                     options.Disk, options.Subscription);
 
-                var disks = await _computeService.ListDisksAsync(
+                var disks = await computeService.ListDisksAsync(
                     options.Subscription!,
                     null,
                     options.Tenant,
@@ -148,7 +148,7 @@ public sealed class DiskUpdateCommand(
                 "Updating disk {DiskName} in resource group {ResourceGroup}",
                 options.Disk, options.ResourceGroup);
 
-            var disk = await _computeService.UpdateDiskAsync(
+            var disk = await computeService.UpdateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,

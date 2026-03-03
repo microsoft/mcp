@@ -39,7 +39,7 @@ public class DiskUpdateCommandTests
         var collection = new ServiceCollection().AddSingleton(_computeService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _computeService);
+        _command = new(_logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -19,22 +19,22 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// Command to create an Azure managed disk.
 /// </summary>
 public sealed class DiskCreateCommand(
-    ILogger<DiskCreateCommand> logger,
-    IComputeService computeService)
+    ILogger<DiskCreateCommand> logger)
     : BaseComputeCommand<DiskCreateOptions>
 {
     private const string CommandTitle = "Create Managed Disk";
     private const string CommandDescription =
         "Creates a new Azure managed disk in the specified resource group. "
-        + "Supports creating empty disks (specify --size-gb) or disks from a source such as a snapshot, "
-        + "another managed disk, or a blob URI (specify --source). "
+        + "Supports creating empty disks (specify --size-gb), disks from a source such as a snapshot, "
+        + "another managed disk, or a blob URI (specify --source), disks from a Shared Image Gallery "
+        + "image version (specify --gallery-image-reference), or disks ready for upload "
+        + "(specify --upload-type and --upload-size-bytes). "
         + "If location is not specified, defaults to the resource group's location. "
         + "Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), "
         + "OS type, availability zone, hypervisor generation, tags, encryption settings, "
         + "performance tier, shared disk, network access, and on-demand bursting.";
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     /// <inheritdoc/>
     public override string Id => "3f8a1b2c-5d6e-4a7b-8c9d-0e1f2a3b4c5d";
@@ -79,6 +79,13 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.EncryptionType);
         command.Options.Add(ComputeOptionDefinitions.DiskAccessId);
         command.Options.Add(ComputeOptionDefinitions.Tier);
+        command.Options.Add(ComputeOptionDefinitions.GalleryImageReference);
+        command.Options.Add(ComputeOptionDefinitions.GalleryImageReferenceLun);
+        command.Options.Add(ComputeOptionDefinitions.DiskIopsReadWrite);
+        command.Options.Add(ComputeOptionDefinitions.DiskMbpsReadWrite);
+        command.Options.Add(ComputeOptionDefinitions.UploadType);
+        command.Options.Add(ComputeOptionDefinitions.UploadSizeBytes);
+        command.Options.Add(ComputeOptionDefinitions.SecurityType);
     }
 
     /// <inheritdoc/>
@@ -108,6 +115,24 @@ public sealed class DiskCreateCommand(
         options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
         options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
         options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
+        options.GalleryImageReference = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
+
+        var galleryLun = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.GalleryImageReferenceLun.Name);
+        options.GalleryImageReferenceLun = galleryLun > 0 ? galleryLun : null;
+
+        var iops = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskIopsReadWrite.Name);
+        options.DiskIopsReadWrite = iops > 0 ? iops : null;
+
+        var mbps = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskMbpsReadWrite.Name);
+        options.DiskMbpsReadWrite = mbps > 0 ? mbps : null;
+
+        options.UploadType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
+
+        var uploadSizeBytes = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
+        options.UploadSizeBytes = uploadSizeBytes > 0 ? uploadSizeBytes : null;
+
+        options.SecurityType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
+
         return options;
     }
 
@@ -127,16 +152,22 @@ public sealed class DiskCreateCommand(
                 throw new ArgumentException("Resource group is required for creating a disk.");
             }
 
-            if (string.IsNullOrEmpty(options.Source) && !options.SizeGb.HasValue)
+            if (string.IsNullOrEmpty(options.Source) && !options.SizeGb.HasValue && string.IsNullOrEmpty(options.GalleryImageReference) && string.IsNullOrEmpty(options.UploadType))
             {
-                throw new ArgumentException("Either --source or --size-gb must be specified.");
+                throw new ArgumentException("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
+            }
+
+            if (!string.IsNullOrEmpty(options.UploadType) && !options.UploadSizeBytes.HasValue)
+            {
+                throw new ArgumentException("--upload-size-bytes is required when --upload-type is specified.");
             }
 
             _logger.LogInformation(
                 "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}, source {Source}",
                 options.Disk, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
 
-            var disk = await _computeService.CreateDiskAsync(
+            var computeService = context.GetService<IComputeService>();
+            var disk = await computeService.CreateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -155,6 +186,13 @@ public sealed class DiskCreateCommand(
                 options.EncryptionType,
                 options.DiskAccessId,
                 options.Tier,
+                options.GalleryImageReference,
+                options.GalleryImageReferenceLun,
+                options.DiskIopsReadWrite,
+                options.DiskMbpsReadWrite,
+                options.UploadType,
+                options.UploadSizeBytes,
+                options.SecurityType,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

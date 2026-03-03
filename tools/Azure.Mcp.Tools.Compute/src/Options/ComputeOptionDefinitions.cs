@@ -26,6 +26,11 @@ public static class ComputeOptionDefinitions
     public const string EncryptionTypeName = "encryption-type";
     public const string DiskAccessIdName = "disk-access";
     public const string TierName = "tier";
+    public const string GalleryImageReferenceName = "gallery-image-reference";
+    public const string GalleryImageReferenceLunName = "gallery-image-reference-lun";
+    public const string UploadTypeName = "upload-type";
+    public const string UploadSizeBytesName = "upload-size-bytes";
+    public const string SecurityTypeName = "security-type";
 
     public static readonly Option<string> Source = new($"--{SourceName}")
     {
@@ -126,6 +131,36 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> Tier = new($"--{TierName}")
     {
         Description = "Performance tier of the disk (e.g., P10, P15, P20, P30, P40, P50, P60, P70, P80). Applicable to Premium SSD disks only.",
+        Required = false
+    };
+
+    public static readonly Option<string> UploadType = new($"--{UploadTypeName}")
+    {
+        Description = "Type of upload for the disk. Accepted values: Upload, UploadWithSecurityData. When specified, the disk is created in a ReadyToUpload state.",
+        Required = false
+    };
+
+    public static readonly Option<long> UploadSizeBytes = new($"--{UploadSizeBytesName}")
+    {
+        Description = "The size in bytes (including the VHD footer of 512 bytes) of the content to be uploaded. Required when --upload-type is specified.",
+        Required = false
+    };
+
+    public static readonly Option<string> SecurityType = new($"--{SecurityTypeName}")
+    {
+        Description = "Security type of the managed disk. Accepted values: ConfidentialVM_DiskEncryptedWithCustomerKey, ConfidentialVM_DiskEncryptedWithPlatformKey, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey, Standard, TrustedLaunch. Required when --upload-type is UploadWithSecurityData.",
+        Required = false
+    };
+
+    public static readonly Option<string> GalleryImageReference = new($"--{GalleryImageReferenceName}")
+    {
+        Description = "Resource ID of a Shared Image Gallery image version to use as the source for the disk. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{gallery}/images/{image}/versions/{version}.",
+        Required = false
+    };
+
+    public static readonly Option<int> GalleryImageReferenceLun = new($"--{GalleryImageReferenceLunName}")
+    {
+        Description = "LUN (Logical Unit Number) of the data disk in the gallery image version. If specified, the disk is created from the data disk at this LUN. If not specified, the disk is created from the OS disk of the image.",
         Required = false
     };
 

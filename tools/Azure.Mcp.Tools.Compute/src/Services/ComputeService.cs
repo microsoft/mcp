@@ -434,6 +434,13 @@ public class ComputeService(
         string? encryptionType = null,
         string? diskAccessId = null,
         string? tier = null,
+        string? galleryImageReference = null,
+        int? galleryImageReferenceLun = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        string? uploadType = null,
+        long? uploadSizeBytes = null,
+        string? securityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -446,7 +453,7 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
-        var creationData = CreateDiskCreationData(source);
+        var creationData = CreateDiskCreationData(source, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
         var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
         {
@@ -538,6 +545,24 @@ public class ComputeService(
         if (!string.IsNullOrEmpty(tier))
         {
             diskData.Tier = tier;
+        }
+
+        if (diskIopsReadWrite.HasValue)
+        {
+            diskData.DiskIopsReadWrite = diskIopsReadWrite.Value;
+        }
+
+        if (diskMbpsReadWrite.HasValue)
+        {
+            diskData.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
+        }
+
+        if (!string.IsNullOrEmpty(securityType))
+        {
+            diskData.SecurityProfile = new DiskSecurityProfile
+            {
+                SecurityType = new DiskSecurityType(securityType)
+            };
         }
 
         _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
@@ -655,8 +680,38 @@ public class ComputeService(
         return ConvertToDiskModel(result.Value, resourceGroup!);
     }
 
-    private static DiskCreationData CreateDiskCreationData(string? source)
+    private static DiskCreationData CreateDiskCreationData(string? source, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
     {
+        if (!string.IsNullOrEmpty(uploadType))
+        {
+            var createOption = uploadType.Equals("UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
+                ? DiskCreateOption.UploadPreparedSecure
+                : DiskCreateOption.Upload;
+
+            return new DiskCreationData(createOption)
+            {
+                UploadSizeBytes = uploadSizeBytes
+            };
+        }
+
+        if (!string.IsNullOrEmpty(galleryImageReference))
+        {
+            var creationData = new DiskCreationData(DiskCreateOption.FromImage)
+            {
+                GalleryImageReference = new ImageDiskReference
+                {
+                    Id = new Azure.Core.ResourceIdentifier(galleryImageReference)
+                }
+            };
+
+            if (galleryImageReferenceLun.HasValue)
+            {
+                creationData.GalleryImageReference.Lun = galleryImageReferenceLun.Value;
+            }
+
+            return creationData;
+        }
+
         if (string.IsNullOrEmpty(source))
         {
             return new DiskCreationData(DiskCreateOption.Empty);

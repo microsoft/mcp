@@ -108,6 +108,13 @@ public interface IComputeService
         string? encryptionType = null,
         string? diskAccessId = null,
         string? tier = null,
+        string? galleryImageReference = null,
+        int? galleryImageReferenceLun = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        string? uploadType = null,
+        long? uploadSizeBytes = null,
+        string? securityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

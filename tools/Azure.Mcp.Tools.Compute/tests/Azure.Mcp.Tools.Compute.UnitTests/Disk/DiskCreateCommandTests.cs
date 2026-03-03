@@ -39,7 +39,7 @@ public class DiskCreateCommandTests
         var collection = new ServiceCollection().AddSingleton(_computeService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _computeService);
+        _command = new(_logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -106,6 +106,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -186,6 +193,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -262,6 +276,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -331,6 +352,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -403,6 +431,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
@@ -445,7 +480,12 @@ public class DiskCreateCommandTests
             "--tier", "P30",
             "--max-shares", "2",
             "--network-access-policy", "AllowPrivate",
-            "--enable-bursting", "true"
+            "--enable-bursting", "true",
+            "--disk-iops-read-write", "5000",
+            "--disk-mbps-read-write", "200",
+            "--upload-type", "Upload",
+            "--upload-size-bytes", "20972032",
+            "--security-type", "TrustedLaunch"
         ]);
 
         // Act - use reflection or just verify parse doesn't throw
@@ -493,6 +533,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -561,6 +608,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -637,6 +691,13 @@ public class DiskCreateCommandTests
             diskAccess,
             tier,
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -690,6 +751,13 @@ public class DiskCreateCommandTests
             diskAccess,
             tier,
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
@@ -737,6 +805,13 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
@@ -771,9 +846,9 @@ public class DiskCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MissingSourceAndSizeGb_ReturnsBadRequest()
+    public async Task ExecuteAsync_MissingSourceAndSizeGbAndGalleryRefAndUpload_ReturnsBadRequest()
     {
-        // Arrange - neither --source nor --size-gb specified
+        // Arrange - neither --source, --size-gb, --gallery-image-reference, nor --upload-type specified
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
@@ -786,5 +861,362 @@ public class DiskCreateCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskForUpload_ReturnsSuccess()
+    {
+        // Arrange - create disk for upload
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "uploaddisk";
+        var uploadSizeBytes = 20972032L;
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Standard_LRS",
+            DiskSizeGB = 20,
+            DiskState = "ReadyToUpload",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            "Upload",
+            uploadSizeBytes,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk-name", diskName,
+            "--upload-type", "Upload",
+            "--upload-size-bytes", uploadSizeBytes.ToString()
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+        Assert.Equal("ReadyToUpload", result.Disk.DiskState);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UploadTypeMissingUploadSizeBytes_ReturnsBadRequest()
+    {
+        // Arrange - --upload-type specified but --upload-size-bytes missing
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-sub",
+            "--resource-group", "testrg",
+            "--disk-name", "testdisk",
+            "--upload-type", "Upload"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskForUploadWithSecurityData_ReturnsSuccess()
+    {
+        // Arrange - create disk for UploadWithSecurityData with security-type
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "securedisk";
+        var uploadSizeBytes = 20972032L;
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Standard_LRS",
+            DiskSizeGB = 20,
+            DiskState = "ReadyToUpload",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            "UploadWithSecurityData",
+            uploadSizeBytes,
+            "TrustedLaunch",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk-name", diskName,
+            "--upload-type", "UploadWithSecurityData",
+            "--upload-size-bytes", uploadSizeBytes.ToString(),
+            "--security-type", "TrustedLaunch",
+            "--hyper-v-generation", "V2"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+        Assert.Equal("ReadyToUpload", result.Disk.DiskState);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromGalleryImage_ReturnsSuccess()
+    {
+        // Arrange
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+        var galleryImageRef = "/subscriptions/test-sub/resourceGroups/testrg/providers/Microsoft.Compute/galleries/myGallery/images/myImage/versions/1.0.0";
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 128,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk-name", diskName,
+            "--gallery-image-reference", galleryImageRef
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromGalleryImageWithLun_ReturnsSuccess()
+    {
+        // Arrange
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdatadisk";
+        var galleryImageRef = "/subscriptions/test-sub/resourceGroups/testrg/providers/Microsoft.Compute/galleries/myGallery/images/myImage/versions/1.0.0";
+        var lun = 1;
+
+        var mockDisk = new DiskInfo
+        {
+            Name = diskName,
+            Id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}",
+            ResourceGroup = resourceGroup,
+            Location = "eastus",
+            SkuName = "Premium_LRS",
+            DiskSizeGB = 64,
+            DiskState = "Unattached",
+            ProvisioningState = "Succeeded"
+        };
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            galleryImageRef,
+            lun,
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDisk);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--disk-name", diskName,
+            "--gallery-image-reference", galleryImageRef,
+            "--gallery-image-reference-lun", lun.ToString()
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Disk);
+        Assert.Equal(diskName, result.Disk.Name);
+
+        await _computeService.Received(1).CreateDiskAsync(
+            diskName,
+            resourceGroup,
+            subscription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            galleryImageRef,
+            lun,
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }

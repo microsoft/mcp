@@ -812,6 +812,39 @@ azmcp compute disk create --subscription <subscription> \
                           --disk-name <disk-name> \
                           --source <blob-uri>
 
+# Create a managed disk from a Shared Image Gallery image version (OS disk)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --gallery-image-reference <image-version-resource-id>
+
+# Create a managed disk from a specific data disk LUN in a gallery image version
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --gallery-image-reference <image-version-resource-id> \
+                          --gallery-image-reference-lun <lun>
+
+# Create a managed disk ready for upload
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --upload-type Upload \
+                          --upload-size-bytes <size-in-bytes>
+
+# Create a managed disk ready for upload with security data (Trusted Launch)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --upload-type UploadWithSecurityData \
+                          --upload-size-bytes <size-in-bytes> \
+                          --security-type TrustedLaunch \
+                          --hyper-v-generation V2
+
 # Create a managed disk with a specific location, SKU, and all options
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk create --subscription <subscription> \
@@ -830,15 +863,24 @@ azmcp compute disk create --subscription <subscription> \
                           --tier <performance-tier> \
                           --max-shares <count> \
                           --network-access-policy <policy> \
-                          --enable-bursting <true|false>
+                          --enable-bursting <true|false> \
+                          --disk-iops-read-write <iops> \
+                          --disk-mbps-read-write <mbps> \
+                          --upload-type <upload-type> \
+                          --upload-size-bytes <size-in-bytes> \
+                          --security-type <security-type> \
+                          --gallery-image-reference <image-version-resource-id> \
+                          --gallery-image-reference-lun <lun>
 ```
 
 **Command Behavior:**
 - Creates a new Azure managed disk in the specified resource group.
-- Either `--size-gb` or `--source` (or both) must be specified.
+- Either `--size-gb`, `--source`, `--gallery-image-reference`, or `--upload-type` must be specified.
 - When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
+- When `--gallery-image-reference` is specified, the disk is created from a Shared Image Gallery image version. Use `--gallery-image-reference-lun` to select a specific data disk from the image; if omitted, the OS disk is used.
+- When `--upload-type` is specified with `--upload-size-bytes`, creates a disk in a ready-to-upload state. Use `UploadWithSecurityData` with `--security-type` and `--hyper-v-generation V2` for Trusted Launch or Confidential VM scenarios.
 - If `--location` is not specified, defaults to the resource group's location.
-- Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.
+- Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, on-demand bursting, IOPS and throughput limits (UltraSSD only), upload type, and security type.
 
 **Returns:**
 - Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
@@ -849,8 +891,8 @@ azmcp compute disk create --subscription <subscription> \
 | `--subscription` | Yes | Azure subscription ID or name |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--disk-name` | Yes | Name of the managed disk to create |
-| `--source` | Conditional | Source to create the disk from: a resource ID of a snapshot or managed disk, or a blob URI of a VHD. Required if `--size-gb` is not specified. |
-| `--size-gb` | Conditional | Size of the disk in GB. Required if `--source` is not specified. When used with `--source`, overrides the source size. |
+| `--source` | Conditional | Source to create the disk from: a resource ID of a snapshot or managed disk, or a blob URI of a VHD. Required if `--size-gb` and `--gallery-image-reference` are not specified. |
+| `--size-gb` | Conditional | Size of the disk in GB. Required if `--source` and `--gallery-image-reference` are not specified. When used with `--source`, overrides the source size. |
 | `--location` | No | Azure region (defaults to the resource group's location if not specified) |
 | `--sku` | No | Storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |
 | `--os-type` | No | OS type for the disk (Windows or Linux) |
@@ -864,6 +906,13 @@ azmcp compute disk create --subscription <subscription> \
 | `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
 | `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
 | `--enable-bursting` | No | Enable on-demand bursting (true or false) |
+| `--disk-iops-read-write` | No | IOPS limit for the disk (UltraSSD only) |
+| `--disk-mbps-read-write` | No | Throughput limit in MBps for the disk (UltraSSD only) |
+| `--gallery-image-reference` | No | Resource ID of a Shared Image Gallery image version to create the disk from |
+| `--gallery-image-reference-lun` | No | LUN of the data disk in the gallery image version (if omitted, creates from the OS disk) |
+| `--upload-type` | No | Upload type for the disk (Upload or UploadWithSecurityData). When specified, `--upload-size-bytes` is required. |
+| `--upload-size-bytes` | Conditional | Size in bytes for upload disks, including the VHD footer (required when `--upload-type` is specified) |
+| `--security-type` | No | Security type for the disk. Accepted values: ConfidentialVM_DiskEncryptedWithCustomerKey, ConfidentialVM_DiskEncryptedWithPlatformKey, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey, Standard, TrustedLaunch. Required when `--upload-type` is UploadWithSecurityData. |
 
 ```bash
 # Update a managed disk's size
