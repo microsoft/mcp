@@ -14,20 +14,6 @@ namespace Azure.Mcp.Tools.FoundryExtensions.LiveTests;
 public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    public override async ValueTask InitializeAsync()
-    {
-        // Restrict server to the foundryextensions namespace only.
-        // Without this, --mode all causes the server to also connect to the external
-        // Foundry MCP registry server (mcp.ai.azure.com from registry.json). That
-        // connection goes through the RecordingRedirectHandler, so its HTTP traffic
-        // hits the test proxy during an active playback session. Since those requests
-        // are not in the recordings, the test proxy mismatches them and shifts the ARM
-        // call replay sequence, causing foundryextensions_* tool calls to receive
-        // wrong (text) responses instead of their recorded JSON.
-        SetArguments("server", "start", "--mode", "all", "--namespace", "foundryextensions");
-        await base.InitializeAsync();
-    }
-
     // Sanitize subscription IDs in URIs to allow playback to work
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
