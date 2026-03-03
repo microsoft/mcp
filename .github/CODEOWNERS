@@ -186,6 +186,12 @@
 # ServiceLabel: %tools-FileShares
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
+# PRLabel: %tools-FoundryExtensions
+/tools/Azure.Mcp.Tools.FoundryExtensions/     @jayzzh @xiangyan99 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-FoundryExtensions
+# ServiceOwners:                       @jayzzh @xiangyan99
+
 # PRLabel: %tools-FunctionApp
 /tools/Azure.Mcp.Tools.FunctionApp/   @jongio @microsoft/azure-mcp
 
