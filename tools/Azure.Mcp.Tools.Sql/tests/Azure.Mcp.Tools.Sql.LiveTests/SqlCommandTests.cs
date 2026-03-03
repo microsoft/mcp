@@ -70,10 +70,12 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 { "database", databaseName }
             });
 
-        // Should successfully retrieve the database as a single-element array
+        // Should successfully retrieve the database as a result object with a single-element databases array
         Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
-        var databases = result.Value.EnumerateArray().ToList();
+        Assert.Equal(JsonValueKind.Object, result.Value.ValueKind);
+        var databasesElement = result.Value.GetProperty("databases");
+        Assert.Equal(JsonValueKind.Array, databasesElement.ValueKind);
+        var databases = databasesElement.EnumerateArray().ToList();
         Assert.Single(databases);
         var database = databases[0];
         Assert.Equal(JsonValueKind.Object, database.ValueKind);
@@ -101,12 +103,14 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 { "server", serverName }
             });
 
-        // Should successfully retrieve the list of databases as a flat array
+        // Should successfully retrieve the list of databases as a result object with databases array
         Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        Assert.Equal(JsonValueKind.Object, result.Value.ValueKind);
+        var databasesElement = result.Value.GetProperty("databases");
+        Assert.Equal(JsonValueKind.Array, databasesElement.ValueKind);
 
         // Should contain at least the master database and our test database
-        var databaseArray = result.Value.EnumerateArray().ToList();
+        var databaseArray = databasesElement.EnumerateArray().ToList();
         Assert.True(databaseArray.Count >= 2, "Should contain at least master and testdb databases");
 
         // Verify that master database exists
