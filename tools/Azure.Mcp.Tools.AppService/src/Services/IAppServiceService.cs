@@ -55,7 +55,7 @@ public interface IAppServiceService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<DiagnosesResults> DiagnoseDetectorAsync(
+    Task<DiagnosisResults> DiagnoseDetectorAsync(
         string subscription,
         string resourceGroup,
         string appName,

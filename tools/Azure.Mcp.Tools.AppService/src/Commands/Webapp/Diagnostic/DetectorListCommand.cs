@@ -21,7 +21,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
     public override string Description =>
         """
         Retrieves detailed information about detectors detector for the specified App Service Web App, returning the name,
-        kind, type, description, and category for each detector.
+        detector type, description, category, and analysis types for each detector.
         """;
 
     public override string Title => CommandTitle;

@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
 public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger)
-    : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true)
+    : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
@@ -47,7 +47,6 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName);
         command.Options.Add(AppServiceOptionDefinitions.AppSettingName);
         command.Options.Add(AppServiceOptionDefinitions.AppSettingValue);
         command.Options.Add(AppServiceOptionDefinitions.AppSettingUpdateType);
@@ -94,7 +93,6 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     protected override AppSettingsUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
         options.SettingName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingName.Name);
         options.SettingValue = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingValue.Name);
         options.SettingUpdateType = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingUpdateType.Name);

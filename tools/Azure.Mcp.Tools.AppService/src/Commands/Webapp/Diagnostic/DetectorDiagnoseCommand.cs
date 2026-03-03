@@ -42,12 +42,50 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     {
         base.RegisterOptions(command);
         command.Options.Add(AppServiceOptionDefinitions.DetectorName.AsRequired());
+        command.Options.Add(AppServiceOptionDefinitions.StartTime);
+        command.Options.Add(AppServiceOptionDefinitions.EndTime);
+        command.Options.Add(AppServiceOptionDefinitions.Interval);
+        command.Validators.Add(result =>
+        {
+            var startTime = result.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name);
+            var endTime = result.GetValueOrDefault<string?>(AppServiceOptionDefinitions.EndTime.Name);
+
+            bool hasStartTime = !string.IsNullOrEmpty(startTime);
+            bool hasEndTime = !string.IsNullOrEmpty(endTime);
+
+            if (hasStartTime && !DateTimeOffset.TryParse(startTime, out _))
+            {
+                result.AddError($"Invalid start time format: {startTime}. Please provide a valid ISO format date time string.");
+            }
+
+            if (hasEndTime && !DateTimeOffset.TryParse(endTime, out _))
+            {
+                result.AddError($"Invalid end time format: {endTime}. Please provide a valid ISO format date time string.");
+            }
+
+            if (hasStartTime && hasEndTime
+                && DateTimeOffset.TryParse(startTime, out var start)
+                && DateTimeOffset.TryParse(endTime, out var end)
+                && start > end)
+            {
+                result.AddError($"Start time '{startTime}' must be earlier than end time '{endTime}'.");
+            }
+        });
     }
 
     protected override DetectorDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DetectorName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorName.Name);
+        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name), out var startTime))
+        {
+            options.StartTime = startTime.ToUniversalTime();
+        }
+        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.EndTime.Name), out var endTime))
+        {
+            options.EndTime = endTime.ToUniversalTime();
+        }
+        options.Interval = parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.Interval.Name);
         return options;
     }
 
@@ -90,5 +128,5 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         return context.Response;
     }
 
-    public record DetectorDiagnoseResult(DiagnosesResults Diagnoses);
+    public record DetectorDiagnoseResult(DiagnosisResults Diagnoses);
 }

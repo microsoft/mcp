@@ -11,6 +11,6 @@ namespace Azure.Mcp.Tools.AppService.Models;
 public sealed record DetectorDetails(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("type")] string Type,
-    [property: JsonPropertyName("kind")] string Kind,
-    [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("category")] string Category);
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("category")] string? Category,
+    [property: JsonPropertyName("analysisTypes")] List<string>? AnalysisTypes);

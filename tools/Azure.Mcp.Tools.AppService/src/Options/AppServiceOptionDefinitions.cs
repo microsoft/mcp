@@ -72,17 +72,15 @@ public static class AppServiceOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<DateTimeOffset> StartTime = new($"--{StartTimeName}")
+    public static readonly Option<string> StartTime = new($"--{StartTimeName}")
     {
-        Description = "The start time in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to 24 hours ago.",
-        DefaultValueFactory = _ => DateTime.UtcNow.AddHours(-24),
+        Description = "The start time in ISO format (e.g., 2023-01-01T00:00:00Z).",
         Required = false
     };
 
-    public static readonly Option<DateTimeOffset> EndTime = new($"--{EndTimeName}")
+    public static readonly Option<string> EndTime = new($"--{EndTimeName}")
     {
-        Description = "The end time in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to now.",
-        DefaultValueFactory = _ => DateTime.UtcNow,
+        Description = "The end time in ISO format (e.g., 2023-01-01T00:00:00Z).",
         Required = false
     };
 

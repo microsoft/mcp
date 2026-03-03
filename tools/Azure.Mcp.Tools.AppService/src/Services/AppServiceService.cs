@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
@@ -9,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
@@ -357,12 +359,113 @@ public class AppServiceService(
         // {
         //     results.Add(MapToDetectorDetails(detector.Data));
         // }
-        return await ListDetectorsAsync(tenant, subscription, resourceGroup, appName, cancellationToken);
+        return await CallDetectorsAsync(tenant, subscription, resourceGroup, appName, MapToListDetectorDetails, cancellationToken: cancellationToken);
     }
 
-    private async Task<List<DetectorDetails>> ListDetectorsAsync(string? tenant, string subscription, string resourceGroup, string appName, CancellationToken cancellationToken)
+    private static List<DetectorDetails> MapToListDetectorDetails(JsonDocument jsonDocument)
     {
-        var httpRequest = new HttpRequestMessage(HttpMethod.Get, ListDetectorsEndpoint(subscription, resourceGroup, appName));
+        if (!jsonDocument.RootElement.TryGetProperty("value", out var detectorsArray))
+        {
+            throw new InvalidOperationException($"Unexpected response format: 'value' property is missing.");
+        }
+
+        if (detectorsArray.ValueKind == JsonValueKind.Array)
+        {
+            var results = new List<DetectorDetails>();
+            foreach (var detectorElement in detectorsArray.EnumerateArray())
+            {
+                results.Add(MapToDetectorDetails(detectorElement.GetProperty("properties").GetProperty("metadata")));
+            }
+
+            return results;
+        }
+        else if (detectorsArray.ValueKind == JsonValueKind.Null)
+        {
+            return [];
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unexpected response format: 'value' property is not an array or null, was '{detectorsArray.ValueKind}'.");
+        }
+    }
+
+    private static DetectorDetails MapToDetectorDetails(JsonElement metadata)
+    {
+        var name = metadata.GetProperty("name").GetString()!;
+        var type = metadata.GetProperty("type").GetString()!;
+        var description = metadata.GetProperty("description").GetString();
+        var category = metadata.GetProperty("category").GetString();
+        var categories = (metadata.TryGetProperty("analysisTypes", out var analysisTypesElement) && analysisTypesElement.ValueKind == JsonValueKind.Array)
+            ? analysisTypesElement.EnumerateArray().Select(at => at.GetString() ?? string.Empty).Where(at => !string.IsNullOrEmpty(at)).ToList()
+            : null;
+
+        return new DetectorDetails(name, type, description, category, categories);
+    }
+
+    public async Task<DiagnosisResults> DiagnoseDetectorAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string detectorName,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(detectorName), detectorName));
+
+        // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
+        // // use WebSiteResource.GetSiteDetectorAsync instead of using a direct HttpClient.
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
+
+        // return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
+        return await CallDetectorsAsync(tenant, subscription, resourceGroup, appName, MapToDiagnosesResults, detectorName: detectorName, cancellationToken: cancellationToken);
+    }
+
+    private static DiagnosisResults MapToDiagnosesResults(JsonDocument jsonDocument)
+    {
+        if (!jsonDocument.RootElement.TryGetProperty("properties", out var properties))
+        {
+            throw new InvalidOperationException($"Unexpected response format: 'properties' property is missing.");
+        }
+
+        var dataset = JsonSerializer.Deserialize(properties.GetProperty("dataset"), AppServiceJsonContext.Default.IListDiagnosticDataset)!;
+        var detector = MapToDetectorDetails(properties.GetProperty("metadata"));
+
+        return new DiagnosisResults(dataset, detector);
+    }
+
+    private string GetDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName, string? detectorName = null)
+    {
+        string subscriptionPath = string.IsNullOrEmpty(detectorName)
+            ? $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01"
+            : $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors/{detectorName}?api-version=2025-05-01";
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
+            _ => $"https://management.azure.com/{subscriptionPath}"
+        };
+    }
+
+    private async Task<T> CallDetectorsAsync<T>(
+        string? tenant,
+        string subscription,
+        string resourceGroup,
+        string appName,
+        Func<JsonDocument, T> mapFunc,
+        string? detectorName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, GetDetectorsEndpoint(subscription, resourceGroup, appName, detectorName));
         var scopes = new string[]
         {
             _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope
@@ -389,42 +492,6 @@ public class AppServiceService(
         using var contentStream = await httpResponse.Content.ReadAsStreamAsync(cancellationToken);
         using var jsonDoc = await JsonDocument.ParseAsync(contentStream, cancellationToken: cancellationToken);
 
-        return [];
-    }
-
-    private string ListDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName)
-    {
-        string subscriptionPath = $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01";
-        return _tenantService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
-            _ => $"https://management.azure.com/{subscriptionPath}"
-        };
-    }
-
-    public async Task<DiagnosesResults> DiagnoseDetectorAsync(
-        string subscription,
-        string resourceGroup,
-        string appName,
-        string detectorName,
-        DateTimeOffset? startTime = null,
-        DateTimeOffset? endTime = null,
-        string? interval = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(appName), appName),
-            (nameof(detectorName), detectorName));
-
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
-        var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
-
-        return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
+        return mapFunc(jsonDoc);
     }
 }

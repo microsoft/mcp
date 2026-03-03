@@ -260,7 +260,7 @@
                 "--database-name",
                 "${input:kustoDatabaseName}",
                 "--query",
-                "${input:kustoQuery}"
+                "${input:kustoQuery}",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -283,7 +283,7 @@
                 "--database-name",
                 "${input:kustoDatabaseName}",
                 "--query",
-                "${input:kustoQuery}"
+                "${input:kustoQuery}",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -300,7 +300,7 @@
             "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "tools",
-                "list"
+                "list",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -346,7 +346,7 @@
                 "--subscription",
                 "${input:subscription}",
                 "--account-name",
-                "${input:storageAccountName}"
+                "${input:storageAccountName}",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -374,7 +374,7 @@
                 "--resource-group",
                 "${input:resourceGroup}",
                 "--resource-type",
-                "${input:resourceType}"
+                "${input:resourceType}",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -572,13 +572,6 @@
             "env": {
                 "DOTNET_ENVIRONMENT": "Development"
             }
-        },
-        {
-            "name": "C#: Azure.Mcp.Tools.AppService.LiveTests",
-            "type": "dotnet",
-            "request": "launch",
-            "projectPath": "${workspaceFolder}\\tools\\Azure.Mcp.Tools.AppService\\tests\\Azure.Mcp.Tools.AppService.LiveTests\\Azure.Mcp.Tools.AppService.LiveTests.csproj",
-            "launchConfigurationId": "TargetFramework=;Azure.Mcp.Tools.AppService.LiveTests"
         }
     ],
     "compounds": [

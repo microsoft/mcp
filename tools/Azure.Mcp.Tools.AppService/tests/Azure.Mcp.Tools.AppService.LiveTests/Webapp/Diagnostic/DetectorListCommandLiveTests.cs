@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Diagnostic;
 
-[Trait("Command", "WebappDetectorListCommand")]
+[Trait("Command", "DetectorListCommand")]
 public class DetectorListCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
