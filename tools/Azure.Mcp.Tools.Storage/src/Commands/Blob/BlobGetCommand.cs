@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
@@ -29,6 +30,9 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageJsonContext.Default.BlobGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

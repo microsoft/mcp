@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -33,6 +34,9 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageJsonContext.Default.AccountCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
@@ -27,6 +28,9 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageJsonContext.Default.BlobUploadResult;
 
     public override ToolMetadata Metadata => new()
     {

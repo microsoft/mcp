@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,9 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageJsonContext.Default.ContainerCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -30,6 +31,9 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageJsonContext.Default.AccountGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {
