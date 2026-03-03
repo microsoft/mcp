@@ -70,9 +70,37 @@ public partial class OutputSchemaGeneratorTests
     }
 
     [Fact]
-    public void Generate_ThrowsOnNull()
+    public void Generate_WithNull_ReturnsDefaultCommandResponseSchema()
     {
-        Assert.Throws<ArgumentNullException>(() => OutputSchemaGenerator.Generate(null!));
+        var schema = OutputSchemaGenerator.Generate(null);
+
+        Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+        Assert.Equal("object", schema.GetProperty("type").GetString());
+
+        var properties = schema.GetProperty("properties");
+        Assert.True(properties.TryGetProperty("status", out var statusProp));
+        Assert.Equal("integer", statusProp.GetProperty("type").GetString());
+
+        Assert.True(properties.TryGetProperty("message", out var msgProp));
+        Assert.Equal("string", msgProp.GetProperty("type").GetString());
+
+        Assert.True(properties.TryGetProperty("results", out var resultsProp));
+        Assert.Equal("object", resultsProp.GetProperty("type").GetString());
+
+        Assert.True(properties.TryGetProperty("duration", out var durationProp));
+        Assert.Equal("integer", durationProp.GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public void Generate_WithNoArgs_ReturnsSameDefaultSchema()
+    {
+        // Calling Generate() with no argument should produce the same default schema
+        var schema1 = OutputSchemaGenerator.Generate();
+        var schema2 = OutputSchemaGenerator.Generate();
+
+        Assert.Equal(schema1.ToString(), schema2.ToString());
+        Assert.True(schema1.TryGetProperty("properties", out var props));
+        Assert.True(props.TryGetProperty("status", out _));
     }
 
     // Test models and serialization context

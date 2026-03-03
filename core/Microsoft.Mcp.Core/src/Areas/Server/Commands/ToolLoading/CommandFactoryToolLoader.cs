@@ -243,17 +243,14 @@ public sealed class CommandFactoryToolLoader(
 
         tool.InputSchema = InputSchemaGenerator.Generate(options);
 
-        // Raw MCP tool input options carry their own schema; skip output schema generation
+        // Raw MCP tool input options carry their own schema; use default output schema
         if (options is { Count: 1 } && InputSchemaGenerator.IsRawMcpToolInputOption(options[0]))
         {
+            tool.OutputSchema = OutputSchemaGenerator.Generate();
             return tool;
         }
 
-        // Set output schema if the command provides result type info
-        if (command.ResultTypeInfo is { } typeInfo)
-        {
-            tool.OutputSchema = OutputSchemaGenerator.Generate(typeInfo);
-        }
+        tool.OutputSchema = OutputSchemaGenerator.Generate(command.ResultTypeInfo);
 
         return tool;
     }

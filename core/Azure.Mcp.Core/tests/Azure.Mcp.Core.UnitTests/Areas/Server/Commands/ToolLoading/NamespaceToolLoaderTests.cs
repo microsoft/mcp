@@ -550,9 +550,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     [Fact]
-    public async Task CallToolHandler_LearnResponse_NoOutputSchemaForCommandsWithoutResultTypeInfo()
+    public async Task CallToolHandler_LearnResponse_AllCommandsHaveOutputSchema()
     {
-        // Arrange - Use a namespace that should have commands without ResultTypeInfo
+        // Arrange - Use a namespace that has commands without ResultTypeInfo
         var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
 
         // Find a namespace that has commands without ResultTypeInfo
@@ -561,7 +561,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             .Select(g => g.Name)
             .ToList();
 
-        // Use a namespace other than storage (which has been opted in)
+        // Use a namespace other than storage to verify default schema is applied
         var testNamespace = namespaces.FirstOrDefault(n => !string.Equals(n, "storage", StringComparison.OrdinalIgnoreCase))
             ?? namespaces.First();
 
@@ -586,21 +586,15 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             var toolsJson = textContent.Text.Substring(toolsJsonStart, toolsJsonEnd - toolsJsonStart + 1);
             using var doc = JsonDocument.Parse(toolsJson);
 
-            // Verify commands in this namespace that haven't opted in don't have outputSchema
-            var commands = _commandFactory.GroupCommands([testNamespace]);
-            var commandsWithoutResultType = commands
-                .Where(kvp => kvp.Value.ResultTypeInfo == null)
-                .Select(kvp => kvp.Key)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
+            // Every command in the learn response should have an outputSchema
             foreach (var tool in doc.RootElement.EnumerateArray())
             {
                 var toolName = tool.GetProperty("name").GetString()!;
-                if (commandsWithoutResultType.Contains(toolName))
-                {
-                    Assert.False(tool.TryGetProperty("outputSchema", out _),
-                        $"Tool '{toolName}' should NOT have outputSchema since its command does not provide ResultTypeInfo");
-                }
+                Assert.True(tool.TryGetProperty("outputSchema", out var outputSchema),
+                    $"Tool '{toolName}' should have outputSchema (specific or default)");
+                Assert.Equal("object", outputSchema.GetProperty("type").GetString());
+                Assert.True(outputSchema.TryGetProperty("properties", out _),
+                    $"Tool '{toolName}' outputSchema should have a 'properties' field");
             }
         }
     }
