@@ -1,0 +1,48 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Foundry tools previously under the `foundry` namespace have moved to the new `foundryextensions` namespace within Azure MCP Server, retaining direct in-process access to Azure OpenAI, knowledge indexes, agent threads, and resources:
+      - foundryextensions_agents_get_sdk_sample: Get an SDK code sample for Azure AI Foundry Agents
+      - foundryextensions_knowledge_index_list: List knowledge indexes in a Foundry project
+      - foundryextensions_knowledge_index_schema: Get the schema of a knowledge index
+      - foundryextensions_openai_chat_completions_create: Create a chat completion using an Azure OpenAI deployment
+      - foundryextensions_openai_create_completion: Create a text completion using an Azure OpenAI deployment
+      - foundryextensions_openai_embeddings_create: Create embeddings using an Azure OpenAI deployment
+      - foundryextensions_openai_models_list: List available Azure OpenAI models
+      - foundryextensions_resource_get: Get details about a Foundry resource
+      - foundryextensions_threads_create: Create a new agent thread
+      - foundryextensions_threads_get_messages: Get messages from an agent thread
+      - foundryextensions_threads_list: List agent threads
+
+  - section: "Features Added"
+    description: |
+      Added new tools available via the external Azure AI Foundry MCP server (https://mcp.ai.azure.com) that provide capabilities not previously available in Azure MCP Server:
+      - agent_container_control: Control an agent container
+      - agent_container_status_get: Get the status of an agent container
+      - agent_definition_schema_get: Get the schema for an agent definition
+      - agent_invoke: Invoke an agent interactively
+      - evaluation_agent_batch_eval_create: Create a batch evaluation run for an agent
+      - evaluation_dataset_batch_eval_create: Create a batch evaluation run using a dataset
+      - evaluator_catalog_create: Create a custom evaluator in the catalog
+      - evaluator_catalog_delete: Delete an evaluator from the catalog
+      - evaluator_catalog_get: Get an evaluator from the catalog
+      - evaluator_catalog_update: Update an evaluator in the catalog
+      - project_connection_create: Create a connection in a Foundry project
+      - project_connection_delete: Delete a connection from a Foundry project
+      - project_connection_get: Get details of a Foundry project connection
+      - project_connection_list: List connections in a Foundry project
+      - project_connection_list_metadata: List metadata for connections in a Foundry project
+      - project_connection_update: Update a connection in a Foundry project
+      - prompt_optimize: Optimize a prompt for a specific model
+
+  - section: "Other Changes"
+    description: |
+      The following Azure AI Foundry tools were renamed as part of the migration to the external Foundry MCP server (https://mcp.ai.azure.com). See the Breaking Changes entry for the full list of removed tools:
+      - foundry_agents_list → agent_get
+      - foundry_agents_create → agent_update
+      - foundry_agents_connect → agent_invoke
+      - foundry_models_list → model_catalog_list
+      - foundry_models_deploy → model_deploy
+      - foundry_models_deployments_list → model_deployment_get
+      - foundry_agents_query-and-evaluate → evaluation_agent_batch_eval_create
+      - foundry_agents_evaluate → evaluator_catalog_get
