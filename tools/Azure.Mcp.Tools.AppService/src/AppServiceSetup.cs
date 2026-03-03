@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
@@ -27,6 +28,7 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<DetectorListCommand>();
         services.AddSingleton<AppSettingsGetCommand>();
         services.AddSingleton<AppSettingsUpdateCommand>();
+        services.AddSingleton<DeploymentGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -50,6 +52,14 @@ public class AppServiceSetup : IAreaSetup
         // Add webapp commands
         var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
         webapp.AddCommand(webappGet.Name, webappGet);
+
+        // Add deployment subgroup
+        var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
+        webapp.AddSubGroup(deployment);
+
+        // Add deployment commands
+        var deploymentGet = serviceProvider.GetRequiredService<DeploymentGetCommand>();
+        deployment.AddCommand(deploymentGet.Name, deploymentGet);
 
         // Add diagnostic subgroup under webapp
         var diagnostic = new CommandGroup("diagnostic", "Operations for diagnosing Azure App Service web apps");

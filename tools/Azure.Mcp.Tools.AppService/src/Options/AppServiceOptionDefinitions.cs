@@ -13,6 +13,7 @@ public static class AppServiceOptionDefinitions
     public const string AppSettingNameName = "setting-name";
     public const string AppSettingValueName = "setting-value";
     public const string AppSettingUpdateTypeName = "setting-update-type";
+    public const string DeploymentIdName = "deployment-id";
     public const string DetectorNameName = "detector-name";
     public const string StartTimeName = "start-time";
     public const string EndTimeName = "end-time";
@@ -64,6 +65,12 @@ public static class AppServiceOptionDefinitions
     {
         Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.",
         Required = true
+    };
+
+    public static readonly Option<string> DeploymentIdOption = new($"--{DeploymentIdName}")
+    {
+        Description = "The ID of the deployment.",
+        Required = false
     };
 
     public static readonly Option<string> DetectorName = new($"--{DetectorNameName}")

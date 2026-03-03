@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
 public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger)
-    : BaseAppServiceCommand<DatabaseAddOptions>(appRequired: true)
+    : BaseAppServiceCommand<DatabaseAddOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;

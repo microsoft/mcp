@@ -661,6 +661,31 @@ azmcp appservice webapp settings update-appsettings --subscription "my-subscript
                                                     --setting-update-type "delete"
 ```
 
+#### Web App Deployments
+
+```bash
+# Get the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --app <app> \
+                                       [--deployment-id <deployment-id>]
+
+# Examples:
+# List the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app"
+
+# Get the deployment for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app" \
+                                       --deployment-id "deployment-id"
+```
+
 #### Web App Diagnostics
 
 ```bash
