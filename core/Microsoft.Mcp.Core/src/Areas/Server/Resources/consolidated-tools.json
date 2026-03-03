@@ -1277,7 +1277,6 @@
         }
       },
       "mappedToolList": [
-        "foundry_agents_create",
         "foundryextensions_threads_create"
       ]
     },
