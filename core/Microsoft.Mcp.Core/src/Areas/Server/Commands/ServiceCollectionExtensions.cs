@@ -217,9 +217,13 @@ public static class ServiceCollectionExtensions
                 mcpServerOptions.ProtocolVersion = "2025-06-18";
                 mcpServerOptions.ServerInfo = new Implementation
                 {
-                    Name = configuration.DisplayName,
+                    Name = configuration.Name,
                     Version = configuration.Version,
                 };
+
+                mcpServerOptions.Capabilities ??= new();
+                mcpServerOptions.Capabilities.Tools ??= new();
+                mcpServerOptions.Capabilities.Tools.ListChanged = true;
 
                 mcpServerOptions.Handlers = new()
                 {
