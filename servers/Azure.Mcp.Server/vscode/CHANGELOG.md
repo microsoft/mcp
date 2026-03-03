@@ -5,7 +5,7 @@
 
 ### Added
 
-- Add App Service web app deployment retrieval tool. [[#1898](https://github.com/microsoft/mcp/pull/1898)]
+- Added App Service web app deployment retrieval tool. [[#1898](https://github.com/microsoft/mcp/pull/1898)]
 
 ### Changed
 
