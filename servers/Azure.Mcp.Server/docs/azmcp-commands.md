@@ -1405,6 +1405,122 @@ azmcp fileshares usage --subscription <subscription> \
                        --location <azure-region>
 ```
 
+### Microsoft Foundry Operations
+
+> **Note:** The tools in this section are provided by the Microsoft Foundry MCP server (`mcp.ai.azure.com`) which is registered via the Azure MCP registry. They will only be available when the Azure MCP server can reach the external Foundry MCP endpoint.
+
+```bash
+# Connect to and query an agent in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents connect
+
+# Create a new agent in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents create
+
+# Evaluate agent responses using various metrics
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents evaluate
+
+# List agents in a Microsoft Foundry resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list
+
+# Query and evaluate an agent in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents query-and-evaluate
+
+# Deploy a model in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deploy
+
+# List model deployments in Microsoft Foundry
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deployments-list
+
+# List available models in Microsoft Foundry
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models list
+```
+
+### Microsoft Foundry Extensions Operations
+
+```bash
+# Get code samples to interact with a Foundry Agent using the Microsoft Foundry SDK
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions agents get-sdk-sample \
+    [--programming-language <language>]
+
+# List knowledge indexes in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions knowledge index list \
+    --endpoint <project-endpoint>
+
+# Get the schema of a knowledge index in Microsoft Foundry
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions knowledge index schema \
+    --endpoint <project-endpoint> \
+    --index-name <index-name>
+
+# Create chat completions using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai chat-completions-create \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --message-array <json-message-array>
+
+# Create text completions using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai create-completion \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --prompt-text <prompt>
+
+# Create embeddings using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai embeddings-create \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --input-text <text>
+
+# List available Azure OpenAI model deployments in a Microsoft Foundry resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai models-list \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name>
+
+# Get details of Microsoft Foundry (AI) resources in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions resource get \
+    --subscription <subscription> \
+    [--resource-group <resource-group>] \
+    [--resource-name <resource-name>]
+
+# Create a thread in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads create \
+    --endpoint <project-endpoint> \
+    --user-message <initial-message>
+
+# Get messages from a Microsoft Foundry thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads get-messages \
+    --endpoint <project-endpoint> \
+    --thread-id <thread-id>
+
+# List threads in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads list \
+    --endpoint <project-endpoint>
+```
+
 ### Azure Function App Operations
 
 ```bash
