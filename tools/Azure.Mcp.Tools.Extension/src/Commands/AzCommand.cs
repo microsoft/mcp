@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.Authentication;
@@ -49,6 +50,9 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ExtensionJsonContext.Default.JsonElement;
 
     public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -28,6 +29,9 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FabricJsonContext.Default.FabricWorkloadPublicApi;
 
     public override ToolMetadata Metadata => new()
     {

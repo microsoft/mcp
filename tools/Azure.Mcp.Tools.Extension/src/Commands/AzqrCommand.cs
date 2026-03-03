@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -36,6 +37,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ExtensionJsonContext.Default.AzqrReportResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -32,6 +33,9 @@ public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.AgentsCreateResult;
 
     protected override void RegisterOptions(Command command)
     {

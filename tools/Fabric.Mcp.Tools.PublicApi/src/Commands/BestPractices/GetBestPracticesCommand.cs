@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
@@ -32,6 +33,9 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FabricJsonContext.Default.IEnumerableString;
 
     public override ToolMetadata Metadata => new()
     {

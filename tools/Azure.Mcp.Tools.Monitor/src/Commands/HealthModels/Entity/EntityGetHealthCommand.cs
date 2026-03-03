@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,9 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.JsonNode;
 
     public override ToolMetadata Metadata => new()
     {

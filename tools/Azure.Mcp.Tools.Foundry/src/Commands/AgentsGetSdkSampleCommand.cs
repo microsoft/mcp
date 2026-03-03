@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Agents;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -29,6 +30,9 @@ public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.AgentsGetSdkCodeSampleResult;
 
     protected override void RegisterOptions(Command command)
     {

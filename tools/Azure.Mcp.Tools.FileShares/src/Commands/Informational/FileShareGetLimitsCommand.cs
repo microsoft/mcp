@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
@@ -23,6 +24,10 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
     public override string Name => "limits";
     public override string Description => "Get file share limits for a subscription and location";
     public override string Title => "Get File Share Limits";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.FileShareLimitsResult;
+
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,

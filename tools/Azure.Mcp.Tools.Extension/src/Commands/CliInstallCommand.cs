@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Extension.Models;
@@ -28,6 +29,9 @@ This tool can provide installation instructions for the specified CLI tool among
 """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ExtensionJsonContext.Default.CliInstallResult;
 
     public override ToolMetadata Metadata => new()
     {

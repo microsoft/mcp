@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -33,6 +34,9 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.ListJsonNode;
 
     public override ToolMetadata Metadata => new()
     {

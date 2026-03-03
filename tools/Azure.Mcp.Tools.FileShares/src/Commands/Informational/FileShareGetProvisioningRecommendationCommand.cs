@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
@@ -23,6 +24,10 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
     public override string Name => "rec";
     public override string Description => "Get provisioning parameter recommendations for a file share based on desired storage size";
     public override string Title => "Get File Share Provisioning Recommendation";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.FileShareProvisioningRecommendationResult;
+
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,

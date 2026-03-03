@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Extension.Models;
@@ -28,6 +29,9 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
 """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ExtensionJsonContext.Default.CliGenerateResult;
 
     public override ToolMetadata Metadata => new()
     {

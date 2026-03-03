@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Thread;
@@ -31,6 +32,9 @@ public class ThreadListCommand : GlobalCommand<ThreadListOptions>
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.ThreadListResult;
 
     protected override void RegisterOptions(Command command)
     {

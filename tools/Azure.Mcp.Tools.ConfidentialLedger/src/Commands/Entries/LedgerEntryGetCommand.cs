@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -23,6 +24,9 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult;
 
     public override ToolMetadata Metadata => new()
     {

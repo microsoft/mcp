@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -26,6 +27,9 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ConfidentialLedgerJsonContext.Default.AppendEntryResult;
 
     public override ToolMetadata Metadata => new()
     {

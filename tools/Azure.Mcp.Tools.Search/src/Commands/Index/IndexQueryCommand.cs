@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
@@ -27,6 +28,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SearchJsonContext.Default.ListJsonElement;
 
     public override ToolMetadata Metadata => new()
     {

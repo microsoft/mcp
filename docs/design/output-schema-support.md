@@ -264,7 +264,7 @@ This means schema generation only runs once per server lifetime, regardless of h
 | `core/Microsoft.Mcp.Core/src/Areas/Server/ServerJsonContext.cs` | Modify | Registered `ToolOutputSchema` for AOT |
 | `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs` | Modify | Uses `InputSchemaGenerator`, `OutputSchemaGenerator`, adds caching |
 | `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/NamespaceToolLoader.cs` | Modify | Same refactoring as CommandFactoryToolLoader |
-| 226 command files across ~35 toolsets | Modify | Added `ResultTypeInfo` override |
+| 243 command files across ~40 toolsets | Modify | Added `ResultTypeInfo` override |
 
 ---
 
@@ -275,8 +275,8 @@ This means schema generation only runs once per server lifetime, regardless of h
 | Category | Count |
 |----------|-------|
 | Total concrete commands | ~249 |
-| Commands with specific `ResultTypeInfo` | **226** (91%) |
-| Commands using default `CommandResponse` schema | **23** (9%) |
+| Commands with specific `ResultTypeInfo` | **243** (98%) |
+| Commands using default `CommandResponse` schema | **6** (2%) |
 
 ### Commands with specific `ResultTypeInfo` (223)
 
@@ -286,11 +286,11 @@ override `ResultTypeInfo`. This includes all commands across these toolsets:
 - **Core:** Group, Subscription, ServiceInfo, ToolsList
 - **Azure tools:** Acr, Advisor, Aks, AppConfig, AppLens, ApplicationInsights, AppService,
   Authorization, AzureBestPractices, AzureIsv, AzureMigrate, AzureTerraformBestPractices,
-  BicepSchema, Communication, Compute, Cosmos,
-  EventGrid, EventHubs, FileShares, Foundry, FunctionApp, Grafana, KeyVault, Kusto,
-  LoadTesting, ManagedLustre, Marketplace, Monitor, MySql, Policy, Postgres, Pricing,
-  Quota, Redis, ResourceHealth, Search, ServiceBus, ServiceFabric, SignalR, Speech, Sql,
-  Storage, StorageSync, VirtualDesktop, Workbooks
+  BicepSchema, CloudArchitect, Communication, ConfidentialLedger, Compute, Cosmos,
+  EventGrid, EventHubs, Extension, FileShares, Foundry, FunctionApp, Grafana, KeyVault,
+  Kusto, LoadTesting, ManagedLustre, Marketplace, Monitor, MySql, Policy, Postgres,
+  Pricing, Quota, Redis, ResourceHealth, Search, ServiceBus, ServiceFabric, SignalR,
+  Speech, Sql, Storage, StorageSync, VirtualDesktop, Workbooks
 - **Fabric tools:** OneLake, PublicApi
 
 ### Commands with multiple result types
@@ -309,27 +309,10 @@ chosen as the representative schema:
 | `AutoimportJobGetCommand` | ManagedLustre | `AutoimportJobGetResult` | `AutoimportJobListResult` |
 | `ImportJobGetCommand` | ManagedLustre | `ImportJobGetResult` | `ImportJobListResult` |
 
-### Commands without `ResultTypeInfo` (23)
+### Commands without `ResultTypeInfo` (6)
 
-These commands use `ResponseResult.Create` but their result types are not registered in a
-`JsonSerializerContext`, or they use patterns that don't produce typed results at all.
+These commands do not produce structured result objects via `ResponseResult.Create`.
 They receive the default `CommandResponse` envelope schema.
-
-#### Commands that produce typed results but lack a registered `JsonTypeInfo` (17)
-
-| Toolset | Commands |
-|---------|----------|
-| CloudArchitect | `DesignCommand` |
-| ConfidentialLedger | `LedgerEntryAppendCommand`, `LedgerEntryGetCommand` |
-| Extension | `AzCommand`, `AzqrCommand`, `CliGenerateCommand`, `CliInstallCommand` |
-| FileShares | `FileShareGetLimitsCommand`, `FileShareGetProvisioningRecommendationCommand`, `FileShareGetUsageDataCommand` |
-| Foundry | `AgentsCreateCommand`, `AgentsGetSdkSampleCommand`, `ThreadCreateCommand`, `ThreadGetMessagesCommand`, `ThreadListCommand` |
-| Monitor | `EntityGetHealthCommand`, `ResourceLogQueryCommand`, `WorkspaceLogQueryCommand` |
-| Search | `IndexQueryCommand` |
-| Fabric.PublicApi | `GetBestPracticesCommand`, `GetWorkloadDefinitionCommand`, `GetPlatformApisCommand`, `GetWorkloadApisCommand` |
-
-These commands can be opted in once their result types are added to the appropriate
-`JsonSerializerContext` (`[JsonSerializable(typeof(...))]`).
 
 #### Commands that do not produce typed results (6)
 
@@ -342,7 +325,7 @@ These commands can be opted in once their result types are added to the appropri
 | Deploy | `GetCommand` | Unstructured text output |
 | Microsoft.Mcp.Core | `ServiceStartCommand` | Server lifecycle, not a data command |
 
-These commands cannot be opted in because they genuinely do not produce structured result
+These commands cannot be opted in because they do not produce structured result
 objects via `ResponseResult.Create`.
 
 ---
@@ -389,8 +372,8 @@ validate against that schema. Since our `outputSchema` describes the result type
 
 | # | Change | Status |
 |---|--------|--------|
-| 9 | All commands with registered `JsonTypeInfo` override `ResultTypeInfo` | ✅ 226 commands |
-| 10 | All tools without `ResultTypeInfo` get default `CommandResponse` schema | ✅ 23 commands |
+| 9 | All commands with registered `JsonTypeInfo` override `ResultTypeInfo` | ✅ 243 commands |
+| 10 | All tools without `ResultTypeInfo` get default `CommandResponse` schema | ✅ 6 commands |
 
 ---
 
@@ -430,8 +413,6 @@ Any non-null `OutputSchema` property on the `Tool` will be preserved verbatim. *
 
 ## Future Improvements
 
-- Register result types for the remaining 20 commands that produce typed results.
-- Consider making `ResultTypeInfo` abstract in a future `BaseCommand<TOptions, TResult>`.
+- Enrich generated schemas with nested property descriptions for complex models.
 - Add a Roslyn analyzer to enforce that all commands with `ResponseResult.Create` also
   override `ResultTypeInfo`.
-- Enrich generated schemas with nested property descriptions for complex models.

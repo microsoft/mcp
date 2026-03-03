@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -32,6 +33,9 @@ public class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.ThreadGetMessagesResult;
 
     protected override void RegisterOptions(Command command)
     {
