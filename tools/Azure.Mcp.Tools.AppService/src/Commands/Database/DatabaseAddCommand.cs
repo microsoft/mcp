@@ -11,7 +11,8 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
-public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : BaseAppServiceCommand<DatabaseAddOptions>()
+public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger)
+    : BaseAppServiceCommand<DatabaseAddOptions>(resourceGroupRequired: true)
 {
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
