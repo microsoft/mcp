@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `DeviceCodeCredential` support. Set `AZURE_TOKEN_CREDENTIALS=DeviceCodeCredential` for headless environments (Docker, WSL, SSH tunnels, CI) where browser-based interactive authentication is unavailable."

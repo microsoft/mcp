@@ -36,6 +36,10 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// <description>Environment → Workload Identity → Managed Identity (no interactive fallback)</description>
 /// </item>
 /// <item>
+/// <term>"DeviceCodeCredential"</term>
+/// <description>Device code flow — prints a URL and one-time code to stdout; works in headless environments (Docker, WSL, SSH, CI)</description>
+/// </item>
+/// <item>
 /// <term>Specific credential name</term>
 /// <description>Only that credential (e.g., "AzureCliCredential" or "ManagedIdentityCredential") with no fallback</description>
 /// </item>
@@ -60,6 +64,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// <para>
 /// It is NOT added when:
 /// - AZURE_TOKEN_CREDENTIALS="prod" (production credentials only, fail fast if unavailable)
+/// - AZURE_TOKEN_CREDENTIALS="DeviceCodeCredential" (non-interactive device code flow requested)
 /// - AZURE_TOKEN_CREDENTIALS=specific credential name (user wants only that credential, fail fast)
 /// </para>
 /// <para>
@@ -76,6 +81,12 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     /// Cloud configuration for authority host. Set by DI container during service registration.
     /// </summary>
     internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
+
+    /// <summary>
+    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServiceStartCommand"/>
+    /// before the credential chain is first used. Empty when not running as a server (e.g. direct CLI invocation).
+    /// </summary>
+    internal static string ActiveTransport { get; set; } = string.Empty;
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
@@ -262,6 +273,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                     AddAzureDeveloperCliCredential(credentials, tenantId);
                     break;
 
+                case "devicecodecredential":
+                    AddDeviceCodeCredential(credentials, tenantId);
+                    break;
+
                 default:
                     // Unknown value, fall back to default chain
                     AddDefaultCredentialChain(credentials, tenantId);
@@ -403,6 +418,49 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             azdOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
         credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
+    }
+
+    private static void AddDeviceCodeCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        // DeviceCodeCredential requires an interactive terminal to display the device code prompt.
+        // In stdio mode stdout is the MCP protocol pipe — writing to it would corrupt the transport.
+        // In http mode there is no user-facing terminal attached to the server process.
+        if (!string.IsNullOrEmpty(ActiveTransport))
+        {
+            throw new CredentialUnavailableException(
+                $"DeviceCodeCredential is not available when the server is running in '{ActiveTransport}' transport mode. " +
+                "DeviceCodeCredential requires an interactive terminal to display the device code prompt. " +
+                "Use an automated credential such as AzureCliCredential or ManagedIdentityCredential instead.");
+        }
+
+        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+
+        var deviceCodeOptions = new DeviceCodeCredentialOptions
+        {
+            TenantId = string.IsNullOrEmpty(tenantId) ? null : tenantId,
+            TokenCachePersistenceOptions = new TokenCachePersistenceOptions { Name = TokenCacheName }
+        };
+
+        if (!string.IsNullOrEmpty(clientId))
+        {
+            deviceCodeOptions.ClientId = clientId;
+        }
+
+        if (CloudConfiguration != null)
+        {
+            deviceCodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
+
+        // Hydrate an existing AuthenticationRecord from the environment to enable silent token cache reuse
+        string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
+        if (!string.IsNullOrEmpty(authRecordJson))
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(authRecordJson);
+            using MemoryStream stream = new(bytes);
+            deviceCodeOptions.AuthenticationRecord = AuthenticationRecord.Deserialize(stream);
+        }
+
+        credentials.Add(new SafeTokenCredential(new DeviceCodeCredential(deviceCodeOptions), "DeviceCodeCredential"));
     }
 
     private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId)

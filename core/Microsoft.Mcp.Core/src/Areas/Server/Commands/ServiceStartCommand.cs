@@ -373,6 +373,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for the MCP server.</returns>
     private IHost CreateHost(ServiceStartOptions serverOptions)
     {
+        // Inform the credential chain which transport is active so that interactive credentials
+        // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
+        CustomChainedCredential.ActiveTransport = serverOptions.Transport;
+
 #if ENABLE_HTTP
         if (serverOptions.Transport == TransportTypes.Http)
         {
