@@ -10,7 +10,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Consolidated sql_db_show and sql_db_list commands into a single sql_db_get command, and sql_server_show and sql_server_list commands into a single sql_server_get command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
+- Consolidated `sql_db_show` and `sql_db_list` commands into a single `sql_db_get` command, and `sql_server_show` and `sql_server_list` commands into a single `sql_server_get` command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
 
 ### Bugs Fixed
 
