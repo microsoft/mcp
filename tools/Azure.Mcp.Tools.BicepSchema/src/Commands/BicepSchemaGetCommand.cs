@@ -4,18 +4,18 @@
 using Azure.Mcp.Tools.BicepSchema.Options;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands
 {
-    public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger) : BaseBicepSchemaCommand<BicepSchemaOptions>
+    public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger, IBicepSchemaService bicepSchemaService) : BaseBicepSchemaCommand<BicepSchemaOptions>
     {
         private const string CommandTitle = "Get Bicep Schema for a resource";
 
         private readonly ILogger<BicepSchemaGetCommand> _logger = logger;
+        private readonly IBicepSchemaService _bicepSchemaService = bicepSchemaService;
 
         public override string Id => "553c003a-7cdf-4382-b833-94fe8bbb7386";
 
@@ -38,18 +38,6 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
             Secret = false
         };
 
-        private static readonly Lazy<IServiceProvider> s_serviceProvider;
-
-        static BicepSchemaGetCommand()
-        {
-            s_serviceProvider = new Lazy<IServiceProvider>(() =>
-            {
-                var serviceCollection = new ServiceCollection();
-                SchemaGenerator.ConfigureServices(serviceCollection);
-                return serviceCollection.BuildServiceProvider();
-            });
-        }
-
         public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -61,7 +49,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
             try
             {
-                TypesDefinitionResult result = SchemaGenerator.GetResourceTypeDefinitions(s_serviceProvider.Value, options.ResourceType!);
+                TypesDefinitionResult result = _bicepSchemaService.GetResourceTypeDefinitions(options.ResourceType!);
                 List<ComplexType> response = SchemaGenerator.GetResponse(result);
 
                 if (response is not null)

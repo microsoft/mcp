@@ -5,17 +5,18 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
+using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.BicepSchema.UnitTests;
 
 public class BicepSchemaGetCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IBicepSchemaService _bicepSchemaService;
     private readonly ILogger<BicepSchemaGetCommand> _logger;
     private readonly CommandContext _context;
@@ -27,19 +28,31 @@ public class BicepSchemaGetCommandTests
         _bicepSchemaService = Substitute.For<IBicepSchemaService>();
         _logger = Substitute.For<ILogger<BicepSchemaGetCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_bicepSchemaService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger);
+        _command = new(_logger, _bicepSchemaService);
         _commandDefinition = _command.GetCommand();
+        _context = new(new ServiceCollection().BuildServiceProvider());
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists()
     {
-        var args = _commandDefinition.Parse("--resource-type Microsoft.Sql/servers/databases/schemas");
+        var resourceTypeName = "Microsoft.Sql/servers/databases/schemas";
+        var expectedResult = new TypesDefinitionResult
+        {
+            ResourceProvider = "Microsoft.Sql",
+            ApiVersion = "2023-08-01",
+            ResourceTypeEntities =
+            [
+                new ResourceTypeEntity
+                {
+                    Name = "Microsoft.Sql/servers/databases/schemas@2023-08-01",
+                    BodyType = new ObjectTypeEntity { Name = "body" }
+                }
+            ]
+        };
+        _bicepSchemaService.GetResourceTypeDefinitions(resourceTypeName).Returns(expectedResult);
+
+        var args = _commandDefinition.Parse($"--resource-type {resourceTypeName}");
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
@@ -56,8 +69,11 @@ public class BicepSchemaGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenResourceTypeDoesNotExist()
     {
+        var resourceTypeName = "Microsoft.Unknown/virtualRandom";
+        _bicepSchemaService.GetResourceTypeDefinitions(resourceTypeName)
+            .Throws(new Exception($"Resource type {resourceTypeName} not found."));
 
-        var args = _commandDefinition.Parse("--resource-type Microsoft.Unknown/virtualRandom");
+        var args = _commandDefinition.Parse($"--resource-type {resourceTypeName}");
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);

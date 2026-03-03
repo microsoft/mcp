@@ -8,7 +8,6 @@ namespace Azure.Mcp.Tools.BicepSchema.Services
     public interface IBicepSchemaService
     {
         TypesDefinitionResult GetResourceTypeDefinitions(
-        IServiceProvider serviceProvider,
         string resourceTypeName,
         string? apiVersion = null);
     }

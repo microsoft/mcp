@@ -17,6 +17,8 @@ public class BicepSchemaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        SchemaGenerator.ConfigureServices(services);
+
         services.AddSingleton<IBicepSchemaService, BicepSchemaService>();
 
         services.AddSingleton<BicepSchemaGetCommand>();

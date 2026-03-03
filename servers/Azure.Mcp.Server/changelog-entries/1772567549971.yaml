@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Refactored Azure.Mcp.Tools.BicepSchema to use constructor dependency injection"
