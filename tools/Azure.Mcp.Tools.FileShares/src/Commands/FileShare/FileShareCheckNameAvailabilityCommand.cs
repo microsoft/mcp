@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -24,6 +25,9 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
     public override string Name => "check-name-availability";
     public override string Description => "Check if a file share name is available";
     public override string Title => "Check File Share Name Availability";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

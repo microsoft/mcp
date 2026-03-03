@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -31,6 +32,9 @@ public sealed class BlobDeleteCommand(
     public override string Id => "48561b8d-6f19-45ae-86fa-9feeb8f75e8e";
     public override string Name => "delete";
     public override string Title => "Delete OneLake Blob";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.BlobDeleteCommandResult;
     public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
 
     public override ToolMetadata Metadata => new()

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
@@ -30,6 +31,9 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SqlJsonContext.Default.FirewallRuleDeleteResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -22,6 +23,9 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KustoJsonContext.Default.TableListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
@@ -23,6 +24,9 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
         """;
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        LoadTestJsonContext.Default.TestResourceListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

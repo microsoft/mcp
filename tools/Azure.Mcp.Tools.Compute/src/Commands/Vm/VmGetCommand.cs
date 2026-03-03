@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -31,6 +32,9 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ComputeJsonContext.Default.VmGetSingleResult;
 
     public override ToolMetadata Metadata => new()
     {

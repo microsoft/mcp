@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
@@ -34,6 +35,9 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SpeechJsonContext.Default.SttRecognizeCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

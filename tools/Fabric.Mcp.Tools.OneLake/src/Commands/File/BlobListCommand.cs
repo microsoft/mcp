@@ -14,6 +14,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -28,6 +29,9 @@ public sealed class BlobListCommand(
     public override string Id => "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a";
     public override string Name => "list";
     public override string Title => "List OneLake Blobs";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.BlobListCommandResult;
     public override string Description => "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.";
 
     public override ToolMetadata Metadata => new()

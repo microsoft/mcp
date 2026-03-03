@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
@@ -23,6 +24,9 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
         "Retrieves a specific parameter of a PostgreSQL server.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PostgresJsonContext.Default.ServerParamGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

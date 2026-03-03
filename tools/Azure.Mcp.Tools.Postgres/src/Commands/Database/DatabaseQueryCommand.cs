@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Postgres.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
@@ -23,6 +24,9 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PostgresJsonContext.Default.DatabaseQueryCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

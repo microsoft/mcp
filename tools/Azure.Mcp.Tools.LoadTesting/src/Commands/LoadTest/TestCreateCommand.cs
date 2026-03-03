@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
@@ -28,6 +29,9 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         It will only create a test in an already existing load test resource.
         """;
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        LoadTestJsonContext.Default.TestCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
@@ -22,6 +23,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
     public override string Description => "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
 
     public override string Title => "List MySQL Resources";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MySqlJsonContext.Default.MySqlListCommandResult;
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 

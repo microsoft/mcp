@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
@@ -23,6 +24,9 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
         """;
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        LoadTestJsonContext.Default.TestResourceCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

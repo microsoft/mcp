@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -36,6 +37,9 @@ public sealed class AutoimportJobDeleteCommand(ILogger<AutoimportJobDeleteComman
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ManagedLustreJsonContext.Default.AutoimportJobDeleteResult;
 
     public override ToolMetadata Metadata => new()
     {

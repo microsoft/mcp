@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
@@ -31,6 +32,9 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AppServiceJsonContext.Default.AppSettingsUpdateResult;
 
     private static readonly HashSet<string> ValidUpdateTypes = ["add", "set", "delete"];
 

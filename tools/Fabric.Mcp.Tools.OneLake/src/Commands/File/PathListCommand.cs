@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -41,6 +42,9 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.PathListResult;
 
     public override ToolMetadata Metadata => new()
     {

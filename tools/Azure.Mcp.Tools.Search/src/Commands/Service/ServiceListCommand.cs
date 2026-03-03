@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Search.Commands.Service;
 
@@ -26,6 +27,9 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SearchJsonContext.Default.ServiceListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

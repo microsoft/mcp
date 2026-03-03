@@ -14,6 +14,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -30,6 +31,9 @@ public sealed class DirectoryCreateCommand(
     public override string Id => "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe";
     public override string Name => "create";
     public override string Title => "Create OneLake Directory";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.DirectoryCreateCommandResult;
     public override string Description => "Create a directory in OneLake storage. Can create nested directory structures.";
 
     public override ToolMetadata Metadata => new()

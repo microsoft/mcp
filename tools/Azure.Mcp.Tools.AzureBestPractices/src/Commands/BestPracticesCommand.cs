@@ -4,6 +4,7 @@
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
@@ -44,6 +45,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AzureBestPracticesJsonContext.Default.ListString;
 
     protected override void RegisterOptions(Command command)
     {

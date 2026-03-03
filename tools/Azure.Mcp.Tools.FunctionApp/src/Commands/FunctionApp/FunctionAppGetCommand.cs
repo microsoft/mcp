@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
@@ -34,6 +35,9 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FunctionAppJsonContext.Default.FunctionAppGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

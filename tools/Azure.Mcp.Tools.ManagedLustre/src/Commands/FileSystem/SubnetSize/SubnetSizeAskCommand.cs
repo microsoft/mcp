@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -27,6 +28,9 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult;
 
     public override ToolMetadata Metadata => new()
     {

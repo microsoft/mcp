@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
@@ -29,6 +30,9 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         """;
 
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AuthorizationJsonContext.Default.RoleAssignmentListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

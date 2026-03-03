@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Redis.Commands;
 
@@ -32,6 +33,9 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
        """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        RedisJsonContext.Default.ResourceCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

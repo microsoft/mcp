@@ -12,6 +12,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 
@@ -25,6 +26,9 @@ public sealed class OneLakeWorkspaceListCommand(
     public override string Id => "5f005a27-9838-4c09-9785-55ce49963c97";
     public override string Name => "list";
     public override string Title => "List OneLake Workspaces";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.OneLakeWorkspaceListCommandResult;
     public override string Description => "List all OneLake workspaces using the OneLake data plane API.";
 
     public override ToolMetadata Metadata => new()

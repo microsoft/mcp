@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -25,6 +26,9 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Microsoft Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.ModelDeploymentCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

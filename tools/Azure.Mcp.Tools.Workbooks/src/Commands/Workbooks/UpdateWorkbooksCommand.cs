@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
@@ -26,6 +27,9 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

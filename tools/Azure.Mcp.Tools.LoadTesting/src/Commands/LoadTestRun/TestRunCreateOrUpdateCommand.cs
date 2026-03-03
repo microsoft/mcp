@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
@@ -29,6 +30,9 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
         This does not modify the test plan configuration or create a new test/resource - only manages test run executions.
         """;
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        LoadTestJsonContext.Default.TestRunCreateOrUpdateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

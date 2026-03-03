@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
@@ -27,6 +28,9 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
     public override string Description => "Delete a server endpoint from a sync group.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

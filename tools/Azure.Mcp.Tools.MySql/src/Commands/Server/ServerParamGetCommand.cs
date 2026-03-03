@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
@@ -22,6 +23,9 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
     public override string Description => "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MySqlJsonContext.Default.ServerParamGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

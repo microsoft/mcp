@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -27,6 +28,9 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
     public override string Name => "create";
     public override string Description => "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.FileShareCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

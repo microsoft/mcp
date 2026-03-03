@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
@@ -28,6 +29,9 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         Does not return test configuration or resource details.
         """;
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        LoadTestJsonContext.Default.TestRunGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

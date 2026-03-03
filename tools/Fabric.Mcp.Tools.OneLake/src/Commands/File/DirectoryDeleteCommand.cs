@@ -13,6 +13,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -26,6 +27,9 @@ public sealed class DirectoryDeleteCommand(
     public override string Id => "86991cd6-75fa-4870-9d99-f986ba9f5f73";
     public override string Name => "delete";
     public override string Title => "Delete OneLake Directory";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.DirectoryDeleteCommandResult;
     public override string Description => "Delete a directory from OneLake storage. Use --recursive to delete non-empty directories.";
 
     public override ToolMetadata Metadata => new()

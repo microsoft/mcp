@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -25,6 +26,9 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
         "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult;
 
     public override ToolMetadata Metadata => new()
     {

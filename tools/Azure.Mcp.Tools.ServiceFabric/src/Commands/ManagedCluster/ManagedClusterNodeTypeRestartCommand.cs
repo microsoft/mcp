@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
@@ -29,6 +30,9 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         "Restart nodes of a specific node type in a Service Fabric managed cluster. Requires the cluster name, node type, and list of node names to restart. Optionally specify the update type (Default or ByUpgradeDomain).";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

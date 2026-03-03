@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
@@ -29,6 +30,9 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseApp
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AppServiceJsonContext.Default.WebappGetResult;
 
     public override ToolMetadata Metadata => new()
     {

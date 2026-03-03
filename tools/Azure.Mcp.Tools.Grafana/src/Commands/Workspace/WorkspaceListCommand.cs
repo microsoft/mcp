@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Grafana.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Grafana.Commands.Workspace;
 
@@ -30,6 +31,9 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        GrafanaJsonContext.Default.WorkspaceListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

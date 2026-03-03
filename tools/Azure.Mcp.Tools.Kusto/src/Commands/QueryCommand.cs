@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -36,6 +37,9 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KustoJsonContext.Default.QueryCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

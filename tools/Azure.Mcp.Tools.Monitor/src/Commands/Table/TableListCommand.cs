@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
@@ -25,6 +26,9 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.TableListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

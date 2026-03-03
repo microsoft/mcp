@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 
@@ -19,6 +20,9 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     public override string Name => "get";
     public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PostgresJsonContext.Default.TableSchemaGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

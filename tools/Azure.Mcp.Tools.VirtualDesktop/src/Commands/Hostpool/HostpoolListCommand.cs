@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
@@ -27,6 +28,9 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
 		""";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        VirtualDesktopJsonContext.Default.HostPoolListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

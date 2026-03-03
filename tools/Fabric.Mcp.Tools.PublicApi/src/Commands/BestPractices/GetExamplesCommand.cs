@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
@@ -31,6 +32,9 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FabricJsonContext.Default.ExampleFileResult;
 
     public override ToolMetadata Metadata => new()
     {

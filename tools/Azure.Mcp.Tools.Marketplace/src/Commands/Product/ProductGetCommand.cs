@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
@@ -30,6 +31,9 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MarketplaceJsonContext.Default.ProductGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

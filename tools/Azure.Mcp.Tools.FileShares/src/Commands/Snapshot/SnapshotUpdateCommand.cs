@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -27,6 +28,9 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
     public override string Name => "update";
     public override string Description => "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.SnapshotUpdateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

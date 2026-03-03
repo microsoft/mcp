@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 
@@ -31,6 +32,9 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
             """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.MetricsDefinitionsCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

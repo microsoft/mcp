@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
@@ -25,6 +26,9 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AdvisorJsonContext.Default.RecommendationListResult;
 
     public override ToolMetadata Metadata => new()
     {

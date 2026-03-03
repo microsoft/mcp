@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -25,6 +26,9 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.AgentsListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

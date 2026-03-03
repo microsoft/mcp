@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
@@ -27,6 +28,9 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AcrJsonContext.Default.RegistryRepositoryListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

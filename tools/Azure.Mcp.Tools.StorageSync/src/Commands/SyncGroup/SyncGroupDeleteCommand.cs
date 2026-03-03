@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
@@ -27,6 +28,9 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
     public override string Description => "Remove a sync group from a Storage Sync service. Deleting a sync group also removes all associated cloud endpoints and server endpoints within that group.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.SyncGroupDeleteCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

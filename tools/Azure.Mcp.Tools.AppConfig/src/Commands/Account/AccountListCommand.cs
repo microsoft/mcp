@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
@@ -28,6 +29,9 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AppConfigJsonContext.Default.AccountListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

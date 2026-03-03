@@ -13,6 +13,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
@@ -26,6 +27,9 @@ public sealed class TableGetCommand(
     public override string Id => "19bb5a6a-2a09-410c-bfa0-312986c6acc6";
     public override string Name => "get";
     public override string Title => "Get OneLake Table";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.TableGetCommandResult;
     public override string Description => "Retrieve detailed metadata for a specific table exposed by the OneLake table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse'). Returns complete schema including column names, types, row counts, and statistics. Use this when asked about 'columns', 'schema', or 'table structure'.";
 
     public override ToolMetadata Metadata => new()

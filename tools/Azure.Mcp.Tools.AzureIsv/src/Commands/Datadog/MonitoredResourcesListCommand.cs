@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
@@ -32,6 +33,9 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         """;
 
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        DatadogJsonContext.Default.MonitoredResourcesListResult;
 
     public override ToolMetadata Metadata => new()
     {

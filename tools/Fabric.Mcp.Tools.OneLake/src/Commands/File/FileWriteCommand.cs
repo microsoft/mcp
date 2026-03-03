@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -29,6 +30,9 @@ public sealed class FileWriteCommand(
     public override string Id => "ca454f68-3c44-47e3-bd88-6596a1d2c368";
     public override string Name => "write";
     public override string Title => "Write OneLake File";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.FileWriteCommandResult;
     public override string Description => "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.";
 
     public override ToolMetadata Metadata => new()

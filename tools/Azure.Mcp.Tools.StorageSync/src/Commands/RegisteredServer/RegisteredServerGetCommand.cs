@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
@@ -29,6 +30,9 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
     public override string Description => "List all registered servers in a Storage Sync service or retrieve details about a specific registered server. Returns server properties including server ID, registration status, agent version, OS version, and last heartbeat. Use --server-id for a specific server.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.RegisteredServerGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

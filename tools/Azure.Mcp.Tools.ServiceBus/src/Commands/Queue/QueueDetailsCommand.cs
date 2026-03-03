@@ -12,6 +12,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
@@ -35,6 +36,9 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ServiceBusJsonContext.Default.QueueDetailsCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

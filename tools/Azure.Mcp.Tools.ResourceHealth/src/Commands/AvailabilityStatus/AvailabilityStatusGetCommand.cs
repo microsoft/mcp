@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 
@@ -29,6 +30,9 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         "Get availability status and health status for Azure resources. Shows the health status of a specific virtual machine, storage account, or other resource. Lists availability status for all resources in a subscription or resource group to identify health issues and availability problems.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

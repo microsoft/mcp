@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -27,6 +28,9 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
     public override string Name => "create";
     public override string Description => "Create a snapshot of an Azure managed file share. Snapshots are read-only point-in-time copies used for backup and recovery.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.SnapshotCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Table;
 
@@ -23,6 +24,9 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     public override string Description => "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MySqlJsonContext.Default.TableSchemaGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

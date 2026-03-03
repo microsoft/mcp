@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -29,6 +30,9 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
     public override string Description => "Create a new Azure Storage Sync service resource in a resource group. This is the top-level service container that manages sync groups, registered servers, and synchronization workflows.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

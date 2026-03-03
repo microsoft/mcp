@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
@@ -21,6 +22,9 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         "Retrieve the configuration of a PostgreSQL server.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PostgresJsonContext.Default.ServerConfigGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

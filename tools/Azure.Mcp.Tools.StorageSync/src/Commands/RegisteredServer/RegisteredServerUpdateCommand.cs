@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
@@ -28,6 +29,9 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
     public override string Description => "Update properties of a registered server.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.RegisteredServerUpdateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

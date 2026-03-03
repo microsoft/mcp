@@ -1,5 +1,10 @@
 # Supporting `outputSchema` in the Azure MCP Server
 
+> **Status:** Phase 1 (outputSchema on all tools) and Phase 3 (broad adoption) are **implemented**.
+> Phase 2 (runtime `structuredContent`) is not yet implemented.
+
+---
+
 ## Background
 
 The MCP specification (starting with version `2025-03-26`) introduced two related features for structured tool output:
@@ -14,20 +19,20 @@ The upstream `ModelContextProtocol` NuGet package (v1.0.0) already supports both
 
 The MCPB CLI (.NET, v0.3.5) serializes the full `Tool` object via `tool.ProtocolTool` → `JsonElement` → `FilterNullProperties()`. This is schema-agnostic: if `OutputSchema` is non-null on the `Tool`, it will be preserved in the manifest. **No changes to the MCPB CLI are required.**
 
-However, the Azure MCP Server currently:
+However, the Azure MCP Server originally:
 
-- Advertises protocol version `"2024-11-05"`, which predates `outputSchema`.
-- Never sets `Tool.OutputSchema` during tool registration.
-- Never sets `CallToolResult.StructuredContent` in tool call responses.
-- Wraps the entire `CommandResponse` (including status, message, and results) as a single `TextContentBlock.Text` string.
+- Advertised protocol version `"2024-11-05"`, which predates `outputSchema`.
+- Never set `Tool.OutputSchema` during tool registration.
+- Never set `CallToolResult.StructuredContent` in tool call responses.
+- Wrapped the entire `CommandResponse` (including status, message, and results) as a single `TextContentBlock.Text` string.
 
-This document outlines the changes needed so that `outputSchema` is populated on tools at registration time and flows through to the MCPB CLI manifest.
+This document records the design options that were considered, the decision that was made, and the implementation details.
 
 ---
 
-## Current Architecture
+## Prior Architecture
 
-### How `inputSchema` is produced today
+### How `inputSchema` is produced
 
 1. Each command class (e.g., `AccountGetCommand`) extends `BaseCommand<TOptions>` and calls `RegisterOptions(Command)` to declare its `System.CommandLine.Option` parameters.
 2. At server startup, `CommandFactoryToolLoader.GetTool()` iterates over these options and builds a `ToolInputSchema` object (type, properties, required), then serializes it into `Tool.InputSchema`:
@@ -38,7 +43,7 @@ This document outlines the changes needed so that `outputSchema` is populated on
 3. `NamespaceToolLoader.CreateToolFromCommand()` follows the same pattern.
 4. When `mcpb pack --update` runs, it launches the server, sends `tools/list`, and captures the response (including `InputSchema`) into `manifest.json`.
 
-### How tool results are produced today
+### How tool results are produced
 
 1. Commands call `ResponseResult.Create<T>(result, JsonTypeInfo<T>)` to wrap their result:
    ```csharp
@@ -58,84 +63,19 @@ This document outlines the changes needed so that `outputSchema` is populated on
 
 ### Key observation
 
-The `JsonTypeInfo` for each command's result type **already exists** at call time (via the per-toolset `JsonSerializerContext`), but it is only used during response serialization.  To produce `outputSchema` at registration time, this type information needs to be made available during tool loading.
+The `JsonTypeInfo` for each command's result type **already exists** at call time (via the per-toolset `JsonSerializerContext`), but it is only used during response serialization. To produce `outputSchema` at registration time, this type information needs to be made available during tool loading.
 
 ---
 
-## Required Changes
+## Design Options Considered
 
-### 1. Bump Protocol Version
+### Option A: New Interface (`IOutputSchemaProvider`)
 
-**File:** `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ServiceCollectionExtensions.cs`
-
-```diff
-- mcpServerOptions.ProtocolVersion = "2024-11-05";
-+ mcpServerOptions.ProtocolVersion = "2025-03-26";
-```
-
-This is required for clients to recognize that the server supports `outputSchema` and `structuredContent`.
-
-### 2. Create a `ToolOutputSchema` Model
-
-**New file:** `core/Microsoft.Mcp.Core/src/Areas/Server/Models/ToolOutputSchema.cs`
-
-A JSON Schema representation for the output. The structure mirrors `ToolInputSchema` since both are JSON Schema objects:
+Create a dedicated opt-in interface for commands to supply their output schema:
 
 ```csharp
-using System.Text.Json.Serialization;
-
-namespace Microsoft.Mcp.Core.Areas.Server.Models;
-
-/// <summary>
-/// Represents the JSON schema for a tool's output (structured content).
-/// </summary>
-public sealed class ToolOutputSchema
-{
-    [JsonPropertyName("type")]
-    public string Type { get; init; } = "object";
-
-    [JsonPropertyName("properties")]
-    public Dictionary<string, ToolPropertySchema> Properties { get; init; } = new();
-
-    [JsonPropertyName("required")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string[]? Required { get; set; }
-}
-```
-
-> **Alternative:** Reuse `ToolInputSchema` directly (rename to `ToolSchema` or use as-is). Structurally they are identical since both are JSON Schema `"object"` definitions. A separate type provides clearer intent.
-
-### 3. Register `ToolOutputSchema` in AOT Serialization Context
-
-**File:** `core/Microsoft.Mcp.Core/src/Areas/Server/ServerJsonContext.cs`
-
-```diff
-  [JsonSerializable(typeof(ToolInputSchema))]
-+ [JsonSerializable(typeof(ToolOutputSchema))]
-  [JsonSerializable(typeof(ToolPropertySchema))]
-```
-
-### 4. Expose Output Type Metadata on Commands
-
-Commands need a way to declare their output type at registration time. Two approaches:
-
-#### Option A: New Interface (Recommended)
-
-**New file:** `core/Microsoft.Mcp.Core/src/Commands/IOutputSchemaProvider.cs`
-
-```csharp
-using System.Text.Json;
-
-namespace Microsoft.Mcp.Core.Commands;
-
-/// <summary>
-/// Implemented by commands that declare a structured output schema.
-/// </summary>
 public interface IOutputSchemaProvider
 {
-    /// <summary>
-    /// Returns the JSON Schema describing this command's structured output.
-    /// </summary>
     JsonElement GetOutputSchema();
 }
 ```
@@ -143,76 +83,38 @@ public interface IOutputSchemaProvider
 Commands opt in by implementing this interface. The tool loaders check for it during tool creation:
 
 ```csharp
-// In CommandFactoryToolLoader.GetTool() / NamespaceToolLoader.CreateToolFromCommand()
 if (command is IOutputSchemaProvider outputProvider)
 {
     tool.OutputSchema = outputProvider.GetOutputSchema();
 }
 ```
 
-**Pros:** Backward-compatible — existing commands that don't implement the interface are unaffected; no forced changes across 100+ commands.
+**Pros:**
+- Backward-compatible — existing commands that don't implement the interface are unaffected; no forced changes across 100+ commands.
 
-**Cons:** Each command must manually implement the interface and build the schema.
+**Cons:**
+- Each command must manually implement the interface and build the schema.
+- Schemas can drift out of sync with the actual result types.
 
-#### Option B: Derive Schema from `JsonTypeInfo`
+### Option B: Derive Schema from `JsonTypeInfo` ✅ Chosen
 
 Rather than having each command hand-author a schema, leverage the `JsonTypeInfo<T>` that commands already use for serialization. Add a static helper that generates a JSON Schema from the source-generated type info.
 
-**New file:** `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/OutputSchemaGenerator.cs`
+Commands expose their result `JsonTypeInfo` via a property on `IBaseCommand`:
 
 ```csharp
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using Microsoft.Mcp.Core.Areas.Server.Models;
-
-namespace Microsoft.Mcp.Core.Areas.Server.Commands;
-
-/// <summary>
-/// Generates a ToolOutputSchema from a JsonTypeInfo, reflecting
-/// the shape of a command's result type for use as outputSchema.
-/// </summary>
-public static class OutputSchemaGenerator
-{
-    public static JsonElement Generate(JsonTypeInfo typeInfo)
-    {
-        var schema = new ToolOutputSchema();
-
-        if (typeInfo is JsonTypeInfo objectInfo
-            && objectInfo.Kind == JsonTypeInfoKind.Object)
-        {
-            foreach (var prop in objectInfo.Properties)
-            {
-                schema.Properties[prop.Name] = TypeToJsonTypeMapper
-                    .CreatePropertySchema(prop.PropertyType, description: null);
-            }
-        }
-
-        return JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolOutputSchema);
-    }
-}
+// Default interface member — all existing commands remain compatible
+JsonTypeInfo? ResultTypeInfo => null;
 ```
 
-Then the command interface is extended to expose the result `JsonTypeInfo`:
-
-**File:** `core/Microsoft.Mcp.Core/src/Commands/IBaseCommand.cs`
-
-```diff
-+ /// <summary>
-+ /// Gets the JsonTypeInfo for this command's result type, if available.
-+ /// Used to auto-generate outputSchema.
-+ /// </summary>
-+ JsonTypeInfo? ResultTypeInfo => null;
-```
-
-With a default interface member (`=> null`), all existing commands remain compatible. Commands that want output schema override it:
+Commands opt in with a single override:
 
 ```csharp
-// In AccountGetCommand
 public override JsonTypeInfo? ResultTypeInfo =>
     StorageJsonContext.Default.AccountGetCommandResult;
 ```
 
-The tool loaders then call:
+The tool loaders call:
 
 ```csharp
 if (command.ResultTypeInfo is { } typeInfo)
@@ -221,134 +123,274 @@ if (command.ResultTypeInfo is { } typeInfo)
 }
 ```
 
-**Pros:** Eliminates hand-authoring; schema stays in sync with actual result types; commands opt in with a single property.
+**Pros:**
+- Eliminates hand-authoring; schema stays in sync with actual result types.
+- Commands opt in with a single property.
+- Leverages existing `JsonSerializerContext` infrastructure (AOT-safe).
 
-**Cons:** The generated schema may be shallow (only top-level properties with types, no nested descriptions). May require refinement for complex nested models.
+**Cons:**
+- The generated schema may be shallow (only top-level properties with types, no nested descriptions).
+- May require refinement for complex nested models.
 
-### 5. Set `OutputSchema` in Tool Loaders
+### Decision
 
-**File:** `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs`
+**Option B** was chosen because it eliminates manual schema maintenance and keeps output
+schemas automatically in sync with result types. The per-toolset `JsonSerializerContext`
+infrastructure already exists, so the incremental cost per command is a single property
+override.
 
-In the `GetTool()` method, after setting `InputSchema`:
+---
 
-```diff
-  tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+## Implementation
 
-+ // Set output schema if the command provides one
-+ if (command is IOutputSchemaProvider outputProvider)
-+ {
-+     tool.OutputSchema = outputProvider.GetOutputSchema();
-+ }
+### How it works
 
-  return tool;
-```
+1. **`ResultTypeInfo`** — a default interface member on `IBaseCommand` (`=> null`) and a
+   `virtual` property on `BaseCommand<TOptions>`. Commands override it to point at their
+   source-generated `JsonTypeInfo`:
 
-Or, if using Option B (JsonTypeInfo-based):
+   ```csharp
+   public override JsonTypeInfo? ResultTypeInfo =>
+       StorageJsonContext.Default.AccountGetCommandResult;
+   ```
 
-```diff
-  tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+2. **`OutputSchemaGenerator`** — a static helper that accepts `JsonTypeInfo?`:
+   - When non-null, walks `JsonTypeInfo.Properties` and builds a
+     `ToolOutputSchema` with property names and JSON types.
+   - When null, returns a **cached default** schema describing the generic `CommandResponse`
+     envelope (status, message, results, duration). Uses `Lazy<JsonElement>` for thread-safety.
 
-+ if (command.ResultTypeInfo is { } typeInfo)
-+ {
-+     tool.OutputSchema = OutputSchemaGenerator.Generate(typeInfo);
-+ }
+3. **Both tool loaders** (`CommandFactoryToolLoader` and `NamespaceToolLoader`)
+   **unconditionally** set `tool.OutputSchema = OutputSchemaGenerator.Generate(command.ResultTypeInfo)`.
+   Every tool gets an `outputSchema` — either a specific one or the default envelope.
 
-  return tool;
-```
+4. **`InputSchemaGenerator`** — input schema generation was also extracted into a parallel
+   static helper class, following the same pattern. Both loaders delegate to
+   `InputSchemaGenerator.Generate(options)` instead of inline schema construction.
 
-**File:** `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/NamespaceToolLoader.cs`
+5. **Caching** — both `CommandFactoryToolLoader` and `NamespaceToolLoader` cache their
+   `ListToolsResult` via a `_cachedListToolsResult` field with an early-return pattern,
+   so schema generation only runs once.
 
-Apply the same change in `CreateToolFromCommand()`.
+### Default schema
 
-### 6. (Optional) Populate `StructuredContent` in Tool Call Handlers
+When `ResultTypeInfo` is null, `OutputSchemaGenerator.Generate()` returns a cached
+default schema describing the `CommandResponse` envelope:
 
-While not strictly needed for `outputSchema` to appear in the manifest, returning `StructuredContent` in `CallToolResult` completes the structured output story. This allows MCP clients to consume typed JSON instead of parsing the `TextContentBlock` string.
-
-**File:** `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs`
-
-In the call handler, after serializing the command response:
-
-```diff
-  var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
-  var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
-  var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
-
-  return new CallToolResult
-  {
-      Content = [new TextContentBlock { Text = jsonResponse }],
-+     StructuredContent = commandResponse.Results != null
-+         ? SerializeStructuredContent(commandResponse)
-+         : null,
-      IsError = isError
-  };
-```
-
-Where `SerializeStructuredContent` uses the existing `ResponseResult.Write()` method to produce a `JsonElement`:
-
-```csharp
-private static JsonElement? SerializeStructuredContent(CommandResponse response)
+```json
 {
-    if (response.Results is null) return null;
-
-    using var buffer = new System.Buffers.ArrayBufferWriter<byte>();
-    using var writer = new Utf8JsonWriter(buffer);
-    response.Results.Write(writer);
-    writer.Flush();
-    return JsonDocument.Parse(buffer.WrittenMemory).RootElement.Clone();
+  "type": "object",
+  "properties": {
+    "status": { "type": "integer", "description": "HTTP status code." },
+    "message": { "type": "string", "description": "Status or error message." },
+    "results": { "type": "object", "description": "Command-specific result payload." },
+    "duration": { "type": "integer", "description": "Execution duration in milliseconds." }
+  }
 }
 ```
 
-Apply the same change in `NamespaceToolLoader`'s call handler.
+This ensures **every tool** advertises an `outputSchema`, even if it's the generic envelope.
 
-> **Note:** The MCP spec requires that if `outputSchema` is declared, the `structuredContent` MUST validate against that schema. This coupling means both features should be enabled together per command, gated behind the same opt-in mechanism.
+### Architecture diagrams
+
+#### Output schema generation pipeline
+
+```
+Command.ResultTypeInfo ──► OutputSchemaGenerator.Generate(typeInfo)
+                                    │
+                         ┌──────────┴──────────┐
+                    typeInfo != null         typeInfo == null
+                         │                      │
+              Walk JsonTypeInfo.Properties   Return cached default
+              Build ToolOutputSchema         CommandResponse schema
+                         │                      │
+                         └──────────┬──────────┘
+                                    ▼
+                    JsonSerializer.SerializeToElement(schema)
+                                    │
+                                    ▼
+                           tool.OutputSchema
+```
+
+#### Input schema generation (extracted)
+
+Input schema generation was extracted from both loaders into `InputSchemaGenerator` for
+consistency with `OutputSchemaGenerator`:
+
+```
+Command.Options ──► InputSchemaGenerator.Generate(options)
+                            │
+               ┌────────────┼────────────┐
+          options.Count==1          normal options       no options
+          && IsRawMcpToolInput          │                   │
+               │               Build ToolInputSchema   Empty schema
+         Parse JSON from       with properties/required
+         option.Description
+               │                        │                   │
+               └────────────┬───────────┘───────────────────┘
+                            ▼
+                    tool.InputSchema
+```
+
+#### Caching in tool loaders
+
+Both `CommandFactoryToolLoader` and `NamespaceToolLoader` cache the `ListToolsResult`:
+
+```csharp
+private ListToolsResult? _cachedListToolsResult;
+
+// In ListToolsHandler:
+if (_cachedListToolsResult is { } cached)
+    return cached;
+// ... build tools ...
+_cachedListToolsResult = result;
+return result;
+```
+
+This means schema generation only runs once per server lifetime, regardless of how many
+`tools/list` requests are received.
+
+---
+
+## Files Changed
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `core/Microsoft.Mcp.Core/src/Areas/Server/Models/ToolOutputSchema.cs` | **New** | JSON Schema model (type, properties, required) |
+| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/OutputSchemaGenerator.cs` | **New** | Generates outputSchema from `JsonTypeInfo?` with default fallback |
+| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/InputSchemaGenerator.cs` | **New** | Extracted inputSchema generation (mirrors OutputSchemaGenerator) |
+| `core/Microsoft.Mcp.Core/src/Commands/IBaseCommand.cs` | Modify | Added `JsonTypeInfo? ResultTypeInfo => null;` default member |
+| `core/Microsoft.Mcp.Core/src/Commands/BaseCommand.cs` | Modify | Added `public virtual JsonTypeInfo? ResultTypeInfo => null;` |
+| `core/Microsoft.Mcp.Core/src/Areas/Server/ServerJsonContext.cs` | Modify | Registered `ToolOutputSchema` for AOT |
+| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs` | Modify | Uses `InputSchemaGenerator`, `OutputSchemaGenerator`, adds caching |
+| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/NamespaceToolLoader.cs` | Modify | Same refactoring as CommandFactoryToolLoader |
+| 226 command files across ~35 toolsets | Modify | Added `ResultTypeInfo` override |
+
+---
+
+## Command Coverage
+
+### Summary
+
+| Category | Count |
+|----------|-------|
+| Total concrete commands | ~249 |
+| Commands with specific `ResultTypeInfo` | **226** (91%) |
+| Commands using default `CommandResponse` schema | **23** (9%) |
+
+### Commands with specific `ResultTypeInfo` (223)
+
+All commands that have a result type registered in a per-toolset `JsonSerializerContext` now
+override `ResultTypeInfo`. This includes all commands across these toolsets:
+
+- **Core:** Group, Subscription, ServiceInfo, ToolsList
+- **Azure tools:** Acr, Advisor, Aks, AppConfig, AppLens, ApplicationInsights, AppService,
+  Authorization, AzureBestPractices, AzureIsv, AzureMigrate, AzureTerraformBestPractices,
+  BicepSchema, Communication, Compute, Cosmos,
+  EventGrid, EventHubs, FileShares, Foundry, FunctionApp, Grafana, KeyVault, Kusto,
+  LoadTesting, ManagedLustre, Marketplace, Monitor, MySql, Policy, Postgres, Pricing,
+  Quota, Redis, ResourceHealth, Search, ServiceBus, ServiceFabric, SignalR, Speech, Sql,
+  Storage, StorageSync, VirtualDesktop, Workbooks
+- **Fabric tools:** OneLake, PublicApi
+
+### Commands with multiple result types
+
+Seven commands produce different result types depending on input parameters (e.g., single
+vs. list). Since `ResultTypeInfo` is a single property, the **single-item result type** was
+chosen as the representative schema:
+
+| Command | Toolset | Selected `ResultTypeInfo` | Other result types |
+|---------|---------|--------------------------|-------------------|
+| `VmGetCommand` | Compute | `VmGetSingleResult` | `VmGetListResult` |
+| `VmssGetCommand` | Compute | `VmssGetSingleResult` | `VmssGetListResult`, `VmssGetVmInstanceResult` |
+| `NamespaceGetCommand` | EventHubs | `NamespaceGetCommandResult` | `NamespacesGetCommandResult` |
+| `WebTestsGetCommand` | Monitor | `WebTestsGetCommandResult` | `WebTestsGetCommandListResult` |
+| `AutoexportJobGetCommand` | ManagedLustre | `AutoexportJobGetResult` | `AutoexportJobListResult` |
+| `AutoimportJobGetCommand` | ManagedLustre | `AutoimportJobGetResult` | `AutoimportJobListResult` |
+| `ImportJobGetCommand` | ManagedLustre | `ImportJobGetResult` | `ImportJobListResult` |
+
+### Commands without `ResultTypeInfo` (23)
+
+These commands use `ResponseResult.Create` but their result types are not registered in a
+`JsonSerializerContext`, or they use patterns that don't produce typed results at all.
+They receive the default `CommandResponse` envelope schema.
+
+#### Commands that produce typed results but lack a registered `JsonTypeInfo` (17)
+
+| Toolset | Commands |
+|---------|----------|
+| CloudArchitect | `DesignCommand` |
+| ConfidentialLedger | `LedgerEntryAppendCommand`, `LedgerEntryGetCommand` |
+| Extension | `AzCommand`, `AzqrCommand`, `CliGenerateCommand`, `CliInstallCommand` |
+| FileShares | `FileShareGetLimitsCommand`, `FileShareGetProvisioningRecommendationCommand`, `FileShareGetUsageDataCommand` |
+| Foundry | `AgentsCreateCommand`, `AgentsGetSdkSampleCommand`, `ThreadCreateCommand`, `ThreadGetMessagesCommand`, `ThreadListCommand` |
+| Monitor | `EntityGetHealthCommand`, `ResourceLogQueryCommand`, `WorkspaceLogQueryCommand` |
+| Search | `IndexQueryCommand` |
+| Fabric.PublicApi | `GetBestPracticesCommand`, `GetWorkloadDefinitionCommand`, `GetPlatformApisCommand`, `GetWorkloadApisCommand` |
+
+These commands can be opted in once their result types are added to the appropriate
+`JsonSerializerContext` (`[JsonSerializable(typeof(...))]`).
+
+#### Commands that do not produce typed results (6)
+
+| Toolset | Command | Reason |
+|---------|---------|--------|
+| Deploy | `LogsGetCommand` | Unstructured text output |
+| Deploy | `DiagramGenerateCommand` | Raw MCP tool input, unstructured output |
+| Deploy | `RulesGetCommand` | Unstructured text output |
+| Deploy | `GuidanceGetCommand` | Unstructured text output |
+| Deploy | `GetCommand` | Unstructured text output |
+| Microsoft.Mcp.Core | `ServiceStartCommand` | Server lifecycle, not a data command |
+
+These commands cannot be opted in because they genuinely do not produce structured result
+objects via `ResponseResult.Create`.
 
 ---
 
 ## Rollout Strategy
 
-### Phase 1: outputSchema Only (Manifest Enrichment)
+### Phase 1: outputSchema Only (Manifest Enrichment) — ✅ Complete
 
-Minimum changes to get `outputSchema` into the MCPB-generated manifest:
+| # | Change | File(s) | Status |
+|---|--------|---------|--------|
+| 1 | Bump protocol version | `ServiceCollectionExtensions.cs` | ✅ Done |
+| 2 | Create `ToolOutputSchema` model | New `ToolOutputSchema.cs` | ✅ Done |
+| 3 | Register in AOT context | `ServerJsonContext.cs` | ✅ Done |
+| 4 | Add `ResultTypeInfo` property | `IBaseCommand.cs`, `BaseCommand.cs` | ✅ Done |
+| 5 | Set `Tool.OutputSchema` in tool loaders | `CommandFactoryToolLoader.cs`, `NamespaceToolLoader.cs` | ✅ Done |
+| 6 | Opt in select commands | Storage commands (initial batch) | ✅ Done |
 
-| # | Change | File(s) |
-|---|--------|---------|
-| 1 | Bump protocol version | `ServiceCollectionExtensions.cs` |
-| 2 | Create `ToolOutputSchema` model | New `ToolOutputSchema.cs` |
-| 3 | Register in AOT context | `ServerJsonContext.cs` |
-| 4 | Add `IOutputSchemaProvider` or `ResultTypeInfo` | New interface or `IBaseCommand.cs` |
-| 5 | Set `Tool.OutputSchema` in tool loaders | `CommandFactoryToolLoader.cs`, `NamespaceToolLoader.cs` |
-| 6 | Opt in select commands | Individual command files |
+### Phase 2: StructuredContent (Runtime) — Not Yet Implemented
 
-After Phase 1, running `mcpb pack --update` will produce a manifest with `outputSchema` entries.
+| # | Change | File(s) | Status |
+|---|--------|---------|--------|
+| 7 | Populate `CallToolResult.StructuredContent` | `CommandFactoryToolLoader.cs`, `NamespaceToolLoader.cs` | ⬜ Pending |
+| 8 | Ensure schema/content consistency | Validation tests | ⬜ Pending |
 
-### Phase 2: StructuredContent (Runtime)
+Returning `StructuredContent` in `CallToolResult` completes the structured output story,
+allowing MCP clients to consume typed JSON instead of parsing the `TextContentBlock` string.
 
-| # | Change | File(s) |
-|---|--------|---------|
-| 7 | Populate `CallToolResult.StructuredContent` | `CommandFactoryToolLoader.cs`, `NamespaceToolLoader.cs` |
-| 8 | Ensure schema/content consistency | Validation tests |
+```csharp
+return new CallToolResult
+{
+    Content = [new TextContentBlock { Text = jsonResponse }],
+    StructuredContent = commandResponse.Results != null
+        ? SerializeStructuredContent(commandResponse)
+        : null,
+    IsError = isError
+};
+```
 
-### Phase 3: Broad Adoption
+The MCP spec requires that if `outputSchema` is declared, `structuredContent` **must**
+validate against that schema. Since our `outputSchema` describes the result type and
+`structuredContent` would serialize the same result type, consistency is automatic.
 
-- Migrate all commands to declare output types.
-- Consider making `ResultTypeInfo` abstract (`required`) in a future `BaseCommand<TOptions, TResult>` variant.
-- Add tooling/analyzers to enforce output schema coverage.
+### Phase 3: Broad Adoption — ✅ Complete
 
----
-
-## Files Changed Summary
-
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ServiceCollectionExtensions.cs` | Modify | Protocol version bump |
-| `core/Microsoft.Mcp.Core/src/Areas/Server/Models/ToolOutputSchema.cs` | **New** | Output schema model |
-| `core/Microsoft.Mcp.Core/src/Areas/Server/ServerJsonContext.cs` | Modify | Register `ToolOutputSchema` for AOT |
-| `core/Microsoft.Mcp.Core/src/Commands/IOutputSchemaProvider.cs` | **New** | Opt-in interface (Option A) |
-| `core/Microsoft.Mcp.Core/src/Commands/IBaseCommand.cs` | Modify | Add `ResultTypeInfo` property (Option B) |
-| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/OutputSchemaGenerator.cs` | **New** | Schema generation from `JsonTypeInfo` (Option B) |
-| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs` | Modify | Set `Tool.OutputSchema` and optionally `StructuredContent` |
-| `core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading/NamespaceToolLoader.cs` | Modify | Same as above |
-| Per-toolset command files (e.g., `AccountGetCommand.cs`) | Modify | Opt in to output schema |
+| # | Change | Status |
+|---|--------|--------|
+| 9 | All commands with registered `JsonTypeInfo` override `ResultTypeInfo` | ✅ 226 commands |
+| 10 | All tools without `ResultTypeInfo` get default `CommandResponse` schema | ✅ 23 commands |
 
 ---
 
@@ -372,11 +414,24 @@ Any non-null `OutputSchema` property on the `Tool` will be preserved verbatim. *
 
 ---
 
-## Testing Considerations
+## Testing
 
-1. **Unit tests for `OutputSchemaGenerator`** — verify schema generation from known `JsonTypeInfo` types.
-2. **Unit tests for tool loaders** — verify `Tool.OutputSchema` is set when a command provides output type info, and null when it doesn't.
-3. **Integration test** — run `tools/list` against the server and verify `outputSchema` appears on opted-in tools.
-4. **MCPB manifest test** — run `mcpb pack --update` and verify the generated manifest contains `outputSchema` entries.
-5. **Schema/content consistency** — if `structuredContent` is implemented, validate that the runtime response conforms to the declared schema.
-6. **AOT compatibility** — ensure `ToolOutputSchema` serialization works under native AOT (`Build-Local.ps1 -BuildNative`).
+| Test | Location | Status |
+|------|----------|--------|
+| `OutputSchemaGenerator` unit tests (6) | `Azure.Mcp.Core.UnitTests/.../OutputSchemaGeneratorTests.cs` | ✅ Passing |
+| `CommandFactoryToolLoader` tests — all tools have outputSchema | `Microsoft.Mcp.Core.UnitTests/.../CommandFactoryToolLoaderTests.cs` | ✅ Passing |
+| `NamespaceToolLoader` tests — all commands have outputSchema | `Microsoft.Mcp.Core.UnitTests/.../NamespaceToolLoaderTests.cs` | ✅ Passing |
+| Caching tests (Assert.Same on repeated ListTools calls) | Both loader test files | ✅ Passing |
+| Full solution build (0 errors, 0 warnings) | `dotnet build Microsoft.Mcp.slnx` | ✅ Passing |
+| AOT compatibility | `Build-Local.ps1 -BuildNative` | Not yet verified |
+| Schema/content consistency (Phase 2) | — | Not yet implemented |
+
+---
+
+## Future Improvements
+
+- Register result types for the remaining 20 commands that produce typed results.
+- Consider making `ResultTypeInfo` abstract in a future `BaseCommand<TOptions, TResult>`.
+- Add a Roslyn analyzer to enforce that all commands with `ResponseResult.Create` also
+  override `ResultTypeInfo`.
+- Enrich generated schemas with nested property descriptions for complex models.

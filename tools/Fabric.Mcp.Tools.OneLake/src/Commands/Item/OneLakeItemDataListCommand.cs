@@ -13,6 +13,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
@@ -29,6 +30,9 @@ public sealed class OneLakeItemDataListCommand(
     public override string Id => "8925d0c4-becf-4b5a-8af1-3e998c1058ec";
     public override string Name => "list-data";
     public override string Title => "List OneLake Items (Data API)";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.OneLakeItemDataListCommandResult;
     public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
 
     public override ToolMetadata Metadata => new()

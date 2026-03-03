@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -28,6 +29,9 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
     public override string Description => "Displays running MCP server information.";
 
     public override string Title => "Server information.";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ServiceInfoJsonContext.Default.ServiceInfoCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

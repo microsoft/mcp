@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -36,6 +37,9 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
         "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KustoJsonContext.Default.SampleCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

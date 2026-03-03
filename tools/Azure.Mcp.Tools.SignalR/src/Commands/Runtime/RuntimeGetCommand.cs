@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 
@@ -32,6 +33,9 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SignalRJsonContext.Default.RuntimeGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

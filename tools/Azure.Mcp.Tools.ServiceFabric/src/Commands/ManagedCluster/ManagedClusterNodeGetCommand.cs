@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
@@ -29,6 +30,9 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         "Get nodes for a Service Fabric managed cluster. Returns all nodes by default or a single node when a node name is specified. Includes name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

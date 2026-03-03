@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
@@ -29,6 +30,9 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SqlJsonContext.Default.ServerDeleteResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
@@ -22,6 +23,9 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     public override string Name => "import";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KeyVaultJsonContext.Default.CertificateImportCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

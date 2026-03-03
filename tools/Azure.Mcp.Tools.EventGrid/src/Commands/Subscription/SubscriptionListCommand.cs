@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
@@ -28,6 +29,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        EventGridJsonContext.Default.SubscriptionListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

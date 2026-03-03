@@ -13,6 +13,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
@@ -26,6 +27,9 @@ public sealed class TableNamespaceGetCommand(
     public override string Id => "a86298d1-7475-4ea8-8c1b-e4c54ac2b896";
     public override string Name => "get";
     public override string Title => "Get OneLake Table Namespace";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.TableNamespaceGetCommandResult;
     public override string Description => "Retrieve detailed metadata for a specific namespace (schema) exposed by the OneLake table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse').";
 
     public override ToolMetadata Metadata => new()

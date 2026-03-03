@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
@@ -37,6 +38,9 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PolicyJsonContext.Default.PolicyAssignmentListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

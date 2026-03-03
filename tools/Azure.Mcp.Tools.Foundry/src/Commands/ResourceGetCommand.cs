@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -34,6 +35,9 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FoundryJsonContext.Default.ResourceGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

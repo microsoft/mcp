@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
@@ -65,6 +66,10 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
 
     /// <inheritdoc/>
     public override string Title => CommandTitle;
+
+    /// <inheritdoc/>
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AzureMigrateJsonContext.Default.GetGuidanceCommandResult;
 
     /// <inheritdoc/>
     public override ToolMetadata Metadata => new()

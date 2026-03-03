@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 
@@ -31,6 +32,9 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SqlJsonContext.Default.ElasticPoolListResult;
 
     public override ToolMetadata Metadata => new()
     {

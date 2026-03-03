@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
@@ -23,6 +24,9 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     public override string Name => "get";
 
     public override string Title => _commandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KeyVaultJsonContext.Default.SecretGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

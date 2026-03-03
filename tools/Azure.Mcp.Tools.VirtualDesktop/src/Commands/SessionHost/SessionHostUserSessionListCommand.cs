@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
@@ -27,6 +28,9 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
 		""";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

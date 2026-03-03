@@ -8,6 +8,7 @@ using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 
@@ -23,6 +24,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     public override string Description =>
     "List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault. Use for scope selection in governance, policy, access, cost management, or deployment.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SubscriptionJsonContext.Default.SubscriptionListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
@@ -23,6 +24,9 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
         "Configures PostgreSQL server settings including replication, connection limits, and other parameters.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PostgresJsonContext.Default.ServerParamSetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

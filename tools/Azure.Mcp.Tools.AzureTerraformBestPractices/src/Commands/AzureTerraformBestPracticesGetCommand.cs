@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,9 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         LocalRequired = false,
         Secret = false
     };
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AzureTerraformBestPracticesJsonContext.Default.ListString;
 
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 

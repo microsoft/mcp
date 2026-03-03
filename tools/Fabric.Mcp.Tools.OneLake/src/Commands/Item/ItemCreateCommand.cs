@@ -12,6 +12,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
@@ -25,6 +26,9 @@ public sealed class ItemCreateCommand(
     public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
     public override string Name => "create";
     public override string Title => "Create Fabric Item";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.ItemCreateCommandResult;
     public override string Description => "Create a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.";
 
     public override ToolMetadata Metadata => new()

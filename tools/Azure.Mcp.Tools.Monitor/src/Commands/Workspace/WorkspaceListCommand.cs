@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
 
@@ -28,6 +29,9 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.WorkspaceListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

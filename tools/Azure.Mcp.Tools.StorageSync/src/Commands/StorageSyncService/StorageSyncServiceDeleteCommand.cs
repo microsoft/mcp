@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -27,6 +28,9 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
     public override string Description => "Delete an Azure Storage Sync service and all its associated resources.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

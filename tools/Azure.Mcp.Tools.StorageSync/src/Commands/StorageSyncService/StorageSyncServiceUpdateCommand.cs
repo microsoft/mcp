@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -28,6 +29,9 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
     public override string Description => "Update properties of an existing Azure Storage Sync service.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

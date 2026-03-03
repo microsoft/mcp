@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
 
@@ -22,6 +23,9 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
         "List available table types in a Log Analytics workspace. Returns table type names.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MonitorJsonContext.Default.TableTypeListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

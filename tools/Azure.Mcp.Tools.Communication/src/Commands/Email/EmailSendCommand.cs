@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Email;
 
@@ -24,6 +25,9 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
     public override string Id => "60f79b69-9e90-4f07-9bf4-bd4452f1143d";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        CommunicationJsonContext.Default.EmailSendCommandResult;
 
     public override string Description =>
         """

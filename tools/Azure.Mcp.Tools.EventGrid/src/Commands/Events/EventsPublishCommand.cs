@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
@@ -30,6 +31,9 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        EventGridJsonContext.Default.EventGridPublishCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -10,6 +10,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
@@ -27,6 +28,9 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         "Specify --account to list databases in that account, or --account and --database to list containers in a specific database.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        CosmosJsonContext.Default.CosmosListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
@@ -24,6 +25,9 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        EventGridJsonContext.Default.TopicListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

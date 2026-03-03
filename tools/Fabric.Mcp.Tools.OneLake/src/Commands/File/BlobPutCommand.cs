@@ -16,6 +16,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -29,6 +30,9 @@ public sealed class BlobPutCommand(
     public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
     public override string Name => "file";
     public override string Title => "Upload OneLake File";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.BlobPutCommandResult;
     public override string Description => "Upload content to OneLake storage. Supports inline content or local file uploads with optional overwrite control.";
 
     public override ToolMetadata Metadata => new()

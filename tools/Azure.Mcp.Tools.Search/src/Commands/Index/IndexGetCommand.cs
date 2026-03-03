@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
@@ -31,6 +32,9 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        SearchJsonContext.Default.IndexGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

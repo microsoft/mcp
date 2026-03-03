@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
@@ -27,6 +28,9 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
     public override string Description => "Unregister a server from a Storage Sync service.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.RegisteredServerUnregisterCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

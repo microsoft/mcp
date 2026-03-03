@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Pricing.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Pricing.Commands;
 
@@ -31,6 +32,9 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
     "FOR BICEP/ARM COST ESTIMATION: When user asks to estimate costs from a Bicep or ARM template file, read the file, extract each resource's type and SKU, call this tool for each resource and aggregate the monthly costs (hourly price * 730 hours/month).";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        PricingJsonContext.Default.PricingGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

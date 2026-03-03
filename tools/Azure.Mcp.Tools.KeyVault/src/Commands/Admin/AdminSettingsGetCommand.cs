@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
@@ -20,6 +21,9 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
     public override string Name => "get";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KeyVaultJsonContext.Default.AdminSettingsGetCommandResult;
     public override ToolMetadata Metadata => new()
     {
         OpenWorld = false,       // Command queries Azure resources (vault settings)

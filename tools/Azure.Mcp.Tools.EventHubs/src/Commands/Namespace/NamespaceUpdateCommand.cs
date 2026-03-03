@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -45,6 +46,9 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        EventHubsJsonContext.Default.NamespaceUpdateCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

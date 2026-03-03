@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
@@ -27,6 +28,9 @@ public sealed class BlobGetCommand(
     public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
     public override string Name => "file";
     public override string Title => "Download OneLake File";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.BlobGetCommandResult;
     public override string Description => "Retrieve a file from OneLake storage, returning metadata, base64 content, and text when applicable.";
 
     public override ToolMetadata Metadata => new()

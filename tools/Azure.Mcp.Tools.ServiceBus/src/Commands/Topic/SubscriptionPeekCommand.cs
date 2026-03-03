@@ -11,6 +11,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
@@ -38,6 +39,9 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ServiceBusJsonContext.Default.SubscriptionPeekCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

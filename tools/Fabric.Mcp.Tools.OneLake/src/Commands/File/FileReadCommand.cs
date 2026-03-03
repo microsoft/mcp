@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -31,6 +32,9 @@ public sealed class FileReadCommand(
     public override string Id => "b70e5f70-d616-4a54-9879-6aa0a80345d9";
     public override string Name => "read";
     public override string Title => "Read OneLake File";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.FileReadCommandResult;
     public override string Description => "Read the contents of a file from OneLake storage.";
 
     public override ToolMetadata Metadata => new()

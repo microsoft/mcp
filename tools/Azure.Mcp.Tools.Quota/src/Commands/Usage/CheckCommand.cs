@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.Quota.Services.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
 
@@ -29,6 +30,9 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        QuotaJsonContext.Default.UsageCheckCommandResult;
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,

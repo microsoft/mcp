@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -25,6 +26,9 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
     public override string Name => "delete";
     public override string Description => "Delete a file share";
     public override string Title => "Delete File Share";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.FileShareDeleteCommandResult;
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,

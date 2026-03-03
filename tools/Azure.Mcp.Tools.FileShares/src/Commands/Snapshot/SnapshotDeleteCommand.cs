@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -25,6 +26,9 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
     public override string Name => "delete";
     public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
     public override string Title => "Delete File Share Snapshot";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.SnapshotDeleteCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

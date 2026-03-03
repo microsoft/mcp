@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
@@ -22,6 +23,9 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        MySqlJsonContext.Default.ServerParamSetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

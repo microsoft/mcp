@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands
 {
@@ -27,6 +28,9 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
        """;
 
         public override string Title => CommandTitle;
+
+        public override JsonTypeInfo? ResultTypeInfo =>
+            BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult;
 
         public override ToolMetadata Metadata => new()
         {

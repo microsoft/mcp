@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
@@ -32,6 +33,10 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
 
     /// <inheritdoc/>
     public override string Title => CommandTitle;
+
+    /// <inheritdoc/>
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AzureMigrateJsonContext.Default.RequestCommandResult;
 
     /// <inheritdoc/>
     public override string Description =>

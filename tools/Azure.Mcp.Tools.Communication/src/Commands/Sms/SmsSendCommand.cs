@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
 
@@ -27,6 +28,9 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        CommunicationJsonContext.Default.SmsSendCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

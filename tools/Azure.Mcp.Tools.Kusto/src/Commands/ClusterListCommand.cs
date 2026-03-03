@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -23,6 +24,9 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        KustoJsonContext.Default.ClusterListCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

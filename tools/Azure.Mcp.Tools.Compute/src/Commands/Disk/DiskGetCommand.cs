@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
@@ -37,6 +38,9 @@ public sealed class DiskGetCommand(
 
     /// <inheritdoc/>
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        ComputeJsonContext.Default.DiskGetCommandResult;
 
     /// <inheritdoc/>
     public override string Description => CommandDescription;

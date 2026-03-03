@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
@@ -29,6 +30,9 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        GroupJsonContext.Default.Result;
 
     public override ToolMetadata Metadata => new()
     {

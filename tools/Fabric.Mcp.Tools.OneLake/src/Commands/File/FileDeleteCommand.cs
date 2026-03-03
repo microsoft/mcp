@@ -14,6 +14,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -27,6 +28,9 @@ public sealed class FileDeleteCommand(
     public override string Id => "0aa3f887-0085-4141-8e34-f0cf1ed44f71";
     public override string Name => "delete";
     public override string Title => "Delete OneLake File";
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        OneLakeJsonContext.Default.FileDeleteCommandResult;
     public override string Description => "Delete a file from OneLake storage.";
 
     public override ToolMetadata Metadata => new()

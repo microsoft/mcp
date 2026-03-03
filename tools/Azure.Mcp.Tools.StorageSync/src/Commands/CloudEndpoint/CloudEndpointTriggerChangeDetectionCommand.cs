@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
@@ -27,6 +28,9 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
     public override string Description => "Trigger change detection on a cloud endpoint to sync file changes.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        StorageSyncJsonContext.Default.CloudEndpointTriggerChangeDetectionCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

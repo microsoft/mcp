@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -39,6 +40,9 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        EventHubsJsonContext.Default.NamespaceDeleteCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

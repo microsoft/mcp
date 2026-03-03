@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
@@ -26,6 +27,9 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.";
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        AksJsonContext.Default.ClusterGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

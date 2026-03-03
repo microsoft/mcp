@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -26,6 +27,9 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
     public override string Name => "get";
     public override string Description => "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.";
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        FileSharesJsonContext.Default.SnapshotGetCommandResult;
 
     public override ToolMetadata Metadata => new()
     {

@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
@@ -28,6 +29,9 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         """;
 
     public override string Title => CommandTitle;
+
+    public override JsonTypeInfo? ResultTypeInfo =>
+        QuotaJsonContext.Default.RegionCheckCommandResult;
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
