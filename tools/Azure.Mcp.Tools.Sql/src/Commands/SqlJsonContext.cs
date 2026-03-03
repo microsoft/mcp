@@ -12,7 +12,7 @@ using Azure.Mcp.Tools.Sql.Services.Models;
 
 namespace Azure.Mcp.Tools.Sql.Commands;
 
-[JsonSerializable(typeof(List<SqlDatabase>))]
+[JsonSerializable(typeof(DatabaseGetCommand.DatabaseGetListResult))]
 [JsonSerializable(typeof(DatabaseCreateCommand.DatabaseCreateResult))]
 [JsonSerializable(typeof(DatabaseUpdateCommand.DatabaseUpdateResult))]
 [JsonSerializable(typeof(DatabaseRenameCommand.DatabaseRenameResult))]
