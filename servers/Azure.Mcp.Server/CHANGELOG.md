@@ -12,6 +12,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Consolidated sql_db_show and sql_db_list commands into a single sql_db_get command, and sql_server_show and sql_server_list commands into a single sql_server_get command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
 
+### Bugs Fixed
+
+- Multiple bugs fixed for the Azure Workboosk tool  [[#1646](https://github.com/microsoft/mcp/pull/1646)]
+
 ## 2.0.0-beta.23 (2026-02-27)
 
 ### Features Added

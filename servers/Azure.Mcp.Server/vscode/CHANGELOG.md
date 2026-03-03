@@ -11,6 +11,10 @@
 
 - **Breaking:** Consolidated sql_db_show and sql_db_list commands into a single sql_db_get command, and sql_server_show and sql_server_list commands into a single sql_server_get command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
 
+### Fixed
+
+- Multiple bugs fixed for the Azure Workboosk tool  [[#1646](https://github.com/microsoft/mcp/pull/1646)]
+
 ## 2.0.0-beta.23 (2026-02-27) (pre-release)
 
 ### Added
@@ -87,7 +91,7 @@
 
 - Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
     - Removed keyvault_key_list - use keyvault_key_get without providing a key name
-    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name
     - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
 - Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
     - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
