@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Refactored `ApplicationInsights` tools to use constructor dependency injection."
