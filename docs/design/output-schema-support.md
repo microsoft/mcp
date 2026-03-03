@@ -309,6 +309,8 @@ chosen as the representative schema:
 | `AutoimportJobGetCommand` | ManagedLustre | `AutoimportJobGetResult` | `AutoimportJobListResult` |
 | `ImportJobGetCommand` | ManagedLustre | `ImportJobGetResult` | `ImportJobListResult` |
 
+TODO: We can consider future enhancements such as a single schema like we've done for recently unified commands like Key Vault's `KeyGetCommand`.
+
 ### Commands without `ResultTypeInfo` (6)
 
 These commands do not produce structured result objects via `ResponseResult.Create`.
