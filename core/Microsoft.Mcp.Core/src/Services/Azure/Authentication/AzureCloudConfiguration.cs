@@ -38,12 +38,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         // Try to get cloud configuration from various sources in priority order:
         // 1. ServiceStartOptions (--cloud command line argument)
         // 2. Configuration (appsettings.json or environment variables)
-        var cloudValue = serviceStartOptions?.Value?.Cloud
-            ?? configuration["AZURE_CLOUD"]
-            ?? configuration["azure_cloud"]
-            ?? configuration["cloud"]
-            ?? configuration["Cloud"]
-            ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
+        var cloudValue = LoadCloudValue(configuration, serviceStartOptions);
 
         (AuthorityHost, ArmEnvironment, CloudType) = ParseCloudValue(cloudValue);
 
@@ -62,7 +57,15 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
 
     public AzureCloud CloudType { get; }
 
-    private static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType) ParseCloudValue(string? cloudValue)
+    internal static string? LoadCloudValue(IConfiguration configuration, IOptions<ServiceStartOptions>? serviceStartOptions = null)
+        => serviceStartOptions?.Value?.Cloud
+            ?? configuration["AZURE_CLOUD"]
+            ?? configuration["azure_cloud"]
+            ?? configuration["cloud"]
+            ?? configuration["Cloud"]
+            ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
+
+    internal static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType) ParseCloudValue(string? cloudValue)
     {
         if (string.IsNullOrWhiteSpace(cloudValue))
         {
