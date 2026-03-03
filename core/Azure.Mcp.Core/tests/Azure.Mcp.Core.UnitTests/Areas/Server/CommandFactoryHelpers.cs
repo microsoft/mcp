@@ -21,6 +21,7 @@ using Azure.Mcp.Tools.Cosmos;
 using Azure.Mcp.Tools.Deploy;
 using Azure.Mcp.Tools.EventGrid;
 using Azure.Mcp.Tools.Extension;
+using Azure.Mcp.Tools.FoundryExtensions;
 using Azure.Mcp.Tools.FunctionApp;
 using Azure.Mcp.Tools.Grafana;
 using Azure.Mcp.Tools.KeyVault;
@@ -75,6 +76,7 @@ internal class CommandFactoryHelpers
             new DeploySetup(),
             new EventGridSetup(),
             new ExtensionSetup(),
+            new FoundryExtensionsSetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),
             new KeyVaultSetup(),
@@ -138,6 +140,7 @@ internal class CommandFactoryHelpers
             new DeploySetup(),
             new EventGridSetup(),
             new ExtensionSetup(),
+            new FoundryExtensionsSetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),
             new KeyVaultSetup(),
