@@ -875,22 +875,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |
 
-## Microsoft Foundry
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| foundry_agents_connect | Query an agent in my Microsoft Foundry resource |
-| foundry_agents_create | Create a new Microsoft Foundry agent using instructions in the active editor |
-| foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_list | List all agents in my Microsoft Foundry resource |
-| foundry_agents_list | Show me the available agents in my Microsoft Foundry resource |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Microsoft Foundry resource for task_adherence |
-| foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
-| foundry_models_deployments_list | List all Microsoft Foundry model deployments |
-| foundry_models_deployments_list | Show me all Microsoft Foundry model deployments |
-| foundry_models_list | List all Microsoft Foundry models |
-| foundry_models_list | Show me the available Microsoft Foundry models |
-
 ## Microsoft Foundry Extensions
 
 | Tool Name | Test Prompt |

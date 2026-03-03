@@ -1405,44 +1405,6 @@ azmcp fileshares usage --subscription <subscription> \
                        --location <azure-region>
 ```
 
-### Microsoft Foundry Operations
-
-> **Note:** The tools in this section are provided by the Microsoft Foundry MCP server (`mcp.ai.azure.com`) which is registered via the Azure MCP registry. They will only be available when the Azure MCP server can reach the external Foundry MCP endpoint.
-
-```bash
-# Connect to and query an agent in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents connect
-
-# Create a new agent in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents create
-
-# Evaluate agent responses using various metrics
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents evaluate
-
-# List agents in a Microsoft Foundry resource
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents list
-
-# Query and evaluate an agent in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents query-and-evaluate
-
-# Deploy a model in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deploy
-
-# List model deployments in Microsoft Foundry
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deployments-list
-
-# List available models in Microsoft Foundry
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models list
-```
-
 ### Microsoft Foundry Extensions Operations
 
 ```bash
