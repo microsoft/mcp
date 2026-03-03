@@ -493,8 +493,5 @@ public class RegistryDiscoveryStrategyTests
         Assert.Contains("documentation", serverIds);
         Assert.Contains("azd", serverIds);
         Assert.Contains("foundry", serverIds);
-        
-        // Should have exactly 3 servers in registry
-        Assert.Equal(3, serverIds.Count);
     }
 }

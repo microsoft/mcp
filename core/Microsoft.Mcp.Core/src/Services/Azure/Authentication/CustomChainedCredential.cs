@@ -63,6 +63,12 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// - AZURE_TOKEN_CREDENTIALS=specific credential name (user wants only that credential, fail fast)
 /// </para>
 /// <para>
+/// The <c>forceBrowserFallback</c> constructor parameter lets callers (e.g. registry server OAuth)
+/// request interactive browser as a last resort, but it is subject to the same restrictions:
+/// any explicit AZURE_TOKEN_CREDENTIALS value — including "prod" and named credentials — is
+/// always honored and prevents the browser popup even when <c>forceBrowserFallback</c> is <c>true</c>.
+/// </para>
+/// <para>
 /// For User-Assigned Managed Identity, set the AZURE_CLIENT_ID environment variable to the client ID of the managed identity.
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
@@ -148,17 +154,24 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
         // Only add InteractiveBrowserCredential as fallback when:
         // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
-        // 2. AZURE_TOKEN_CREDENTIALS explicitly requests it
-        // 3. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
-        // 4. forceBrowserFallback=true AND AZURE_TOKEN_CREDENTIALS is not "prod"
-        //    (registry server callers want interactive fallback for local/hosting-identity scenarios,
-        //     but must respect "prod" which means headless/CI — no browser popup)
-        // Do NOT add it for "prod" or specific credential names (user wants only those credentials)
-        bool isProdMode = tokenCredentials?.Equals("prod", StringComparison.OrdinalIgnoreCase) ?? false;
-        bool shouldAddBrowserFallback = (!isProdMode && forceBrowserFallback) ||
+        // 2. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
+        // 3. AZURE_TOKEN_CREDENTIALS="InteractiveBrowserCredential" (explicitly requested)
+        // 4. forceBrowserFallback=true AND no specific credential is pinned
+        //    (registry server callers want interactive fallback; must still honor any explicit
+        //     AZURE_TOKEN_CREDENTIALS choice — "prod", "AzureCliCredential", etc. — which all
+        //     express "use only this credential, no interactive popup")
+        //
+        // Do NOT add it when AZURE_TOKEN_CREDENTIALS is set to "prod" or any specific
+        // credential name; those choices are always respected even when forceBrowserFallback=true.
+        bool isDevMode = tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false;
+        bool isExplicitBrowserMode = tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false;
+        // Any explicit AZURE_TOKEN_CREDENTIALS value other than "dev" or "InteractiveBrowserCredential"
+        // is treated as a pinned credential choice — interactive browser must not be injected.
+        bool isPinnedCredentialMode = hasExplicitCredentialSetting && !isDevMode && !isExplicitBrowserMode;
+        bool shouldAddBrowserFallback = isExplicitBrowserMode ||
+                                       isDevMode ||
                                        !hasExplicitCredentialSetting ||
-                                       (tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                                       (tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false);
+                                       (forceBrowserFallback && !isPinnedCredentialMode);
 
         if (shouldAddBrowserFallback)
         {
@@ -458,7 +471,9 @@ internal class SafeTokenCredential(TokenCredential innerCredential, string crede
     private static string NormalizeScope(string scope) =>
         scope.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
             ? scope
-            : $"{new Uri(scope).GetLeftPart(UriPartial.Authority)}/.default";
+            : Uri.TryCreate(scope, UriKind.Absolute, out var uri)
+                ? $"{uri.GetLeftPart(UriPartial.Authority)}/.default"
+                : scope; // not a valid absolute URI — return unchanged to preserve chaining
 
     private TokenRequestContext MaybeNormalize(TokenRequestContext ctx) =>
         _normalizeScopes
