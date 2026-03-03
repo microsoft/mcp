@@ -723,6 +723,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --detector-name "detector"
 
 # Diagnose the Web App with detector between start and end time with interval
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
