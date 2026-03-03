@@ -108,7 +108,7 @@ public class StorageService(
         try
         {
             // Create ArmClient for deployments
-            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, retryPolicy);
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, retryPolicy, cancellationToken);
 
             // Prepare data
             ResourceIdentifier accountId = new ResourceIdentifier($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
@@ -136,7 +136,8 @@ public class StorageService(
                 accountId,
                 location,
                 createContent,
-                StorageJsonContext.Default.StorageAccountCreateOrUpdateContent);
+                StorageJsonContext.Default.StorageAccountCreateOrUpdateContent,
+                cancellationToken);
             if (!result.HasData)
             {
                 return new StorageAccountResult(

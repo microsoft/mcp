@@ -82,8 +82,18 @@ extends:
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}
-            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrices.x64']
             MaxParallel: 4
+
+      - template: /eng/pipelines/templates/jobs/build.yml
+        parameters:
+          TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+          ServerName: ${{ parameters.ServerName }}
+          PublishTarget: ${{ parameters.PublishTarget }}
+          OSName: linux
+          Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.linuxBuildMatrices.arm64']
+          MaxParallel: 4
+          HostArchitecture: arm64
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test

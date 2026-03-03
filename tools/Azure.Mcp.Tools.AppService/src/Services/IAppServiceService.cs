@@ -19,4 +19,40 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<WebappDetails>> GetWebAppsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? appName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IDictionary<string, string>> GetAppSettingsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> UpdateAppSettingsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string settingName,
+        string settingUpdateType,
+        string? settingValue = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<DeploymentDetails>> GetDeploymentsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? deploymentId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

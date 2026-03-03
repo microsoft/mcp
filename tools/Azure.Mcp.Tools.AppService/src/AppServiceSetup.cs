@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -19,6 +22,10 @@ public class AppServiceSetup : IAreaSetup
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
+        services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<AppSettingsGetCommand>();
+        services.AddSingleton<AppSettingsUpdateCommand>();
+        services.AddSingleton<DeploymentGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -34,6 +41,33 @@ public class AppServiceSetup : IAreaSetup
         // Register the 'add' command for database connections, allowing users to configure a new database connection for an App Service web app.
         var databaseAdd = serviceProvider.GetRequiredService<DatabaseAddCommand>();
         database.AddCommand(databaseAdd.Name, databaseAdd);
+
+        // Create webapp subgroup
+        var webapp = new CommandGroup("webapp", "Operations for managing Azure App Service web apps");
+        appService.AddSubGroup(webapp);
+
+        // Add webapp commands
+        var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
+        webapp.AddCommand(webappGet.Name, webappGet);
+
+        // Add settings subgroup under webapp
+        var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");
+        webapp.AddSubGroup(settings);
+
+        // Add settings commands
+        var appSettingsGet = serviceProvider.GetRequiredService<AppSettingsGetCommand>();
+        settings.AddCommand(appSettingsGet.Name, appSettingsGet);
+
+        var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
+        settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
+
+        // Add deployment subgroup
+        var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
+        webapp.AddSubGroup(deployment);
+
+        // Add deployment commands
+        var deploymentGet = serviceProvider.GetRequiredService<DeploymentGetCommand>();
+        deployment.AddCommand(deploymentGet.Name, deploymentGet);
 
         return appService;
     }
