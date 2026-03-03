@@ -973,9 +973,9 @@ public class CommandFactoryToolLoaderTests
         {
             var tool = result.Tools.First(t => t.Name == commandName);
             var props = tool.OutputSchema!.Value.GetProperty("properties");
-            // Specific schemas should NOT contain the default "status" field
-            Assert.False(props.TryGetProperty("status", out _),
-                $"Tool '{commandName}' with ResultTypeInfo should have command-specific (not default) outputSchema");
+            // Specific schemas should NOT contain the default envelope "duration" field
+            Assert.False(props.TryGetProperty("duration", out _),
+                $"Tool '{commandName}' with ResultTypeInfo should have command-specific (not default envelope) outputSchema");
         }
 
         // Commands without ResultTypeInfo should have the default CommandResponse schema

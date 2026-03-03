@@ -82,6 +82,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                OutputSchema = OutputSchemaGenerator.Generate(),
             };
 
             // Set annotations if we have Title or ToolMetadata

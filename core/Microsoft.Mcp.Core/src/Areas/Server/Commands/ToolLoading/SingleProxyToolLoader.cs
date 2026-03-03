@@ -86,6 +86,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
                         """,
                     Annotations = new ToolAnnotations(),
                     InputSchema = ToolSchema,
+                    OutputSchema = OutputSchemaGenerator.Generate(),
                 }
             ],
         };
