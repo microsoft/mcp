@@ -34,6 +34,8 @@ public class RoleAssignmentListCommandTests
 
         _command = new(_logger, _authorizationService);
         _commandDefinition = _command.GetCommand();
+        // CommandContext requires an IServiceProvider, but these tests do not resolve any services,
+        // so an empty ServiceProvider is sufficient and intentionally used here.
         _serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
         _context = new(_serviceProvider);
