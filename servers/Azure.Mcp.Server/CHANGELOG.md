@@ -14,7 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Multiple bugs fixed for the Azure Workboosk tool  [[#1646](https://github.com/microsoft/mcp/pull/1646)]
+- Fixed multiple bugs for the Azure Workbooks tool  [[#1646](https://github.com/microsoft/mcp/pull/1646)]
 
 ## 2.0.0-beta.23 (2026-02-27)
 
