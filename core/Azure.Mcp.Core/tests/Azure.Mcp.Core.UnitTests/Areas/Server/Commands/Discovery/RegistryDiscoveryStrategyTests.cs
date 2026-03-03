@@ -471,7 +471,7 @@ public class RegistryDiscoveryStrategyTests
         var metadata = foundryProvider.CreateMetadata();
         Assert.Equal("foundry", metadata.Id);
         Assert.Equal("foundry", metadata.Name);
-        
+
         // Description should mention models, agents, and evaluation workflows
         var description = metadata.Description.ToLowerInvariant();
         Assert.Contains("models", description);

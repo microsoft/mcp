@@ -78,7 +78,7 @@ public class VisualStudioToolNameTests
 
             // Read initialize response — in --mode all the server may take 15+ seconds to
             // respond while it connects to external MCP registry servers.
-            var initResponseLine = await process.StandardOutput.ReadLineAsync(timeoutToken);
+            var initResponseLine = await ReadJsonLineAsync(process.StandardOutput, timeoutToken);
             Assert.NotNull(initResponseLine);
 
             // Send initialized notification
@@ -103,8 +103,9 @@ public class VisualStudioToolNameTests
             await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), timeoutToken);
             await process.StandardInput.FlushAsync(timeoutToken);
 
-            // Read response with timeout
-            var responseLine = await process.StandardOutput.ReadLineAsync(timeoutToken);
+            // Read response — skip any non-JSON lines (e.g. server log output written to stdout
+            // by the process or a failing external subprocess such as azd).
+            var responseLine = await ReadJsonLineAsync(process.StandardOutput, timeoutToken);
             Assert.NotNull(responseLine);
 
             var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
@@ -125,6 +126,26 @@ public class VisualStudioToolNameTests
                 await process.WaitForExitAsync(CancellationToken.None);
             }
         }
+    }
+
+    /// <summary>
+    /// Reads lines from <paramref name="reader"/> until a line that starts with '{' is found,
+    /// skipping any non-JSON output (log messages, subprocess errors, etc.) the server process
+    /// may write to stdout alongside MCP JSON-RPC messages.
+    /// </summary>
+    private static async Task<string?> ReadJsonLineAsync(StreamReader reader, CancellationToken cancellationToken)
+    {
+        string? line;
+        while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
+        {
+            if (line.AsSpan().TrimStart().StartsWith('{'))
+            {
+                return line;
+            }
+            // Non-JSON line — skip it. The server or a failing stdio subprocess may write
+            // diagnostic text to stdout; we don't want that to break JSON-RPC parsing.
+        }
+        return null;
     }
 
     [Fact(Timeout = 180000)] // 3-minute timeout: --mode all connects to external MCP registry servers on startup
