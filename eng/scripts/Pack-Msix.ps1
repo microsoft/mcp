@@ -133,6 +133,19 @@ if (-not (Test-Path $makeAppxPath)) {
 
 Write-Host "Using MakeAppx.exe from: $makeAppxPath"
 
+# MakePri.exe is used to generate resources.pri - the Package Resource Index that maps
+# all assets (logos, manifest.json) so the MSIX runtime and ODR can locate them.
+# Without resources.pri, ODR may fail to resolve PublicFolder="Assets" and the
+# Registration>manifest.json reference, preventing server discovery.
+$makePriPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0\x64\makepri.exe"
+
+if (-not (Test-Path $makePriPath)) {
+    LogError "MakePri.exe not found. Please install Windows SDK 10.0.22621.0: winget install Microsoft.WindowsSDK.10.0.22621"
+    exit 1
+}
+
+Write-Host "Using MakePri.exe from: $makePriPath"
+
 # Always use SignTool for signing (WinAppCli has issues with complex Publisher DNs)
 $signToolPath = $null
 if ($CertificatePath) {
@@ -423,6 +436,35 @@ Processing MSIX packaging:
             Copy-Item $packageIconPath "$stagingDir/Assets/StoreLogo.png"
         }
     }
+
+    # Generate resources.pri - the Package Resource Index
+    # This maps all assets so the MSIX runtime and ODR can locate them.
+    # ODR uses this to resolve PublicFolder="Assets" and find manifest.json.
+    Write-Host "Generating resources.pri..."
+    $priConfigPath = "$stagingDir/priconfig.xml"
+    $priOutputPath = "$stagingDir/resources.pri"
+
+    # Generate default PRI config and build resources.pri
+    & $makePriPath createconfig /cf $priConfigPath /dq en-US /o 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        LogError "Failed to create PRI configuration for $($server.name)"
+        $exitCode = 1
+        continue
+    }
+
+    & $makePriPath new /cf $priConfigPath /pr $stagingDir /of $priOutputPath /mn "$stagingDir/AppxManifest.xml" /o 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        LogError "Failed to generate resources.pri for $($server.name)"
+        $exitCode = 1
+        continue
+    }
+
+    # Clean up: remove PRI config and per-language split .pri files (generated from
+    # satellite assemblies in the server directory). Only the main resources.pri is
+    # needed in the MSIX package.
+    Remove-Item -Path $priConfigPath -ErrorAction SilentlyContinue
+    Get-ChildItem "$stagingDir/resources.language-*.pri" -ErrorAction SilentlyContinue | Remove-Item -Force
+    Write-Host "resources.pri generated successfully"
 
     # Create output directory for this server
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"

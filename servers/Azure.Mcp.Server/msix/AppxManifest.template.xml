@@ -25,6 +25,7 @@
     Windows MCP ODR sample packages (AgentSessionServer, UserSessionAsAgentServer).
 -->
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
          xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
          xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
@@ -35,6 +36,9 @@
             Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
             Version="{{VERSION}}"
             ProcessorArchitecture="x64" />
+
+  <mp:PhoneIdentity PhoneProductId="a3f0e47b-5c2d-4f8a-9b1e-6d7c8a2f5e30"
+                    PhonePublisherId="00000000-0000-0000-0000-000000000000" />
 
   <Properties>
     <DisplayName>{{DISPLAY_NAME}}</DisplayName>
@@ -54,6 +58,7 @@
       MaxVersionTested 10.0.26100.0 (Windows 11 24H2)
     -->
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>
@@ -114,5 +119,8 @@
     
     <!-- Full trust required for CLI server execution -->
     <rescap:Capability Name="runFullTrust" />
+
+    <!-- Required for ODR package registration - addresses license error 0x87E10BC6 -->
+    <rescap:Capability Name="appLicensing" />
   </Capabilities>
 </Package>
