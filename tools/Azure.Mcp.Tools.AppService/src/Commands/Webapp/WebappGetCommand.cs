@@ -13,7 +13,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseAppServiceCommand<BaseAppServiceOptions>()
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
+    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Details";
     private readonly ILogger<WebappGetCommand> _logger = logger;

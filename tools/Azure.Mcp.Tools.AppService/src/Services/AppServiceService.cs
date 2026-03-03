@@ -335,4 +335,39 @@ public class AppServiceService(
 
         return updateResultMessage;
     }
+
+    public async Task<List<DeploymentDetails>> GetDeploymentsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? deploymentId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
+
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+
+        var results = new List<DeploymentDetails>();
+
+        if (deploymentId == null)
+        {
+            await foreach (var deployment in webAppResource.GetSiteDeployments().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                results.Add(MapToDeploymentDetails(deployment.Data));
+            }
+        }
+        else
+        {
+            var deployment = await webAppResource.GetSiteDeploymentAsync(deploymentId, cancellationToken: cancellationToken);
+            results.Add(MapToDeploymentDetails(deployment.Value.Data));
+        }
+
+        return results;
+    }
+
+    private static DeploymentDetails MapToDeploymentDetails(WebAppDeploymentData deployment)
+        => new(deployment.Id.Name, deployment.ResourceType.ToString(), deployment.Kind, deployment.IsActive,
+            deployment.Status, deployment.Author, deployment.Deployer, deployment.StartOn, deployment.EndOn);
 }

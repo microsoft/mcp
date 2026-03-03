@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,7 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<WebappGetCommand>();
         services.AddSingleton<AppSettingsGetCommand>();
         services.AddSingleton<AppSettingsUpdateCommand>();
+        services.AddSingleton<DeploymentGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -58,6 +60,14 @@ public class AppServiceSetup : IAreaSetup
 
         var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
         settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
+
+        // Add deployment subgroup
+        var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
+        webapp.AddSubGroup(deployment);
+
+        // Add deployment commands
+        var deploymentGet = serviceProvider.GetRequiredService<DeploymentGetCommand>();
+        deployment.AddCommand(deploymentGet.Name, deploymentGet);
 
         return appService;
     }

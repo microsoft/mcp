@@ -13,7 +13,6 @@ namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp;
 public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
-
     [Fact]
     public async Task ExecuteAsync_SubscriptionList_ReturnsExpectedWebApp()
     {
