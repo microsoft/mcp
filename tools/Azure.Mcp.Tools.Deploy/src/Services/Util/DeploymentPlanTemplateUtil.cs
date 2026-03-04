@@ -23,7 +23,7 @@ public static class DeploymentPlanTemplateUtil
     public static string GetPlanTemplate(string projectName, string targetAppService, string provisioningTool, string sourceType, string deployOption, string? iacOptions, string? subscriptionId, string? resourceGroupName)
     {
         // Default values for optional parameters
-        if (provisioningTool == "azd" && string.IsNullOrWhiteSpace(iacOptions))
+        if (string.Equals(provisioningTool, "azd", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(iacOptions))
         {
             iacOptions = "bicep";
         }
@@ -56,42 +56,36 @@ public static class DeploymentPlanTemplateUtil
             ? "Azure Deployment Plan"
             : $"Azure Deployment Plan for {projectName} Project";
 
-        if (deployOption == DeployOption.DeployOnly)
+        if (string.Equals(deployOption, DeployOption.DeployOnly, StringComparison.OrdinalIgnoreCase))
         {
             provisioningTool = DeploymentTool.AzCli;
             sourceType = SourceType.FromAzure;
         }
 
-        if (deployOption == DeployOption.ProvisionOnly)
+        if (string.Equals(deployOption, DeployOption.ProvisionOnly, StringComparison.OrdinalIgnoreCase))
         {
             provisioningTool = DeploymentTool.AzCli;
         }
 
         var fallbackIaCTypeDescription = "";
-        if (string.IsNullOrEmpty(iacOptions) && (deployOption == DeployOption.ProvisionOnly || deployOption == DeployOption.ProvisionAndDeploy))
+        if (string.IsNullOrEmpty(iacOptions) && (string.Equals(deployOption, DeployOption.ProvisionOnly, StringComparison.OrdinalIgnoreCase) || string.Equals(deployOption, DeployOption.ProvisionAndDeploy, StringComparison.OrdinalIgnoreCase)))
         {
             iacOptions = targetAppService.ToLowerInvariant() == "aks" ? IacType.Terraform : IacType.Bicep;
-            fallbackIaCTypeDescription = $" Since the IaC option is not specified, we will use ${iacOptions} as the IaC option based on the target app services.";
+            fallbackIaCTypeDescription = $" Since the IaC option is not specified, we will use {iacOptions} as the IaC option based on the target app services.";
         }
 
-        var goal = sourceType == SourceType.FromAzure ?
-            $"Based on the project to provide a plan to deploy the project to Azure ${targetAppService} in resource group ${resourceGroupName ?? "YOUR RG"} and subscription ${subscriptionId ?? "YOUR SUBSCRIPTION"} with tool ${provisioningTool.ToUpperInvariant()}.${fallbackIaCTypeDescription}" :
-            $"Based on the project to provide a plan to deploy the project to Azure using ${provisioningTool.ToUpperInvariant()}.${fallbackIaCTypeDescription}";
+        var goal = string.Equals(sourceType, SourceType.FromAzure, StringComparison.OrdinalIgnoreCase) ?
+            $"Based on the project to provide a plan to deploy the project to Azure {targetAppService} in resource group {resourceGroupName ?? "YOUR RG"} and subscription {subscriptionId ?? "YOUR SUBSCRIPTION"} with tool {provisioningTool.ToUpperInvariant()}.{fallbackIaCTypeDescription}" :
+            $"Based on the project to provide a plan to deploy the project to Azure using {provisioningTool.ToUpperInvariant()}.{fallbackIaCTypeDescription}";
 
-        if (deployOption == DeployOption.ProvisionOnly)
+        if (string.Equals(deployOption, DeployOption.ProvisionOnly, StringComparison.OrdinalIgnoreCase))
         {
-            goal = $"Provide a plan to provision Azure resources for the project with ${provisioningTool.ToUpperInvariant()}${(string.IsNullOrEmpty(iacOptions) ? "" : " and " + iacOptions)}.${fallbackIaCTypeDescription}";
+            goal = $"Provide a plan to provision Azure resources for the project with {provisioningTool.ToUpperInvariant()}{(string.IsNullOrEmpty(iacOptions) ? "" : " and " + iacOptions)}.{fallbackIaCTypeDescription}";
         }
 
-        var sampleMermaid = "";
-        if (targetAppService.ToLowerInvariant() == "aks")
-        {
-            sampleMermaid = TemplateService.LoadTemplate("Plan/sample-aks-mermaid");
-        }
-        else
-        {
-            sampleMermaid = TemplateService.LoadTemplate("Plan/sample-app-mermaid");
-        }
+        var sampleMermaid = targetAppService.ToLowerInvariant() == "aks"
+        ? TemplateService.LoadTemplate("Plan/sample-aks-mermaid")
+        : TemplateService.LoadTemplate("Plan/sample-app-mermaid");
 
         return new DeploymentPlanTemplateParameters
         {
@@ -215,7 +209,7 @@ public static class DeploymentPlanTemplateUtil
             {
                 IaCType = parameters.IacType.ToLowerInvariant(),
                 AzureComputeHost = parameters.AzureComputeHost,
-                TargetAppCommandTitle = parameters.TargetAppService,
+                TargetAppCommandTitle = parameters.TargetAppService.ToLowerInvariant(),
                 DeploymentSteps = cliDeploymentSteps,
                 ACRDependencyCheck = parameters.TargetAppService.ToLowerInvariant() == "containerapp"
                     ? "- Check Azure Container Registry:\n- login server: <>. Check with \'az acr show -o json\'."
@@ -244,17 +238,12 @@ public static class DeploymentPlanTemplateUtil
 
     private static string GenerateResourceInfo(DeploymentPlanTemplateParameters parameters)
     {
-        if (parameters.DeployOption == DeployOption.DeployOnly)
-        {
-            return TemplateService.LoadTemplate("Plan/existing-resource-info");
-        }
-        else
-        {
-            return TemplateService.ProcessTemplate("Plan/provision-info", new Dictionary<string, string>
+        return parameters.DeployOption == DeployOption.DeployOnly
+            ? TemplateService.LoadTemplate("Plan/existing-resource-info")
+            : TemplateService.ProcessTemplate("Plan/provision-info", new Dictionary<string, string>
             {
                 { "ProjectName", parameters.ProjectName },
                 { "AzureComputeHost", parameters.AzureComputeHost }
             });
-        }
     }
 }
