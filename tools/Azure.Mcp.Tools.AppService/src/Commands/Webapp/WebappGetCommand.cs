@@ -44,7 +44,6 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName.AsOptional());
         command.Validators.Add(commandResult =>
         {
             var appName = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
@@ -56,12 +55,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
         });
     }
 
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
-        return options;
-    }
+    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

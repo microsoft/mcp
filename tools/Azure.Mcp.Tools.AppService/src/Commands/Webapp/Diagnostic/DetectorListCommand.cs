@@ -1,26 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
+namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger)
+public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
     : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
 {
-    private const string CommandTitle = "Gets Azure App Service Web App Application Settings";
-    private readonly ILogger<AppSettingsGetCommand> _logger = logger;
-    public override string Id => "825ef21f-392f-4cd4-8272-7e7dce12e293";
-    public override string Name => "get-appsettings";
+    private const string CommandTitle = "List the Diagnostic Detectors for an App Service Web App";
+    private readonly ILogger<DetectorListCommand> _logger = logger;
+    public override string Id => "7807fdb6-4b92-4361-8042-be61dd342e17";
+    public override string Name => "list";
 
     public override string Description =>
         """
-        Retrieves the application settings for an App Service web app, returning key-value pairs that represent the
-        setting. Application settings may contain sensitive information.
+        Retrieves detailed information about detectors detector for the specified App Service Web App, returning the name,
+        detector type, description, category, and analysis types for each detector.
         """;
 
     public override string Title => CommandTitle;
@@ -31,7 +32,7 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger)
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
-        Secret = true,
+        Secret = false,
         LocalRequired = false
     };
 
@@ -54,7 +55,7 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger)
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var appServiceService = context.GetService<IAppServiceService>();
-            var appSettings = await appServiceService.GetAppSettingsAsync(
+            var detectors = await appServiceService.ListDetectorsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
@@ -62,11 +63,11 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(appSettings), AppServiceJsonContext.Default.AppSettingsGetResult);
+            context.Response.Results = ResponseResult.Create(new(detectors), AppServiceJsonContext.Default.DetectorListResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get application settings for Web App details for '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
+            _logger.LogError(ex, "Failed to get diagnostic detectors for Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
                 options.AppName, options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
@@ -74,5 +75,5 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger)
         return context.Response;
     }
 
-    public record AppSettingsGetResult(IDictionary<string, string> AppSettings);
+    public record DetectorListResult(List<DetectorDetails> Detectors);
 }
