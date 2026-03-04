@@ -3,6 +3,4 @@
 
 namespace Azure.Mcp.Tools.Sql.Options.Server;
 
-public class ServerListOptions : BaseSqlOptions
-{
-}
+public class ServerGetOptions : BaseSqlOptions;
