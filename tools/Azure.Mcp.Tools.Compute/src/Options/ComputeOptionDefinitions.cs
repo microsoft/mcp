@@ -21,6 +21,7 @@ public static class ComputeOptionDefinitions
     public const string PublicIpAddressName = "public-ip-address";
     public const string NetworkSecurityGroupName = "network-security-group";
     public const string NoPublicIpName = "no-public-ip";
+    public const string SourceAddressPrefixName = "source-address-prefix";
     public const string ZoneName = "zone";
     public const string OsDiskSizeGbName = "os-disk-size-gb";
     public const string OsDiskTypeName = "os-disk-type";
@@ -124,6 +125,12 @@ public static class ComputeOptionDefinitions
     public static readonly Option<bool> NoPublicIp = new($"--{NoPublicIpName}")
     {
         Description = "Do not create or assign a public IP address",
+        Required = false
+    };
+
+    public static readonly Option<string> SourceAddressPrefix = new($"--{SourceAddressPrefixName}")
+    {
+        Description = "Source IP address range for NSG inbound rules (e.g., '203.0.113.0/24' or a specific IP). Defaults to '*' (any source)",
         Required = false
     };
 

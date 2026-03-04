@@ -99,6 +99,7 @@ public class VmCreateCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -166,6 +167,7 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -213,13 +215,11 @@ public class VmCreateCommandTests
             "--image", "Win2022Datacenter" // Windows image
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("password", response.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Windows", response.Message, StringComparison.OrdinalIgnoreCase);
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<Microsoft.Mcp.Core.Commands.CommandValidationException>(
+            () => _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken));
+        Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Windows", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -244,6 +244,7 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
@@ -291,6 +292,7 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
@@ -348,6 +350,7 @@ public class VmCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),

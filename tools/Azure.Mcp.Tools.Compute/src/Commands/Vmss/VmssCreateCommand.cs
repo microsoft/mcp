@@ -23,7 +23,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
     private const string CommandTitle = "Create Virtual Machine Scale Set";
     private readonly ILogger<VmssCreateCommand> _logger = logger;
 
-    public override string Id => "e5d0c3f8-6g4b-5c9f-0d2e-1f3g4h5i6j7k";
+    public override string Id => "c46a4bc5-cba6-4d99-991b-a9109fc689ad";
 
     public override string Name => "create";
 
@@ -126,9 +126,9 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         // Custom validation: For Windows VMSS, password is required
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
         {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "The --admin-password option is required for Windows VMSS.";
-            return context.Response;
+            throw new CommandValidationException(
+                "The --admin-password option is required for Windows VMSS.",
+                HttpStatusCode.BadRequest);
         }
 
         // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)

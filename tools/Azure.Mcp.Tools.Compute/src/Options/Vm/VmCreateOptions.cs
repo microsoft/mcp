@@ -36,4 +36,6 @@ public class VmCreateOptions : BaseComputeOptions
     public int? OsDiskSizeGb { get; set; }
 
     public string? OsDiskType { get; set; }
+
+    public string? SourceAddressPrefix { get; set; }
 }

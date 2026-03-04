@@ -22,7 +22,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
     private const string CommandTitle = "Update Virtual Machine Scale Set";
     private readonly ILogger<VmssUpdateCommand> _logger = logger;
 
-    public override string Id => "f6e1d4g9-7h5c-6d0g-1e3f-2g4h5i6j7k8l";
+    public override string Id => "aaa0ad51-3c16-4ec2-99e2-b24f28a1e7d0";
 
     public override string Name => "update";
 

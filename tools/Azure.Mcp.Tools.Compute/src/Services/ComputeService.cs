@@ -60,6 +60,7 @@ public class ComputeService(
         string? publicIpAddress = null,
         string? networkSecurityGroup = null,
         bool? noPublicIp = null,
+        string? sourceAddressPrefix = null,
         string? zone = null,
         int? osDiskSizeGb = null,
         string? osDiskType = null,
@@ -99,6 +100,7 @@ public class ComputeService(
             networkSecurityGroup,
             noPublicIp ?? false,
             effectiveOsType,
+            sourceAddressPrefix,
             cancellationToken);
 
         // Build VM data
@@ -262,8 +264,10 @@ public class ComputeService(
         string? networkSecurityGroup,
         bool noPublicIp,
         string osType,
+        string? sourceAddressPrefix,
         CancellationToken cancellationToken)
     {
+        var effectiveSourceAddressPrefix = sourceAddressPrefix ?? "*";
         var vnetName = virtualNetwork ?? $"{vmName}-vnet";
         var subnetName = subnet ?? "default";
         var nsgName = networkSecurityGroup ?? $"{vmName}-nsg";
@@ -292,7 +296,11 @@ public class ComputeService(
 
             if (isWindows)
             {
-                _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range.");
+                if (effectiveSourceAddressPrefix == "*")
+                {
+                    _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
+                }
+
                 nsgData.SecurityRules.Add(new SecurityRuleData
                 {
                     Name = "AllowRDP",
@@ -300,7 +308,7 @@ public class ComputeService(
                     Access = SecurityRuleAccess.Allow,
                     Direction = SecurityRuleDirection.Inbound,
                     Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = "*",
+                    SourceAddressPrefix = effectiveSourceAddressPrefix,
                     SourcePortRange = "*",
                     DestinationAddressPrefix = "*",
                     DestinationPortRange = "3389"
@@ -308,7 +316,11 @@ public class ComputeService(
             }
             else
             {
-                _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range.");
+                if (effectiveSourceAddressPrefix == "*")
+                {
+                    _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
+                }
+
                 nsgData.SecurityRules.Add(new SecurityRuleData
                 {
                     Name = "AllowSSH",
@@ -316,7 +328,7 @@ public class ComputeService(
                     Access = SecurityRuleAccess.Allow,
                     Direction = SecurityRuleDirection.Inbound,
                     Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = "*",
+                    SourceAddressPrefix = effectiveSourceAddressPrefix,
                     SourcePortRange = "*",
                     DestinationAddressPrefix = "*",
                     DestinationPortRange = "22"
@@ -877,49 +889,50 @@ public class ComputeService(
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
         var vmssResource = vmssResponse.Value;
-        var vmssData = vmssResource.Data;
 
-        // Apply updates using PATCH semantics - only update what's specified
+        // Build PATCH payload - only include what's specified
+        var patch = new VirtualMachineScaleSetPatch();
         var needsUpdate = false;
 
-        if (vmSize != null && vmssData.Sku != null)
+        if (vmSize != null || capacity.HasValue)
         {
-            vmssData.Sku.Name = vmSize;
+            patch.Sku = new ComputeSku
+            {
+                Name = vmSize ?? vmssResource.Data.Sku?.Name,
+                Tier = vmssResource.Data.Sku?.Tier,
+                Capacity = capacity ?? vmssResource.Data.Sku?.Capacity
+            };
             needsUpdate = true;
         }
 
-        if (capacity.HasValue && vmssData.Sku != null)
+        if (upgradePolicy != null || enableAutoOsUpgrade.HasValue)
         {
-            vmssData.Sku.Capacity = capacity.Value;
-            needsUpdate = true;
-        }
+            patch.UpgradePolicy = new VirtualMachineScaleSetUpgradePolicy
+            {
+                Mode = upgradePolicy != null ? ParseUpgradePolicy(upgradePolicy) : vmssResource.Data.UpgradePolicy?.Mode
+            };
 
-        if (upgradePolicy != null)
-        {
-            vmssData.UpgradePolicy ??= new VirtualMachineScaleSetUpgradePolicy();
-            vmssData.UpgradePolicy.Mode = ParseUpgradePolicy(upgradePolicy);
+            if (enableAutoOsUpgrade.HasValue)
+            {
+                patch.UpgradePolicy.AutomaticOSUpgradePolicy = new AutomaticOSUpgradePolicy
+                {
+                    EnableAutomaticOSUpgrade = enableAutoOsUpgrade.Value
+                };
+            }
+
             needsUpdate = true;
         }
 
         if (overprovision.HasValue)
         {
-            vmssData.Overprovision = overprovision.Value;
-            needsUpdate = true;
-        }
-
-        if (enableAutoOsUpgrade.HasValue)
-        {
-            vmssData.UpgradePolicy ??= new VirtualMachineScaleSetUpgradePolicy();
-            vmssData.UpgradePolicy.AutomaticOSUpgradePolicy ??= new AutomaticOSUpgradePolicy();
-            vmssData.UpgradePolicy.AutomaticOSUpgradePolicy.EnableAutomaticOSUpgrade = enableAutoOsUpgrade.Value;
+            patch.Overprovision = overprovision.Value;
             needsUpdate = true;
         }
 
         if (scaleInPolicy != null)
         {
-            vmssData.ScaleInPolicy ??= new ScaleInPolicy();
-            vmssData.ScaleInPolicy.Rules.Clear();
-            vmssData.ScaleInPolicy.Rules.Add(ParseScaleInPolicy(scaleInPolicy));
+            patch.ScaleInPolicy = new ScaleInPolicy();
+            patch.ScaleInPolicy.Rules.Add(ParseScaleInPolicy(scaleInPolicy));
             needsUpdate = true;
         }
 
@@ -932,7 +945,7 @@ public class ComputeService(
                 var keyValue = pair.Split('=', 2);
                 if (keyValue.Length == 2)
                 {
-                    vmssData.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
                 }
             }
             needsUpdate = true;
@@ -940,11 +953,10 @@ public class ComputeService(
 
         if (needsUpdate)
         {
-            var updateOperation = await vmssCollection.CreateOrUpdateAsync(
+            var updateOperation = await vmssResource.UpdateAsync(
                 Azure.WaitUntil.Completed,
-                vmssName,
-                vmssData,
-                cancellationToken);
+                patch,
+                cancellationToken: cancellationToken);
             vmssResource = updateOperation.Value;
         }
 
@@ -1049,9 +1061,10 @@ public class ComputeService(
                 .FirstOrDefault(s => s.Code?.StartsWith("PowerState/", StringComparison.OrdinalIgnoreCase) == true)?
                 .DisplayStatus;
         }
-        catch
+        catch (RequestFailedException ex)
         {
-            // Instance view not always available
+            // Instance view may not be available due to permissions or VM state
+            _logger.LogDebug(ex, "Could not retrieve instance view for VM {VmName}", vmResource.Data.Name);
         }
 
         return new VmUpdateResult(

@@ -22,7 +22,7 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
     private const string CommandTitle = "Update Virtual Machine";
     private readonly ILogger<VmUpdateCommand> _logger = logger;
 
-    public override string Id => "g7f2e5h0-8i6d-7e1h-2f4g-3h5i6j7k8l9m";
+    public override string Id => "f330138e-8048-4a4a-8170-d8b6f958eaa4";
 
     public override string Name => "update";
 

@@ -204,12 +204,10 @@ public class VmssCreateCommandTests
             "--image", "Win2022Datacenter" // Windows image
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("password", response.Message, StringComparison.OrdinalIgnoreCase);
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<Microsoft.Mcp.Core.Commands.CommandValidationException>(
+            () => _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken));
+        Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

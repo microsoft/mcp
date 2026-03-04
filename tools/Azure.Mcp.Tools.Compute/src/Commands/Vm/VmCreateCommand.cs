@@ -23,7 +23,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
     private const string CommandTitle = "Create Virtual Machine";
     private readonly ILogger<VmCreateCommand> _logger = logger;
 
-    public override string Id => "d4c9b2e7-5f3a-4b8e-9c1d-0e2f3a4b5c6d";
+    public override string Id => "b765ab9c-788d-4422-80aa-54488f6be648";
 
     public override string Name => "create";
 
@@ -73,6 +73,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.PublicIpAddress);
         command.Options.Add(ComputeOptionDefinitions.NetworkSecurityGroup);
         command.Options.Add(ComputeOptionDefinitions.NoPublicIp);
+        command.Options.Add(ComputeOptionDefinitions.SourceAddressPrefix);
 
         // Additional options
         command.Options.Add(ComputeOptionDefinitions.Zone);
@@ -106,6 +107,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         options.PublicIpAddress = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PublicIpAddress.Name);
         options.NetworkSecurityGroup = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkSecurityGroup.Name);
         options.NoPublicIp = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.NoPublicIp.Name);
+        options.SourceAddressPrefix = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SourceAddressPrefix.Name);
         options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
         options.OsDiskSizeGb = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.OsDiskSizeGb.Name);
         options.OsDiskType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsDiskType.Name);
@@ -174,6 +176,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
                 options.PublicIpAddress,
                 options.NetworkSecurityGroup,
                 options.NoPublicIp,
+                options.SourceAddressPrefix,
                 options.Zone,
                 options.OsDiskSizeGb,
                 options.OsDiskType,

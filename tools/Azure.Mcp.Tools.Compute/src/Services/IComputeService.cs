@@ -56,6 +56,7 @@ public interface IComputeService
         string? publicIpAddress = null,
         string? networkSecurityGroup = null,
         bool? noPublicIp = null,
+        string? sourceAddressPrefix = null,
         string? zone = null,
         int? osDiskSizeGb = null,
         string? osDiskType = null,
