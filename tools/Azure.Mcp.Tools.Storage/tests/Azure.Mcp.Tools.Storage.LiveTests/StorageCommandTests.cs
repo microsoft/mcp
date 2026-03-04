@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
@@ -68,7 +69,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind.GetString());
 
             var skuName = account.GetProperty("skuName");
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
 
             var hnsEnabled = account.GetProperty("hnsEnabled");
             Assert.True(hnsEnabled.GetBoolean());
@@ -393,7 +394,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // Check account properties
             var name = account.GetProperty("name").GetString();
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
 
             var location = account.GetProperty("location").GetString();
             Assert.Equal("eastus", location);
@@ -402,7 +403,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind);
 
             var skuName = account.GetProperty("skuName").GetString();
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
         }
 
         [Theory]
