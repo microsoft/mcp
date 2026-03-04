@@ -151,6 +151,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             // Use the default credential chain (respects AZURE_TOKEN_CREDENTIALS if set)
             creds.Add(CreateDefaultCredential(tenantId));
         }
+        
 
         // Only add InteractiveBrowserCredential as fallback when:
         // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
