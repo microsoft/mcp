@@ -11,8 +11,8 @@ public class WebappChangeStateOptions : BaseAppServiceOptions
     public string? StateChange { get; set; }
 
     [JsonPropertyName(AppServiceOptionDefinitions.SoftRestartName)]
-    public bool? SoftRestart { get; set; }
+    public bool SoftRestart { get; set; } = false;
 
     [JsonPropertyName(AppServiceOptionDefinitions.WaitForCompletionName)]
-    public bool? WaitForCompletion { get; set; }
+    public bool WaitForCompletion { get; set; } = false;
 }

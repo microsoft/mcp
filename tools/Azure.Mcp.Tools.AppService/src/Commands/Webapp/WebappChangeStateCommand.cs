@@ -84,8 +84,8 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
     {
         var options = base.BindOptions(parseResult);
         options.StateChange = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.StateChange.Name);
-        options.SoftRestart = parseResult.GetValueOrDefault<bool?>(AppServiceOptionDefinitions.SoftRestartName);
-        options.WaitForCompletion = parseResult.GetValueOrDefault<bool?>(AppServiceOptionDefinitions.WaitForCompletionName);
+        options.SoftRestart = parseResult.GetValueOrDefault<bool>(AppServiceOptionDefinitions.SoftRestart.Name);
+        options.WaitForCompletion = parseResult.GetValueOrDefault<bool>(AppServiceOptionDefinitions.WaitForCompletion.Name);
         return options;
     }
 

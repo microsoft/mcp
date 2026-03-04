@@ -534,8 +534,8 @@ public class AppServiceService(
         string resourceGroup,
         string appName,
         string stateChange,
-        bool? softRestart = null,
-        bool? waitForCompletion = null,
+        bool softRestart,
+        bool waitForCompletion,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)

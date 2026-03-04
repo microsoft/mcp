@@ -41,11 +41,11 @@ public class WebappChangeStateCommandTests
     }
 
     [Theory]
-    [InlineData("start", null, null)]
-    [InlineData("stop", null, null)]
-    [InlineData("restart", null, null)]
+    [InlineData("start", false, false)]
+    [InlineData("stop", false, false)]
+    [InlineData("restart", false, false)]
     [InlineData("restart", true, true)]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string stateChange, bool? softRestart, bool? waitForCompletion)
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string stateChange, bool softRestart, bool waitForCompletion)
     {
         // Arrange
         var expected = $"Web app state change '{stateChange}' initiated successfully.";
@@ -56,11 +56,11 @@ public class WebappChangeStateCommandTests
             .Returns(expected);
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
-        if (softRestart.HasValue)
+        if (softRestart)
         {
             unparsedArgs.Add("--soft-restart");
         }
-        if (waitForCompletion.HasValue)
+        if (waitForCompletion)
         {
             unparsedArgs.Add("--wait-for-completion");
         }
@@ -122,8 +122,8 @@ public class WebappChangeStateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
+            Arg.Any<bool>(),
+            Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -152,19 +152,20 @@ public class WebappChangeStateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
+            Arg.Any<bool>(),
+            Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("start", null, null)]
-    [InlineData("stop", null, null)]
-    [InlineData("restart", null, null)]
+    [InlineData("start", false, false)]
+    [InlineData("stop", false, false)]
+    [InlineData("restart", false, false)]
     [InlineData("restart", true, true)]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string stateChange, bool? softRestart, bool? waitForCompletion)
+
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string stateChange, bool softRestart, bool waitForCompletion)
     {
         // Arrange
 
@@ -173,11 +174,11 @@ public class WebappChangeStateCommandTests
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
-        if (softRestart.HasValue)
+        if (softRestart)
         {
             unparsedArgs.Add("--soft-restart");
         }
-        if (waitForCompletion.HasValue)
+        if (waitForCompletion)
         {
             unparsedArgs.Add("--wait-for-completion");
         }
