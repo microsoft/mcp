@@ -135,6 +135,29 @@ public class RulesGetCommandTests
     }
 
     [Fact]
+    public async Task Should_default_to_bicep_for_azd_when_iac_type_is_empty()
+    {
+        // arrange
+        var args = _commandDefinition.Parse([
+            "--deployment-tool", "azd",
+            "--iac-type", "",
+            "--resource-types", "appservice"
+        ]);
+
+        // act
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Message);
+        Assert.Contains("Deployment Tool azd rules", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IaC Type: bicep rules", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("main.bicep", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("No IaC is used", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Should_include_necessary_tools_in_response()
     {
         // arrange
