@@ -179,11 +179,11 @@ Processing MCPB packaging:
         
         $manifest | ConvertTo-Json -Depth 100 | Set-Content "$stagingDir/manifest.json" -NoNewline
 
-        # Copy and rename icon to servericon.png (required name for MCPB bundles)
+        # Copy and rename icon to icon.png (required name for MCPB bundles)
         $packageIconPath = "$RepoRoot/$($server.packageIcon)"
         if (Test-Path $packageIconPath) {
             LogInfo "Copying icon from $packageIconPath..."
-            Copy-Item -Path $packageIconPath -Destination "$stagingDir/servericon.png" -Force
+            Copy-Item -Path $packageIconPath -Destination "$stagingDir/icon.png" -Force
         } else {
             LogWarning "No icon found for $($server.name). MCPB may not validate."
         }
