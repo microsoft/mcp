@@ -5,11 +5,8 @@ targetScope = 'resourceGroup'
 @description('The base resource name.')
 param baseName string = resourceGroup().name
 
-@description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
-
 @description('The client OID to grant access to test resources.')
-param testApplicationOid string
+param testApplicationOid string = deployer().objectId
 
 @description('Admin username for the VM.')
 @secure()
@@ -21,6 +18,9 @@ param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
 param vmSize string = 'Standard_B2s'
+
+// Compute ignores the default location from eng/common
+var location string = 'eastus2'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {

@@ -27,4 +27,52 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<IDictionary<string, string>> GetAppSettingsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> UpdateAppSettingsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string settingName,
+        string settingUpdateType,
+        string? settingValue = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<DeploymentDetails>> GetDeploymentsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? deploymentId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<DetectorDetails>> ListDetectorsAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DiagnosisResults> DiagnoseDetectorAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string detectorName,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

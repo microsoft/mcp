@@ -2,17 +2,50 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.23 (Unreleased)
+## 2.0.0-beta.24 (2026-03-03)
 
 ### Features Added
 
+- Added App Service web app deployment retrieval tool. [[#1898](https://github.com/microsoft/mcp/pull/1898)]
+
 ### Breaking Changes
+
+- Consolidated `sql_db_show` and `sql_db_list` commands into a single `sql_db_get` command, and `sql_server_show` and `sql_server_list` commands into a single `sql_server_get` command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
 
 ### Bugs Fixed
 
-- Fixed `azqr` call failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed multiple bugs for the Azure Workbooks tool  [[#1646](https://github.com/microsoft/mcp/pull/1646)]
+
+## 2.0.0-beta.23 (2026-02-27)
+
+### Features Added
+
+- Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
+- Added the `appservice_webapp_get` tool to retrieve details about Web Apps. [[#1810](https://github.com/microsoft/mcp/pull/1810)]
+- Added the following App Service Web App settings tools: [[#1831](https://github.com/microsoft/mcp/pull/1831)]
+  - `appservice_webapp_settings_get-appsettings`: Get application settings for an App Service Web App
+  - `appservice_webapp_settings_update-appsettings`: Update application settings for an App Service Web App
+
+### Breaking Changes
+
+- Consolidated the `cosmos_account_list`, `cosmos_database_list`, and `cosmos_database_container_list` commands into a single `cosmos_list` command. [[#1821](https://github.com/microsoft/mcp/pull/1821)]
+
+### Bugs Fixed
+
+- Fixed `azqr` tool calls failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed OAuth Protected Resource Metadata flows in Azure Container Apps (ACA) by reading the `X-Forwarded-Proto` header (opt-in via `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS`) to correctly construct the scheme in `WWW-Authenticate` challenge responses and the OAuth PRM endpoint. [[#1820](https://github.com/microsoft/mcp/pull/1820)]
 
 ### Other Changes
+
+- Improve testability by removing dependency on `CommandContext.ServiceProvider` in the `ExecuteAsync()` method for App Configuration `*Command` classes. [[#1815](https://github.com/microsoft/mcp/pull/1815)]
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[#1819](https://github.com/microsoft/mcp/pull/1819)]
+  - `ModelContextProtocol`: `0.8.0-preview.1` to `1.0.0`
+  - `ModelContextProtocol.AspNetCore`: `0.8.0-preview.1` to `1.0.0`
+  - `Microsoft.Extensions.AI.Abstractions`: `10.2.0` to `10.3.0`
+- Updated `Azure.Security.ConfidentialLedger` from version `1.4.1-beta.2` to `1.4.1-beta.3`. [[#1814](https://github.com/microsoft/mcp/pull/1814)]
 
 ## 2.0.0-beta.22 (2026-02-24)
 
@@ -78,7 +111,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
     - Removed keyvault_key_list - use keyvault_key_get without providing a key name
-    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name
     - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
 - Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
     - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name

@@ -220,14 +220,17 @@ The `azmcp server start` command supports the following options:
 
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
-| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
+| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -241,6 +244,41 @@ The `azmcp server start` command supports the following options:
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
+>
+> This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
+> - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
+> - Logs may contain sensitive data that could be useful for support troubleshooting
+> - Only use this option when specifically requested by support for diagnosing issues
+> - Remove log files after troubleshooting is complete
+>
+> **Example usage:**
+> ```bash
+> # For support troubleshooting only
+> azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+> ```
+
+> **Note on `--outgoing-auth-strategy`:**
+>
+> This option controls how the server authenticates when making requests to downstream Azure services:
+> - `NotSet` (default): A safe default is chosen based on other settings
+> - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
+> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
+
+> **Note on `--cloud`:**
+>
+> Use this option to target sovereign cloud environments:
+> - `AzureCloud` (default): Azure public cloud
+> - `AzureChinaCloud`: Azure China (operated by 21Vianet)
+> - `AzureUSGovernment`: Azure US Government
+> - Custom URL: A custom authority host URL starting with `https://`
+>
+> **Example usage:**
+> ```bash
+> # Connect to Azure US Government cloud
+> azmcp server start --cloud AzureUSGovernment
 > ```
 
 #### Server Info
@@ -547,25 +585,152 @@ azmcp appservice database add --subscription "my-subscription" \
 ```bash
 # Get App Service Web App details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription <subscription> \
-                             [--resource-group <resource-group>] \
-                             [--app <app>]
+azmcp appservice webapp get --subscription <subscription> \
+                            [--resource-group <resource-group>] \
+                            [--app <app>]
 
 # Examples:
 # List the App Service Web Apps details in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription"
+azmcp appservice webapp get --subscription "my-subscription"
 
 # List the App Service Web Apps details in a resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group"
 
 # Get the details for a specific App Service Web App
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapps get --subscription "my-subscription" \
-                             --resource-group "my-resource-group" \
-                             --app "my-app"
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group" \
+                            --app "my-app"
+```
+
+#### Web App Application Settings
+
+```bash
+# Get application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription <subscription> \
+                                                 --resource-group <resource-group> \
+                                                 --app <app>
+
+# Examples:
+# Get the application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription "my-subscription" \
+                                                 --resource-group "my-resource-group" \
+                                                 --app "my-app"
+```
+
+```bash
+# Update application settings for an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription <subscription> \
+                                                    --resource-group <resource-group> \
+                                                    --app <app> \
+                                                    --setting-name <setting-name> \
+                                                    --setting-update-type <add/set/delete> \
+                                                    [--setting-value <setting-value>]
+
+# Examples:
+# Add the application setting 'foo' with value 'bar' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "foo" \
+                                                    --setting-update-type "add" \
+                                                    --setting-value "bar"
+
+# Set the application setting 'fizz' with value 'buzz' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "fizz" \
+                                                    --setting-update-type "set" \
+                                                    --setting-value "buzz"
+
+# Delete the application setting 'baz' from an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "baz" \
+                                                    --setting-update-type "delete"
+```
+
+#### Web App Deployments
+
+```bash
+# Get the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --app <app> \
+                                       [--deployment-id <deployment-id>]
+
+# Examples:
+# List the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app"
+
+# Get the deployment for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app" \
+                                       --deployment-id "deployment-id"
+```
+
+#### Web App Diagnostics
+
+```bash
+# List detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --app <app>
+
+# Examples:
+# List diagnostic detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription "my-subscription" \
+                                        --resource-group "my-resource-group" \
+                                        --app "my-web-app"
+```
+
+```bash
+# Diagnose an App Service Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --app <app> \
+                                            --detector-name <detector-name> \
+                                            [--start-time <start-time>] \
+                                            [--end-time <end-time>] \
+                                            [--interval <interval>]
+
+# Examples:
+# Diagnose the Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+
+# Diagnose the Web App with detector between start and end time with interval
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+                                            --start-time "2026-01-01T00:00:00Z" \
+                                            --end-time "2026-01-01T23:59:59Z" \
+                                            --interval "PT1H"
 ```
 
 ### Azure CLI Operations
@@ -1133,9 +1298,13 @@ azmcp acr registry repository list --subscription <subscription> \
 ### Azure Cosmos DB Operations
 
 ```bash
-# List Cosmos DB accounts in a subscription
+# List Cosmos DB resources (accounts, databases, or containers) in a subscription.
+# Omit --account to list accounts. Provide --account to list databases.
+# Provide --account and --database to list containers.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos account list --subscription <subscription>
+azmcp cosmos list --subscription <subscription> \
+                  [--account <account>] \
+                  [--database <database>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1144,17 +1313,6 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --database <database> \
                                            --container <container> \
                                            [--query "SELECT * FROM c"]
-
-# List containers in a Cosmos DB database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos database container list --subscription <subscription> \
-                                     --account <account> \
-                                     --database <database>
-
-# List databases in a Cosmos DB account
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos database list --subscription <subscription> \
-                           --account <account>
 ```
 
 ### Azure Data Explorer Operations
@@ -2538,11 +2696,12 @@ azmcp sql db delete --subscription <subscription> \
                     --server <server-name> \
                     --database <database-name>
 
-# Gets a list of all databases in a SQL server
+# Gets a list of all databases in a SQL server, or shows details of a specific database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db list --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name>
+azmcp sql db get --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --server <server-name> \
+                 [--database <database-name>]
 
 # Rename an existing SQL database to a new name within the same server
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2551,13 +2710,6 @@ azmcp sql db rename --subscription <subscription> \
                     --server <server-name> \
                     --database <current-database-name> \
                     --new-database-name <new-database-name>
-
-# Show details of a specific SQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db show --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name> \
-                  --database <database>
 
 # Update an existing SQL database (applies only the provided configuration changes)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2633,16 +2785,11 @@ azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
 
-# List SQL servers in a resource group
+# List SQL servers in a resource group, or show details of a specific SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
-# Show details of a specific SQL server
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server show --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --server <server-name>
+azmcp sql server get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     [--server <server-name>]
 ```
 
 ### Azure Storage Operations

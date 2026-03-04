@@ -1,3 +1,3 @@
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 # Microsoft Template MCP Server

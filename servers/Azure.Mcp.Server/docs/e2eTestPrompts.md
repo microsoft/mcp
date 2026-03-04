@@ -105,9 +105,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
-| appservice_webapps_get | List the web apps in my subscription |
-| appservice_webapps_get | Show me the web apps in my <resource_group> resource group |
-| appservice_webapps_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> |
+| appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> |
+| appservice_webapp_get | List the web apps in my subscription |
+| appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
+| appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | List the deployments for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
 ## Azure Application Insights
 
@@ -235,14 +245,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cosmos_account_list | List all cosmosdb accounts in my subscription |
-| cosmos_account_list | Show me my cosmosdb accounts |
-| cosmos_account_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all cosmosdb accounts in my subscription |
+| cosmos_list | Show me my cosmosdb accounts |
+| cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | Show me the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_list | List all the databases in the cosmosdb account <account_name> |
-| cosmos_database_list | Show me the databases in the cosmosdb account <account_name> |
 
 ## Azure Data Explorer
 
@@ -737,12 +747,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
 | sql_db_delete | Delete the database called <database_name> on server <server_name> |
-| sql_db_list | List all databases in the Azure SQL server <server_name> |
-| sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| sql_db_get | List all Azure SQL databases in server <server_name> |
+| sql_db_get | List all databases in the Azure SQL server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> |
 | sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
 | sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
-| sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
-| sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
 | sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
@@ -776,11 +786,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
-| sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
-| sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
-| sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
-| sql_server_show | Get the configuration details for SQL server <server_name> |
-| sql_server_show | Display the properties of SQL server <server_name> |
+| sql_server_get | List all Azure SQL servers in resource group <resource_group_name> |
+| sql_server_get | Show me every Azure SQL server in resource group <resource_group_name> |
+| sql_server_get | Show me the Azure SQL server <server_name> details |
+| sql_server_get | Get Azure SQL server <server_name> info |
+| sql_server_get | Display the properties of Azure SQL server <server_name> |
 
 ## Azure Storage
 

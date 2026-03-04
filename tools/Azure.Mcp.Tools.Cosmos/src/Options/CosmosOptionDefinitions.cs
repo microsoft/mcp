@@ -18,12 +18,26 @@ public static class CosmosOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string?> AccountOptional = new(
+        $"--{AccountName}"
+    )
+    {
+        Description = "The name of the Cosmos DB account (optional). When not specified, lists all accounts in the subscription. Specify this to list databases, or combine with --database to list containers."
+    };
+
     public static readonly Option<string> Database = new(
         $"--{DatabaseName}"
     )
     {
         Description = "The name of the database to query (e.g., my-database).",
         Required = true
+    };
+
+    public static readonly Option<string?> DatabaseOptional = new(
+        $"--{DatabaseName}"
+    )
+    {
+        Description = "The name of the database (optional). Requires --account to be specified. When provided, lists containers within this database."
     };
 
     public static readonly Option<string> Container = new(
