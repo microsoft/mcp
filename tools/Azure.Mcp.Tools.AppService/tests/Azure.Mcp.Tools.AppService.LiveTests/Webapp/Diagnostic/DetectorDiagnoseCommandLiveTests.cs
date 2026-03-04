@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Diagnostic;
@@ -17,7 +18,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
     public async Task ExecuteAsync_DetectorsDiagnose_ReturnsDiagnostics()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -40,7 +41,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
     public async Task ExecuteAsync_DetectorsDiagnoseWithOptionalParams_ReturnsDiagnostics()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(

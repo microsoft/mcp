@@ -3,10 +3,11 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.LiveTests;
@@ -33,7 +34,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     {
         // Arrange & Act
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "acr_registry_list",
             new()
@@ -100,7 +101,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     public async Task Should_list_repositories_for_registries(AuthMethod authMethod)
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "acr_registry_repository_list",
             new()
