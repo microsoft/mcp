@@ -27,14 +27,8 @@ public class SkillsSetup : IAreaSetup
             Title
         );
 
-        var telemetry = new CommandGroup(
-            "telemetry",
-            "Skills telemetry operations - Commands for publishing telemetry events from agent hooks."
-        );
-        skill.AddSubGroup(telemetry);
-
         var publishCommand = serviceProvider.GetRequiredService<TelemetryPublishCommand>();
-        telemetry.AddCommand(publishCommand.Name, publishCommand);
+        skill.AddCommand(publishCommand.Name, publishCommand);
 
         return skill;
     }
