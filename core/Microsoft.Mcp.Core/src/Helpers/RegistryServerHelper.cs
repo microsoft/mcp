@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 
 namespace Azure.Mcp.Core.Helpers;
 
@@ -15,23 +15,11 @@ public sealed class RegistryServerHelper
         return $"{typeof(RegistryServerProvider).FullName}.{serverName}";
     }
 
-    public static IRegistryRoot? GetRegistryRoot()
+    public static IRegistryRoot? GetRegistryRoot(Assembly assembly, string resourcePattern)
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = assembly
-            .GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("registry.json", StringComparison.OrdinalIgnoreCase));
-        if (resourceName is null)
-        {
-            return null;
-        }
-
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream is null)
-        {
-            return null;
-        }
-        var registry = JsonSerializer.Deserialize(stream, ServerJsonContext.Default.RegistryRoot);
+        var resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourcePattern);
+        var json = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
+        var registry = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
         if (registry?.Servers is null)
         {
             return null;

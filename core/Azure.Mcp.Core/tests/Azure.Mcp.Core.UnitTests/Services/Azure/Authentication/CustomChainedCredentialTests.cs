@@ -253,14 +253,15 @@ public class CustomChainedCredentialTests
             .FirstOrDefault(c =>
             {
                 var parameters = c.GetParameters();
-                return parameters.Length == 2 &&
+                return parameters.Length == 3 &&
                        parameters[0].ParameterType == typeof(string) &&
-                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType);
+                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
+                       parameters[2].ParameterType == typeof(bool);
             });
 
         Assert.NotNull(constructor);
 
-        var credential = constructor.Invoke([null, null]) as TokenCredential;
+        var credential = constructor.Invoke([null, null, false]) as TokenCredential;
         Assert.NotNull(credential);
 
         return credential;

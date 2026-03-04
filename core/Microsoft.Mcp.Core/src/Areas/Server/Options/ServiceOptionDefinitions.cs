@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Areas.Server.Options;
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 public static class ServiceOptionDefinitions
 {
@@ -19,7 +19,7 @@ public static class ServiceOptionDefinitions
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
-        Description = "Transport mechanism to use for Azure MCP Server.",
+        Description = "Transport mechanism to use for MCP Server.",
         DefaultValueFactory = _ => TransportTypes.StdIo,
         Required = false
     };
@@ -28,7 +28,7 @@ public static class ServiceOptionDefinitions
         $"--{NamespaceName}"
     )
     {
-        Description = "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
+        Description = "The service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,
@@ -90,7 +90,7 @@ public static class ServiceOptionDefinitions
         $"--{OutgoingAuthStrategyName}")
     {
         Required = false,
-        Description = "Outgoing authentication strategy for Azure service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
+        Description = "Outgoing authentication strategy for service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
         DefaultValueFactory = _ => Options.OutgoingAuthStrategy.NotSet
     };
 

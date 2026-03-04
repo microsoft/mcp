@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;

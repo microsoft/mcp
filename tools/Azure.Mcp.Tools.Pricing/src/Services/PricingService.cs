@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Pricing.Models;
 using AzureRetailPrices;
 
@@ -9,7 +10,7 @@ namespace Azure.Mcp.Tools.Pricing.Services;
 /// <summary>
 /// Service implementation for Azure Retail Pricing operations.
 /// </summary>
-public class PricingService : IPricingService
+public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPricingService
 {
     private const int MaxResults = 5000;
 
@@ -45,7 +46,7 @@ public class PricingService : IPricingService
         var clientOptions = new AzureRetailPricesClientOptions(serviceVersion);
 
         var client = new AzureRetailPricesClient(
-            new Uri("https://prices.azure.com"),
+            GetPricingEndpoint(),
             clientOptions);
 
         var retailPrices = client.GetRetailPricesClient();
@@ -120,6 +121,17 @@ public class PricingService : IPricingService
     {
         // Escape single quotes in OData filter values
         return value.Replace("'", "''");
+    }
+
+    private Uri GetPricingEndpoint()
+    {
+        return cloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://prices.azure.com"),
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://prices.azure.cn"),
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://prices.azure.us"),
+            _ => new Uri("https://prices.azure.com")
+        };
     }
 
     private static PriceItem MapToPriceItem(RetailPriceItem item)

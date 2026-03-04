@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;
@@ -14,7 +14,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 /// </summary>
 public sealed class MockMcpDiscoveryStrategyBuilder
 {
-    private readonly List<IMcpServerProvider> _providers = new();
+    private readonly List<IMcpServerProvider> _providers = [];
 
     /// <summary>
     /// Initializes a new instance of the MockMcpDiscoveryStrategyBuilder.

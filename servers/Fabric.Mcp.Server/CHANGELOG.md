@@ -5,7 +5,7 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.0.0-beta.9 (Unreleased)
+## 0.0.0-beta.10 (Unreleased)
 
 ### Features Added
 
@@ -15,7 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other Changes
 
-## 0.0.0-beta.8 (Unreleased)
+## 0.0.0-beta.9 (2026-03-03)
+
+### Features Added
+
+- Added OneLake table API commands for configuration, namespace management, and table metadata retrieval:
+    - onelake table config get
+    - onelake table namespace list
+    - onelake table namespace get
+    - onelake table list
+    - onelake table get
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 0.0.0-beta.8 (2026-02-10)
 
 ### Features Added
 

@@ -61,7 +61,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         var databaseName = "testdb";
 
         var result = await CallToolAsync(
-            "sql_db_show",
+            "sql_db_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -70,8 +70,14 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 { "database", databaseName }
             });
 
-        // Should successfully retrieve the database
-        var database = result.AssertProperty("database");
+        // Should successfully retrieve the database as a result object with a single-element databases array
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Object, result.Value.ValueKind);
+        var databasesElement = result.Value.GetProperty("databases");
+        Assert.Equal(JsonValueKind.Array, databasesElement.ValueKind);
+        var databases = databasesElement.EnumerateArray().ToList();
+        Assert.Single(databases);
+        var database = databases[0];
         Assert.Equal(JsonValueKind.Object, database.ValueKind);
 
         // Verify database properties
@@ -89,7 +95,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         var serverName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "sql_db_list",
+            "sql_db_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -97,12 +103,14 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 { "server", serverName }
             });
 
-        // Should successfully retrieve the list of databases
-        var databases = result.AssertProperty("databases");
-        Assert.Equal(JsonValueKind.Array, databases.ValueKind);
+        // Should successfully retrieve the list of databases as a result object with databases array
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Object, result.Value.ValueKind);
+        var databasesElement = result.Value.GetProperty("databases");
+        Assert.Equal(JsonValueKind.Array, databasesElement.ValueKind);
 
         // Should contain at least the master database and our test database
-        var databaseArray = databases.EnumerateArray().ToList();
+        var databaseArray = databasesElement.EnumerateArray().ToList();
         Assert.True(databaseArray.Count >= 2, "Should contain at least master and testdb databases");
 
         // Verify that master database exists
@@ -139,7 +147,7 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         // and we need to catch any exceptions or check the response manually
         try
         {
-            var result = await CallToolAsync("sql_db_show",
+            var result = await CallToolAsync("sql_db_get",
                 new Dictionary<string, object?> { { "args", argsString } });
 
             // If we get here, the command didn't fail as expected
@@ -161,11 +169,11 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         try
         {
             var result = await CallToolAsync(
-                "sql_db_show",
+                "sql_db_get",
                 new Dictionary<string, object?>
                 {
                     { "subscription", Settings.SubscriptionId }
-                    // Missing resource-group, server, and database
+                    // Missing resource-group and server
                 });
 
             // If we get here without an exception, the validation didn't work as expected
@@ -534,12 +542,12 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     [Theory]
     [InlineData("--invalid-param")]
     [InlineData("--subscription invalidSub")]
-    [InlineData("--subscription sub --resource-group rg")] // Missing server
-    public async Task Should_Return400_WithInvalidSqlServerShowInput(string args)
+    [InlineData("--subscription sub")] // Missing required resource-group
+    public async Task Should_Return400_WithInvalidSqlServerGetInput(string args)
     {
         try
         {
-            var result = await CallToolAsync("sql_server_show",
+            var result = await CallToolAsync("sql_server_get",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected

@@ -18,6 +18,12 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        ExcludedHeaders = "Authorization,Content-Type",
+        CompareBodies = false
+    };
+
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
         // Sanitizes all hostnames in URLs to remove actual vault names (not limited to `kid` fields)
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
@@ -215,7 +221,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task Should_import_certificate()
     {
         var fakePassword = _importCertificateAssets.Password;

@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
@@ -283,7 +283,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         [
                             new TextContentBlock {
                                     Text = $"""
-                                        The '{command}' command is missing required parameters.
+                                        {textContent.Text}
 
                                         - Review the following command spec and identify the required arguments from the input schema.
                                         - Omit any arguments that are not required or do not apply to your use case.

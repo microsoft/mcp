@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Discovery strategy that exposes command groups as MCP servers.
@@ -23,10 +22,17 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, IOptions<McpServerConfiguration> configurationOptions, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(
+    ICommandFactory commandFactory,
+    IServiceProvider serviceProvider,
+    IConsolidatedToolDefinitionProvider definitionProvider,
+    IOptions<ServiceStartOptions> options,
+    IOptions<McpServerConfiguration> configurationOptions,
+    ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IConsolidatedToolDefinitionProvider _definitionProvider = definitionProvider;
     private readonly IOptions<ServiceStartOptions> _options = options;
     private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
@@ -51,8 +57,8 @@ public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFac
             return _consolidatedCommandFactory;
         }
 
-        // Load consolidated tool definitions from JSON file
-        var consolidatedTools = LoadConsolidatedToolDefinitions();
+        // Load consolidated tool definitions
+        List<ConsolidatedToolDefinition> consolidatedTools = _definitionProvider.GetToolDefinitions();
 
         // Filter commands based on options
         var allCommands = _commandFactory.AllCommands;
@@ -163,40 +169,6 @@ public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFac
         return _consolidatedCommandFactory;
     }
 
-    private List<ConsolidatedToolDefinition> LoadConsolidatedToolDefinitions()
-    {
-        try
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "Microsoft.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
-            using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream == null)
-            {
-                var errorMessage = $"Failed to load embedded resource '{resourceName}'";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
-            using var jsonDoc = JsonDocument.Parse(json);
-            if (!jsonDoc.RootElement.TryGetProperty("consolidated_tools", out var toolsArray))
-            {
-                var errorMessage = "Property 'consolidated_tools' not found in consolidated-tools.json";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            return JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
-        }
-        catch (Exception ex)
-        {
-            var errorMessage = "Failed to load consolidated tools from JSON file";
-            _logger.LogError(ex, errorMessage);
-            throw new InvalidOperationException(errorMessage);
-        }
-    }
-
     private Dictionary<string, IBaseCommand> FilterCommands(IReadOnlyDictionary<string, IBaseCommand> allCommands)
     {
         return allCommands
@@ -222,7 +194,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(ICommandFactory commandFac
     /// <inheritdoc/>
     public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult<IEnumerable<IMcpServerProvider>>(new List<IMcpServerProvider>());
+        return Task.FromResult<IEnumerable<IMcpServerProvider>>([]);
     }
 
     /// <summary>

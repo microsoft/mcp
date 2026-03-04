@@ -1,0 +1,109 @@
+{
+  "manifest_version": "0.3",
+  "name": "Azure.Mcp.Server",
+  "display_name": "Azure MCP Server",
+  "version": "2.0.0-beta.17",
+  "description": "Provides Model Context Protocol (MCP) integration and tooling for Microsoft Azure.",
+  "long_description": "All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/mcp.git"
+  },
+  "homepage": "https://learn.microsoft.com/azure/developer/azure-mcp-server/get-started",
+  "documentation": "https://learn.microsoft.com/azure/developer/azure-mcp-server",
+  "support": "https://github.com/microsoft/mcp/issues",
+  "icon": "./servericon.png",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/azmcp",
+    "mcp_config": {
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}\\server\\azmcp.exe",
+          "args": []
+        }
+      },
+      "command": "${__dirname}/server/azmcp",
+      "args": [ "server", "start" ],
+      "env": {}
+    }
+  },
+  "tools": [],
+  "tools_generated": false,
+  "keywords": [
+    "azure",
+    "mcp",
+    "model context protocol",
+    "server",
+    "microsoft",
+    "ai",
+    "artificial intelligence",
+    "acr",
+    "azure container registry",
+    "aks",
+    "kubernetes",
+    "app configuration",
+    "applens",
+    "application insights",
+    "app service",
+    "terraform",
+    "bicep",
+    "cloud",
+    "architecture",
+    "communication services",
+    "confidential ledger",
+    "cosmos",
+    "database",
+    "datadog",
+    "deploy",
+    "event grid",
+    "event hubs",
+    "foundry",
+    "function app",
+    "grafana",
+    "resource group",
+    "key vault",
+    "kusto",
+    "data explorer",
+    "load testing",
+    "managed lustre",
+    "marketplace",
+    "monitor",
+    "mysql",
+    "postgres",
+    "postgresql",
+    "quota",
+    "redis",
+    "resource health",
+    "role assignments",
+    "rbac",
+    "search",
+    "service bus",
+    "signalr",
+    "speech",
+    "sql",
+    "storage",
+    "subscription",
+    "virtual desktop",
+    "workbooks",
+    "azqr",
+    "quick reference",
+    "cli"
+  ],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://www.microsoft.com/privacy/privacystatement"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.8.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  }
+}

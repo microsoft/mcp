@@ -105,6 +105,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> |
+| appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> |
+| appservice_webapp_get | List the web apps in my subscription |
+| appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
+| appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | List the deployments for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
 ## Azure Application Insights
 
@@ -247,14 +260,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cosmos_account_list | List all cosmosdb accounts in my subscription |
-| cosmos_account_list | Show me my cosmosdb accounts |
-| cosmos_account_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all cosmosdb accounts in my subscription |
+| cosmos_list | Show me my cosmosdb accounts |
+| cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | Show me the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_list | List all the databases in the cosmosdb account <account_name> |
-| cosmos_database_list | Show me the databases in the cosmosdb account <account_name> |
 
 ## Azure Data Explorer
 
@@ -586,6 +599,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |
@@ -679,9 +694,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_availability-status_get | Get the availability status for resource <resource_name> |
 | resourcehealth_availability-status_get | Show me the health status of the storage account <storage_account_name> |
 | resourcehealth_availability-status_get | What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>? |
-| resourcehealth_availability-status_list | List availability status for all resources in my subscription |
-| resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
-| resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| resourcehealth_availability-status_get | List availability status for all resources in my subscription |
+| resourcehealth_availability-status_get | Show me the health status of all my Azure resources |
+| resourcehealth_availability-status_get | What resources in resource group <resource_group_name> have health issues? |
 | resourcehealth_health-events_list | List all service health events in my subscription |
 | resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> |
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
@@ -747,12 +762,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
 | sql_db_delete | Delete the database called <database_name> on server <server_name> |
-| sql_db_list | List all databases in the Azure SQL server <server_name> |
-| sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| sql_db_get | List all Azure SQL databases in server <server_name> |
+| sql_db_get | List all databases in the Azure SQL server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> |
 | sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
 | sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
-| sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
-| sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
 | sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
@@ -786,11 +801,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
-| sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
-| sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
-| sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
-| sql_server_show | Get the configuration details for SQL server <server_name> |
-| sql_server_show | Display the properties of SQL server <server_name> |
+| sql_server_get | List all Azure SQL servers in resource group <resource_group_name> |
+| sql_server_get | Show me every Azure SQL server in resource group <resource_group_name> |
+| sql_server_get | Show me the Azure SQL server <server_name> details |
+| sql_server_get | Get Azure SQL server <server_name> info |
+| sql_server_get | Display the properties of Azure SQL server <server_name> |
 
 ## Azure Storage
 
@@ -896,35 +911,24 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |
 
-## Microsoft Foundry
+## Microsoft Foundry Extensions
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| foundry_agents_connect | Query an agent in my Microsoft Foundry resource |
-| foundry_agents_create | Create a new Microsoft Foundry agent using instructions in the active editor |
-| foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
-| foundry_agents_list | List all agents in my Microsoft Foundry resource |
-| foundry_agents_list | Show me the available agents in my Microsoft Foundry resource |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Microsoft Foundry resource for task_adherence |
-| foundry_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
-| foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
-| foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
-| foundry_models_deployments_list | List all Microsoft Foundry model deployments |
-| foundry_models_deployments_list | Show me all Microsoft Foundry model deployments |
-| foundry_models_list | List all Microsoft Foundry models |
-| foundry_models_list | Show me the available Microsoft Foundry models |
-| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
-| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
-| foundry_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
-| foundry_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
-| foundry_resource_get | List all Microsoft Foundry resources in my subscription |
-| foundry_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
-| foundry_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundry_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundry_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundry_threads_list | List my Microsoft Foundry threads |
+| foundryextensions_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
+| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
+| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
+| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
+| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
+| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
+| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
+| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
+| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
+| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
+| foundryextensions_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
+| foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription |
+| foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
+| foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
+| foundryextensions_threads_create | Create a Microsoft Foundry thread to hold the conversation |
+| foundryextensions_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
+| foundryextensions_threads_list | List my Microsoft Foundry threads |

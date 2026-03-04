@@ -52,10 +52,10 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     ];
 
     [Fact]
-    public async Task Should_list_storage_accounts_by_subscription_id()
+    public async Task Should_list_databases_by_account()
     {
         var result = await CallToolAsync(
-            "cosmos_database_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -68,27 +68,10 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     }
 
     [Fact]
-    public async Task Should_list_cosmos_database_containers()
+    public async Task Should_list_cosmos_containers_by_database()
     {
         var result = await CallToolAsync(
-            "cosmos_database_container_list",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "database", "ToDoList" }
-            });
-
-        var containersArray = result.AssertProperty("containers");
-        Assert.Equal(JsonValueKind.Array, containersArray.ValueKind);
-        Assert.NotEmpty(containersArray.EnumerateArray());
-    }
-
-    [Fact]
-    public async Task Should_list_cosmos_database_containers_by_database_name()
-    {
-        var result = await CallToolAsync(
-            "cosmos_database_container_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -124,7 +107,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     public async Task Should_list_cosmos_accounts()
     {
         var result = await CallToolAsync(
-            "cosmos_account_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -140,7 +123,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     {
         var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var dbResult = await CallToolAsync(
-            "cosmos_database_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -158,7 +141,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         Assert.False(string.IsNullOrEmpty(dbName));
 
         var containerResult = await CallToolAsync(
-            "cosmos_database_container_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -194,7 +177,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     {
         var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var dbResult = await CallToolAsync(
-            "cosmos_database_list",
+            "cosmos_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -212,7 +195,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             Assert.False(string.IsNullOrEmpty(dbName));
 
             var containerResult = await CallToolAsync(
-                "cosmos_database_container_list",
+                "cosmos_list",
                 new() {
                     { "subscription", Settings.SubscriptionId },
                     { "account", resourceBaseName },

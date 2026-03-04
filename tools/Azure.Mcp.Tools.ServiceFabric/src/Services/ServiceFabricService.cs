@@ -20,10 +20,13 @@ public sealed class ServiceFabricService(
     IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IServiceFabricService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private const string AzureManagementBaseUrl = "https://management.azure.com";
     private const string ApiVersion = "2024-04-01";
+
+    private string GetManagementBaseUrl() =>
+        _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
 
     public async Task<List<ManagedClusterNode>> ListManagedClusterNodes(
         string subscription,
@@ -43,13 +46,13 @@ public sealed class ServiceFabricService(
 
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        var requestUrl = $"{AzureManagementBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes?api-version={ApiVersion}";
+        var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes?api-version={ApiVersion}";
 
         var allNodes = new List<ManagedClusterNode>();
 
@@ -93,13 +96,13 @@ public sealed class ServiceFabricService(
 
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        var requestUrl = $"{AzureManagementBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes/{Uri.EscapeDataString(nodeName)}?api-version={ApiVersion}";
+        var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes/{Uri.EscapeDataString(nodeName)}?api-version={ApiVersion}";
 
         using var response = await client.GetAsync(requestUrl, cancellationToken);
         response.EnsureSuccessStatusCode();
@@ -137,13 +140,13 @@ public sealed class ServiceFabricService(
 
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
+            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        var requestUrl = $"{AzureManagementBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodeTypes/{Uri.EscapeDataString(nodeType)}/restart?api-version={ApiVersion}";
+        var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodeTypes/{Uri.EscapeDataString(nodeType)}/restart?api-version={ApiVersion}";
 
         var requestBody = new RestartNodeRequest
         {
