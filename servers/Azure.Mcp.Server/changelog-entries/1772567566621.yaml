@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "CloudArchitect: Improve testability by using constructor dependency injection in commands"
