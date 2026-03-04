@@ -1072,7 +1072,8 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 📊 **Azure Event Grid** - Event routing and management
 - � **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management
-- 🔑 **Azure Key Vault** - Secrets, keys, and certificates
+- � **Azure Functions Templates** - Function project templates, language support, and template source code
+- �🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards

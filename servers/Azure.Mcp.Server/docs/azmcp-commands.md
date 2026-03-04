@@ -1415,6 +1415,25 @@ azmcp functionapp get --subscription <subscription> \
                       [--function-app <function-app-name>]
 ```
 
+### Azure Functions Templates Operations
+
+```bash
+# List supported programming languages for Azure Functions with runtime versions, prerequisites, and development tools
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functiontemplates language list
+
+# Get project initialization files for a new Azure Functions app including host.json, local.settings.json, and language-specific files
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functiontemplates project get --language <language> \
+                                    [--runtime-version <runtime-version>]
+
+# List all available function templates for a language or get the complete source code for a specific template
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functiontemplates template get --language <language> \
+                                     [--template <template-name>] \
+                                     [--runtime-version <runtime-version>]
+```
+
 ### Azure Key Vault Operations
 
 #### Administration
