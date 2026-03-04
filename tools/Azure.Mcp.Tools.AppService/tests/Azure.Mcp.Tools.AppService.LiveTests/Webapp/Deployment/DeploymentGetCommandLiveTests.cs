@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
-using Azure.Mcp.Tools.AppService.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Deployment;

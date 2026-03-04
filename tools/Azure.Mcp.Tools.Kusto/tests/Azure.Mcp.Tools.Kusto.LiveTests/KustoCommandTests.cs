@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using Azure.Identity;
+using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
-using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;

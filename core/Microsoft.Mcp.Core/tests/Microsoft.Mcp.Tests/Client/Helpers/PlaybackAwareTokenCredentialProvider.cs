@@ -6,8 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Microsoft.Mcp.Tests.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Tests.Helpers;
 
 namespace Microsoft.Mcp.Tests.Client.Helpers;
 
