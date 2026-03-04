@@ -79,7 +79,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
                 }
 
                 // Filter by specific SKU names
-                if (!SkuNameList.Contains(name))
+                if (!SkuNameList.Contains(name, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
