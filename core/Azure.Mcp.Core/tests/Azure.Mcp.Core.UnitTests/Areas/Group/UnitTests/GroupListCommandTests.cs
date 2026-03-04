@@ -8,13 +8,13 @@ using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.Tests.Helpers;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Group.UnitTests;
 
