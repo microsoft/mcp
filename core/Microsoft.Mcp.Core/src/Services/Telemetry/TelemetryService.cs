@@ -40,8 +40,8 @@ internal class TelemetryService : ITelemetryService
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<McpServerConfiguration> options,
         IOptions<ServiceStartOptions> serverOptions,
-        IAzureCloudConfiguration cloudConfiguration,
-        ILogger<TelemetryService> logger)
+        ILogger<TelemetryService> logger,
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList =
@@ -52,7 +52,7 @@ internal class TelemetryService : ITelemetryService
             new(TagName.Transport, serverOptions.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),
             new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString()),
-            new(TagName.Cloud, cloudConfiguration.CloudType.ToString())
+            new(TagName.Cloud, cloudConfiguration?.CloudType.ToString() ?? "Unknown")
         ];
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);

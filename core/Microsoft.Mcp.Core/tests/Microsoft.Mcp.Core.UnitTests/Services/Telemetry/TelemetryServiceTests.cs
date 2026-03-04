@@ -57,7 +57,7 @@ public class TelemetryServiceTests
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         const string activityId = "test-activity";
 
         // Act
@@ -72,7 +72,7 @@ public class TelemetryServiceTests
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         const string activityId = "test-activity";
         var clientInfo = new Implementation
         {
@@ -91,7 +91,7 @@ public class TelemetryServiceTests
     public void Dispose_WithNullLogForwarder_ShouldNotThrow()
     {
         // Arrange
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         // Act & Assert
         var exception = Record.Exception(() => service.Dispose());
@@ -102,7 +102,7 @@ public class TelemetryServiceTests
     public void Constructor_WithNullOptions_ShouldThrowArgumentNullException()
     {
         // Arrange, Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions, _mockCloudConfiguration, _logger));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions, _logger, _mockCloudConfiguration));
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class TelemetryServiceTests
         mockOptions.Value.Returns((McpServerConfiguration)null!);
 
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration));
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class TelemetryServiceTests
         _mockOptions.Value.Returns(_testConfiguration);
 
         // Act & Assert
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         Assert.Throws<InvalidOperationException>(() => service.GetDefaultTags());
     }
@@ -143,7 +143,7 @@ public class TelemetryServiceTests
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
         // Act
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         var tags = service.GetDefaultTags();
 
         // Assert
@@ -168,7 +168,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
 
@@ -200,7 +200,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         // Act & Assert
         // Test both overloads.
@@ -241,7 +241,7 @@ public class TelemetryServiceTests
         };
 
         // Act & Assert
-        using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
@@ -272,7 +272,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
 
@@ -306,7 +306,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _mockCloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
         await service.InitializeAsync();
@@ -354,7 +354,7 @@ public class TelemetryServiceTests
 
         var cloudConfiguration = new AzureCloudConfiguration(Substitute.For<IConfiguration>(), _mockServiceOptions, Substitute.For<ILogger<AzureCloudConfiguration>>());
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, cloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, cloudConfiguration);
 
         await service.InitializeAsync();
 
@@ -399,7 +399,7 @@ public class TelemetryServiceTests
 
         var cloudConfiguration = new AzureCloudConfiguration(mockConfiguration, _mockServiceOptions, Substitute.For<ILogger<AzureCloudConfiguration>>());
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, cloudConfiguration, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, cloudConfiguration);
 
         await service.InitializeAsync();
 
