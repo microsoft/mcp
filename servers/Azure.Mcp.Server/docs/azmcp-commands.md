@@ -613,8 +613,8 @@ azmcp appservice webapp change-state --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --app <app> \
                                      --state-change <state-change> \
-                                     [--soft-restart <soft-restart>] \
-                                     [--wait-for-completion <wait-for-completion>]
+                                     [--soft-restart] \
+                                     [--wait-for-completion]
 
 # Examples:
 # Start the App Service Web App

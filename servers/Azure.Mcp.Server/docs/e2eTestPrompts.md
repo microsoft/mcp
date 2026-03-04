@@ -111,7 +111,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_change-state | Start the web app <app> in <resource_group> |
 | appservice_webapp_change-state | Stop the web app <app> in <resource_group> |
 | appservice_webapp_change-state | Restart the web app <app> in <resource_group> |
-| appservice_webapp_change-state | Sof restart the web app <app> in <resource_group> waiting for restart to complete |
+| appservice_webapp_change-state | Soft restart the web app <app> in <resource_group> waiting for restart to complete |
 | appservice_webapp_get | List the web apps in my subscription |
 | appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
 | appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |

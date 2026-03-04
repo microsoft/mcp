@@ -117,10 +117,13 @@ public class WebappChangeStateCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().GetWebAppsAsync(
+        await _appServiceService.DidNotReceive().ChangeWebAppStateAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

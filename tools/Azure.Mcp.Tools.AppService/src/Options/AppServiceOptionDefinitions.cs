@@ -106,13 +106,13 @@ public static class AppServiceOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<bool> SoftRestart = new($"--{SoftRestartName}")
+    public static readonly Option<bool?> SoftRestart = new($"--{SoftRestartName}")
     {
         Description = "Indicates whether to perform a soft restart.",
         Required = false
     };
 
-    public static readonly Option<bool> WaitForCompletion = new($"--{WaitForCompletionName}")
+    public static readonly Option<bool?> WaitForCompletion = new($"--{WaitForCompletionName}")
     {
         Description = "Indicates whether to synchronously wait for the state change operation to complete before returning.",
         Required = false
