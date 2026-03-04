@@ -4,8 +4,10 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -19,6 +21,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 public class ServiceStartCommandTests
 {
     private readonly ServiceStartCommand _command;
+    private static readonly object CurrentDirectoryLock = new();
 
     public ServiceStartCommandTests()
     {
@@ -716,6 +719,56 @@ public class ServiceStartCommandTests
         Assert.Equal(serviceStartOptions.Debug, debug);
 
         Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
+    }
+
+    [Fact]
+    public void CreateStdioHost_UsesApplicationBaseAsContentRoot()
+    {
+        // Arrange
+        var options = new ServiceStartOptions
+        {
+            Transport = TransportTypes.StdIo,
+            Mode = "namespace"
+        };
+        var originalCurrentDirectory = Environment.CurrentDirectory;
+        var temporaryDirectory = Path.Combine(Path.GetTempPath(), $"mcp-content-root-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectory);
+
+        lock (CurrentDirectoryLock)
+        {
+            try
+            {
+                Environment.CurrentDirectory = temporaryDirectory;
+
+                // Act
+                var method = typeof(ServiceStartCommand).GetMethod(
+                    "CreateStdioHost",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                using var host = (IHost)method!.Invoke(_command, [options])!;
+                var hostEnvironment = host.Services.GetRequiredService<IHostEnvironment>();
+
+                // Assert
+                Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(hostEnvironment.ContentRootPath));
+            }
+            finally
+            {
+                Environment.CurrentDirectory = originalCurrentDirectory;
+                Directory.Delete(temporaryDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void HttpContentRootOptions_UseApplicationBaseAsContentRoot()
+    {
+        // Act
+        var field = typeof(ServiceStartCommand).GetField(
+            "HttpWebApplicationOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var options = Assert.IsType<WebApplicationOptions>(field!.GetValue(null));
+
+        // Assert
+        Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(options.ContentRootPath!));
     }
 
     private static ParseResult CreateParseResult(string? serviceValue)
