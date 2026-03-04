@@ -1,18 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.Deploy.Models.Templates;
 using Azure.Mcp.Tools.Deploy.Options.Pipeline;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
-using Azure.ResourceManager.Network.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
-using OpenTelemetry;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
@@ -35,11 +26,11 @@ public static class PipelineGenerationUtil
     private static string GeneratePrerequisiteChecksPrompt(GuidanceGetOptions options)
     {
         var prompt = "";
-        if (options.DeployOption == Models.DeployOption.DeployOnly)
+        if (string.Equals(options.DeployOption, Models.DeployOption.DeployOnly, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- When user confirms that Azure resources are ready for deployment, you need to know at least two things: the resource groups (with environments, e.g., dev, prod) and the hosting service TYPE(e.g., AKS, Azure Container Apps, App Service).\n";
         }
-        else if (options.DeployOption == Models.DeployOption.ProvisionAndDeploy)
+        else if (string.Equals(options.DeployOption, Models.DeployOption.ProvisionAndDeploy, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- When user wants to include provisioning, check if there are available infra files. If not, first run Get Iac(Infrastructure as Code) Rules to create infra-provisioning files.\n";
         }
@@ -54,13 +45,13 @@ public static class PipelineGenerationUtil
     private static string GeneratePipelineFilePrompts(GuidanceGetOptions options)
     {
         var prompt = "";
-        if (options.PipelinePlatform == Models.PipelinePlatform.GitHubActions)
+        if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.GitHubActions, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Use User-assigned Managed Identity with OIDC for login to Azure in the pipeline.\n" +
                 "- Use azure/login@v2 action to set up OIDC authentication in Github Actions. Add 'id-token: write' permission.\n" +
                 "- Use variables and secrets for specific values. Do NOT hardcode any values like service names.\n";
         }
-        else if (options.PipelinePlatform == Models.PipelinePlatform.AzureDevOps)
+        else if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.AzureDevOps, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Use Service Principal(app registration) with workflow identity federation to login to Azure in the pipeline.\n";
         }
@@ -69,7 +60,7 @@ public static class PipelineGenerationUtil
         {
             prompt += "- Use 'azd deploy --no-prompt' to skip provisioning in CD pipeline.\n";
         }
-        if (options.DeployOption == Models.DeployOption.ProvisionAndDeploy)
+        if (string.Equals(options.DeployOption, Models.DeployOption.ProvisionAndDeploy, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Add a SEPARATE infra-deploy pipeline file to provision Azure resources.\n";
         }
@@ -79,7 +70,7 @@ public static class PipelineGenerationUtil
     private static string GenerateSetUpMethodPrompts(GuidanceGetOptions options)
     {
         var prompt = "";
-        if (options.PipelinePlatform == Models.PipelinePlatform.GitHubActions)
+        if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.GitHubActions, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Create a setup-azure-auth-for-pipeline.sh or setup-azure-auth-for-pipeline.ps1 script to automate the auth configuration. Include detailed commands or UI instructions according to the pipeline platform.\n";
         }
@@ -89,14 +80,14 @@ public static class PipelineGenerationUtil
     private static string GenerateAzureAuthConfigPrompt(GuidanceGetOptions options)
     {
         var prompt = "";
-        if (options.PipelinePlatform == Models.PipelinePlatform.GitHubActions)
+        if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.GitHubActions, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Create a new **User-assigned Managed Identity** in a SEPARATE resource group.\n" +
                 "- This Managed Identity works for the pipeline. DO NOT CONFUSE it with any existing Managed Identity used by the application.\n" +
                 "- Set up Managed Identity with federated credentials and RBAC(e.g.contributor to resource groups and AcrPull) to authenticate(azure login with OIDC), push images and deploy applications to Azure in the pipeline for different environments.\n" +
                 "- Federated credentials should be set with proper subject * *to different environments * *(instead of branch), issuer, and audience. Description is NOT a valid property.\n";
         }
-        else if (options.PipelinePlatform == Models.PipelinePlatform.AzureDevOps)
+        else if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.AzureDevOps, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "Set up Service Connection in Azure DevOps using app registration with workflow identity federation.\n" +
                 "Use RBAC (e.g. contributor to resource groups and AcrPull) to the app registration to authenticate, push images and deploy applications to Azure in the pipeline for different environments.\n";
@@ -107,14 +98,14 @@ public static class PipelineGenerationUtil
     private static string GenerateEnvironmentSetupPrompt(GuidanceGetOptions options)
     {
         var prompt = "";
-        if (options.PipelinePlatform == Models.PipelinePlatform.GitHubActions)
+        if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.GitHubActions, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Create Github environments and set up approval checks in ALL environments.\n" +
                 "- Configure the Github Actions variables and secrets needed for the deployment pipeline for *different environments*.\n" +
                 "- Refer to the managed identity created in the 'Azure Authentication Configuration Guidance' section for OIDC setup.\n" +
                 "- You can use Github CLI and Github CLI or guide user to use UI to finish the setup.\n";
         }
-        else if (options.PipelinePlatform == Models.PipelinePlatform.AzureDevOps)
+        else if (string.Equals(options.PipelinePlatform, Models.PipelinePlatform.AzureDevOps, StringComparison.OrdinalIgnoreCase))
         {
             prompt += "- Configure the Azure DevOps pipeline variables and service connections needed for the deployment pipeline.\n" +
                 "- Set up the ADO environment and set up deployment approvals and checks.\n";
