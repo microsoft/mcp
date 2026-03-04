@@ -21,7 +21,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
-    // Sanitize resource group and base name in URIs
+    // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
         new UriRegexSanitizer(new UriRegexSanitizerBody
@@ -29,12 +29,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
-        }),
-        // Sanitize base name in URIs (e.g., disk names) to ensure playback matching
-        new UriRegexSanitizer(new UriRegexSanitizerBody
-        {
-            Regex = Settings.ResourceBaseName,
-            Value = "Sanitized",
         })
     ];
 
@@ -307,7 +301,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskGet_WithInvalidDiskName_ReturnsNotFound()
     {
         // Arrange
@@ -335,7 +328,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskGet_WithInvalidResourceGroup_ReturnsNotFound()
     {
         // Arrange
@@ -393,7 +385,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #region Disk Create Tests
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_EmptyDisk_CreatesSuccessfully()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-create-test";
@@ -431,7 +422,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_WithLocationAndTags_CreatesWithProperties()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-tag-test";
@@ -474,7 +464,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_WithoutSizeOrSource_ReturnsError()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-nosize-test";
@@ -496,7 +485,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_ThenGetVerifies_FullLifecycle()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-lifecycle-test";
@@ -548,7 +536,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
+    [CustomMatcher(compareBody: false)] // Gallery image reference embeds resource group/base name in request body; GeneralRegexSanitizer doesn't fully sanitize nested body values during playback matching
     public async Task DiskCreate_FromGalleryImage_CreatesSuccessfully()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-test";
@@ -587,7 +575,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
+    [CustomMatcher(compareBody: false)] // Gallery image reference embeds resource group/base name in request body; GeneralRegexSanitizer doesn't fully sanitize nested body values during playback matching
     public async Task DiskCreate_FromGalleryImageWithLun_CreatesDataDisk()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-lun-test";
@@ -627,7 +615,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_WithUploadType_CreatesReadyToUploadDisk()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-upload-test";
@@ -666,7 +653,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_WithUploadTypeUploadWithSecurityData_CreatesReadyToUploadDisk()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-uploadsec-test";
@@ -707,7 +693,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskCreate_WithUploadTypeButNoUploadSizeBytes_ReturnsError()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-uploadnosize-test";
@@ -734,7 +719,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #region Disk Update Tests
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskUpdate_IncreaseDiskSize_UpdatesSuccessfully()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-upsize-test";
@@ -780,7 +764,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskUpdate_ChangeSku_UpdatesSuccessfully()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-upsku-test";
@@ -825,7 +808,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskUpdate_AddTags_UpdatesSuccessfully()
     {
         var newDiskName = $"{Settings.ResourceBaseName}-uptag-test";
@@ -871,7 +853,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskUpdate_NonExistentDisk_ReturnsError()
     {
         var invalidDiskName = RegisterOrRetrieveVariable("updateInvalidDiskName", "nonexistent-disk-" + Guid.NewGuid().ToString("N")[..8]);
@@ -893,7 +874,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task DiskUpdate_CreateThenUpdateMultipleProperties_FullLifecycle()
     {
         var diskSuffix = RegisterOrRetrieveVariable("updateFullDiskSuffix", Random.Shared.NextInt64().ToString());

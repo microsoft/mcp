@@ -1505,7 +1505,7 @@
       ]
     },
     {
-      "name": "create_azure_compute",
+      "name": "create_azure_compute_resources",
       "description": "Create Azure compute resources including managed disks. Supports creating empty disks with a specified size or disks from a source such as a snapshot, another managed disk, or a blob URI. Configure storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.",
       "toolMetadata": {
         "destructive": {
@@ -1538,7 +1538,7 @@
       ]
     },
     {
-      "name": "update_azure_compute",
+      "name": "update_azure_compute_resources",
       "description": "Update Azure compute resources including managed disks. Modify disk size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Only specified properties are updated; unspecified properties remain unchanged.",
       "toolMetadata": {
         "destructive": {
