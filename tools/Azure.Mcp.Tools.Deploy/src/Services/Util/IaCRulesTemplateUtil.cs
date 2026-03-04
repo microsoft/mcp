@@ -4,9 +4,6 @@
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Models.Templates;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
-using Microsoft.AspNetCore.DataProtection;
-using ModelContextProtocol.Protocol;
-using YamlDotNet.Core.Tokens;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
@@ -15,7 +12,7 @@ namespace Azure.Mcp.Tools.Deploy.Services.Util;
 /// </summary>
 public static class IaCRulesTemplateUtil
 {
-    private static string databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
+    private static string _databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
 
     /// <summary>
     /// Generates IaC rules using embedded templates.
@@ -31,6 +28,7 @@ public static class IaCRulesTemplateUtil
         if (deploymentTool.Equals(DeploymentTool.Azd, StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(iacType))
         {
             iacType = "bicep";
+            parameters.IacType = iacType;
         }
 
         parameters.DeploymentToolRules = GenerateDeploymentToolRules(parameters);
@@ -206,15 +204,14 @@ public static class IaCRulesTemplateUtil
         var cliRules = "- If PostgreSQL server uses Azure AD authentication, use '--microsoft-entra-auth Enabled' when creating.\n- Azure CLI uses parameters '--name <server-name> --rule-name <rule-name>' for firewall rules creation.\n- IMPORTANT: **If using Azure AD authentication, you MUST ADD a database USER for the managed identity and GRANT all privileges to make the connection work.** Use 'az postgres flexible-server execute' command to run SQL commands to create the user and grant privileges.";
         return TemplateService.ProcessTemplate("IaCRules/postgresql-rules", new Dictionary<string, string> {
             { "VersionRules",  versionRules },
-            { "DatabaseCommonRules", databaseCommonRules},
+            { "DatabaseCommonRules", _databaseCommonRules},
             { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, cliRules)}
         });
     }
 
     private static string GenerateMySqlRules(IaCRulesTemplateParameters parameters)
     {
-        var databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
-        return TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", databaseCommonRules } });
+        return TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", _databaseCommonRules } });
     }
 
     private static string GenerateCosmosDbRules(IaCRulesTemplateParameters parameters)
