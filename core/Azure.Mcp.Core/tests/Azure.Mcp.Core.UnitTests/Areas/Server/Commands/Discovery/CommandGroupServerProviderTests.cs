@@ -44,7 +44,7 @@ public class CommandGroupServerProviderTests
         Assert.NotNull(storageGroup);
 
         // Use the built azmcp.exe as the entry point for testing (should be in the same directory as the test exe)
-        var entryPoint = McpTestUtilities.GetAzMcpExecutablePath();
+        var entryPoint = new AzureLiveTestSettings().GetMcpExecutablePath();
         Assert.True(File.Exists(entryPoint), $"azmcp executable not found at {entryPoint}");
 
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);

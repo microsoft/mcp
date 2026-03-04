@@ -84,13 +84,13 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var strategy = CreateStrategy();
-        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
+        var entrypoint = "any string";
 
         // Act
-        strategy.EntryPoint = azmcpPath;
+        strategy.EntryPoint = entrypoint;
 
         // Assert
-        Assert.Equal(azmcpPath, strategy.EntryPoint);
+        Assert.Equal(entrypoint, strategy.EntryPoint);
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithCustomEntryPoint_SetsEntryPointOnAllProviders()
     {
         // Arrange
-        var customEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
+        var customEntryPoint = "any string";
         var strategy = CreateStrategy(entryPoint: customEntryPoint);
 
         // Act
@@ -392,7 +392,7 @@ public class CommandGroupDiscoveryStrategyTests
         {
             ReadOnly = true,
         };
-        var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
+        var azmcpEntryPoint = "any string";
         var strategy = CreateStrategy(options: options, entryPoint: azmcpEntryPoint);
 
         // Act
@@ -461,7 +461,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
-        var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
+        var azmcpEntryPoint = "any string";
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
         {
@@ -480,35 +480,6 @@ public class CommandGroupDiscoveryStrategyTests
             Assert.True(((CommandGroupServerProvider)provider).ReadOnly);
             Assert.Equal(azmcpEntryPoint, ((CommandGroupServerProvider)provider).EntryPoint);
         }
-    }
-
-    [Fact]
-    public void GetAzmcpExecutablePath_ReturnsCorrectPathForCurrentOS()
-    {
-        // Arrange & Act
-        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
-
-        // Assert
-        Assert.NotNull(azmcpPath);
-        Assert.NotEmpty(azmcpPath);
-
-        // Should end with the correct executable name for the current OS
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows))
-        {
-            Assert.EndsWith("azmcp.exe", azmcpPath);
-        }
-        else
-        {
-            Assert.EndsWith("azmcp", azmcpPath);
-            Assert.False(azmcpPath.EndsWith("azmcp.exe"));
-        }
-
-        // Should be in the same directory as the test assembly
-        var testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        var testDirectory = Path.GetDirectoryName(testAssemblyPath);
-        var expectedDirectory = Path.GetDirectoryName(azmcpPath);
-        Assert.Equal(testDirectory, expectedDirectory);
     }
 
     [Fact]

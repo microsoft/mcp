@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using ModelContextProtocol.Protocol;
 using Npgsql;
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
-public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
+public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : CommandTestsBase<AzureLiveTestSettings>(output, liveServerFixture)
 {
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];

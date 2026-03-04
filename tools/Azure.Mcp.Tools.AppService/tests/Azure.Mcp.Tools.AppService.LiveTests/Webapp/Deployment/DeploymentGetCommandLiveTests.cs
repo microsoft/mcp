@@ -11,7 +11,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Deployment;
 
 [Trait("Command", "DeploymentGetCommand")]
-public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
     public override CustomDefaultMatcher? TestMatcher

@@ -66,12 +66,12 @@ try {
             $elapsedTime += $waitInterval
             $currentServer = Get-AzPostgreSqlFlexibleServer -ResourceGroupName $ResourceGroupName -Name $postgresServerName
             Write-Host "  Server state: $($currentServer.State)" -ForegroundColor Gray
-            
+
             if ($currentServer.State -eq "Ready") {
                 Write-Host "PostgreSQL server is ready!" -ForegroundColor Green
                 break
             }
-            
+
             if ($elapsedTime -ge $maxWaitTime) {
                 Write-Warning "Timeout waiting for PostgreSQL server to be ready. Current state: $($currentServer.State)"
                 break
@@ -80,11 +80,11 @@ try {
 
         # Prepare test data
         Write-Host "Preparing test data..." -ForegroundColor Yellow
-        
+
         # The connection string and data preparation would typically be done here
         # However, since we're using MCP tools for testing, the actual data preparation
         # will be done as part of the live tests themselves
-        
+
         Write-Host "PostgreSQL test resources setup completed successfully!" -ForegroundColor Green
     } else {
         Write-Error "PostgreSQL Server '$postgresServerName' not found"

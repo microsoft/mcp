@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.LiveTests;
 
-public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     // Disable AZSDK2003 sanitizer to prevent it from over-sanitizing resource names in recordings.
     public override List<string> DisabledDefaultSanitizers =>

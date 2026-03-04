@@ -9,36 +9,28 @@ namespace Azure.Mcp.Core.LiveTests;
 
 public class NpxTests
 {
-    private readonly LiveTestSettings _settings;
-
-    public NpxTests()
-    {
-        if (!LiveTestSettings.TryLoadTestSettings(out var settings) || string.IsNullOrEmpty(settings.TestPackage))
-        {
-            Assert.Skip("Can only test packages ");
-        }
-        else
-        {
-            _settings = settings;
-        }
-    }
-
     [Fact]
     public async Task Help_command_should_return_help()
     {
-        var outputLines = await RunCommand("--help");
+        var settings = await LiveTestSettingsBase.LoadTestSettingsAsync<AzureLiveTestSettings>();
+        if (string.IsNullOrEmpty(settings.TestPackage))
+        {
+            Assert.Skip("Can only test packages.");
+        }
+
+        var outputLines = await RunCommand(settings.TestPackage, "--help");
         var concatenatedOutput = string.Join(Environment.NewLine, outputLines.Output);
         Assert.NotEmpty(concatenatedOutput);
         Assert.Contains("azmcp [command] [options]", concatenatedOutput);
     }
 
-    private async Task<(string[] Output, string[] Error, int ExitCode)> RunCommand(params string[] arguments)
+    private async Task<(string[] Output, string[] Error, int ExitCode)> RunCommand(string packageName, params string[] arguments)
     {
         var shell = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh";
         var shellArgument = OperatingSystem.IsWindows() ? "/c" : "-c";
 
         // Construct the npx command
-        var npxCommand = $"npx -y {_settings.TestPackage} {string.Join(" ", arguments)}";
+        var npxCommand = $"npx -y {packageName} {string.Join(" ", arguments)}";
 
         var processStartInfo = new ProcessStartInfo
         {

@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
-public sealed class ProductListCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class ProductListCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     private const string ProductsKey = "products";
     private const string Language = "en";

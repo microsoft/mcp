@@ -9,7 +9,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
 
 [Trait("Command", "DatabaseAddCommand")]
-public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
     [Fact]

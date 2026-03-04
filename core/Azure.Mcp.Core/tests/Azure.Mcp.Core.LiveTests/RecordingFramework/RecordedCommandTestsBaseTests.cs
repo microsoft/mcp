@@ -132,7 +132,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     private string TestDisplayName = string.Empty;
     private readonly TemporaryAssetsPathResolver Resolver = new();
     private readonly TestProxyFixture Fixture;
-    private readonly LiveServerFixture LiveServerFixture;
+    private readonly LiveServerFixture<AzureLiveTestSettings> LiveServerFixture;
     private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
     private RecordedCommandTestHarness? DefaultHarness;
 
@@ -140,7 +140,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     {
         Fixture = new TestProxyFixture();
         Fixture.ConfigurePathResolver(Resolver);
-        LiveServerFixture = new LiveServerFixture();
+        LiveServerFixture = new();
     }
 
     [Fact]

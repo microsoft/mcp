@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
+public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, testProxyFixture, liveServerFixture)
 {
 
     [Fact]

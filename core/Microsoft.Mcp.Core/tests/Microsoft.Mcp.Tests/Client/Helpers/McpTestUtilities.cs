@@ -29,16 +29,6 @@ public static class McpTestUtilities
         return null;
     }
 
-    /// <summary>
-    /// Gets the path to the azmcp executable, handling OS-specific executable naming.
-    /// </summary>
-    /// <returns>The full path to the azmcp executable.</returns>
-    public static string GetAzMcpExecutablePath()
-    {
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        return Path.Combine(testAssemblyPath, executableName);
-    }
 
     /// <summary>
     /// Creates and initializes an MCP client based on the configured transport type.
@@ -56,10 +46,10 @@ public static class McpTestUtilities
         string executablePath,
         List<string> arguments,
         Dictionary<string, string?> environmentVariables,
-        Action<Process>? storeHttpServerProcess = null,
-        ITestOutputHelper? output = null,
-        string? testPackage = null,
-        string? settingsDirectory = null)
+        Action<Process> storeHttpServerProcess,
+        ITestOutputHelper? output,
+        string testPackage,
+        string settingsDirectory)
     {
         bool useHttp = string.Equals(
             Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"),

@@ -14,15 +14,14 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-public class KustoCommandTests : RecordedCommandTestsBase
+public class KustoCommandTests : AzureRecordedTestsBase
 {
     private const string TestDatabaseName = "ToDoLists";
     private const string TestTableName = "ToDoList";
-    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private const string Sanitized = "Sanitized";
     private readonly ServiceProvider _httpClientProvider;
 
-    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : base(output, fixture, liveServerFixture)
+    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : base(output, fixture, liveServerFixture)
     {
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
     }

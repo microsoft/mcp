@@ -14,9 +14,10 @@ using Xunit.v3;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+public abstract class RecordedCommandTestsBase<T>(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<T> liveServerFixture)
+    : CommandTestsBase<T>(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture<T>> where T : LiveTestSettingsBase, new()
 {
-    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    protected const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
@@ -126,7 +127,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// <summary>
     /// Registers a variable or retrieves it from the test resources deployment outputs. This is a convenience 
     /// equivalent to calling <see cref="RegisterOrRetrieveVariable(string, string)"/> with a value from the
-    /// <see cref="LiveTestSettings.DeploymentOutputs"/> dictionary. This gets around issues in playback where the
+    /// <see cref="AzureLiveTestSettings.DeploymentOutputs"/> dictionary. This gets around issues in playback where the
     /// actual deployment output values may not be present, but the test still needs to run with consistent values that
     /// are captured in the recording file.
     /// If th test mode is playback, it will load attempt to load the variable and return it. If the test mode is
@@ -298,22 +299,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
     }
 
-    private void PopulateDefaultSanitizers()
+    protected virtual void PopulateDefaultSanitizers()
     {
-        // Registering a few common sanitizers for values that we know will be universally present and cleaned up
-        if (EnableDefaultSanitizerAdditions)
-        {
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.ResourceBaseName,
-                Value = "Sanitized",
-            }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.SubscriptionId,
-                Value = EmptyGuid,
-            }));
-        }
     }
 
     private async Task DisableSanitizersAsync()

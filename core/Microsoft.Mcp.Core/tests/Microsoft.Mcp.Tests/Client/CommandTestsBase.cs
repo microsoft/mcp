@@ -12,15 +12,15 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
+public abstract class CommandTestsBase<TSettings>(ITestOutputHelper output, LiveServerFixture<TSettings> liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture<TSettings>> where TSettings : LiveTestSettingsBase, new()
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
-    protected LiveTestSettings Settings { get; set; } = default!;
+    protected TSettings Settings { get; set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
-    protected LiveServerFixture LiveServerFixture { get; } = liveServerFixture;
+    protected LiveServerFixture<TSettings> LiveServerFixture { get; } = liveServerFixture;
 
     public string[]? CustomArguments;
     public TestMode TestMode = TestMode.Live;
@@ -39,44 +39,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         await InitializeAsyncInternal(null);
     }
 
-    public static LiveTestSettings PlaybackSettings => new()
-    {
-        SubscriptionId = "00000000-0000-0000-0000-000000000000",
-        TenantId = "00000000-0000-0000-0000-000000000000",
-        ResourceBaseName = "Sanitized",
-        SubscriptionName = "Sanitized",
-        TenantName = "Sanitized",
-        ResourceGroupName = "Sanitized",
-        TestMode = TestMode.Playback
-    };
-
     protected virtual async ValueTask LoadSettingsAsync()
     {
-        Settings = await TryLoadLiveSettingsAsync().ConfigureAwait(false) ?? PlaybackSettings;
-
-        // if the user has set to playback in LiveTestSettings, they're
-        // intentionally checking playback mode, load the playback settings
-        // and ignore what we got from the .testsettings.json file
-        if (Settings.TestMode == TestMode.Playback)
-        {
-            Settings = PlaybackSettings;
-        }
-
+        Settings = await LiveTestSettingsBase.LoadTestSettingsAsync<TSettings>();
         TestMode = Settings.TestMode;
-    }
-
-    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
-    {
-        try
-        {
-            var settingsFixture = new LiveTestSettingsFixture();
-            await settingsFixture.InitializeAsync().ConfigureAwait(false);
-            return settingsFixture.Settings;
-        }
-        catch (FileNotFoundException)
-        {
-            return null;
-        }
     }
 
     private Dictionary<string, string?> GetEnvironmentVariables(TestProxyFixture? proxy)
@@ -115,10 +81,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
         await LoadSettingsAsync();
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
-        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
+        var debugEnvVar = Environment.GetEnvironmentVariable("MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
             ? ["server", "start", "--mode", "all", "--debug"]
@@ -142,7 +107,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, McpClient mcpClient)
     {
         // Use the same debug logic as MCP server initialization
-        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
+        var debugEnvVar = Environment.GetEnvironmentVariable("MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
 
         // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case

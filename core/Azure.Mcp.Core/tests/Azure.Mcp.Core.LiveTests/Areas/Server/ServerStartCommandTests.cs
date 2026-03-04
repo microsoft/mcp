@@ -45,11 +45,12 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     private async Task<McpClient> CreateClientAsync(params string[] arguments)
     {
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+        var settings = await LiveTestSettingsBase.LoadTestSettingsAsync<AzureLiveTestSettings>();
+        Assert.NotNull(settings);
 
-        LiveTestSettings? settings = null;
-        LiveTestSettings.TryLoadTestSettings(out settings);
-        Dictionary<string, string?> envVars = settings?.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
+        string executablePath = settings.GetMcpExecutablePath();
+
+        Dictionary<string, string?> envVars = settings.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
 
         var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
             executablePath,
@@ -57,8 +58,8 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
             envVars,
             process => _httpServerProcess = process,
             Output,
-            settings?.TestPackage,
-            settings?.SettingsDirectory);
+            settings.TestPackage,
+            settings.SettingsDirectory);
 
         _serverUrl = serverUrl;
         return client;

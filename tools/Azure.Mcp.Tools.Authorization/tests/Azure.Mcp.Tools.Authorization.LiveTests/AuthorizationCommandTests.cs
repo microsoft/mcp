@@ -10,7 +10,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.Authorization.LiveTests;
 
 
-public class AuthorizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AuthorizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_list_role_assignments()
