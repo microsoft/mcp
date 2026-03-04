@@ -129,9 +129,9 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         // Custom validation: For Windows VMs, password is required
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
         {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "The --admin-password option is required for Windows VMs.";
-            return context.Response;
+            throw new CommandValidationException(
+                "The --admin-password option is required for Windows VMs.",
+                HttpStatusCode.BadRequest);
         }
 
         // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
