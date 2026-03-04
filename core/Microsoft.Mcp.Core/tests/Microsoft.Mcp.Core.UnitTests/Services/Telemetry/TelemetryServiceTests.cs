@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
+using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -11,6 +13,7 @@ using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
+using static Azure.Mcp.Core.Services.Azure.Authentication.AzureCloudConfiguration;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
@@ -29,6 +32,7 @@ public class TelemetryServiceTests
     private readonly IOptions<McpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
     private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
+    private readonly IAzureCloudConfiguration _mockCloudConfiguration;
     private readonly ILogger<TelemetryService> _logger;
 
     public TelemetryServiceTests()
@@ -43,6 +47,8 @@ public class TelemetryServiceTests
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
         _mockInformationProvider.GetOrCreateDeviceId().Returns(Task.FromResult<string?>(TestDeviceId));
 
+        _mockCloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+
         _logger = Substitute.For<ILogger<TelemetryService>>();
     }
 
@@ -51,7 +57,7 @@ public class TelemetryServiceTests
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         const string activityId = "test-activity";
 
         // Act
@@ -66,7 +72,7 @@ public class TelemetryServiceTests
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         const string activityId = "test-activity";
         var clientInfo = new Implementation
         {
@@ -85,7 +91,7 @@ public class TelemetryServiceTests
     public void Dispose_WithNullLogForwarder_ShouldNotThrow()
     {
         // Arrange
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         // Act & Assert
         var exception = Record.Exception(() => service.Dispose());
@@ -96,7 +102,7 @@ public class TelemetryServiceTests
     public void Constructor_WithNullOptions_ShouldThrowArgumentNullException()
     {
         // Arrange, Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions, _logger));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions, _logger, _mockCloudConfiguration));
     }
 
     [Fact]
@@ -107,7 +113,7 @@ public class TelemetryServiceTests
         mockOptions.Value.Returns((McpServerConfiguration)null!);
 
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration));
     }
 
     [Fact]
@@ -117,7 +123,7 @@ public class TelemetryServiceTests
         _mockOptions.Value.Returns(_testConfiguration);
 
         // Act & Assert
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         Assert.Throws<InvalidOperationException>(() => service.GetDefaultTags());
     }
@@ -137,7 +143,7 @@ public class TelemetryServiceTests
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
         // Act
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
         var tags = service.GetDefaultTags();
 
         // Assert
@@ -162,7 +168,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
 
@@ -194,7 +200,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         // Act & Assert
         // Test both overloads.
@@ -235,7 +241,7 @@ public class TelemetryServiceTests
         };
 
         // Act & Assert
-        using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
@@ -266,7 +272,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
 
@@ -300,7 +306,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
 
         await service.InitializeAsync();
         await service.InitializeAsync();
@@ -310,8 +316,171 @@ public class TelemetryServiceTests
         await _mockInformationProvider.Received(1).GetMacAddressHash();
     }
 
-    private static void AssertDefaultTags(IReadOnlyList<KeyValuePair<string, object?>> tags,
-        McpServerConfiguration? expectedOptions, ServiceStartOptions? expectedServiceOptions)
+    [Theory]
+    [InlineData(null, AzureCloud.AzurePublicCloud)]
+    [InlineData("AzureCloud", AzureCloud.AzurePublicCloud)]
+    [InlineData("AzurePublicCloud", AzureCloud.AzurePublicCloud)]
+    [InlineData("Public", AzureCloud.AzurePublicCloud)]
+    [InlineData("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud)]
+    [InlineData("AzureChinaCloud", AzureCloud.AzureChinaCloud)]
+    [InlineData("China", AzureCloud.AzureChinaCloud)]
+    [InlineData("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud)]
+    [InlineData("AzureUSGovernment", AzureCloud.AzureUSGovernmentCloud)]
+    [InlineData("USGovernment", AzureCloud.AzureUSGovernmentCloud)]
+    [InlineData("USGov", AzureCloud.AzureUSGovernmentCloud)]
+    public async Task StartActivity_HasCloudBasedOnServiceStartOptions(string? cloud, AzureCloud expectedCloud)
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Mode = "test-mode",
+            Debug = true,
+            Transport = TransportTypes.StdIo,
+            Cloud = cloud
+        };
+        _mockServiceOptions.Value.Returns(serviceStartOptions);
+
+        var configuration = new McpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
+        };
+        var operationName = "an-activity-id";
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        var cloudConfiguration = new AzureCloudConfiguration(Substitute.For<IConfiguration>(), _mockServiceOptions, Substitute.For<ILogger<AzureCloudConfiguration>>());
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, cloudConfiguration);
+
+        await service.InitializeAsync();
+
+        // Act
+        var activity = service.StartActivity(operationName);
+
+        // Assert
+        if (activity != null)
+        {
+            Assert.Equal(operationName, activity.OperationName);
+            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+                tags => AssertTag(tags, TagName.Cloud, expectedCloud.ToString()));
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(HasCloudBasedOnConfigurationTestData))]
+    public async Task StartActivity_HasCloudBasedOnConfiguration(string configName, string? cloud, AzureCloud expectedCloud)
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Mode = "test-mode",
+            Debug = true,
+            Transport = TransportTypes.StdIo
+        };
+        _mockServiceOptions.Value.Returns(serviceStartOptions);
+
+        var configuration = new McpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
+        };
+        var operationName = "an-activity-id";
+        var mockOptions = Options.Create(configuration);
+
+        var mockConfiguration = Substitute.For<IConfiguration>();
+        mockConfiguration[configName].Returns(cloud);
+
+        var cloudConfiguration = new AzureCloudConfiguration(mockConfiguration, _mockServiceOptions, Substitute.For<ILogger<AzureCloudConfiguration>>());
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, cloudConfiguration);
+
+        await service.InitializeAsync();
+
+        // Act
+        var activity = service.StartActivity(operationName);
+
+        // Assert
+        if (activity != null)
+        {
+            Assert.Equal(operationName, activity.OperationName);
+            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+                tags => AssertTag(tags, TagName.Cloud, expectedCloud.ToString()));
+        }
+    }
+
+    public static IEnumerable<object?[]> HasCloudBasedOnConfigurationTestData()
+    {
+        List<string> configNames = ["AZURE_CLOUD", "azure_cloud", "cloud", "Cloud"];
+        List<(string?, AzureCloud)> cloudStringToCloud =
+        [
+            (null, AzureCloud.AzurePublicCloud),
+            ("AzureCloud", AzureCloud.AzurePublicCloud),
+            ("AzurePublicCloud", AzureCloud.AzurePublicCloud),
+            ("Public", AzureCloud.AzurePublicCloud),
+            ("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud),
+            ("AzureChinaCloud", AzureCloud.AzureChinaCloud),
+            ("China", AzureCloud.AzureChinaCloud),
+            ("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud),
+            ("AzureUSGovernment", AzureCloud.AzureUSGovernmentCloud),
+            ("USGovernment", AzureCloud.AzureUSGovernmentCloud),
+            ("USGov", AzureCloud.AzureUSGovernmentCloud)
+        ];
+
+        return configNames.SelectMany(configName => cloudStringToCloud.Select(cloudData => new object?[] { configName, cloudData.Item1, cloudData.Item2 }));
+    }
+
+    [Fact]
+    public async Task StartActivity_NoCloudWhenAzureCloudConfigurationIsNull()
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Mode = "test-mode",
+            Debug = true,
+            Transport = TransportTypes.StdIo
+        };
+        _mockServiceOptions.Value.Returns(serviceStartOptions);
+
+        var configuration = new McpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
+        };
+        var operationName = "an-activity-id";
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, null);
+
+        await service.InitializeAsync();
+
+        // Act
+        var activity = service.StartActivity(operationName);
+
+        // Assert
+        if (activity != null)
+        {
+            Assert.Equal(operationName, activity.OperationName);
+            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+                tags => Assert.False(tags.ContainsKey(TagName.Cloud)));
+        }
+    }
+
+    private static void AssertDefaultTags<T>(
+        IEnumerable<KeyValuePair<string, T?>> tags,
+        McpServerConfiguration? expectedOptions,
+        ServiceStartOptions? expectedServiceOptions,
+        Action<Dictionary<string, T?>>? additionalAsserts = null)
     {
         var dictionary = tags.ToDictionary();
         Assert.NotEmpty(tags);
@@ -343,12 +512,14 @@ public class TelemetryServiceTests
             Assert.False(dictionary.ContainsKey(TagName.ServerMode));
             Assert.False(dictionary.ContainsKey(TagName.Transport));
         }
+
+        additionalAsserts?.Invoke(dictionary);
     }
 
-    private static void AssertTag(IDictionary<string, object?> tags, string tagName, string expectedValue)
+    private static void AssertTag<T>(IDictionary<string, T?> tags, string tagName, string expectedValue)
     {
         Assert.True(tags.ContainsKey(tagName));
-        Assert.Equal(expectedValue, tags[tagName]);
+        Assert.Equal(expectedValue, tags[tagName]?.ToString());
     }
 
     private class ExceptionalInformationProvider : IMachineInformationProvider

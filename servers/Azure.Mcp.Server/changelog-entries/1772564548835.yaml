@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Add Cloud to telemetry to denote which Azure cloud the tool is using"

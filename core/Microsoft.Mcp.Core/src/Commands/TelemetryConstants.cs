@@ -33,6 +33,7 @@ public class TagName
     public const string VSCodeRequestId = "VSCodeRequestId";
     public const string Host = "Host";
     public const string ProcessorArchitecture = "ProcessorArchitecture";
+    public const string Cloud = "Cloud";
 }
 
 public class ActivityName
