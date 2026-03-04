@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "AzureTerraformBestPractices: Verified command uses constructor dependency injection and does not resolve services via CommandContext.ServiceProvider"
