@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Core;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
@@ -17,9 +18,9 @@ public static class RegistryServerServiceCollectionExtensions
     /// <summary>
     /// Add HttpClient for each registry server with OAuthScopes that knows how to fetch its access token.
     /// </summary>
-    public static IServiceCollection AddRegistryRoot(this IServiceCollection services)
+    public static IServiceCollection AddRegistryRoot(this IServiceCollection services, Assembly sourceAssembly, string resourcePattern)
     {
-        var registry = RegistryServerHelper.GetRegistryRoot();
+        var registry = RegistryServerHelper.GetRegistryRoot(sourceAssembly, resourcePattern);
         if (registry?.Servers is null)
         {
             // Add an empty RegistryRoot

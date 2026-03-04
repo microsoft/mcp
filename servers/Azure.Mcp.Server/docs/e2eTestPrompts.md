@@ -726,12 +726,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
 | sql_db_delete | Delete the database called <database_name> on server <server_name> |
-| sql_db_list | List all databases in the Azure SQL server <server_name> |
-| sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| sql_db_get | List all Azure SQL databases in server <server_name> |
+| sql_db_get | List all databases in the Azure SQL server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> |
 | sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
 | sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
-| sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
-| sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
 | sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
@@ -765,11 +765,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
-| sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
-| sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
-| sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
-| sql_server_show | Get the configuration details for SQL server <server_name> |
-| sql_server_show | Display the properties of SQL server <server_name> |
+| sql_server_get | List all Azure SQL servers in resource group <resource_group_name> |
+| sql_server_get | Show me every Azure SQL server in resource group <resource_group_name> |
+| sql_server_get | Show me the Azure SQL server <server_name> details |
+| sql_server_get | Get Azure SQL server <server_name> info |
+| sql_server_get | Display the properties of Azure SQL server <server_name> |
 
 ## Azure Storage
 
