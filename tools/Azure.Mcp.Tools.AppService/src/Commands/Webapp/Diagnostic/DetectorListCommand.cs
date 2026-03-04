@@ -15,7 +15,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
 {
     private const string CommandTitle = "List the Diagnostic Detectors for an App Service Web App";
     private readonly ILogger<DetectorListCommand> _logger = logger;
-    public override string Id => "b39bd5d6-be14-44b2-9162-998c8a5876d8";
+    public override string Id => "7807fdb6-4b92-4361-8042-be61dd342e17";
     public override string Name => "list";
 
     public override string Description =>
