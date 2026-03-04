@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -755,6 +756,19 @@ public class ServiceStartCommandTests
                 Directory.Delete(temporaryDirectory, recursive: true);
             }
         }
+    }
+
+    [Fact]
+    public void HttpContentRootOptions_UseApplicationBaseAsContentRoot()
+    {
+        // Act
+        var field = typeof(ServiceStartCommand).GetField(
+            "HttpWebApplicationOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var options = Assert.IsType<WebApplicationOptions>(field!.GetValue(null));
+
+        // Assert
+        Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(options.ContentRootPath!));
     }
 
     private static ParseResult CreateParseResult(string? serviceValue)

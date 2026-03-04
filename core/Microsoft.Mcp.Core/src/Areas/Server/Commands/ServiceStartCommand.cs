@@ -50,6 +50,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         "--hostBuilder:reloadConfigOnChange=false"
     ];
 
+    private static readonly WebApplicationOptions HttpWebApplicationOptions = new()
+    {
+        ContentRootPath = AppContext.BaseDirectory
+    };
+
     /// <summary>
     /// Gets the name of the command.
     /// </summary>
@@ -451,7 +456,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
 
         // Read once at host setup time — this env var is process-wide and effectively static,
         // so there is no need to re-read it on every incoming request.
@@ -633,7 +638,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateIncomingAuthDisabledHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
 
         InitializeListingUrls(builder, serverOptions);
 
