@@ -32,7 +32,10 @@ public sealed class DiskCreateCommand(
         + "If location is not specified, defaults to the resource group's location. "
         + "Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), "
         + "OS type, availability zone, hypervisor generation, tags, encryption settings, "
-        + "performance tier, shared disk, network access, and on-demand bursting.";
+        + "performance tier, shared disk, on-demand bursting, "
+        + "and IOPS/throughput limits for UltraSSD disks. "
+        + "Create a disk with network access policy DenyAll, AllowAll, or AllowPrivate "
+        + "and associate a disk access resource during creation.";
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 

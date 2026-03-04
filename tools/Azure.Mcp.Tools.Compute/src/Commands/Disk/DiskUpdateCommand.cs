@@ -24,11 +24,12 @@ public sealed class DiskUpdateCommand(
 {
     private const string CommandTitle = "Update Managed Disk";
     private const string CommandDescription =
-        "Updates properties of an existing Azure managed disk. "
+        "Updates or modifies properties of an existing Azure managed disk that was previously created. "
         + "If resource group is not specified, the disk is located by name within the subscription. "
-        + "Supports modifying disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), "
-        + "maximum shared attachments, network access policy, on-demand bursting, tags, "
+        + "Supports changing disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), "
+        + "max shares for shared disk attachments, on-demand bursting, tags, "
         + "encryption settings, disk access, and performance tier. "
+        + "Modify the network access policy to DenyAll, AllowAll, or AllowPrivate on an existing disk. "
         + "Only specified properties are updated; unspecified properties remain unchanged.";
 
     private readonly ILogger<DiskUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
