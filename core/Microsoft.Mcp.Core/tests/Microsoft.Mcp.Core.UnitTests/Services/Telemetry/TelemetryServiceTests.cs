@@ -436,6 +436,46 @@ public class TelemetryServiceTests
         return configNames.SelectMany(configName => cloudStringToCloud.Select(cloudData => new object?[] { configName, cloudData.Item1, cloudData.Item2 }));
     }
 
+    [Fact]
+    public async Task StartActivity_NoCloudWhenAzureCloudConfigurationIsNull()
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Mode = "test-mode",
+            Debug = true,
+            Transport = TransportTypes.StdIo
+        };
+        _mockServiceOptions.Value.Returns(serviceStartOptions);
+
+        var configuration = new McpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true,
+            DisplayName = "Test Display",
+            RootCommandGroupName = "azmcp"
+        };
+        var operationName = "an-activity-id";
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger, null);
+
+        await service.InitializeAsync();
+
+        // Act
+        var activity = service.StartActivity(operationName);
+
+        // Assert
+        if (activity != null)
+        {
+            Assert.Equal(operationName, activity.OperationName);
+            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+                tags => Assert.False(tags.ContainsKey(TagName.Cloud)));
+        }
+    }
+
     private static void AssertDefaultTags<T>(
         IEnumerable<KeyValuePair<string, T?>> tags,
         McpServerConfiguration? expectedOptions,
