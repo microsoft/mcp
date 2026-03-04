@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.FunctionsTemplate.Models;
 using Microsoft.Extensions.Logging;
 
@@ -17,13 +17,19 @@ namespace Azure.Mcp.Tools.FunctionsTemplate.Services;
 /// </summary>
 public sealed class FunctionTemplatesService(
     IHttpClientFactory httpClientFactory,
+    ICacheService cacheService,
     ILogger<FunctionTemplatesService> logger) : IFunctionTemplatesService
 {
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+
     private const string ManifestUrl = "https://cdn-test.functions.azure.com/public/templates/manifest.json";
     private const string FunctionsRuntimeVersion = "4.x";
     private const string ExtensionBundleVersion = "[4.*, 5.0.0)";
     private const string DefaultBranch = "main";
     private const long MaxFileSizeBytes = 1_048_576; // 1 MB
+    private const string CacheGroup = "functiontemplates";
+    private const string ManifestCacheKey = "manifest";
+    private static readonly TimeSpan s_manifestCacheDuration = TimeSpan.FromHours(1);
 
     private const string FunctionTemplateMergeInstructions =
         """
@@ -41,9 +47,6 @@ public sealed class FunctionTemplatesService(
         - Java: Place files in `src/main/java/com/function/`
         - C#: Place files in the project root alongside the .csproj
         """;
-
-    private static readonly ConcurrentDictionary<string, TemplateManifest> s_manifestCache = new();
-    private static readonly string s_manifestCacheKey = "manifest";
 
     private static readonly HashSet<string> s_validLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -495,11 +498,12 @@ public sealed class FunctionTemplatesService(
     }
 
     /// <summary>
-    /// Fetches and caches the CDN template manifest.
+    /// Fetches and caches the CDN template manifest with TTL-based expiration.
     /// </summary>
     internal async Task<TemplateManifest> FetchManifestAsync(CancellationToken cancellationToken)
     {
-        if (s_manifestCache.TryGetValue(s_manifestCacheKey, out var cached))
+        var cached = await _cacheService.GetAsync<TemplateManifest>(CacheGroup, ManifestCacheKey, s_manifestCacheDuration, cancellationToken);
+        if (cached is not null)
         {
             return cached;
         }
@@ -514,7 +518,7 @@ public sealed class FunctionTemplatesService(
             var manifest = JsonSerializer.Deserialize(json, FunctionTemplatesManifestJsonContext.Default.TemplateManifest)
                 ?? throw new InvalidOperationException("Failed to deserialize the CDN manifest.");
 
-            s_manifestCache.TryAdd(s_manifestCacheKey, manifest);
+            await _cacheService.SetAsync(CacheGroup, ManifestCacheKey, manifest, s_manifestCacheDuration, cancellationToken);
             return manifest;
         }
         catch (HttpRequestException ex)

@@ -15,7 +15,7 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
 
-    public override string Id => "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    public override string Id => "f7c8d9e0-a1b2-4c3d-8e5f-6a7b8c9d0e1f";
 
     public override string Name => "list";
 
