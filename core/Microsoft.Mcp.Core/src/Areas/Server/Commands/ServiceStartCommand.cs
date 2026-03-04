@@ -44,6 +44,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
     private const string CommandTitle = "Start MCP Server";
+    private static readonly string[] StdioHostBuilderArgs =
+    [
+        $"--contentRoot={AppContext.BaseDirectory}",
+        "--hostBuilder:reloadConfigOnChange=false"
+    ];
 
     /// <summary>
     /// Gets the name of the command.
@@ -401,7 +406,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
+        return Host.CreateDefaultBuilder(StdioHostBuilderArgs)
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
