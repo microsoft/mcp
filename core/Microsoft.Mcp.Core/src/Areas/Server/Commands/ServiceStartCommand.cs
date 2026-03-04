@@ -402,6 +402,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
         return Host.CreateDefaultBuilder()
+            // Set content root to the application directory instead of the current working directory.
+            // Host.CreateDefaultBuilder() defaults to Directory.GetCurrentDirectory(), which may be a
+            // large workspace. On Linux, this causes .NET's PhysicalFileProvider to create a recursive
+            // FileSystemWatcher that registers an inotify watch for every subdirectory, easily exhausting
+            // the system inotify limit (fs.inotify.max_user_watches) in large workspaces (e.g. monorepos
+            // with node_modules). See https://github.com/microsoft/mcp/issues/1930
+            .UseContentRoot(AppContext.BaseDirectory)
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -446,7 +453,16 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        // Set content root to the application directory instead of the current working directory.
+        // WebApplication.CreateBuilder() defaults to Directory.GetCurrentDirectory(), which may be a
+        // large workspace. On Linux, this causes .NET's PhysicalFileProvider to create a recursive
+        // FileSystemWatcher that registers an inotify watch for every subdirectory, easily exhausting
+        // the system inotify limit (fs.inotify.max_user_watches) in large workspaces.
+        // See https://github.com/microsoft/mcp/issues/1930
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            ContentRootPath = AppContext.BaseDirectory
+        });
 
         // Read once at host setup time — this env var is process-wide and effectively static,
         // so there is no need to re-read it on every incoming request.
@@ -628,7 +644,16 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateIncomingAuthDisabledHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        // Set content root to the application directory instead of the current working directory.
+        // WebApplication.CreateBuilder() defaults to Directory.GetCurrentDirectory(), which may be a
+        // large workspace. On Linux, this causes .NET's PhysicalFileProvider to create a recursive
+        // FileSystemWatcher that registers an inotify watch for every subdirectory, easily exhausting
+        // the system inotify limit (fs.inotify.max_user_watches) in large workspaces.
+        // See https://github.com/microsoft/mcp/issues/1930
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            ContentRootPath = AppContext.BaseDirectory
+        });
 
         InitializeListingUrls(builder, serverOptions);
 
