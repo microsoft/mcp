@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.FunctionsTemplate.Commands;
 using Azure.Mcp.Tools.FunctionsTemplate.Commands.Language;
 using Azure.Mcp.Tools.FunctionsTemplate.Models;
@@ -164,8 +165,9 @@ public sealed class LanguageListCommandTests
         // Arrange - use the real service to verify actual data shape
         // GetLanguageListAsync uses only static data, no HTTP calls needed
         var mockHttpClientFactory = Substitute.For<IHttpClientFactory>();
+        var mockCacheService = Substitute.For<ICacheService>();
         var mockLogger = Substitute.For<ILogger<FunctionTemplatesService>>();
-        var realService = new FunctionTemplatesService(mockHttpClientFactory, mockLogger);
+        var realService = new FunctionTemplatesService(mockHttpClientFactory, mockCacheService, mockLogger);
         var realResult = await realService.GetLanguageListAsync(TestContext.Current.CancellationToken);
         _service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(realResult));
 

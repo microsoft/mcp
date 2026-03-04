@@ -405,7 +405,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functiontemplates_template_get | Show me all the Python Azure Function templates |
 | functiontemplates_template_get | Create a Timer trigger function in C# that runs every 5 minutes? |
 | functiontemplates_template_get | Show me a Cosmos DB trigger with an output binding in Java |
-| functiontemplates_template_get | I need a Service Bus queue trigger in TypeScript for Node.js 22 |
+| functiontemplates_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 
