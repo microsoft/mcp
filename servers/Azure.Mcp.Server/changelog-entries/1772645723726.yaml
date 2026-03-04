@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Linux inotify watcher exhaustion (ENOSPC) by setting content root to AppContext.BaseDirectory instead of the current working directory in all host creation paths."
