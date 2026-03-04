@@ -22,7 +22,7 @@ public class VisualStudioToolNameTests
     /// Starts the Azure MCP server in 'all' mode, performs MCP initialization handshake,
     /// and retrieves the list of tool names.
     /// </summary>
-    private static async Task<List<string>> GetAllModeToolNamesAsync(CancellationToken cancellationToken)
+    private static async Task<List<string>> GetAllModeToolNamesAsync()
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
@@ -47,17 +47,16 @@ public class VisualStudioToolNameTests
 
         try
         {
-            // Wait for server to initialize by checking if it's ready to receive requests
-            // The server is ready when it starts listening on stdin
-            using var initializationTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            using var linkedCts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    initializationTimeout.Token);
+            // Use a generous timeout for server initialization. In --mode all, the server connects
+            // to all external MCP registry servers (which can take 15-30 seconds) before
+            // responding. We use an independent timeout rather than TestContext.Current.CancellationToken
+            // to avoid being cancelled by the test runner's per-test timeout.
+            using var initializationTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var timeoutToken = initializationTimeout.Token;
 
             // Attempt to read any startup output/errors to ensure process is running
             // If the process exits immediately, this will help catch that
-            await Task.Delay(500, linkedCts.Token); // Brief delay to allow process to fail fast if misconfigured
+            await Task.Delay(500, timeoutToken); // Brief delay to allow process to fail fast if misconfigured
             Assert.False(process.HasExited, "Server process exited immediately after start");
 
             // Send initialize request first (required by MCP protocol)
@@ -74,11 +73,12 @@ public class VisualStudioToolNameTests
             };
 
             var initRequestJson = JsonSerializer.Serialize(initRequest);
-            await process.StandardInput.WriteLineAsync(initRequestJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
+            await process.StandardInput.WriteLineAsync(initRequestJson.AsMemory(), timeoutToken);
+            await process.StandardInput.FlushAsync(timeoutToken);
 
-            // Read initialize response
-            var initResponseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
+            // Read initialize response — in --mode all the server may take 15+ seconds to
+            // respond while it connects to external MCP registry servers.
+            var initResponseLine = await ReadJsonLineAsync(process.StandardOutput, timeoutToken);
             Assert.NotNull(initResponseLine);
 
             // Send initialized notification
@@ -88,8 +88,8 @@ public class VisualStudioToolNameTests
             };
 
             var notificationJson = JsonSerializer.Serialize(initializedNotification);
-            await process.StandardInput.WriteLineAsync(notificationJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
+            await process.StandardInput.WriteLineAsync(notificationJson.AsMemory(), timeoutToken);
+            await process.StandardInput.FlushAsync(timeoutToken);
 
             // Send tools/list request
             var request = new JsonRpcRequest
@@ -100,11 +100,12 @@ public class VisualStudioToolNameTests
             };
 
             var requestJson = JsonSerializer.Serialize(request);
-            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
+            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), timeoutToken);
+            await process.StandardInput.FlushAsync(timeoutToken);
 
-            // Read response with timeout
-            var responseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
+            // Read response — skip any non-JSON lines (e.g. server log output written to stdout
+            // by the process or a failing external subprocess such as azd).
+            var responseLine = await ReadJsonLineAsync(process.StandardOutput, timeoutToken);
             Assert.NotNull(responseLine);
 
             var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
@@ -122,16 +123,36 @@ public class VisualStudioToolNameTests
             if (!process.HasExited)
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync(cancellationToken);
+                await process.WaitForExitAsync(CancellationToken.None);
             }
         }
     }
 
-    [Fact]
+    /// <summary>
+    /// Reads lines from <paramref name="reader"/> until a line that starts with '{' is found,
+    /// skipping any non-JSON output (log messages, subprocess errors, etc.) the server process
+    /// may write to stdout alongside MCP JSON-RPC messages.
+    /// </summary>
+    private static async Task<string?> ReadJsonLineAsync(StreamReader reader, CancellationToken cancellationToken)
+    {
+        string? line;
+        while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
+        {
+            if (line.AsSpan().TrimStart().StartsWith('{'))
+            {
+                return line;
+            }
+            // Non-JSON line — skip it. The server or a failing stdio subprocess may write
+            // diagnostic text to stdout; we don't want that to break JSON-RPC parsing.
+        }
+        return null;
+    }
+
+    [Fact(Timeout = 180000)] // 3-minute timeout: --mode all connects to external MCP registry servers on startup
     public async Task AllMode_VisualStudioToolNames_MustNotChange()
     {
         // Act - Get tool names from server
-        var toolNames = await GetAllModeToolNamesAsync(TestContext.Current.CancellationToken);
+        var toolNames = await GetAllModeToolNamesAsync();
 
         // Assert - Verify both Visual Studio tool names exist and haven't changed
         // Visual Studio has hard-coded dependencies on these exact tool names in FirstPartyToolsProvider.cs
