@@ -100,18 +100,31 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
 
         if (name.StartsWith("standardD", StringComparison.OrdinalIgnoreCase))
         {
-            var skuParts = name[9..].Split("Family")[0];
-            var prefix = skuParts[..^2].ToLowerInvariant();
-            var suffix = skuParts[^2..];
-            return $"{name} (GeneralPurpose tier, e.g. Standard_D2{prefix}_{suffix})";
+            try
+
+                var skuParts = name[9..].Split("Family")[0];
+                var prefix = skuParts[..^2].ToLowerInvariant();
+                var suffix = skuParts[^2..];
+                return $"{name} (GeneralPurpose tier, e.g. Standard_D2{prefix}_{suffix})";             
+
+            catch (Exception)
+            {
+                return name;
+            }            }}_{suffix})";
         }
 
-        if (name.StartsWith("standardE", StringComparison.OrdinalIgnoreCase))
+        if (name.StartsWith("standardE", StringComparison.OrdinalIgnoreCase)
+            try {)    
         {
-            var skuParts = name[9..].Split("Family")[0];
-            var prefix = skuParts[..^2].ToLowerInvariant();
-            var suffix = skuParts[^2..];
-            return $"{name} (MemoryOptimized tier, e.g. Standard_E2{prefix}_{suffix})";
+            var skuParts = name[9..].Split("Fa    mily")[0];
+            var prefix = skuParts[..^2].ToLowerIn    variant();
+            var suffix = skuPa    rts[^2..];
+            return $"{name} (MemoryOptimized tier, e.g. Standard_E2{prefix}_{    suffix})"
+            catch (Exception)
+            {
+                return name;
+            }
+        };
         }
 
         if (string.Equals(name, CoresMagicString, StringComparison.OrdinalIgnoreCase))
