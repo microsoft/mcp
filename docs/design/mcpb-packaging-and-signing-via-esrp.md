@@ -157,7 +157,7 @@ The signature signs the entire file content (including the pre-set EOCD comment_
 │     │ Copy icon              │         ├── manifest.json                     │
 │     └────────────────────────┘         ├── server/                           │
 │                                        │   └── [trimmed binaries]            │
-│                                        └── icon.png                     │
+│                                        └── icon.png                          │
 │                                                                              │
 │  3. Package with MCPB CLI                                                    │
 │     ┌──────────────────────────────┐                                         │
