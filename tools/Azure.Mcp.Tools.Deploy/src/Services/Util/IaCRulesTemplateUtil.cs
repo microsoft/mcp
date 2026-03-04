@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Models.Templates;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
@@ -88,7 +89,9 @@ public static class IaCRulesTemplateUtil
     /// </summary>
     private static string GenerateIaCTypeRules(IaCRulesTemplateParameters parameters)
     {
-        return parameters.IacType switch
+        var normalizedIacType = (parameters.IacType ?? string.Empty).ToLowerInvariant();
+
+        return normalizedIacType switch
         {
             IacType.Bicep => TemplateService.LoadTemplate("IaCRules/bicep-rules"),
             IacType.Terraform => TemplateService.LoadTemplate("IaCRules/terraform-rules"),
@@ -103,42 +106,42 @@ public static class IaCRulesTemplateUtil
     {
         var rules = new List<string>();
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureContainerApp))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureContainerApp, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateContainerAppRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureAppService))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureAppService, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateAppServiceRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureFunctionApp))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureFunctionApp, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateFunctionAppRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureKubernetesService))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureKubernetesService, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateAKSRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForPostgreSql))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForPostgreSql, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GeneratePostgreSqlRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForMySql))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForMySql, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateMySqlRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureCosmosDb))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureCosmosDb, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateCosmosDbRules(parameters));
         }
 
-        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureStorageAccount))
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureStorageAccount, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateStorageRules(parameters));
         }
@@ -249,12 +252,12 @@ public static class IaCRulesTemplateUtil
     {
         var tools = new List<string> { "az cli (az --version)" };
 
-        if (deploymentTool == DeploymentTool.Azd)
+        if (string.Equals(deploymentTool, DeploymentTool.Azd, StringComparison.OrdinalIgnoreCase))
         {
             tools.Add("azd (azd version)");
         }
 
-        if (resourceTypes.Contains(AzureServiceNames.AzureContainerApp))
+        if (resourceTypes.Contains(AzureServiceNames.AzureContainerApp, StringComparer.OrdinalIgnoreCase))
         {
             tools.Add("docker (docker --version)");
         }
@@ -267,7 +270,7 @@ public static class IaCRulesTemplateUtil
     /// </summary>
     private static string BuildAdditionalNotes(string deploymentTool, string iacType)
     {
-        if (iacType == IacType.Terraform && deploymentTool == DeploymentTool.Azd)
+        if (string.Equals(iacType, IacType.Terraform, StringComparison.OrdinalIgnoreCase) && string.Equals(deploymentTool, DeploymentTool.Azd, StringComparison.OrdinalIgnoreCase))
         {
             return "Note: Do not use Terraform CLI.";
         }
