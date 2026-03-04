@@ -686,6 +686,53 @@ azmcp appservice webapp deployment get --subscription "my-subscription" \
                                        --deployment-id "deployment-id"
 ```
 
+#### Web App Diagnostics
+
+```bash
+# List detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --app <app>
+
+# Examples:
+# List diagnostic detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription "my-subscription" \
+                                        --resource-group "my-resource-group" \
+                                        --app "my-web-app"
+```
+
+```bash
+# Diagnose an App Service Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --app <app> \
+                                            --detector-name <detector-name> \
+                                            [--start-time <start-time>] \
+                                            [--end-time <end-time>] \
+                                            [--interval <interval>]
+
+# Examples:
+# Diagnose the Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+
+# Diagnose the Web App with detector between start and end time with interval
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+                                            --start-time "2026-01-01T00:00:00Z" \
+                                            --end-time "2026-01-01T23:59:59Z" \
+                                            --interval "PT1H"
+```
+
 ### Azure CLI Operations
 
 #### Generate
