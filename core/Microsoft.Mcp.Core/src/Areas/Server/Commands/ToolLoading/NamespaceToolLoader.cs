@@ -70,6 +70,8 @@ public sealed class NamespaceToolLoader(
         }
         """;
 
+    private static readonly HashSet<string> MetaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
+
     private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
         {
             "type": "object",
@@ -609,9 +611,8 @@ public sealed class NamespaceToolLoader(
         }
 
         // Fallback: treat all non-meta args as parameters (Codex compatibility)
-        var metaKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
         var flatParams = args
-            .Where(kvp => !metaKeys.Contains(kvp.Key))
+            .Where(kvp => !MetaKeys.Contains(kvp.Key))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return flatParams;
