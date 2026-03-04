@@ -3,9 +3,9 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
-using Microsoft.Mcp.Tests.Client.Attributes;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
