@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -89,6 +90,15 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.UploadType);
         command.Options.Add(ComputeOptionDefinitions.UploadSizeBytes);
         command.Options.Add(ComputeOptionDefinitions.SecurityType);
+
+        command.Validators.Add(commandResult =>
+        {
+            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+            if (string.IsNullOrEmpty(resourceGroup))
+            {
+                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
+            }
+        });
     }
 
     /// <inheritdoc/>
@@ -120,8 +130,7 @@ public sealed class DiskCreateCommand(
         options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
         options.GalleryImageReference = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
 
-        var galleryLun = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.GalleryImageReferenceLun.Name);
-        options.GalleryImageReferenceLun = galleryLun > 0 ? galleryLun : null;
+        options.GalleryImageReferenceLun = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.GalleryImageReferenceLun.Name);
 
         var iops = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskIopsReadWrite.Name);
         options.DiskIopsReadWrite = iops > 0 ? iops : null;
@@ -150,11 +159,6 @@ public sealed class DiskCreateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                throw new ArgumentException("Resource group is required for creating a disk.");
-            }
-
             if (string.IsNullOrEmpty(options.Source) && !options.SizeGb.HasValue && string.IsNullOrEmpty(options.GalleryImageReference) && string.IsNullOrEmpty(options.UploadType))
             {
                 throw new ArgumentException("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
@@ -163,6 +167,12 @@ public sealed class DiskCreateCommand(
             if (!string.IsNullOrEmpty(options.UploadType) && !options.UploadSizeBytes.HasValue)
             {
                 throw new ArgumentException("--upload-size-bytes is required when --upload-type is specified.");
+            }
+
+            if (string.Equals(options.UploadType, "UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(options.SecurityType))
+            {
+                throw new ArgumentException("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
             }
 
             _logger.LogInformation(

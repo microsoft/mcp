@@ -375,7 +375,7 @@ public class DiskUpdateCommandTests
 
         _computeService.UpdateDiskAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
@@ -781,5 +781,45 @@ public class DiskUpdateCommandTests
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoUpdatePropertiesProvided_ReturnsValidationError()
+    {
+        // Arrange - only required identifiers, no updatable properties
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-sub",
+            "--resource-group", "testrg",
+            "--disk-name", "testdisk"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("At least one update property must be provided", response.Message);
+
+        // Verify the service was never called
+        await _computeService.DidNotReceive().UpdateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }

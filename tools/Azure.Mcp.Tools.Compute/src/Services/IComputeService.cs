@@ -121,7 +121,7 @@ public interface IComputeService
 
     Task<DiskInfo> UpdateDiskAsync(
         string diskName,
-        string? resourceGroup,
+        string resourceGroup,
         string subscription,
         int? sizeGb = null,
         string? sku = null,

@@ -511,14 +511,18 @@ public class ComputeService(
             diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        if (!string.IsNullOrEmpty(tags))
+        if (tags is not null)
         {
-            foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            diskData.Tags.Clear();
+            if (!string.IsNullOrEmpty(tags))
             {
-                var parts = pair.Split('=', 2);
-                if (parts.Length == 2)
+                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    diskData.Tags[parts[0]] = parts[1];
+                    var parts = pair.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        diskData.Tags[parts[0]] = parts[1];
+                    }
                 }
             }
         }
@@ -575,7 +579,7 @@ public class ComputeService(
 
     public async Task<DiskInfo> UpdateDiskAsync(
         string diskName,
-        string? resourceGroup,
+        string resourceGroup,
         string subscription,
         int? sizeGb = null,
         string? sku = null,
@@ -636,15 +640,18 @@ public class ComputeService(
             diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        if (!string.IsNullOrEmpty(tags))
+        if (tags is not null)
         {
             diskPatch.Tags.Clear();
-            foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            if (!string.IsNullOrEmpty(tags))
             {
-                var parts = pair.Split('=', 2);
-                if (parts.Length == 2)
+                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    diskPatch.Tags[parts[0]] = parts[1];
+                    var parts = pair.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        diskPatch.Tags[parts[0]] = parts[1];
+                    }
                 }
             }
         }
@@ -677,7 +684,7 @@ public class ComputeService(
 
         var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
 
-        return ConvertToDiskModel(result.Value, resourceGroup!);
+        return ConvertToDiskModel(result.Value, resourceGroup);
     }
 
     private static DiskCreationData CreateDiskCreationData(string? source, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)

@@ -158,7 +158,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<int> GalleryImageReferenceLun = new($"--{GalleryImageReferenceLunName}")
+    public static readonly Option<int?> GalleryImageReferenceLun = new($"--{GalleryImageReferenceLunName}")
     {
         Description = "LUN (Logical Unit Number) of the data disk in the gallery image version. If specified, the disk is created from the data disk at this LUN. If not specified, the disk is created from the OS disk of the image.",
         Required = false

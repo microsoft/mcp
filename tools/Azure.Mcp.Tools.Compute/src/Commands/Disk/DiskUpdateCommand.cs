@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -74,6 +75,29 @@ public sealed class DiskUpdateCommand(
         command.Options.Add(ComputeOptionDefinitions.EncryptionType);
         command.Options.Add(ComputeOptionDefinitions.DiskAccessId);
         command.Options.Add(ComputeOptionDefinitions.Tier);
+
+        command.Validators.Add(commandResult =>
+        {
+            if (!commandResult.HasOptionResult(ComputeOptionDefinitions.SizeGb.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Sku.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskIopsReadWrite.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskMbpsReadWrite.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.MaxShares.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.NetworkAccessPolicy.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableBursting.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskEncryptionSet.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.EncryptionType.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskAccessId.Name) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tier.Name))
+            {
+                commandResult.AddError(
+                    "At least one update property must be provided "
+                    + "(size-gb, sku, disk-iops-read-write, disk-mbps-read-write, max-shares, "
+                    + "network-access-policy, enable-bursting, tags, disk-encryption-set, "
+                    + "encryption-type, disk-access-id, or tier).");
+            }
+        });
     }
 
     /// <inheritdoc/>
@@ -134,10 +158,25 @@ public sealed class DiskUpdateCommand(
                     options.RetryPolicy,
                     cancellationToken);
 
-                var matchingDisk = disks.FirstOrDefault(d =>
-                    string.Equals(d.Name, options.Disk, StringComparison.OrdinalIgnoreCase));
+                var matchingDisks = disks
+                    .Where(d => string.Equals(d.Name, options.Disk, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-                if (matchingDisk == null || string.IsNullOrEmpty(matchingDisk.ResourceGroup))
+                if (matchingDisks.Count == 0)
+                {
+                    throw new ArgumentException($"Disk '{options.Disk}' not found in subscription. Specify --resource-group to narrow the search.");
+                }
+
+                if (matchingDisks.Count > 1)
+                {
+                    var resourceGroups = string.Join(", ", matchingDisks.Select(d => d.ResourceGroup));
+                    throw new ArgumentException(
+                        $"Multiple disks named '{options.Disk}' found in resource groups: {resourceGroups}. "
+                        + "Specify --resource-group to disambiguate.");
+                }
+
+                var matchingDisk = matchingDisks[0];
+                if (string.IsNullOrEmpty(matchingDisk.ResourceGroup))
                 {
                     throw new ArgumentException($"Disk '{options.Disk}' not found in subscription. Specify --resource-group to narrow the search.");
                 }
