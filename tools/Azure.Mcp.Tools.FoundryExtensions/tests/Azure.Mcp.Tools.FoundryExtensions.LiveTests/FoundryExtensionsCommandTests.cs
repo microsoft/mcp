@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Azure.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.LiveTests;
@@ -794,10 +794,10 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
 
         // Verify resource details match the request
         var returnedResourceName = resource.AssertProperty("resourceName");
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceName"], returnedResourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : TestVariables["resourceName"], returnedResourceName.GetString());
 
         var returnedResourceGroup = resource.AssertProperty("resourceGroup");
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceGroup"], returnedResourceGroup.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : TestVariables["resourceGroup"], returnedResourceGroup.GetString());
 
         var subscriptionName = resource.AssertProperty("subscriptionName");
         Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
