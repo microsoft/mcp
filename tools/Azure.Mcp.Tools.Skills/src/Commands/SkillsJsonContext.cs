@@ -8,6 +8,7 @@ namespace Azure.Mcp.Tools.Skills.Commands;
 
 [JsonSerializable(typeof(TelemetryPublishCommand.TelemetryPublishResult))]
 [JsonSerializable(typeof(List<JsonElement>))]
+[JsonSerializable(typeof(JsonElement))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class SkillsJsonContext : JsonSerializerContext
 {

@@ -22,7 +22,7 @@ public sealed class TelemetryPublishCommand(ILogger<TelemetryPublishCommand> log
 
     public override string Description =>
         "Publish skills-related telemetry events from agent hooks. " +
-        "Accepts a JSON array of telemetry events with fields such as 'timestamp', 'event_type', " +
+        "Accepts JSONL (JSON Lines) format - one JSON object per line - with fields such as 'timestamp', 'event_type', " +
         "'tool_name', and 'session_id'. Use this command from agent hooks in clients like VS Code, " +
         "Claude, or Copilot CLI to emit usage metrics.";
 
@@ -69,17 +69,30 @@ public sealed class TelemetryPublishCommand(ILogger<TelemetryPublishCommand> log
                 return Task.FromResult(context.Response);
             }
 
-            List<JsonElement> events;
-            try
+            // Parse JSONL format (one JSON object per line)
+            var events = new List<JsonElement>();
+            var lines = options.Events.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var line in lines)
             {
-                events = JsonSerializer.Deserialize<List<JsonElement>>(options.Events, SkillsJsonContext.Default.ListJsonElement)
-                    ?? [];
-            }
-            catch (JsonException ex)
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = $"Invalid JSON in --events parameter: {ex.Message}";
-                return Task.FromResult(context.Response);
+                var trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var evt = JsonSerializer.Deserialize(trimmedLine, SkillsJsonContext.Default.JsonElement);
+                    events.Add(evt);
+                }
+                catch (JsonException ex)
+                {
+                    var preview = trimmedLine.Length > 50 ? trimmedLine[..50] + "..." : trimmedLine;
+                    context.Response.Status = HttpStatusCode.BadRequest;
+                    context.Response.Message = $"Invalid JSON in line: {preview} Error: {ex.Message}";
+                    return Task.FromResult(context.Response);
+                }
             }
 
             foreach (var evt in events)

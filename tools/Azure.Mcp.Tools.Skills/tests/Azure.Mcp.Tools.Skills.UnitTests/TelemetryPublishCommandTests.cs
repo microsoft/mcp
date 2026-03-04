@@ -35,7 +35,7 @@ public class TelemetryPublishCommandTests
     [Fact]
     public async Task ExecuteAsync_ValidEvents_ReturnsOk()
     {
-        var events = "[{\"timestamp\":\"2026-03-03T23:11:41.3587086Z\",\"event_type\":\"tool_invocation\",\"tool_name\":\"azure_best_practices\",\"session_id\":\"abc123\"}]";
+        var events = "{\"timestamp\":\"2026-03-03T23:11:41.3587086Z\",\"event_type\":\"tool_invocation\",\"tool_name\":\"azure_best_practices\",\"session_id\":\"abc123\"}";
         var args = _commandDefinition.Parse(["--events", events]);
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -55,7 +55,7 @@ public class TelemetryPublishCommandTests
     [Fact]
     public async Task ExecuteAsync_MultipleEvents_ReturnsCorrectCount()
     {
-        var events = "[{\"timestamp\":\"2026-03-03T23:00:00Z\",\"event_type\":\"tool_invocation\",\"tool_name\":\"tool_a\",\"session_id\":\"s1\"},{\"timestamp\":\"2026-03-03T23:01:00Z\",\"event_type\":\"tool_result\",\"tool_name\":\"tool_b\",\"session_id\":\"s1\"}]";
+        var events = "{\"timestamp\":\"2026-03-03T23:00:00Z\",\"event_type\":\"tool_invocation\",\"tool_name\":\"tool_a\",\"session_id\":\"s1\"}\n{\"timestamp\":\"2026-03-03T23:01:00Z\",\"event_type\":\"tool_result\",\"tool_name\":\"tool_b\",\"session_id\":\"s1\"}";
         var args = _commandDefinition.Parse(["--events", events]);
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -72,7 +72,7 @@ public class TelemetryPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyArray_ReturnsOkWithZeroCount()
+    public async Task ExecuteAsync_EmptyArray_ReturnsOkWithOneEvent()
     {
         var args = _commandDefinition.Parse(["--events", "[]"]);
 
@@ -86,7 +86,7 @@ public class TelemetryPublishCommandTests
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         Assert.NotNull(result);
-        Assert.Equal(0, result.EventCount);
+        Assert.Equal(1, result.EventCount);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class TelemetryPublishCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid JSON", response.Message);
+        Assert.Contains("Invalid JSON in line", response.Message);
     }
 
     [Fact]
@@ -110,6 +110,25 @@ public class TelemetryPublishCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("required", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhitespaceOnly_ReturnsOkWithZeroCount()
+    {
+        var args = _commandDefinition.Parse(["--events", "   \n   \n   "]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<TelemetryPublishCommand.TelemetryPublishResult>(json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        Assert.NotNull(result);
+        Assert.Equal(0, result.EventCount);
     }
 
     [Fact]

@@ -11,7 +11,7 @@ public static class SkillsOptionDefinitions
         $"--{EventsName}"
     )
     {
-        Description = "A JSON array of telemetry events to publish. Each event should include fields such as 'timestamp', 'event_type', 'tool_name', and 'session_id'.",
+        Description = "JSONL (JSON Lines) telemetry events to publish - one JSON object per line. Each event should include fields such as 'timestamp', 'event_type', 'tool_name', and 'session_id'.",
         Required = true
     };
 }
