@@ -3295,6 +3295,39 @@
       "mappedToolList": [
         "appservice_webapp_settings_update-appsettings"
       ]
+    },
+    {
+      "name": "change_state_azure_appservice_resources",
+      "description": "Changes the running state of Azure App Service resources including Web Apps.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "appservice_webapp_change-state"
+      ]
     }
   ]
 }

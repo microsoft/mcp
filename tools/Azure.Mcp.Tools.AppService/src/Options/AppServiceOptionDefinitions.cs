@@ -18,6 +18,9 @@ public static class AppServiceOptionDefinitions
     public const string StartTimeName = "start-time";
     public const string EndTimeName = "end-time";
     public const string IntervalName = "interval";
+    public const string StateChangeName = "state-change";
+    public const string SoftRestartName = "soft-restart";
+    public const string WaitForCompletionName = "wait-for-completion";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -94,6 +97,24 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> Interval = new($"--{IntervalName}")
     {
         Description = "The time interval (e.g., PT1H for 1 hour, PT5M for 5 minutes).",
+        Required = false
+    };
+
+    public static readonly Option<string> StateChange = new($"--{StateChangeName}")
+    {
+        Description = "The state change action to perform. Valid values are: start, stop, restart.",
+        Required = true
+    };
+
+    public static readonly Option<bool> SoftRestart = new($"--{SoftRestartName}")
+    {
+        Description = "Indicates whether to perform a soft restart.",
+        Required = false
+    };
+
+    public static readonly Option<bool> WaitForCompletion = new($"--{WaitForCompletionName}")
+    {
+        Description = "Indicates whether to synchronously wait for the state change operation to complete before returning.",
         Required = false
     };
 }

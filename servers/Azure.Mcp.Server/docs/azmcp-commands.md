@@ -606,6 +606,48 @@ azmcp appservice webapp get --subscription "my-subscription" \
                             --app "my-app"
 ```
 
+```bash
+# Change the running state of an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp change-state --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --app <app> \
+                                     --state-change <state-change> \
+                                     [--soft-restart <soft-restart>] \
+                                     [--wait-for-completion <wait-for-completion>]
+
+# Examples:
+# Start the App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp change-state --subscription "my-subscription" \
+                                     --resource-group "my-resource-group" \
+                                     --app "my-app" \
+                                     --state-change "start"
+
+# Stop the App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp change-state --subscription "my-subscription" \
+                                     --resource-group "my-resource-group" \
+                                     --app "my-app" \
+                                     --state-change "stop"
+
+# Restart the App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp change-state --subscription "my-subscription" \
+                                     --resource-group "my-resource-group" \
+                                     --app "my-app" \
+                                     --state-change "restart"
+
+# Soft restart the App Service Web App waiting for restart to complete
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp change-state --subscription "my-subscription" \
+                                     --resource-group "my-resource-group" \
+                                     --app "my-app" \
+                                     --state-change "restart" \
+                                     --soft-restart \
+                                     --wait-for-completion
+```
+
 #### Web App Application Settings
 
 ```bash

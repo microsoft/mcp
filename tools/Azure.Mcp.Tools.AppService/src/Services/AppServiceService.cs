@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Commands;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
@@ -526,5 +527,49 @@ public class AppServiceService(
         using var jsonDoc = await JsonDocument.ParseAsync(contentStream, cancellationToken: cancellationToken);
 
         return mapFunc(jsonDoc);
+    }
+
+    public async Task<string> ChangeWebAppStateAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string stateChange,
+        bool? softRestart = null,
+        bool? waitForCompletion = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(stateChange), stateChange));
+
+        if (!WebappChangeStateCommand.ValidateStateChange(stateChange, out var errorMessage))
+        {
+            throw new ArgumentException(errorMessage);
+        }
+
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+
+        if (stateChange.Equals("start", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StartAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' start initiated successfully.";
+        }
+        else if (stateChange.Equals("stop", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StopAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' stop initiated successfully.";
+        }
+        else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.RestartAsync(softRestart, waitForCompletion, cancellationToken: cancellationToken);
+            return $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}, wait for completion: {waitForCompletion}).";
+        }
+
+        // Should never reach this.
+        throw new ArgumentException($"Invalid state change action: {stateChange}. Valid values are: start, stop, restart.");
     }
 }
