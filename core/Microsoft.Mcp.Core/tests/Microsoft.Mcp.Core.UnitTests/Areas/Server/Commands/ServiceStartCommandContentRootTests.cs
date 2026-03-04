@@ -86,7 +86,9 @@ public sealed class ServiceStartCommandContentRootTests : IDisposable
         finally
         {
             Directory.SetCurrentDirectory(originalDir);
-            try { Directory.Delete(tempDir, recursive: true); } catch { /* best-effort cleanup */ }
+            try
+            { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort cleanup */ }
         }
     }
 
