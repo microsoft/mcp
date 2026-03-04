@@ -371,7 +371,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for the MCP server.</returns>
-    private IHost CreateHost(ServiceStartOptions serverOptions)
+    internal IHost CreateHost(ServiceStartOptions serverOptions)
     {
 #if ENABLE_HTTP
         if (serverOptions.Transport == TransportTypes.Http)
