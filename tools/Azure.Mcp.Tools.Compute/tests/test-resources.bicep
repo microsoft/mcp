@@ -63,7 +63,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 // Test Virtual Machine (Linux)
-resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: '${baseName}-vm'
   location: location
   properties: {
@@ -111,7 +111,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 }
 
 // Virtual Machine Scale Set for VMSS testing
-resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
+resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
   name: '${baseName}-vmss'
   location: location
   sku: {
