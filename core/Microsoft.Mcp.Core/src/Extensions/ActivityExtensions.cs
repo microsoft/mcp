@@ -14,7 +14,7 @@ public static class ActivityExtensions
     /// <param name="value">The value of the tag.</param>
     public static Activity SetTagIfNotExists(this Activity activity, string name, object? value)
     {
-        if (activity.GetTagItem(name) != null)
+        if (!activity.Tags.Any(tag => tag.Key == name))
         {
             activity.SetTag(name, value);
         }
