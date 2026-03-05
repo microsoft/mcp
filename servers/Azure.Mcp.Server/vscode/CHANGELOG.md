@@ -23,7 +23,7 @@
   - project_connection_update: Update a connection in a Foundry project
   - prompt_optimize: Optimize a prompt for a specific model
 - Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
-- Add tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
+- Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
 
 ### Changed
 
@@ -48,7 +48,7 @@
   - foundry_models_deployments_list → model_deployment_get
   - foundry_agents_query-and-evaluate → evaluation_agent_batch_eval_create
   - foundry_agents_evaluate → evaluator_catalog_get
-- Add Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
+- Added Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
 #### Dependency Updates
 - Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure from 4.4.0-preview.1 to 4.4.0. [[#1896](https://github.com/microsoft/mcp/pull/1896)]
 

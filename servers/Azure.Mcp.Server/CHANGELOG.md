@@ -25,7 +25,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - project_connection_update: Update a connection in a Foundry project
   - prompt_optimize: Optimize a prompt for a specific model
 - Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
-- Add tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
+- Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
 
 ### Breaking Changes
 
@@ -60,7 +60,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Add Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
+- Added Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
 
 #### Dependency Updates
 
