@@ -135,7 +135,7 @@ namespace Microsoft.Mcp.Tests.Client.Helpers
             var nameClaim = IsServicePrincipal ? "app_displayname" : "unique_name";
 
             var principalName = jsonToken.Claims.FirstOrDefault(c => c.Type == nameClaim)?.Value ??
-                throw new Exception($"Unable to locate 'unique_name' claim in Entra ID token: {claims}");
+                throw new Exception($"Unable to locate '{nameClaim}' claim in Entra ID token: {claims}");
 
             PrincipalName = principalName;
         }
