@@ -1,0 +1,61 @@
+name: Auto Changelog
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Changelog
+        uses: metcalfc/changelog-generator@v4
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add Contributors
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Get contributors from recent commits
+            const { data: commits } = await github.rest.repos.listCommits({
+              owner: 'microsoft',
+              repo: 'mcp',
+              per_page: 50
+            });
+            
+            const contributors = new Set();
+            commits.forEach(commit => {
+              if (commit.author) {
+                contributors.add(commit.author.login);
+              }
+            });
+            
+            // Read existing CHANGELOG
+            let changelog = fs.existsSync('CHANGELOG.md') 
+              ? fs.readFileSync('CHANGELOG.md', 'utf8') 
+              : '# Changelog\n\n';
+            
+            // Add contributors section
+            const contributorsList = Array.from(contributors).slice(0, 10).map(c => `- @${c}`).join('\n');
+            
+            const newEntry = `## Contributors\n\nThanks to our community contributors:\n${contributorsList}\n`;
+            
+            fs.writeFileSync('CHANGELOG.md', newEntry + '\n' + changelog);
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add CHANGELOG.md
+          git commit -m "docs: Auto-update CHANGELOG with contributors" || echo "No changes to commit"
+          git push -u origin add-changelog-action
