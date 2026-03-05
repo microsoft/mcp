@@ -31,3 +31,12 @@ eng/tools/ToolDescriptionEvaluator/prompts.json
 eng/tools/ToolDescriptionEvaluator/results.md
 eng/tools/ToolDescriptionEvaluator/tools.json
 deploy-log.txt
+docs/vm-docs/cli-gap-analysis.md
+docs/vm-docs/compute-tools-roadmap.md
+docs/vm-docs/compute-tools-tracker.md
+docs/vm-docs/new-command-compute.md
+docs/vm-docs/tool-description-evaluator-results.md
+docs/vm-docs/vm-vmss-create-update-summary.md
+docs/vm-docs/vm-vmss-design-review.md
+docs/vm-docs/vm-vmss-workload-removal-changes.md
+docs/vm-docs/vmcreate.md
