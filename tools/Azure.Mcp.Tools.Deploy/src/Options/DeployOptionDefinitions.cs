@@ -56,13 +56,13 @@ public static class DeployOptionDefinitions
 
     public class PipelineGenerateOptions : SubscriptionOptions
     {
-        public const string isAZDProjectName = "is-azd-project";
+        public const string IsAZDProjectName = "is-azd-project";
         public const string PipelinePlatformName = "pipeline-platform";
 
         public const string DeployOptionName = "deploy-option";
 
-        public static readonly Option<bool> isAZDProject = new(
-            $"--{isAZDProjectName}"
+        public static readonly Option<bool> IsAZDProject = new(
+            $"--{IsAZDProjectName}"
         )
         {
             Description = "Whether to use azd tool in the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
@@ -70,7 +70,7 @@ public static class DeployOptionDefinitions
             Required = true
         };
 
-        public static readonly Option<string> pipelinePlatform = new(
+        public static readonly Option<string> PipelinePlatform = new(
             $"--{PipelinePlatformName}"
         )
         {
@@ -79,7 +79,7 @@ public static class DeployOptionDefinitions
             Required = true,
         };
 
-        public static readonly Option<string> deployOption = new(
+        public static readonly Option<string> DeployOption = new(
             $"--{DeployOptionName}"
         )
         {

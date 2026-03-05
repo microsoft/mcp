@@ -41,17 +41,17 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.isAZDProject);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.pipelinePlatform);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.deployOption);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.IsAZDProject);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.PipelinePlatform);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.DeployOption);
     }
 
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.IsAZDProject = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.isAZDProject.Name);
-        options.PipelinePlatform = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.pipelinePlatform.Name);
-        options.DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.deployOption.Name);
+        options.IsAZDProject = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.IsAZDProject.Name);
+        options.PipelinePlatform = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.PipelinePlatform.Name);
+        options.DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.DeployOption.Name);
         return options;
     }
 
