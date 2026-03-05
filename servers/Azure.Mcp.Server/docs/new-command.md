@@ -1201,7 +1201,7 @@ Guidelines:
   - Reference project `$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj`
   - Include an `AssemblyAttributes.cs` file with the following contents :
     ```csharp
-    [assembly: Azure.Mcp.Tests.Helpers.ClearEnvironmentVariablesBeforeTest]
+    [assembly: Microsoft.Mcp.Tests.Helpers.ClearEnvironmentVariablesBeforeTest]
     [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
     ```
 

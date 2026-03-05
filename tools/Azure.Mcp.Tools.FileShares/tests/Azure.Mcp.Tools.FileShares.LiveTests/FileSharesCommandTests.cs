@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 
@@ -10,7 +11,7 @@ namespace Azure.Mcp.Tools.FileShares.LiveTests;
 /// Live tests for FileShares commands.
 /// These tests exercise the actual Azure FileShares resource provider with real resources.
 /// </summary>
-public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     private string FileShare1Name => $"{Settings.ResourceBaseName}-fileshare-01";
     private string FileShare2Name => $"{Settings.ResourceBaseName}-fileshare-02";

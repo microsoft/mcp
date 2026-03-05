@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public sealed class LiveServerFixture() : IAsyncLifetime
+public sealed class LiveServerFixture<TSettings>() : IAsyncLifetime where TSettings : LiveTestSettingsBase, new()
 {
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private Process? _httpServerProcess;
@@ -19,8 +19,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     public Dictionary<string, string?> EnvironmentVariables { get; set; } = new();
     public List<string> Arguments { get; set; } = new();
     public ITestOutputHelper? Output { get; set; }
-    public LiveTestSettings? Settings { get; set; }
-
+    public TSettings Settings { get; set; } = new();
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
     public async Task EnsureStartedAsync()
@@ -29,7 +28,9 @@ public sealed class LiveServerFixture() : IAsyncLifetime
         {
             return;
         }
+
         await _startLock.WaitAsync().ConfigureAwait(false);
+
         try
         {
             if (_started)
@@ -37,16 +38,16 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 return;
             }
 
-            string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+            string executablePath = Settings.GetMcpExecutablePath();
 
-            var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
+            (McpClient? client, string? serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
                 executablePath,
                 Arguments,
                 EnvironmentVariables,
                 process => _httpServerProcess = process,
                 Output,
-                Settings?.TestPackage,
-                Settings?.SettingsDirectory);
+                Settings.TestPackage,
+                Settings.SettingsDirectory);
 
             _mcpClient = client;
             _serverUrl = serverUrl;

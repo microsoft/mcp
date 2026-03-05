@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -12,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.LiveTests;
 
-public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     private static readonly string[] _sanitizedHeaders =
     [

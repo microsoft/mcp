@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -8,8 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests;
 
-public abstract class BaseAppServiceCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public abstract class BaseAppServiceCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
+    : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
