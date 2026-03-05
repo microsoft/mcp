@@ -191,9 +191,5 @@ namespace Microsoft.Mcp.Tests.Client.Helpers
 
             return playbackSettings;
         }
-
-        internal virtual void PopulateDefaultSanitizers()
-        {
-        }
     }
 }
