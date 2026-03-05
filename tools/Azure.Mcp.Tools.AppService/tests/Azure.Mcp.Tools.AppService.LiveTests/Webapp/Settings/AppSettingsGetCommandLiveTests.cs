@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,7 +12,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Settings;
 
 [Trait("Command", "AppSettingsGetCommand")]
-public class AppSettingsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+public class AppSettingsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
     [Fact(Skip = "Test temporarily disabled - recording can't consent to secret elicitation")]

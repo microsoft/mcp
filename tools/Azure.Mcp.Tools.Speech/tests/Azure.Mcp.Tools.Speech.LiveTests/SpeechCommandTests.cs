@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.Mcp.Tests;
@@ -10,7 +11,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
-public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
+public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : CommandTestsBase<AzureLiveTestSettings>(output, liveServerFixture)
 {
     #region SpeechToText Tests
 

@@ -14,9 +14,9 @@ using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+public abstract class RecordedCommandTestsBase<T>(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<T> liveServerFixture) : CommandTestsBase<T>(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture<T>> where T : LiveTestSettingsBase, new()
 {
-    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+    protected const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
@@ -298,22 +298,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
     }
 
-    private void PopulateDefaultSanitizers()
+    protected virtual void PopulateDefaultSanitizers()
     {
-        // Registering a few common sanitizers for values that we know will be universally present and cleaned up
-        if (EnableDefaultSanitizerAdditions)
-        {
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.ResourceBaseName,
-                Value = "Sanitized",
-            }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
-            {
-                Regex = Settings.SubscriptionId,
-                Value = EmptyGuid,
-            }));
-        }
     }
 
     private async Task DisableSanitizersAsync()

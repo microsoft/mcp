@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +22,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : RecordedCommandTestsBase
+public class AppConfigCommandTests : AzureRecordedTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
@@ -35,7 +36,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     /// </summary>
     public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493", "AZSDK3447"];
 
-    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : base(output, fixture, liveServerFixture)
+    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : base(output, fixture, liveServerFixture)
     {
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
