@@ -27,7 +27,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names nad values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the tool call command."
             }
           },
           "additionalProperties": false

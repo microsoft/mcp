@@ -1,0 +1,4 @@
+pr: 1935
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Linux stdio watcher regression where using CWD as content root could exhaust inotify watchers (ENOSPC). Host builders now use AppContext.BaseDirectory as content root."
