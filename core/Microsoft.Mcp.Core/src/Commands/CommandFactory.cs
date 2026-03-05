@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
@@ -209,7 +210,7 @@ public class CommandFactory : ICommandFactory
 
                 if (response.Status == HttpStatusCode.OK && response.Results == null)
                 {
-                    response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
+                    response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
                 var isServiceStartCommand = implementation is ServiceStartCommand;
@@ -220,7 +221,9 @@ public class CommandFactory : ICommandFactory
 
                 if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error)
+                        .SetTagIfNotExists(TagName.ExceptionType, "ToolCallError")
+                        .SetTagIfNotExists(TagName.ExceptionMessage, $"Status code: {response.Status}");
                 }
 
                 return (int)response.Status;
@@ -229,7 +232,9 @@ public class CommandFactory : ICommandFactory
             {
                 _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}",
                     command.Name, ex);
-                activity?.SetStatus(ActivityStatusCode.Error);
+                activity?.SetStatus(ActivityStatusCode.Error)
+                    .SetTagIfNotExists(TagName.ExceptionType, ex.GetType().ToString())
+                    .SetTagIfNotExists(TagName.ExceptionStackTrace, ex.StackTrace);
                 return 1;
             }
             finally

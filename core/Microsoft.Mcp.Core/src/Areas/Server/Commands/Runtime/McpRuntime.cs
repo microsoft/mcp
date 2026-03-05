@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
@@ -68,7 +69,9 @@ public sealed class McpRuntime : IMcpRuntime
                 Text = "Cannot call tools with null parameters.",
             };
 
-            activity?.SetStatus(ActivityStatusCode.Error);
+            activity?.SetStatus(ActivityStatusCode.Error)
+                .SetTag(TagName.ExceptionType, "InvalidParameters")
+                .SetTag(TagName.ExceptionMessage, content.Text);
 
             return new CallToolResult
             {
@@ -108,7 +111,11 @@ public sealed class McpRuntime : IMcpRuntime
                 return callTool;
             }
 
-            activity?.SetStatus(ActivityStatusCode.Error);
+            // TODO (alzimmer): Determine a way to safely capture error details from the CallToolResult without risking PII leakage.
+            // Given this is the egress point for tool calling, ExceptionType may have been set already, only set it if it wasn't
+            // already set.
+            activity?.SetStatus(ActivityStatusCode.Error)
+                .SetTagIfNotExists(TagName.ExceptionType, "ToolCallError");
 
             return callTool;
         }
@@ -116,7 +123,9 @@ public sealed class McpRuntime : IMcpRuntime
         // due to missing dependencies or misconfiguration.
         catch (InvalidOperationException ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
+                .SetTagIfNotExists(TagName.ExceptionType, ex.GetType().ToString())
+                .SetTagIfNotExists(TagName.ExceptionStackTrace, ex.StackTrace);
 
             return new CallToolResult
             {
@@ -127,9 +136,11 @@ public sealed class McpRuntime : IMcpRuntime
                 IsError = true,
             };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler");
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
+                 .SetTagIfNotExists(TagName.ExceptionType, ex.GetType().ToString())
+                 .SetTagIfNotExists(TagName.ExceptionStackTrace, ex.StackTrace);
             throw;
         }
     }
@@ -168,9 +179,11 @@ public sealed class McpRuntime : IMcpRuntime
 
             return result;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler");
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling list tools handler")
+                .SetTagIfNotExists(TagName.ExceptionType, ex.GetType().ToString())
+                .SetTagIfNotExists(TagName.ExceptionStackTrace, ex.StackTrace);
             throw;
         }
     }
