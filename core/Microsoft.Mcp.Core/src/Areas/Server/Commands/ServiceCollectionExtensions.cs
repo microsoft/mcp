@@ -218,6 +218,7 @@ public static class ServiceCollectionExtensions
                 mcpServerOptions.ServerInfo = new Implementation
                 {
                     Name = configuration.Name,
+                    Title = configuration.DisplayName,
                     Version = configuration.Version,
                 };
 
