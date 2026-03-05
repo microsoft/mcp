@@ -49,7 +49,6 @@
   - foundry_agents_query-and-evaluate → evaluation_agent_batch_eval_create
   - foundry_agents_evaluate → evaluator_catalog_get
 - Added Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
-#### Dependency Updates
 - Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure from 4.4.0-preview.1 to 4.4.0. [[#1896](https://github.com/microsoft/mcp/pull/1896)]
 
 ### Fixed
