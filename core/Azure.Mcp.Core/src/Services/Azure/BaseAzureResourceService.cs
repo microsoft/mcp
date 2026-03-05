@@ -77,6 +77,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="tenant">Optional tenant to use for the query</param>
     /// <returns>List of resources converted to the specified type</returns>
     protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
@@ -87,15 +88,16 @@ public abstract class BaseAzureResourceService(
         string? tableName = "resources",
         string? additionalFilter = null,
         int limit = 50,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? tenant = null)
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
         var results = new List<T>();
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -154,48 +156,12 @@ public abstract class BaseAzureResourceService(
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
-        ArgumentNullException.ThrowIfNull(converter);
-
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
-
-        var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
-            {
-                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
-            queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
-        }
-        if (!string.IsNullOrEmpty(additionalFilter))
-        {
-            queryFilter += $" and {additionalFilter}";
-        }
-        queryFilter += " | limit 1";
-
-        var queryContent = new ResourceQueryContent(queryFilter)
-        {
-            Subscriptions = { subscriptionResource.Data.SubscriptionId }
-        };
-
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result != null && result.Count > 0)
-        {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            var dataArray = jsonDocument.RootElement;
-            var item = dataArray.ValueKind == JsonValueKind.Array && dataArray.GetArrayLength() > 0
-                ? dataArray[0]
-                : default;
-            if (item.ValueKind == JsonValueKind.Object)
-            {
-                return converter(item);
-            }
-        }
-        return null;
+        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, retryPolicy, converter,
+            tableName, additionalFilter, 1, cancellationToken, tenant).ConfigureAwait(false);
+        return result.Results.FirstOrDefault();
     }
 
     /// <summary>

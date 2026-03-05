@@ -35,6 +35,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                 subscription,
                 retryPolicy,
                 ConvertToAppConfigurationAccountModel,
+                tenant: tenant,
                 cancellationToken: cancellationToken);
 
             return accounts;
