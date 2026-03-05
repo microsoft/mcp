@@ -50,7 +50,6 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.PlanGet.IacOptions);
         command.Options.Add(DeployOptionDefinitions.PlanGet.SourceType);
         command.Options.Add(DeployOptionDefinitions.PlanGet.DeployOption);
-        command.Options.Add(DeployOptionDefinitions.PlanGet.ResourceGroupName);
     }
 
     protected override GetOptions BindOptions(ParseResult parseResult)
@@ -63,8 +62,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             ProvisioningTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProvisioningTool.Name) ?? string.Empty,
             IacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.IacOptions.Name) ?? string.Empty,
             SourceType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.SourceType.Name) ?? string.Empty,
-            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty,
-            ResourceGroupName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ResourceGroupName.Name) ?? string.Empty
+            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty
         };
     }
 
@@ -91,7 +89,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
                     .AddTag(DeployTelemetryTags.DeployOption, options.DeployOption ?? string.Empty)
                     .AddTag(DeployTelemetryTags.SourceType, options.SourceType ?? string.Empty);
 
-            var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.SourceType ?? string.Empty, options.DeployOption ?? string.Empty, options.IacOptions, options.Subscription, options.ResourceGroupName);
+            var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.SourceType ?? string.Empty, options.DeployOption ?? string.Empty, options.IacOptions, options.Subscription, options.ResourceGroup);
 
             context.Response.Message = planTemplate;
             context.Response.Status = HttpStatusCode.OK;

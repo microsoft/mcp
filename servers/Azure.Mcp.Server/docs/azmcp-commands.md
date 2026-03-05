@@ -1054,7 +1054,11 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       --project-name <project-name> \
                       --target-app-service <target-app-service> \
                       --provisioning-tool <provisioning-tool> \
-                      [--iac-options <iac-options>]
+                      --source-type <source-type> \
+                      [--iac-options <iac-options>] \
+                      [--deploy-option <deploy-option>] \
+                      [--resource-group <resource-group>] \
+                      [--subscription <subscription>]
 ```
 
 ### Azure Event Grid Operations

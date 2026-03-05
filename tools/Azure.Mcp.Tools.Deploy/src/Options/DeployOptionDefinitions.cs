@@ -98,7 +98,6 @@ public static class DeployOptionDefinitions
         public const string IacOptionsName = "iac-options";
         public const string SourceTypeName = "source-type";
         public const string DeployOptionName = "deploy-option";
-        public const string ResourceGroupNameName = "resource-group-name";
 
         public static readonly Option<string> WorkspaceFolder = new(
             $"--{WorkspaceFolderName}"
@@ -157,14 +156,6 @@ public static class DeployOptionDefinitions
             Description = "Set the value based on project and user's input. Valid values: 'provision-and-deploy', 'deploy-only', 'provision-only'. Use 'deploy-only' if user mentions they want to deploy to existing Azure resources or Iac files already exist in project, get Azure resource group from project files or from user. Use 'provision-only' if user only wants to provision Azure resource. Use 'provision-and-deploy' if user wants to deploy application and doesn't have existing infrastructure resources, or are starting from an empty resource group.",
             DefaultValueFactory = _ => "provision-and-deploy",
             Required = true
-        };
-
-        public static readonly Option<string> ResourceGroupName = new(
-            $"--{ResourceGroupNameName}"
-        )
-        {
-            Description = "The Azure resource group name to use for the deployment. If user has existing resources, agent must use existing resource's resource group, ask for user's confirmation before using its resource group name. Don't use a placeholder or mock a value.",
-            Required = false
         };
     }
 
