@@ -907,7 +907,7 @@ azmcp compute vm get --subscription "my-subscription" \
 | `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
 
 ```bash
-# Create Virtual Machine with smart defaults based on workload requirements
+# Create Virtual Machine (automatically creates networking resources when missing)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm create --subscription <subscription> \
                         --resource-group <resource-group> \
@@ -918,28 +918,29 @@ azmcp compute vm create --subscription <subscription> \
                         [--ssh-public-key <ssh-public-key>] \
                         [--vm-size <vm-size>] \
                         [--image <image>] \
-                        [--workload <workload>] \
                         [--os-type <os-type>] \
                         [--virtual-network <virtual-network>] \
                         [--subnet <subnet>] \
                         [--public-ip-address <public-ip-address>] \
                         [--network-security-group <network-security-group>] \
+                        [--source-address-prefix <source-address-prefix>] \
                         [--no-public-ip] \
                         [--zone <zone>] \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
+Defaults to the Azure CLI baseline of Standard_DS1_v2 size and the Ubuntu2404 image when not specified. When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+
 # Examples:
 
-# Create Linux VM with SSH key (development workload)
+# Create Linux VM with SSH key
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm create --subscription "my-subscription" \
                         --resource-group "my-rg" \
                         --vm-name "my-linux-vm" \
                         --location "eastus" \
                         --admin-username "azureuser" \
-                        --ssh-public-key "ssh-ed25519 AAAAC3..." \
-                        --workload "development"
+                        --ssh-public-key "ssh-ed25519 AAAAC3..."
 
 # Create Windows VM with password
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
@@ -949,8 +950,7 @@ azmcp compute vm create --subscription "my-subscription" \
                         --location "eastus" \
                         --admin-username "adminuser" \
                         --admin-password "ComplexPassword123!" \
-                        --image "Win2022Datacenter" \
-                        --workload "web"
+                        --image "Win2022Datacenter"
 
 # Create VM with specific size and no public IP
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
@@ -963,15 +963,6 @@ azmcp compute vm create --subscription "my-subscription" \
                         --vm-size "Standard_D4s_v3" \
                         --no-public-ip
 ```
-
-**Workload Types:**
-- `development`: Standard_B2s - Cost-effective burstable VM for dev/test
-- `web`: Standard_D2s_v3 - General purpose for web servers
-- `database`: Standard_E4s_v3 - Memory-optimized for databases
-- `compute`: Standard_F4s_v2 - CPU-optimized for batch processing
-- `memory`: Standard_E8s_v3 - High-memory for caching
-- `gpu`: Standard_NC6s_v3 - GPU-enabled for ML/rendering
-- `general`: Standard_D2s_v3 - Balanced general purpose (default)
 
 **Image Aliases:**
 - Linux: `Ubuntu2404`, `Ubuntu2204`, `Ubuntu2004`, `Debian11`, `Debian12`, `RHEL9`, `CentOS8`
@@ -987,14 +978,14 @@ azmcp compute vm create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
-| `--vm-size` | No | VM size (defaults based on workload) |
+| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
 | `--image` | No | Image alias or URN (default: Ubuntu2404) |
-| `--workload` | No | Workload type for smart defaults |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |
 | `--public-ip-address` | No | Public IP address name |
 | `--network-security-group` | No | Network security group name |
+| `--source-address-prefix` | No | Source IP/CIDR for created NSG inbound rules (default: `*`) |
 | `--no-public-ip` | No | Do not create a public IP address |
 | `--zone` | No | Availability zone |
 | `--os-disk-size-gb` | No | OS disk size in GB |
@@ -1102,7 +1093,7 @@ azmcp compute vmss get --subscription "my-subscription" \
 | `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
 
 ```bash
-# Create Virtual Machine Scale Set with smart defaults based on workload requirements
+# Create Virtual Machine Scale Set (automatically creates networking resources when missing)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss create --subscription <subscription> \
                           --resource-group <resource-group> \
@@ -1113,7 +1104,6 @@ azmcp compute vmss create --subscription <subscription> \
                           [--ssh-public-key <ssh-public-key>] \
                           [--vm-size <vm-size>] \
                           [--image <image>] \
-                          [--workload <workload>] \
                           [--os-type <os-type>] \
                           [--virtual-network <virtual-network>] \
                           [--subnet <subnet>] \
@@ -1122,6 +1112,8 @@ azmcp compute vmss create --subscription <subscription> \
                           [--zone <zone>] \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
+
+Defaults to two Standard_DS1_v2 instances running Ubuntu2404 when size or image are not provided.
 
 # Examples:
 
@@ -1157,9 +1149,8 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--admin-password` | Conditional | Admin password (required for Windows) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
-| `--vm-size` | No | VM size (defaults based on workload) |
+| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
 | `--image` | No | Image alias or URN (default: Ubuntu2404) |
-| `--workload` | No | Workload type for smart defaults |
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |
