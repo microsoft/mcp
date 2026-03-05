@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed argument parsing to support camelCase parameter names and flat argument structures sent by Codex and other OpenAI models"

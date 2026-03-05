@@ -53,16 +53,16 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 function Write-StepHeader([string]$name) {
     Write-Host ""
-    Write-Host "ΓöüΓöüΓöü $name " -ForegroundColor Cyan -NoNewline
-    Write-Host ("Γöü" * [Math]::Max(0, 60 - $name.Length - 5)) -ForegroundColor Cyan
+    Write-Host "━━━ $name " -ForegroundColor Cyan -NoNewline
+    Write-Host ("━" * [Math]::Max(0, 60 - $name.Length - 5)) -ForegroundColor Cyan
 }
 
 function Write-StepResult([string]$name, [bool]$passed, [string]$detail) {
     if ($passed) {
-        Write-Host "Γ£à $name" -ForegroundColor Green
+        Write-Host "✅ $name" -ForegroundColor Green
         $script:stepsPassed++
     } else {
-        Write-Host "Γ¥î $name" -ForegroundColor Red
+        Write-Host "❌ $name" -ForegroundColor Red
         if ($detail) { Write-Host "   $detail" -ForegroundColor Yellow }
         $script:stepsFailed++
         $script:failedSteps += $name
@@ -70,16 +70,16 @@ function Write-StepResult([string]$name, [bool]$passed, [string]$detail) {
 }
 
 function Write-StepSkipped([string]$name, [string]$reason) {
-    Write-Host "ΓÅ¡∩╕Å  $name (skipped: $reason)" -ForegroundColor DarkGray
+    Write-Host "⏭️  $name (skipped: $reason)" -ForegroundColor DarkGray
     $script:stepsSkipped++
 }
 
 Push-Location $RepoRoot
 try {
     Write-Host ""
-    Write-Host "ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù" -ForegroundColor Cyan
-    Write-Host "Γòæ                   MCP Preflight Checks                      Γòæ" -ForegroundColor Cyan
-    Write-Host "ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥" -ForegroundColor Cyan
+    Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+    Write-Host "║                   MCP Preflight Checks                      ║" -ForegroundColor Cyan
+    Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     if ($Quick) {
         Write-Host "  Mode: Quick (format + build + tool validation)" -ForegroundColor Yellow
     } elseif ($IncludeAot) {
@@ -88,7 +88,7 @@ try {
         Write-Host "  Mode: Standard" -ForegroundColor Yellow
     }
 
-    # ΓöÇΓöÇ 1. Code Formatting ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 1. Code Formatting ──────────────────────────────────────────
     Write-StepHeader "Code Formatting"
 
     # Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
@@ -100,7 +100,7 @@ try {
         Write-StepResult "dotnet format" $false "Run 'dotnet format `"$solutionFile`"' to fix"
     }
 
-    # ΓöÇΓöÇ 2. Spelling ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 2. Spelling ─────────────────────────────────────────────────
     Write-StepHeader "Spelling"
 
     if ($Quick) {
@@ -117,7 +117,7 @@ try {
         }
     }
 
-    # ΓöÇΓöÇ 3. Build ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 3. Build ────────────────────────────────────────────────────
     Write-StepHeader "Build"
 
     dotnet build $solutionFile 2>&1 | Out-Host
@@ -128,7 +128,7 @@ try {
         Write-StepResult "dotnet build" $false "Fix compilation errors above"
     }
 
-    # ΓöÇΓöÇ 4. Tool Metadata Validation ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 4. Tool Metadata Validation ─────────────────────────────────
     Write-StepHeader "Tool Metadata Validation"
 
     & "$PSScriptRoot/Test-ToolSelection.ps1" 2>&1 | Out-Host
@@ -152,7 +152,7 @@ try {
         Write-StepResult "Tool ID uniqueness" $false "$($toolIdResult.ViolationCount) duplicate ID(s)"
     }
 
-    # ΓöÇΓöÇ 5. Documentation Validation ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 5. Documentation Validation ────────────────────────────────
     Write-StepHeader "Documentation Validation"
 
     if ($Quick) {
@@ -168,7 +168,7 @@ try {
         }
     }
 
-    # ΓöÇΓöÇ 6. Unit Tests ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 6. Unit Tests ───────────────────────────────────────────────
     Write-StepHeader "Unit Tests"
 
     if ($Quick) {
@@ -190,7 +190,7 @@ try {
         }
     }
 
-    # ΓöÇΓöÇ 7. AOT Analysis (optional) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── 7. AOT Analysis (optional) ──────────────────────────────────
     Write-StepHeader "AOT Analysis"
 
     if (!$IncludeAot) {
@@ -205,14 +205,14 @@ try {
         }
     }
 
-    # ΓöÇΓöÇ Summary ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Summary ─────────────────────────────────────────────────────
     $stopwatch.Stop()
     $elapsed = $stopwatch.Elapsed.ToString("mm\:ss")
 
     Write-Host ""
-    Write-Host "ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
-    Write-Host "Γòæ                        Results                              Γòæ" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
-    Write-Host "ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
+    Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
+    Write-Host "║                        Results                              ║" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
+    Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor ($stepsFailed -gt 0 ? "Red" : "Green")
     Write-Host "  Passed:  $stepsPassed" -ForegroundColor Green
     if ($stepsFailed -gt 0) {
         Write-Host "  Failed:  $stepsFailed" -ForegroundColor Red
