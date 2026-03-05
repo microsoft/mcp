@@ -1,0 +1,196 @@
+# ---------------------------------------------------------------------------
+# On-demand load test pipeline for Azure MCP Server
+# ---------------------------------------------------------------------------
+# This pipeline is intentionally trigger-free (no CI, no PR, no schedule).
+# Queue it manually from Azure DevOps when you want to run a load test.
+#
+# For each run the pipeline:
+#   1. Builds the MCP Server Docker image and pushes it to ACR
+#   2. Deploys an ephemeral Container App with --dangerously-disable-http-incoming-auth
+#   3. Runs a Locust load test via Azure Load Testing
+#   4. Tears down the Container App and removes the image tag
+#
+# Prerequisites – variable group "mcp-load-test-vars":
+#   - AZURE_SERVICE_CONNECTION         – ARM service connection name
+#   - AZURE_LOAD_TEST_RESOURCE_GROUP   – resource group (ALT + ACA + ACR)
+#   - AZURE_LOAD_TEST_NAME            – name of the Azure Load Testing resource
+#   - AZURE_ACR_NAME                  – Azure Container Registry name (e.g. mcploadtestacr)
+#   - MCP_SUBSCRIPTION                – Azure subscription used in the tool call
+# ---------------------------------------------------------------------------
+
+trigger: none
+pr: none
+
+parameters:
+  - name: engineInstances
+    displayName: Number of Azure Load Testing engine instances
+    type: number
+    default: 1
+  - name: users
+    displayName: Concurrent simulated users
+    type: number
+    default: 10
+  - name: spawnRate
+    displayName: Users spawned per second
+    type: number
+    default: 2
+  - name: duration
+    displayName: Test duration (seconds)
+    type: number
+    default: 120
+
+variables:
+  - group: mcp-load-test-vars
+  - name: imageTag
+    value: $(Build.BuildId)
+  - name: imageName
+    value: azure-mcp-server
+  - name: containerAppName
+    value: mcp-loadtest-$(Build.BuildId)
+
+stages:
+  # =======================================================================
+  # Stage 1 – Build the MCP Server Docker image and push to ACR
+  # =======================================================================
+  - stage: BuildImage
+    displayName: Build & Push Docker Image
+    jobs:
+      - job: BuildAndPush
+        displayName: Build image and push to ACR
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: AzureCLI@2
+            displayName: ACR Build & Push
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr build \
+                  --registry $(AZURE_ACR_NAME) \
+                  --image $(imageName):$(imageTag) \
+                  --file servers/Azure.Mcp.Server/src/Dockerfile \
+                  .
+
+  # =======================================================================
+  # Stage 2 – Deploy an ephemeral Container App (auth disabled)
+  # =======================================================================
+  - stage: Deploy
+    displayName: Deploy Ephemeral MCP Server
+    dependsOn: BuildImage
+    jobs:
+      - job: DeployContainerApp
+        displayName: Deploy Container App via Bicep
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: AzureCLI@2
+            displayName: Deploy Bicep template
+            name: bicepDeploy
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                FQDN=$(az deployment group create \
+                  --resource-group $(AZURE_LOAD_TEST_RESOURCE_GROUP) \
+                  --template-file eng/load-tests/load-test-resources.bicep \
+                  --parameters \
+                      mcpServerImage=$(AZURE_ACR_NAME).azurecr.io/$(imageName):$(imageTag) \
+                      containerAppName=$(containerAppName) \
+                      acrName=$(AZURE_ACR_NAME) \
+                  --query 'properties.outputs.mcpServerFqdn.value' \
+                  --output tsv)
+
+                echo "MCP Server FQDN: $FQDN"
+                echo "##vso[task.setvariable variable=mcpServerEndpoint;isOutput=true]https://$FQDN"
+
+  # =======================================================================
+  # Stage 3 – Run the Locust load test via Azure Load Testing
+  # =======================================================================
+  - stage: LoadTest
+    displayName: Run Load Test
+    dependsOn: Deploy
+    variables:
+      mcpServerEndpoint: $[ stageDependencies.Deploy.DeployContainerApp.outputs['bicepDeploy.mcpServerEndpoint'] ]
+    jobs:
+      - job: RunLoadTest
+        displayName: Execute Locust load test
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          # Wait for the server to become healthy
+          - script: |
+              echo "Waiting for MCP server at $(mcpServerEndpoint) ..."
+              for i in $(seq 1 30); do
+                STATUS=$(curl -s -o /dev/null -w "%%{http_code}" "$(mcpServerEndpoint)/health" || true)
+                if [ "$STATUS" = "200" ]; then
+                  echo "Server is healthy."
+                  exit 0
+                fi
+                echo "Attempt $i – status $STATUS, retrying in 10s..."
+                sleep 10
+              done
+              echo "##vso[task.logissue type=error]Server did not become healthy within 5 minutes."
+              exit 1
+            displayName: Wait for server health check
+
+          - task: AzureLoadTest@1
+            displayName: Run Azure Load Test
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              loadTestConfigFile: eng/load-tests/config.yaml
+              loadTestResource: $(AZURE_LOAD_TEST_NAME)
+              resourceGroup: $(AZURE_LOAD_TEST_RESOURCE_GROUP)
+              env: |
+                [
+                  { "name": "MCP_SERVER_URL",    "value": "$(mcpServerEndpoint)" },
+                  { "name": "MCP_SUBSCRIPTION",  "value": "$(MCP_SUBSCRIPTION)" }
+                ]
+
+          - publish: $(System.DefaultWorkingDirectory)/loadTest
+            artifact: load-test-results
+            displayName: Publish load test results
+            condition: always()
+
+  # =======================================================================
+  # Stage 4 – Cleanup (always runs)
+  # =======================================================================
+  - stage: Cleanup
+    displayName: Cleanup Ephemeral Resources
+    dependsOn:
+      - LoadTest
+      - Deploy
+    condition: always()
+    jobs:
+      - job: CleanupResources
+        displayName: Delete Container App & image tag
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: AzureCLI@2
+            displayName: Delete Container App
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Deleting Container App $(containerAppName)..."
+                az containerapp delete \
+                  --name $(containerAppName) \
+                  --resource-group $(AZURE_LOAD_TEST_RESOURCE_GROUP) \
+                  --yes || true
+
+          - task: AzureCLI@2
+            displayName: Remove image tag from ACR
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Removing image $(imageName):$(imageTag) from ACR..."
+                az acr repository delete \
+                  --name $(AZURE_ACR_NAME) \
+                  --image $(imageName):$(imageTag) \
+                  --yes || true
