@@ -12,7 +12,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Settings;
 
 [Trait("Command", "AppSettingsUpdateCommand")]
-public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture,  LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
+public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
     [Fact]

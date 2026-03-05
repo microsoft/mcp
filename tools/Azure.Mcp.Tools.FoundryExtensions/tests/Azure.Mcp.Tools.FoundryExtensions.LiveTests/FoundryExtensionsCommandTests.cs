@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.LiveTests;
 
-public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture,  LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
+public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     // Sanitize subscription IDs in URIs to allow playback to work

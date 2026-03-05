@@ -428,7 +428,7 @@ def query_data_from_warehouse(myWarehouse: fn.FabricSqlConnection) -> list:
     whSqlConnection = myWarehouse.connect()
     # Use connection to execute a query
     cursor = whSqlConnection.cursor()
-    cursor.execute(f"SELECT * FROM (VALUES ('John Smith',  31) , ('Kayla Jones', 33)) AS Employee(EmpName, DepID);")
+    cursor.execute(f"SELECT * FROM (VALUES ('John Smith', 31) , ('Kayla Jones', 33)) AS Employee(EmpName, DepID);")
     
     rows = [x for x in cursor]
     columnNames = [x[0] for x in cursor.description]

@@ -57,8 +57,8 @@ public class RealtimeRecognitionNBestResultTests
 
             Words = new List<RealtimeRecognitionWordResult>
             {
-                new() { Word = "Hello",  Offset = 100, Duration = 500 },
-                new() { Word = "world",  Offset = 600, Duration = 400 }
+                new() { Word = "Hello", Offset = 100, Duration = 500 },
+                new() { Word = "world", Offset = 600, Duration = 400 }
             }
         };
 
