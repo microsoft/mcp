@@ -2,11 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 1.0.2-beta.1 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 1.0.2 (2026-03-05)
 
 ### Bugs Fixed
 
@@ -18,7 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Begin capturing information for the MCP client request's `_meta` store. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
 - Removed ErrorDetails from telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
 - Added processor architecture to captured telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
-- Resolve incorrect/missing setting of `IsServerCommandInvoked` in telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Resolved incorrect/missing setting of `IsServerCommandInvoked` in telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
 
 ## 1.0.1 (2025-11-25)
 
@@ -42,7 +38,7 @@ The Azure MCP Server now offers:
 
 - **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
-- **Flexible Server Modes**: 
+- **Flexible Server Modes**:
   - Namespace mode (default): Organizes tools by service for easy discovery
   - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
   - Single mode: All tools behind one unified "azure" tool
