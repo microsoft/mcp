@@ -88,7 +88,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Markitdown MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22markitdown%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22markitdown-mcp%22%5D%7D) [![Install Markitdown MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22markitdown%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22markitdown-mcp%22%5D%7D) [![Install Markitdown MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22markitdown%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22markitdown-mcp%22%5D%7D)
-  
+
 ### 💻 Microsoft 365 Agents Toolkit
 - **REPOSITORY**: [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit/)
 - **DESCRIPTION**: The Microsoft 365 Agents Toolkit MCP Server is a Model Context Protocol (MCP) server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
@@ -174,13 +174,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [microsoft/wassette](https://github.com/microsoft/wassette)
 
 
-## 🏗️ Looking for starter templates that use MCP? 
+## 🏗️ Looking for starter templates that use MCP?
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
-- [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
+- [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/docs/sdk)
 - [MCP Specification](https://spec.modelcontextprotocol.io/specification/)
 
 ## Contributing
