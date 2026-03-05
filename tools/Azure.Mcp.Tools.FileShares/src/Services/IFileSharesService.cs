@@ -186,4 +186,39 @@ public interface IFileSharesService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
-}
+    /// <summary>
+    /// Get a specific private endpoint connection for a file share.
+    /// </summary>
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List all private endpoint connections for a file share.
+    /// </summary>
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update the state of a private endpoint connection.
+    /// </summary>
+    Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string status,
+        string? description = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);}
