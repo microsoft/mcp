@@ -17,10 +17,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) : SubscriptionCommand<AccountCreateOptions>()
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions>()
 {
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
 
@@ -79,11 +80,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
             // Call service to create storage account
-            var account = await storageService.CreateStorageAccount(
+            var account = await _storageService.CreateStorageAccount(
                 options.Account!,
                 options.ResourceGroup!,
                 options.Location!,
