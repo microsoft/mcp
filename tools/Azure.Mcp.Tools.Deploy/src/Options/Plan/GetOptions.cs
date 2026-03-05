@@ -28,7 +28,4 @@ public sealed class GetOptions : SubscriptionOptions
 
     [JsonPropertyName("iacOptions")]
     public string? IacOptions { get; set; } = string.Empty;
-
-    [JsonPropertyName("resourceGroupName")]
-    public string? ResourceGroupName { get; set; } = string.Empty;
 }

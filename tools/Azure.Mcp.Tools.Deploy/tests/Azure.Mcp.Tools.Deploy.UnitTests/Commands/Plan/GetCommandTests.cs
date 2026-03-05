@@ -134,7 +134,7 @@ public class GetCommandTests
             "--provisioning-tool", "AzCli",
             "--deploy-option", "deploy-only",
             "--source-type", "from-azure",
-            "--resource-group-name", "DefaultRG"
+            "--resource-group", "DefaultRG"
         ]);
         var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 

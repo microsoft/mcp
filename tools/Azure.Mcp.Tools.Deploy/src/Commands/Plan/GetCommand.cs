@@ -12,6 +12,8 @@ using Azure.Mcp.Tools.Deploy.Services.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option ;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Plan;
 
@@ -50,6 +52,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.PlanGet.IacOptions);
         command.Options.Add(DeployOptionDefinitions.PlanGet.SourceType);
         command.Options.Add(DeployOptionDefinitions.PlanGet.DeployOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override GetOptions BindOptions(ParseResult parseResult)
@@ -62,7 +65,8 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             ProvisioningTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProvisioningTool.Name) ?? string.Empty,
             IacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.IacOptions.Name) ?? string.Empty,
             SourceType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.SourceType.Name) ?? string.Empty,
-            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty
+            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty,
+            ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name) ?? string.Empty,
         };
     }
 
