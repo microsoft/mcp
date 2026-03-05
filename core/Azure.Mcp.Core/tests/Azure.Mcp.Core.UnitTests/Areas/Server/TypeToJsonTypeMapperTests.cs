@@ -156,7 +156,7 @@ public class TypeToJsonTypeMapperTests
         var result = typeof(TestEnum).ToJsonType();
 
         // Assert
-        Assert.Equal("integer", result);
+        Assert.Equal("string", result);
     }
 
     [Theory]
@@ -169,7 +169,7 @@ public class TypeToJsonTypeMapperTests
         var result = enumType.ToJsonType();
 
         // Assert
-        Assert.Equal("integer", result);
+        Assert.Equal("string", result);
     }
 
     public class CustomClass
@@ -209,7 +209,7 @@ public class TypeToJsonTypeMapperTests
     [InlineData(typeof(double?), "number")]
     [InlineData(typeof(char?), "string")]
     [InlineData(typeof(Guid?), "string")]
-    [InlineData(typeof(TestEnum?), "integer")]
+    [InlineData(typeof(TestEnum?), "string")]
     public void ToJsonType_WithNullableTypes_ReturnsUnderlyingType(Type nullableType, string expectedType)
     {
         // Nullable types should return their underlying type, not "object"
