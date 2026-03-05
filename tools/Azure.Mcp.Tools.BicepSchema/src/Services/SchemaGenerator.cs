@@ -36,7 +36,7 @@ public static class SchemaGenerator
         return resourceVisitor.LoadSingleResource(resourceTypeName, apiVersion);
     }
 
-    public static void ConfigureServices(ServiceCollection services)
+    public static void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ITypeLoader, AzTypeLoader>();
         services.AddSingleton<ResourceVisitor>();
