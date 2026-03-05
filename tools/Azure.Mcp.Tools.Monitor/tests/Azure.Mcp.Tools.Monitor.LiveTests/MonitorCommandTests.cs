@@ -35,7 +35,7 @@ public sealed class MonitorCommandTests : AzureRecordedTestsBase
     private string? _appInsightsName;
     private string? _bingWebTestName;
 
-    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture,  LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
+    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
         : base(output, fixture, liveServerFixture)
     {
         _memoryCache = new MemoryCache(new MemoryCacheOptions());

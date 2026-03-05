@@ -1,9 +1,11 @@
-﻿using Microsoft.Mcp.Tests.Client.Helpers;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Fabric.Mcp.Tests
+using Microsoft.Mcp.Tests.Client.Helpers;
+
+namespace Fabric.Mcp.Tests;
+
+public class FabricLiveTestSettings : LiveTestSettingsBase
 {
-    public class FabricLiveTestSettings : LiveTestSettingsBase
-    {
-        public override string ServerExecutableName => "fabmcp";
-    }
+    public override string ServerExecutableName => "fabmcp";
 }
