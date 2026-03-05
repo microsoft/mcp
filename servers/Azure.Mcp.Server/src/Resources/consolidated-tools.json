@@ -2236,7 +2236,7 @@
     },
     {
       "name": "create_azure_compute_resources",
-      "description": "Create Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Create VMs with smart workload-based defaults (development, web, database, compute, memory, gpu, general). Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
+      "description": "Create Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
       "toolMetadata": {
         "destructive": {
           "value": true,
