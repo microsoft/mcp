@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -128,8 +129,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(databaseName), databaseName)
-        );
+            (nameof(databaseName), databaseName));
 
         try
         {
@@ -140,7 +140,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Configure SKU if provided
             if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
             {
-                databaseData.Sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? "Basic")
+                databaseData.Sku = new(skuName ?? "Basic")
                 {
                     Tier = skuTier,
                     Capacity = skuCapacity
@@ -166,8 +166,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Configure elastic pool if provided
             if (!string.IsNullOrEmpty(elasticPoolName))
             {
-                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
-                    $"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
+                databaseData.ElasticPoolId = ResourceIdentifier.Parse($"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
             }
 
             // Configure zone redundancy if provided
@@ -247,8 +246,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(databaseName), databaseName)
-        );
+            (nameof(databaseName), databaseName));
 
         try
         {
@@ -286,8 +284,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             if (!string.IsNullOrEmpty(elasticPoolName))
             {
-                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
-                    $"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
+                databaseData.ElasticPoolId = ResourceIdentifier.Parse($"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
             }
 
             if (zoneRedundant.HasValue)
@@ -349,10 +346,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(databaseName), databaseName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
-        if (string.IsNullOrWhiteSpace(newDatabaseName))
-            throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
+            (nameof(subscription), subscription),
+            (nameof(newDatabaseName), newDatabaseName));
         try
         {
             var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
@@ -448,8 +443,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
@@ -458,7 +452,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var administrators = new List<SqlServerEntraAdministrator>();
             await foreach (var admin in sqlServerResource.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
             {
-                administrators.Add(new SqlServerEntraAdministrator(
+                administrators.Add(new(
                     Name: admin.Data.Name,
                     Id: admin.Data.Id.ToString(),
                     Type: admin.Data.ResourceType.ToString() ?? "Unknown",
@@ -543,8 +537,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
@@ -553,7 +546,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var firewallRules = new List<SqlServerFirewallRule>();
             await foreach (var firewallRule in sqlServerResource.GetSqlFirewallRules().GetAllAsync(cancellationToken))
             {
-                firewallRules.Add(new SqlServerFirewallRule(
+                firewallRules.Add(new(
                     Name: firewallRule.Data.Name,
                     Id: firewallRule.Data.Id.ToString(),
                     Type: firewallRule.Data.ResourceType.ToString() ?? "Unknown",
@@ -607,8 +600,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(firewallRuleName), firewallRuleName),
             (nameof(startIpAddress), startIpAddress),
-            (nameof(endIpAddress), endIpAddress)
-        );
+            (nameof(endIpAddress), endIpAddress));
 
         try
         {
@@ -628,7 +620,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             var firewallRule = operation.Value;
 
-            return new SqlServerFirewallRule(
+            return new(
                 Name: firewallRule.Data.Name,
                 Id: firewallRule.Data.Id.ToString(),
                 Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
@@ -668,8 +660,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(firewallRuleName), firewallRuleName)
-        );
+            (nameof(firewallRuleName), firewallRuleName));
 
         try
         {
@@ -736,8 +727,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(location), location),
             (nameof(administratorLogin), administratorLogin),
-            (nameof(administratorPassword), administratorPassword)
-        );
+            (nameof(administratorPassword), administratorPassword));
 
         try
         {
@@ -769,9 +759,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 cancellationToken);
 
             var server = operation.Value;
-            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+            var tags = server.Data.Tags?.ToDictionary() ?? [];
 
-            return new SqlServer(
+            return new(
                 Name: server.Data.Name,
                 FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
                 Location: server.Data.Location.ToString(),
@@ -814,15 +804,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
             var server = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+            var tags = server.Data.Tags?.ToDictionary() ?? [];
 
-            return new SqlServer(
+            return new(
                 Name: server.Data.Name,
                 FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
                 Location: server.Data.Location.ToString(),
@@ -865,15 +854,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     {
         ValidateRequiredParameters(
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
             var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
 
-            Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
+            ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
             try
             {
                 var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -915,8 +903,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
@@ -967,8 +954,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(databaseName), databaseName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
@@ -1006,12 +992,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     {
         var data = databaseResource.Data;
 
-        return new SqlDatabase(
+        return new(
             Name: data.Name,
             Id: data.Id.ToString(),
             Type: data.ResourceType.ToString(),
             Location: data.Location.ToString(),
-            Sku: data.Sku != null ? new DatabaseSku(
+            Sku: data.Sku != null ? new(
                 Name: data.Sku.Name,
                 Tier: data.Sku.Tier,
                 Capacity: data.Sku.Capacity,
@@ -1033,16 +1019,15 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item);
-        if (sqlDatabase == null)
-            throw new InvalidOperationException("Failed to parse SQL database data");
+        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item) 
+            ?? throw new InvalidOperationException("Failed to parse SQL database data");
 
-        return new SqlDatabase(
+        return new(
                 Name: sqlDatabase.ResourceName ?? "Unknown",
                 Id: sqlDatabase.ResourceId ?? "Unknown",
                 Type: sqlDatabase.ResourceType ?? "Unknown",
                 Location: sqlDatabase.Location,
-                Sku: sqlDatabase.Sku != null ? new DatabaseSku(
+                Sku: sqlDatabase.Sku != null ? new(
                     Name: sqlDatabase.Sku.Name,
                     Tier: sqlDatabase.Sku.Tier,
                     Capacity: sqlDatabase.Sku.Capacity,
@@ -1067,9 +1052,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ArgumentNullException.ThrowIfNull(serverResource);
 
         var data = serverResource.Data;
-        var tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+        var tags = data.Tags?.ToDictionary() ?? [];
 
-        return new SqlServer(
+        return new(
             Name: data.Name,
             FullyQualifiedDomainName: data.FullyQualifiedDomainName,
             Location: data.Location.ToString(),
@@ -1084,35 +1069,34 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlElasticPool ConvertToSqlElasticPoolModel(JsonElement item)
     {
-        SqlElasticPoolData? elasticPool = SqlElasticPoolData.FromJson(item);
-        if (elasticPool == null)
-            throw new InvalidOperationException("Failed to parse SQL elastic pool data");
+        SqlElasticPoolData? elasticPool = SqlElasticPoolData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse SQL elastic pool data");
 
-        return new SqlElasticPool(
-                    Name: elasticPool.ResourceName ?? "Unknown",
-                    Id: elasticPool.ResourceId ?? "Unknown",
-                    Type: elasticPool.ResourceType ?? "Unknown",
-                    Location: elasticPool.Location,
-                    Sku: elasticPool.Sku != null ? new ElasticPoolSku(
-                        Name: elasticPool.Sku.Name,
-                        Tier: elasticPool.Sku.Tier,
-                        Capacity: elasticPool.Sku.Capacity,
-                        Family: elasticPool.Sku.Family,
-                        Size: elasticPool.Sku.Size
-                    ) : null,
-                    State: elasticPool.Properties?.State,
-                    CreationDate: elasticPool.Properties?.CreatedOn,
-                    MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Sql.Models.ElasticPoolPerDatabaseSettings(
-                        MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
-                        MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
-                    ) : null,
-                    ZoneRedundant: elasticPool.Properties?.IsZoneRedundant,
-                    LicenseType: elasticPool.Properties?.LicenseType,
-                    DatabaseDtuMin: null, // DTU properties not available in current SDK
-                    DatabaseDtuMax: null,
-                    Dtu: null,
-                    StorageMB: null
-                );
+        return new(
+            Name: elasticPool.ResourceName ?? "Unknown",
+            Id: elasticPool.ResourceId ?? "Unknown",
+            Type: elasticPool.ResourceType ?? "Unknown",
+            Location: elasticPool.Location,
+            Sku: elasticPool.Sku != null ? new(
+                Name: elasticPool.Sku.Name,
+                Tier: elasticPool.Sku.Tier,
+                Capacity: elasticPool.Sku.Capacity,
+                Family: elasticPool.Sku.Family,
+                Size: elasticPool.Sku.Size
+            ) : null,
+            State: elasticPool.Properties?.State,
+            CreationDate: elasticPool.Properties?.CreatedOn,
+            MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
+            PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new(
+                MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
+                MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
+            ) : null,
+            ZoneRedundant: elasticPool.Properties?.IsZoneRedundant,
+            LicenseType: elasticPool.Properties?.LicenseType,
+            DatabaseDtuMin: null, // DTU properties not available in current SDK
+            DatabaseDtuMax: null,
+            Dtu: null,
+            StorageMB: null
+        );
     }
 }

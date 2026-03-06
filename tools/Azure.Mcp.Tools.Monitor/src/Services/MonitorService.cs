@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
@@ -17,6 +16,7 @@ using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -25,11 +25,13 @@ public class MonitorService(
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IMonitorService
+    IHttpClientFactory httpClientFactory,
+    ILogger<MonitorService> logger) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ILogger<MonitorService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -78,7 +80,8 @@ public class MonitorService(
                 TimeoutException => "The query timed out. Try simplifying your query or reducing the time range.",
                 _ => $"Error querying resource logs: {ex.Message}"
             };
-            throw new Exception(errorMessage, ex);
+            _logger.LogError(ex, errorMessage);
+            throw;
         }
     }
 
@@ -129,7 +132,7 @@ public class MonitorService(
             var response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
-                new LogsQueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
+                new(TimeSpan.FromDays(timeSpanDays)),
                 options: null,
                 cancellationToken
             );
@@ -157,7 +160,8 @@ public class MonitorService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error querying workspace: {ex.Message}", ex);
+            _logger.LogError(ex, "Error querying workspace {workspace}.", workspace);
+            throw;
         }
     }
 
@@ -200,7 +204,8 @@ public class MonitorService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing tables for workspace {workspace}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing tables for workspace {workspace}.", workspace);
+            throw;
         }
     }
 
@@ -230,7 +235,8 @@ public class MonitorService(
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error retrieving Log Analytics workspaces: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Log Analytics workspaces.");
+            throw;
         }
     }
     public async Task<List<JsonNode>> QueryWorkspaceLogs(
@@ -286,7 +292,8 @@ public class MonitorService(
                 _ => $"Error querying logs: {ex.Message}"
             };
 
-            throw new Exception(errorMessage, ex);
+            _logger.LogError(ex, errorMessage);
+            throw;
         }
     }
 
@@ -368,7 +375,8 @@ public class MonitorService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing table types for workspace {workspace}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing table types for workspace {workspace}.", workspace);
+            throw;
         }
     }
 
@@ -409,7 +417,8 @@ public class MonitorService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving activity logs for resource '{resourceName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving activity logs for resource '{resourceName}'.", resourceName);
+            throw;
         }
     }
 
@@ -449,7 +458,7 @@ public class MonitorService(
 
         TokenCredential credential = await GetCredential(tenant, cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         // Make paginated requests
@@ -467,7 +476,7 @@ public class MonitorService(
     private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token, CancellationToken cancellationToken)
     {
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        httpRequest.Headers.Authorization = new("Bearer", token);
 
         var client = _httpClientFactory.CreateClient();
         using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
@@ -479,7 +488,7 @@ public class MonitorService(
                 responseStream,
                 MonitorJsonContext.Default.ActivityLogListResponse,
                 cancellationToken);
-            return responseObject ?? new ActivityLogListResponse();
+            return responseObject ?? new();
         }
         else
         {
@@ -501,11 +510,8 @@ public class MonitorService(
         }
     }
 
-    private static bool IsWorkspaceId(string workspace)
-    {
-        // Workspace IDs are GUIDs
-        return Guid.TryParse(workspace, out _);
-    }
+    // Workspace IDs are GUIDs
+    private static bool IsWorkspaceId(string workspace) => Guid.TryParse(workspace, out _);
 
     private async Task<(string id, string name)> GetWorkspaceInfo(
         string workspace,

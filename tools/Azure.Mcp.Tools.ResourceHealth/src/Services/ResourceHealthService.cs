@@ -9,15 +9,21 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public class ResourceHealthService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientFactory httpClientFactory)
+public class ResourceHealthService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    IHttpClientFactory httpClientFactory,
+    ILogger<ResourceHealthService> logger)
     : BaseAzureService(tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ILogger<ResourceHealthService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string ResourceHealthApiVersion = "2025-05-01";
 
@@ -37,11 +43,11 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+                new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
             // Construct URL safely using Uri to ensure path is relative to base
             var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
@@ -62,7 +68,8 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         }
         catch (HttpRequestException ex)
         {
-            throw new Exception($"Failed to get availability status for resource '{resourceId}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get availability status for resource '{ResourceId}'", resourceId);
+            throw;
         }
         catch (JsonException ex)
         {
@@ -87,11 +94,11 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+                new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
             // Construct URL safely using Uri to ensure path is relative to base
             var relativePath = resourceGroup != null
@@ -107,14 +114,15 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             if (apiResponse?.Value == null)
             {
-                return new List<AvailabilityStatus>();
+                return [];
             }
 
             return apiResponse.Value.Select(item => item.ToAvailabilityStatus()).ToList();
         }
         catch (HttpRequestException ex)
         {
-            throw new Exception($"Failed to list availability statuses for subscription '{subscription}'{(resourceGroup != null ? $" and resource group '{resourceGroup}'" : "")}: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list availability statuses for subscription '{Subscription}'{ResourceGroupInfo}", subscription, resourceGroup != null ? $" and resource group '{resourceGroup}'" : string.Empty);
+            throw;
         }
         catch (JsonException ex)
         {
@@ -145,11 +153,11 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+                new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
             // Build OData filter - using correct property paths for Azure Resource Health API
             var filterParts = new List<string>();
@@ -209,7 +217,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             if (apiResponse?.Value == null)
             {
-                return new List<ServiceHealthEvent>();
+                return [];
             }
 
             return apiResponse.Value
@@ -220,7 +228,8 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         }
         catch (HttpRequestException ex)
         {
-            throw new Exception($"Failed to list service health events for subscription '{subscription}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list service health events for subscription '{Subscription}'", subscription);
+            throw;
         }
         catch (JsonException ex)
         {

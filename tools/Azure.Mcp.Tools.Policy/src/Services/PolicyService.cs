@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Policy.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
@@ -47,8 +45,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
             {
                 // Get policy assignments at the specified scope
                 // This approach works for all scope types including management groups
-                var scopeId = new ResourceIdentifier(scope);
-                var genericResource = armClient.GetGenericResource(scopeId);
+                var genericResource = armClient.GetGenericResource(new(scope));
                 var genericResourceData = await genericResource.GetAsync(cancellationToken);
                 policyAssignments = genericResourceData.Value.GetPolicyAssignments();
             }
@@ -153,7 +150,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
                 return null;
             }
 
-            return new PolicyDefinition
+            return new()
             {
                 Id = policyDefinitionResource.Id.ToString(),
                 Name = policyDefinitionResource.Data.Name,
@@ -169,9 +166,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "Error getting policy definition '{PolicyDefinitionId}'",
-                policyDefinitionId);
+            _logger.LogError(ex, "Error getting policy definition '{PolicyDefinitionId}'", policyDefinitionId);
             throw;
         }
     }

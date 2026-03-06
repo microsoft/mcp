@@ -88,15 +88,12 @@ public class WorkbooksService(
                 totalCount = await GetTotalCountAsync(subscriptions, resourceGroups, filters, tenant, retryPolicy, cancellationToken);
             }
 
-            return new WorkbookListResult(
-                workbooks,
-                totalCount,
-                ContinuationToken: null);
+            return new(workbooks, totalCount, ContinuationToken: null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to list workbooks");
-            throw new InvalidOperationException($"Failed to list workbooks: {ex.Message}", ex);
+            throw;
         }
     }
 
@@ -150,7 +147,7 @@ public class WorkbooksService(
             }
         }
 
-        return new WorkbookBatchResult(succeeded, failed);
+        return new(succeeded, failed);
     }
 
     public async Task<WorkbookInfo?> CreateWorkbookAsync(
@@ -189,7 +186,7 @@ public class WorkbooksService(
                 SerializedData = serializedData,
                 Category = "workbook",
                 Kind = "shared",
-                SourceId = new ResourceIdentifier(sourceId)
+                SourceId = new(sourceId)
             };
 
             var workbookName = Guid.NewGuid().ToString();
@@ -205,7 +202,7 @@ public class WorkbooksService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating workbook '{DisplayName}' in resource group '{ResourceGroup}'", displayName, resourceGroupName);
-            throw new InvalidOperationException($"Failed to create workbook: {ex.Message}", ex);
+            throw;
         }
     }
 
@@ -263,7 +260,7 @@ public class WorkbooksService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating workbook with ID: {WorkbookId}", workbookId);
-            throw new InvalidOperationException($"Failed to update workbook: {ex.Message}", ex);
+            throw;
         }
     }
 
@@ -291,7 +288,7 @@ public class WorkbooksService(
             }
             catch (Exception ex)
             {
-                var error = HandleWorkbookException(id, ex) as WorkbookError;
+                var error = HandleWorkbookException(id, ex);
                 return (Id: id, Error: error);
             }
             finally
@@ -314,7 +311,7 @@ public class WorkbooksService(
             }
         }
 
-        return new WorkbookDeleteBatchResult(succeeded, failed);
+        return new(succeeded, failed);
     }
 
     private async Task<WorkbookInfo?> GetSingleWorkbookAsync(
@@ -532,7 +529,7 @@ public class WorkbooksService(
 
         if (outputFormat == OutputFormat.Summary)
         {
-            return new WorkbookInfo(
+            return new(
                 WorkbookId: resourceId,
                 DisplayName: resourceName,
                 Description: null,
@@ -552,7 +549,7 @@ public class WorkbooksService(
         var tags = resource.TryGetProperty("tags", out var tagsElement) ? tagsElement : default;
         var properties = resource.TryGetProperty("properties", out var props) ? props : default;
 
-        return new WorkbookInfo(
+        return new(
             WorkbookId: resourceId,
             DisplayName: properties.ValueKind != JsonValueKind.Undefined && properties.TryGetProperty("displayName", out var displayName)
                 ? displayName.GetString() : null,
@@ -578,7 +575,7 @@ public class WorkbooksService(
 
     private static WorkbookInfo CreateWorkbookInfo(ApplicationInsightsWorkbookResource workbook, string fallbackId)
     {
-        return new WorkbookInfo(
+        return new(
             WorkbookId: workbook.Id?.ToString() ?? fallbackId,
             DisplayName: workbook.Data.DisplayName,
             Description: workbook.Data.Description,
@@ -598,21 +595,21 @@ public class WorkbooksService(
         return ex switch
         {
             RequestFailedException { Status: 404 } =>
-                new WorkbookError(resourceId, 404, $"Workbook not found. Verify the ID exists and you have access: {resourceId}"),
+                new(resourceId, 404, $"Workbook not found. Verify the ID exists and you have access: {resourceId}"),
 
             RequestFailedException { Status: 403 } reqEx =>
-                new WorkbookError(resourceId, 403, $"Authorization denied. Required role: Workbook Contributor. Details: {reqEx.Message}"),
+                new(resourceId, 403, $"Authorization denied. Required role: Workbook Contributor. Details: {reqEx.Message}"),
 
             RequestFailedException { Status: 409 } =>
-                new WorkbookError(resourceId, 409, "Conflict: Workbook was modified by another process. Retry with updated etag."),
+                new(resourceId, 409, "Conflict: Workbook was modified by another process. Retry with updated etag."),
 
-            Azure.Identity.AuthenticationFailedException =>
-                new WorkbookError(resourceId, 401, "Authentication failed. Run 'az login' to authenticate."),
+            Identity.AuthenticationFailedException =>
+                new(resourceId, 401, "Authentication failed. Run 'az login' to authenticate."),
 
             ArgumentException argEx =>
-                new WorkbookError(resourceId, 400, $"Invalid parameter: {argEx.Message}"),
+                new(resourceId, 400, $"Invalid parameter: {argEx.Message}"),
 
-            _ => new WorkbookError(resourceId, 500, $"Unexpected error: {ex.Message}")
+            _ => new(resourceId, 500, $"Unexpected error: {ex.Message}")
         };
     }
 

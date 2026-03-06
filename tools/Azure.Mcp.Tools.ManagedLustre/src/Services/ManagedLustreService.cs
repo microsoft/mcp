@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -10,17 +9,22 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.ResourceManager.Models;
-using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
+using Microsoft.Extensions.Logging;
 
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
-public sealed class ManagedLustreService(ISubscriptionService subscriptionService, IResourceGroupService resourceGroupService, ITenantService tenantService) : BaseAzureService(tenantService), IManagedLustreService
+public sealed class ManagedLustreService(
+    ISubscriptionService subscriptionService,
+    IResourceGroupService resourceGroupService,
+    ITenantService tenantService,
+    ILogger<ManagedLustreService> logger) : BaseAzureService(tenantService), IManagedLustreService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
+    private readonly ILogger<ManagedLustreService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<LustreFileSystem>> ListFileSystemsAsync(
         string subscription,
@@ -55,22 +59,23 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing AMLFS file systems in subscription '{subscription}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing AMLFS file systems in subscription '{Subscription}'", subscription);
+            throw;
         }
 
         return results;
     }
 
-    private static Models.AutoimportJob MapAutoimportJob(AutoImportJobResource job)
+    private static AutoimportJob MapAutoimportJob(AutoImportJobResource job)
     {
         var data = job.Data;
-        return new Models.AutoimportJob
+        return new()
         {
             Name = data.Name,
             Id = data.Id?.ToString(),
             Type = data.ResourceType.ToString(),
             Location = data.Location.ToString(),
-            Properties = new Models.AutoimportJobProperties
+            Properties = new()
             {
                 ProvisioningState = data.ProvisioningState?.ToString(),
                 AutoImportPrefixes = data.AutoImportPrefixes?.ToArray(),
@@ -78,7 +83,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 EnableDeletions = data.EnableDeletions,
                 MaximumErrors = (int?)data.MaximumErrors,
                 AdminStatus = data.AdminStatus?.ToString(),
-                Status = new Models.AutoimportJobStatus
+                Status = new()
                 {
                     State = data.State?.ToString(),
                     StatusCode = data.StatusCode?.ToString(),
@@ -95,7 +100,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                     TotalErrors = data.TotalErrors,
                     TotalConflicts = data.TotalConflicts,
                     LastStartedTimeUTC = data.LastStartedTimeUTC?.DateTime,
-                    BlobSyncEvents = data.BlobSyncEvents != null ? new Models.BlobSyncEvents
+                    BlobSyncEvents = data.BlobSyncEvents != null ? new()
                     {
                         ImportedFiles = data.BlobSyncEvents.ImportedFiles,
                         ImportedDirectories = data.BlobSyncEvents.ImportedDirectories,
@@ -115,21 +120,21 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         };
     }
 
-    private static Models.AutoexportJob MapAutoexportJob(AutoExportJobResource job)
+    private static AutoexportJob MapAutoexportJob(AutoExportJobResource job)
     {
         var data = job.Data;
-        return new Models.AutoexportJob
+        return new()
         {
             Name = data.Name,
             Id = data.Id?.ToString(),
             Type = data.ResourceType.ToString(),
             Location = data.Location.ToString(),
-            Properties = new Models.AutoexportJobProperties
+            Properties = new()
             {
                 ProvisioningState = data.ProvisioningState?.ToString(),
                 AutoExportPrefixes = data.AutoExportPrefixes?.ToArray(),
                 AdminStatus = data.AdminStatus?.ToString(),
-                Status = new Models.AutoexportJobStatus
+                Status = new()
                 {
                     State = data.State?.ToString(),
                     TotalFilesExported = data.TotalFilesExported,
@@ -147,23 +152,23 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         };
     }
 
-    private static Models.ImportJob MapImportJob(StorageCacheImportJobResource job)
+    private static ImportJob MapImportJob(StorageCacheImportJobResource job)
     {
         var data = job.Data;
-        return new Models.ImportJob
+        return new()
         {
             Name = data.Name,
             Id = data.Id?.ToString(),
             Type = data.ResourceType.ToString(),
             Location = data.Location.ToString(),
-            Properties = new Models.ImportJobProperties
+            Properties = new()
             {
                 ProvisioningState = data.ProvisioningState?.ToString(),
                 ImportPrefixes = data.ImportPrefixes?.ToArray(),
                 ConflictResolutionMode = data.ConflictResolutionMode?.ToString(),
                 MaximumErrors = data.MaximumErrors,
                 AdminStatus = data.AdminStatus?.ToString(),
-                Status = new Models.ImportJobStatus
+                Status = new()
                 {
                     State = data.State?.ToString(),
                     TotalBlobsWalked = data.TotalBlobsWalked,
@@ -180,7 +185,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
     private static LustreFileSystem Map(AmlFileSystemResource fs)
     {
         var data = fs.Data;
-        return new LustreFileSystem(
+        return new(
             data.Name,
             fs.Id.ToString(),
             fs.Id.ResourceGroupName,
@@ -213,21 +218,19 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var name = cap?.Name;
             if (string.IsNullOrWhiteSpace(name))
                 continue;
-            list.Add(new ManagedLustreSkuCapability(name!, cap?.Value ?? string.Empty));
+            list.Add(new(name!, cap?.Value ?? string.Empty));
         }
         return list;
     }
 
     private static AmlFileSystemPropertiesMaintenanceWindow GenerateMaintenanceWindow(string maintenanceDay, string maintenanceTime)
     {
-        MaintenanceDayOfWeekType dayEnum;
-
-        if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
+        if (!Enum.TryParse(maintenanceDay, true, out MaintenanceDayOfWeekType dayEnum))
         {
             throw new ArgumentException($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
         }
 
-        return new AmlFileSystemPropertiesMaintenanceWindow
+        return new()
         {
             DayOfWeek = dayEnum,
             TimeOfDayUTC = maintenanceTime
@@ -270,7 +273,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                     throw new ArgumentException("squash-gid must be a non-negative integer.");
                 }
 
-                rootSquashSettings = new AmlFileSystemRootSquashSettings
+                rootSquashSettings = new()
                 {
                     Mode = modeParsed,
                     NoSquashNidLists = noSquashNidLists,
@@ -299,14 +302,14 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 hsmSettings.ImportPrefix = importPrefix;
             }
 
-            return new AmlFileSystemPropertiesHsm
+            return new()
             {
                 Settings = hsmSettings
             };
         }
         else
         {
-            return new AmlFileSystemPropertiesHsm
+            return new()
             {
                 Settings = null
             };
@@ -333,7 +336,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving required subnet size: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving required subnet size.");
+            throw;
         }
     }
 
@@ -371,7 +375,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                         continue;
                     var supportsZones = (locationInfo?.Zones?.Count ?? 0) > 1;
 
-                    results.Add(new ManagedLustreSkuInfo(name, foundLocation, supportsZones, [.. capabilities]));
+                    results.Add(new(name, foundLocation, supportsZones, [.. capabilities]));
                 }
             }
 
@@ -379,7 +383,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Azure Managed Lustre SKUs for subscription '{subscription}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Azure Managed Lustre SKUs for subscription '{Subscription}'", subscription);
+            throw;
         }
     }
 
@@ -410,19 +415,18 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription),
-        (nameof(resourceGroup), resourceGroup),
-        (nameof(name), name),
-        (nameof(location), location),
-        (nameof(sku), sku),
-        (nameof(subnetId), subnetId)
-        );
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(name), name),
+            (nameof(location), location),
+            (nameof(sku), sku),
+            (nameof(subnetId), subnetId));
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Subscription '{subscription}' not found");
 
-        var data = new AmlFileSystemData(new AzureLocation(location))
+        var data = new AmlFileSystemData(new(location))
         {
             SkuName = sku,
             StorageCapacityTiB = sizeTiB,
@@ -457,7 +461,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to validate availability zones for location '{location}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error validating availability zones for location '{Location}'", location);
+            throw;
         }
 
         data.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
@@ -471,18 +476,16 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             {
                 throw new Exception("Both key-url and source-vault must be provided when custom-encryption is enabled.");
             }
-            data.KeyEncryptionKey = new StorageCacheEncryptionKeyVaultKeyReference(
-                new Uri(keyUrl!),
-                new WritableSubResource { Id = new ResourceIdentifier(sourceVaultId!) });
+            data.KeyEncryptionKey = new(new(keyUrl), new() { Id = new(sourceVaultId!) });
 
             // Assign user-assigned managed identity for Key Vault access
             if (!string.IsNullOrWhiteSpace(userAssignedIdentityId))
             {
-                data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned)
+                data.Identity = new(ManagedServiceIdentityType.UserAssigned)
                 {
                     UserAssignedIdentities =
                     {
-                        [new ResourceIdentifier(userAssignedIdentityId)] = new UserAssignedIdentity()
+                        [new(userAssignedIdentityId)] = new()
                     }
                 };
 
@@ -496,13 +499,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var fileSystemResource = createOperationResult.Value;
             return Map(fileSystemResource);
         }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to create AML file system '{name}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create AML file system '{name}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to create AML file system '{FileSystem}'.", name);
+            throw;
         }
     }
 
@@ -536,7 +536,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             {
                 var maintenanceWindowConfiguration = GenerateMaintenanceWindow(maintenanceDay, maintenanceTime);
 
-                patch.MaintenanceWindow = new AmlFileSystemUpdatePropertiesMaintenanceWindow
+                patch.MaintenanceWindow = new()
                 {
                     DayOfWeek = maintenanceWindowConfiguration.DayOfWeek,
                     TimeOfDayUTC = maintenanceWindowConfiguration.TimeOfDayUTC
@@ -552,13 +552,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
             return Map(updateOperation.Value);
         }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to update AML file system '{name}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to update AML file system '{name}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to update AML file system '{FileSystem}'.", name);
+            throw;
         }
     }
 
@@ -598,14 +595,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         catch (Exception ex)
         {
             if (ex is RequestFailedException rfe &&
-                ((HttpStatusCode)rfe.Status == HttpStatusCode.BadRequest &&
-                rfe.Message.Contains("a subnet with a minimum size of", StringComparison.OrdinalIgnoreCase)))
+                (HttpStatusCode)rfe.Status == HttpStatusCode.BadRequest &&
+                rfe.Message.Contains("a subnet with a minimum size of", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
             else
             {
-                throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
+                _logger.LogError(ex, "Error validating AMLFS subnet.");
+                throw;
             }
 
         }
@@ -675,13 +673,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return createOperation.Value.Data.Name;
         }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to create auto export job for filesystem '{FileSystem}'.", filesystemName);
+            throw;
         }
     }
 
@@ -725,15 +720,17 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Auto export job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+            _logger.LogWarning(rfe, "Auto export job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
         catch (RequestFailedException rfe)
         {
-            throw new Exception($"Failed to cancel auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogError(rfe, "Failed to cancel auto export job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
-    public async Task<Models.AutoexportJob> GetAutoexportJobAsync(
+    public async Task<AutoexportJob> GetAutoexportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -742,10 +739,11 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
-        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
 
         try
         {
@@ -760,21 +758,19 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return MapAutoexportJob(job.Value);
         }
-        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Autoexport job '{jobName}' not found for filesystem '{filesystemName}' in resource group '{resourceGroup}'.", rfe);
-        }
-        catch (Azure.RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to get auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Autoexport job '{JobName}' not found for filesystem '{FileSystemName}' in resource group '{ResourceGroup}'.", jobName, filesystemName, resourceGroup);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get auto export job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
-    public async Task<List<Models.AutoexportJob>> ListAutoexportJobsAsync(
+    public async Task<List<AutoexportJob>> ListAutoexportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -782,9 +778,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
 
         try
         {
@@ -795,7 +792,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
 
             // Get all auto export jobs
-            var jobs = new List<Models.AutoexportJob>();
+            var jobs = new List<AutoexportJob>();
             await foreach (var job in fs.Value.GetAutoExportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
                 jobs.Add(MapAutoexportJob(job));
@@ -803,17 +800,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return jobs;
         }
-        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'.", rfe);
-        }
-        catch (Azure.RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Filesystem '{FileSystemName}' not found in resource group '{ResourceGroup}'.", filesystemName, resourceGroup);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list auto export jobs for filesystem '{FileSystemName}'.", filesystemName);
+            throw;
         }
     }
 
@@ -850,15 +845,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Auto export job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
-        }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to delete auto export job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Auto export job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to delete auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to delete auto export job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
@@ -952,13 +945,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return createOperation.Value.Data.Name;
         }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to create auto import job for filesystem '{FileSystemName}'.", filesystemName);
+            throw;
         }
     }
 
@@ -1002,15 +992,17 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Auto import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+            _logger.LogWarning(rfe, "Auto import job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
-        catch (RequestFailedException rfe)
+        catch (Exception rfe)
         {
-            throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogError(rfe, "Failed to cancel auto import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
-    public async Task<Models.AutoimportJob> GetAutoimportJobAsync(
+    public async Task<AutoimportJob> GetAutoimportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -1019,10 +1011,11 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
-        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
 
         try
         {
@@ -1037,21 +1030,19 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return MapAutoimportJob(job.Value);
         }
-        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Autoimport job '{jobName}' not found for filesystem '{filesystemName}' in resource group '{resourceGroup}'.", rfe);
-        }
-        catch (Azure.RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Auto import job '{JobName}' not found for filesystem '{FileSystemName}' in resource group '{ResourceGroup}'.", jobName, filesystemName, resourceGroup);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get auto import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
-    public async Task<List<Models.AutoimportJob>> ListAutoimportJobsAsync(
+    public async Task<List<AutoimportJob>> ListAutoimportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -1059,9 +1050,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
 
         try
         {
@@ -1072,7 +1064,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
 
             // Get all auto import jobs
-            var jobs = new List<Models.AutoimportJob>();
+            var jobs = new List<AutoimportJob>();
             await foreach (var job in fs.Value.GetAutoImportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
                 jobs.Add(MapAutoimportJob(job));
@@ -1080,17 +1072,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return jobs;
         }
-        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'.", rfe);
-        }
-        catch (Azure.RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to list auto import jobs for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Filesystem '{FileSystemName}' not found in resource group '{ResourceGroup}'.", filesystemName, resourceGroup);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list auto import jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list auto import jobs for filesystem '{FileSystemName}'.", filesystemName);
+            throw;
         }
     }
 
@@ -1127,15 +1117,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Auto import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
-        }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to delete auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Auto import job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to delete auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to delete auto import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
@@ -1210,7 +1198,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create import job for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to create import job for filesystem '{FileSystemName}'.", filesystemName);
+            throw;
         }
     }
 
@@ -1251,17 +1240,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             // Return successfully rather than throwing an error
             return;
         }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to delete import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to delete import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to delete import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
         }
     }
 
-    public async Task<List<Models.ImportJob>> ListImportJobsAsync(
+    public async Task<List<ImportJob>> ListImportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -1269,9 +1254,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
 
         try
         {
@@ -1287,7 +1273,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             }
 
             // Get all import jobs
-            var jobs = new List<Models.ImportJob>();
+            var jobs = new List<ImportJob>();
             await foreach (var job in fs.Value.GetStorageCacheImportJobs().GetAllAsync(cancellationToken: cancellationToken))
             {
                 jobs.Add(MapImportJob(job));
@@ -1297,11 +1283,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list import jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list import jobs for filesystem '{FileSystemName}'.", filesystemName);
+            throw;
         }
     }
 
-    public async Task<Models.ImportJob> GetImportJobAsync(
+    public async Task<ImportJob> GetImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -1310,10 +1297,11 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
-        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
-        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+        ValidateRequiredParameters(
+             (nameof(subscription), subscription),
+             (nameof(resourceGroup), resourceGroup),
+             (nameof(filesystemName), filesystemName),
+             (nameof(jobName), jobName));
 
         try
         {
@@ -1333,17 +1321,14 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
             return MapImportJob(job.Value);
         }
-        catch (Azure.RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to get import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 
-    public async Task<Models.ImportJob> CancelImportJobAsync(
+    public async Task<ImportJob> CancelImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -1387,15 +1372,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
-            throw new Exception($"Import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
-        }
-        catch (RequestFailedException rfe)
-        {
-            throw new Exception($"Failed to cancel import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+            _logger.LogWarning(rfe, "Import job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to cancel import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to cancel import job '{JobName}' for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
         }
     }
 }

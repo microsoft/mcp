@@ -11,12 +11,18 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
-public class GrafanaService(ISubscriptionService subscriptionService, ITenantService tenantService)
+public class GrafanaService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    ILogger<GrafanaService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IGrafanaService
 {
+    private readonly ILogger<GrafanaService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     public async Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? tenant = null,
@@ -39,7 +45,8 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Grafana workspaces: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Grafana workspaces.");
+            throw;
         }
     }
 
@@ -50,15 +57,14 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
     /// <returns>The Grafana workspace model</returns>
     private static GrafanaWorkspace ConvertToWorkspaceModel(JsonElement item)
     {
-        var grafanaWorkspace = ManagedGrafanaData.FromJson(item);
-        if (grafanaWorkspace == null)
-            throw new InvalidOperationException("Failed to parse Grafana workspace data");
+        var grafanaWorkspace = ManagedGrafanaData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse Grafana workspace data");
 
         if (string.IsNullOrEmpty(grafanaWorkspace.ResourceId))
             throw new InvalidOperationException("Resource ID is missing");
         var id = new ResourceIdentifier(grafanaWorkspace.ResourceId);
 
-        return new GrafanaWorkspace(
+        return new(
             Name: grafanaWorkspace.ResourceName,
             ResourceGroupName: id.ResourceGroupName,
             SubscriptionId: id.SubscriptionId,
@@ -69,9 +75,9 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
             ZoneRedundancy: grafanaWorkspace.Properties?.ZoneRedundancy,
             PublicNetworkAccess: grafanaWorkspace.Properties?.PublicNetworkAccess,
             GrafanaVersion: grafanaWorkspace.Properties?.GrafanaVersion,
-            Identity: grafanaWorkspace.Identity is null ? null : new ManagedIdentityInfo
+            Identity: grafanaWorkspace.Identity is null ? null : new()
             {
-                SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                SystemAssignedIdentity = new()
                 {
                     Enabled = grafanaWorkspace.Identity != null,
                     TenantId = grafanaWorkspace.Identity?.TenantId?.ToString(),
@@ -84,6 +90,6 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
                         PrincipalId = identity.Value.PrincipalId?.ToString()
                     }).ToArray()
             },
-            Tags: grafanaWorkspace.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+            Tags: grafanaWorkspace.Tags?.ToDictionary());
     }
 }
