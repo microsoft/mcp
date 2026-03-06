@@ -4,6 +4,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,7 +12,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp;
 
 [Trait("Command", "WebappGetCommand")]
-public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
     [Fact]

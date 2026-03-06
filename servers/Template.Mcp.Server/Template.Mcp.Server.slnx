@@ -12,6 +12,9 @@
   <Folder Name="/core/Template.Mcp.Core/src/">
     <Project Path="../../core/Template.Mcp.Core/src/Template.Mcp.Core.csproj" />
   </Folder>
+  <Folder Name="/core/Template.Mcp.Core/tests/">
+    <Project Path="../../core/Template.Mcp.Core/tests/Template.Mcp.Tests/Template.Mcp.Tests.csproj" />
+  </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Template.Mcp.Server/" />
   <Folder Name="/servers/Template.Mcp.Server/src/">
