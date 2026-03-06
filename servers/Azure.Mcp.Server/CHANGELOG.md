@@ -12,7 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-## 2.0.0-beta.25 (Unreleased)
+## 2.0.0-beta.25 (2026-03-06)
 
 ### Features Added
 
