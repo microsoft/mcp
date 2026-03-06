@@ -33,6 +33,7 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
                 subscription,
                 retryPolicy,
                 ConvertToWorkspaceModel,
+                tenant: tenant,
                 cancellationToken: cancellationToken);
 
             return workspaces;

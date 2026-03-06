@@ -35,6 +35,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
                 subscription,
                 retryPolicy,
                 ConvertToAcrRegistryInfoModel,
+                tenant: tenant,
                 cancellationToken: cancellationToken);
 
             return registries;
@@ -65,6 +66,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
                         retryPolicy: retryPolicy,
                         converter: ConvertToAcrRegistryInfoModel,
                         additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
+                        tenant: tenant,
                         cancellationToken: cancellationToken);
             if (registrie == null)
             {
