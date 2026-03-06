@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.StorageSync.Models;
+using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.StorageSync;
 using Azure.ResourceManager.StorageSync.Models;
 using Microsoft.Extensions.Logging;
@@ -39,20 +36,19 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
             var services = new List<StorageSyncServiceDataSchema>();
 
             if (!string.IsNullOrEmpty(resourceGroup))
             {
-                Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
+                ResourceGroupResource resourceGroupResource;
                 try
                 {
                     var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                     resourceGroupResource = response.Value;
                 }
-                catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+                catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning(reqEx,
                         "Resource group not found when listing Storage Sync services. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -102,14 +98,13 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
             return StorageSyncServiceDataSchema.FromResource(serviceResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx,
                 "Storage Sync service not found. Service: {Service}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -139,17 +134,15 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(location), location)
-        );
+            (nameof(location), location));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            var content = new Azure.ResourceManager.StorageSync.Models.StorageSyncServiceCreateOrUpdateContent(new Azure.Core.AzureLocation(location));
+            var content = new StorageSyncServiceCreateOrUpdateContent(new(location));
             if (tags != null)
             {
                 foreach (var tag in tags)
@@ -193,18 +186,16 @@ public sealed class StorageSyncService(
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(storageSyncServiceName), storageSyncServiceName)
-        );
+            (nameof(storageSyncServiceName), storageSyncServiceName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var patch = new Azure.ResourceManager.StorageSync.Models.StorageSyncServicePatch();
+            var patch = new StorageSyncServicePatch();
 
             // Update incoming traffic policy
             if (!string.IsNullOrEmpty(incomingTrafficPolicy))
@@ -224,8 +215,7 @@ public sealed class StorageSyncService(
             // Update identity
             if (!string.IsNullOrEmpty(identityType))
             {
-                var identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                    new Azure.ResourceManager.Models.ManagedServiceIdentityType(identityType));
+                var identity = new ResourceManager.Models.ManagedServiceIdentity(new(identityType));
                 patch.Identity = identity;
             }
 
@@ -257,14 +247,12 @@ public sealed class StorageSyncService(
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(storageSyncServiceName), storageSyncServiceName)
-        );
+            (nameof(storageSyncServiceName), storageSyncServiceName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
@@ -295,14 +283,12 @@ public sealed class StorageSyncService(
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(storageSyncServiceName), storageSyncServiceName)
-        );
+            (nameof(storageSyncServiceName), storageSyncServiceName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
@@ -334,21 +320,19 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(syncGroupName), syncGroupName)
-        );
+            (nameof(syncGroupName), syncGroupName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
             return SyncGroupDataSchema.FromResource(syncGroupResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx, "Sync Group not found: {SyncGroup}", syncGroupName);
             return null;
@@ -373,18 +357,16 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(syncGroupName), syncGroupName)
-        );
+            (nameof(syncGroupName), syncGroupName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var content = new Azure.ResourceManager.StorageSync.Models.StorageSyncGroupCreateOrUpdateContent();
+            var content = new StorageSyncGroupCreateOrUpdateContent();
             var operation = await serviceResource.Value.GetStorageSyncGroups().CreateOrUpdateAsync(WaitUntil.Completed, syncGroupName, content, cancellationToken);
 
             _logger.LogInformation("Successfully created Sync Group: {SyncGroup}", syncGroupName);
@@ -410,14 +392,12 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(syncGroupName), syncGroupName)
-        );
+            (nameof(syncGroupName), syncGroupName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -447,14 +427,12 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(syncGroupName), syncGroupName)
-        );
+            (nameof(syncGroupName), syncGroupName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -489,14 +467,12 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(cloudEndpointName), cloudEndpointName)
-        );
+            (nameof(cloudEndpointName), cloudEndpointName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -504,7 +480,7 @@ public sealed class StorageSyncService(
 
             return CloudEndpointDataSchema.FromResource(endpointResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx, "Cloud Endpoint not found: {Endpoint}", cloudEndpointName);
             return null;
@@ -535,14 +511,12 @@ public sealed class StorageSyncService(
             (nameof(syncGroupName), syncGroupName),
             (nameof(cloudEndpointName), cloudEndpointName),
             (nameof(storageAccountResourceId), storageAccountResourceId),
-            (nameof(azureFileShareName), azureFileShareName)
-        );
+            (nameof(azureFileShareName), azureFileShareName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
             // Get subscription data to access tenant ID
             var subscriptionData = await subscriptionResource.GetAsync(cancellationToken);
@@ -562,9 +536,9 @@ public sealed class StorageSyncService(
                 storageAccountTenantId = subscriptionData.Value.Data.TenantId.Value;
             }
 
-            var content = new Azure.ResourceManager.StorageSync.Models.CloudEndpointCreateOrUpdateContent
+            var content = new CloudEndpointCreateOrUpdateContent
             {
-                StorageAccountResourceId = new Azure.Core.ResourceIdentifier(storageAccountResourceId),
+                StorageAccountResourceId = new(storageAccountResourceId),
                 AzureFileShareName = azureFileShareName,
                 StorageAccountTenantId = storageAccountTenantId
             };
@@ -596,14 +570,12 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(cloudEndpointName), cloudEndpointName)
-        );
+            (nameof(cloudEndpointName), cloudEndpointName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -639,20 +611,18 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
             (nameof(cloudEndpointName), cloudEndpointName),
-            (nameof(directoryPath), directoryPath)
-        );
+            (nameof(directoryPath), directoryPath));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
             var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
 
-            var content = new Azure.ResourceManager.StorageSync.Models.TriggerChangeDetectionContent
+            var content = new TriggerChangeDetectionContent
             {
                 DirectoryPath = directoryPath
             };
@@ -660,7 +630,7 @@ public sealed class StorageSyncService(
             // Set change detection mode if provided
             if (!string.IsNullOrEmpty(changeDetectionMode))
             {
-                content.ChangeDetectionMode = new Azure.ResourceManager.StorageSync.Models.ChangeDetectionMode(changeDetectionMode);
+                content.ChangeDetectionMode = new(changeDetectionMode);
             }
 
             // Add paths if provided
@@ -697,14 +667,12 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(syncGroupName), syncGroupName)
-        );
+            (nameof(syncGroupName), syncGroupName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -739,14 +707,12 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(serverEndpointName), serverEndpointName)
-        );
+            (nameof(serverEndpointName), serverEndpointName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -754,7 +720,7 @@ public sealed class StorageSyncService(
 
             return ServerEndpointDataSchema.FromResource(endpointResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx, "Server Endpoint not found: {Endpoint}", serverEndpointName);
             return null;
@@ -789,27 +755,25 @@ public sealed class StorageSyncService(
             (nameof(syncGroupName), syncGroupName),
             (nameof(serverEndpointName), serverEndpointName),
             (nameof(serverResourceId), serverResourceId),
-            (nameof(serverLocalPath), serverLocalPath)
-        );
+            (nameof(serverLocalPath), serverLocalPath));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
-            var content = new Azure.ResourceManager.StorageSync.Models.StorageSyncServerEndpointCreateOrUpdateContent
+            var content = new StorageSyncServerEndpointCreateOrUpdateContent
             {
-                ServerResourceId = new Azure.Core.ResourceIdentifier(serverResourceId),
+                ServerResourceId = new(serverResourceId),
                 ServerLocalPath = serverLocalPath
             };
 
             if (enableCloudTiering.HasValue)
             {
-                content.CloudTiering = enableCloudTiering.Value ? Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.On : Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.Off;
+                content.CloudTiering = enableCloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
             }
             if (volumeFreeSpacePercent.HasValue)
             {
@@ -856,23 +820,21 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(serverEndpointName), serverEndpointName)
-        );
+            (nameof(serverEndpointName), serverEndpointName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
             var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
 
-            var patch = new Azure.ResourceManager.StorageSync.Models.StorageSyncServerEndpointPatch();
+            var patch = new StorageSyncServerEndpointPatch();
             if (cloudTiering.HasValue)
             {
-                patch.CloudTiering = cloudTiering.Value ? Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.On : Azure.ResourceManager.StorageSync.Models.StorageSyncFeatureStatus.Off;
+                patch.CloudTiering = cloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
             }
             if (volumeFreeSpacePercent.HasValue)
             {
@@ -884,7 +846,7 @@ public sealed class StorageSyncService(
             }
             if (!string.IsNullOrEmpty(localCacheMode))
             {
-                patch.LocalCacheMode = new LocalCacheMode(localCacheMode);
+                patch.LocalCacheMode = new(localCacheMode);
             }
 
             var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
@@ -914,14 +876,12 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName),
-            (nameof(serverEndpointName), serverEndpointName)
-        );
+            (nameof(serverEndpointName), serverEndpointName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
@@ -950,14 +910,12 @@ public sealed class StorageSyncService(
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(storageSyncServiceName), storageSyncServiceName)
-        );
+            (nameof(storageSyncServiceName), storageSyncServiceName));
 
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
@@ -989,8 +947,7 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(registeredServerId), registeredServerId)
-        );
+            (nameof(registeredServerId), registeredServerId));
 
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
@@ -998,15 +955,14 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
 
             return RegisteredServerDataSchema.FromResource(serverResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx, "Registered Server not found: {Server}", registeredServerId);
             return null;
@@ -1031,8 +987,7 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(registeredServerId), registeredServerId)
-        );
+            (nameof(registeredServerId), registeredServerId));
 
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
@@ -1040,12 +995,11 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var content = new Azure.ResourceManager.StorageSync.Models.StorageSyncRegisteredServerCreateOrUpdateContent();
+            var content = new StorageSyncRegisteredServerCreateOrUpdateContent();
             var operation = await serviceResource.Value.GetStorageSyncRegisteredServers().CreateOrUpdateAsync(
                 WaitUntil.Completed, serverGuid, content, cancellationToken);
 
@@ -1073,8 +1027,7 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(registeredServerId), registeredServerId)
-        );
+            (nameof(registeredServerId), registeredServerId));
 
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
@@ -1082,13 +1035,12 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
 
-            var patch = new Azure.ResourceManager.StorageSync.Models.StorageSyncRegisteredServerPatch();
+            var patch = new StorageSyncRegisteredServerPatch();
             // Add any patch-specific logic here if needed
 
             var operation = await serverResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
@@ -1116,8 +1068,7 @@ public sealed class StorageSyncService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName),
-            (nameof(registeredServerId), registeredServerId)
-        );
+            (nameof(registeredServerId), registeredServerId));
 
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
@@ -1125,8 +1076,7 @@ public sealed class StorageSyncService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
             var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
@@ -47,6 +48,14 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
     {
         base.RegisterOptions(command);
         command.Options.Add(WorkbooksOptionDefinitions.WorkbookIds);
+        command.Validators.Add(result =>
+        {
+            var workbookIds = result.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
+            if (workbookIds == null || workbookIds.Length == 0)
+            {
+                result.AddError("At least one workbook ID is required");
+            }
+        });
     }
 
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
@@ -67,20 +76,15 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 
         try
         {
-            if (options.WorkbookIds == null || options.WorkbookIds.Length == 0)
-            {
-                throw new ArgumentException("At least one workbook ID is required");
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var result = await workbooksService.GetWorkbooksAsync(
-                options.WorkbookIds,
+                options.WorkbookIds!,
                 options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ShowWorkbooksCommandResult(result.Succeeded.ToList(), result.Failed.ToList()),
+                new([.. result.Succeeded], [.. result.Failed]),
                 WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }
         catch (Exception ex)

@@ -8,7 +8,6 @@ using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Storage.Commands;
@@ -78,11 +77,12 @@ public class StorageService(
                     throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
                 }
 
-                return new ResourceQueryResults<StorageAccountInfo>([storageAccount], false);
+                return new([storageAccount], false);
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving Storage Account details for '{Account}'.", account);
+                throw;
             }
         }
     }
@@ -111,17 +111,17 @@ public class StorageService(
             ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, retryPolicy, cancellationToken);
 
             // Prepare data
-            ResourceIdentifier accountId = new ResourceIdentifier($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
+            ResourceIdentifier accountId = new($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
             var createContent = new StorageAccountCreateOrUpdateContent
             {
-                Sku = new ResourceSku
+                Sku = new()
                 {
                     Name = string.IsNullOrEmpty(sku) ? "Standard_LRS" : ParseStorageSkuName(sku),
                     Tier = "Standard"
                 },
                 Kind = "StorageV2",
                 Location = location,
-                Properties = new StorageAccountProperties
+                Properties = new()
                 {
                     AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                     EnableHttpsTrafficOnly = true,
@@ -140,7 +140,7 @@ public class StorageService(
                 cancellationToken);
             if (!result.HasData)
             {
-                return new StorageAccountResult(
+                return new(
                     HasData: false,
                     Id: null,
                     Name: null,
@@ -153,7 +153,7 @@ public class StorageService(
             }
             else
             {
-                return new StorageAccountResult(
+                return new(
                     HasData: true,
                     Id: result.Data.Id.ToString(),
                     Name: result.Data.Name,
@@ -167,7 +167,8 @@ public class StorageService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating Storage account '{account}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating Storage Account '{Account}'.", account);
+            throw;
         }
     }
 
@@ -220,7 +221,8 @@ public class StorageService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error listing blobs: {ex.Message}", ex);
+                _logger.LogError(ex, "Error listing blobs in container '{Container}' of account '{Account}'.", container, account);
+                throw;
             }
         }
         else
@@ -255,7 +257,8 @@ public class StorageService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error getting blob details: {ex.Message}", ex);
+                _logger.LogError(ex, "Error getting blob details for blob '{Blob}' in container '{Container}' of account '{Account}'.", blob, container, account);
+                throw;
             }
         }
 
@@ -300,7 +303,8 @@ public class StorageService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error listing containers: {ex.Message}", ex);
+                _logger.LogError(ex, "Error listing containers in account '{Account}'.", account);
+                throw;
             }
         }
         else
@@ -328,7 +332,8 @@ public class StorageService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error getting container details: {ex.Message}", ex);
+                _logger.LogError(ex, "Error getting container details for container '{Container}' in account '{Account}'.", container, account);
+                throw;
             }
         }
 
@@ -373,7 +378,8 @@ public class StorageService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating container: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating container '{Container}' in account '{Account}'.", container, account);
+            throw;
         }
     }
 
@@ -386,7 +392,7 @@ public class StorageService(
         var uri = GetBlobEndpoint(account);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
-        return new BlobServiceClient(new Uri(uri), await GetCredential(tenant, cancellationToken), options);
+        return new BlobServiceClient(new(uri), await GetCredential(tenant, cancellationToken), options);
     }
 
     private static string ParseStorageSkuName(string sku)
@@ -453,7 +459,7 @@ public class StorageService(
         using var fileStream = File.OpenRead(localFilePath);
         var response = await blobClient.UploadAsync(fileStream, false, cancellationToken);
 
-        return new BlobUploadResult(
+        return new(
             Blob: blob,
             Container: container,
             UploadedFile: localFilePath,
@@ -465,11 +471,10 @@ public class StorageService(
 
     private static StorageAccountInfo ConvertToAccountInfoModel(JsonElement item)
     {
-        StorageAccountData? storageAccount = StorageAccountData.FromJson(item);
-        if (storageAccount == null)
-            throw new InvalidOperationException("Failed to parse storage account data");
+        StorageAccountData? storageAccount = StorageAccountData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse storage account data");
 
-        return new StorageAccountInfo(
+        return new(
             Name: storageAccount.ResourceName ?? "Unknown",
             Location: storageAccount.Location,
             Kind: storageAccount.Kind,
@@ -492,7 +497,7 @@ public class StorageService(
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
         var defaultUri = GetTableEndpoint(account);
-        return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant, cancellationToken), options);
+        return new TableServiceClient(new(defaultUri), await GetCredential(tenant, cancellationToken), options);
     }
 
     public async Task<List<string>> ListTables(
@@ -524,7 +529,8 @@ public class StorageService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing tables: {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing tables in account '{Account}'.", account);
+            throw;
         }
     }
 

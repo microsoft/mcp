@@ -58,29 +58,30 @@ public sealed class KustoService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Kusto clusters: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Kusto clusters.");
+            throw;
         }
     }
 
     public async Task<KustoClusterModel> GetClusterAsync(
-            string subscriptionId,
-            string clusterName,
-            string? tenant = null,
-            RetryPolicyOptions? retryPolicy = null,
-            CancellationToken cancellationToken = default)
+        string subscriptionId,
+        string clusterName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
         try
         {
             var cluster = await ExecuteSingleResourceQueryAsync(
-                        "Microsoft.Kusto/clusters",
-                        resourceGroup: null, // all resource groups
-                        subscription: subscriptionId,
-                        retryPolicy: retryPolicy,
-                        converter: ConvertToClusterModel,
-                        additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
-                        cancellationToken: cancellationToken);
+                "Microsoft.Kusto/clusters",
+                resourceGroup: null, // all resource groups
+                subscription: subscriptionId,
+                retryPolicy: retryPolicy,
+                converter: ConvertToClusterModel,
+                additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
+                cancellationToken: cancellationToken);
 
             if (cluster == null)
             {
@@ -208,14 +209,14 @@ public sealed class KustoService(
     }
 
     public async Task<List<JsonElement>> QueryItemsAsync(
-            string subscriptionId,
-            string clusterName,
-            string databaseName,
-            string query,
-            string? tenant = null,
-            AuthMethod? authMethod = AuthMethod.Credential,
-            RetryPolicyOptions? retryPolicy = null,
-            CancellationToken cancellationToken = default)
+        string subscriptionId,
+        string clusterName,
+        string databaseName,
+        string query,
+        string? tenant = null,
+        AuthMethod? authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscriptionId), subscriptionId),
@@ -287,7 +288,7 @@ public sealed class KustoService(
         return result;
     }
 
-    private List<string> KustoResultToStringList(KustoResult kustoResult)
+    private static List<string> KustoResultToStringList(KustoResult kustoResult)
     {
         var result = new List<string>();
         if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
@@ -305,7 +306,7 @@ public sealed class KustoService(
             return result;
         }
         var columns = columnsElement.EnumerateArray()
-            .Select(column => ($"{column.GetProperty("ColumnName").GetString()}:{column.GetProperty("ColumnType").GetString()}"));
+            .Select(column => $"{column.GetProperty("ColumnName").GetString()}:{column.GetProperty("ColumnType").GetString()}");
         var columnsAsString = string.Join(",", columns);
         result.Add(columnsAsString);
         if (!table.TryGetProperty("Rows", out var items) || items.ValueKind != JsonValueKind.Array)
@@ -372,15 +373,14 @@ public sealed class KustoService(
     /// <returns>The cluster model</returns>
     private static KustoClusterModel ConvertToClusterModel(JsonElement item)
     {
-        Models.KustoClusterData? kustoCluster = Models.KustoClusterData.FromJson(item);
-        if (kustoCluster == null)
-            throw new InvalidOperationException("Failed to parse Kusto cluster data");
+        Models.KustoClusterData? kustoCluster = Models.KustoClusterData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse Kusto cluster data");
 
         if (string.IsNullOrEmpty(kustoCluster.ResourceId))
             throw new InvalidOperationException("Resource ID is missing");
         var id = new ResourceIdentifier(kustoCluster.ResourceId);
 
-        return new KustoClusterModel(
+        return new(
             ClusterName: kustoCluster.ResourceName ?? "Unknown",
             Location: kustoCluster.Location,
             ResourceGroupName: id.ResourceGroupName,

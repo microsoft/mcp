@@ -11,14 +11,20 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorWebTestService(ISubscriptionService subscriptionService, ITenantService tenantService, IResourceGroupService resourceGroupService)
+public class MonitorWebTestService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    IResourceGroupService resourceGroupService,
+    ILogger<MonitorWebTestService> logger)
     : BaseAzureService(tenantService), IMonitorWebTestService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ILogger<MonitorWebTestService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
@@ -26,8 +32,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -50,7 +55,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error retrieving web tests: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving web tests.");
+            throw;
         }
     }
 
@@ -88,7 +94,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error retrieving web tests: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving web tests.");
+            throw;
         }
     }
     public async Task<WebTestDetailedInfo> GetWebTest(
@@ -126,7 +133,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             var parsedHeaders = ParseHeadersFromRawResponse(webTest.GetRawResponse());
             PatchRequestWithCorrectedHeaders(webTestData.Request, parsedHeaders);
 
-            return new WebTestDetailedInfo
+            return new()
             {
                 ResourceName = webTestData.Name,
                 Location = webTestData.Location.ToString(),
@@ -151,7 +158,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error retrieving web test {resourceName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving web test {ResourceName}.", resourceName);
+            throw;
         }
     }
 
@@ -217,13 +225,13 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                 Description = description,
                 Request = new WebTestRequest
                 {
-                    RequestUri = new Uri(requestUrl),
+                    RequestUri = new(requestUrl),
                     HttpVerb = (httpVerb ?? HttpMethod.Get.ToString()).ToUpperInvariant(),
                     RequestBody = requestBody,
                     FollowRedirects = followRedirects,
                     ParseDependentRequests = parseRequests
                 },
-                ValidationRules = new WebTestValidationRules
+                ValidationRules = new()
                 {
                     ExpectedHttpStatusCode = expectedStatusCode,
                     IgnoreHttpStatusCode = ignoreStatusCode,
@@ -236,9 +244,9 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
 
             foreach (var webTestLocation in locations)
             {
-                webTestData.Locations.Add(new WebTestGeolocation
+                webTestData.Locations.Add(new()
                 {
-                    Location = new AzureLocation(webTestLocation)
+                    Location = new(webTestLocation)
                 });
             }
 
@@ -246,7 +254,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             {
                 foreach (var headerKey in headers.Keys)
                 {
-                    webTestData.Request.Headers.Add(new WebTestRequestHeaderField()
+                    webTestData.Request.Headers.Add(new()
                     {
                         HeaderFieldName = headerKey,
                         HeaderFieldValue = headers[headerKey]
@@ -272,7 +280,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
             PatchRequestWithCorrectedHeaders(createdWebTest.Request, parsedHeaders);
 
-            return new WebTestDetailedInfo
+            return new()
             {
                 ResourceName = createdWebTest.Name,
                 Location = createdWebTest.Location.ToString(),
@@ -297,7 +305,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error creating web test {resourceName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating web test {ResourceName}.", resourceName);
+            throw;
         }
     }
 
@@ -362,7 +371,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                 TimeoutInSeconds = timeoutInSeconds ?? currentData.TimeoutInSeconds,
                 IsRetryEnabled = retryEnabled ?? currentData.IsRetryEnabled,
                 Description = description ?? currentData.Description,
-                Request = new WebTestRequest
+                Request = new()
                 {
                     RequestUri = requestUrl != null ? new Uri(requestUrl) : currentData.Request?.RequestUri,
                     HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
@@ -370,7 +379,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                     FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
                     ParseDependentRequests = parseRequests ?? currentData.Request?.ParseDependentRequests
                 },
-                ValidationRules = new WebTestValidationRules
+                ValidationRules = new()
                 {
                     ExpectedHttpStatusCode = expectedStatusCode ?? currentData.ValidationRules?.ExpectedHttpStatusCode,
                     IgnoreHttpStatusCode = ignoreStatusCode ?? currentData.ValidationRules?.IgnoreHttpStatusCode,
@@ -392,9 +401,9 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             {
                 foreach (var webTestLocation in locations)
                 {
-                    webTestData.Locations.Add(new WebTestGeolocation
+                    webTestData.Locations.Add(new()
                     {
-                        Location = new AzureLocation(webTestLocation)
+                        Location = new(webTestLocation)
                     });
                 }
             }
@@ -412,7 +421,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             {
                 foreach (var headerKey in headers.Keys)
                 {
-                    webTestData.Request.Headers.Add(new WebTestRequestHeaderField()
+                    webTestData.Request.Headers.Add(new()
                     {
                         HeaderFieldName = headerKey,
                         HeaderFieldValue = headers[headerKey]
@@ -446,7 +455,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
             var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
             PatchRequestWithCorrectedHeaders(updatedWebTest.Request, parsedHeaders);
 
-            return new WebTestDetailedInfo
+            return new()
             {
                 ResourceName = updatedWebTest.Name,
                 Location = updatedWebTest.Location.ToString(),
@@ -471,7 +480,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
-            throw new Exception($"Error updating web test {resourceName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating web test {ResourceName}.", resourceName);
+            throw;
         }
     }
 
@@ -494,7 +504,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                     {
                         string key = keyElement.GetString()!;
                         string value = valueElement.GetString()!;
-                        headers.Add(new WebTestRequestHeaderField
+                        headers.Add(new()
                         {
                             HeaderFieldName = key,
                             HeaderFieldValue = value
@@ -527,5 +537,5 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         return hiddenLinkMatch?.Groups[1].Value;
     }
 
-    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = new Regex("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = new("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

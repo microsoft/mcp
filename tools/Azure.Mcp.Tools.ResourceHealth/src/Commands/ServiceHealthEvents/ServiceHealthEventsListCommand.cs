@@ -41,6 +41,9 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         Secret = false
     };
 
+    private static readonly string[] validEventTypes = ["Incident", "Maintenance", "Advisory", "Security"];
+    private static readonly string[] validStatuses = ["Active", "Resolved"];
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -57,7 +60,6 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate event-type enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
             {
-                var validEventTypes = new[] { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
                 if (!validEventTypes.Contains(eventType, StringComparer.OrdinalIgnoreCase))
                 {
                     commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
@@ -67,7 +69,6 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate status enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
             {
-                var validStatuses = new[] { "Active", "Resolved" };
                 if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
                 {
                     commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");

@@ -18,18 +18,21 @@ using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
 public sealed class SearchService(
     ISubscriptionService subscriptionService,
     ICacheService cacheService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<SearchService> logger)
     : BaseAzureService(tenantService), ISearchService
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<SearchService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
     private static readonly TimeSpan s_cacheDurationServices = TimeSpan.FromHours(1);
@@ -69,7 +72,8 @@ public sealed class SearchService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Search services: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Search services.");
+            throw;
         }
 
         return services;
@@ -98,7 +102,8 @@ public sealed class SearchService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving Search indexes: {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving Search indexes for service {ServiceName}.", serviceName);
+                throw;
             }
         }
         else
@@ -112,7 +117,8 @@ public sealed class SearchService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving Search index details: {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving Search index {IndexName} for service {ServiceName}.", indexName, serviceName);
+                throw;
             }
         }
 
@@ -153,7 +159,8 @@ public sealed class SearchService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error querying Search index: {ex.Message}", ex);
+            _logger.LogError(ex, "Error querying Search index {IndexName} for service {ServiceName}.", indexName, serviceName);
+            throw;
         }
     }
 
@@ -174,7 +181,7 @@ public sealed class SearchService(
             {
                 await foreach (var source in searchClient.GetKnowledgeSourcesAsync(cancellationToken: cancellationToken))
                 {
-                    sources.Add(new KnowledgeSourceInfo(source.Name, source.GetType().Name, source.Description));
+                    sources.Add(new(source.Name, source.GetType().Name, source.Description));
                 }
             }
             else
@@ -182,7 +189,7 @@ public sealed class SearchService(
                 var result = await searchClient.GetKnowledgeSourceAsync(knowledgeSourceName, cancellationToken: cancellationToken);
                 if (result?.Value != null)
                 {
-                    sources.Add(new KnowledgeSourceInfo(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
+                    sources.Add(new(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
                 }
             }
 
@@ -190,7 +197,8 @@ public sealed class SearchService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Search knowledge sources: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Search knowledge sources for service {ServiceName}.", serviceName);
+            throw;
         }
     }
 
@@ -211,7 +219,7 @@ public sealed class SearchService(
             {
                 await foreach (var knowledgeBase in searchClient.GetKnowledgeBasesAsync(cancellationToken: cancellationToken))
                 {
-                    bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
+                    bases.Add(new(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
                 }
             }
             else
@@ -221,7 +229,7 @@ public sealed class SearchService(
                 {
                     if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
                     {
-                        bases.Add(new KnowledgeBaseInfo(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
+                        bases.Add(new(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
                     }
                 }
             }
@@ -230,7 +238,8 @@ public sealed class SearchService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Search knowledge bases: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Search knowledge bases for service {ServiceName}.", serviceName);
+            throw;
         }
     }
 
@@ -269,7 +278,8 @@ public sealed class SearchService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving data from knowledge base {BaseName} in service {ServiceName}.", baseName, serviceName);
+            throw;
         }
     }
 
@@ -294,13 +304,13 @@ public sealed class SearchService(
         {
             foreach ((string role, string message) in messages)
             {
-                request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
+                request.Messages.Add(new([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
             }
 
             return request;
         }
 
-        request.Messages.Add(new KnowledgeBaseMessage([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
+        request.Messages.Add(new([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
         return request;
     }
 

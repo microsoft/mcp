@@ -70,9 +70,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
 
         var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
-        TokenCredential tokenCredential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, cancellationToken);
+        var tokenCredential = await GetCredential(cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
         return accessToken.Token;
     }
 

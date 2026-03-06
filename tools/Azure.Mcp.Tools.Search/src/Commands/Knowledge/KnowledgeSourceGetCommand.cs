@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
@@ -86,5 +85,5 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         return context.Response;
     }
 
-    internal sealed record KnowledgeSourceGetCommandResult([property: JsonPropertyName("knowledgeSources")] List<Models.KnowledgeSourceInfo> KnowledgeSources);
+    internal sealed record KnowledgeSourceGetCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
 }

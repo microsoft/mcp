@@ -16,10 +16,14 @@ using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.RedisEnterprise;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(ISubscriptionService _subscriptionService, ITenantService _tenantService)
+public class RedisService(
+    ISubscriptionService _subscriptionService,
+    ITenantService _tenantService,
+    ILogger<RedisService> _logger)
     : BaseAzureService(_tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
@@ -61,7 +65,8 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Redis resources: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Redis resources.");
+            throw;
         }
     }
 
@@ -116,10 +121,10 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
 
             var parameters = new RedisCreateParameters
             {
-                ResourceName = new BicepParameter() { Value = name },
-                Location = new BicepParameter() { Value = location },
-                SkuName = new BicepParameter() { Value = sku },
-                AccessKeyAuthenticationEnabled = new BicepParameter() { Value = accessKeyAuthenticationString },
+                ResourceName = new() { Value = name },
+                Location = new() { Value = location },
+                SkuName = new() { Value = sku },
+                AccessKeyAuthenticationEnabled = new() { Value = accessKeyAuthenticationString },
                 Modules = requestedModules
             };
 
@@ -135,11 +140,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 .CreateOrUpdateAsync(
                 WaitUntil.Started,
                 $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-                new ArmDeploymentContent(deploymentProperties),
+                new(deploymentProperties),
                 cancellationToken
             );
 
-            return new Resource
+            return new()
             {
                 Name = name,
                 Type = "AzureManagedRedis",
@@ -152,11 +157,12 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating Redis resource: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating Redis resource.");
+            throw;
         }
     }
 
-    private async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -216,9 +222,9 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 PrivateEndpointConnections = resource.PrivateEndpointConnections.Any() ?
                     [.. resource.PrivateEndpointConnections.Select(connection => connection.Id.ToString())]
                     : null,
-                Identity = resource.Identity is null ? null : new ManagedIdentityInfo
+                Identity = resource.Identity is null ? null : new()
                 {
-                    SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                    SystemAssignedIdentity = new()
                     {
                         Enabled = resource.Identity != null,
                         TenantId = resource.Identity?.TenantId?.ToString(),
@@ -260,7 +266,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         return resources;
     }
 
-    private async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -327,9 +333,9 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 PrivateEndpointConnections = resource.PrivateEndpointConnections.Any() ?
                     [.. resource.PrivateEndpointConnections.Select(connection => connection.Id.ToString())]
                     : null,
-                Identity = resource.Identity is null ? null : new ManagedIdentityInfo
+                Identity = resource.Identity is null ? null : new()
                 {
-                    SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                    SystemAssignedIdentity = new()
                     {
                         Enabled = resource.Identity != null,
                         TenantId = resource.Identity?.TenantId?.ToString(),
@@ -344,7 +350,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 },
                 Zones = resource.Zones?.Any() == true ? [.. resource.Zones] : null,
                 Tags = resource.Tags.Any() ? resource.Tags : null,
-                Databases = databases.Any() == true ? databases.ToArray() : null
+                Databases = databases.Count != 0 == true ? [.. databases] : null
             });
         }
 

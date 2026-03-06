@@ -9,13 +9,18 @@ using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(
+    ITenantService tenantService,
+    IHttpClientFactory httpClientFactory,
+    ILogger<KeyVaultService> logger) : BaseAzureService(tenantService), IKeyVaultService
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ILogger<KeyVaultService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<string>> ListKeys(
         string vaultName,
@@ -40,7 +45,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving keys from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving keys from vault {VaultName}.", vaultName);
+            throw;
         }
 
         return keys;
@@ -65,7 +71,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving key '{keyName}' from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving key '{KeyName}' from vault {VaultName}.", keyName, vaultName);
+            throw;
         }
     }
 
@@ -90,7 +97,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating key '{keyName}' in vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating key '{KeyName}' in vault {VaultName}.", keyName, vaultName);
+            throw;
         }
     }
 
@@ -116,7 +124,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving secrets from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving secrets from vault {VaultName}.", vaultName);
+            throw;
         }
 
         return secrets;
@@ -142,7 +151,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating secret '{secretName}' in vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating secret '{SecretName}' in vault {VaultName}.", secretName, vaultName);
+            throw;
         }
     }
 
@@ -161,12 +171,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
 
         try
         {
-            var response = await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
-            return response.Value;
+            return await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving secret '{secretName}' from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving secret '{SecretName}' from vault {VaultName}.", secretName, vaultName);
+            throw;
         }
     }
 
@@ -192,7 +202,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving certificates from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving certificates from vault {VaultName}.", vaultName);
+            throw;
         }
 
         return certificates;
@@ -217,7 +228,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving certificate '{certificateName}' from vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving certificate '{CertificateName}' from vault {VaultName}.", certificateName, vaultName);
+            throw;
         }
     }
 
@@ -240,7 +252,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating certificate '{certificateName}' in vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating certificate '{CertificateName}' in vault {VaultName}.", certificateName, vaultName);
+            throw;
         }
     }
 
@@ -299,7 +312,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error importing certificate '{certificateName}' into vault {vaultName}: {ex.Message}", ex);
+            _logger.LogError(ex, "Error importing certificate '{CertificateName}' into vault {VaultName}.", certificateName, vaultName);
+            throw;
         }
     }
 
@@ -343,7 +357,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         var options = new KeyClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new KeyClient(vaultUri, credential, options);
+        return new(vaultUri, credential, options);
     }
 
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
@@ -354,7 +368,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         var options = new SecretClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new SecretClient(vaultUri, credential, options);
+        return new(vaultUri, credential, options);
     }
 
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
@@ -365,7 +379,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         var options = new CertificateClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new CertificateClient(vaultUri, credential, options);
+        return new(vaultUri, credential, options);
     }
 
     public async Task<GetSettingsResult> GetVaultSettings(
@@ -386,7 +400,8 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientFac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Managed HSM administration settings for '{vaultName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error retrieving Managed HSM administration settings for vault {VaultName}.", vaultName);
+            throw;
         }
     }
 }

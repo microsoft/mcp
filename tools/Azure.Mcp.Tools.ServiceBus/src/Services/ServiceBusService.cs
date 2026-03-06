@@ -27,7 +27,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName, cancellationToken)).Value;
         var properties = (await client.GetQueueAsync(queueName, cancellationToken)).Value;
 
-        return new QueueDetails
+        return new()
         {
             DefaultMessageTimeToLive = properties.DefaultMessageTimeToLive,
             EnablePartitioning = properties.EnablePartitioning,
@@ -67,7 +67,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName, cancellationToken)).Value;
         var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName, cancellationToken)).Value;
 
-        return new SubscriptionDetails
+        return new()
         {
             ActiveMessageCount = runtimeProperties.ActiveMessageCount,
             DeadLetteringOnMessageExpiration = properties.DeadLetteringOnMessageExpiration,
@@ -100,7 +100,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName, cancellationToken)).Value;
         var properties = (await client.GetTopicAsync(topicName, cancellationToken)).Value;
 
-        return new TopicDetails
+        return new()
         {
             DefaultMessageTimeToLive = properties.DefaultMessageTimeToLive,
             EnablePartitioning = properties.EnablePartitioning,
@@ -123,7 +123,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(queueName))
@@ -143,7 +143,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(topicName, subscriptionName))

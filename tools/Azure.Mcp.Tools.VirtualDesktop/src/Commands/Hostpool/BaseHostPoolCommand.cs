@@ -24,8 +24,8 @@ public abstract class BaseHostPoolCommand<
         command.Validators.Add(commandResult =>
         {
             // Retrieve values once and infer presence from non-empty values
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPool, out string? hostPoolName);
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption, out string? hostPoolResourceId);
+            var hostPoolName = commandResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPool.Name);
+            var hostPoolResourceId = commandResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption.Name);
 
             var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
             var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);

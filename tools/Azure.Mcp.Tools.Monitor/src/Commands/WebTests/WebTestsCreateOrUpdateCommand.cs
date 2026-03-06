@@ -176,7 +176,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 }
 
                 var locationsArray = options.Locations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
+                var headersDictionary = options.Headers == null ? [] : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
                 webTest = await monitorWebTestService.CreateWebTest(
                     subscription: options.Subscription!,
