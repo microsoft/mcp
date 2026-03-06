@@ -412,6 +412,22 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_get | Show me my Azure function apps |
 | functionapp_get | What function apps do I have? |
 
+## Azure Functions Templates
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| functiontemplates_language_list | What languages does Azure Functions support? |
+| functiontemplates_language_list | Compare all Azure Functions languages side by side |
+| functiontemplates_language_list | What runtime versions are available for Azure Functions? |
+| functiontemplates_project_get | Set up a new Azure Functions project in Python |
+| functiontemplates_project_get | Generate the project files for a TypeScript Azure Functions app |
+| functiontemplates_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
+| functiontemplates_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functiontemplates_template_get | Show me all the Python Azure Function templates |
+| functiontemplates_template_get | Create a Timer trigger function in C# that runs every 5 minutes? |
+| functiontemplates_template_get | Show me a Cosmos DB trigger with an output binding in Java |
+| functiontemplates_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
