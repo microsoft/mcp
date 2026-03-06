@@ -63,7 +63,7 @@ public class RecommendationListCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
+            .Returns(Task.FromResult<IEnumerable<JsonNode>>([]));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
         await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Null(_context.Response.Results);

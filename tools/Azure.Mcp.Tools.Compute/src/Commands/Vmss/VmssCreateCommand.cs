@@ -93,7 +93,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
             }
 
             // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)
-            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) 
+            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
                 && commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name)?.Length > 9)
             {
                 commandResult.AddError(

@@ -72,9 +72,8 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ScaleInPolicy.Name)) &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)))
             {
-                throw new CommandValidationException(
-                    "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.",
-                    HttpStatusCode.BadRequest);
+                commandResult.AddError(
+                    "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.");
             }
         });
     }

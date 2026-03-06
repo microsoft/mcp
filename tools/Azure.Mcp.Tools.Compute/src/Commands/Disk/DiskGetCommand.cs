@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// <summary>
 /// Command to get details of an Azure managed disk.
 /// </summary>
-public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger,IComputeService computeService)
+public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeService computeService)
     : BaseComputeCommand<DiskGetOptions>(false)
 {
     private const string CommandTitle = "Get Disk Details";
