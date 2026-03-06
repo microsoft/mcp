@@ -19,9 +19,15 @@
         "description": "The base resource name."
       }
     },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location of the resource. By default, this is the same as the resource group."
+      }
+    },
     "testApplicationOid": {
       "type": "string",
-      "defaultValue": "[deployer().objectId]",
       "metadata": {
         "description": "The client OID to grant access to test resources."
       }
@@ -42,7 +48,7 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_D2s_v6",
+      "defaultValue": "Standard_B2s",
       "metadata": {
         "description": "The VM size to use for testing."
       }
@@ -97,7 +103,7 @@
     },
     "vm": {
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vm', parameters('baseName'))]",
       "location": "[variables('location')]",
       "properties": {
@@ -117,7 +123,7 @@
               "storageAccountType": "Standard_LRS"
             }
           },
-          "diskControllerType": "NVMe"
+          "diskControllerType": "SCSI"
         },
         "osProfile": {
           "computerName": "[format('{0}-vm', parameters('baseName'))]",
@@ -148,7 +154,7 @@
     },
     "vmss": {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vmss', parameters('baseName'))]",
       "location": "[variables('location')]",
       "sku": {
@@ -175,7 +181,7 @@
                 "storageAccountType": "Standard_LRS"
               }
             },
-            "diskControllerType": "NVMe"
+            "diskControllerType": "SCSI"
           },
           "osProfile": {
             "computerNamePrefix": "[format('{0}-', parameters('baseName'))]",
