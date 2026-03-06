@@ -116,7 +116,7 @@ internal class Program
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
-            new Azure.Mcp.Tools.FunctionsTemplate.FunctionTemplatesSetup(),
+            new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),

@@ -199,11 +199,11 @@
 # ServiceLabel: %tools-FunctionApp
 # ServiceOwners:                      @jongio
 
-# PRLabel: %tools-FunctionsTemplate
-/tools/Azure.Mcp.Tools.FunctionsTemplate/   @manvkaur @microsoft/azure-mcp
+# PRLabel: %tools-Functions
+/tools/Azure.Mcp.Tools.Functions/   @manvkaur @vrdmr @microsoft/azure-mcp
 
-# ServiceLabel: %tools-FunctionsTemplate
-# ServiceOwners:                             @manvkaur
+# ServiceLabel: %tools-Functions
+# ServiceOwners:                             @manvkaur @vrdmr
 
 # PRLabel: %tools-Grafana
 /tools/Azure.Mcp.Tools.Grafana/        @weng5e @xiangyan99 @microsoft/azure-mcp

@@ -97,9 +97,9 @@
         }
       },
       "mappedToolList": [
-        "functiontemplates_language_list",
-        "functiontemplates_project_get",
-        "functiontemplates_template_get"
+        "functions_language_list",
+        "functions_project_get",
+        "functions_template_get"
       ]
     },
     {

@@ -398,17 +398,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| functiontemplates_language_list | What languages does Azure Functions support? |
-| functiontemplates_language_list | Compare all Azure Functions languages side by side |
-| functiontemplates_language_list | What runtime versions are available for Azure Functions? |
-| functiontemplates_project_get | Set up a new Azure Functions project in Python |
-| functiontemplates_project_get | Generate the project files for a TypeScript Azure Functions app |
-| functiontemplates_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
-| functiontemplates_template_get | What triggers and bindings are available for C# Azure Functions? |
-| functiontemplates_template_get | Show me all the Python Azure Function templates |
-| functiontemplates_template_get | Create a Timer trigger function in C# that runs every 5 minutes? |
-| functiontemplates_template_get | Show me a Cosmos DB trigger with an output binding in Java |
-| functiontemplates_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
+| functions_language_list | What languages does Azure Functions support? |
+| functions_language_list | Compare all Azure Functions languages side by side |
+| functions_language_list | What runtime versions are available for Azure Functions? |
+| functions_project_get | Set up a new Azure Functions project in Python |
+| functions_project_get | Generate the project files for a TypeScript Azure Functions app |
+| functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
+| functions_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functions_template_get | Show me all the Python Azure Function templates |
+| functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes? |
+| functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
+| functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 
