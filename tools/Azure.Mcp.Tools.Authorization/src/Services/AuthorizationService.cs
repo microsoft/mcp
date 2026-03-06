@@ -30,7 +30,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         try
         {
             var scopeId = new ResourceIdentifier(scope!);
-            var roleAssignments = await ExecuteResourceQueryAsync(
+            return await ExecuteResourceQueryAsync(
                 "Microsoft.Authorization/roleAssignments",
                 null, // all resource groups
                 subscription,
@@ -39,14 +39,10 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
                 "authorizationresources",
                 additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
                 cancellationToken: cancellationToken);
-
-            return roleAssignments;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "Error retrieving role assignments for scope '{Scope}' and tenant '{Tenant}'",
-                scope, tenantId);
+            _logger.LogError(ex, "Error retrieving role assignments for scope '{Scope}' and tenant '{Tenant}'", scope, tenantId);
             throw;
         }
     }
@@ -58,11 +54,10 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     /// <returns>The role assignment model</returns>
     private static RoleAssignment ConvertToRoleAssignmentModel(JsonElement item)
     {
-        RoleAssignmentData? roleAssignmentData = RoleAssignmentData.FromJson(item);
-        if (roleAssignmentData == null)
-            throw new InvalidOperationException("Failed to parse role assignment data");
+        RoleAssignmentData? roleAssignmentData = RoleAssignmentData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse role assignment data");
 
-        return new RoleAssignment
+        return new()
         {
             Id = roleAssignmentData.ResourceId,
             Name = roleAssignmentData.ResourceName,

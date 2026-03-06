@@ -76,14 +76,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 // Get subscriptions from all topics in the subscription or resource group
                 await GetSubscriptionsFromAllTopics(subscriptionResource, resourceGroup, location, subscriptions, cancellationToken);
             }
+
+            return subscriptions;
         }
         catch (Exception ex)
         {
-            // Log the actual error instead of swallowing it
-            throw new InvalidOperationException($"Failed to retrieve EventGrid subscriptions: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to retrieve EventGrid subscriptions.");
+            throw;
         }
-
-        return subscriptions;
     }
 
     public async Task<EventPublishResult> PublishEventAsync(
@@ -180,14 +180,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static IEnumerable<Models.EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
     {
         try
         {
             // Parse the JSON data
             using var jsonDocument = JsonDocument.Parse(eventData);
 
-            IEnumerable<Models.EventGridEventSchema> events;
+            IEnumerable<EventGridEventSchema> events;
 
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
@@ -198,7 +198,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             else
             {
                 // Handle single event - return single item enumerable
-                events = new[] { CreateEventGridEventFromJsonElement(jsonDocument.RootElement, eventSchema) };
+                events = [CreateEventGridEventFromJsonElement(jsonDocument.RootElement, eventSchema)];
             }
 
             var eventsList = events.ToList();
@@ -215,7 +215,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static Models.EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
+    private static EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
     {
         var eventJson = eventElement.GetRawText();
 
@@ -235,7 +235,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 }
             }
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = cloudEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
@@ -251,7 +251,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             if (eventGridEvent == null)
                 throw new ArgumentException("Failed to deserialize EventGrid event");
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = eventGridEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = eventGridEvent.Subject ?? "/default/subject",
@@ -267,7 +267,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             if (flexibleEvent == null)
                 throw new ArgumentException("Failed to deserialize custom event");
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = flexibleEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
@@ -306,8 +306,8 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
         catch (Exception ex)
         {
-            // Log and re-throw to preserve error information
-            throw new InvalidOperationException($"Failed to get subscriptions for topic '{topicName}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get subscriptions for topic '{TopicName}'.", topicName);
+            throw;
         }
     }
 
@@ -392,8 +392,8 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
         catch (Exception ex)
         {
-            // Log and re-throw to preserve error information
-            throw new InvalidOperationException($"Failed to get subscriptions from all topics in resource group '{resourceGroup}': {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get subscriptions from all topics in resource group '{ResourceGroup}'.", resourceGroup);
+            throw;
         }
     }
 
@@ -483,7 +483,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
     private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
     {
-        return new EventGridTopicInfo(
+        return new(
             Name: topicData.Name,
             Location: topicData.Location.ToString(),
             Endpoint: topicData.Endpoint?.ToString(),
@@ -538,7 +538,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             filterInfo = filterDetails.Any() ? string.Join("; ", filterDetails) : null;
         }
 
-        return new EventGridSubscriptionInfo(
+        return new(
             Name: subscriptionData.Name,
             Type: subscriptionData.ResourceType.ToString(),
             EndpointType: endpointType,

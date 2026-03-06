@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -80,8 +75,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                var singleResult = new SnapshotGetCommandResult([snapshot]);
-                context.Response.Results = ResponseResult.Create(singleResult, FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([snapshot]), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
                 _logger.LogInformation("Successfully retrieved snapshot. SnapshotName: {SnapshotName}", options.SnapshotName);
             }
@@ -99,8 +93,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                var result = new SnapshotGetCommandResult(snapshots ?? []);
-                context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(snapshots ?? []), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
                 _logger.LogInformation("Successfully listed {Count} snapshots for file share {FileShareName}", snapshots?.Count ?? 0, options.FileShareName);
             }
@@ -114,5 +107,5 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
         return context.Response;
     }
 
-    internal record SnapshotGetCommandResult([property: JsonPropertyName("snapshots")] List<FileShareSnapshotInfo> Snapshots);
+    internal record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
 }

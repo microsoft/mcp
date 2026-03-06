@@ -66,9 +66,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = insights?.Count() > 0 ?
-                ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(insights ?? []), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult);
         }
         catch (Exception ex)
         {

@@ -41,7 +41,8 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving container registries: {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing Container Registries for subscription '{Subscription}'", subscription);
+            throw;
         }
     }
 
@@ -59,13 +60,14 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         try
         {
             var registrie = await ExecuteSingleResourceQueryAsync(
-                        "Microsoft.ContainerRegistry/registries",
-                        resourceGroup: resourceGroup,
-                        subscription: subscription,
-                        retryPolicy: retryPolicy,
-                        converter: ConvertToAcrRegistryInfoModel,
-                        additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
-                        cancellationToken: cancellationToken);
+                "Microsoft.ContainerRegistry/registries",
+                resourceGroup: resourceGroup,
+                subscription: subscription,
+                retryPolicy: retryPolicy,
+                converter: ConvertToAcrRegistryInfoModel,
+                additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
+                cancellationToken: cancellationToken);
+
             if (registrie == null)
             {
                 throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
@@ -74,9 +76,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "Error retrieving Container registry '{RegistryName}' for subscription '{Subscription}'",
-                registry, subscription);
+            _logger.LogError(ex, "Error retrieving Container Registry '{Registry}' for subscription '{Subscription}'", registry, subscription);
             throw;
         }
     }
@@ -96,9 +96,9 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
-        var repoNames = new List<string>();
         try
         {
+            var repoNames = new List<string>();
             await foreach (var repo in client.GetRepositoryNamesAsync(cancellationToken))
             {
                 if (!string.IsNullOrWhiteSpace(repo))
@@ -106,13 +106,14 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
                     repoNames.Add(repo);
                 }
             }
-        }
-        catch (RequestFailedException)
-        {
-            _logger.LogWarning("Failed to list repositories for registry '{RegistryName}' at '{LoginServer}'", reg.Name, reg.LoginServer);
-        }
 
-        return repoNames;
+            return repoNames;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to list repositories for registry '{RegistryName}' at '{LoginServer}'", reg.Name, reg.LoginServer);
+            throw;
+        }
     }
 
     public async Task<Dictionary<string, List<string>>> ListRegistryRepositories(
@@ -157,9 +158,8 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
     /// <returns>The Container Registry model</returns>
     private static AcrRegistryInfo ConvertToAcrRegistryInfoModel(JsonElement item)
     {
-        var containerRegistryData = Models.ContainerRegistryData.FromJson(item);
-        if (containerRegistryData == null)
-            throw new InvalidOperationException("Failed to parse Container Registry data");
+        var containerRegistryData = Models.ContainerRegistryData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse Container Registry data");
 
         return new AcrRegistryInfo
         (

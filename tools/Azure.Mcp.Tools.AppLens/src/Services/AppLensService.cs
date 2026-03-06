@@ -12,18 +12,24 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppLens.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
 
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
+public class AppLensService(
+    IHttpClientFactory httpClientFactory,
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    ILogger<AppLensService> logger) : BaseAzureService(tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly AppLensOptions _options = new AppLensOptions();
+    private readonly ILogger<AppLensService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly AppLensOptions _options = new();
 
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
@@ -37,7 +43,7 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
         // Step 1: Get the resource ID
-        var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType, cancellationToken);
+        var findResult = FindResourceId(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -66,23 +72,22 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
             foundResource.ResourceTypeAndKind);
     }
 
-    private Task<FindResourceIdResult> FindResourceIdAsync(
+    private FindResourceIdResult FindResourceId(
         string resource,
         string? subscription,
         string? resourceGroup,
-        string? resourceType,
-        CancellationToken cancellationToken)
+        string? resourceType)
     {
         // Construct a resource ID from the provided information
 
         if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(resourceGroup))
         {
-            return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
+            return new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters.");
         }
 
         var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
 
-        return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
+        return new FoundResourceResult(resourceId, resourceType ?? "Unknown", null);
     }
 
     private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
@@ -116,15 +121,14 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            AppLensSession? appLensSession;
-            appLensSession = ParseGetTokenResponse(content);
+            var appLensSession = ParseGetTokenResponse(content);
 
-            return new SuccessfulAppLensSessionResult(
-                appLensSession with { ResourceId = resourceId });
+            return new SuccessfulAppLensSessionResult(appLensSession with { ResourceId = resourceId });
         }
         catch (Exception ex)
         {
-            return new FailedAppLensSessionResult($"Failed to create AppLens session: {ex.Message}");
+            _logger.LogError(ex, "Failed to create AppLens sessions.");
+            throw;
         }
     }
 
@@ -281,7 +285,7 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
             }
         }
 
-        return new DiagnosticResult(insights, solutions, session.ResourceId, "Resource");
+        return new(insights, solutions, session.ResourceId, "Resource");
     }
 
     private static AppLensSession ParseGetTokenResponse(string rawResponse)

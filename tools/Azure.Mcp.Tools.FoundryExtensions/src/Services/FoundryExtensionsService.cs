@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
-using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models;
@@ -21,6 +19,7 @@ using Azure.Mcp.Tools.FoundryExtensions.Options.Thread;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
@@ -28,11 +27,13 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 public class FoundryExtensionsService(
     IHttpClientFactory httpClientFactory,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<FoundryExtensionsService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IFoundryExtensionsService
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ILogger<FoundryExtensionsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
@@ -63,9 +64,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new ArgumentException(
-            $"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
-            nameof(endpoint), ex);
+            throw new ArgumentException($"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
         }
     }
 
@@ -125,9 +125,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new ArgumentException(
-            $"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
-            nameof(endpoint), ex);
+            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
         }
     }
 
@@ -163,24 +162,23 @@ public class FoundryExtensionsService(
                     _ => index.GetType().Name
                 };
 
-                var knowledgeIndex = new KnowledgeIndexInformation
+                indexes.Add(new()
                 {
                     Type = indexType,
                     Id = index.Id,
                     Name = index.Name,
                     Version = index.Version,
                     Description = index.Description,
-                    Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value) ?? null
-                };
-
-                indexes.Add(knowledgeIndex);
+                    Tags = index.Tags?.ToDictionary()
+                });
             }
 
             return indexes;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list knowledge indexes: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list knowledge indexes.");
+            throw;
         }
     }
 
@@ -220,19 +218,20 @@ public class FoundryExtensionsService(
                 _ => index.GetType().Name
             };
 
-            return new KnowledgeIndexSchema
+            return new()
             {
                 Type = indexType,
                 Id = index.Id,
                 Name = index.Name,
                 Version = index.Version,
                 Description = index.Description,
-                Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value)
+                Tags = index.Tags?.ToDictionary()
             };
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get knowledge index schema: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get knowledge index schema.");
+            throw;
         }
     }
 
@@ -308,7 +307,7 @@ public class FoundryExtensionsService(
             result.Usage.OutputTokenCount,
             result.Usage.TotalTokenCount);
 
-        return new CompletionResult(completionText, usageInfo);
+        return new(completionText, usageInfo);
     }
 
     public async Task<EmbeddingResult> CreateEmbeddingsAsync(
@@ -330,8 +329,7 @@ public class FoundryExtensionsService(
             (nameof(deploymentName), deploymentName),
             (nameof(inputText), inputText),
             (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup)
-            );
+            (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
@@ -360,10 +358,7 @@ public class FoundryExtensionsService(
 
         var embeddingData = new List<EmbeddingData>
         {
-            new EmbeddingData(
-                "embedding",
-                0,
-                result.ToFloats().ToArray())
+            new("embedding", 0, result.ToFloats().ToArray())
         };
 
         // Note: Usage information might not be available in the current SDK version
@@ -373,11 +368,7 @@ public class FoundryExtensionsService(
             splitInput.Length, // Approximate token count
             splitInput.Length);
 
-        return new EmbeddingResult(
-            "list",
-            embeddingData,
-            deploymentName,
-            usageInfo);
+        return new("list", embeddingData, deploymentName, usageInfo);
     }
 
     public async Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
@@ -425,14 +416,14 @@ public class FoundryExtensionsService(
             allDeployments.Add(modelDeployment);
         }
 
-        return new OpenAiModelsListResult(allDeployments, resourceName);
+        return new(allDeployments, resourceName);
     }
 
     private static OpenAiModelCapabilities DetermineModelCapabilities(string? modelName)
     {
         if (string.IsNullOrEmpty(modelName))
         {
-            return new OpenAiModelCapabilities(false, false, false, false);
+            return new(false, false, false, false);
         }
 
         var modelNameLower = modelName.ToLowerInvariant();
@@ -443,12 +434,11 @@ public class FoundryExtensionsService(
         var isChatModel = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-4") || modelNameLower.Contains("gpt-35");
         var supportsFineTuning = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-35") || modelNameLower.Contains("davinci");
 
-        return new OpenAiModelCapabilities(
+        return new(
             Completions: isCompletionModel,
             Embeddings: isEmbeddingModel,
             ChatCompletions: isChatModel,
-            FineTuning: supportsFineTuning
-        );
+            FineTuning: supportsFineTuning);
     }
 
     public async Task<ChatCompletionResult> CreateChatCompletionsAsync(
@@ -475,8 +465,7 @@ public class FoundryExtensionsService(
             (nameof(resourceName), resourceName),
             (nameof(deploymentName), deploymentName),
             (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup)
-            );
+            (nameof(resourceGroup), resourceGroup));
 
         if (messages == null || messages.Count == 0)
         {
@@ -582,14 +571,11 @@ public class FoundryExtensionsService(
                 ToolCalls: null
             );
 
-            var choice = new ChatCompletionChoice(
+            choices.Add(new(
                 Index: i,
                 Message: chatCompletionMessage,
                 FinishReason: result.FinishReason.ToString(),
-                LogProbs: null
-            );
-
-            choices.Add(choice);
+                LogProbs: null));
         }
 
         // Create usage information
@@ -599,7 +585,7 @@ public class FoundryExtensionsService(
             TotalTokens: result.Usage?.TotalTokenCount ?? 0
         );
 
-        return new ChatCompletionResult(
+        return new(
             Id: result.Id ?? Guid.NewGuid().ToString(),
             Object: "chat.completion",
             Created: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -618,8 +604,6 @@ public class FoundryExtensionsService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        AzureOpenAIClient client;
-
         // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
         var httpClient = _httpClientFactory.CreateClient();
         var clientOptions = new AzureOpenAIClientOptions
@@ -639,16 +623,13 @@ public class FoundryExtensionsService(
                     throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
                 }
 
-                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key), clientOptions);
-                break;
+                return new(new(endpoint), new AzureKeyCredential(key), clientOptions);
 
             case AuthMethod.Credential:
             default:
-                var credential = await GetCredential(cancellationToken);
-                client = new AzureOpenAIClient(new Uri(endpoint), credential, clientOptions);
-                break;
+                var credential = await GetCredential(tenant, cancellationToken);
+                return new(new(endpoint), credential, clientOptions);
         }
-        return client;
     }
 
     private async Task<AIProjectClient> CreateAIProjectClientWithAuth(
@@ -664,7 +645,7 @@ public class FoundryExtensionsService(
             Transport = transport
         };
 
-        return new AIProjectClient(new Uri(endpoint), credential, clientOptions);
+        return new(new(endpoint), credential, clientOptions);
     }
 
     private async Task<(AIProjectClient ProjectClient, PersistentAgentsClient AgentsClient)> CreateAIProjectAndPersistentAgentsClientsAsync(
@@ -680,25 +661,17 @@ public class FoundryExtensionsService(
             Transport = transport
         };
 
-        var projectClient = new AIProjectClient(new Uri(endpoint), credential, projectClientOptions);
+        var projectClient = new AIProjectClient(new(endpoint), credential, projectClientOptions);
 
         var agentsClientOptions = new PersistentAgentsAdministrationClientOptions
         {
             Transport = transport
         };
 
-        var agentsClient = new PersistentAgentsClient(endpoint, credential, agentsClientOptions);
-
-        return (projectClient, agentsClient);
+        return (projectClient, new(endpoint, credential, agentsClientOptions));
     }
 
-    private HttpClientTransport CreateTransport()
-    {
-        var httpClient = _httpClientFactory.CreateClient();
-        var transport = new HttpClientTransport(httpClient);
-
-        return transport;
-    }
+    private HttpClientTransport CreateTransport() => new(_httpClientFactory.CreateClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,
@@ -746,7 +719,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list AI resources: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list AI resources.");
+            throw;
         }
     }
 
@@ -784,7 +758,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get AI resource: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get AI resource.");
+            throw;
         }
     }
 
@@ -818,7 +793,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Unable to list threads. Get threads request failed with: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list threads.");
+            throw;
         }
     }
 
@@ -838,10 +814,10 @@ public class FoundryExtensionsService(
         try
         {
             PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
-                [new ThreadMessageOptions(MessageRole.User, userMessage)],
+                [new(MessageRole.User, userMessage)],
                 cancellationToken: cancellationToken);
 
-            return new ThreadCreateResult()
+            return new()
             {
                 ThreadId = thread.Id,
                 ProjectEndpoint = projectEndpoint
@@ -849,7 +825,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Unable to create thread. Create thread request failed with: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to create thread.");
+            throw;
         }
     }
 
@@ -875,8 +852,8 @@ public class FoundryExtensionsService(
             {
                 messages.Add(message);
             }
-            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = ConvertMessages(messages).ToList();
-            return new ThreadGetMessagesResult()
+            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = [.. ConvertMessages(messages)];
+            return new()
             {
                 ThreadId = threadId,
                 Messages = convertedMessages
@@ -884,7 +861,8 @@ public class FoundryExtensionsService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Unable to get messages. Get messages request failed with: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to get messages for thread {ThreadId}.", threadId);
+            throw;
         }
     }
 
@@ -914,7 +892,7 @@ public class FoundryExtensionsService(
         string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
         string codeSampleText = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
 
-        return new AgentsGetSdkCodeSampleResult()
+        return new()
         {
             CodeSampleText = codeSampleText
         };
@@ -942,7 +920,7 @@ public class FoundryExtensionsService(
         {
             await foreach (var deployment in account.GetCognitiveServicesAccountDeployments().WithCancellation(cancellationToken))
             {
-                var deploymentInfo = new DeploymentInformation
+                resourceInfo.Deployments.Add(new()
                 {
                     DeploymentName = deployment.Data.Name,
                     ModelName = deployment.Data.Properties?.Model?.Name,
@@ -952,8 +930,7 @@ public class FoundryExtensionsService(
                     SkuCapacity = deployment.Data.Sku?.Capacity,
                     ScaleType = deployment.Data.Properties?.ScaleSettings?.ScaleType.ToString(),
                     ProvisioningState = deployment.Data.Properties?.ProvisioningState.ToString()
-                };
-                resourceInfo.Deployments?.Add(deploymentInfo);
+                });
             }
         }
         catch

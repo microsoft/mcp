@@ -3,12 +3,10 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -17,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
-    : BaseComputeCommand<VmssUpdateOptions>()
+    : BaseComputeCommand<VmssUpdateOptions>(true)
 {
     private const string CommandTitle = "Update Virtual Machine Scale Set";
     private readonly ILogger<VmssUpdateCommand> _logger = logger;
@@ -65,10 +63,18 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
         // Resource group is required for update
         command.Validators.Add(commandResult =>
         {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
+            // Custom validation: At least one update property must be specified
+            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name)) &&
+                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Capacity.Name).HasValue &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
+                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Overprovision.Name).HasValue &&
+                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.EnableAutoOsUpgrade.Name).HasValue &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ScaleInPolicy.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)))
             {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
+                throw new CommandValidationException(
+                    "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.",
+                    HttpStatusCode.BadRequest);
             }
         });
     }
@@ -96,20 +102,6 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Custom validation: At least one update property must be specified
-        if (string.IsNullOrEmpty(options.UpgradePolicy) &&
-            !options.Capacity.HasValue &&
-            string.IsNullOrEmpty(options.VmSize) &&
-            !options.Overprovision.HasValue &&
-            !options.EnableAutoOsUpgrade.HasValue &&
-            string.IsNullOrEmpty(options.ScaleInPolicy) &&
-            string.IsNullOrEmpty(options.Tags))
-        {
-            throw new CommandValidationException(
-                "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.",
-                HttpStatusCode.BadRequest);
-        }
-
         var computeService = context.GetService<IComputeService>();
 
         try
@@ -131,9 +123,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmssUpdateCommandResult(result),
-                ComputeJsonContext.Default.VmssUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssUpdateCommandResult);
         }
         catch (Exception ex)
         {

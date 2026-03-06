@@ -73,7 +73,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static Namespace ConvertToNamespace(EventHubsNamespaceData namespaceData, string resourceGroup)
     {
-        return new Namespace(
+        return new(
         Name: namespaceData.Name,
         Id: namespaceData.Id.ToString(),
         ResourceGroup: resourceGroup,
@@ -93,7 +93,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         MaximumThroughputUnits: namespaceData.MaximumThroughputUnits,
         KafkaEnabled: namespaceData.KafkaEnabled,
         ZoneRedundant: namespaceData.ZoneRedundant,
-        Tags: namespaceData.Tags != null ? new Dictionary<string, string>(namespaceData.Tags) : null);
+        Tags: namespaceData.Tags?.ToDictionary());
     }
 
     public async Task<Namespace> GetNamespaceAsync(
@@ -378,7 +378,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static EventHub ConvertToEventHub(EventHubData eventHub, string resourceGroup)
     {
-        return new EventHub(
+        return new(
             Name: eventHub.Name,
             Id: eventHub.Id.ToString(),
             ResourceGroup: resourceGroup,
@@ -432,10 +432,10 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
             if (messageRetentionInHours.HasValue)
             {
-                eventHubData.RetentionDescription = new Azure.ResourceManager.EventHubs.Models.RetentionDescription
+                eventHubData.RetentionDescription = new()
                 {
                     RetentionTimeInHours = messageRetentionInHours.Value,
-                    CleanupPolicy = Azure.ResourceManager.EventHubs.Models.CleanupPolicyRetentionDescription.Delete
+                    CleanupPolicy = CleanupPolicyRetentionDescription.Delete
                 };
             }
 
@@ -562,7 +562,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
             var resourceId = new ResourceIdentifier(consumerGroupResource.Id!);
 
-            return new ConsumerGroup(
+            return new(
                 Name: consumerGroupResource.Data.Name,
                 Id: consumerGroupResource.Id!,
                 ResourceGroup: resourceId.ResourceGroupName ?? resourceGroup,
@@ -763,7 +763,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static ConsumerGroup ConvertToConsumerGroup(EventHubsConsumerGroupData consumerGroupData, string resourceGroup, string namespaceName, string eventHubName)
     {
-        return new ConsumerGroup(
+        return new(
             Name: consumerGroupData.Name,
             Id: consumerGroupData.Id?.ToString() ?? string.Empty,
             ResourceGroup: resourceGroup,
