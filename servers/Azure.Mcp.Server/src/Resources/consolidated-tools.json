@@ -1527,8 +1527,8 @@
       ]
     },
     {
-      "name": "create_azure_compute_resources",
-      "description": "Create Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies. Create managed disks from scratch with a specified size or from a source such as a snapshot, another managed disk, or a blob URI. Configure storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.",
+      "name": "create_azure_compute_vms",
+      "description": "Create Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1556,9 +1556,41 @@
         }
       },
       "mappedToolList": [
-        "compute_disk_create",
         "compute_vm_create",
         "compute_vmss_create"
+      ]
+    },
+    {
+      "name": "create_azure_managed_disk",
+      "description": "Create Azure managed disks from scratch with a specified size or from a source such as a snapshot, another managed disk, or a blob URI. Configure storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates new resources which may incur costs."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may create duplicate resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates new Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_create"
       ]
     },
     {
@@ -2331,7 +2363,6 @@
         "aks_nodepool_get"
       ]
     },
-
     {
       "name": "get_azure_virtual_desktop_details",
       "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
