@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
@@ -48,7 +47,9 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected virtual void HandleException(CommandContext context, Exception ex)
     {
-        context.Activity?.SetStatus(ActivityStatusCode.Error);
+        context.Activity?.SetStatus(ActivityStatusCode.Error)
+            .SetTag(TagName.ExceptionType, ex.GetType().ToString())
+            .SetTag(TagName.ExceptionStackTrace, ex.StackTrace);
 
         var response = context.Response;
 
@@ -65,8 +66,17 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             {
                 response.Message = cve.Message;
             }
+            // Include the command validation exception message as it should be safe. Requires custom validators to
+            // exclude any sensitive information from their error messages.
+            context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
             response.Results = null;
             return;
+        }
+        else
+        {
+            // All other cases, include the status code for now until we can determine a better way to capture error
+            // details without risking PII leakage.
+            context.Activity?.SetTag(TagName.ExceptionMessage, $"Status code: {GetStatusCode(ex)}");
         }
 
         var result = new ExceptionResult(
@@ -117,6 +127,10 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
         if (!result.IsValid && commandResponse != null)
         {
+            Activity.Current?.SetStatus(ActivityStatusCode.Error)
+                .SetTag(TagName.ExceptionType, "ValidationError")
+                .SetTag(TagName.ExceptionMessage, string.Join("; ", result.Errors));
+
             commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = string.Join('\n', result.Errors);
         }
