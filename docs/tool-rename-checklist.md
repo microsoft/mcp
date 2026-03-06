@@ -1,12 +1,12 @@
 # Tool Rename Checklist
 
-This document defines the steps required when renaming an existing MCP tool (i.e., changing the value returned by a command's `Name` property or its parent group name). Tool names form part of the MCP protocol surface — they are how AI agents discover and invoke capabilities — so renames are **breaking changes** and must be handled carefully.
+This document defines the steps required when renaming an existing MCP tool (i.e., changing the value returned by a command's `Name` property or its parent group name). Tool names form part of the MCP protocol surface, they are how AI agents discover and invoke capabilities, so renames are **breaking changes** and must be handled carefully.
 
-> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`new-command.md`](../servers/Azure.Mcp.Server/docs/new-command.md) instead.
+> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) instead.
 
 ## What counts as a tool rename?
 
-A tool name is the underscore-separated string exposed to MCP clients (e.g. `storage_account_list`, `sql_db_get`). It is derived from the command hierarchy: each group and leaf command's `Name` property is joined with `_`. Changing *any* segment of that hierarchy — the service group, resource group, or operation leaf — is a rename.
+A tool name is the underscore-separated string exposed to MCP clients (e.g. `storage_account_list`, `sql_db_get`). It is derived from the command hierarchy: each group and leaf command's `Name` property is joined with `_`. Changing *any* segment of that hierarchy, the service group, resource group, or operation leaf is a rename.
 
 Examples:
 - `sql_db_get` → `sql_database_get` — rename
@@ -29,8 +29,8 @@ Examples:
 
 ### 2. Docs
 
-- [ ] Update [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](../servers/Azure.Mcp.Server/docs/azmcp-commands.md) — rename the entry and update any cross-references to the old name.
-- [ ] Update [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md) — update or add test prompts that reference the old tool name.
+- [ ] Update [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) — rename the entry and update any cross-references to the old name.
+- [ ] Update [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md) — update or add test prompts that reference the old tool name.
 - [ ] Search the entire repo for the old tool name string (e.g. `grep -r "old_tool_name"`) and update any remaining documentation, README files, or code comments found.
 
 ### 3. Recordings
@@ -64,7 +64,7 @@ A tool rename is a **breaking change** for any MCP client or agent that hard-cod
     -Description "Renamed tool `old_tool_name` to `new_tool_name`." `
     -Section "Breaking Changes"
   ```
-  See [`docs/changelog-entries.md`](changelog-entries.md) for full guidance.
+  See [`docs/changelog-entries.md`](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md) for full guidance.
 
 ### 6. Spelling
 
@@ -83,10 +83,10 @@ A tool rename is a **breaking change** for any MCP client or agent that hard-cod
 
 ## Why tool renames are breaking changes
 
-MCP clients — including AI agents, IDE extensions, and automation scripts — reference tools by their exact name. When a name changes:
+MCP clients including AI agents, IDE extensions, and automation scripts reference tools by their exact name. When a name changes:
 
 - Agents that have cached tool manifests will silently stop finding the renamed tool.
 - Users who have configured explicit tool allow-lists by name must update their configuration.
 - Recorded sessions keyed on the old name will fail playback until re-recorded.
 
-For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`new-command.md`](../servers/Azure.Mcp.Server/docs/new-command.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.
+For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.
