@@ -438,6 +438,22 @@ azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure
     --endpointId my-custom-voice-endpoint-id
 ```
 
+### Azure Skills Telemetry Operations
+
+```bash
+# Publish skills-related telemetry events from agent hooks
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp skill telemetry publish --events '<json-array-of-events>'
+
+# Example: Publish a single tool invocation event
+azmcp skill telemetry publish \
+    --events '[{"timestamp":"2026-03-03T23:11:41Z","event_type":"tool_invocation","tool_name":"azure_best_practices","session_id":"abc123"}]'
+
+# Example: Publish multiple events
+azmcp skill telemetry publish \
+    --events '[{"timestamp":"2026-03-03T23:11:41Z","event_type":"tool_invocation","tool_name":"azure_best_practices","session_id":"abc123"},{"timestamp":"2026-03-03T23:11:42Z","event_type":"tool_result","tool_name":"azure_best_practices","session_id":"abc123"}]'
+```
+
 ### Azure App Configuration Operations
 
 ```bash

@@ -398,6 +398,13 @@
     <Project Path="tools/Azure.Mcp.Tools.SignalR/tests/Azure.Mcp.Tools.SignalR.LiveTests/Azure.Mcp.Tools.SignalR.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.SignalR/tests/Azure.Mcp.Tools.SignalR.UnitTests/Azure.Mcp.Tools.SignalR.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Skills/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Skills/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Skills/src/Azure.Mcp.Tools.Skills.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Skills/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Skills/tests/Azure.Mcp.Tools.Skills.UnitTests/Azure.Mcp.Tools.Skills.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/src/">
     <Project Path="tools/Azure.Mcp.Tools.Speech/src/Azure.Mcp.Tools.Speech.csproj" />

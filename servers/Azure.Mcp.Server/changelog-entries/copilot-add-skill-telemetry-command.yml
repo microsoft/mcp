@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp skill telemetry publish` command to publish skills-related telemetry events from agent hooks in clients like VS Code, Claude, and Copilot CLI."
