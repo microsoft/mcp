@@ -1019,7 +1019,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item) 
+        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse SQL database data");
 
         return new(

@@ -81,7 +81,7 @@ public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteComman
                 cancellationToken);
 
             context.Response.Message = "Cloud endpoint deleted successfully";
-            context.Response.Results = ResponseResult.Create( new("Cloud endpoint deleted successfully"), StorageSyncJsonContext.Default.CloudEndpointDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Cloud endpoint deleted successfully"), StorageSyncJsonContext.Default.CloudEndpointDeleteCommandResult);
         }
         catch (Exception ex)
         {
