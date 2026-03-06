@@ -31,6 +31,7 @@ Examples:
 
 - [ ] Update [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) — rename the entry and update any cross-references to the old name.
 - [ ] Update [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md) — update or add test prompts that reference the old tool name.
+- [ ] Update `core/Microsoft.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` — if the renamed tool appears in any `mappedToolList` array, replace the old tool name with the new one. Also review the `description` field of the parent consolidated tool entry to ensure it still accurately describes the grouped capabilities.
 - [ ] Search the entire repo for the old tool name string (e.g. `grep -r "old_tool_name"`) and update any remaining documentation, README files, or code comments found.
 
 ### 3. Recordings
