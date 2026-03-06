@@ -32,13 +32,13 @@ function Update-Solution {
 
     Write-Host "Adding server projects and dependencies to solution" -ForegroundColor Cyan
     $serverProjects = Get-ChildItem -Path "$serverDirectory/src" -Filter "*.csproj" | Sort-Object -Property FullName
-    foreach ($project in $serverProjects) {
-        dotnet sln $slnFile add $project
-    }
+    dotnet sln $slnFile add $serverProjects
 
     $projects = dotnet sln $slnFile list | Where-Object { $_ -like "*.csproj" } | ForEach-Object { Resolve-Path $_ }
 
     Write-Host "Adding tests to solution" -ForegroundColor Cyan
+
+    $testProjects = @()
     foreach ($project in $projects) {
         $projectDirectory = Split-Path -Parent $project
         $projectArea = Split-Path -Parent $projectDirectory
@@ -48,10 +48,11 @@ function Update-Solution {
             # we're not building the Azure.Mcp.Server solution, avoid adding the Azure.Mcp.Core.UnitTests project
             continue
         }
-        $testProjects = Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
-        foreach ($testProject in $testProjects) {
-            dotnet sln $slnFile add $testProject
-        }
+        $testProjects += Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+    }
+
+    if ($testProjects) {
+        dotnet sln $slnFile add $testProjects
     }
 
     # When moving the solution file into the server directory, we need to update the project paths
@@ -64,7 +65,7 @@ function Update-Solution {
     }
     Set-Content -Path "$serverDirectory/$serverName.slnx" -Value $contents -NoNewline -Force
     Remove-Item -Path $slnFile -Force -ErrorAction SilentlyContinue
-    Write-Host "Solution update complete for server: $serverName" -ForegroundColor Green  
+    Write-Host "Solution update complete for server: $serverName" -ForegroundColor Green
 }
 
 function Update-RootSolution {
@@ -80,11 +81,9 @@ function Update-RootSolution {
 
     $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse
     Write-Host "Adding all projects to root solution" -ForegroundColor Cyan
-    foreach ($project in $allProjects) {
-        dotnet sln $slnFile add $project
-    }   
+    dotnet sln $slnFile add $allProjects
 
-    Write-Host "Root solution update complete." -ForegroundColor Green  
+    Write-Host "Root solution update complete." -ForegroundColor Green
 }
 
 $originalLocation = Get-Location

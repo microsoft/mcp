@@ -3,6 +3,8 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -38,7 +40,8 @@ internal class TelemetryService : ITelemetryService
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<McpServerConfiguration> options,
         IOptions<ServiceStartOptions> serverOptions,
-        ILogger<TelemetryService> logger)
+        ILogger<TelemetryService> logger,
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList =
@@ -50,6 +53,11 @@ internal class TelemetryService : ITelemetryService
             new(TagName.Host, RuntimeInformation.OSDescription),
             new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];
+
+        if (cloudConfiguration != null)
+        {
+            _tagsList.Add(new(TagName.Cloud, cloudConfiguration.CloudType.ToString()));
+        }
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;

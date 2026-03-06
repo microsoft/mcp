@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 
 public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
-    : BaseAppServiceCommand<DeploymentGetOptions>(resourceGroupRequired: true)
+    : BaseAppServiceCommand<DeploymentGetOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Deployment Details";
     private readonly ILogger<DeploymentGetCommand> _logger = logger;
@@ -44,14 +44,12 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName);
         command.Options.Add(AppServiceOptionDefinitions.DeploymentIdOption);
     }
 
     protected override DeploymentGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
         options.DeploymentId = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DeploymentIdOption.Name);
         return options;
     }

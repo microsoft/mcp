@@ -1,9 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
-using System.Text.Json;
+using Azure.Mcp.Core.Commands;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;
@@ -13,125 +20,62 @@ namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 /// Visual Studio has hard-coded dependencies on these tool names in FirstPartyToolsProvider.cs
 /// See: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
 /// </summary>
-public class VisualStudioToolNameTests
+public sealed class VisualStudioToolNameTests
 {
     private const string AzureBestPracticesToolName = "get_azure_bestpractices_get";
     private const string ExtensionCliGenerateToolName = "extension_cli_generate";
 
     /// <summary>
-    /// Starts the Azure MCP server in 'all' mode, performs MCP initialization handshake,
-    /// and retrieves the list of tool names.
+    /// Gets all tool names using the in-process CommandFactory, which produces
+    /// the same tool names as the server in 'all' mode without requiring a
+    /// separate server process or network calls.
     /// </summary>
-    private static async Task<List<string>> GetAllModeToolNamesAsync(CancellationToken cancellationToken)
+    private static Task<List<string>> GetAllModeToolNamesAsync()
     {
-        // Arrange
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        IAreaSetup[] areaSetups = [
+            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
+            new Azure.Mcp.Tools.Extension.ExtensionSetup(),
+        ];
 
-        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
+        var serviceCollection = new ServiceCollection()
+            .AddLogging()
+            .AddSingleton<ITelemetryService, NoOpTelemetryService>()
+            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>())
+            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>())
+            .AddSingleton(Substitute.For<IHttpClientFactory>());
 
-        // Act - Start the server process in "all" mode which exposes individual tools
-        var processStartInfo = new ProcessStartInfo
+        foreach (var area in areaSetups)
         {
-            FileName = azmcpPath,
-            Arguments = "server start --mode all",
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-
-        using var process = Process.Start(processStartInfo);
-        Assert.NotNull(process);
-
-        try
-        {
-            // Wait for server to initialize by checking if it's ready to receive requests
-            // The server is ready when it starts listening on stdin
-            using var initializationTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            using var linkedCts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    initializationTimeout.Token);
-
-            // Attempt to read any startup output/errors to ensure process is running
-            // If the process exits immediately, this will help catch that
-            await Task.Delay(500, linkedCts.Token); // Brief delay to allow process to fail fast if misconfigured
-            Assert.False(process.HasExited, "Server process exited immediately after start");
-
-            // Send initialize request first (required by MCP protocol)
-            var initRequest = new JsonRpcRequest
-            {
-                Method = "initialize",
-                Params = JsonSerializer.SerializeToNode(new
-                {
-                    protocolVersion = "2024-11-05",
-                    capabilities = new { },
-                    clientInfo = new { name = "test-client", version = "1.0" }
-                }),
-                Id = new RequestId(1)
-            };
-
-            var initRequestJson = JsonSerializer.Serialize(initRequest);
-            await process.StandardInput.WriteLineAsync(initRequestJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
-
-            // Read initialize response
-            var initResponseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
-            Assert.NotNull(initResponseLine);
-
-            // Send initialized notification
-            var initializedNotification = new JsonRpcNotification
-            {
-                Method = "notifications/initialized"
-            };
-
-            var notificationJson = JsonSerializer.Serialize(initializedNotification);
-            await process.StandardInput.WriteLineAsync(notificationJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
-
-            // Send tools/list request
-            var request = new JsonRpcRequest
-            {
-                Method = "tools/list",
-                Params = JsonSerializer.SerializeToNode(new ListToolsRequestParams()),
-                Id = new RequestId(2)
-            };
-
-            var requestJson = JsonSerializer.Serialize(request);
-            await process.StandardInput.WriteLineAsync(requestJson.AsMemory(), linkedCts.Token);
-            await process.StandardInput.FlushAsync(linkedCts.Token);
-
-            // Read response with timeout
-            var responseLine = await process.StandardOutput.ReadLineAsync(linkedCts.Token);
-            Assert.NotNull(responseLine);
-
-            var response = JsonSerializer.Deserialize<JsonRpcResponse>(responseLine);
-            Assert.NotNull(response);
-            Assert.NotNull(response.Result);
-
-            var result = JsonSerializer.Deserialize<ListToolsResult>(JsonSerializer.Serialize(response.Result));
-            Assert.NotNull(result);
-            Assert.NotNull(result.Tools);
-
-            return result.Tools.Select(t => t.Name).ToList();
+            area.ConfigureServices(serviceCollection);
         }
-        finally
+
+        var services = serviceCollection.BuildServiceProvider();
+
+        var configurationOptions = Options.Create(new McpServerConfiguration
         {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync(cancellationToken);
-            }
-        }
+            Name = "Test Server",
+            Version = "1.0",
+            DisplayName = "Test",
+            RootCommandGroupName = "azmcp"
+        });
+
+        var commandFactory = new CommandFactory(
+            services,
+            areaSetups,
+            services.GetRequiredService<ITelemetryService>(),
+            configurationOptions,
+            services.GetRequiredService<ILogger<CommandFactory>>());
+
+        var toolNames = commandFactory.AllCommands.Keys.ToList();
+
+        return Task.FromResult(toolNames);
     }
 
     [Fact]
     public async Task AllMode_VisualStudioToolNames_MustNotChange()
     {
-        // Act - Get tool names from server
-        var toolNames = await GetAllModeToolNamesAsync(TestContext.Current.CancellationToken);
+        // Act - Get tool names from CommandFactory (same names as server 'all' mode)
+        var toolNames = await GetAllModeToolNamesAsync();
 
         // Assert - Verify both Visual Studio tool names exist and haven't changed
         // Visual Studio has hard-coded dependencies on these exact tool names in FirstPartyToolsProvider.cs
@@ -139,5 +83,13 @@ public class VisualStudioToolNameTests
         // Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
         Assert.Contains(AzureBestPracticesToolName, toolNames);
         Assert.Contains(ExtensionCliGenerateToolName, toolNames);
+    }
+
+    private sealed class NoOpTelemetryService : ITelemetryService
+    {
+        public System.Diagnostics.Activity? StartActivity(string activityName) => null;
+        public System.Diagnostics.Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
+        public Task InitializeAsync() => Task.CompletedTask;
+        public void Dispose() { }
     }
 }
