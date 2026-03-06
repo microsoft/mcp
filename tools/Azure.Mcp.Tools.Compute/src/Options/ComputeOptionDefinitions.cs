@@ -237,11 +237,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> OsType = new($"--{OsTypeName}")
-    {
-        Description = "The operating system type: 'linux' or 'windows'. Defaults to 'linux'",
-        Required = false
-    };
+
 
     public static readonly Option<string> VirtualNetwork = new($"--{VirtualNetworkName}", "--vnet")
     {
@@ -279,11 +275,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> Zone = new($"--{ZoneName}", "-z")
-    {
-        Description = "Availability zone for the VM (e.g., '1', '2', '3')",
-        Required = false
-    };
+
 
     public static readonly Option<int> OsDiskSizeGb = new($"--{OsDiskSizeGbName}")
     {
@@ -325,8 +317,6 @@ public static class ComputeOptionDefinitions
     public const string OverprovisionName = "overprovision";
     public const string EnableAutoOsUpgradeName = "enable-auto-os-upgrade";
     public const string ScaleInPolicyName = "scale-in-policy";
-    public const string TagsName = "tags";
-
     public static readonly Option<bool> Overprovision = new($"--{OverprovisionName}")
     {
         Description = "Enable or disable overprovisioning. When enabled, Azure provisions more VMs than requested and deletes extra VMs after deployment",
@@ -342,12 +332,6 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> ScaleInPolicy = new($"--{ScaleInPolicyName}")
     {
         Description = "Scale-in policy to determine which VMs to remove: 'Default', 'NewestVM', or 'OldestVM'",
-        Required = false
-    };
-
-    public static readonly Option<string> Tags = new($"--{TagsName}")
-    {
-        Description = "Resource tags in format 'key1=value1,key2=value2'. Use empty string to clear all tags",
         Required = false
     };
 
