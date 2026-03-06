@@ -25,6 +25,7 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
         services.AddSingleton<IInstrumentationDetector, DotNetInstrumentationDetector>();
 
         services.AddSingleton<IGenerator, AspNetCoreGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
 
         services.AddSingleton<WorkspaceAnalyzer>();
         services.AddSingleton<ListLearningResourcesTool>();

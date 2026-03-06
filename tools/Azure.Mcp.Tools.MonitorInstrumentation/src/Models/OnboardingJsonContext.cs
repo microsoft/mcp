@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
 
 [JsonSourceGenerationOptions(
+    WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNameCaseInsensitive = true)]
