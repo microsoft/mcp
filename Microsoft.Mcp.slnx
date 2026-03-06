@@ -257,6 +257,13 @@
     <Project Path="tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.LiveTests/Azure.Mcp.Tools.FunctionApp.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.UnitTests/Azure.Mcp.Tools.FunctionApp.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Functions/src/Azure.Mcp.Tools.Functions.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.UnitTests/Azure.Mcp.Tools.Functions.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/src/">
     <Project Path="tools/Azure.Mcp.Tools.Grafana/src/Azure.Mcp.Tools.Grafana.csproj" />

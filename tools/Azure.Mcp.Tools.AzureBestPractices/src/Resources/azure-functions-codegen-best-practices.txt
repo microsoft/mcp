@@ -1,3 +1,12 @@
+## Tools for Azure Functions Code Generation
+    use `azmcp functions` tools together with best practices guidance:
+    1. `language list` - Get supported languages and runtime versions
+    3. `project get --language <lang>` - Get project scaffold files
+    2. `template get --language <lang>` - List available templates
+    4. `template get --language <lang> --template <name>` - Get function code
+ 
+## General Best Practices
+
 Azure Functions code generation best practices:
     - Use the latest programming models (v4 for JavaScript, v2 for Python)
     - Use this extension bundles version `[4.*, 5.0.0)` in the host.json file.

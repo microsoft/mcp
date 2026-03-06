@@ -68,6 +68,41 @@
       ]
     },
     {
+      "name": "get_azure_functions_template_info",
+      "description": "Get Azure Functions project templates, supported languages, and template source code for bootstrapping new Azure Functions projects.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves template information without modifying any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions templates."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "functions_language_list",
+        "functions_project_get",
+        "functions_template_get"
+      ]
+    },
+    {
       "name": "add_azure_app_service_database",
       "description": "Add and configure database integrations for Azure App Service applications.",
       "toolMetadata": {
