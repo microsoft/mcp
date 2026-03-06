@@ -2259,6 +2259,8 @@ azmcp monitor webtests update --subscription <subscription> \
                               [--ssl-lifetime-check <days>] \
                               [--timeout <seconds>]
 
+```
+
 ### Azure Monitor Instrumentation Operations
 
 ```bash
@@ -2289,8 +2291,13 @@ azmcp monitorinstrumentation submit_brownfield_analysis --session-id <session-id
 - `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
 - `submit_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
 
-ubscription> \
-                            --resource-group <resource-group>
+### Azure Managed Lustre Operations
+
+```bash
+# List Azure Managed Lustre file systems in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs list --subscription <subscription> \
+                            [--resource-group <resource-group>]
 
 # Create an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
