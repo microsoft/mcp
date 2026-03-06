@@ -163,7 +163,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        // Only add InteractiveBrowserCredential as fallback when:
+        // Only add interactive fallback credentials when:
         // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
         // 2. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
         // 3. AZURE_TOKEN_CREDENTIALS="InteractiveBrowserCredential" (explicitly requested)
@@ -187,6 +187,19 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         if (shouldAddBrowserFallback)
         {
             creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        }
+
+        // Add DeviceCodeCredential as a fallback for headless environments (Docker, WSL, SSH, CI)
+        // when the default or dev chain is active. Unlike InteractiveBrowserCredential it only needs
+        // a terminal, not a GUI browser. Only added in CLI mode (ActiveTransport empty) because in
+        // server mode stdout is the MCP protocol pipe (stdio) or there is no attached terminal (http).
+        bool shouldAddDeviceCodeFallback = !isPinnedCredentialMode &&
+                                          !isExplicitBrowserMode &&
+                                          string.IsNullOrEmpty(ActiveTransport);
+
+        if (shouldAddDeviceCodeFallback)
+        {
+            AddDeviceCodeCredential(creds, tenantId);
         }
 
         return new ChainedTokenCredential([.. creds]);
