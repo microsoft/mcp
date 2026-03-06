@@ -6,11 +6,10 @@ This document defines the steps required when renaming an existing MCP tool (i.e
 
 ## What counts as a tool rename?
 
-A tool name is the underscore-separated string exposed to MCP clients (e.g. `storage_account_list`, `sql_db_get`). It is derived from the command hierarchy: each group and leaf command's `Name` property is joined with `_`. Changing *any* segment of that hierarchy, the service group, resource group, or operation leaf is a rename.
-
+A tool name is the underscore-separated string exposed to MCP clients (e.g. `azmcp_storage_account_list`, `azmcp_sql_db_get`). It is derived from the command hierarchy: each group and leaf command's `Name` property is joined with `_` and prefixed with `azmcp_`. Changing *any* segment of that hierarchy, the service group, resource group, or operation leaf is a rename.
 Examples:
-- `sql_db_get` → `sql_database_get` — rename
-- Splitting a combined get/list command into `sql_database_get` and `sql_database_list` — rename (old name disappears)
+- `azmcp_sql_db_get` → `azmcp_sql_database_get` — rename
+- Splitting a combined get/list command into `azmcp_sql_database_get` and `azmcp_sql_database_list` — rename (old name disappears)
 - Updating `Description` or `Title` only — **not** a rename
 
 ---
@@ -20,6 +19,7 @@ Examples:
 ### 1. Source code
 
 - [ ] Update the `Name` property on the command class (and parent group command if the group is also changing).
+- [ ] Update any hardcoded group name string literals in the toolset's `*Setup.cs` `RegisterCommands` method (e.g. `new CommandGroup("db", ...)` → `new CommandGroup("database", ...)`). Group segment names are **not** derived from a command's `Name` property — they must be changed here explicitly.
 - [ ] Update the `Id` property to a new unique GUID if the semantic meaning of the tool has changed materially (not required for pure name-only fixes).
 - [ ] Update the command class filename and any references to match the new name (`{Resource}{Operation}Command.cs`).
 - [ ] Update the `Title` constant to reflect the new name (used in logs and telemetry).
@@ -35,10 +35,13 @@ Examples:
 
 ### 3. Recordings
 
-Recorded tests reference tool names inside their JSON session files. Old recordings will no longer match the renamed tool and must be re-recorded.
+Recorded tests reference tool names inside their JSON session files. Old recordings will no longer match the renamed tool and must be re-recorded using the externalized recording workflow (`assets.json` + `.assets/<hash>/...` sparse clone of `Azure/azure-sdk-assets`).
 
-- [ ] Delete or re-record all session files under the toolset's `SessionRecords/` directory that reference the old name.
-- [ ] Push updated recordings with `test-proxy push` and commit the new `assets.json` tag.
+- [ ] Re-record tests for the affected tool following [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md), ensuring any recordings that reference the old tool name are updated in the external assets repository.
+- [ ] Push updated recordings using the local test proxy and commit the new `assets.json` tag. See [`docs/recorded-tests.md`](./recorded-tests.md) for the full workflow:
+  ```powershell
+  ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a path/to/assets.json
+  ```
 - [ ] Verify playback passes locally:
   ```powershell
   dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests --no-build
@@ -61,7 +64,7 @@ A tool rename is a **breaking change** for any MCP client or agent that hard-cod
   ```powershell
   ./eng/scripts/New-ChangelogEntry.ps1 `
     -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" `
-    -Description "Renamed tool `old_tool_name` to `new_tool_name`." `
+    -Description "Renamed tool old_tool_name to new_tool_name." `
     -Section "Breaking Changes"
   ```
   See [`docs/changelog-entries.md`](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md) for full guidance.
