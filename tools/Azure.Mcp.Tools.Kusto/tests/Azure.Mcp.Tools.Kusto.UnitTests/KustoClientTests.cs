@@ -31,7 +31,8 @@ public sealed class KustoClientTests
         tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
 
-        using var httpClient = new HttpClient(new MockHttpMessageHandler());
+        var handler = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
 
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
@@ -39,11 +40,38 @@ public sealed class KustoClientTests
         var kustoClient = new KustoClient("https://test.kusto.windows.net", tokenCredential, "azmcp", httpClientFactory);
 
         // Act
-        var result = await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", CancellationToken.None);
+        var result = await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", TestContext.Current.CancellationToken);
 
         // Assert - verify the timeout was set to 240 seconds
         Assert.Equal(TimeSpan.FromSeconds(240), httpClient.Timeout);
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task ExecuteQueryCommandAsync_UsesV2EndpointAndExpectedHeaders()
+    {
+        // Arrange
+        var tokenCredential = Substitute.For<TokenCredential>();
+        tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
+
+        var handler = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+
+        var kustoClient = new KustoClient("https://test.kusto.windows.net", tokenCredential, "azmcp", httpClientFactory);
+
+        // Act
+        await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("/v2/rest/query", handler.LastRequest!.RequestUri!.AbsolutePath);
+        Assert.True(handler.LastRequest.Headers.Contains("x-ms-readonly"));
+        Assert.Contains(handler.LastRequest.Headers.AcceptEncoding, value => value.Value == "gzip");
+        Assert.Contains(handler.LastRequest.Headers.AcceptEncoding, value => value.Value == "deflate");
+        Assert.Contains("Keep-Alive", handler.LastRequest.Headers.Connection);
     }
 
     #region SSRF Protection Tests
@@ -197,12 +225,17 @@ public sealed class KustoClientTests
 
     private sealed class MockHttpMessageHandler : HttpMessageHandler
     {
+        public HttpRequestMessage? LastRequest { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            // The caller (HttpClient.SendAsync) takes ownership and is responsible for disposal HttpResponseMessage.
+            LastRequest = request;
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent("""{"Tables": []}""", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    """[{"FrameType":"DataSetHeader","IsProgressive":false,"Version":"v2.0"},{"FrameType":"DataSetCompletion","HasErrors":false,"Cancelled":false}]""",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
             };
             return Task.FromResult(response);
         }

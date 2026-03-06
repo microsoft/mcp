@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -21,19 +22,21 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     {
         base.RegisterOptions(command);
         command.Options.Add(KustoOptionDefinitions.Query);
+        command.Options.Add(KustoOptionDefinitions.ShowStats);
     }
 
     protected override QueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
+        options.ShowStats = parseResult.GetValueOrDefault<bool>(KustoOptionDefinitions.ShowStats.Name);
         return options;
     }
 
     public override string Name => "query";
 
     public override string Description =>
-        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
+        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query. Optional: --show-stats to include execution statistics.";
 
     public override string Title => CommandTitle;
 
@@ -58,15 +61,16 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
         try
         {
-            List<JsonElement> results = [];
+            (List<JsonElement> Items, JsonElement? Statistics) queryResult;
             var kusto = context.GetService<IKustoService>();
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                queryResult = await kusto.QueryItemsWithStatisticsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Query!,
+                    options.ShowStats,
                     options.Tenant,
                     options.AuthMethod,
                     options.RetryPolicy,
@@ -74,18 +78,21 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                queryResult = await kusto.QueryItemsWithStatisticsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,
                     options.Query!,
+                    options.ShowStats,
                     options.Tenant,
                     options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new(queryResult.Items ?? [], queryResult.Statistics),
+                KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,5 +103,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         return context.Response;
     }
 
-    internal record QueryCommandResult(List<JsonElement> Items);
+    internal record QueryCommandResult(
+        List<JsonElement> Items,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] JsonElement? Statistics = null);
 }
