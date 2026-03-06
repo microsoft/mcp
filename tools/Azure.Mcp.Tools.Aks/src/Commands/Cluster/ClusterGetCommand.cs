@@ -45,13 +45,10 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         command.Validators.Add(commandResults =>
         {
             var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
-            if (!string.IsNullOrEmpty(clusterName))
+            var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+            if (!string.IsNullOrEmpty(clusterName) && string.IsNullOrEmpty(resourceGroup))
             {
-                var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-                if (string.IsNullOrEmpty(resourceGroup))
-                {
-                    commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
-                }
+                commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
             }
         });
     }

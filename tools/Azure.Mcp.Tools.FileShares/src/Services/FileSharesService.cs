@@ -2,14 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
@@ -37,8 +31,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
             var fileShares = new List<FileShareInfo>();
 
@@ -50,7 +43,7 @@ public sealed class FileSharesService(
                     var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                     resourceGroupResource = response.Value;
                 }
-                catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+                catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning(reqEx,
                         "Resource group not found when listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -99,13 +92,12 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
             return FileShareInfo.FromResource(fileShareResource.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx,
                 "File share not found. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -150,13 +142,12 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            var fileShareData = new FileShareData(new Azure.Core.AzureLocation(location))
+            var fileShareData = new FileShareData(new(location))
             {
-                Properties = new Azure.ResourceManager.FileShares.Models.FileShareProperties()
+                Properties = new()
             };
 
             // Populate properties from parameters
@@ -164,13 +155,13 @@ public sealed class FileSharesService(
                 fileShareData.Properties.MountName = mountName;
 
             if (!string.IsNullOrEmpty(mediaTier))
-                fileShareData.Properties.MediaTier = new Azure.ResourceManager.FileShares.Models.FileShareMediaTier(mediaTier);
+                fileShareData.Properties.MediaTier = new(mediaTier);
 
             if (!string.IsNullOrEmpty(redundancy))
-                fileShareData.Properties.Redundancy = new Azure.ResourceManager.FileShares.Models.FileShareRedundancyLevel(redundancy);
+                fileShareData.Properties.Redundancy = new(redundancy);
 
             if (!string.IsNullOrEmpty(protocol))
-                fileShareData.Properties.Protocol = new Azure.ResourceManager.FileShares.Models.FileShareProtocol(protocol);
+                fileShareData.Properties.Protocol = new(protocol);
 
             if (provisionedStorageInGiB.HasValue)
                 fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
@@ -182,10 +173,10 @@ public sealed class FileSharesService(
                 fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
 
             if (!string.IsNullOrEmpty(publicNetworkAccess))
-                fileShareData.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
+                fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
 
             if (!string.IsNullOrEmpty(nfsRootSquash))
-                fileShareData.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
 
             if (allowedSubnets != null && allowedSubnets.Length > 0)
             {
@@ -202,7 +193,6 @@ public sealed class FileSharesService(
                     fileShareData.Tags.Add(tag.Key, tag.Value);
                 }
             }
-
 
             var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
                 WaitUntil.Completed,
@@ -248,18 +238,17 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             // Create a patch object with only the properties to update
-            var patch = new Azure.ResourceManager.FileShares.Models.FileSharePatch();
+            var patch = new ResourceManager.FileShares.Models.FileSharePatch();
 
             // Set properties that are explicitly provided
             if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
                 !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
             {
-                patch.Properties = new Azure.ResourceManager.FileShares.Models.FileSharePatchProperties();
+                patch.Properties = new();
 
                 if (provisionedStorageInGiB.HasValue)
                 {
@@ -279,12 +268,12 @@ public sealed class FileSharesService(
 
             if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
             {
-                patch.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
+                patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
             }
 
             if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
             {
-                patch.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
             }
 
             if (tags is { Count: > 0 })
@@ -332,8 +321,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
@@ -343,7 +331,7 @@ public sealed class FileSharesService(
                 "Successfully deleted file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 fileShareName, resourceGroup);
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "File share not found (already deleted). FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -375,14 +363,12 @@ public sealed class FileSharesService(
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var azureLocation = new Azure.Core.AzureLocation(location);
-
-            var content = new Azure.ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
+            var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
             {
                 Name = fileShareName,
                 Type = "Microsoft.FileShares/fileShares"
             };
-            var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(azureLocation, content, cancellationToken);
+            var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(new(location), content, cancellationToken);
 
             var result = response.Value;
 
@@ -390,7 +376,7 @@ public sealed class FileSharesService(
                 "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
                 fileShareName, result.IsNameAvailable);
 
-            return new FileShareNameAvailabilityResult(
+            return new(
                 result.IsNameAvailable ?? false,
                 result.Reason?.ToString(),
                 result.Message);
@@ -421,8 +407,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -430,7 +415,7 @@ public sealed class FileSharesService(
 
             var snapshotData = new FileShareSnapshotData
             {
-                Properties = new Azure.ResourceManager.FileShares.Models.FileShareSnapshotProperties()
+                Properties = new()
             };
 
             // Populate metadata if provided
@@ -481,8 +466,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -499,12 +483,12 @@ public sealed class FileSharesService(
 
             throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx,
                 "Snapshot not found. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 snapshotId, fileShareName, resourceGroup);
-            throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
+            throw;
         }
         catch (Exception ex)
         {
@@ -531,8 +515,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -546,7 +529,7 @@ public sealed class FileSharesService(
 
             return snapshots;
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx,
                 "File share not found when listing snapshots. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -581,8 +564,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -592,7 +574,7 @@ public sealed class FileSharesService(
             var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
 
             // Create a patch object with only the properties to update
-            var patch = new Azure.ResourceManager.FileShares.Models.FileShareSnapshotPatch();
+            var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();
 
             if (metadata is { Count: > 0 })
             {
@@ -614,12 +596,12 @@ public sealed class FileSharesService(
 
             return FileShareSnapshotInfo.FromResource(operation.Value);
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(reqEx,
                 "Snapshot not found for update. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 snapshotId, fileShareName, resourceGroup);
-            throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
+            throw;
         }
         catch (Exception ex)
         {
@@ -648,8 +630,7 @@ public sealed class FileSharesService(
         try
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(
-                Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -663,7 +644,7 @@ public sealed class FileSharesService(
                 "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
                 snapshotId, fileShareName, resourceGroup);
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "Snapshot not found (already deleted). Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -693,9 +674,7 @@ public sealed class FileSharesService(
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var azureLocation = new Azure.Core.AzureLocation(location);
-
-            var response = await subscriptionResource.GetLimitsAsync(azureLocation, cancellationToken);
+            var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
 
             var output = response.Value.Properties;
 
@@ -703,9 +682,9 @@ public sealed class FileSharesService(
                 "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
                 output.Limits.MaxFileShares, subscription, location);
 
-            return new FileShareLimitsResult
+            return new()
             {
-                Limits = new FileShareLimits
+                Limits = new()
                 {
                     MaxFileShares = output.Limits.MaxFileShares,
                     MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
@@ -718,7 +697,7 @@ public sealed class FileSharesService(
                     MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
                     MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
                 },
-                ProvisioningConstants = new FileShareProvisioningConstants
+                ProvisioningConstants = new()
                 {
                     BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
                     ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
@@ -750,9 +729,7 @@ public sealed class FileSharesService(
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var azureLocation = new Azure.Core.AzureLocation(location);
-
-            var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
+            var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
 
             var output = response.Value.Properties;
 
@@ -760,9 +737,9 @@ public sealed class FileSharesService(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
                 output.LiveSharesFileShareCount, subscription, location);
 
-            return new FileShareUsageDataResult
+            return new()
             {
-                LiveShares = new LiveSharesUsageData
+                LiveShares = new()
                 {
                     FileShareCount = output.LiveSharesFileShareCount ?? 0
                 }
@@ -793,10 +770,7 @@ public sealed class FileSharesService(
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var azureLocation = new Azure.Core.AzureLocation(location);
-
-            var content = new Azure.ResourceManager.FileShares.Models.FileShareProvisioningRecommendationContent(provisionedStorageGiB);
-            var response = await subscriptionResource.GetProvisioningRecommendationAsync(azureLocation, content, cancellationToken);
+            var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
 
             var output = response.Value.Properties;
 
@@ -804,7 +778,7 @@ public sealed class FileSharesService(
                 "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
                 provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
 
-            return new Models.FileShareProvisioningRecommendationResult
+            return new()
             {
                 ProvisionedIOPerSec = output.ProvisionedIOPerSec,
                 ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,

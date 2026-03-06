@@ -9,16 +9,19 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
 using Azure.ResourceManager.ContainerService.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
 public sealed class AksService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), IAksService
+    ICacheService cacheService,
+    ILogger<AksService> logger) : BaseAzureService(tenantService), IAksService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<AksService> _logger = logger;
 
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
@@ -56,10 +59,10 @@ public sealed class AksService(
             }
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var clusters = new List<Cluster>();
 
             try
             {
+                var clusters = new List<Cluster>();
                 if (string.IsNullOrEmpty(resourceGroup))
                 {
 
@@ -70,8 +73,6 @@ public sealed class AksService(
                             clusters.Add(ConvertToClusterModel(cluster));
                         }
                     }
-
-
                 }
                 else
                 {
@@ -92,13 +93,14 @@ public sealed class AksService(
 
                 // Cache the results
                 await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
+
+                return clusters;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving AKS clusters: {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving AKS clusters for subscription '{Subscription}'", subscription);
+                throw;
             }
-
-            return clusters;
         }
         else
         {
@@ -117,7 +119,6 @@ public sealed class AksService(
             }
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
             try
             {
                 var resourceGroupResource = await subscriptionResource
@@ -146,7 +147,8 @@ public sealed class AksService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving AKS cluster '{clusterName}': {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", clusterName, resourceGroup, subscription);
+                throw;
             }
         }
     }
@@ -179,10 +181,10 @@ public sealed class AksService(
             }
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var nodePools = new List<NodePool>();
 
             try
             {
+                var nodePools = new List<NodePool>();
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (resourceGroupResource?.Value == null)
                 {
@@ -199,8 +201,8 @@ public sealed class AksService(
                 }
 
                 await foreach (var agentPool in clusterResource.Value
-                                   .GetContainerServiceAgentPools()
-                                   .GetAllAsync(cancellationToken))
+                                    .GetContainerServiceAgentPools()
+                                    .GetAllAsync(cancellationToken))
                 {
                     if (agentPool?.Data != null)
                     {
@@ -210,13 +212,14 @@ public sealed class AksService(
 
                 // Cache the results
                 await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
+
+                return nodePools;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving AKS node pools for cluster '{clusterName}': {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving node pools for AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", clusterName, resourceGroup, subscription);
+                throw;
             }
-
-            return nodePools;
         }
         else
         {
@@ -269,7 +272,8 @@ public sealed class AksService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving AKS node pool '{nodePoolName}' for cluster '{clusterName}': {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving node pool '{NodePoolName}' for AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", nodePoolName, clusterName, resourceGroup, subscription);
+                throw;
             }
         }
     }
@@ -346,7 +350,7 @@ public sealed class AksService(
             },
             AddonProfiles = data.AddonProfiles?.ToDictionary(
                 kvp => kvp.Key,
-                kvp =>
+                static kvp =>
                 {
                     IDictionary<string, string> map = new Dictionary<string, string>();
                     if (kvp.Value != null)
@@ -448,7 +452,7 @@ public sealed class AksService(
     {
         var data = agentPoolResource.Data;
 
-        return new NodePool
+        return new()
         {
             Name = data.Name,
             Count = data.Count,
@@ -497,7 +501,7 @@ public sealed class AksService(
 
     private static NodePool ConvertToNodePoolModel(ManagedClusterAgentPoolProfile profile)
     {
-        return new NodePool
+        return new()
         {
             Name = profile.Name,
             Count = profile.Count,

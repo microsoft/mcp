@@ -5,14 +5,14 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Datadog;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 
-public partial class DatadogService : BaseAzureService, IDatadogService
+public partial class DatadogService(ITenantService tenantService, ILogger<DatadogService> logger)
+    : BaseAzureService(tenantService), IDatadogService
 {
-    public DatadogService(ITenantService tenantService) : base(tenantService)
-    {
-    }
+    private readonly ILogger<DatadogService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource, CancellationToken cancellationToken = default)
     {
@@ -23,7 +23,7 @@ public partial class DatadogService : BaseAzureService, IDatadogService
 
             var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 
-            ResourceIdentifier id = new ResourceIdentifier(resourceId);
+            ResourceIdentifier id = new(resourceId);
             var datadogMonitorResource = armClient.GetDatadogMonitorResource(id);
             var monitoredResources = datadogMonitorResource.GetMonitoredResources(cancellationToken);
 
@@ -39,7 +39,8 @@ public partial class DatadogService : BaseAzureService, IDatadogService
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing monitored resources: {ex.Message}", ex);
+            _logger.LogError(ex, "Error listing monitored resources.");
+            throw;
         }
     }
 }

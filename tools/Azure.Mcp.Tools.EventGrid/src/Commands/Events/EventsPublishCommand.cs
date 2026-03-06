@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -114,11 +113,11 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Event Grid topic not found. Please verify the topic name and resource group exist.",
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Access denied to Event Grid topic. Please verify you have Event Grid Data Sender permissions.",
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             "Invalid event data or schema format. Please verify the event data is valid JSON and matches the expected schema.",
         System.Text.Json.JsonException jsonEx =>
             $"Invalid JSON format in event data: {jsonEx.Message}",

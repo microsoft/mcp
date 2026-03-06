@@ -77,7 +77,6 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var credential = await GetCredential(cancellationToken);
         ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
 
-        Response? getByCollectionResponse = null;
         bool loaded = false;
         string? contents = null;
         string? actualTransactionId = null;
@@ -89,7 +88,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             {
                 throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
             }
-            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            var getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
             using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
             {
                 loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
@@ -109,7 +108,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             }
         }
 
-        return new LedgerEntryGetResult
+        return new()
         {
             LedgerName = ledgerName,
             TransactionId = actualTransactionId ?? transactionId,

@@ -45,17 +45,17 @@ public class AppServiceService(
             "Adding database connection to App Service {AppName} in resource group {ResourceGroup}",
             appName, resourceGroup);
 
+        // Validate inputs
+        ValidateRequiredParameters(
+            (nameof(appName), appName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(databaseType), databaseType),
+            (nameof(databaseServer), databaseServer),
+            (nameof(databaseName), databaseName),
+            (nameof(subscription), subscription));
+
         try
         {
-            // Validate inputs
-            ValidateRequiredParameters(
-                (nameof(appName), appName),
-                (nameof(resourceGroup), resourceGroup),
-                (nameof(databaseType), databaseType),
-                (nameof(databaseServer), databaseServer),
-                (nameof(databaseName), databaseName),
-                (nameof(subscription), subscription));
-
             // Get Azure resources
             var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
 
@@ -70,8 +70,7 @@ public class AppServiceService(
                 "Successfully added database connection {ConnectionName} to App Service {AppName}",
                 connectionStringName, appName);
 
-            return CreateDatabaseConnectionInfo(
-                databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
+            return CreateDatabaseConnectionInfo(databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
         }
         catch (Exception ex)
         {
