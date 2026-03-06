@@ -39,7 +39,7 @@ Examples:
 Recorded tests reference tool names inside their JSON session files. Old recordings will no longer match the renamed tool and must be re-recorded using the externalized recording workflow (`assets.json` + `.assets/<hash>/...` sparse clone of `Azure/azure-sdk-assets`).
 
 - [ ] Re-record tests for the affected tool following [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md), ensuring any recordings that reference the old tool name are updated in the external assets repository.
-- [ ] Push updated recordings using the local test proxy and commit the new `assets.json` tag. See [`docs/recorded-tests.md`](./recorded-tests.md) for the full workflow:
+- [ ] Push updated recordings using the local test proxy and commit the new `assets.json` tag. See [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full workflow:
   ```powershell
   ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a path/to/assets.json
   ```
