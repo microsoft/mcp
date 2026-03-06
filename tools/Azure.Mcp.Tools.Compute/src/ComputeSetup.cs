@@ -28,11 +28,13 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<VmGetCommand>();
         services.AddSingleton<VmCreateCommand>();
         services.AddSingleton<VmUpdateCommand>();
+        services.AddSingleton<VmDeleteCommand>();
 
         // VMSS commands
         services.AddSingleton<VmssGetCommand>();
         services.AddSingleton<VmssCreateCommand>();
         services.AddSingleton<VmssUpdateCommand>();
+        services.AddSingleton<VmssDeleteCommand>();
 
         // Disk commands
         services.AddSingleton<DiskGetCommand>();
@@ -67,6 +69,9 @@ public class ComputeSetup : IAreaSetup
         var vmUpdate = serviceProvider.GetRequiredService<VmUpdateCommand>();
         vm.AddCommand(vmUpdate.Name, vmUpdate);
 
+        var vmDelete = serviceProvider.GetRequiredService<VmDeleteCommand>();
+        vm.AddCommand(vmDelete.Name, vmDelete);
+
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
@@ -80,6 +85,9 @@ public class ComputeSetup : IAreaSetup
 
         var vmssUpdate = serviceProvider.GetRequiredService<VmssUpdateCommand>();
         vmss.AddCommand(vmssUpdate.Name, vmssUpdate);
+
+        var vmssDelete = serviceProvider.GetRequiredService<VmssDeleteCommand>();
+        vmss.AddCommand(vmssDelete.Name, vmssDelete);
 
         // Create Disk subgroup
         var disk = new CommandGroup(

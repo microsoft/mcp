@@ -1080,6 +1080,70 @@ public class ComputeService(
             Tags: vmResource.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
+    public async Task<bool> DeleteVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        bool? forceDeletion = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        var vmCollection = resourceGroupResource.GetVirtualMachines();
+
+        try
+        {
+            var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
+            var vmResource = vmResponse.Value;
+            await vmResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogDebug(ex, "VM {VmName} not found in resource group {ResourceGroup}", vmName, resourceGroup);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        bool? forceDeletion = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
+
+        try
+        {
+            var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
+            var vmssResource = vmssResponse.Value;
+            await vmssResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogDebug(ex, "VMSS {VmssName} not found in resource group {ResourceGroup}", vmssName, resourceGroup);
+            return false;
+        }
+    }
+
     private static VirtualMachineScaleSetScaleInRule ParseScaleInPolicy(string scaleInPolicy)
     {
         return scaleInPolicy.ToLowerInvariant() switch

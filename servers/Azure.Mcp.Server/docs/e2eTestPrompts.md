@@ -202,6 +202,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_update | Update virtual machine <vm-name> with environment=production tag |
 | compute_vm_update | Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name> |
 | compute_vm_update | Change the size of VM <vm-name> to Standard_D4s_v3 |
+| compute_vm_delete | Delete VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> |
+| compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
 | compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
@@ -217,6 +221,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> |
 | compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> |
 | compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_delete | Delete scale set <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_delete | Remove VMSS <vmss-name> from resource group <resource-group-name> |
+| compute_vmss_delete | Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_delete | Force delete VMSS <vmss-name> in resource group <resource-group-name> |
 
 ## Azure Confidential Ledger
 
