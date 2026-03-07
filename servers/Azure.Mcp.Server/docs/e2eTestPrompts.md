@@ -621,6 +621,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
 
+## Azure Monitor Instrumentation
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource-path> |
+| monitorinstrumentation_get_learning_resource | Show me the Azure Monitor onboarding content from <resource-path> |
+| monitorinstrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
+| monitorinstrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session-id> with completion note <completion-note> |
+| monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session-id> after I completed <completion-note> |
+| monitorinstrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace-path> |
+| monitorinstrumentation_orchestrator_start | Analyze workspace <workspace-path> and return the first Azure Monitor instrumentation step |
+| monitorinstrumentation_submit_brownfield_analysis | Submit brownfield findings JSON <findings-json> for session <session-id> |
+| monitorinstrumentation_submit_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings-json> to session <session-id> |
+
 ## Azure Native ISV
 
 | Tool Name | Test Prompt |
