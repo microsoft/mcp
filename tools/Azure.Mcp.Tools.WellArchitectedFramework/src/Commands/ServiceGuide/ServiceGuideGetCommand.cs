@@ -78,7 +78,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
             var serviceNameExact = options.Service!;
             var serviceNameNormalized = NormalizeServiceName(serviceNameExact);
-    
             var serviceGuideUrl = GetServiceGuideUrl(serviceNameExact, serviceNameNormalized);
             var guidance = GetGuidance(serviceNameExact, serviceGuideUrl);
 
@@ -110,7 +109,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         {
             string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, "service-guides.json");
             string jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
-            
             var serviceGuides = JsonSerializer.Deserialize(
                 jsonContent,
                 ServiceGuideJsonContext.Default.DictionaryStringServiceGuide);
