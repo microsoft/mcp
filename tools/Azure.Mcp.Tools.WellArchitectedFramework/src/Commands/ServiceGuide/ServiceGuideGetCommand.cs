@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using ServiceGuideModel = Azure.Mcp.Tools.WellArchitectedFramework.Models.ServiceGuide;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 
@@ -21,7 +22,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
     private const string CommandTitle = "Get Well-Architected Framework Service Guide";
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
 
-    private static Dictionary<string, ServiceGuide>? s_serviceGuidesCache;
+    private static Dictionary<string, ServiceGuideModel>? s_serviceGuidesCache;
 
     public override string Id => "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f";
 
@@ -31,8 +32,8 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         "Get Azure Well-Architected Framework guidance for a specific Azure service, " +
         "including architectural best practices, design patterns, and recommendations based on the five pillars: " +
         "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Required options: - service: The Azure service name in lowercase with hyphens " +
-        "(e.g., 'app-service', 'sql-database', 'cosmos-db', 'virtual-machines')";
+        "Required option: --service: The Azure service name (case-insensitive; spaces and hyphens are normalized) " +
+        "e.g., 'App Service', 'app-service', 'SQL Database', 'sql-database', 'Cosmos DB', 'cosmos-db'";
 
     public override string Title => CommandTitle;
 
@@ -59,14 +60,14 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         };
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(
+    public override Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
-            return context.Response;
+            return Task.FromResult(context.Response);
         }
 
         var options = BindOptions(parseResult);
@@ -93,7 +94,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             HandleException(context, ex);
         }
 
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 
     private static void LoadServiceGuides()
@@ -111,22 +112,22 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             string jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
             var serviceGuides = JsonSerializer.Deserialize(
                 jsonContent,
-                ServiceGuideJsonContext.Default.DictionaryStringServiceGuide);
-            s_serviceGuidesCache = serviceGuides ?? new Dictionary<string, ServiceGuide>();
+                WellArchitectedFrameworkJsonContext.Default.DictionaryStringServiceGuide);
+            s_serviceGuidesCache = serviceGuides ?? new Dictionary<string, ServiceGuideModel>();
 
             return;
         }
-        catch (FileNotFoundException ex)
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
             // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuide>();
+            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
 
             throw new InvalidOperationException("Missing 'service-guides.json' file", ex);
         }
         catch (JsonException ex)
         {
             // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuide>();
+            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
 
             throw new InvalidOperationException("Failed to parse 'service-guides.json' file", ex);
         }
@@ -191,18 +192,4 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         return $"For detailed Azure Well-Architected Framework guidance on {serviceName} service, " +
             $"please refer to the markdown file at this url: {serviceGuideUrl}";
     }
-}
-
-internal sealed class ServiceGuide
-{
-    public required string ServiceNameExact { get; set; }
-    public required string[] ServiceNameVariations { get; set; }
-    public required string ServiceGuideUrl { get; set; }
-}
-
-[System.Text.Json.Serialization.JsonSerializable(typeof(Dictionary<string, ServiceGuide>))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(ServiceGuide))]
-[System.Text.Json.Serialization.JsonSourceGenerationOptions(PropertyNamingPolicy = System.Text.Json.Serialization.JsonKnownNamingPolicy.CamelCase)]
-internal partial class ServiceGuideJsonContext : System.Text.Json.Serialization.JsonSerializerContext
-{
 }

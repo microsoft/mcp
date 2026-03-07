@@ -9,7 +9,8 @@ public static class WellArchitectedFrameworkOptionDefinitions
 
     public static readonly Option<string> Service = new($"--{ServiceName}", "-s")
     {
-        Description = "The name of the Azure service to get Well-Architected Framework guidance for (e.g., 'app-service', 'storage', 'sql-database', 'cosmos-db'). Use lowercase with hyphens.",
+        Description = "The Azure service name (case-insensitive; spaces and hyphens are normalized) " +
+                      "e.g., 'App Service', 'app-service', 'SQL Database', 'sql-database', 'Cosmos DB', 'cosmos-db'.",
         Required = true
     };
 }
