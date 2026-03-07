@@ -626,7 +626,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource-path> |
-| monitorinstrumentation_get_learning_resource | Show me the Azure Monitor onboarding content from <resource-path> |
+| monitorinstrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource-path> |
 | monitorinstrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
 | monitorinstrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
 | monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session-id> with completion note <completion-note> |
