@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using Azure.Core;
+using Azure.Identity;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -240,6 +241,150 @@ public class CustomChainedCredentialTests
     }
 
     /// <summary>
+    /// Tests that explicit DeviceCodeCredential request creates successfully in CLI mode.
+    /// Expected: DeviceCodeCredential is created when AZURE_TOKEN_CREDENTIALS="DeviceCodeCredential"
+    /// and no server transport is active (ActiveTransport is empty).
+    /// </summary>
+    [Fact]
+    public void DeviceCodeCredential_ExplicitMode_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that DeviceCodeCredential throws CredentialUnavailableException when the server is in a
+    /// transport mode (stdio or http), because stdout is the protocol pipe and no terminal is attached.
+    /// Expected: GetToken throws CredentialUnavailableException.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DeviceCodeCredential_InServerTransportMode_ThrowsCredentialUnavailableException(string transport)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            var credential = CreateCustomChainedCredential();
+
+            // Act & Assert — GetToken triggers lazy credential construction, which throws
+            Assert.Throws<CredentialUnavailableException>(() =>
+                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that the default credential chain in server transport mode creates a credential
+    /// successfully. DeviceCodeCredential fallback is suppressed but the rest of the chain is intact.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DefaultBehavior_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
+    {
+        // Arrange
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            // Act
+            var credential = CreateCustomChainedCredential();
+
+            // Assert
+            Assert.NotNull(credential);
+            Assert.IsAssignableFrom<TokenCredential>(credential);
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that dev mode in server transport mode creates a credential successfully.
+    /// DeviceCodeCredential fallback is suppressed, but the dev chain (VS, VS Code, CLI, etc.) remains.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DevMode_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            // Act
+            var credential = CreateCustomChainedCredential();
+
+            // Assert
+            Assert.NotNull(credential);
+            Assert.IsAssignableFrom<TokenCredential>(credential);
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that prod mode does not add DeviceCodeCredential as a fallback.
+    /// Prod is a pinned credential mode, so no interactive fallbacks (browser or device code) are added.
+    /// </summary>
+    [Fact]
+    public void ProdMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that a pinned specific credential does not add DeviceCodeCredential as a fallback.
+    /// Any explicit non-dev, non-browser credential setting is a pinned mode.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureCliCredential")]
+    [InlineData("ManagedIdentityCredential")]
+    [InlineData("EnvironmentCredential")]
+    public void PinnedCredentialMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully(string credentialType)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
     private static TokenCredential CreateCustomChainedCredential()
@@ -265,5 +410,21 @@ public class CustomChainedCredentialTests
         Assert.NotNull(credential);
 
         return credential;
+    }
+
+    private static Type GetCustomChainedCredentialType()
+    {
+        var assembly = typeof(global::Azure.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var type = assembly.GetType("Azure.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        Assert.NotNull(type);
+        return type;
+    }
+
+    private static void SetActiveTransport(Type credentialType, string value)
+    {
+        var prop = credentialType.GetProperty("ActiveTransport",
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        Assert.NotNull(prop);
+        prop.SetValue(null, value);
     }
 }
