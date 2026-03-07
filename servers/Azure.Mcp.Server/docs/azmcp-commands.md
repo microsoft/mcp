@@ -1497,6 +1497,15 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure Device Registry Operations
+
+```bash
+# List Azure Device Registry namespaces in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceregistry namespace list --subscription <subscription> \
+                                    [--resource-group <resource-group>]
+```
+
 ### Azure Event Grid Operations
 
 ```bash
