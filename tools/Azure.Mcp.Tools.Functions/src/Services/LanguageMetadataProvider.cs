@@ -83,6 +83,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "host.json          # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
                     "requirements.txt   # Python dependencies",
+                    "README.md          # Project documentation",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters = null
@@ -132,6 +133,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "local.settings.json # Local development settings (do not commit)",
                     "package.json       # Node.js dependencies and scripts",
                     "tsconfig.json      # TypeScript compiler configuration",
+                    "README.md          # Project documentation",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -188,6 +190,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "host.json          # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
                     "package.json       # Node.js dependencies and scripts",
+                    "README.md          # Project documentation",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -206,9 +209,9 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 Name = "Java",
                 Runtime = "java",
                 ProgrammingModel = "Annotations-based",
-                Prerequisites = ["JDK 8, 11, 17, or 21", "Apache Maven 3.x", "Azure Functions Core Tools v4"],
+                Prerequisites = ["JDK (see RuntimeVersions for supported versions)", "Apache Maven 3.x", "Azure Functions Core Tools v4"],
                 DevelopmentTools = ["VS Code with Java + Azure Functions extensions", "IntelliJ IDEA", "Azure Functions Core Tools"],
-                InitCommand = "func init --worker-runtime java",
+                InitCommand = "mvn archetype:generate -DarchetypeGroupId=com.microsoft.azure -DarchetypeArtifactId=azure-functions-archetype",
                 RunCommand = "mvn clean package && mvn azure-functions:run",
                 BuildCommand = "mvn clean package",
                 ProjectFiles = ["pom.xml"],
@@ -241,6 +244,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "pom.xml            # Maven project configuration (from template)",
                     "host.json          # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
+                    "README.md          # Project documentation",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -277,7 +281,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
 
                     1. Create project using .NET CLI:
                        ```bash
-                       func init --dotnet-isolated
+                       func init --worker-runtime dotnet-isolated
                        ```
 
                     2. Or use Visual Studio / VS Code with Azure Functions extension
@@ -298,6 +302,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "Program.cs          # Application entry point",
                     "host.json           # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
+                    "README.md           # Project documentation",
                     ".funcignore         # Files to exclude from deployment"
                 ],
                 TemplateParameters = null
@@ -343,6 +348,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "local.settings.json # Local development settings (do not commit)",
                     "profile.ps1        # App-level initialization script",
                     "requirements.psd1  # PowerShell module dependencies",
+                    "README.md          # Project documentation",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters = null

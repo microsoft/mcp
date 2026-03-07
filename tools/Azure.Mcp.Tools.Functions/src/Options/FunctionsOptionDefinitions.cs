@@ -18,10 +18,9 @@ public static class FunctionsOptionDefinitions
 
     public static readonly Option<string> RuntimeVersion = new($"--{RuntimeVersionName}")
     {
-        Description = "Optional runtime version for the project. " +
-            "For Java: JDK version (8, 11, 17, 21, 25). " +
-            "For TypeScript: Node.js version (20, 22, 24). " +
-            "When provided, template placeholders like {{javaVersion}} or {{nodeVersion}} are replaced automatically.",
+        Description = "Optional runtime version for Java or TypeScript/JavaScript. " +
+            "When provided, template placeholders like {{javaVersion}} or {{nodeVersion}} are replaced automatically. " +
+            "See 'functions language list' for supported versions.",
         Required = false
     };
 
