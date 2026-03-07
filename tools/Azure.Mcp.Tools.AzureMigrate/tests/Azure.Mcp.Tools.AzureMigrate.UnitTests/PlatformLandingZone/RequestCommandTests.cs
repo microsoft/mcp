@@ -36,7 +36,7 @@ public class RequestCommandTests
         var collection = new ServiceCollection().AddSingleton(_platformLandingZoneService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _platformLandingZoneService, null!);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
