@@ -15,6 +15,7 @@ using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.ResourceManager;
 using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
@@ -312,6 +313,12 @@ public class LoadTestingService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
+
+        if (!string.IsNullOrEmpty(endpointUrl))
+        {
+            EndpointValidator.ValidatePublicTargetUrl(endpointUrl);
+        }
+
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken);

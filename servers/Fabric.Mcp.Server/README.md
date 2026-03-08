@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Microsoft Fabric MCP Server is currently in **Public Preview**.
 <!-- remove-section: end remove_note_preview -->
 
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
@@ -271,6 +271,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ## Feedback and Support
 
+- The Microsoft Fabric MCP Server is an **open-source project in Public Preview**. Support for this server implementation is primarily provided through community channels and GitHub repositories. Customers with qualifying Microsoft enterprise support agreements may have access to limited support for broader Microsoft Fabric and platform scenarios; review the [Microsoft Support Policy](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md#microsoft-support-policy) section of this project for more details.
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
     - [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!

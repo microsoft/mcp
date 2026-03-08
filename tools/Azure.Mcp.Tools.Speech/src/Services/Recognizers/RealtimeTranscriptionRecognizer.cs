@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
@@ -19,6 +20,7 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogger<RealtimeTranscriptionRecognizer> logger)
     : BaseAzureService(tenantService), IRealtimeTranscriptionRecognizer
 {
+    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -61,7 +63,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
+                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
                 var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Configure Speech SDK with endpoint
@@ -495,5 +497,16 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         }
 
         return nbestResults;
+    }
+
+    private string GetCognitiveServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
+            _ => "https://cognitiveservices.azure.com/.default"
+        };
     }
 }

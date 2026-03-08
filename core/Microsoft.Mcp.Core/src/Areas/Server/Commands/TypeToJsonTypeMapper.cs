@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Collections;
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Gets the JSON object type based on its C# type.
@@ -74,7 +74,7 @@ public static class TypeToJsonTypeMapper
 
         if (effectiveType.IsEnum)
         {
-            return "integer";
+            return "string";
         }
 
         return "object";
@@ -144,10 +144,21 @@ public static class TypeToJsonTypeMapper
             }
         }
 
+        // If the type is an enum, populate the allowed values for model guidance
+        if (effectiveType.IsEnum)
+        {
+            return new ToolPropertySchema()
+            {
+                Type = "string",
+                Description = description,
+                Enum = System.Enum.GetNames(effectiveType)
+            };
+        }
+
         return new ToolPropertySchema()
         {
             Type = jsonType,
-            Description = description ?? string.Empty,
+            Description = description,
             Items = itemsSchema
         };
     }

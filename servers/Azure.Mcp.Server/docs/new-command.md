@@ -270,7 +270,7 @@ Choose the appropriate base class for your service based on the operations neede
 **API Pattern Discovery:**
 - Study existing services (e.g., Sql, Postgres, Redis) to understand resource access patterns
 - Use resource collections correctly
-   - ✅ Good: `.GetSqlServers().GetAsync(serverName)`
+   - ✅ Good: `.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken)`
    - ❌ Bad: `.GetSqlServerAsync(serverName, cancellationToken)`
 - Check Azure SDK documentation for correct method signatures and property names
 
@@ -364,9 +364,9 @@ var upgradeStatus = await vmssResource.Value
     .GetLatestVirtualMachineScaleSetRollingUpgradeAsync(cancellationToken);
 
 // ✅ Correct: VMSS instances
-var vms = vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync();
+var vms = await vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync(cancellationToken: cancellationToken);
 
-// Pattern: Get{ResourceType}() returns collection, then .GetAsync() or .GetAllAsync()
+// Pattern: Get{ResourceType}() returns collection, then .GetAsync(ResourceName, CancellationToken) or .GetAllAsync(CancellationToken)
 ```
 
 ### 2. Options Class
@@ -904,7 +904,7 @@ public interface IMyService
         string subscription,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -2175,7 +2175,7 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(null, retryPolicy);
@@ -2185,7 +2185,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 **Issue: `cannot convert from 'System.Threading.CancellationToken' to 'string'`**
 - **Cause**: Wrong parameter order in resource manager method calls
 - **Solution**: Check method signatures; many Azure SDK methods don't take CancellationToken as second parameter
-- **Fix**: Use `.GetAsync(resourceName)` instead of `.GetAsync(resourceName, cancellationToken)`
+- **Fix**: Use `.GetAsync(resourceName, cancellationToken: cancellationToken)` instead of `.GetAsync(resourceName, cancellationToken)`
 
 **Issue: `'SqlDatabaseData' does not contain a definition for 'CreationDate'`**
 - **Cause**: Property names in Azure SDK differ from expected/documented names
@@ -2201,7 +2201,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 
 **Issue: Wrong resource access pattern**
 - **Problem**: Using `.GetSqlServerAsync(name, cancellationToken)`
-- **Solution**: Use resource collections: `.GetSqlServers().GetAsync(name)`
+- **Solution**: Use resource collections: `GetSqlServers().GetAsync(name, cancellationToken: cancellationToken)`
 - **Pattern**: Always access through collections, not direct async methods
 
 ### Live Test Infrastructure Issues
@@ -2412,7 +2412,8 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
 
@@ -2420,7 +2421,8 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.RetryPolicy);
+            options.RetryPolicy,
+            cancellationToken);
 
         // Standard response format works for all transports
         context.Response.Results = ResponseResult.Create(
@@ -2473,7 +2475,7 @@ public class StorageService : BaseAzureService, IStorageService
         CancellationToken cancellationToken = default)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy);
+        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy, cancellationToken: cancellationToken);
 
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
@@ -2511,7 +2513,8 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         // ✅ Options created per-request, no shared state
         var options = BindOptions(parseResult);
@@ -2520,7 +2523,8 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
         var databases = await _sqlService.ListDatabasesAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.Server);
+            options.Server,
+            cancellationToken: cancellationToken);
 
         return context.Response;
     }
@@ -2739,6 +2743,7 @@ Before submitting:
 ### Azure SDK Integration
 - [ ] All Azure SDK property names verified and correct
 - [ ] Resource access patterns use collections (e.g., `.GetSqlServers().GetAsync()`)
+- [ ] Use cancellation token when using async methods (e.g., `GetAsync(serverName, cancellationToken: cancellationToken)`)
 - [ ] Subscription resolution uses `ISubscriptionService.GetSubscription()`
 - [ ] Service constructor includes `ISubscriptionService` injection for Azure resources
 
