@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Fabric.Mcp.Server": {
+      "commandName": "Project",
+      "commandLineArgs": "core create_item --workspace-id \"b35c5abf-b0a7-4312-bece-1ab0bc1384bd\" --display-name \"J NB\" --item-type Notebook"
+    }
+  }
+}

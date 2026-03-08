@@ -51,14 +51,14 @@ public sealed class ItemCreateCommand(
     protected override ItemCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceIdName);
-        var workspaceName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceName);
+        var workspaceId = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
             ? workspaceId!
             : workspaceName ?? string.Empty;
-        options.ItemName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DisplayNameName) ?? string.Empty;
-        options.ItemType = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.ItemTypeName) ?? string.Empty;
-        options.ItemDescription = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DescriptionName);
+        options.ItemName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DisplayName.Name) ?? string.Empty;
+        options.ItemType = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.ItemType.Name) ?? string.Empty;
+        options.ItemDescription = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Description.Name);
         return options;
     }
 
