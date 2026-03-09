@@ -29,7 +29,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </listheader>
 /// <item>
 /// <term>"dev"</term>
-/// <description>Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential</description>
+/// <description>Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential → DeviceCodeCredential (CLI mode; fallbacks suppressed in server transport mode)</description>
 /// </item>
 /// <item>
 /// <term>"prod"</term>
@@ -37,7 +37,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </item>
 /// <item>
 /// <term>"DeviceCodeCredential"</term>
-/// <description>Device code flow — prints a URL and one-time code to stdout; works in headless environments (Docker, WSL, SSH, CI)</description>
+/// <description>Device code flow — displays a URL and one-time code on the console; works in headless environments (Docker, WSL, SSH, CI). Not available in server transport mode (stdio/http).</description>
 /// </item>
 /// <item>
 /// <term>Specific credential name</term>
@@ -45,7 +45,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </item>
 /// <item>
 /// <term>Not set or empty</term>
-/// <description>Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI) + InteractiveBrowserCredential fallback</description>
+/// <description>Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI) + InteractiveBrowserCredential + DeviceCodeCredential as last-resort fallbacks (CLI mode only; both suppressed in server transport mode)</description>
 /// </item>
 /// </list>
 /// <para>
@@ -56,16 +56,21 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// Visual Studio Code credential is automatically prioritized first in the chain.
 /// </para>
 /// <para>
-/// InteractiveBrowserCredential with Identity Broker is added as a final fallback only when:
+/// InteractiveBrowserCredential with Identity Broker is added as an interactive fallback only when:
 /// - AZURE_TOKEN_CREDENTIALS is not set (default behavior)
 /// - AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
 /// - AZURE_TOKEN_CREDENTIALS="InteractiveBrowserCredential" (explicitly requested)
+/// It is NOT added when AZURE_TOKEN_CREDENTIALS is "prod" or any specific credential name
+/// (user wants only that credential, no interactive popup).
 /// </para>
 /// <para>
-/// It is NOT added when:
-/// - AZURE_TOKEN_CREDENTIALS="prod" (production credentials only, fail fast if unavailable)
-/// - AZURE_TOKEN_CREDENTIALS="DeviceCodeCredential" (non-interactive device code flow requested)
-/// - AZURE_TOKEN_CREDENTIALS=specific credential name (user wants only that credential, fail fast)
+/// DeviceCodeCredential is appended automatically as a last-resort fallback (after
+/// InteractiveBrowserCredential) only when ALL of the following are true:
+/// - AZURE_TOKEN_CREDENTIALS is not set or is "dev" (non-pinned mode)
+/// - AZURE_TOKEN_CREDENTIALS is not "InteractiveBrowserCredential"
+/// - ActiveTransport is empty (not running as an MCP server in stdio or http mode)
+/// It is NOT appended when a specific credential is pinned (including "prod"),
+/// when "InteractiveBrowserCredential" is explicitly requested, or when running as a server.
 /// </para>
 /// <para>
 /// The <c>forceBrowserFallback</c> constructor parameter lets callers (e.g. registry server OAuth)

@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using Azure.Core;
+using Azure.Identity;
+using Microsoft.Extensions.Logging;
+using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Services.Azure.Authentication;
 
@@ -35,6 +39,7 @@ public class CustomChainedCredentialTests
     public void DevMode_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
 
         // Act
@@ -54,6 +59,7 @@ public class CustomChainedCredentialTests
     public void ProdMode_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
 
         // Act
@@ -72,6 +78,7 @@ public class CustomChainedCredentialTests
     public void SpecificCredential_ManagedIdentity_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
 
         // Act
@@ -90,6 +97,7 @@ public class CustomChainedCredentialTests
     public void SpecificCredential_AzureCli_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzureCliCredential");
 
         // Act
@@ -108,6 +116,7 @@ public class CustomChainedCredentialTests
     public void SpecificCredential_InteractiveBrowser_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "InteractiveBrowserCredential");
 
         // Act
@@ -132,6 +141,7 @@ public class CustomChainedCredentialTests
     public void SpecificCredential_VariousTypes_CreateCredentialSuccessfully(string credentialType)
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
 
         // Act
@@ -150,6 +160,7 @@ public class CustomChainedCredentialTests
     public void ManagedIdentityCredential_WithClientId_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS", "AZURE_CLIENT_ID");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
         Environment.SetEnvironmentVariable("AZURE_CLIENT_ID", "12345678-1234-1234-1234-123456789012");
 
@@ -169,6 +180,7 @@ public class CustomChainedCredentialTests
     public void ManagedIdentityCredential_WithoutClientId_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
 
         // Act
@@ -187,6 +199,7 @@ public class CustomChainedCredentialTests
     public void OnlyUseBrokerCredential_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL");
         Environment.SetEnvironmentVariable("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL", "true");
 
         // Act
@@ -206,6 +219,7 @@ public class CustomChainedCredentialTests
     public void VSCodeContext_WithoutExplicitSetting_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("VSCODE_PID");
         Environment.SetEnvironmentVariable("VSCODE_PID", "12345");
 
         // Act
@@ -225,6 +239,7 @@ public class CustomChainedCredentialTests
     public void VSCodeContext_WithExplicitProdSetting_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("VSCODE_PID", "AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("VSCODE_PID", "12345");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
 
@@ -245,6 +260,7 @@ public class CustomChainedCredentialTests
     public void DeviceCodeCredential_ExplicitMode_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
 
         // Act
@@ -266,6 +282,7 @@ public class CustomChainedCredentialTests
     public void DeviceCodeCredential_InServerTransportMode_ThrowsCredentialUnavailableException(string transport)
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
         var credentialType = GetCustomChainedCredentialType();
         SetActiveTransport(credentialType, transport);
@@ -322,6 +339,7 @@ public class CustomChainedCredentialTests
     public void DevMode_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
         var credentialType = GetCustomChainedCredentialType();
         SetActiveTransport(credentialType, transport);
@@ -349,6 +367,7 @@ public class CustomChainedCredentialTests
     public void ProdMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully()
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
 
         // Act
@@ -370,6 +389,7 @@ public class CustomChainedCredentialTests
     public void PinnedCredentialMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully(string credentialType)
     {
         // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
 
         // Act
@@ -422,5 +442,21 @@ public class CustomChainedCredentialTests
             BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
         Assert.NotNull(prop);
         prop.SetValue(null, value);
+    }
+
+    /// <summary>
+    /// Saves the current values of the specified environment variables and restores them on disposal.
+    /// Use with <c>using var</c> to guarantee restoration even when a test throws.
+    /// </summary>
+    private sealed class EnvironmentScope(params string[] names) : IDisposable
+    {
+        private readonly (string Name, string? Value)[] _saved =
+            names.Select(n => (n, Environment.GetEnvironmentVariable(n))).ToArray();
+
+        public void Dispose()
+        {
+            foreach (var (name, value) in _saved)
+                Environment.SetEnvironmentVariable(name, value);
+        }
     }
 }
