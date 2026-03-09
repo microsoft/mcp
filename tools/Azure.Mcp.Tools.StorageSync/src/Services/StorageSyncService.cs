@@ -33,52 +33,42 @@ public sealed class StorageSyncService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var services = new List<StorageSyncServiceDataSchema>();
+
+        if (!string.IsNullOrEmpty(resourceGroup))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-
-            var services = new List<StorageSyncServiceDataSchema>();
-
-            if (!string.IsNullOrEmpty(resourceGroup))
+            ResourceGroupResource resourceGroupResource;
+            try
             {
-                ResourceGroupResource resourceGroupResource;
-                try
-                {
-                    var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    resourceGroupResource = response.Value;
-                }
-                catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning(reqEx,
-                        "Resource group not found when listing Storage Sync services. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                        resourceGroup, subscription);
-                    return [];
-                }
-
-                var collection = resourceGroupResource.GetStorageSyncServices();
-                await foreach (var serviceResource in collection.WithCancellation(cancellationToken))
-                {
-                    services.Add(StorageSyncServiceDataSchema.FromResource(serviceResource));
-                }
+                var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                resourceGroupResource = response.Value;
             }
-            else
+            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
             {
-                await foreach (var serviceResource in subscriptionResource.GetStorageSyncServicesAsync(cancellationToken))
-                {
-                    services.Add(StorageSyncServiceDataSchema.FromResource(serviceResource));
-                }
+                _logger.LogWarning(reqEx,
+                    "Resource group not found when listing Storage Sync services. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                    resourceGroup, subscription);
+                return [];
             }
 
-            return services;
+            var collection = resourceGroupResource.GetStorageSyncServices();
+            await foreach (var serviceResource in collection.WithCancellation(cancellationToken))
+            {
+                services.Add(StorageSyncServiceDataSchema.FromResource(serviceResource));
+            }
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex,
-                "Error listing Storage Sync services. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                resourceGroup, subscription);
-            throw;
+            await foreach (var serviceResource in subscriptionResource.GetStorageSyncServicesAsync(cancellationToken))
+            {
+                services.Add(StorageSyncServiceDataSchema.FromResource(serviceResource));
+            }
         }
+
+        return services;
     }
 
     public async Task<StorageSyncServiceDataSchema?> GetStorageSyncServiceAsync(
@@ -111,13 +101,6 @@ public sealed class StorageSyncService(
                 storageSyncServiceName, resourceGroup, subscription);
             return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                storageSyncServiceName, resourceGroup, subscription);
-            throw;
-        }
     }
 
     public async Task<StorageSyncServiceDataSchema> CreateStorageSyncServiceAsync(
@@ -136,40 +119,30 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(location), location));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            var content = new StorageSyncServiceCreateOrUpdateContent(new(location));
-            if (tags != null)
+        var content = new StorageSyncServiceCreateOrUpdateContent(new(location));
+        if (tags != null)
+        {
+            foreach (var tag in tags)
             {
-                foreach (var tag in tags)
-                {
-                    content.Tags.Add(tag.Key, tag.Value);
-                }
+                content.Tags.Add(tag.Key, tag.Value);
             }
-
-            var operation = await resourceGroupResource.Value.GetStorageSyncServices().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                storageSyncServiceName,
-                content,
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully created Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Location: {Location}",
-                storageSyncServiceName, resourceGroup, location);
-
-            return StorageSyncServiceDataSchema.FromResource(operation.Value);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error creating Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                storageSyncServiceName, resourceGroup, subscription);
-            throw;
-        }
+
+        var operation = await resourceGroupResource.Value.GetStorageSyncServices().CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            storageSyncServiceName,
+            content,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully created Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+            storageSyncServiceName, resourceGroup, location);
+
+        return StorageSyncServiceDataSchema.FromResource(operation.Value);
     }
 
     public async Task<StorageSyncServiceDataSchema> UpdateStorageSyncServiceAsync(
@@ -188,52 +161,42 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+
+        var patch = new StorageSyncServicePatch();
+
+        // Update incoming traffic policy
+        if (!string.IsNullOrEmpty(incomingTrafficPolicy))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-
-            var patch = new StorageSyncServicePatch();
-
-            // Update incoming traffic policy
-            if (!string.IsNullOrEmpty(incomingTrafficPolicy))
-            {
-                patch.IncomingTrafficPolicy = new IncomingTrafficPolicy(incomingTrafficPolicy);
-            }
-
-            // Update tags
-            if (tags != null)
-            {
-                foreach (var tag in tags)
-                {
-                    patch.Tags[tag.Key] = tag.Value?.ToString() ?? string.Empty;
-                }
-            }
-
-            // Update identity
-            if (!string.IsNullOrEmpty(identityType))
-            {
-                var identity = new ResourceManager.Models.ManagedServiceIdentity(new(identityType));
-                patch.Identity = identity;
-            }
-
-            var operation = await serviceResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully updated Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
-                storageSyncServiceName, resourceGroup);
-
-            return StorageSyncServiceDataSchema.FromResource(operation.Value);
+            patch.IncomingTrafficPolicy = new IncomingTrafficPolicy(incomingTrafficPolicy);
         }
-        catch (Exception ex)
+
+        // Update tags
+        if (tags != null)
         {
-            _logger.LogError(ex,
-                "Error updating Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                storageSyncServiceName, resourceGroup, subscription);
-            throw;
+            foreach (var tag in tags)
+            {
+                patch.Tags[tag.Key] = tag.Value?.ToString() ?? string.Empty;
+            }
         }
+
+        // Update identity
+        if (!string.IsNullOrEmpty(identityType))
+        {
+            var identity = new ResourceManager.Models.ManagedServiceIdentity(new(identityType));
+            patch.Identity = identity;
+        }
+
+        var operation = await serviceResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully updated Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
+            storageSyncServiceName, resourceGroup);
+
+        return StorageSyncServiceDataSchema.FromResource(operation.Value);
     }
 
     public async Task DeleteStorageSyncServiceAsync(
@@ -249,26 +212,16 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            await serviceResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await serviceResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
-            _logger.LogInformation(
-                "Successfully deleted Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
-                storageSyncServiceName, resourceGroup);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                storageSyncServiceName, resourceGroup, subscription);
-            throw;
-        }
+        _logger.LogInformation(
+            "Successfully deleted Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
+            storageSyncServiceName, resourceGroup);
     }
 
     // Sync Group Operations
@@ -285,26 +238,18 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var syncGroups = new List<SyncGroupDataSchema>();
-            await foreach (var syncGroupResource in serviceResource.Value.GetStorageSyncGroups().WithCancellation(cancellationToken))
-            {
-                syncGroups.Add(SyncGroupDataSchema.FromResource(syncGroupResource));
-            }
-
-            return syncGroups;
-        }
-        catch (Exception ex)
+        var syncGroups = new List<SyncGroupDataSchema>();
+        await foreach (var syncGroupResource in serviceResource.Value.GetStorageSyncGroups().WithCancellation(cancellationToken))
         {
-            _logger.LogError(ex, "Error listing Sync Groups");
-            throw;
+            syncGroups.Add(SyncGroupDataSchema.FromResource(syncGroupResource));
         }
+
+        return syncGroups;
     }
 
     public async Task<SyncGroupDataSchema?> GetSyncGroupAsync(
@@ -337,11 +282,6 @@ public sealed class StorageSyncService(
             _logger.LogWarning(reqEx, "Sync Group not found: {SyncGroup}", syncGroupName);
             return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting Sync Group: {SyncGroup}", syncGroupName);
-            throw;
-        }
     }
 
     public async Task<SyncGroupDataSchema> CreateSyncGroupAsync(
@@ -359,24 +299,16 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var content = new StorageSyncGroupCreateOrUpdateContent();
-            var operation = await serviceResource.Value.GetStorageSyncGroups().CreateOrUpdateAsync(WaitUntil.Completed, syncGroupName, content, cancellationToken);
+        var content = new StorageSyncGroupCreateOrUpdateContent();
+        var operation = await serviceResource.Value.GetStorageSyncGroups().CreateOrUpdateAsync(WaitUntil.Completed, syncGroupName, content, cancellationToken);
 
-            _logger.LogInformation("Successfully created Sync Group: {SyncGroup}", syncGroupName);
-            return SyncGroupDataSchema.FromResource(operation.Value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating Sync Group: {SyncGroup}", syncGroupName);
-            throw;
-        }
+        _logger.LogInformation("Successfully created Sync Group: {SyncGroup}", syncGroupName);
+        return SyncGroupDataSchema.FromResource(operation.Value);
     }
 
     public async Task DeleteSyncGroupAsync(
@@ -394,23 +326,15 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
-            await syncGroupResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await syncGroupResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
-            _logger.LogInformation("Successfully deleted Sync Group: {SyncGroup}", syncGroupName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting Sync Group: {SyncGroup}", syncGroupName);
-            throw;
-        }
+        _logger.LogInformation("Successfully deleted Sync Group: {SyncGroup}", syncGroupName);
     }
 
     // Cloud Endpoint Operations
@@ -429,27 +353,19 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
-            var endpoints = new List<CloudEndpointDataSchema>();
-            await foreach (var endpointResource in syncGroupResource.Value.GetCloudEndpoints().WithCancellation(cancellationToken))
-            {
-                endpoints.Add(CloudEndpointDataSchema.FromResource(endpointResource));
-            }
-
-            return endpoints;
-        }
-        catch (Exception ex)
+        var endpoints = new List<CloudEndpointDataSchema>();
+        await foreach (var endpointResource in syncGroupResource.Value.GetCloudEndpoints().WithCancellation(cancellationToken))
         {
-            _logger.LogError(ex, "Error listing Cloud Endpoints");
-            throw;
+            endpoints.Add(CloudEndpointDataSchema.FromResource(endpointResource));
         }
+
+        return endpoints;
     }
 
     public async Task<CloudEndpointDataSchema?> GetCloudEndpointAsync(
@@ -485,11 +401,6 @@ public sealed class StorageSyncService(
             _logger.LogWarning(reqEx, "Cloud Endpoint not found: {Endpoint}", cloudEndpointName);
             return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting Cloud Endpoint: {Endpoint}", cloudEndpointName);
-            throw;
-        }
     }
 
     public async Task<CloudEndpointDataSchema> CreateCloudEndpointAsync(
@@ -513,46 +424,38 @@ public sealed class StorageSyncService(
             (nameof(storageAccountResourceId), storageAccountResourceId),
             (nameof(azureFileShareName), azureFileShareName));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        // Get subscription data to access tenant ID
+        var subscriptionData = await subscriptionResource.GetAsync(cancellationToken);
+
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+
+        // Get the tenant ID - use provided tenant or get from subscription
+        Guid? storageAccountTenantId = null;
+        if (tenant != null && Guid.TryParse(tenant, out var parsedTenantId))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-
-            // Get subscription data to access tenant ID
-            var subscriptionData = await subscriptionResource.GetAsync(cancellationToken);
-
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
-
-            // Get the tenant ID - use provided tenant or get from subscription
-            Guid? storageAccountTenantId = null;
-            if (tenant != null && Guid.TryParse(tenant, out var parsedTenantId))
-            {
-                storageAccountTenantId = parsedTenantId;
-            }
-            else if (subscriptionData.Value.Data.TenantId.HasValue)
-            {
-                storageAccountTenantId = subscriptionData.Value.Data.TenantId.Value;
-            }
-
-            var content = new CloudEndpointCreateOrUpdateContent
-            {
-                StorageAccountResourceId = new(storageAccountResourceId),
-                AzureFileShareName = azureFileShareName,
-                StorageAccountTenantId = storageAccountTenantId
-            };
-            var operation = await syncGroupResource.Value.GetCloudEndpoints().CreateOrUpdateAsync(
-                WaitUntil.Completed, cloudEndpointName, content, cancellationToken);
-
-            _logger.LogInformation("Successfully created Cloud Endpoint: {Endpoint}", cloudEndpointName);
-            return CloudEndpointDataSchema.FromResource(operation.Value);
+            storageAccountTenantId = parsedTenantId;
         }
-        catch (Exception ex)
+        else if (subscriptionData.Value.Data.TenantId.HasValue)
         {
-            _logger.LogError(ex, "Error creating Cloud Endpoint: {Endpoint}", cloudEndpointName);
-            throw;
+            storageAccountTenantId = subscriptionData.Value.Data.TenantId.Value;
         }
+
+        var content = new CloudEndpointCreateOrUpdateContent
+        {
+            StorageAccountResourceId = new(storageAccountResourceId),
+            AzureFileShareName = azureFileShareName,
+            StorageAccountTenantId = storageAccountTenantId
+        };
+        var operation = await syncGroupResource.Value.GetCloudEndpoints().CreateOrUpdateAsync(
+            WaitUntil.Completed, cloudEndpointName, content, cancellationToken);
+
+        _logger.LogInformation("Successfully created Cloud Endpoint: {Endpoint}", cloudEndpointName);
+        return CloudEndpointDataSchema.FromResource(operation.Value);
     }
 
     public async Task DeleteCloudEndpointAsync(
@@ -572,24 +475,16 @@ public sealed class StorageSyncService(
             (nameof(syncGroupName), syncGroupName),
             (nameof(cloudEndpointName), cloudEndpointName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
-            var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
 
-            await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
-            _logger.LogInformation("Successfully deleted Cloud Endpoint: {Endpoint}", cloudEndpointName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting Cloud Endpoint: {Endpoint}", cloudEndpointName);
-            throw;
-        }
+        _logger.LogInformation("Successfully deleted Cloud Endpoint: {Endpoint}", cloudEndpointName);
     }
 
     public async Task TriggerChangeDetectionAsync(
@@ -613,44 +508,36 @@ public sealed class StorageSyncService(
             (nameof(cloudEndpointName), cloudEndpointName),
             (nameof(directoryPath), directoryPath));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
+
+        var content = new TriggerChangeDetectionContent
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
-            var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
+            DirectoryPath = directoryPath
+        };
 
-            var content = new TriggerChangeDetectionContent
-            {
-                DirectoryPath = directoryPath
-            };
-
-            // Set change detection mode if provided
-            if (!string.IsNullOrEmpty(changeDetectionMode))
-            {
-                content.ChangeDetectionMode = new(changeDetectionMode);
-            }
-
-            // Add paths if provided
-            if (paths != null)
-            {
-                foreach (var path in paths)
-                {
-                    content.Paths.Add(path);
-                }
-            }
-
-            await endpointResource.Value.TriggerChangeDetectionAsync(WaitUntil.Completed, content, cancellationToken);
-
-            _logger.LogInformation("Successfully triggered change detection for Cloud Endpoint: {Endpoint}", cloudEndpointName);
-        }
-        catch (Exception ex)
+        // Set change detection mode if provided
+        if (!string.IsNullOrEmpty(changeDetectionMode))
         {
-            _logger.LogError(ex, "Error triggering change detection for Cloud Endpoint: {Endpoint}", cloudEndpointName);
-            throw;
+            content.ChangeDetectionMode = new(changeDetectionMode);
         }
+
+        // Add paths if provided
+        if (paths != null)
+        {
+            foreach (var path in paths)
+            {
+                content.Paths.Add(path);
+            }
+        }
+
+        await endpointResource.Value.TriggerChangeDetectionAsync(WaitUntil.Completed, content, cancellationToken);
+
+        _logger.LogInformation("Successfully triggered change detection for Cloud Endpoint: {Endpoint}", cloudEndpointName);
     }
 
     // Server Endpoint Operations
@@ -669,27 +556,19 @@ public sealed class StorageSyncService(
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
-            var endpoints = new List<ServerEndpointDataSchema>();
-            await foreach (var endpointResource in syncGroupResource.Value.GetStorageSyncServerEndpoints().WithCancellation(cancellationToken))
-            {
-                endpoints.Add(ServerEndpointDataSchema.FromResource(endpointResource));
-            }
-
-            return endpoints;
-        }
-        catch (Exception ex)
+        var endpoints = new List<ServerEndpointDataSchema>();
+        await foreach (var endpointResource in syncGroupResource.Value.GetStorageSyncServerEndpoints().WithCancellation(cancellationToken))
         {
-            _logger.LogError(ex, "Error listing Server Endpoints");
-            throw;
+            endpoints.Add(ServerEndpointDataSchema.FromResource(endpointResource));
         }
+
+        return endpoints;
     }
 
     public async Task<ServerEndpointDataSchema?> GetServerEndpointAsync(
@@ -725,11 +604,6 @@ public sealed class StorageSyncService(
             _logger.LogWarning(reqEx, "Server Endpoint not found: {Endpoint}", serverEndpointName);
             return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting Server Endpoint: {Endpoint}", serverEndpointName);
-            throw;
-        }
     }
 
     public async Task<ServerEndpointDataSchema> CreateServerEndpointAsync(
@@ -757,48 +631,40 @@ public sealed class StorageSyncService(
             (nameof(serverResourceId), serverResourceId),
             (nameof(serverLocalPath), serverLocalPath));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+
+        var content = new StorageSyncServerEndpointCreateOrUpdateContent
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+            ServerResourceId = new(serverResourceId),
+            ServerLocalPath = serverLocalPath
+        };
 
-            var content = new StorageSyncServerEndpointCreateOrUpdateContent
-            {
-                ServerResourceId = new(serverResourceId),
-                ServerLocalPath = serverLocalPath
-            };
-
-            if (enableCloudTiering.HasValue)
-            {
-                content.CloudTiering = enableCloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
-            }
-            if (volumeFreeSpacePercent.HasValue)
-            {
-                content.VolumeFreeSpacePercent = volumeFreeSpacePercent;
-            }
-            if (tierFilesOlderThanDays.HasValue)
-            {
-                content.TierFilesOlderThanDays = tierFilesOlderThanDays;
-            }
-            if (!string.IsNullOrEmpty(localCacheMode))
-            {
-                content.LocalCacheMode = new LocalCacheMode(localCacheMode);
-            }
-
-            var operation = await syncGroupResource.Value.GetStorageSyncServerEndpoints().CreateOrUpdateAsync(
-                WaitUntil.Completed, serverEndpointName, content, cancellationToken);
-
-            _logger.LogInformation("Successfully created Server Endpoint: {Endpoint}", serverEndpointName);
-            return ServerEndpointDataSchema.FromResource(operation.Value);
-        }
-        catch (Exception ex)
+        if (enableCloudTiering.HasValue)
         {
-            _logger.LogError(ex, "Error creating Server Endpoint: {Endpoint}", serverEndpointName);
-            throw;
+            content.CloudTiering = enableCloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
         }
+        if (volumeFreeSpacePercent.HasValue)
+        {
+            content.VolumeFreeSpacePercent = volumeFreeSpacePercent;
+        }
+        if (tierFilesOlderThanDays.HasValue)
+        {
+            content.TierFilesOlderThanDays = tierFilesOlderThanDays;
+        }
+        if (!string.IsNullOrEmpty(localCacheMode))
+        {
+            content.LocalCacheMode = new LocalCacheMode(localCacheMode);
+        }
+
+        var operation = await syncGroupResource.Value.GetStorageSyncServerEndpoints().CreateOrUpdateAsync(
+            WaitUntil.Completed, serverEndpointName, content, cancellationToken);
+
+        _logger.LogInformation("Successfully created Server Endpoint: {Endpoint}", serverEndpointName);
+        return ServerEndpointDataSchema.FromResource(operation.Value);
     }
 
     public async Task<ServerEndpointDataSchema> UpdateServerEndpointAsync(
@@ -822,43 +688,35 @@ public sealed class StorageSyncService(
             (nameof(syncGroupName), syncGroupName),
             (nameof(serverEndpointName), serverEndpointName));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
+
+        var patch = new StorageSyncServerEndpointPatch();
+        if (cloudTiering.HasValue)
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
-            var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
-
-            var patch = new StorageSyncServerEndpointPatch();
-            if (cloudTiering.HasValue)
-            {
-                patch.CloudTiering = cloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
-            }
-            if (volumeFreeSpacePercent.HasValue)
-            {
-                patch.VolumeFreeSpacePercent = volumeFreeSpacePercent;
-            }
-            if (tierFilesOlderThanDays.HasValue)
-            {
-                patch.TierFilesOlderThanDays = tierFilesOlderThanDays;
-            }
-            if (!string.IsNullOrEmpty(localCacheMode))
-            {
-                patch.LocalCacheMode = new(localCacheMode);
-            }
-
-            var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
-
-            _logger.LogInformation("Successfully updated Server Endpoint: {Endpoint}", serverEndpointName);
-            return ServerEndpointDataSchema.FromResource(operation.Value);
+            patch.CloudTiering = cloudTiering.Value ? StorageSyncFeatureStatus.On : StorageSyncFeatureStatus.Off;
         }
-        catch (Exception ex)
+        if (volumeFreeSpacePercent.HasValue)
         {
-            _logger.LogError(ex, "Error updating Server Endpoint: {Endpoint}", serverEndpointName);
-            throw;
+            patch.VolumeFreeSpacePercent = volumeFreeSpacePercent;
         }
+        if (tierFilesOlderThanDays.HasValue)
+        {
+            patch.TierFilesOlderThanDays = tierFilesOlderThanDays;
+        }
+        if (!string.IsNullOrEmpty(localCacheMode))
+        {
+            patch.LocalCacheMode = new(localCacheMode);
+        }
+
+        var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+
+        _logger.LogInformation("Successfully updated Server Endpoint: {Endpoint}", serverEndpointName);
+        return ServerEndpointDataSchema.FromResource(operation.Value);
     }
 
     public async Task DeleteServerEndpointAsync(
@@ -878,24 +736,16 @@ public sealed class StorageSyncService(
             (nameof(syncGroupName), syncGroupName),
             (nameof(serverEndpointName), serverEndpointName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
-            var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
 
-            await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
-            _logger.LogInformation("Successfully deleted Server Endpoint: {Endpoint}", serverEndpointName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting Server Endpoint: {Endpoint}", serverEndpointName);
-            throw;
-        }
+        _logger.LogInformation("Successfully deleted Server Endpoint: {Endpoint}", serverEndpointName);
     }
 
     // Registered Server Operations
@@ -912,26 +762,18 @@ public sealed class StorageSyncService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var servers = new List<RegisteredServerDataSchema>();
-            await foreach (var serverResource in serviceResource.Value.GetStorageSyncRegisteredServers().WithCancellation(cancellationToken))
-            {
-                servers.Add(RegisteredServerDataSchema.FromResource(serverResource));
-            }
-
-            return servers;
-        }
-        catch (Exception ex)
+        var servers = new List<RegisteredServerDataSchema>();
+        await foreach (var serverResource in serviceResource.Value.GetStorageSyncRegisteredServers().WithCancellation(cancellationToken))
         {
-            _logger.LogError(ex, "Error listing Registered Servers");
-            throw;
+            servers.Add(RegisteredServerDataSchema.FromResource(serverResource));
         }
+
+        return servers;
     }
 
     public async Task<RegisteredServerDataSchema?> GetRegisteredServerAsync(
@@ -967,11 +809,6 @@ public sealed class StorageSyncService(
             _logger.LogWarning(reqEx, "Registered Server not found: {Server}", registeredServerId);
             return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting Registered Server: {Server}", registeredServerId);
-            throw;
-        }
     }
 
     public async Task<RegisteredServerDataSchema> RegisterServerAsync(
@@ -992,25 +829,17 @@ public sealed class StorageSyncService(
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-            var content = new StorageSyncRegisteredServerCreateOrUpdateContent();
-            var operation = await serviceResource.Value.GetStorageSyncRegisteredServers().CreateOrUpdateAsync(
-                WaitUntil.Completed, serverGuid, content, cancellationToken);
+        var content = new StorageSyncRegisteredServerCreateOrUpdateContent();
+        var operation = await serviceResource.Value.GetStorageSyncRegisteredServers().CreateOrUpdateAsync(
+            WaitUntil.Completed, serverGuid, content, cancellationToken);
 
-            _logger.LogInformation("Successfully registered Server: {Server}", registeredServerId);
-            return RegisteredServerDataSchema.FromResource(operation.Value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error registering Server: {Server}", registeredServerId);
-            throw;
-        }
+        _logger.LogInformation("Successfully registered Server: {Server}", registeredServerId);
+        return RegisteredServerDataSchema.FromResource(operation.Value);
     }
 
     public async Task<RegisteredServerDataSchema> UpdateServerAsync(
@@ -1032,27 +861,19 @@ public sealed class StorageSyncService(
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
 
-            var patch = new StorageSyncRegisteredServerPatch();
-            // Add any patch-specific logic here if needed
+        var patch = new StorageSyncRegisteredServerPatch();
+        // Add any patch-specific logic here if needed
 
-            var operation = await serverResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var operation = await serverResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
 
-            _logger.LogInformation("Successfully updated Registered Server: {Server}", registeredServerId);
-            return RegisteredServerDataSchema.FromResource(operation.Value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating Registered Server: {Server}", registeredServerId);
-            throw;
-        }
+        _logger.LogInformation("Successfully updated Registered Server: {Server}", registeredServerId);
+        return RegisteredServerDataSchema.FromResource(operation.Value);
     }
 
     public async Task UnregisterServerAsync(
@@ -1073,23 +894,15 @@ public sealed class StorageSyncService(
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        try
-        {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-            var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
-            var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
 
-            await serverResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        await serverResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
-            _logger.LogInformation("Successfully unregistered Server: {Server}", registeredServerId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error unregistering Server: {Server}", registeredServerId);
-            throw;
-        }
+        _logger.LogInformation("Successfully unregistered Server: {Server}", registeredServerId);
     }
 
     /// <summary>

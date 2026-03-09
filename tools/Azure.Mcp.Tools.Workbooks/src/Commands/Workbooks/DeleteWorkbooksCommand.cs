@@ -86,7 +86,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new([.. result.Succeeded], [.. result.Failed]),
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
                 WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
         }
         catch (Exception ex)

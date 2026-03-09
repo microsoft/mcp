@@ -31,23 +31,15 @@ public class GrafanaService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var workspaces = await ExecuteResourceQueryAsync(
-                "Microsoft.Dashboard/grafana",
-                resourceGroup: null, // all resource groups
-                subscription,
-                retryPolicy,
-                ConvertToWorkspaceModel,
-                cancellationToken: cancellationToken);
+        var workspaces = await ExecuteResourceQueryAsync(
+            "Microsoft.Dashboard/grafana",
+            resourceGroup: null, // all resource groups
+            subscription,
+            retryPolicy,
+            ConvertToWorkspaceModel,
+            cancellationToken: cancellationToken);
 
-            return workspaces;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Grafana workspaces.");
-            throw;
-        }
+        return workspaces;
     }
 
     /// <summary>

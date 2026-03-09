@@ -36,17 +36,9 @@ public sealed class KeyVaultService(
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
-        try
+        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => x.Managed == includeManagedKeys))
         {
-            await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => x.Managed == includeManagedKeys))
-            {
-                keys.Add(key.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving keys from vault {VaultName}.", vaultName);
-            throw;
+            keys.Add(key.Name);
         }
 
         return keys;
@@ -65,15 +57,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving key '{KeyName}' from vault {VaultName}.", keyName, vaultName);
-            throw;
-        }
+        return await client.GetKeyAsync(keyName, cancellationToken: cancellationToken);
     }
 
     public async Task<KeyVaultKey> CreateKey(
@@ -91,15 +75,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.CreateKeyAsync(keyName, type, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating key '{KeyName}' in vault {VaultName}.", keyName, vaultName);
-            throw;
-        }
+        return await client.CreateKeyAsync(keyName, type, cancellationToken: cancellationToken);
     }
 
     public async Task<List<string>> ListSecrets(
@@ -115,17 +91,9 @@ public sealed class KeyVaultService(
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
         var secrets = new List<string>();
 
-        try
+        await foreach (var secret in client.GetPropertiesOfSecretsAsync(cancellationToken))
         {
-            await foreach (var secret in client.GetPropertiesOfSecretsAsync(cancellationToken))
-            {
-                secrets.Add(secret.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving secrets from vault {VaultName}.", vaultName);
-            throw;
+            secrets.Add(secret.Name);
         }
 
         return secrets;
@@ -145,15 +113,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.SetSecretAsync(secretName, secretValue, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating secret '{SecretName}' in vault {VaultName}.", secretName, vaultName);
-            throw;
-        }
+        return await client.SetSecretAsync(secretName, secretValue, cancellationToken);
     }
 
     public async Task<KeyVaultSecret> GetSecret(
@@ -169,15 +129,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving secret '{SecretName}' from vault {VaultName}.", secretName, vaultName);
-            throw;
-        }
+        return await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
     }
 
     public async Task<List<string>> ListCertificates(
@@ -193,17 +145,9 @@ public sealed class KeyVaultService(
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
         var certificates = new List<string>();
 
-        try
+        await foreach (var certificate in client.GetPropertiesOfCertificatesAsync(cancellationToken: cancellationToken))
         {
-            await foreach (var certificate in client.GetPropertiesOfCertificatesAsync(cancellationToken: cancellationToken))
-            {
-                certificates.Add(certificate.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving certificates from vault {VaultName}.", vaultName);
-            throw;
+            certificates.Add(certificate.Name);
         }
 
         return certificates;
@@ -222,15 +166,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.GetCertificateAsync(certificateName, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving certificate '{CertificateName}' from vault {VaultName}.", certificateName, vaultName);
-            throw;
-        }
+        return await client.GetCertificateAsync(certificateName, cancellationToken);
     }
 
     public async Task<CertificateOperation> CreateCertificate(
@@ -246,15 +182,7 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating certificate '{CertificateName}' in vault {VaultName}.", certificateName, vaultName);
-            throw;
-        }
+        return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
     }
 
     public async Task<KeyVaultCertificateWithPolicy> ImportCertificate(
@@ -272,49 +200,41 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
-        try
-        {
-            // certificateData expected as base64 PFX bytes or raw PEM text.
-            byte[] bytes;
+        // certificateData expected as base64 PFX bytes or raw PEM text.
+        byte[] bytes;
 
-            if (certificateData.StartsWith("-----BEGIN"))
+        if (certificateData.StartsWith("-----BEGIN"))
+        {
+            // Treat as PEM text
+            bytes = System.Text.Encoding.UTF8.GetBytes(certificateData);
+        }
+        else
+        {
+            // Try base64, fallback to file path if exists
+            if (File.Exists(certificateData))
             {
-                // Treat as PEM text
-                bytes = System.Text.Encoding.UTF8.GetBytes(certificateData);
+                bytes = await File.ReadAllBytesAsync(certificateData, cancellationToken);
             }
             else
             {
-                // Try base64, fallback to file path if exists
-                if (File.Exists(certificateData))
+                try
                 {
-                    bytes = await File.ReadAllBytesAsync(certificateData, cancellationToken);
+                    bytes = Convert.FromBase64String(certificateData);
                 }
-                else
+                catch (FormatException ex)
                 {
-                    try
-                    {
-                        bytes = Convert.FromBase64String(certificateData);
-                    }
-                    catch (FormatException ex)
-                    {
-                        throw new Exception("The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.", ex);
-                    }
+                    throw new Exception("The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.", ex);
                 }
             }
-
-            var importOptions = new ImportCertificateOptions(certificateName, bytes)
-            {
-                Password = string.IsNullOrEmpty(password) ? null : password
-            };
-
-            var response = await client.ImportCertificateAsync(importOptions, cancellationToken);
-            return response.Value;
         }
-        catch (Exception ex)
+
+        var importOptions = new ImportCertificateOptions(certificateName, bytes)
         {
-            _logger.LogError(ex, "Error importing certificate '{CertificateName}' into vault {VaultName}.", certificateName, vaultName);
-            throw;
-        }
+            Password = string.IsNullOrEmpty(password) ? null : password
+        };
+
+        var response = await client.ImportCertificateAsync(importOptions, cancellationToken);
+        return response.Value;
     }
 
     private string BuildVaultUri(string vaultName)
@@ -392,16 +312,9 @@ public sealed class KeyVaultService(
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
         var credential = await GetCredential(tenantId, cancellationToken);
         var hsmUri = new Uri(GetHsmUri(vaultName));
-        try
-        {
-            var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
-            var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
-            return hsmResponse.Value;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Managed HSM administration settings for vault {VaultName}.", vaultName);
-            throw;
-        }
+
+        var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+        var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
+        return hsmResponse.Value;
     }
 }

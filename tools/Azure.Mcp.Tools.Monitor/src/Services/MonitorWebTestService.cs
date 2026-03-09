@@ -34,30 +34,22 @@ public class MonitorWebTestService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-            var webTests = await subscriptionResource
-                .GetApplicationInsightsWebTestsAsync(cancellationToken)
-                .Select(webTest => new WebTestSummaryInfo
-                {
-                    ResourceName = webTest.Data.Name,
-                    Location = webTest.Data.Location,
-                    ResourceGroup = webTest.Id.ResourceGroupName,
-                    Kind = webTest.Data.WebTestKind?.ToString(),
-                    AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+        var webTests = await subscriptionResource
+            .GetApplicationInsightsWebTestsAsync(cancellationToken)
+            .Select(webTest => new WebTestSummaryInfo
+            {
+                ResourceName = webTest.Data.Name,
+                Location = webTest.Data.Location,
+                ResourceGroup = webTest.Id.ResourceGroupName,
+                Kind = webTest.Data.WebTestKind?.ToString(),
+                AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
-            return webTests;
-        }
-        catch (Exception ex) when (ex is not ArgumentNullException)
-        {
-            _logger.LogError(ex, "Error retrieving web tests.");
-            throw;
-        }
+        return webTests;
     }
 
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
@@ -71,32 +63,24 @@ public class MonitorWebTestService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        try
-        {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
-                throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+        var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
-            var webTests = await resourceGroupResource
-                .GetApplicationInsightsWebTests()
-                .GetAllAsync(cancellationToken)
-                .Select(webTest => new WebTestSummaryInfo
-                {
-                    ResourceName = webTest.Data.Name,
-                    Location = webTest.Data.Location,
-                    ResourceGroup = webTest.Id.ResourceGroupName,
-                    Kind = webTest.Data.WebTestKind?.ToString(),
-                    AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+        var webTests = await resourceGroupResource
+            .GetApplicationInsightsWebTests()
+            .GetAllAsync(cancellationToken)
+            .Select(webTest => new WebTestSummaryInfo
+            {
+                ResourceName = webTest.Data.Name,
+                Location = webTest.Data.Location,
+                ResourceGroup = webTest.Id.ResourceGroupName,
+                Kind = webTest.Data.WebTestKind?.ToString(),
+                AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
-            return webTests;
-        }
-        catch (Exception ex) when (ex is not ArgumentNullException)
-        {
-            _logger.LogError(ex, "Error retrieving web tests.");
-            throw;
-        }
+        return webTests;
     }
     public async Task<WebTestDetailedInfo> GetWebTest(
       string subscription,
@@ -111,56 +95,48 @@ public class MonitorWebTestService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        try
+        var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+
+        var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
+        if (webTest == null || !webTest.HasValue || !webTest.Value!.HasData)
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
-                throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-
-            var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
-            if (webTest == null || !webTest.HasValue || !webTest.Value!.HasData)
-            {
-                throw new Exception($"Error retrieving details for web test '{resourceName}'");
-            }
-
-            if (webTest.Value.Data.WebTestKind == WebTestKind.Ping || webTest.Value.Data.WebTestKind == WebTestKind.MultiStep)
-            {
-                throw new NotSupportedException($"Web test '{resourceName}' is of type '{webTest.Value.Data.WebTestKind}', which has been deprecated and is not supported by this command.");
-            }
-
-            var webTestData = webTest.Value.Data;
-            var webTestId = webTest.Value.Id;
-
-            var parsedHeaders = ParseHeadersFromRawResponse(webTest.GetRawResponse());
-            PatchRequestWithCorrectedHeaders(webTestData.Request, parsedHeaders);
-
-            return new()
-            {
-                ResourceName = webTestData.Name,
-                Location = webTestData.Location.ToString(),
-                Locations = webTestData.Locations
-                    .Where(x => x.Location != null)
-                    .Select(x => x.Location.ToString())
-                    .Cast<string>()
-                    .ToList(),
-                ResourceGroup = webTestId.ResourceGroupName,
-                Id = webTestId.ToString(),
-                Kind = webTestData.WebTestKind?.ToString(),
-                WebTestName = webTestData.WebTestName,
-                IsEnabled = webTestData.IsEnabled,
-                SyntheticMonitorId = webTestData.SyntheticMonitorId,
-                FrequencyInSeconds = webTestData.FrequencyInSeconds,
-                TimeoutInSeconds = webTestData.TimeoutInSeconds,
-                IsRetryEnabled = webTestData.IsRetryEnabled,
-                Request = webTestData.Request,
-                ValidationRules = webTestData.ValidationRules,
-                AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTestData)
-            };
+            throw new Exception($"Error retrieving details for web test '{resourceName}'");
         }
-        catch (Exception ex) when (ex is not ArgumentNullException)
+
+        if (webTest.Value.Data.WebTestKind == WebTestKind.Ping || webTest.Value.Data.WebTestKind == WebTestKind.MultiStep)
         {
-            _logger.LogError(ex, "Error retrieving web test {ResourceName}.", resourceName);
-            throw;
+            throw new NotSupportedException($"Web test '{resourceName}' is of type '{webTest.Value.Data.WebTestKind}', which has been deprecated and is not supported by this command.");
         }
+
+        var webTestData = webTest.Value.Data;
+        var webTestId = webTest.Value.Id;
+
+        var parsedHeaders = ParseHeadersFromRawResponse(webTest.GetRawResponse());
+        PatchRequestWithCorrectedHeaders(webTestData.Request, parsedHeaders);
+
+        return new()
+        {
+            ResourceName = webTestData.Name,
+            Location = webTestData.Location.ToString(),
+            Locations = webTestData.Locations
+                .Where(x => x.Location != null)
+                .Select(x => x.Location.ToString())
+                .Cast<string>()
+                .ToList(),
+            ResourceGroup = webTestId.ResourceGroupName,
+            Id = webTestId.ToString(),
+            Kind = webTestData.WebTestKind?.ToString(),
+            WebTestName = webTestData.WebTestName,
+            IsEnabled = webTestData.IsEnabled,
+            SyntheticMonitorId = webTestData.SyntheticMonitorId,
+            FrequencyInSeconds = webTestData.FrequencyInSeconds,
+            TimeoutInSeconds = webTestData.TimeoutInSeconds,
+            IsRetryEnabled = webTestData.IsRetryEnabled,
+            Request = webTestData.Request,
+            ValidationRules = webTestData.ValidationRules,
+            AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTestData)
+        };
     }
 
     public async Task<WebTestDetailedInfo> CreateWebTest(
@@ -198,116 +174,108 @@ public class MonitorWebTestService(
             (nameof(location), location),
             (nameof(requestUrl), requestUrl));
 
-        try
+        var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+
+        // Check if web test already exists
+        var existingWebTestResponse = await resourceGroupResource.GetApplicationInsightsWebTests()
+            .ExistsAsync(resourceName, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existingWebTestResponse.HasValue && existingWebTestResponse.Value)
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
-                throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new InvalidOperationException($"Web test '{resourceName}' already exists in resource group '{resourceGroup}'. Use the update command to modify an existing web test.");
+        }
 
-            // Check if web test already exists
-            var existingWebTestResponse = await resourceGroupResource.GetApplicationInsightsWebTests()
-                .ExistsAsync(resourceName, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (existingWebTestResponse.HasValue && existingWebTestResponse.Value)
+        var webTestData = new ApplicationInsightsWebTestData(new(location))
+        {
+            WebTestName = webTestName ?? resourceName,
+            SyntheticMonitorId = resourceName,
+            WebTestKind = WebTestKind.Standard,
+            IsEnabled = enabled,
+            FrequencyInSeconds = frequencyInSeconds,
+            TimeoutInSeconds = timeoutInSeconds,
+            IsRetryEnabled = retryEnabled,
+            Description = description,
+            Request = new()
             {
-                throw new InvalidOperationException($"Web test '{resourceName}' already exists in resource group '{resourceGroup}'. Use the update command to modify an existing web test.");
-            }
-
-            var webTestData = new ApplicationInsightsWebTestData(new(location))
+                RequestUri = new(requestUrl),
+                HttpVerb = (httpVerb ?? HttpMethod.Get.ToString()).ToUpperInvariant(),
+                RequestBody = requestBody,
+                FollowRedirects = followRedirects,
+                ParseDependentRequests = parseRequests
+            },
+            ValidationRules = new()
             {
-                WebTestName = webTestName ?? resourceName,
-                SyntheticMonitorId = resourceName,
-                WebTestKind = WebTestKind.Standard,
-                IsEnabled = enabled,
-                FrequencyInSeconds = frequencyInSeconds,
-                TimeoutInSeconds = timeoutInSeconds,
-                IsRetryEnabled = retryEnabled,
-                Description = description,
-                Request = new WebTestRequest
-                {
-                    RequestUri = new(requestUrl),
-                    HttpVerb = (httpVerb ?? HttpMethod.Get.ToString()).ToUpperInvariant(),
-                    RequestBody = requestBody,
-                    FollowRedirects = followRedirects,
-                    ParseDependentRequests = parseRequests
-                },
-                ValidationRules = new()
-                {
-                    ExpectedHttpStatusCode = expectedStatusCode,
-                    IgnoreHttpStatusCode = ignoreStatusCode,
-                    CheckSsl = sslCheck,
-                    SslCertRemainingLifetimeCheck = sslCheck.HasValue && sslCheck.Value ? sslLifetimeCheckInDays : null
-                },
-            };
+                ExpectedHttpStatusCode = expectedStatusCode,
+                IgnoreHttpStatusCode = ignoreStatusCode,
+                CheckSsl = sslCheck,
+                SslCertRemainingLifetimeCheck = sslCheck.HasValue && sslCheck.Value ? sslLifetimeCheckInDays : null
+            },
+        };
 
-            webTestData.Tags.Add($"hidden-link:{appInsightsComponentId}", "Resource");
+        webTestData.Tags.Add($"hidden-link:{appInsightsComponentId}", "Resource");
 
-            foreach (var webTestLocation in locations)
+        foreach (var webTestLocation in locations)
+        {
+            webTestData.Locations.Add(new()
             {
-                webTestData.Locations.Add(new()
+                Location = new(webTestLocation)
+            });
+        }
+
+        if (headers != null)
+        {
+            foreach (var headerKey in headers.Keys)
+            {
+                webTestData.Request.Headers.Add(new()
                 {
-                    Location = new(webTestLocation)
+                    HeaderFieldName = headerKey,
+                    HeaderFieldValue = headers[headerKey]
                 });
             }
-
-            if (headers != null)
-            {
-                foreach (var headerKey in headers.Keys)
-                {
-                    webTestData.Request.Headers.Add(new()
-                    {
-                        HeaderFieldName = headerKey,
-                        HeaderFieldValue = headers[headerKey]
-                    });
-                }
-            }
-
-            var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
-                .CreateOrUpdateAsync(
-                    WaitUntil.Completed,
-                    resourceName,
-                    webTestData,
-                    cancellationToken
-                ).ConfigureAwait(false);
-
-            if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
-            {
-                throw new Exception($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
-            }
-
-            var createdWebTest = webTestArmResource.Value.Data;
-
-            var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
-            PatchRequestWithCorrectedHeaders(createdWebTest.Request, parsedHeaders);
-
-            return new()
-            {
-                ResourceName = createdWebTest.Name,
-                Location = createdWebTest.Location.ToString(),
-                Locations = createdWebTest.Locations
-                    .Where(x => x.Location != null)
-                    .Select(x => x.Location.ToString())
-                    .Cast<string>()
-                    .ToList(),
-                ResourceGroup = webTestArmResource.Value.Id.ResourceGroupName,
-                Id = webTestArmResource.Value.Id.ToString(),
-                Kind = createdWebTest.WebTestKind?.ToString(),
-                WebTestName = createdWebTest.WebTestName,
-                IsEnabled = createdWebTest.IsEnabled,
-                SyntheticMonitorId = createdWebTest.SyntheticMonitorId,
-                FrequencyInSeconds = createdWebTest.FrequencyInSeconds,
-                TimeoutInSeconds = createdWebTest.TimeoutInSeconds,
-                IsRetryEnabled = createdWebTest.IsRetryEnabled,
-                Request = createdWebTest.Request,
-                ValidationRules = createdWebTest.ValidationRules,
-                AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(createdWebTest)
-            };
         }
-        catch (Exception ex) when (ex is not ArgumentNullException)
+
+        var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
+            .CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                resourceName,
+                webTestData,
+                cancellationToken
+            ).ConfigureAwait(false);
+
+        if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
-            _logger.LogError(ex, "Error creating web test {ResourceName}.", resourceName);
-            throw;
+            throw new Exception($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
         }
+
+        var createdWebTest = webTestArmResource.Value.Data;
+
+        var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
+        PatchRequestWithCorrectedHeaders(createdWebTest.Request, parsedHeaders);
+
+        return new()
+        {
+            ResourceName = createdWebTest.Name,
+            Location = createdWebTest.Location.ToString(),
+            Locations = createdWebTest.Locations
+                .Where(x => x.Location != null)
+                .Select(x => x.Location.ToString())
+                .Cast<string>()
+                .ToList(),
+            ResourceGroup = webTestArmResource.Value.Id.ResourceGroupName,
+            Id = webTestArmResource.Value.Id.ToString(),
+            Kind = createdWebTest.WebTestKind?.ToString(),
+            WebTestName = createdWebTest.WebTestName,
+            IsEnabled = createdWebTest.IsEnabled,
+            SyntheticMonitorId = createdWebTest.SyntheticMonitorId,
+            FrequencyInSeconds = createdWebTest.FrequencyInSeconds,
+            TimeoutInSeconds = createdWebTest.TimeoutInSeconds,
+            IsRetryEnabled = createdWebTest.IsRetryEnabled,
+            Request = createdWebTest.Request,
+            ValidationRules = createdWebTest.ValidationRules,
+            AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(createdWebTest)
+        };
     }
 
     public async Task<WebTestDetailedInfo> UpdateWebTest(
@@ -342,147 +310,139 @@ public class MonitorWebTestService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        try
+        var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+
+        // Get existing web test
+        var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
+        if (existingWebTest == null || !existingWebTest.HasValue || !existingWebTest.Value!.HasData)
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
-                throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-
-            // Get existing web test
-            var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
-            if (existingWebTest == null || !existingWebTest.HasValue || !existingWebTest.Value!.HasData)
-            {
-                throw new Exception($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
-            }
-
-            var currentData = existingWebTest.Value.Data;
-            if (currentData.WebTestKind == WebTestKind.Ping || currentData.WebTestKind == WebTestKind.MultiStep)
-            {
-                throw new NotSupportedException($"Web test '{resourceName}' is of type '{currentData.WebTestKind}', which has been deprecated and is not supported by this command.");
-            }
-
-            // Create updated web test data using existing values as defaults
-            var webTestData = new ApplicationInsightsWebTestData(new(location ?? currentData.Location))
-            {
-                WebTestName = webTestName ?? currentData.WebTestName,
-                SyntheticMonitorId = currentData.SyntheticMonitorId,
-                WebTestKind = WebTestKind.Standard,
-                IsEnabled = enabled ?? currentData.IsEnabled,
-                FrequencyInSeconds = frequencyInSeconds ?? currentData.FrequencyInSeconds,
-                TimeoutInSeconds = timeoutInSeconds ?? currentData.TimeoutInSeconds,
-                IsRetryEnabled = retryEnabled ?? currentData.IsRetryEnabled,
-                Description = description ?? currentData.Description,
-                Request = new()
-                {
-                    RequestUri = requestUrl != null ? new Uri(requestUrl) : currentData.Request?.RequestUri,
-                    HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
-                    RequestBody = requestBody ?? currentData.Request?.RequestBody,
-                    FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
-                    ParseDependentRequests = parseRequests ?? currentData.Request?.ParseDependentRequests
-                },
-                ValidationRules = new()
-                {
-                    ExpectedHttpStatusCode = expectedStatusCode ?? currentData.ValidationRules?.ExpectedHttpStatusCode,
-                    IgnoreHttpStatusCode = ignoreStatusCode ?? currentData.ValidationRules?.IgnoreHttpStatusCode,
-                    CheckSsl = sslCheck ?? currentData.ValidationRules?.CheckSsl,
-                    SslCertRemainingLifetimeCheck = (sslCheck ?? currentData.ValidationRules?.CheckSsl) == true
-                                                   ? (sslLifetimeCheckInDays ?? currentData.ValidationRules?.SslCertRemainingLifetimeCheck)
-                                                   : null
-                },
-            };
-
-            // Preserve existing tags
-            foreach (var tag in currentData.Tags)
-            {
-                webTestData.Tags.Add(tag.Key, tag.Value);
-            }
-
-            // Update locations
-            if (locations != null)
-            {
-                foreach (var webTestLocation in locations)
-                {
-                    webTestData.Locations.Add(new()
-                    {
-                        Location = new(webTestLocation)
-                    });
-                }
-            }
-            else
-            {
-                // Preserve existing locations
-                foreach (var existingLocation in currentData.Locations)
-                {
-                    webTestData.Locations.Add(existingLocation);
-                }
-            }
-
-            // Update headers
-            if (headers != null)
-            {
-                foreach (var headerKey in headers.Keys)
-                {
-                    webTestData.Request.Headers.Add(new()
-                    {
-                        HeaderFieldName = headerKey,
-                        HeaderFieldValue = headers[headerKey]
-                    });
-                }
-            }
-            else if (currentData.Request?.Headers != null)
-            {
-                // Preserve existing headers
-                foreach (var existingHeader in currentData.Request.Headers)
-                {
-                    webTestData.Request.Headers.Add(existingHeader);
-                }
-            }
-
-            var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
-                .CreateOrUpdateAsync(
-                    WaitUntil.Completed,
-                    resourceName,
-                    webTestData,
-                    cancellationToken
-                ).ConfigureAwait(false);
-
-            if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
-            {
-                throw new Exception($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
-            }
-
-            var updatedWebTest = webTestArmResource.Value.Data;
-
-            var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
-            PatchRequestWithCorrectedHeaders(updatedWebTest.Request, parsedHeaders);
-
-            return new()
-            {
-                ResourceName = updatedWebTest.Name,
-                Location = updatedWebTest.Location.ToString(),
-                Locations = updatedWebTest.Locations
-                    .Where(x => x.Location != null)
-                    .Select(x => x.Location.ToString())
-                    .Cast<string>()
-                    .ToList(),
-                ResourceGroup = webTestArmResource.Value.Id.ResourceGroupName,
-                Id = webTestArmResource.Value.Id.ToString(),
-                Kind = updatedWebTest.WebTestKind?.ToString(),
-                WebTestName = updatedWebTest.WebTestName,
-                IsEnabled = updatedWebTest.IsEnabled,
-                SyntheticMonitorId = updatedWebTest.SyntheticMonitorId,
-                FrequencyInSeconds = updatedWebTest.FrequencyInSeconds,
-                TimeoutInSeconds = updatedWebTest.TimeoutInSeconds,
-                IsRetryEnabled = updatedWebTest.IsRetryEnabled,
-                Request = updatedWebTest.Request,
-                ValidationRules = updatedWebTest.ValidationRules,
-                AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(updatedWebTest)
-            };
+            throw new Exception($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
         }
-        catch (Exception ex) when (ex is not ArgumentNullException)
+
+        var currentData = existingWebTest.Value.Data;
+        if (currentData.WebTestKind == WebTestKind.Ping || currentData.WebTestKind == WebTestKind.MultiStep)
         {
-            _logger.LogError(ex, "Error updating web test {ResourceName}.", resourceName);
-            throw;
+            throw new NotSupportedException($"Web test '{resourceName}' is of type '{currentData.WebTestKind}', which has been deprecated and is not supported by this command.");
         }
+
+        // Create updated web test data using existing values as defaults
+        var webTestData = new ApplicationInsightsWebTestData(new(location ?? currentData.Location))
+        {
+            WebTestName = webTestName ?? currentData.WebTestName,
+            SyntheticMonitorId = currentData.SyntheticMonitorId,
+            WebTestKind = WebTestKind.Standard,
+            IsEnabled = enabled ?? currentData.IsEnabled,
+            FrequencyInSeconds = frequencyInSeconds ?? currentData.FrequencyInSeconds,
+            TimeoutInSeconds = timeoutInSeconds ?? currentData.TimeoutInSeconds,
+            IsRetryEnabled = retryEnabled ?? currentData.IsRetryEnabled,
+            Description = description ?? currentData.Description,
+            Request = new()
+            {
+                RequestUri = requestUrl != null ? new Uri(requestUrl) : currentData.Request?.RequestUri,
+                HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
+                RequestBody = requestBody ?? currentData.Request?.RequestBody,
+                FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
+                ParseDependentRequests = parseRequests ?? currentData.Request?.ParseDependentRequests
+            },
+            ValidationRules = new()
+            {
+                ExpectedHttpStatusCode = expectedStatusCode ?? currentData.ValidationRules?.ExpectedHttpStatusCode,
+                IgnoreHttpStatusCode = ignoreStatusCode ?? currentData.ValidationRules?.IgnoreHttpStatusCode,
+                CheckSsl = sslCheck ?? currentData.ValidationRules?.CheckSsl,
+                SslCertRemainingLifetimeCheck = (sslCheck ?? currentData.ValidationRules?.CheckSsl) == true
+                                                ? (sslLifetimeCheckInDays ?? currentData.ValidationRules?.SslCertRemainingLifetimeCheck)
+                                                : null
+            },
+        };
+
+        // Preserve existing tags
+        foreach (var tag in currentData.Tags)
+        {
+            webTestData.Tags.Add(tag.Key, tag.Value);
+        }
+
+        // Update locations
+        if (locations != null)
+        {
+            foreach (var webTestLocation in locations)
+            {
+                webTestData.Locations.Add(new()
+                {
+                    Location = new(webTestLocation)
+                });
+            }
+        }
+        else
+        {
+            // Preserve existing locations
+            foreach (var existingLocation in currentData.Locations)
+            {
+                webTestData.Locations.Add(existingLocation);
+            }
+        }
+
+        // Update headers
+        if (headers != null)
+        {
+            foreach (var headerKey in headers.Keys)
+            {
+                webTestData.Request.Headers.Add(new()
+                {
+                    HeaderFieldName = headerKey,
+                    HeaderFieldValue = headers[headerKey]
+                });
+            }
+        }
+        else if (currentData.Request?.Headers != null)
+        {
+            // Preserve existing headers
+            foreach (var existingHeader in currentData.Request.Headers)
+            {
+                webTestData.Request.Headers.Add(existingHeader);
+            }
+        }
+
+        var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
+            .CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                resourceName,
+                webTestData,
+                cancellationToken
+            ).ConfigureAwait(false);
+
+        if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
+        {
+            throw new Exception($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
+        }
+
+        var updatedWebTest = webTestArmResource.Value.Data;
+
+        var parsedHeaders = ParseHeadersFromRawResponse(webTestArmResource.GetRawResponse());
+        PatchRequestWithCorrectedHeaders(updatedWebTest.Request, parsedHeaders);
+
+        return new()
+        {
+            ResourceName = updatedWebTest.Name,
+            Location = updatedWebTest.Location.ToString(),
+            Locations = updatedWebTest.Locations
+                .Where(x => x.Location != null)
+                .Select(x => x.Location.ToString())
+                .Cast<string>()
+                .ToList(),
+            ResourceGroup = webTestArmResource.Value.Id.ResourceGroupName,
+            Id = webTestArmResource.Value.Id.ToString(),
+            Kind = updatedWebTest.WebTestKind?.ToString(),
+            WebTestName = updatedWebTest.WebTestName,
+            IsEnabled = updatedWebTest.IsEnabled,
+            SyntheticMonitorId = updatedWebTest.SyntheticMonitorId,
+            FrequencyInSeconds = updatedWebTest.FrequencyInSeconds,
+            TimeoutInSeconds = updatedWebTest.TimeoutInSeconds,
+            IsRetryEnabled = updatedWebTest.IsRetryEnabled,
+            Request = updatedWebTest.Request,
+            ValidationRules = updatedWebTest.ValidationRules,
+            AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(updatedWebTest)
+        };
     }
 
     private List<WebTestRequestHeaderField> ParseHeadersFromRawResponse(Response response)

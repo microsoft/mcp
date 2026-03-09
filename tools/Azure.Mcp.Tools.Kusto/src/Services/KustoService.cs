@@ -44,23 +44,15 @@ public sealed class KustoService(
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
-        try
-        {
-            var clusters = await ExecuteResourceQueryAsync(
-                "Microsoft.Kusto/clusters",
-                resourceGroup: null, // all resource groups
-                subscriptionId,
-                retryPolicy,
-                item => ConvertToClusterModel(item).ClusterName,
-                cancellationToken: cancellationToken);
+        var clusters = await ExecuteResourceQueryAsync(
+            "Microsoft.Kusto/clusters",
+            resourceGroup: null, // all resource groups
+            subscriptionId,
+            retryPolicy,
+            item => ConvertToClusterModel(item).ClusterName,
+            cancellationToken: cancellationToken);
 
-            return clusters;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Kusto clusters.");
-            throw;
-        }
+        return clusters;
     }
 
     public async Task<KustoClusterModel> GetClusterAsync(
@@ -72,30 +64,20 @@ public sealed class KustoService(
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
-        try
-        {
-            var cluster = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.Kusto/clusters",
-                resourceGroup: null, // all resource groups
-                subscription: subscriptionId,
-                retryPolicy: retryPolicy,
-                converter: ConvertToClusterModel,
-                additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
-                cancellationToken: cancellationToken);
+        var cluster = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.Kusto/clusters",
+            resourceGroup: null, // all resource groups
+            subscription: subscriptionId,
+            retryPolicy: retryPolicy,
+            converter: ConvertToClusterModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
+            cancellationToken: cancellationToken);
 
-            if (cluster == null)
-            {
-                throw new KeyNotFoundException($"Kusto cluster '{clusterName}' not found for subscription '{subscriptionId}'.");
-            }
-            return cluster;
-        }
-        catch (Exception ex)
+        if (cluster == null)
         {
-            _logger.LogError(ex,
-                "Error retrieving Kusto cluster '{ClusterName}' for subscription '{Subscription}'",
-                clusterName, subscriptionId);
-            throw;
+            throw new KeyNotFoundException($"Kusto cluster '{clusterName}' not found for subscription '{subscriptionId}'.");
         }
+        return cluster;
     }
 
     public async Task<List<string>> ListDatabasesAsync(

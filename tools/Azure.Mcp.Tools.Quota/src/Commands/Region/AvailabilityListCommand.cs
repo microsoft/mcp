@@ -49,8 +49,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         command.Validators.Add(result =>
         {
             var resourceTypes = result.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name);
-            if (string.IsNullOrWhiteSpace(resourceTypes) || !resourceTypes.Split(',')
-                .Select(rt => rt.Trim()).Any(rt => !string.IsNullOrWhiteSpace(rt)))
+            if (string.IsNullOrWhiteSpace(resourceTypes) || !resourceTypes.Split(',').Any(rt => !string.IsNullOrWhiteSpace(rt)))
             {
                 result.AddError("Resource types cannot be empty.");
             }

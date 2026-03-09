@@ -55,37 +55,29 @@ public sealed class SignalRService(
                 return cachedResults;
             }
 
-            try
+            if (string.IsNullOrEmpty(resourceGroup))
             {
-                if (string.IsNullOrEmpty(resourceGroup))
+                var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
+                await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
                 {
-                    var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
-                    {
-                        runtimes.Add(ConvertToRuntimeModel(runtime));
-                    }
-                }
-                else
-                {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    if (!resourceGroupResource.HasValue)
-                    {
-                        throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                    }
-
-                    var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
-                    {
-                        runtimes.Add(ConvertToRuntimeModel(runtime));
-                    }
-
-                    await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
+                    runtimes.Add(ConvertToRuntimeModel(runtime));
                 }
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error getting SignalR runtimes.");
-                throw;
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                if (!resourceGroupResource.HasValue)
+                {
+                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                }
+
+                var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
+                await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
+                {
+                    runtimes.Add(ConvertToRuntimeModel(runtime));
+                }
+
+                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
             }
         }
         else
@@ -101,28 +93,20 @@ public sealed class SignalRService(
                 return cachedResults;
             }
 
-            try
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (!resourceGroupResource.HasValue)
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (!resourceGroupResource.HasValue)
-                {
-                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                }
-
-                var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
-                if (!signalRResource.HasValue)
-                {
-                    throw new Exception($"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
-                }
-
-                runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
-                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
             }
-            catch (Exception ex)
+
+            var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
+            if (!signalRResource.HasValue)
             {
-                _logger.LogError(ex, "Error getting SignalR runtime.");
-                throw;
+                throw new Exception($"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
             }
+
+            runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
+            await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
         }
 
         return runtimes;

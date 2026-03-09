@@ -324,7 +324,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         return results;
     }
 
-    private string ToIsoString(DateTimeOffset dto)
+    private static string ToIsoString(DateTimeOffset dto)
     {
         if (dto.Offset == TimeSpan.Zero)
         {

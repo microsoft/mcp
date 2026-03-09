@@ -464,12 +464,12 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                         List<RealtimeRecognitionWordResult>? words = null;
                         if (item.TryGetProperty("Words", out var wordsArray))
                         {
-                            words = [.. wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult
+                            words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult
                             {
                                 Word = wordItem.TryGetProperty("Word", out var wordProp) ? wordProp.GetString() : "",
                                 Offset = wordItem.TryGetProperty("Offset", out var offsetProp) ? (ulong)offsetProp.GetInt64() : null,
                                 Duration = wordItem.TryGetProperty("Duration", out var durationProp) ? (ulong)durationProp.GetInt64() : null
-                            })];
+                            }).ToList();
                         }
 
                         nbestResults.Add(new()

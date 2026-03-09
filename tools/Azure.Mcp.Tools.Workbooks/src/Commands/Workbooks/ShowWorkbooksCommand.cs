@@ -84,7 +84,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new([.. result.Succeeded], [.. result.Failed]),
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
                 WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }
         catch (Exception ex)

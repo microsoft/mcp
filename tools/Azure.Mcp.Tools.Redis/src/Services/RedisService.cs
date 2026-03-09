@@ -16,14 +16,10 @@ using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.RedisEnterprise;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(
-    ISubscriptionService _subscriptionService,
-    ITenantService _tenantService,
-    ILogger<RedisService> _logger)
+public class RedisService(ISubscriptionService _subscriptionService, ITenantService _tenantService)
     : BaseAzureService(_tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
@@ -34,40 +30,32 @@ public class RedisService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Subscription '{subscription}' not found");
+
+        var resources = new List<Resource>();
+        var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
+
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-                ?? throw new Exception($"Subscription '{subscription}' not found");
-
-            var resources = new List<Resource>();
-            var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
-
-            try
+            resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, cancellationToken));
+            resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, cancellationToken));
+            await Task.WhenAll(resourcesTasks);
+        }
+        catch (Exception)
+        { }
+        finally
+        {
+            foreach (var resourceTask in resourcesTasks)
             {
-                resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, cancellationToken));
-                resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, cancellationToken));
-                await Task.WhenAll(resourcesTasks);
-            }
-            catch (Exception)
-            { }
-            finally
-            {
-                foreach (var resourceTask in resourcesTasks)
+                if (resourceTask.Status == TaskStatus.RanToCompletion)
                 {
-                    if (resourceTask.Status == TaskStatus.RanToCompletion)
-                    {
-                        resources.AddRange(resourceTask.Result);
-                    }
+                    resources.AddRange(resourceTask.Result);
                 }
             }
+        }
 
-            return resources;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Redis resources.");
-            throw;
-        }
+        return resources;
     }
 
     public async Task<Resource> CreateResourceAsync(
@@ -95,71 +83,63 @@ public class RedisService(
             sku = "Balanced_B0";
         }
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Subscription '{subscription}' not found");
+
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
+
+        if (resourceGroupResource.Value == null)
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-                ?? throw new Exception($"Subscription '{subscription}' not found");
-
-            var resourceGroups = subscriptionResource.GetResourceGroups();
-            var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
-
-            if (resourceGroupResource.Value == null)
-            {
-                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-            }
-
-            var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
-                ? "Enabled"
-                : "Disabled";
-
-            var bicepTemplate = GetCreateResourceBicepTemplate();
-
-            var requestedModules = new ModuleList()
-            {
-                Value = modules?.Select(m => new Module { Name = m }).ToArray() ?? []
-            };
-
-            var parameters = new RedisCreateParameters
-            {
-                ResourceName = new() { Value = name },
-                Location = new() { Value = location },
-                SkuName = new() { Value = sku },
-                AccessKeyAuthenticationEnabled = new() { Value = accessKeyAuthenticationString },
-                Modules = requestedModules
-            };
-
-            var parametersJson = JsonSerializer.Serialize(parameters, RedisJsonContext.Default.RedisCreateParameters);
-
-            var deploymentProperties = new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
-            {
-                Template = BinaryData.FromString(bicepTemplate),
-                Parameters = BinaryData.FromString(parametersJson)
-            };
-
-            await resourceGroupResource.Value.GetArmDeployments()
-                .CreateOrUpdateAsync(
-                WaitUntil.Started,
-                $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-                new(deploymentProperties),
-                cancellationToken
-            );
-
-            return new()
-            {
-                Name = name,
-                Type = "AzureManagedRedis",
-                ResourceGroupName = resourceGroup,
-                SubscriptionId = subscription,
-                Location = location,
-                Sku = sku,
-                Status = "Creating"
-            };
+            throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
-        catch (Exception ex)
+
+        var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
+            ? "Enabled"
+            : "Disabled";
+
+        var bicepTemplate = GetCreateResourceBicepTemplate();
+
+        var requestedModules = new ModuleList()
         {
-            _logger.LogError(ex, "Error creating Redis resource.");
-            throw;
-        }
+            Value = modules?.Select(m => new Module { Name = m }).ToArray() ?? []
+        };
+
+        var parameters = new RedisCreateParameters
+        {
+            ResourceName = new() { Value = name },
+            Location = new() { Value = location },
+            SkuName = new() { Value = sku },
+            AccessKeyAuthenticationEnabled = new() { Value = accessKeyAuthenticationString },
+            Modules = requestedModules
+        };
+
+        var parametersJson = JsonSerializer.Serialize(parameters, RedisJsonContext.Default.RedisCreateParameters);
+
+        var deploymentProperties = new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
+        {
+            Template = BinaryData.FromString(bicepTemplate),
+            Parameters = BinaryData.FromString(parametersJson)
+        };
+
+        await resourceGroupResource.Value.GetArmDeployments()
+            .CreateOrUpdateAsync(
+            WaitUntil.Started,
+            $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+            new(deploymentProperties),
+            cancellationToken
+        );
+
+        return new()
+        {
+            Name = name,
+            Type = "AzureManagedRedis",
+            ResourceGroupName = resourceGroup,
+            SubscriptionId = subscription,
+            Location = location,
+            Sku = sku,
+            Status = "Creating"
+        };
     }
 
     private static async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
@@ -350,7 +330,7 @@ public class RedisService(
                 },
                 Zones = resource.Zones?.Any() == true ? [.. resource.Zones] : null,
                 Tags = resource.Tags.Any() ? resource.Tags : null,
-                Databases = databases.Count != 0 == true ? [.. databases] : null
+                Databases = databases?.ToArray()
             });
         }
 
