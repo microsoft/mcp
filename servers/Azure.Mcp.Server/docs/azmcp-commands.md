@@ -1899,8 +1899,8 @@ azmcp aks nodepool get --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test create --subscription <subscription> \
                               --test-id <test-id> \
+                              --test-resource-name <test-resource-name> \
                               [--resource-group <resource-group>] \
-                              [--test-resource-name <test-resource-name>] \
                               [--display-name <display-name>] \
                               [--description <description>] \
                               [--endpoint <endpoint>] \
@@ -1912,13 +1912,13 @@ azmcp loadtesting test create --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test get --subscription <subscription> \
                            --test-id <test-id> \
-                           [--resource-group <resource-group>] \
-                           [--test-resource-name <test-resource-name>]
+                           --test-resource-name <test-resource-name> \
+                           [--resource-group <resource-group>]
 
 # Create load test resources
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource create --subscription <subscription> \
-                                      [--resource-group <resource-group>] \
+                                      --resource-group <resource-group> \
                                       [--test-resource-name <test-resource-name>]
 
 # List load test resources
@@ -1931,8 +1931,8 @@ azmcp loadtesting testresource list --subscription <subscription> \
 # Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
+                              --test-resource-name <test-resource-name> \
                               [--resource-group <resource-group>] \
-                              [--test-resource-name <test-resource-name>] \
                               [--testrun-id <testrun-id>] \
                               [--test-id <test-id>]
 # Note: Either --testrun-id or --test-id must be provided, but not both.
@@ -1944,9 +1944,9 @@ azmcp loadtesting testrun get --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
+                                         --testrun-id <testrun-id> \
                                          [--resource-group <resource-group>] \
-                                         [--test-resource-name <test-resource-name>] \
-                                         [--testrun-id <testrun-id>] \
                                          [--display-name <display-name>] \
                                          [--description <description>] \
                                          [--old-testrun-id <old-testrun-id>]
@@ -1955,18 +1955,18 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
+                                         --testrun-id <new-testrun-id> \
                                          [--resource-group <resource-group>] \
-                                         [--test-resource-name <test-resource-name>] \
-                                         [--testrun-id <new-testrun-id>] \
                                          [--old-testrun-id <existing-testrun-id>]
 
 # Update test run metadata (idempotent):
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
+                                         --testrun-id <testrun-id> \
                                          [--resource-group <resource-group>] \
-                                         [--test-resource-name <test-resource-name>] \
-                                         [--testrun-id <testrun-id>] \
                                          [--display-name <updated-display-name>] \
                                          [--description <updated-description>]
 ```
