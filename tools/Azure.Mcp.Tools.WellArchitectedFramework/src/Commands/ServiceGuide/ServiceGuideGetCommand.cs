@@ -140,7 +140,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         }
 
         var serviceNameNormalized = NormalizeServiceName(serviceName);
-        
         foreach (var kvp in s_serviceGuidesCache)
         {
             if (kvp.Value.ServiceNameVariationsNormalized.Contains(serviceNameNormalized))
