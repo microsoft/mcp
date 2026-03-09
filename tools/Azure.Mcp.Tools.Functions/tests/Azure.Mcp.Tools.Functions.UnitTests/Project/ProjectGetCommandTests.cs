@@ -60,16 +60,13 @@ public sealed class ProjectGetCommandTests
     }
 
     [Fact]
-    public void Command_HasLanguageAndRuntimeVersionOptions()
+    public void Command_HasLanguageOption()
     {
         var options = _commandDefinition.Options.ToList();
         var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
-        var runtimeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.RuntimeVersionName}");
 
         Assert.NotNull(languageOption);
         Assert.True(languageOption.Required);
-        Assert.NotNull(runtimeOption);
-        Assert.False(runtimeOption.Required);
     }
 
     [Fact]
@@ -79,18 +76,11 @@ public sealed class ProjectGetCommandTests
         var expectedResult = new ProjectTemplateResult
         {
             Language = "python",
-            Files =
-            [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{}" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{}" },
-                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" },
-                new ProjectTemplateFile { FileName = ".funcignore", Content = ".venv/" }
-            ],
             InitInstructions = "## Python Azure Functions Project Setup",
-            ProjectStructure = ["function_app.py", "host.json", "requirements.txt"]
+            ProjectStructure = ["function_app.py", "host.json", "requirements.txt", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("python", null, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         var args = _commandDefinition.Parse(["--language", "python"]);
@@ -110,33 +100,25 @@ public sealed class ProjectGetCommandTests
 
         var result = results[0];
         Assert.Equal("python", result.Language);
-        Assert.Equal(4, result.Files.Count);
-        Assert.Equal("host.json", result.Files[0].FileName);
         Assert.NotEmpty(result.InitInstructions);
-        Assert.Equal(3, result.ProjectStructure.Count);
+        Assert.Equal(4, result.ProjectStructure.Count);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsProjectTemplate_WithRuntimeVersion()
+    public async Task ExecuteAsync_ReturnsStaticMetadata_NoHttpCalls()
     {
-        // Arrange
+        // Arrange - project get should return static metadata without HTTP calls
         var expectedResult = new ProjectTemplateResult
         {
             Language = "typescript",
-            Files =
-            [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{}" },
-                new ProjectTemplateFile { FileName = "package.json", Content = "{ \"devDependencies\": { \"@types/node\": \"22.x\" } }" }
-            ],
             InitInstructions = "## TypeScript Azure Functions Project Setup",
-            ProjectStructure = ["src/functions/", "host.json", "package.json"],
-            Parameters = null // Parameters omitted when runtimeVersion is provided
+            ProjectStructure = ["src/functions/", "host.json", "package.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("typescript", "22", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        _service.GetProjectTemplateAsync("typescript", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "typescript", "--runtime-version", "22"]);
+        var args = _commandDefinition.Parse(["--language", "typescript"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
@@ -151,48 +133,28 @@ public sealed class ProjectGetCommandTests
         Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal("typescript", results[0].Language);
-        Assert.Null(results[0].Parameters);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesInvalidLanguage()
     {
-        // Arrange
-        _service.GetProjectTemplateAsync("invalid", null, Arg.Any<CancellationToken>())
-            .Returns<ProjectTemplateResult>(_ => throw new ArgumentException("Invalid language: \"invalid\"."));
+        // Arrange - no mock setup needed, validator catches it
 
         // Act
         var args = _commandDefinition.Parse(["--language", "invalid"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        // Assert
+        // Assert - validator returns error before service is called
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid language", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesInvalidRuntimeVersion()
-    {
-        // Arrange
-        _service.GetProjectTemplateAsync("java", "99", Arg.Any<CancellationToken>())
-            .Returns<ProjectTemplateResult>(_ => throw new ArgumentException("Invalid runtime version \"99\" for java."));
-
-        // Act
-        var args = _commandDefinition.Parse(["--language", "java", "--runtime-version", "99"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid runtime version", response.Message);
+        Assert.Contains("Invalid language 'invalid'", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetProjectTemplateAsync("python", null, Arg.Any<CancellationToken>())
+        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>())
             .Returns<ProjectTemplateResult>(_ => throw new InvalidOperationException("Service error"));
 
         // Act
@@ -212,18 +174,11 @@ public sealed class ProjectGetCommandTests
         var expectedResult = new ProjectTemplateResult
         {
             Language = "python",
-            Files =
-            [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\", \"extensionBundle\": {} }" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": { \"FUNCTIONS_WORKER_RUNTIME\": \"python\" } }" },
-                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" },
-                new ProjectTemplateFile { FileName = ".funcignore", Content = ".venv/" }
-            ],
-            InitInstructions = "## Python Azure Functions Project Setup",
-            ProjectStructure = ["function_app.py", "host.json", "requirements.txt"]
+            InitInstructions = "## Python Azure Functions Project Setup\n\n1. Create virtual environment\n2. Install dependencies",
+            ProjectStructure = ["function_app.py", "host.json", "requirements.txt", "local.settings.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("python", null, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         var args = _commandDefinition.Parse(["--language", "python"]);
@@ -242,19 +197,7 @@ public sealed class ProjectGetCommandTests
 
         var result = results[0];
         Assert.Equal("python", result.Language);
-        Assert.Equal(4, result.Files.Count);
-
-        // Verify host.json is present
-        var hostJson = result.Files.FirstOrDefault(f => f.FileName == "host.json");
-        Assert.NotNull(hostJson);
-        Assert.Contains("extensionBundle", hostJson.Content);
-
-        // Verify local.settings.json is present
-        var localSettings = result.Files.FirstOrDefault(f => f.FileName == "local.settings.json");
-        Assert.NotNull(localSettings);
-        Assert.Contains("FUNCTIONS_WORKER_RUNTIME", localSettings.Content);
-
-        Assert.NotEmpty(result.InitInstructions);
+        Assert.Contains("virtual environment", result.InitInstructions);
         Assert.True(result.ProjectStructure.Count > 0);
     }
 
@@ -263,22 +206,19 @@ public sealed class ProjectGetCommandTests
     [InlineData("typescript")]
     [InlineData("java")]
     [InlineData("csharp")]
+    [InlineData("javascript")]
+    [InlineData("powershell")]
     public async Task ExecuteAsync_ReturnsTemplateForAllLanguages(string language)
     {
         // Arrange - use representative mocked data per language
         var expectedResult = new ProjectTemplateResult
         {
             Language = language,
-            Files =
-            [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{}" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{}" }
-            ],
             InitInstructions = $"## {language} Azure Functions Project Setup",
-            ProjectStructure = ["host.json", "local.settings.json"]
+            ProjectStructure = ["host.json", "local.settings.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync(language, null, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        _service.GetProjectTemplateAsync(language, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         var args = _commandDefinition.Parse(["--language", language]);
@@ -294,14 +234,14 @@ public sealed class ProjectGetCommandTests
         Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal(language, results[0].Language);
-        Assert.True(results[0].Files.Count > 0);
+        Assert.True(results[0].ProjectStructure.Count > 0);
     }
 
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse(["--language", "java", "--runtime-version", "21"]);
+        var args = _commandDefinition.Parse(["--language", "java"]);
 
         // Use reflection to call BindOptions since it's protected
         var method = typeof(ProjectGetCommand).GetMethod(
@@ -312,6 +252,5 @@ public sealed class ProjectGetCommandTests
         // Assert
         Assert.NotNull(options);
         Assert.Equal("java", options.Language);
-        Assert.Equal("21", options.RuntimeVersion);
     }
 }

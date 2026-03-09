@@ -64,4 +64,13 @@ public sealed class LanguageInfo
     /// </summary>
     [JsonPropertyName("templateParameters")]
     public IReadOnlyList<TemplateParameter>? TemplateParameters { get; init; }
+
+    /// <summary>
+    /// Notes about why this language is recommended for its runtime.
+    /// For example, "Recommended for Node.js runtime for type safety and better tooling."
+    /// Null if not a recommended choice.
+    /// </summary>
+    [JsonPropertyName("recommendationNotes")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? RecommendationNotes { get; init; }
 }

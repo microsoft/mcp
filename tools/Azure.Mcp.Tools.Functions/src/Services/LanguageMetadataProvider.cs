@@ -84,13 +84,14 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "local.settings.json # Local development settings (do not commit)",
                     "requirements.txt   # Python dependencies",
                     "README.md          # Project documentation",
+                    ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters = null
             },
             ["typescript"] = new LanguageInfo
             {
-                Name = "TypeScript",
+                Name = "Node.js - TypeScript",
                 Runtime = "node",
                 ProgrammingModel = "v4 (Schema-based)",
                 Prerequisites = ["Node.js 20+", "Azure Functions Core Tools v4", "TypeScript 4.x+"],
@@ -103,7 +104,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 {
                     Supported = ["20", "22"],
                     Preview = ["24"],
-                    Default = "20"
+                    Default = "22"
                 },
                 InitInstructions = """
                     ## TypeScript Azure Functions Project Setup
@@ -134,6 +135,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "package.json       # Node.js dependencies and scripts",
                     "tsconfig.json      # TypeScript compiler configuration",
                     "README.md          # Project documentation",
+                    ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -145,11 +147,12 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                         DefaultValue = "20",
                         ValidValues = ["20", "22", "24"]
                     }
-                ]
+                ],
+                RecommendationNotes = "Recommended for Node.js runtime for type safety and better tooling support."
             },
             ["javascript"] = new LanguageInfo
             {
-                Name = "JavaScript",
+                Name = "Node.js - JavaScript",
                 Runtime = "node",
                 ProgrammingModel = "v4 (Schema-based)",
                 Prerequisites = ["Node.js 20+", "Azure Functions Core Tools v4"],
@@ -162,7 +165,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 {
                     Supported = ["20", "22"],
                     Preview = ["24"],
-                    Default = "20"
+                    Default = "22"
                 },
                 InitInstructions = """
                     ## JavaScript Azure Functions Project Setup
@@ -191,6 +194,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "local.settings.json # Local development settings (do not commit)",
                     "package.json       # Node.js dependencies and scripts",
                     "README.md          # Project documentation",
+                    ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -245,6 +249,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "host.json          # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
                     "README.md          # Project documentation",
+                    ".gitignore        # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters =
@@ -260,11 +265,11 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
             },
             ["csharp"] = new LanguageInfo
             {
-                Name = "C#",
+                Name = "dotnet-isolated - C#",
                 Runtime = "dotnet",
                 ProgrammingModel = "Isolated worker process",
                 Prerequisites = [".NET 8 SDK or later", "Azure Functions Core Tools v4"],
-                DevelopmentTools = ["Visual Studio 2022", "VS Code with C# + Azure Functions extensions", "Azure Functions Core Tools"],
+                DevelopmentTools = ["Visual Studio 2022 or later", "VS Code with C# + Azure Functions extensions", "Azure Functions Core Tools"],
                 InitCommand = "func init --worker-runtime dotnet-isolated",
                 RunCommand = "func start",
                 BuildCommand = "dotnet build",
@@ -303,6 +308,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "host.json           # Azure Functions host configuration",
                     "local.settings.json # Local development settings (do not commit)",
                     "README.md           # Project documentation",
+                    ".gitignore          # Git ignore patterns",
                     ".funcignore         # Files to exclude from deployment"
                 ],
                 TemplateParameters = null
@@ -349,6 +355,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     "profile.ps1        # App-level initialization script",
                     "requirements.psd1  # PowerShell module dependencies",
                     "README.md          # Project documentation",
+                    ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
                 TemplateParameters = null
@@ -419,13 +426,13 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
             // Maven requires Java 8 to be specified as "1.8" for compatibility
             var mavenVersion = runtimeVersion == "8" ? "1.8" : runtimeVersion;
 
-            // Replace the specific XML tag first
+            // First pass: Replace Maven's <java.version> property with Maven-compatible version (1.8 for Java 8)
             content = content.Replace(
                 "<java.version>{{javaVersion}}</java.version>",
                 $"<java.version>{mavenVersion}</java.version>");
 
-            // Replace all other {{javaVersion}} placeholders with Maven-compatible version
-            content = content.Replace("{{javaVersion}}", mavenVersion);
+            // Second pass: Replace all remaining {{javaVersion}} with original version (8 stays as 8)
+            content = content.Replace("{{javaVersion}}", runtimeVersion);
         }
         else if (language is "typescript" or "javascript")
         {

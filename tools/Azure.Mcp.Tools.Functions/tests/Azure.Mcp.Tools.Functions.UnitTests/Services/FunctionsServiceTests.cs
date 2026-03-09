@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Xunit;
@@ -128,17 +129,28 @@ public sealed class FunctionsServiceTests
     #region ExtractTemplateName Tests
 
     [Theory]
-    [InlineData("templates/python/HttpTrigger", "HttpTrigger")]
-    [InlineData("templates/typescript/BlobTrigger/", "BlobTrigger")]
-    [InlineData("HttpTrigger", "HttpTrigger")]
-    [InlineData("a/b/c/TimerTrigger", "TimerTrigger")]
-    public void ExtractTemplateName_ReturnsLastSegment(string folderPath, string expected)
+    [InlineData("http-trigger-python", "templates/python/HttpTrigger")]
+    [InlineData("blob-trigger-typescript", "templates/typescript/BlobTrigger")]
+    [InlineData("http-trigger-javascript-azd", ".")]
+    [InlineData("ai-chatgpt-python", ".")]
+    [InlineData("timer-trigger-java", "templates/java/TimerTrigger")]
+    public void ExtractTemplateName_AlwaysReturnsEntryId(string expectedId, string folderPath)
     {
-        // Act
-        var result = FunctionsService.ExtractTemplateName(folderPath);
+        // Arrange
+        var entry = new TemplateManifestEntry
+        {
+            Id = expectedId,
+            DisplayName = "Test",
+            Language = "python",
+            RepositoryUrl = "https://github.com/Azure/test",
+            FolderPath = folderPath
+        };
 
-        // Assert
-        Assert.Equal(expected, result);
+        // Act
+        var result = FunctionsService.ExtractTemplateName(entry);
+
+        // Assert - always returns entry.Id regardless of folderPath
+        Assert.Equal(expectedId, result);
     }
 
     #endregion
@@ -287,6 +299,9 @@ public sealed class FunctionsServiceTests
     [InlineData("https://github.com/evil/templates")]
     [InlineData("https://github.com/microsoft/repo")]
     [InlineData("https://github.com/")]
+    [InlineData("https://github.com/Azure/")]              // org only, no repo
+    [InlineData("https://github.com/Azure")]               // org only, no trailing slash
+    [InlineData("https://github.com/Azure/repo/extra")]    // extra path segments
     [InlineData("https://api.github.com/repos/Azure/repo")]
     [InlineData("https://raw.githubusercontent.com/Azure/repo/main/file")]
     [InlineData("http://github.com/Azure/repo")]
@@ -296,6 +311,30 @@ public sealed class FunctionsServiceTests
     public void IsValidRepositoryUrl_DisallowedOrg_ReturnsFalse(string? url)
     {
         Assert.False(GitHubUrlValidator.IsValidRepositoryUrl(url));
+    }
+
+    #endregion
+
+    #region NormalizeFolderPath Tests
+
+    [Theory]
+    [InlineData("templates/python", "templates/python")]
+    [InlineData("/templates/python", "templates/python")]
+    [InlineData("templates\\python", "templates/python")]
+    public void NormalizeFolderPath_ValidPath_ReturnsNormalized(string input, string expected)
+    {
+        Assert.Equal(expected, GitHubUrlValidator.NormalizeFolderPath(input));
+    }
+
+    [Theory]
+    [InlineData("templates/../.github")]           // embedded ..
+    [InlineData("templates/python/../../secrets")]  // multiple embedded ..
+    [InlineData("..")]                              // just ..
+    [InlineData("")]                                // empty
+    [InlineData(".")]                               // just .
+    public void NormalizeFolderPath_PathTraversal_ReturnsNull(string input)
+    {
+        Assert.Null(GitHubUrlValidator.NormalizeFolderPath(input));
     }
 
     #endregion

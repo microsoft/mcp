@@ -7,8 +7,10 @@ using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Models;
+using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -23,6 +25,12 @@ public sealed class FunctionsServiceHttpTests
     private readonly ILanguageMetadataProvider _languageMetadata;
     private readonly IManifestService _manifestService;
     private readonly ILogger<FunctionsService> _logger;
+    private readonly IOptions<FunctionsOptions> _functionsOptions;
+
+    // Derive URL patterns from default options to avoid duplication
+    private static readonly FunctionsOptions s_defaultOptions = new();
+    private static string PrimaryUrlHost => new Uri(s_defaultOptions.ManifestUrl).Host;
+    private static string FallbackUrlHost => new Uri(s_defaultOptions.FallbackManifestUrl).Host;
 
     public FunctionsServiceHttpTests()
     {
@@ -30,6 +38,7 @@ public sealed class FunctionsServiceHttpTests
         _languageMetadata = new LanguageMetadataProvider();
         _manifestService = Substitute.For<IManifestService>();
         _logger = Substitute.For<ILogger<FunctionsService>>();
+        _functionsOptions = Microsoft.Extensions.Options.Options.Create(new FunctionsOptions());
     }
 
     private FunctionsService CreateService(IHttpClientFactory httpClientFactory) =>
@@ -38,7 +47,7 @@ public sealed class FunctionsServiceHttpTests
     private ManifestService CreateManifestService(IHttpClientFactory httpClientFactory)
     {
         var manifestLogger = Substitute.For<ILogger<ManifestService>>();
-        return new ManifestService(httpClientFactory, _cacheService, manifestLogger);
+        return new ManifestService(httpClientFactory, _cacheService, _functionsOptions, manifestLogger);
     }
 
     private static TemplateManifestEntry CreateTestEntry(string language = "python", string folderPath = "templates/python/HttpTrigger") =>
@@ -155,6 +164,112 @@ public sealed class FunctionsServiceHttpTests
         Assert.True(handler.WasCalled); // Should fetch fresh data
     }
 
+    [Fact]
+    public async Task FetchManifestAsync_UsesFallback_WhenPrimaryFails()
+    {
+        // Arrange - primary returns 404, fallback returns valid manifest
+        var fallbackManifest = new TemplateManifest
+        {
+            Version = "fallback",
+            Templates = [CreateTestEntry("fallback-lang")]
+        };
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+
+        var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
+        {
+            [PrimaryUrlHost] = ("Not Found", HttpStatusCode.NotFound),
+            [FallbackUrlHost] = (fallbackJson, HttpStatusCode.OK)
+        };
+        var handler = new MultiResponseHttpMessageHandler(responses);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+        var service = CreateManifestService(httpClientFactory);
+
+        // Act
+        var result = await service.FetchManifestAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("fallback", result.Version);
+        Assert.Single(result.Templates);
+    }
+
+    [Fact]
+    public async Task FetchManifestAsync_UsesFallback_WhenPrimaryReturnsMalformedJson()
+    {
+        // Arrange - primary returns malformed JSON, fallback returns valid
+        var fallbackManifest = new TemplateManifest
+        {
+            Version = "fallback-after-malformed",
+            Templates = [CreateTestEntry()]
+        };
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+
+        var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
+        {
+            [PrimaryUrlHost] = ("{ invalid json }", HttpStatusCode.OK),
+            [FallbackUrlHost] = (fallbackJson, HttpStatusCode.OK)
+        };
+        var handler = new MultiResponseHttpMessageHandler(responses);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+        var service = CreateManifestService(httpClientFactory);
+
+        // Act
+        var result = await service.FetchManifestAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("fallback-after-malformed", result.Version);
+    }
+
+    [Fact]
+    public async Task FetchManifestAsync_Throws_WhenBothPrimaryAndFallbackFail()
+    {
+        // Arrange - both URLs return 404
+        var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
+        {
+            [PrimaryUrlHost] = ("Primary Not Found", HttpStatusCode.NotFound),
+            [FallbackUrlHost] = ("Fallback Not Found", HttpStatusCode.NotFound)
+        };
+        var handler = new MultiResponseHttpMessageHandler(responses);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+        var service = CreateManifestService(httpClientFactory);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.FetchManifestAsync(CancellationToken.None));
+
+        Assert.Contains("primary", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fallback", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task FetchManifestAsync_UsesPrimary_WhenPrimarySucceeds()
+    {
+        // Arrange - primary succeeds, fallback should not be called
+        var primaryManifest = new TemplateManifest
+        {
+            Version = "primary",
+            Templates = [CreateTestEntry("primary-lang")]
+        };
+        var primaryJson = JsonSerializer.Serialize(primaryManifest);
+
+        var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
+        {
+            [PrimaryUrlHost] = (primaryJson, HttpStatusCode.OK),
+            [FallbackUrlHost] = ("should not be called", HttpStatusCode.InternalServerError)
+        };
+        var handler = new MultiResponseHttpMessageHandler(responses);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+        var service = CreateManifestService(httpClientFactory);
+
+        // Act
+        var result = await service.FetchManifestAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("primary", result.Version);
+    }
+
     #endregion
 
     #region ListGitHubDirectoryAsync Tests
@@ -214,51 +329,6 @@ public sealed class FunctionsServiceHttpTests
 
         // Assert
         Assert.Empty(result);
-    }
-
-    #endregion
-
-    #region FetchProjectFilesAsync Tests
-
-    [Fact]
-    public async Task FetchProjectFilesAsync_ReturnsFiles_WhenFilesExist()
-    {
-        // Arrange
-        var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
-        {
-            ["host.json"] = ("{\"version\": \"2.0\"}", HttpStatusCode.OK),
-            ["local.settings.json"] = ("{\"IsEncrypted\": false}", HttpStatusCode.OK),
-            ["requirements.txt"] = ("azure-functions", HttpStatusCode.OK)
-        };
-        var handler = new MultiResponseHttpMessageHandler(responses);
-        var httpClientFactory = CreateHttpClientFactory(handler);
-        var service = CreateService(httpClientFactory);
-
-        var template = CreateTestEntry("python", "templates/python");
-
-        // Act
-        var result = await service.FetchProjectFilesAsync(template, "python", null, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.True(result.Count >= 2); // At least some files should be fetched
-    }
-
-    [Fact]
-    public async Task FetchProjectFilesAsync_SkipsMissingFiles_Returns404()
-    {
-        // Arrange - all files return 404
-        var handler = new MockHttpMessageHandler("Not Found", HttpStatusCode.NotFound);
-        var httpClientFactory = CreateHttpClientFactory(handler);
-        var service = CreateService(httpClientFactory);
-
-        var template = CreateTestEntry("python", "templates/python");
-
-        // Act
-        var result = await service.FetchProjectFilesAsync(template, "python", null, CancellationToken.None);
-
-        // Assert
-        Assert.Empty(result); // All files were 404, so empty list
     }
 
     #endregion

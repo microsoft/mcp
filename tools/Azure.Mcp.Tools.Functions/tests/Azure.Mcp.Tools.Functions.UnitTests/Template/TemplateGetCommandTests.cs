@@ -235,17 +235,15 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ListMode_HandlesInvalidLanguage()
     {
-        // Arrange
-        _service.GetTemplateListAsync("invalid", Arg.Any<CancellationToken>())
-            .Returns<TemplateListResult>(_ => throw new ArgumentException("Invalid language: \"invalid\"."));
+        // Arrange - no mock setup needed, validator catches it
 
         // Act
         var args = _commandDefinition.Parse(["--language", "invalid"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        // Assert
+        // Assert - validator returns error before service is called
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid language", response.Message);
+        Assert.Contains("Invalid language 'invalid'", response.Message);
     }
 
     [Fact]

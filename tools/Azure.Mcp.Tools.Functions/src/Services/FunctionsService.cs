@@ -70,9 +70,8 @@ public sealed class FunctionsService(
         return Task.FromResult(result);
     }
 
-    public async Task<ProjectTemplateResult> GetProjectTemplateAsync(
+    public Task<ProjectTemplateResult> GetProjectTemplateAsync(
         string language,
-        string? runtimeVersion,
         CancellationToken cancellationToken = default)
     {
         var normalizedLanguage = language.ToLowerInvariant();
@@ -83,43 +82,18 @@ public sealed class FunctionsService(
                 $"Invalid language: \"{language}\". Valid languages are: {string.Join(", ", _languageMetadata.SupportedLanguages)}.");
         }
 
-        if (runtimeVersion is not null)
-        {
-            _languageMetadata.ValidateRuntimeVersion(normalizedLanguage, runtimeVersion);
-        }
-
-        // Fetch manifest and find a candidate template for this language
-        var manifest = await _manifestService.FetchManifestAsync(cancellationToken);
-        var candidateTemplate = _manifestService.SelectCandidateTemplate(manifest, normalizedLanguage);
-
-        if (candidateTemplate is null)
-        {
-            throw new InvalidOperationException(
-                $"No template found for language \"{normalizedLanguage}\" in the CDN manifest.");
-        }
-
-        // Validate repository URL is from allowed GitHub org (SSRF prevention)
-        if (!GitHubUrlValidator.IsValidRepositoryUrl(candidateTemplate.RepositoryUrl))
-        {
-            throw new InvalidOperationException(
-                $"Invalid repository URL in manifest. Only Azure and Azure-Samples organizations are allowed.");
-        }
-
-        // Fetch project-level files from the candidate template's GitHub repository
-        var files = await FetchProjectFilesAsync(
-            candidateTemplate, normalizedLanguage, runtimeVersion, cancellationToken);
-
+        // Return static metadata only - no HTTP calls needed
+        // Agents can create the actual files based on this information
         var languageInfo = _languageMetadata.GetLanguageInfo(normalizedLanguage)!;
-        var shouldReplace = runtimeVersion is not null && languageInfo.TemplateParameters is not null;
 
-        return new ProjectTemplateResult
+        var result = new ProjectTemplateResult
         {
             Language = normalizedLanguage,
-            Files = files,
             InitInstructions = languageInfo.InitInstructions,
-            ProjectStructure = languageInfo.ProjectStructure,
-            Parameters = shouldReplace ? null : languageInfo.TemplateParameters
+            ProjectStructure = languageInfo.ProjectStructure
         };
+
+        return Task.FromResult(result);
     }
 
     public async Task<TemplateListResult> GetTemplateListAsync(
@@ -144,7 +118,7 @@ public sealed class FunctionsService(
 
         static TemplateSummary ToSummary(TemplateManifestEntry entry) => new()
         {
-            TemplateName = ExtractTemplateName(entry.FolderPath),
+            TemplateName = ExtractTemplateName(entry),
             DisplayName = entry.DisplayName,
             Description = entry.LongDescription,
             Resource = entry.Resource,
@@ -202,7 +176,7 @@ public sealed class FunctionsService(
             .Where(t => t.Language.Equals(normalizedLanguage, StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(t.FolderPath)
                 && !string.IsNullOrWhiteSpace(t.RepositoryUrl)
-                && ExtractTemplateName(t.FolderPath).Equals(template, StringComparison.OrdinalIgnoreCase))
+                && ExtractTemplateName(t).Equals(template, StringComparison.OrdinalIgnoreCase))
             .OrderBy(t => t.Priority)
             .FirstOrDefault();
 
@@ -211,7 +185,7 @@ public sealed class FunctionsService(
             var availableNames = manifest.Templates
                 .Where(t => t.Language.Equals(normalizedLanguage, StringComparison.OrdinalIgnoreCase)
                     && !string.IsNullOrWhiteSpace(t.FolderPath))
-                .Select(t => ExtractTemplateName(t.FolderPath))
+                .Select(t => ExtractTemplateName(t))
                 .OrderBy(n => n)
                 .ToList();
 
@@ -236,7 +210,7 @@ public sealed class FunctionsService(
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,
-            TemplateName = ExtractTemplateName(entry.FolderPath),
+            TemplateName = ExtractTemplateName(entry),
             DisplayName = entry.DisplayName,
             Description = entry.LongDescription ?? entry.ShortDescription,
             BindingType = entry.BindingType,
@@ -245,78 +219,6 @@ public sealed class FunctionsService(
             ProjectFiles = projectFiles,
             MergeInstructions = FunctionTemplateMergeInstructions
         };
-    }
-
-    /// <summary>
-    /// Fetches project-level files from the GitHub repository using raw URLs
-    /// constructed from the template's repositoryUrl and folderPath.
-    /// </summary>
-    internal async Task<IReadOnlyList<ProjectTemplateFile>> FetchProjectFilesAsync(
-        TemplateManifestEntry template,
-        string language,
-        string? runtimeVersion,
-        CancellationToken cancellationToken)
-    {
-        var languageInfo = _languageMetadata.GetLanguageInfo(language);
-        if (languageInfo is null)
-        {
-            return [];
-        }
-
-        var fileNames = languageInfo.ProjectFiles.Concat(["host.json", "local.settings.json", ".funcignore", ".gitignore"]);
-        var rawBaseUrl = ConvertToRawGitHubUrl(template.RepositoryUrl, template.FolderPath);
-        var shouldReplace = runtimeVersion is not null && languageInfo.TemplateParameters is not null;
-        var files = new List<ProjectTemplateFile>();
-
-        using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
-
-        foreach (var fileName in fileNames)
-        {
-            var fileUrl = $"{rawBaseUrl}/{fileName}";
-
-            try
-            {
-                using var response = await client.GetAsync(new Uri(fileUrl), cancellationToken);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    logger.LogWarning(
-                        "Project file {FileName} not found at {Url} (HTTP {Status}). Skipping.",
-                        fileName, fileUrl, response.StatusCode);
-                    continue;
-                }
-
-                // Use size-limited reading to prevent DoS (protects against missing Content-Length header)
-                string content;
-                try
-                {
-                    content = await GitHubUrlValidator.ReadSizeLimitedStringAsync(response.Content, MaxFileSizeBytes, cancellationToken);
-                }
-                catch (InvalidOperationException)
-                {
-                    logger.LogWarning("Skipping file {FileName} - size exceeds limit", fileName);
-                    continue;
-                }
-
-                if (shouldReplace)
-                {
-                    content = _languageMetadata.ReplaceRuntimeVersion(content, language, runtimeVersion!);
-                }
-
-                files.Add(new ProjectTemplateFile
-                {
-                    FileName = fileName,
-                    Content = content
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                logger.LogWarning(ex, "Error fetching project file {FileName} from {Url}", fileName, fileUrl);
-            }
-        }
-
-        return files;
     }
 
     /// <summary>
@@ -524,10 +426,10 @@ public sealed class FunctionsService(
                 continue;
             }
 
-            // Skip files exceeding max size (note: entry.Length is compressed size)
+            // Skip files exceeding max size (note: entry.Length is uncompressed size)
             if (entry.Length > MaxFileSizeBytes)
             {
-                logger.LogWarning("Skipping file {Name} ({Size} bytes compressed) - exceeds max size", relativePath, entry.Length);
+                logger.LogWarning("Skipping file {Name} ({Size} bytes uncompressed) - exceeds max size", relativePath, entry.Length);
                 continue;
             }
 
@@ -535,10 +437,12 @@ public sealed class FunctionsService(
             {
                 using var stream = entry.Open();
 
-                // Read with size limit to prevent ZIP bomb attacks (entry.Length is compressed, not uncompressed)
-                var buffer = new char[MaxFileSizeBytes + 1];
+                // Read with size limit to prevent ZIP bomb attacks
+                // Use int for buffer size (MaxFileSizeBytes is well under int.MaxValue)
+                var bufferSize = (int)MaxFileSizeBytes + 1;
+                var buffer = new char[bufferSize];
                 using var reader = new StreamReader(stream);
-                var charsRead = await reader.ReadBlockAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                var charsRead = await reader.ReadBlockAsync(buffer.AsMemory(0, bufferSize), cancellationToken);
 
                 if (charsRead > MaxFileSizeBytes)
                 {
@@ -617,15 +521,10 @@ public sealed class FunctionsService(
     }
 
     /// <summary>
-    /// Extracts the template name from a CDN manifest folder path.
-    /// e.g., "templates/python/HttpTrigger" → "HttpTrigger"
+    /// Gets the template name from a manifest entry.
+    /// Always uses entry.Id for consistency - folderPath is only used for download logic.
     /// </summary>
-    internal static string ExtractTemplateName(string folderPath)
-    {
-        var trimmed = folderPath.TrimEnd('/');
-        var lastSlash = trimmed.LastIndexOf('/');
-        return lastSlash >= 0 ? trimmed[(lastSlash + 1)..] : trimmed;
-    }
+    internal static string ExtractTemplateName(TemplateManifestEntry entry) => entry.Id ?? string.Empty;
 
     private const int MaxRecursionDepth = 10;
 

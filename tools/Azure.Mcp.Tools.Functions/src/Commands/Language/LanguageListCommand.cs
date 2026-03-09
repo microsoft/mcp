@@ -20,18 +20,10 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
     public override string Name => "list";
 
     public override string Description =>
-        """
-        Get supported programming languages for Azure Functions development.
-
-        USE FOR: Creating new Azure Functions apps, discovering available languages for serverless development, comparing runtime options, checking prerequisites before starting a project.
-        RETURNS: Language details (runtime, programming model, prerequisites, dev tools, init/run/build commands), supported runtime versions per language, Functions runtime version, extension bundle version.
-        DOES NOT RETURN: Project files or function templates - use 'functions project get' and 'functions template get' for those.
-
-        RUNTIME VERSION NOTE: For Java and TypeScript/JavaScript, supply --runtime-version to later tools (project get, template get) to auto-replace template placeholders like {{javaVersion}} or {{nodeVersion}}.
-
-        WORKFLOW: Start here → functions project get → functions template get
-        NEXT STEP: After selecting a language, call 'functions project get --language <language>' to get project scaffold or initialization files.
-        """;
+        "Get supported programming languages for Azure Functions development. " +
+        "USE FOR: Creating serverless apps, discovering runtime options, checking prerequisites. " +
+        "RETURNS: Language metadata, runtime versions, init/build/run commands. " +
+        "WORKFLOW: Start here → functions project get → functions template get";
 
     public override string Title => "List Supported Languages";
 

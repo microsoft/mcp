@@ -1,8 +1,8 @@
 ## Tools for Azure Functions Code Generation
     use `azmcp functions` tools together with best practices guidance:
     1. `language list` - Get supported languages and runtime versions
-    3. `project get --language <lang>` - Get project scaffold files
-    2. `template get --language <lang>` - List available templates
+    2. `project get --language <lang>` - Get project scaffold files
+    3. `template get --language <lang>` - List available templates
     4. `template get --language <lang> --template <name>` - Get function code
  
 ## General Best Practices

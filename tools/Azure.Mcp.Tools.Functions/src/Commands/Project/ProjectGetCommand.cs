@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Project;
@@ -22,20 +23,10 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get project scaffold files for code generation of a new Azure Functions app.
-
-        USE FOR: Scaffolding a new serverless project, code generation for Azure Functions apps, getting host.json and local.settings.json, getting language-specific config files (requirements.txt, package.json, pom.xml, .csproj).
-        RETURNS: Project template files with content (host.json, local.settings.json, language-specific files), setup instructions, project structure description.
-        DOES NOT RETURN: Function code templates - use 'functions template get' for trigger/binding code generation.
-
-        PARAMETERS:
-        --language (required): csharp, java, javascript, python, powershell, typescript
-        --runtime-version (optional): For Java or TypeScript/JavaScript to replace {{javaVersion}} or {{nodeVersion}} placeholders. See 'functions language list' for supported versions.
-
-        WORKFLOW: functions language list → Start here → functions template get
-        NEXT STEP: After creating project files, call 'functions template get --language <language>' to see available triggers and bindings.
-        """;
+        "Get project scaffolding information for a new Azure Functions app. " +
+        "USE FOR: Getting project structure, setup instructions, and file list for initializing serverless projects. " +
+        "RETURNS: Project structure overview and setup instructions (agents create files based on this). " +
+        "WORKFLOW: functions language list → Start here → functions template get";
 
     public override string Title => "Get Project Template";
 
@@ -53,15 +44,26 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
     {
         base.RegisterOptions(command);
         command.Options.Add(FunctionsOptionDefinitions.Language);
-        command.Options.Add(FunctionsOptionDefinitions.RuntimeVersion);
+
+        command.Validators.Add(commandResult =>
+        {
+            var language = commandResult.GetValueWithoutDefault<string>(FunctionsOptionDefinitions.Language.Name);
+            if (string.IsNullOrWhiteSpace(language))
+            {
+                commandResult.AddError("The --language parameter is required.");
+            }
+            else if (!FunctionsOptionDefinitions.SupportedLanguages.Contains(language))
+            {
+                commandResult.AddError($"Invalid language '{language}'. Supported languages: {string.Join(", ", FunctionsOptionDefinitions.SupportedLanguages)}.");
+            }
+        });
     }
 
     protected override ProjectGetOptions BindOptions(ParseResult parseResult)
     {
         return new ProjectGetOptions
         {
-            Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name),
-            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name)
+            Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name)
         };
     }
 
@@ -79,28 +81,14 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
 
         try
         {
-            if (string.IsNullOrWhiteSpace(options.Language))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "The language parameter is required.";
-                return context.Response;
-            }
-
             var service = context.GetService<IFunctionsService>();
-            var result = await service.GetProjectTemplateAsync(options.Language, options.RuntimeVersion, cancellationToken);
+            var result = await service.GetProjectTemplateAsync(options.Language!, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
                 [result],
                 FunctionsJsonContext.Default.ListProjectTemplateResult);
             context.Response.Message = string.Empty;
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogError(ex, "Invalid arguments for project template. Language: {Language}, RuntimeVersion: {RuntimeVersion}",
-                options.Language, options.RuntimeVersion);
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = ex.Message;
         }
         catch (Exception ex)
         {

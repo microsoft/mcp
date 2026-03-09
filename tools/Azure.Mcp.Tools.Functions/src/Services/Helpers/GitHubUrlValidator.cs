@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
+
 namespace Azure.Mcp.Tools.Functions.Services.Helpers;
 
 /// <summary>
@@ -65,7 +67,7 @@ internal static class GitHubUrlValidator
 
     /// <summary>
     /// Validates that a repository URL from the CDN manifest points to an allowed GitHub org.
-    /// Repository URLs must be in https://github.com/{org}/{repo} format.
+    /// Repository URLs must be in https://github.com/{org}/{repo} format with exactly two path segments.
     /// </summary>
     /// <param name="url">The repository URL to validate.</param>
     /// <returns>True if the URL is a valid GitHub repository URL from an allowed org; otherwise false.</returns>
@@ -82,15 +84,19 @@ internal static class GitHubUrlValidator
             return false;
         }
 
-        // Extract org from path: https://github.com/{org}/{repo}
-        var path = url["https://github.com/".Length..];
-        var slashIndex = path.IndexOf('/');
-        if (slashIndex <= 0)
+        // Parse as URI and validate exactly two non-empty path segments: /{org}/{repo}
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
             return false;
         }
 
-        var org = path[..slashIndex];
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2 || string.IsNullOrEmpty(segments[0]) || string.IsNullOrEmpty(segments[1]))
+        {
+            return false;
+        }
+
+        var org = segments[0];
         return s_allowedGitHubOrgs.Any(allowed => allowed.Equals(org, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -122,21 +128,29 @@ internal static class GitHubUrlValidator
     }
 
     /// <summary>
-    /// Normalizes a folder path and optionally validates it's not a root path.
+    /// Normalizes a folder path and validates it doesn't contain path traversal segments.
     /// </summary>
     /// <param name="folderPath">The folder path to normalize.</param>
     /// <param name="allowRoot">Whether to allow root/empty paths.</param>
     /// <returns>The normalized path or null if invalid.</returns>
     public static string? NormalizeFolderPath(string folderPath, bool allowRoot = false)
     {
-        var normalizedPath = folderPath.Trim().TrimStart('/');
+        // Normalize path separators and trim
+        var normalizedPath = folderPath.Replace('\\', '/').Trim().TrimStart('/');
+
+        // Reject any path containing ".." segments (path traversal prevention)
+        var segments = normalizedPath.Split('/');
+        if (segments.Any(s => s == ".."))
+        {
+            return null;
+        }
 
         if (allowRoot)
         {
             return normalizedPath;
         }
 
-        if (string.IsNullOrEmpty(normalizedPath) || normalizedPath == "." || normalizedPath == "..")
+        if (string.IsNullOrEmpty(normalizedPath) || normalizedPath == ".")
         {
             return null;
         }
@@ -146,35 +160,50 @@ internal static class GitHubUrlValidator
 
     /// <summary>
     /// Reads a string from HTTP content with a size limit, protecting against DoS when Content-Length is missing.
+    /// Enforces the limit in bytes and then decodes to UTF-8 string.
     /// </summary>
     /// <param name="content">The HTTP content to read.</param>
-    /// <param name="maxSizeBytes">Maximum allowed size in bytes.</param>
+    /// <param name="maxSizeBytes">Maximum allowed size in bytes (must be <= int.MaxValue).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The content as a string.</returns>
     /// <exception cref="InvalidOperationException">Thrown when content exceeds the size limit.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when maxSizeBytes exceeds int.MaxValue.</exception>
     public static async Task<string> ReadSizeLimitedStringAsync(
         HttpContent content, long maxSizeBytes, CancellationToken cancellationToken)
     {
+        if (maxSizeBytes > int.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxSizeBytes), "Maximum size must be <= int.MaxValue for buffer allocation.");
+        }
+
+        var maxSize = (int)maxSizeBytes;
+
         // First check Content-Length header if available
-        if (content.Headers.ContentLength.HasValue && content.Headers.ContentLength.Value > maxSizeBytes)
+        if (content.Headers.ContentLength.HasValue && content.Headers.ContentLength.Value > maxSize)
         {
             throw new InvalidOperationException(
-                $"Response size ({content.Headers.ContentLength.Value} bytes) exceeds maximum allowed ({maxSizeBytes} bytes).");
+                $"Response size ({content.Headers.ContentLength.Value} bytes) exceeds maximum allowed ({maxSize} bytes).");
         }
 
-        // Use size-limited reading to protect against missing Content-Length header
+        // Read bytes directly with size limit to enforce byte count (not char count)
         await using var stream = await content.ReadAsStreamAsync(cancellationToken);
-        using var reader = new StreamReader(stream);
-        var buffer = new char[maxSizeBytes + 1];
-        var charsRead = await reader.ReadBlockAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+        var buffer = new byte[maxSize + 1];
+        var totalBytesRead = 0;
+        int bytesRead;
 
-        if (charsRead > maxSizeBytes)
+        while (totalBytesRead < buffer.Length &&
+               (bytesRead = await stream.ReadAsync(buffer.AsMemory(totalBytesRead, buffer.Length - totalBytesRead), cancellationToken)) > 0)
         {
-            throw new InvalidOperationException(
-                $"Response size exceeds maximum allowed ({maxSizeBytes} bytes).");
+            totalBytesRead += bytesRead;
         }
 
-        return new string(buffer, 0, charsRead);
+        if (totalBytesRead > maxSize)
+        {
+            throw new InvalidOperationException(
+                $"Response size exceeds maximum allowed ({maxSize} bytes).");
+        }
+
+        return Encoding.UTF8.GetString(buffer, 0, totalBytesRead);
     }
 
     /// <summary>

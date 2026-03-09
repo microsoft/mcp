@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -25,28 +26,11 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
     public override string Name => "get";
 
     public override string Description =>
-        """
-        List available Azure Functions templates or generate complete function code for a specific template.
-
-        USE FOR: Code generation for serverless functions, building HTTP APIs, scheduled jobs (cron), message processors, event-driven applications. Works for both new and existing Azure Functions projects.
-        
-        TWO MODES:
-        1. LIST MODE (no --template): Returns all templates grouped by type (triggers, input bindings, output bindings) with descriptions.
-        2. GET MODE (with --template): Generates complete, ready-to-use function code with merge instructions.
-
-        RETURNS (LIST): Template names, descriptions, binding types, resource categories.
-        RETURNS (GET): Generated function source code files, project config updates, merge instructions.
-
-        PARAMETERS:
-        --language (required): csharp, java, javascript, python, powershell, typescript
-        --template (optional): Template name (e.g., HttpTrigger for REST APIs, TimerTrigger for scheduled/cron jobs, BlobTrigger for file processing, QueueTrigger for message handling, CosmosDBTrigger for database change feeds)
-        --runtime-version (optional): For Java or TypeScript/JavaScript placeholder replacement. See 'functions language list' for supported versions.
-
-        WORKFLOW: functions language list → functions project get → Start here
-
-        USAGE (LIST MODE): Select 1 trigger (required) + 0 or more input/output bindings (optional) for your function.
-        USAGE (GET MODE): Create the files in your project. If adding bindings, fetch additional templates and merge them.
-        """;
+        "Generate Azure Functions code or list available templates. " +
+        "USE FOR: Code generation for serverless functions with triggers and bindings. " +
+        "TWO MODES: Without --template lists templates; with --template generates function code. " +
+        "USAGE: Select 1 trigger (required) + 0 or more input/output bindings (optional). " +
+        "WORKFLOW: functions language list → functions project get → functions template get";
 
     public override string Title => "Get Function Template";
 
@@ -66,6 +50,19 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         command.Options.Add(FunctionsOptionDefinitions.Language);
         command.Options.Add(FunctionsOptionDefinitions.Template.AsOptional());
         command.Options.Add(FunctionsOptionDefinitions.RuntimeVersion);
+
+        command.Validators.Add(commandResult =>
+        {
+            var language = commandResult.GetValueWithoutDefault<string>(FunctionsOptionDefinitions.Language.Name);
+            if (string.IsNullOrWhiteSpace(language))
+            {
+                commandResult.AddError("The --language parameter is required.");
+            }
+            else if (!FunctionsOptionDefinitions.SupportedLanguages.Contains(language))
+            {
+                commandResult.AddError($"Invalid language '{language}'. Supported languages: {string.Join(", ", FunctionsOptionDefinitions.SupportedLanguages)}.");
+            }
+        });
     }
 
     protected override TemplateGetOptions BindOptions(ParseResult parseResult)
@@ -92,23 +89,16 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
 
         try
         {
-            if (string.IsNullOrWhiteSpace(options.Language))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "The language parameter is required.";
-                return context.Response;
-            }
-
             var service = context.GetService<IFunctionsService>();
 
             if (string.IsNullOrEmpty(options.Template))
             {
                 // List mode: return all templates grouped by binding type
-                var templateList = await service.GetTemplateListAsync(options.Language, cancellationToken);
+                var templateList = await service.GetTemplateListAsync(options.Language!, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
-                    new TemplateGetCommandResult(TemplateList: templateList, FunctionTemplate: null),
+                    new(TemplateList: templateList, FunctionTemplate: null),
                     FunctionsJsonContext.Default.TemplateGetCommandResult);
                 context.Response.Message = string.Empty;
             }
@@ -116,21 +106,14 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
             {
                 // Get mode: fetch specific template files
                 var functionTemplate = await service.GetFunctionTemplateAsync(
-                    options.Language, options.Template, options.RuntimeVersion, cancellationToken);
+                    options.Language!, options.Template, options.RuntimeVersion, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
-                    new TemplateGetCommandResult(TemplateList: null, FunctionTemplate: functionTemplate),
+                    new(TemplateList: null, FunctionTemplate: functionTemplate),
                     FunctionsJsonContext.Default.TemplateGetCommandResult);
                 context.Response.Message = string.Empty;
             }
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogError(ex, "Invalid arguments for template get. Language: {Language}, Template: {Template}",
-                options.Language, options.Template);
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = ex.Message;
         }
         catch (Exception ex)
         {

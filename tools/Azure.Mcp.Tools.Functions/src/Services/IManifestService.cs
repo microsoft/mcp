@@ -16,13 +16,4 @@ public interface IManifestService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The template manifest.</returns>
     Task<TemplateManifest> FetchManifestAsync(CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Selects a candidate template from the manifest for the given language.
-    /// Prefers templates sorted by priority (lower = better).
-    /// </summary>
-    /// <param name="manifest">The template manifest.</param>
-    /// <param name="language">The language to find a template for.</param>
-    /// <returns>The best matching template entry or null if not found.</returns>
-    TemplateManifestEntry? SelectCandidateTemplate(TemplateManifest manifest, string language);
 }

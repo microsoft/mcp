@@ -9,10 +9,18 @@ public static class FunctionsOptionDefinitions
     public const string RuntimeVersionName = "runtime-version";
     public const string TemplateName = "template";
 
+    /// <summary>
+    /// Supported languages for validation (must match LanguageMetadataProvider keys).
+    /// </summary>
+    public static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "python", "typescript", "javascript", "java", "csharp", "powershell"
+    };
+
     public static readonly Option<string> Language = new($"--{LanguageName}")
     {
-        Description = "Programming language for the Azure Functions project. " +
-            "Valid values: python, typescript, java, csharp.",
+        Description = $"Programming language for the Azure Functions project. " +
+            $"Valid values: {string.Join(", ", SupportedLanguages)}.",
         Required = true
     };
 

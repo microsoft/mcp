@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.Functions.Commands.Language;
 using Azure.Mcp.Tools.Functions.Commands.Project;
 using Azure.Mcp.Tools.Functions.Commands.Template;
+using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -19,6 +20,7 @@ public sealed class FunctionsSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.Configure<FunctionsOptions>(_ => { });
         services.AddSingleton<ILanguageMetadataProvider, LanguageMetadataProvider>();
         services.AddSingleton<IManifestService, ManifestService>();
         services.AddSingleton<IFunctionsService, FunctionsService>();
@@ -31,8 +33,8 @@ public sealed class FunctionsSetup : IAreaSetup
     {
         var functions = new CommandGroup(
             Name,
-            "Azure Functions code generation commands. Use these tools to generate functions code " +
-"explore supported languages, runtime versions, get composable functions templates for Azure Functions development.",
+            "Azure Functions code generation commands. Use these tools to generate functions code, " +
+            "explore supported languages and runtime versions, and get composable function templates for Azure Functions development.",
             Title);
 
         var languageGroup = new CommandGroup(

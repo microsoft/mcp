@@ -406,7 +406,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
 | functions_template_get | What triggers and bindings are available for C# Azure Functions? |
 | functions_template_get | Show me all the Python Azure Function templates |
-| functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes? |
+| functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
 
