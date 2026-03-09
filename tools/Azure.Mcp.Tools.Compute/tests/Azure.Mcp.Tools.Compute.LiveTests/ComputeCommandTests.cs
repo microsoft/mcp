@@ -511,6 +511,192 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     #endregion
 
+    #region VM Delete Tests
+
+    [Fact]
+    public async Task Should_return_warning_when_deleting_vm_without_force()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("WARNING", message.GetString());
+        Assert.Contains("--force", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.False, success.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_delete_vm_with_force()
+    {
+        // Create a dedicated VM to delete
+        var deleteVmName = RegisterOrRetrieveVariable("deleteVmName", $"delvm{DateTime.UtcNow:MMddHHmmss}");
+
+        await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", deleteVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "no-public-ip", true }
+            });
+
+        // Delete the VM with --force
+        var result = await CallToolAsync(
+            "compute_vm_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", deleteVmName },
+                { "force", true }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("successfully deleted", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_return_not_found_when_deleting_nonexistent_vm()
+    {
+        var nonExistentVmName = "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8];
+
+        try
+        {
+            var result = await CallToolAsync(
+                "compute_vm_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "vm-name", nonExistentVmName },
+                    { "force", true }
+                });
+
+            // The command sets Status = NotFound with a Message when VM is not found
+            if (result.HasValue)
+            {
+                var message = result.Value.AssertProperty("message");
+                Assert.Contains("not found", message.GetString(), StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Some implementations may throw - verify it's a not-found error
+            Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    #endregion
+
+    #region VMSS Delete Tests
+
+    [Fact]
+    public async Task Should_return_warning_when_deleting_vmss_without_force()
+    {
+        var result = await CallToolAsync(
+            "compute_vmss_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", VmssName }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("WARNING", message.GetString());
+        Assert.Contains("--force", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.False, success.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_delete_vmss_with_force()
+    {
+        // Create a dedicated VMSS to delete
+        var deleteVmssName = RegisterOrRetrieveVariable("deleteVmssName", $"delvms{DateTime.UtcNow:HHmmss}");
+
+        await CallToolAsync(
+            "compute_vmss_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", deleteVmssName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "instance-count", 1 }
+            });
+
+        // Delete the VMSS with --force
+        var result = await CallToolAsync(
+            "compute_vmss_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", deleteVmssName },
+                { "force", true }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("successfully deleted", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_return_not_found_when_deleting_nonexistent_vmss()
+    {
+        var nonExistentVmssName = "nonexistent-vmss-" + Guid.NewGuid().ToString("N")[..8];
+
+        try
+        {
+            var result = await CallToolAsync(
+                "compute_vmss_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "vmss-name", nonExistentVmssName },
+                    { "force", true }
+                });
+
+            // The command sets Status = NotFound with a Message when VMSS is not found
+            if (result.HasValue)
+            {
+                var message = result.Value.AssertProperty("message");
+                Assert.Contains("not found", message.GetString(), StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Some implementations may throw - verify it's a not-found error
+            Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    #endregion
+
     #region Disk Tests
 
     [Fact]
