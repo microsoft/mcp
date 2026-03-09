@@ -41,7 +41,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         Secret = false
     };
 
-    private static readonly string[] validEventTypes = ["Incident", "Maintenance", "Advisory", "Security"];
+    private static readonly string[] validEventTypes = ["ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security"];
     private static readonly string[] validStatuses = ["Active", "Resolved"];
 
     protected override void RegisterOptions(Command command)
