@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
+
+// Temporarily disabled until the DocumentDb live tests are migrated to the
+// current recorded test infrastructure in a follow-up PR.
+#if false
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Xunit;
-
-namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
 
 public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture serverFixture)
     : RecordedCommandTestsBase(output, fixture, serverFixture)
@@ -31,7 +34,8 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         ..base.BodyKeySanitizers,
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..connectionString"){
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..connectionString")
+        {
             Value = "Sanitized"
         })
     ];
@@ -218,3 +222,4 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
     //     Assert.Equal(1, deletedCount.GetInt32());
     // }
 }
+#endif
