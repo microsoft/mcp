@@ -1898,49 +1898,44 @@ azmcp aks nodepool get --subscription <subscription> \
 # Create load test
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
                               --test-id <test-id> \
-                              --display-name <display-name> \
-                              --description <description> \
-                              --endpoint <endpoint> \
-                              --virtual-users <virtual-users> \
-                              --duration <duration> \
-                              --ramp-up-time <ramp-up-time>
+                              --test-resource-name <test-resource-name> \
+                              [--resource-group <resource-group>] \
+                              [--display-name <display-name>] \
+                              [--description <description>] \
+                              [--endpoint <endpoint>] \
+                              [--virtual-users <virtual-users>] \
+                              [--duration <duration>] \
+                              [--ramp-up-time <ramp-up-time>]
 
 # Get load test
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test get --subscription <subscription> \
-                           --resource-group <resource-group> \
+                           --test-id <test-id> \
                            --test-resource-name <test-resource-name> \
-                           --test-id <test-id>
+                           [--resource-group <resource-group>]
 
 # Create load test resources
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource create --subscription <subscription> \
                                       --resource-group <resource-group> \
-                                      --test-resource-name <test-resource-name>
+                                      [--test-resource-name <test-resource-name>]
 
 # List load test resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource list --subscription <subscription> \
-                                    --resource-group <resource-group> \
-                                    --test-resource-name <test-resource-name>
+                                    [--resource-group <resource-group>] \
+                                    [--test-resource-name <test-resource-name>]
 
 # Get load test run (single run or list all runs for a test)
 # Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
-                              --testrun-id <testrun-id>
-
-# List all test runs for a specific test:
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
-                              --test-id <test-id>
+                              [--resource-group <resource-group>] \
+                              [--testrun-id <testrun-id>] \
+                              [--test-id <test-id>]
+# Note: Either --testrun-id or --test-id must be provided, but not both.
 
 # Create or update load test run
 # Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
@@ -1948,31 +1943,32 @@ azmcp loadtesting testrun get --subscription <subscription> \
 # Create a new test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <display-name> \
-                                         --description <description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <display-name>] \
+                                         [--description <description>] \
+                                         [--old-testrun-id <old-testrun-id>]
 
 # Rerun an existing test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <new-testrun-id> \
-                                         --old-testrun-id <existing-testrun-id>
+                                         [--resource-group <resource-group>] \
+                                         [--old-testrun-id <existing-testrun-id>]
 
 # Update test run metadata (idempotent):
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <updated-display-name> \
-                                         --description <updated-description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <updated-display-name>] \
+                                         [--description <updated-description>]
 ```
 
 ### Azure Managed Grafana Operations

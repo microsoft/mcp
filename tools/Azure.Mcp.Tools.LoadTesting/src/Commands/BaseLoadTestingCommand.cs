@@ -18,8 +18,6 @@ public abstract class BaseLoadTestingCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
