@@ -74,4 +74,11 @@ public sealed class RegistryServerInfo
     /// </summary>
     [JsonPropertyName("installInstructions")]
     public string? InstallInstructions { get; init; }
+
+    /// <summary>
+    /// Gets the prefix to prepend to all tool names exposed from this server.
+    /// When set, tools from this server will be exposed with this prefix (e.g. "foundry_").
+    /// </summary>
+    [JsonPropertyName("toolPrefix")]
+    public string? ToolPrefix { get; init; }
 }
