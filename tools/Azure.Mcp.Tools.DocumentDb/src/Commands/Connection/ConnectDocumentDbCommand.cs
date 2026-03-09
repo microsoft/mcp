@@ -71,7 +71,7 @@ public sealed class ConnectDocumentDbCommand(ILogger<ConnectDocumentDbCommand> l
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to connect to DocumentDB with connection string: {ConnectionString}", options.ConnectionString);
+            _logger.LogError(ex, "Failed to connect to DocumentDB using the provided connection string.");
             HandleException(context, ex);
             return context.Response;
         }
