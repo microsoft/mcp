@@ -3,10 +3,6 @@ title: AddApplicationInsightsTelemetry
 category: api-reference
 applies-to: 3.x
 source: NETCORE/src/Microsoft.ApplicationInsights.AspNetCore/Extensions/ApplicationInsightsExtensions.cs
-related:
-  - api-reference/UseAzureMonitor.md
-  - api-reference/UseAzureMonitorExporter.md
-  - migration/appinsights-2x-to-3x-code-migration.md
 ---
 
 # AddApplicationInsightsTelemetry
@@ -126,8 +122,3 @@ var app = builder.Build();
 - Connection string resolution order: `ApplicationInsightsServiceOptions.ConnectionString` → env var `APPLICATIONINSIGHTS_CONNECTION_STRING` → config key `ApplicationInsights:ConnectionString`.
 - `TracesPerSecond` is the default sampling mode (effective default `5`). Set `SamplingRatio` for fixed-rate sampling instead.
 - Additional OTel sources/meters can be added: `builder.Services.AddOpenTelemetry().WithTracing(t => t.AddSource("MySource"))`.
-## See also
-
-- [UseAzureMonitor (distro)](./UseAzureMonitor.md)
-- [UseAzureMonitorExporter](./UseAzureMonitorExporter.md)
-- [App Insights 2.x → 3.x Migration](../../migration/dotnet/appinsights-2x-to-3x-code-migration.md)

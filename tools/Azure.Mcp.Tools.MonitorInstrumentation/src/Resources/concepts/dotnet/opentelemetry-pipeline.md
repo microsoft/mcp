@@ -2,9 +2,6 @@
 title: OpenTelemetry Pipeline
 category: concept
 applies-to: 3.x
-related:
-  - concepts/azure-monitor-distro.md
-  - api-reference/AddOpenTelemetry.md
 ---
 
 # OpenTelemetry Pipeline
@@ -42,7 +39,7 @@ The OpenTelemetry pipeline is the data flow path for telemetry signals (traces, 
 
 ## Wiring Up the Pipeline
 
-See the [AddOpenTelemetry API reference](../../api-reference/dotnet/AddOpenTelemetry.md) for full setup examples showing how sources, processors, and exporters are composed via the builder API.
+See the AddOpenTelemetry API reference(see in AddOpenTelemetry.md) for full setup examples showing how sources, processors, and exporters are composed via the builder API.
 
 ## Key Differences from Application Insights 2.x
 
@@ -56,5 +53,5 @@ See the [AddOpenTelemetry API reference](../../api-reference/dotnet/AddOpenTelem
 
 ## See Also
 
-- [Azure Monitor Distro](azure-monitor-distro.md)
-- [AddOpenTelemetry API](../../api-reference/dotnet/AddOpenTelemetry.md)
+- Azure Monitor Distro(see in azure-monitor-distro.md)
+- AddOpenTelemetry API(see in AddOpenTelemetry.md)

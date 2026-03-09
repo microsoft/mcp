@@ -2,10 +2,6 @@
 title: Sampling
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/ConfigureResource.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # SetSampler()
@@ -87,4 +83,4 @@ app.Run();
 
 ## See also
 
-- Use `AddProcessor` with a filtering processor if you need to drop spans **after** they are recorded (post-sampling). See [ActivityProcessors.md](./ActivityProcessors.md) for filtering and enrichment patterns.
+- Use `AddProcessor` with a filtering processor if you need to drop spans **after** they are recorded (post-sampling). See ActivityProcessors.md for filtering and enrichment patterns.

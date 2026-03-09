@@ -2,11 +2,6 @@
 title: ConfigureResource
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/WithMetrics.md
-  - api-reference/WithLogging.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # .ConfigureResource()

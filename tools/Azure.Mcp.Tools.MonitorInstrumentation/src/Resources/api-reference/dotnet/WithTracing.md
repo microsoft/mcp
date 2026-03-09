@@ -2,13 +2,6 @@
 title: WithTracing
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithMetrics.md
-  - api-reference/WithLogging.md
-  - api-reference/ConfigureResource.md
-  - api-reference/Sampling.md
-  - api-reference/ActivityProcessors.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # .WithTracing()
@@ -26,7 +19,7 @@ related:
 | `builder.AddProcessor(Func<IServiceProvider, BaseProcessor<Activity>>)` | Add a processor via factory |
 | `builder.SetErrorStatusOnException(bool)` | Auto-set `Status.Error` on unhandled exceptions (default `true`) |
 
-See also: [Sampling.md](./Sampling.md) for `SetSampler()` overloads · [ConfigureResource.md](./ConfigureResource.md) for resource configuration
+See also: Sampling.md for `SetSampler()` overloads · ConfigureResource.md for resource configuration
 
 ## When to use
 

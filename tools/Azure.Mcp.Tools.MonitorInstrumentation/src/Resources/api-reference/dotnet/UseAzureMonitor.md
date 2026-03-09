@@ -3,9 +3,6 @@ title: UseAzureMonitor
 category: api-reference
 applies-to: 3.x
 source: Azure.Monitor.OpenTelemetry.AspNetCore/OpenTelemetryBuilderExtensions.cs
-related:
-  - api-reference/AddOpenTelemetry.md
-  - concepts/azure-monitor-distro.md
 ---
 
 # UseAzureMonitor
@@ -95,5 +92,5 @@ builder.Services.AddOpenTelemetry()
 
 ## See Also
 
-- [AddOpenTelemetry](AddOpenTelemetry.md)
-- [Azure Monitor Distro concept](../concepts/azure-monitor-distro.md)
+- AddOpenTelemetry(see in AddOpenTelemetry.md)
+- Azure Monitor Distro concept(see in azure-monitor-distro.md)

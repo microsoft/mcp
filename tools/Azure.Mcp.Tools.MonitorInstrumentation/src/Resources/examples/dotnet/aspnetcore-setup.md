@@ -3,9 +3,6 @@ title: Basic ASP.NET Core Setup
 category: example
 applies-to: 3.x
 source: ApplicationInsightsDemo/Program.cs
-related:
-  - concepts/azure-monitor-distro.md
-  - api-reference/UseAzureMonitor.md
 ---
 
 # Basic ASP.NET Core Setup
@@ -155,5 +152,5 @@ After this setup, Azure Monitor will collect:
 
 ## See Also
 
-- [Azure Monitor Distro](../concepts/azure-monitor-distro.md)
-- [UseAzureMonitor API](../api-reference/UseAzureMonitor.md)
+- Azure Monitor Distro(see in azure-monitor-distro.md)
+- UseAzureMonitor API(see in UseAzureMonitor.md)

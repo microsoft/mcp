@@ -2,10 +2,6 @@
 title: SdkCreateTracerProviderBuilder
 category: api-reference
 applies-to: 3.x
-related:
-  - api-reference/AddOpenTelemetry.md
-  - api-reference/OpenTelemetrySdkCreate.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
 ---
 
 # Sdk.CreateTracerProviderBuilder / Sdk.CreateMeterProviderBuilder
@@ -13,8 +9,8 @@ related:
 > [!WARNING]
 > **Legacy pattern (<= 1.9.0).** These APIs still work but are no longer the
 > recommended path. For new code, prefer
-> [Unified Multi-Signal (`OpenTelemetrySdk.Create`)][create] (non-hosted) or
-> [Host & DI-Integrated (`AddOpenTelemetry`)][add] (hosted).
+> Unified Multi-Signal (`OpenTelemetrySdk.Create`)(see in OpenTelemetrySdkCreate.md) (non-hosted) or
+> Host & DI-Integrated (`AddOpenTelemetry`)(see in AddOpenTelemetry.md) (hosted).
 
 ## When to use
 
@@ -82,7 +78,7 @@ logger.LogInformation("Application started");
 
 > [!NOTE]
 > Compare the above with
-> [Unified Multi-Signal (`OpenTelemetrySdk.Create`)][create], which achieves
+> Unified Multi-Signal (`OpenTelemetrySdk.Create`)(see in OpenTelemetrySdkCreate.md), which achieves
 > the same result with a single builder and a single `Dispose()`.
 
 ## API surface
@@ -128,6 +124,3 @@ logger.LogInformation("Application started");
 
 `OpenTelemetrySdk.Create()` (>= 1.10.0) resolves all three issues while staying
 host-free.
-
-[add]: ./AddOpenTelemetry.md
-[create]: ./OpenTelemetrySdkCreate.md

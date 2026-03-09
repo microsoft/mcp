@@ -2,10 +2,6 @@
 title: ConfigureOpenTelemetryProvider
 category: api-reference
 applies-to: 3.x
-related:
-  - api-reference/AddOpenTelemetry.md
-  - api-reference/OpenTelemetrySdkCreate.md
-  - api-reference/SdkCreateTracerProviderBuilder.md
 ---
 
 # ConfigureOpenTelemetry*Provider Extensions
@@ -32,9 +28,9 @@ configure OpenTelemetry providers. They work anywhere you have access to an
 > [!IMPORTANT]
 > These methods register configuration but **do not create a
 > provider**. A provider must still be created via
-> [Host & DI-Integrated (`AddOpenTelemetry`)][add],
-> [Unified Multi-Signal (`OpenTelemetrySdk.Create`)][create], or
-> [Per-Signal / Legacy (`Sdk.CreateTracerProviderBuilder`)][tracer]
+> Host & DI-Integrated (`AddOpenTelemetry`)(in AddOpenTelemetry.md),
+> Unified Multi-Signal (`OpenTelemetrySdk.Create`)(in OpenTelemetrySdkCreate.md), or
+> Per-Signal / Legacy (`Sdk.CreateTracerProviderBuilder`)(in SdkCreateTracerProviderBuilder.md)
 > for the configuration to take effect.
 
 ## Namespaces
@@ -193,10 +189,6 @@ requirement is that a provider is eventually resolved from the same
 
 | Method | Defined on | Purpose |
 | --- | --- | --- |
-| [Host & DI-Integrated (`AddOpenTelemetry`)][add] | `IServiceCollection` | Creates the provider and starts the hosted service |
+| Host & DI-Integrated (`AddOpenTelemetry`)(in AddOpenTelemetry.md) | `IServiceCollection` | Creates the provider and starts the hosted service |
 | `.WithTracing()` / `.WithMetrics()` / `.WithLogging()` | `IOpenTelemetryBuilder` | Registers a provider for the signal and optionally configures it |
 | `.ConfigureResource()` | `IOpenTelemetryBuilder` | Shared resource configuration (internally uses `ConfigureOpenTelemetry*Provider`) |
-
-[add]: ./AddOpenTelemetry.md
-[create]: ./OpenTelemetrySdkCreate.md
-[tracer]: ./SdkCreateTracerProviderBuilder.md

@@ -2,10 +2,6 @@
 title: OpenTelemetrySdk.Create
 category: api-reference
 applies-to: 3.x
-related:
-  - api-reference/AddOpenTelemetry.md
-  - api-reference/SdkCreateTracerProviderBuilder.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
 ---
 
 # OpenTelemetrySdk.Create()
@@ -146,5 +142,5 @@ they emit nothing.
 
 > [!TIP]
 > **Need the .NET Host?** Use
-> [`services.AddOpenTelemetry()`](./AddOpenTelemetry.md) instead -- same
+> `services.AddOpenTelemetry()`(see in AddOpenTelemetry.md) instead -- same
 > builder API, but lifecycle is managed by the host.

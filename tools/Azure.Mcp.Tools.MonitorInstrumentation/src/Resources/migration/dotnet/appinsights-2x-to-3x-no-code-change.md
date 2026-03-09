@@ -2,9 +2,6 @@
 title: Application Insights 2.x to 3.x — No-Code-Change Migration
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/AddApplicationInsightsTelemetry.md
-  - migration/appinsights-2x-to-3x-code-migration.md
 ---
 
 # App Insights 2.x → 3.x — No Code Change
@@ -91,5 +88,5 @@ Even though your code stays the same, 3.x brings these improvements automaticall
 
 ## See also
 
-- [Application Insights 2.x to 3.x Code Migration](appinsights-2x-to-3x-code-migration.md)
-- [AddApplicationInsightsTelemetry API reference](../api-reference/dotnet/AddApplicationInsightsTelemetry.md)
+- Application Insights 2.x to 3.x Code Migration(see in appinsights-2x-to-3x-code-migration.md)
+- AddApplicationInsightsTelemetry API reference(see in AddApplicationInsightsTelemetry.md)

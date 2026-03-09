@@ -2,12 +2,6 @@
 title: AddOpenTelemetry
 category: api-reference
 applies-to: 3.x
-related:
-  - api-reference/UseAzureMonitor.md
-  - api-reference/OpenTelemetrySdkCreate.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
-  - api-reference/SdkCreateTracerProviderBuilder.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # services.AddOpenTelemetry()
@@ -155,5 +149,5 @@ builder.Services.AddSingleton<MyFilteringProcessor>();
 
 > [!TIP]
 > **No host?** Use
-> [`OpenTelemetrySdk.Create()`](./OpenTelemetrySdkCreate.md) for the same
+> `OpenTelemetrySdk.Create()` for the same
 > builder API with manual lifecycle control.

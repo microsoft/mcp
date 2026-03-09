@@ -2,11 +2,6 @@
 title: ActivityProcessors
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/Sampling.md
-  - api-reference/LogProcessors.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # Activity Processors — Filtering & Enrichment
@@ -15,7 +10,7 @@ related:
 
 - Subclass `BaseProcessor<Activity>` to create a custom processor.
 - **`OnStart`** = enrichment (add tags early). **`OnEnd`** = filtering (all data finalized).
-- Register via `.AddProcessor<T>()` — see [WithTracing.md](./WithTracing.md).
+- Register via `.AddProcessor<T>()` — see WithTracing.md.
 
 ## Filtering — drop spans
 
@@ -76,9 +71,9 @@ public class EnrichmentProcessor : BaseProcessor<Activity>
 | 2.x Pattern | 3.x Equivalent |
 | --- | --- |
 | `ITelemetryInitializer.Initialize(ITelemetry)` | `BaseProcessor<Activity>.OnStart(Activity)` — enrich traces |
-| `ITelemetryInitializer` touching `TraceTelemetry`/`EventTelemetry` | `BaseProcessor<LogRecord>.OnEnd(LogRecord)` — enrich logs (see [LogProcessors.md](./LogProcessors.md)) |
+| `ITelemetryInitializer` touching `TraceTelemetry`/`EventTelemetry` | `BaseProcessor<LogRecord>.OnEnd(LogRecord)` — enrich logs (see LogProcessors.md) |
 | `ITelemetryProcessor.Process(ITelemetry)` | `BaseProcessor<Activity>.OnEnd(Activity)` — filter traces |
-| `ITelemetryProcessor` filtering `TraceTelemetry` by severity | `ILoggingBuilder.AddFilter<OpenTelemetryLoggerProvider>()` — filter logs (see [LogProcessors.md](./LogProcessors.md)) |
+| `ITelemetryProcessor` filtering `TraceTelemetry` by severity | `ILoggingBuilder.AddFilter<OpenTelemetryLoggerProvider>()` — filter logs (see LogProcessors.md) |
 | `services.AddApplicationInsightsTelemetryProcessor<T>()` | `.AddProcessor<T>()` on `TracerProviderBuilder` |
 | Not calling `next.Process(item)` to drop | `data.ActivityTraceFlags &= ~ActivityTraceFlags.Recorded;` |
 

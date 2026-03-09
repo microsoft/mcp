@@ -2,12 +2,6 @@
 title: WithLogging
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/WithMetrics.md
-  - api-reference/ConfigureResource.md
-  - api-reference/LogProcessors.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # .WithLogging()
@@ -25,7 +19,7 @@ related:
 | `builder.AddProcessor<T>()` | Add a processor resolved from DI (singleton) |
 | `builder.AddProcessor(Func<IServiceProvider, BaseProcessor<LogRecord>>)` | Add a processor via factory |
 
-See also: [ConfigureResource.md](./ConfigureResource.md) for resource configuration
+See also: ConfigureResource.md for resource configuration
 
 ## When to use
 

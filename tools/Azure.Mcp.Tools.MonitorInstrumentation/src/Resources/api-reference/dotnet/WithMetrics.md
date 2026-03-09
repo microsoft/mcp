@@ -2,11 +2,6 @@
 title: WithMetrics
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/WithLogging.md
-  - api-reference/ConfigureResource.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # .WithMetrics()
@@ -27,7 +22,7 @@ related:
 | `builder.SetMaxMetricStreams(int)` | Set max metric streams (default: 1000) |
 | `builder.SetExemplarFilter(ExemplarFilterType)` | Set exemplar filter (`AlwaysOff`, `AlwaysOn`, `TraceBased`) |
 
-See also: [ConfigureResource.md](./ConfigureResource.md) for resource configuration
+See also: ConfigureResource.md for resource configuration
 
 ## When to use
 

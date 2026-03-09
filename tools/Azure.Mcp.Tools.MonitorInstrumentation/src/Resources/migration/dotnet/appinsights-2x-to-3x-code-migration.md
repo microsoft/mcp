@@ -2,11 +2,6 @@
 title: Application Insights 2.x to 3.x Migration
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/AddApplicationInsightsTelemetry.md
-  - api-reference/UseAzureMonitor.md
-  - api-reference/UseAzureMonitorExporter.md
-  - migration/appinsights-2x-to-3x-no-code-change.md
 ---
 
 # App Insights 2.x → 3.x Code Migration
@@ -127,5 +122,5 @@ Or set `APPLICATIONINSIGHTS_CONNECTION_STRING` as an environment variable and ca
 
 ## See also
 
-- [No-code-change migration](appinsights-2x-to-3x-no-code-change.md)
-- [AddApplicationInsightsTelemetry API reference](../api-reference/dotnet/AddApplicationInsightsTelemetry.md)
+- No-code-change migration(see in appinsights-2x-to-3x-no-code-change.md)
+- AddApplicationInsightsTelemetry API reference(see in AddApplicationInsightsTelemetry.md)

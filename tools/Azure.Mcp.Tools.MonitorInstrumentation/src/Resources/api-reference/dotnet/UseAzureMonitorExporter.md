@@ -3,10 +3,6 @@ title: UseAzureMonitorExporter
 category: api-reference
 applies-to: 3.x
 source: src/OpenTelemetryBuilderExtensions.cs
-related:
-  - api-reference/UseAzureMonitor.md
-  - api-reference/AzureMonitorExporter.md
-  - api-reference/AddOpenTelemetry.md
 ---
 
 # UseAzureMonitorExporter
@@ -39,7 +35,7 @@ and enables Live Metrics.
 
 - **Cannot** be combined with per-signal methods (`AddAzureMonitorTraceExporter`, etc.) in the same app — a runtime exception is thrown.
 - Chaining additional `WithTracing()` / `WithMetrics()` / `WithLogging()` calls adds configuration to the existing provider — it does not create a second one.
-- See [AzureMonitorExporter](./AzureMonitorExporter.md) for the per-signal approach.
+- See AzureMonitorExporter(see in AzureMonitorExporter.md) for the per-signal approach.
 
 ## AzureMonitorExporterOptions
 
@@ -145,6 +141,6 @@ using var sdk = OpenTelemetrySdk.Create(builder => builder
 
 ## See also
 
-- [UseAzureMonitor (distro)](./UseAzureMonitor.md)
-- [Per-signal exporters (AzureMonitorExporter)](./AzureMonitorExporter.md)
-- [AddOpenTelemetry](./AddOpenTelemetry.md)
+- UseAzureMonitor (distro)(see in UseAzureMonitor.md)
+- Per-signal exporters (AzureMonitorExporter)(see in AzureMonitorExporter.md)
+- AddOpenTelemetry(see in AddOpenTelemetry.md)

@@ -2,10 +2,6 @@
 title: LogProcessors
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithLogging.md
-  - api-reference/ActivityProcessors.md
-  - concepts/opentelemetry-pipeline.md
 ---
 
 # Log Processors — Enrichment & Redaction
@@ -13,7 +9,7 @@ related:
 ## Key concepts
 
 - Subclass `BaseProcessor<LogRecord>`. Only `OnEnd` is called (not `OnStart`).
-- Register via `.AddProcessor<T>()` — see [WithLogging.md](./WithLogging.md).
+- Register via `.AddProcessor<T>()` — see WithLogging.md.
 - **Log filtering:** Use `ILoggingBuilder.AddFilter<OpenTelemetryLoggerProvider>()` — processor-level filtering is not reliable because `CompositeProcessor` iterates all processors regardless and `LogRecord` has no `Recorded` flag.
 
 ## Filtering — use `AddFilter`
@@ -100,4 +96,4 @@ If the old `ITelemetryInitializer` or `ITelemetryProcessor` touched `TraceTeleme
 | `ILogger` logs | `TraceTelemetry` |
 | `ILogger` logs with `microsoft.custom_event.name` attribute | `EventTelemetry` |
 
-See [ActivityProcessors.md](./ActivityProcessors.md) for `ActivityKind` → `RequestTelemetry`/`DependencyTelemetry` mapping.
+See ActivityProcessors.md for `ActivityKind` → `RequestTelemetry`/`DependencyTelemetry` mapping.

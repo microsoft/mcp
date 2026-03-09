@@ -2,10 +2,6 @@
 title: Azure Monitor OpenTelemetry Distro
 category: concept
 applies-to: 3.x
-related:
-  - concepts/opentelemetry-pipeline.md
-  - api-reference/UseAzureMonitor.md
-  - examples/configuration/basic-setup-aspnetcore.md
 ---
 
 # Azure Monitor OpenTelemetry Distro
@@ -101,6 +97,6 @@ builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
 
 ## See Also
 
-- [OpenTelemetry Pipeline](opentelemetry-pipeline.md)
-- [UseAzureMonitor API](../api-reference/UseAzureMonitor.md)
-- [Basic Setup Example](../examples/configuration/basic-setup-aspnetcore.md)
+- OpenTelemetry Pipeline(see in opentelemetry-pipeline.md)
+- UseAzureMonitor API(see in UseAzureMonitor.md)
+- Basic Setup Example(see in basic-setup-aspnetcore.md)
