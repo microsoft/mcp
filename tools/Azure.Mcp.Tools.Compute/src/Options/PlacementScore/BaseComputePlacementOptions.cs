@@ -4,10 +4,10 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Options;
+namespace Azure.Mcp.Tools.Compute.Options.PlacementScore;
 
-public class BaseComputeRecommenderOptions : SubscriptionOptions
+public class BaseComputePlacementOptions : SubscriptionOptions
 {
-    [JsonPropertyName(ComputeRecommenderOptionDefinitions.LocationName)]
+    [JsonPropertyName(ComputePlacementOptionDefinitions.LocationName)]
     public string? Location { get; set; }
 }

@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ComputeRecommender.Models;
-using Azure.Mcp.Tools.ComputeRecommender.Options.PlacementScore;
-using Azure.Mcp.Tools.ComputeRecommender.Services;
+using Azure.Mcp.Tools.Compute.Models;
+using Azure.Mcp.Tools.Compute.Options.PlacementScore;
+using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Commands.PlacementScore;
+namespace Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 
 public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCommand> logger)
-    : BaseComputeRecommenderCommand<SpotPlacementMetadataOptions>()
+    : BaseComputePlacementCommand<SpotPlacementMetadataOptions>()
 {
     private const string CommandTitle = "Get Spot Placement Scores Metadata";
     private readonly ILogger<SpotPlacementMetadataCommand> _logger = logger;
@@ -53,7 +53,7 @@ public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCo
 
         try
         {
-            var service = context.GetService<IComputeRecommenderService>();
+            var service = context.GetService<IComputePlacementService>();
 
             var metadata = await service.GetSpotPlacementMetadataAsync(
                 options.Location!,
@@ -64,7 +64,7 @@ public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCo
 
             context.Response.Results = ResponseResult.Create(
                 new SpotPlacementMetadataCommandResult(metadata),
-                ComputeRecommenderJsonContext.Default.SpotPlacementMetadataCommandResult);
+                ComputePlacementJsonContext.Default.SpotPlacementMetadataCommandResult);
         }
         catch (Exception ex)
         {

@@ -5,25 +5,25 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.ComputeRecommender.Options;
+using Azure.Mcp.Tools.Compute.Options.PlacementScore;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Commands;
+namespace Azure.Mcp.Tools.Compute.Commands;
 
-public abstract class BaseComputeRecommenderCommand<
+public abstract class BaseComputePlacementCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
     : SubscriptionCommand<T>
-    where T : BaseComputeRecommenderOptions, new()
+    where T : BaseComputePlacementOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ComputeRecommenderOptionDefinitions.Location);
+        command.Options.Add(ComputePlacementOptionDefinitions.Location);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(ComputeRecommenderOptionDefinitions.Location.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(ComputePlacementOptionDefinitions.Location.Name);
         return options;
     }
 }

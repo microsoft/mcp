@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Models;
+namespace Azure.Mcp.Tools.Compute.Models;
 
 /// <summary>
 /// Represents a single placement score result for a VM SKU in a specific region/zone.

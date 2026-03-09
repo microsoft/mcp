@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Models;
+namespace Azure.Mcp.Tools.Compute.Models;
 
 /// <summary>
 /// Represents metadata about the spot placement score diagnostic resource,

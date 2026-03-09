@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Options;
+namespace Azure.Mcp.Tools.Compute.Options.PlacementScore;
 
-public static class ComputeRecommenderOptionDefinitions
+public static class ComputePlacementOptionDefinitions
 {
     public const string LocationName = "location";
     public const string DesiredLocationsName = "desired-locations";

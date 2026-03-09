@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.ComputeRecommender.Models;
-using Azure.Mcp.Tools.ComputeRecommender.Options;
-using Azure.Mcp.Tools.ComputeRecommender.Options.PlacementScore;
-using Azure.Mcp.Tools.ComputeRecommender.Services;
+using Azure.Mcp.Tools.Compute.Models;
+using Azure.Mcp.Tools.Compute.Options.PlacementScore;
+using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Commands.PlacementScore;
+namespace Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 
 public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand> logger)
-    : BaseComputeRecommenderCommand<SpotPlacementScoreOptions>()
+    : BaseComputePlacementCommand<SpotPlacementScoreOptions>()
 {
     private const string CommandTitle = "Generate Spot Placement Scores";
     private readonly ILogger<SpotPlacementScoreCommand> _logger = logger;
@@ -47,19 +46,19 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ComputeRecommenderOptionDefinitions.DesiredLocations);
-        command.Options.Add(ComputeRecommenderOptionDefinitions.DesiredSizes);
-        command.Options.Add(ComputeRecommenderOptionDefinitions.DesiredCount);
-        command.Options.Add(ComputeRecommenderOptionDefinitions.AvailabilityZones);
+        command.Options.Add(ComputePlacementOptionDefinitions.DesiredLocations);
+        command.Options.Add(ComputePlacementOptionDefinitions.DesiredSizes);
+        command.Options.Add(ComputePlacementOptionDefinitions.DesiredCount);
+        command.Options.Add(ComputePlacementOptionDefinitions.AvailabilityZones);
     }
 
     protected override SpotPlacementScoreOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DesiredLocations = parseResult.GetValueOrDefault<string[]>(ComputeRecommenderOptionDefinitions.DesiredLocations.Name);
-        options.DesiredSizes = parseResult.GetValueOrDefault<string[]>(ComputeRecommenderOptionDefinitions.DesiredSizes.Name);
-        options.DesiredCount = parseResult.GetValueOrDefault<int>(ComputeRecommenderOptionDefinitions.DesiredCount.Name);
-        options.AvailabilityZones = parseResult.GetValueOrDefault<bool>(ComputeRecommenderOptionDefinitions.AvailabilityZones.Name);
+        options.DesiredLocations = parseResult.GetValueOrDefault<string[]>(ComputePlacementOptionDefinitions.DesiredLocations.Name);
+        options.DesiredSizes = parseResult.GetValueOrDefault<string[]>(ComputePlacementOptionDefinitions.DesiredSizes.Name);
+        options.DesiredCount = parseResult.GetValueOrDefault<int>(ComputePlacementOptionDefinitions.DesiredCount.Name);
+        options.AvailabilityZones = parseResult.GetValueOrDefault<bool>(ComputePlacementOptionDefinitions.AvailabilityZones.Name);
         return options;
     }
 
@@ -77,7 +76,7 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
 
         try
         {
-            var service = context.GetService<IComputeRecommenderService>();
+            var service = context.GetService<IComputePlacementService>();
 
             var scores = await service.GetSpotPlacementScoresAsync(
                 options.Location!,
@@ -92,7 +91,7 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
 
             context.Response.Results = ResponseResult.Create(
                 new SpotPlacementScoreCommandResult(scores),
-                ComputeRecommenderJsonContext.Default.SpotPlacementScoreCommandResult);
+                ComputePlacementJsonContext.Default.SpotPlacementScoreCommandResult);
         }
         catch (Exception ex)
         {

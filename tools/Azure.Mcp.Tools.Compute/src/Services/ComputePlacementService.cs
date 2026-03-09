@@ -6,21 +6,21 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.ComputeRecommender.Models;
+using Azure.Mcp.Tools.Compute.Models;
 using Azure.ResourceManager.Compute.Recommender;
 using Azure.ResourceManager.Compute.Recommender.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Services;
+namespace Azure.Mcp.Tools.Compute.Services;
 
-public class ComputeRecommenderService(
+public class ComputePlacementService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILogger<ComputeRecommenderService> logger)
-    : BaseAzureService(tenantService), IComputeRecommenderService
+    ILogger<ComputePlacementService> logger)
+    : BaseAzureService(tenantService), IComputePlacementService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ILogger<ComputeRecommenderService> _logger = logger;
+    private readonly ILogger<ComputePlacementService> _logger = logger;
 
     public async Task<SpotPlacementMetadataInfo> GetSpotPlacementMetadataAsync(
         string location,
@@ -33,9 +33,12 @@ public class ComputeRecommenderService(
             (nameof(location), location),
             (nameof(subscription), subscription));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
+
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
         var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(
-            subscription, new AzureLocation(location));
+            subscriptionId, new AzureLocation(location));
         var diagnosticResource = armClient.GetComputeRecommenderDiagnosticResource(resourceId);
 
         var result = await diagnosticResource.GetAsync(cancellationToken);
@@ -63,9 +66,12 @@ public class ComputeRecommenderService(
             (nameof(location), location),
             (nameof(subscription), subscription));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
+
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
         var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(
-            subscription, new AzureLocation(location));
+            subscriptionId, new AzureLocation(location));
         var diagnosticResource = armClient.GetComputeRecommenderDiagnosticResource(resourceId);
 
         var content = new ComputeRecommenderGenerateContent

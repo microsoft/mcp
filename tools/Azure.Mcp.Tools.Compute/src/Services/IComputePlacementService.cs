@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.ComputeRecommender.Models;
+using Azure.Mcp.Tools.Compute.Models;
 
-namespace Azure.Mcp.Tools.ComputeRecommender.Services;
+namespace Azure.Mcp.Tools.Compute.Services;
 
-public interface IComputeRecommenderService
+public interface IComputePlacementService
 {
     Task<SpotPlacementMetadataInfo> GetSpotPlacementMetadataAsync(
         string location,
