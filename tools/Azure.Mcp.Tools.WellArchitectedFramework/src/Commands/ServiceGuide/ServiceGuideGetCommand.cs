@@ -77,10 +77,9 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             // Lazy load service guides on first use
             LoadServiceGuides();
 
-            var serviceNameExact = options.Service!;
-            var serviceNameNormalized = NormalizeServiceName(serviceNameExact);
-            var serviceGuideUrl = GetServiceGuideUrl(serviceNameExact, serviceNameNormalized);
-            var guidance = GetGuidance(serviceNameExact, serviceGuideUrl);
+            var serviceName = options.Service!;
+            var serviceGuideUrl = GetServiceGuideUrl(serviceName);
+            var guidance = GetGuidance(serviceName, serviceGuideUrl);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
@@ -133,50 +132,34 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         }
     }
 
-    private static string NormalizeServiceName(string serviceNameExact)
-    {
-        return serviceNameExact.ToLowerInvariant().Trim().Replace("-", string.Empty).Replace(" ", string.Empty);
-    }
-
-    private static string? GetServiceGuideUrl(string serviceNameExact, string serviceNameNormalized)
+    private static string? GetServiceGuideUrl(string serviceName)
     {
         if (s_serviceGuidesCache == null)
         {
             return null;
         }
 
-        // Try exact match on dictionary key
-        if (s_serviceGuidesCache.TryGetValue(serviceNameExact, out var entry))
-        {
-            return entry.ServiceGuideUrl;
-        }
-
-        // Try matching by normalized key
+        var serviceNameNormalized = NormalizeServiceName(serviceName);
+        
         foreach (var kvp in s_serviceGuidesCache)
         {
-            var normalizedKey = NormalizeServiceName(kvp.Key);
-            if (normalizedKey == serviceNameNormalized)
+            if (kvp.Value.ServiceNameVariationsNormalized.Contains(serviceNameNormalized))
             {
                 return kvp.Value.ServiceGuideUrl;
-            }
-
-            // Check serviceNameExact in the entry
-            if (NormalizeServiceName(kvp.Value.ServiceNameExact) == serviceNameNormalized)
-            {
-                return kvp.Value.ServiceGuideUrl;
-            }
-
-            // Check serviceNameVariations
-            foreach (var variation in kvp.Value.ServiceNameVariations)
-            {
-                if (NormalizeServiceName(variation) == serviceNameNormalized)
-                {
-                    return kvp.Value.ServiceGuideUrl;
-                }
             }
         }
 
         return null;
+    }
+
+    private static string NormalizeServiceName(string serviceName)
+    {
+        return serviceName
+            .ToLowerInvariant()
+            .Trim()
+            .Replace("-", string.Empty)
+            .Replace("_", string.Empty)
+            .Replace(" ", string.Empty);
     }
 
     private static string GetGuidance(string serviceName, string? serviceGuideUrl)
@@ -202,6 +185,4 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         return string.Join(", ", s_serviceGuidesCache.Keys);
     }
-
-    
 }

@@ -11,8 +11,7 @@ TASK:
 REQUIRED JSON STRUCTURE:
 {
   "<service-key>": {
-    "serviceNameExact": "<exact-service-name-from-href>",
-    "serviceNameVariations": ["<variation1>", "<variation2>", ...],
+    "serviceNameVariationsNormalized": ["<variation1>", "<variation2>", ...],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>"
   }
 }
@@ -21,9 +20,7 @@ RULES FOR GENERATION:
 1. **service-key**: Extract from the href filename (e.g., "azure-blob-storage" from "service-guides/azure-blob-storage.md")
    - Skip entries that have nested items instead of direct href (these are multi-page guides)
 
-2. **serviceNameExact**: Same as service-key (the exact filename without .md extension)
-
-3. **serviceNameVariations**: Generate intelligent variations by:
+2. **serviceNameVariationsNormalized**: Generate intelligent variations by:
    - Removing all spaces and hyphens to create concatenated version (e.g., "azureblobstorage")
    - Creating common abbreviations and shorthand (e.g., "blob", "blobstorage", "azureblob")
    - Removing "azure-" prefix variations (e.g., "blob-storage")
@@ -35,7 +32,7 @@ RULES FOR GENERATION:
      * "azure-kubernetes-service" → ["aks", "azurek8s", "azurekubernetes", "azurekubernetesservice", "k8s", "kubernetes"]
      * "application-insights" → ["applicationinsights", "appinsights", "insights"]
 
-4. **serviceGuideUrl**: Construct as:
+3. **serviceGuideUrl**: Construct as:
    - Base: "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/"
    - Append the href value from TOC.yml (e.g., "service-guides/azure-blob-storage.md")
 
@@ -51,13 +48,11 @@ OUTPUT FORMAT:
 EXAMPLE OUTPUT:
 {
   "application-insights": {
-    "serviceNameExact": "application-insights",
-    "serviceNameVariations": ["applicationinsights", "appinsights", "insights"],
+    "serviceNameVariationsNormalized": ["applicationinsights", "appinsights", "insights"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md"
   },
   "azure-blob-storage": {
-    "serviceNameExact": "azure-blob-storage",
-    "serviceNameVariations": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
+    "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md"
   }
 }

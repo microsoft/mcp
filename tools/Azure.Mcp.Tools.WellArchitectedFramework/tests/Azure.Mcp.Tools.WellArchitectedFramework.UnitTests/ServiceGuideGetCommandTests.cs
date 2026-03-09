@@ -136,7 +136,7 @@ public class ServiceGuideGetCommandTests
     [InlineData("sql-database")] // Another service with hyphens
     [InlineData("azuresql")]   // Different name
     [InlineData("sql")]   // Abbreviation
-    public async Task ExecuteAsync_HandlesServiceNameVariations_Correctly(string serviceNameInput)
+    public async Task ExecuteAsync_HandlesServiceNameVariationsNormalized_Correctly(string serviceNameInput)
     {
         // Arrange
         var args = _commandDefinition.Parse($"--service {serviceNameInput}");

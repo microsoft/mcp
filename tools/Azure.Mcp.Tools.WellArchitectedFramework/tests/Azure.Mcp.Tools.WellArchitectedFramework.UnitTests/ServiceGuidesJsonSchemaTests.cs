@@ -49,11 +49,8 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            Assert.NotNull(kvp.Value.ServiceNameExact);
-            Assert.NotEmpty(kvp.Value.ServiceNameExact);
-
-            Assert.NotNull(kvp.Value.ServiceNameVariations);
-            Assert.NotEmpty(kvp.Value.ServiceNameVariations);
+            Assert.NotNull(kvp.Value.ServiceNameVariationsNormalized);
+            Assert.NotEmpty(kvp.Value.ServiceNameVariationsNormalized);
 
             Assert.NotNull(kvp.Value.ServiceGuideUrl);
             Assert.NotEmpty(kvp.Value.ServiceGuideUrl);
@@ -61,26 +58,16 @@ public class ServiceGuidesJsonSchemaTests
     }
 
     [Fact]
-    public void ServiceGuidesJson_ServiceNameExactMatchesKey()
+    public void ServiceGuidesJson_ServiceNameVariationsNormalizedIsNonEmptyArray()
     {
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            Assert.Equal(kvp.Key, kvp.Value.ServiceNameExact);
-        }
-    }
-
-    [Fact]
-    public void ServiceGuidesJson_ServiceNameVariationsIsNonEmptyArray()
-    {
-        // Assert
-        foreach (var kvp in _serviceGuides)
-        {
-            Assert.NotNull(kvp.Value.ServiceNameVariations);
-            Assert.NotEmpty(kvp.Value.ServiceNameVariations);
+            Assert.NotNull(kvp.Value.ServiceNameVariationsNormalized);
+            Assert.NotEmpty(kvp.Value.ServiceNameVariationsNormalized);
 
             // Each variation should be non-null and non-empty
-            foreach (var variation in kvp.Value.ServiceNameVariations!)
+            foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
                 Assert.NotNull(variation);
                 Assert.NotEmpty(variation);
@@ -115,7 +102,7 @@ public class ServiceGuidesJsonSchemaTests
         // Act - Collect all variations
         foreach (var kvp in _serviceGuides)
         {
-            foreach (var variation in kvp.Value.ServiceNameVariations!)
+            foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
                 if (!allVariations.ContainsKey(variation))
                 {
@@ -162,7 +149,7 @@ public class ServiceGuidesJsonSchemaTests
             // Assert - Has expected variations
             foreach (var expectedVariation in expectedVariations)
             {
-                Assert.True(service.ServiceNameVariations!.Contains(expectedVariation),
+                Assert.True(service.ServiceNameVariationsNormalized!.Contains(expectedVariation),
                     $"Service '{serviceKey}' should have variation '{expectedVariation}'");
             }
         }
@@ -174,7 +161,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            foreach (var variation in kvp.Value.ServiceNameVariations!)
+            foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
                 Assert.True(variation == variation.ToLowerInvariant(),
                     $"Variation '{variation}' in service '{kvp.Key}' should be lowercase");
@@ -188,7 +175,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            foreach (var variation in kvp.Value.ServiceNameVariations!)
+            foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
                 Assert.False(variation.Contains("-"),
                     $"Variation '{variation}' in service '{kvp.Key}' should not contain hyphens");
@@ -204,11 +191,25 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            var variations = kvp.Value.ServiceNameVariations!.ToList();
+            var variations = kvp.Value.ServiceNameVariationsNormalized!.ToList();
             var sortedVariations = variations.OrderBy(v => v).ToList();
             
             Assert.True(sortedVariations.SequenceEqual(variations),
                 $"Variations for service '{kvp.Key}' should be sorted alphabetically. Expected: [{string.Join(", ", sortedVariations)}], Actual: [{string.Join(", ", variations)}]");
+        }
+    }
+
+    [Fact]
+    public void ServiceGuidesJson_ServiceNameVariationsNormalizedIncludesNoHyphenNoSpaceKeyVariation()
+    {
+        // Assert
+        foreach (var kvp in _serviceGuides)
+        {
+            // Calculate the no-hyphen, no-space version of the key
+            var normalizedKey = kvp.Key.Replace("-", "").Replace(" ", "");
+            
+            Assert.True(kvp.Value.ServiceNameVariationsNormalized!.Contains(normalizedKey),
+                $"Service '{kvp.Key}' should have a variation '{normalizedKey}' (the key with hyphens and spaces removed)");
         }
     }
 
@@ -235,8 +236,7 @@ public class ServiceGuidesJsonSchemaTests
 // Test-specific models to avoid coupling with production code
 internal sealed class ServiceGuideEntry
 {
-    public string? ServiceNameExact { get; set; }
-    public string[]? ServiceNameVariations { get; set; }
+    public string[]? ServiceNameVariationsNormalized { get; set; }
     public string? ServiceGuideUrl { get; set; }
 }
 
