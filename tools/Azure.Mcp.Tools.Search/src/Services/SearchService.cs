@@ -32,8 +32,8 @@ public sealed class SearchService(
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
-    private static readonly TimeSpan s_cacheDurationServices = TimeSpan.FromHours(1);
-    private static readonly TimeSpan s_cacheDurationClients = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
+    private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
 
     public async Task<List<string>> ListServices(
         string subscription,

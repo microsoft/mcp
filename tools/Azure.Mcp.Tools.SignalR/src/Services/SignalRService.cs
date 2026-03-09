@@ -29,7 +29,7 @@ public sealed class SignalRService(
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private const string CacheGroup = "signalr";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<IEnumerable<Runtime>> GetRuntimeAsync(
         string subscription,

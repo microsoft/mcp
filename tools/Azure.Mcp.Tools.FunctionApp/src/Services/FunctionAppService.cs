@@ -19,7 +19,7 @@ public sealed class FunctionAppService(
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private const string CacheGroup = "functionapp";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
