@@ -2,10 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Core;
-using Azure.Identity;
-using Microsoft.Extensions.Logging;
-using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Services.Azure.Authentication;
 

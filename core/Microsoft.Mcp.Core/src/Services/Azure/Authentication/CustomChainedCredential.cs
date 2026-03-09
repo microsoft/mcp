@@ -178,11 +178,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         bool isExplicitBrowserMode = tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false;
         // Any explicit AZURE_TOKEN_CREDENTIALS value other than "dev" or "InteractiveBrowserCredential"
         // is treated as a pinned credential choice — interactive browser must not be injected.
+        // Pinned mode: any explicit setting other than "dev" or "InteractiveBrowserCredential" means
+        // the caller wants exactly that credential — no interactive popup, even with forceBrowserFallback.
         bool isPinnedCredentialMode = hasExplicitCredentialSetting && !isDevMode && !isExplicitBrowserMode;
-        bool shouldAddBrowserFallback = isExplicitBrowserMode ||
-                                       isDevMode ||
-                                       !hasExplicitCredentialSetting ||
-                                       (forceBrowserFallback && !isPinnedCredentialMode);
+        bool shouldAddBrowserFallback = !isPinnedCredentialMode || forceBrowserFallback;
 
         if (shouldAddBrowserFallback)
         {
@@ -460,8 +459,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             throw new CredentialUnavailableException(
                 $"DeviceCodeCredential is not available when the server is running in '{ActiveTransport}' transport mode. " +
-                "DeviceCodeCredential requires an interactive terminal to display the device code prompt. " +
-                "Use an automated credential such as AzureCliCredential or ManagedIdentityCredential instead.");
+                "DeviceCodeCredential requires an interactive terminal to display the device code prompt.");
         }
 
         string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
