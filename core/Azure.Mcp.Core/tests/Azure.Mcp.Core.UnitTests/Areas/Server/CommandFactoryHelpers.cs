@@ -7,7 +7,9 @@ using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Acr;
+using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Tools.AppLens;
@@ -62,6 +64,7 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
             new AppLensSetup(),
@@ -126,6 +129,7 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
             new AppLensSetup(),
@@ -166,7 +170,8 @@ internal class CommandFactoryHelpers
             .AddSingleton<ITelemetryService, NoOpTelemetryService>()
             .AddSingleton(Substitute.For<ISubscriptionService>())
             .AddSingleton(Substitute.For<ITenantService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>());
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<ICacheService>());
 
         foreach (var area in areaSetups)
         {
