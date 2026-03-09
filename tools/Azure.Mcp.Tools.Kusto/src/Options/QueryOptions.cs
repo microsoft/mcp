@@ -9,4 +9,7 @@ public class QueryOptions : BaseDatabaseOptions
 {
     [JsonPropertyName(KustoOptionDefinitions.QueryText)]
     public string? Query { get; set; }
+
+    [JsonPropertyName(KustoOptionDefinitions.ShowStatsName)]
+    public bool ShowStats { get; set; }
 }

@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Added --show-stats option for kusto query to return structured execution statistics from QueryCompletionInformation frames."
+  - section: "Other Changes"
+    description: "Migrated kusto query execution to /v2/rest/query with v2 frame parsing, PrimaryResult/DataSetCompletion handling, and query request headers for read-only, compression, and keep-alive behavior."

@@ -12,6 +12,8 @@ public sealed class KustoClient(
     string userAgent,
     IHttpClientFactory httpClientFactory)
 {
+    internal const string HttpClientName = "KustoClient";
+
     // Valid Kusto cluster domain suffixes from official Kusto endpoints configuration
     private static readonly string[] s_validKustoDomainSuffixes =
     [
@@ -216,7 +218,7 @@ public sealed class KustoClient(
     }
 
     public Task<KustoResult> ExecuteQueryCommandAsync(string database, string text, CancellationToken cancellationToken)
-        => ExecuteCommandAsync("/v1/rest/query", database, text, cancellationToken);
+        => ExecuteCommandAsync("/v2/rest/query", database, text, cancellationToken);
 
     public Task<KustoResult> ExecuteControlCommandAsync(string database, string text, CancellationToken cancellationToken)
         => ExecuteCommandAsync("/v1/rest/mgmt", database, text, cancellationToken);
@@ -225,7 +227,7 @@ public sealed class KustoClient(
     {
         var uri = _clusterUri + endpoint;
         var httpRequest = await GenerateRequestAsync(uri, database, text, cancellationToken).ConfigureAwait(false);
-        var client = _httpClientFactory.CreateClient();
+        var client = _httpClientFactory.CreateClient(HttpClientName);
         client.Timeout = s_httpClientTimeout;
         return await SendRequestAsync(client, httpRequest, cancellationToken).ConfigureAwait(false);
     }
@@ -246,6 +248,10 @@ public sealed class KustoClient(
         httpRequest.Headers.Add("x-ms-app", s_application);
         httpRequest.Headers.Add("x-ms-client-version", "Kusto.Client.Light");
         httpRequest.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Add("x-ms-readonly", "true");
+        httpRequest.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip"));
+        httpRequest.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("deflate"));
+        httpRequest.Headers.Connection.Add("Keep-Alive");
 
         var body = new JsonObject
         {
